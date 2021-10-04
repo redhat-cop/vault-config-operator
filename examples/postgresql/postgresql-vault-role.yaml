@@ -1,0 +1,36 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: VaultRole
+metadata:
+  name: postgresql-engine-admin
+spec:
+  # Add fields here
+  serviceAccount: 
+    name: default
+  policies:
+    - postgresql-engine-admin
+  targetServiceAccount:
+    - vault-admin
+  targetNamespaceSelector:
+    matchLabels:
+      postgresql-enabled: "true"
+---
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Policy
+metadata:
+  name: postgresql-engine-admin
+spec:
+  # Add fields here
+  serviceAccount: 
+    name: default
+  policy: |
+    # Mount secrets engines
+    path "sys/mounts/{{identity.entity.aliases.auth_kubernetes_kubernetes.metadata.service_account_namespace}}/postgresql/*" {
+      capabilities = [ "create", "read", "update", "delete", "list" ]
+    }
+
+    # Configure the database secrets engine and create roles
+    path "{{identity.entity.aliases.auth_kubernetes_kubernetes.metadata.service_account_namespace}}/postgresql/*" {
+      capabilities = [ "create", "read", "update", "delete", "list" ]
+    }                 
+
+        

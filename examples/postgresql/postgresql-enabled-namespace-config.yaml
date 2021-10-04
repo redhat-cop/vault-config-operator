@@ -1,0 +1,15 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: NamespaceConfig
+metadata:
+  name: postgresql-enabled
+spec:
+  labelSelector:
+    matchLabels:
+      postgresql-enabled: "true"
+  templates:
+  - objectTemplate: |
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: vault-admin
+        namespace: {{ .Name }}

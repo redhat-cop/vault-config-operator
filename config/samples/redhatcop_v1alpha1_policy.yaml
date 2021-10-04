@@ -1,0 +1,7 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Policy
+metadata:
+  name: policy-sample
+spec:
+  # Add fields here
+  foo: bar
