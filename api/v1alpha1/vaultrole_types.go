@@ -100,7 +100,7 @@ type VaultRoleSpec struct {
 	TokenType string `json:"tokenType,omitempty"`
 
 	// this field is for internal use and will not be serialized
-	consolidatedNamespaces []string
+	ConsolidatedNamespaces []string `json:"-"`
 }
 
 // VaultRoleStatus defines the observed state of VaultRole
@@ -137,7 +137,7 @@ func init() {
 func VaultRoleSpecFromMap(roleConfigMap map[string]interface{}) *VaultRoleSpec {
 	vr := &VaultRoleSpec{}
 	vr.TargetServiceAccounts = roleConfigMap["bound_service_account_names"].([]string)
-	vr.consolidatedNamespaces = roleConfigMap["bound_service_account_namespaces"].([]string)
+	vr.ConsolidatedNamespaces = roleConfigMap["bound_service_account_namespaces"].([]string)
 	vr.Audience = roleConfigMap["audience"].(string)
 	vr.TokenTTL = roleConfigMap["token_ttl"].(int)
 	vr.TokenMaxTTL = roleConfigMap["token_max_ttl"].(int)
@@ -152,13 +152,13 @@ func VaultRoleSpecFromMap(roleConfigMap map[string]interface{}) *VaultRoleSpec {
 }
 
 func (vr *VaultRoleSpec) SetConsolidatedNamespaces(namespaces []string) {
-	vr.consolidatedNamespaces = namespaces
+	vr.ConsolidatedNamespaces = namespaces
 }
 
 func (i *VaultRoleSpec) ToMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["bound_service_account_names"] = i.TargetServiceAccounts
-	payload["bound_service_account_namespaces"] = i.consolidatedNamespaces
+	payload["bound_service_account_namespaces"] = i.ConsolidatedNamespaces
 	payload["audience"] = i.Audience
 	payload["token_ttl"] = i.TokenTTL
 	payload["token_max_ttl"] = i.TokenMaxTTL

@@ -38,12 +38,12 @@ type DatabaseSecretEngineRoleSpec struct {
 
 	// DeafulTTL Specifies the TTL for the leases associated with this role. Accepts time suffixed strings ("1h") or an integer number of seconds. Defaults to system/engine default TTL time.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=0s
+	// +kubebuilder:default=0
 	DefaultTTL metav1.Duration `json:"defaultTTL,omitempty"`
 
 	// MaxTTL Specifies the maximum TTL for the leases associated with this role. Accepts time suffixed strings ("1h") or an integer number of seconds. Defaults to system/mount default TTL time; this value is allowed to be less than the mount max TTL (or, if not set, the system max TTL), but it is not allowed to be longer. See also The TTL General Case.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=0s
+	// +kubebuilder:default=0
 	MaxTTL metav1.Duration `json:"maxTTL,omitempty"`
 
 	// CreationStatements Specifies the database statements executed to create and configure a user. See the plugin's API page for more information on support and formatting for this parameter.
