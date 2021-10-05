@@ -30,11 +30,17 @@ type VaultRoleSpec struct {
 	// +kubebuilder:validation:Required
 	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
 
+	// Path at which to make the configuration.
+	// The final path will be {[spec.authentication.namespace]}/{spec.path}/role/{metadata.name}.
+	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
+	// +kubebuilder:validation:Required
+	Path Path `json:"path,omitempty"`
+
 	VRole `json:",inline"`
 
 	// TargetNamespaceSelector is a selector of namespaces from which service accounts will receove this role. Either TargetNamespaceSelector or TargetNamespaces can be specified
 	// +kubebuilder:validation:Optional
-	TargetNamespaceSelector metav1.LabelSelector `json:"targetNamespaceSelector,omitempty"`
+	TargetNamespaceSelector *metav1.LabelSelector `json:"targetNamespaceSelector,omitempty"`
 
 	// TargetNamespaces is a list of namespace from which service accounts will receive this role. Either TargetNamespaceSelector or TargetNamespaces can be specified.
 	// +kubebuilder:validation:Optional

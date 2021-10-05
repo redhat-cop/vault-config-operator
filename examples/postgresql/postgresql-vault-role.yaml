@@ -1,15 +1,15 @@
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: VaultRole
 metadata:
-  name: postgresql-engine-admin
+  name: database-engine-admin
 spec:
   # Add fields here
-  serviceAccount: 
-    name: default
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  path: kubernetes  
   policies:
-    - postgresql-engine-admin
-  targetServiceAccount:
-    - vault-admin
+    - database-engine-admin
   targetNamespaceSelector:
     matchLabels:
       postgresql-enabled: "true"
@@ -17,20 +17,59 @@ spec:
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: Policy
 metadata:
-  name: postgresql-engine-admin
+  name: database-engine-admin
 spec:
   # Add fields here
-  serviceAccount: 
-    name: default
+  authentication: 
+    path: kubernetes
+    role: policy-admin
   policy: |
-    # Mount secrets engines
-    path "sys/mounts/{{identity.entity.aliases.auth_kubernetes_kubernetes.metadata.service_account_namespace}}/postgresql/*" {
+    # mount database secrets engines
+    path "/sys/mounts/{{identity.entity.aliases.auth_kubernetes_804f1655.metadata.service_account_namespace}}/database" {
+      capabilities = [ "create", "read", "update", "delete", "list" ]
+      allowed_parameters = {
+        "type" = ["database"]
+        "*"   = []
+      }
+    }
+
+    # Configure database secrets engines
+    path "/{{identity.entity.aliases.auth_kubernetes_804f1655.metadata.service_account_namespace}}/database/config/+" {
       capabilities = [ "create", "read", "update", "delete", "list" ]
     }
 
-    # Configure the database secrets engine and create roles
-    path "{{identity.entity.aliases.auth_kubernetes_kubernetes.metadata.service_account_namespace}}/postgresql/*" {
+    # Configure database roles
+    path "/{{identity.entity.aliases.auth_kubernetes_804f1655.metadata.service_account_namespace}}/database/roles/+" {
       capabilities = [ "create", "read", "update", "delete", "list" ]
-    }                 
-
-        
+    }
+--- 
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: VaultRole
+metadata:
+  name: database-creds-reader
+spec:
+  # Add fields here
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  path: kubernetes  
+  policies:
+    - database-creds-reader
+  targetNamespaceSelector:
+    matchLabels:
+      postgresql-enabled: "true"
+---
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Policy
+metadata:
+  name: database-creds-reader
+spec:
+  # Add fields here
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  policy: |
+    # Configure read secrets
+    path "/{{identity.entity.aliases.auth_kubernetes_804f1655.metadata.service_account_namespace}}/database/creds/+" {
+      capabilities = ["read"]
+    }

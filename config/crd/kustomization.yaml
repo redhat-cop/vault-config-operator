@@ -9,6 +9,7 @@ resources:
 - bases/redhatcop.redhat.io_secretenginemounts.yaml
 - bases/redhatcop.redhat.io_databasesecretengineconfigs.yaml
 - bases/redhatcop.redhat.io_databasesecretengineroles.yaml
+- bases/redhatcop.redhat.io_randomsecrets.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
@@ -21,6 +22,7 @@ patchesStrategicMerge:
 #- patches/webhook_in_secretenginemounts.yaml
 #- patches/webhook_in_databasesecretengineconfigs.yaml
 #- patches/webhook_in_databasesecretengineroles.yaml
+#- patches/webhook_in_randomsecrets.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable cert-manager, uncomment all the sections with [CERTMANAGER] prefix.
@@ -32,6 +34,7 @@ patchesStrategicMerge:
 #- patches/cainjection_in_secretenginemounts.yaml
 #- patches/cainjection_in_databasesecretengineconfigs.yaml
 #- patches/cainjection_in_databasesecretengineroles.yaml
+#- patches/cainjection_in_randomsecrets.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.

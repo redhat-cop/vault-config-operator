@@ -7,4 +7,5 @@ resources:
 - redhatcop_v1alpha1_secretenginemount.yaml
 - redhatcop_v1alpha1_databasesecretengineconfig.yaml
 - redhatcop_v1alpha1_databasesecretenginerole.yaml
+- redhatcop_v1alpha1_randomsecret.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

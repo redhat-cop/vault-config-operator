@@ -113,6 +113,33 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "SecretEngineMount")
 		os.Exit(1)
 	}
+	if err = (&controllers.RandomSecretReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "RandomSecret")
+		os.Exit(1)
+	}
+	if err = (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "RandomSecret")
+		os.Exit(1)
+	}
+	if err = (&redhatcopv1alpha1.SecretEngineMount{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "SecretEngineMount")
+		os.Exit(1)
+	}
+	if err = (&redhatcopv1alpha1.DatabaseSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "DatabaseSecretEngineRole")
+		os.Exit(1)
+	}
+	if err = (&redhatcopv1alpha1.DatabaseSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "DatabaseSecretEngineConfig")
+		os.Exit(1)
+	}
+	if err = (&redhatcopv1alpha1.VaultRole{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "VaultRole")
+		os.Exit(1)
+	}
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

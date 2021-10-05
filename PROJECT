@@ -16,6 +16,9 @@ resources:
   kind: VaultRole
   path: github.com/redhat-cop/vault-config-operator/api/v1alpha1
   version: v1alpha1
+  webhooks:
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -34,6 +37,9 @@ resources:
   kind: DatabaseSecretEngineConfig
   path: github.com/redhat-cop/vault-config-operator/api/v1alpha1
   version: v1alpha1
+  webhooks:
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -43,6 +49,9 @@ resources:
   kind: DatabaseSecretEngineRole
   path: github.com/redhat-cop/vault-config-operator/api/v1alpha1
   version: v1alpha1
+  webhooks:
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -52,4 +61,19 @@ resources:
   kind: SecretEngineMount
   path: github.com/redhat-cop/vault-config-operator/api/v1alpha1
   version: v1alpha1
+  webhooks:
+    validation: true
+    webhookVersion: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: redhat.io
+  group: redhatcop
+  kind: RandomSecret
+  path: github.com/redhat-cop/vault-config-operator/api/v1alpha1
+  version: v1alpha1
+  webhooks:
+    validation: true
+    webhookVersion: v1
 version: "3"
