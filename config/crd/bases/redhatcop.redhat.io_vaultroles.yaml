@@ -1,0 +1,215 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.6.1
+  creationTimestamp: null
+  name: vaultroles.redhatcop.redhat.io
+spec:
+  group: redhatcop.redhat.io
+  names:
+    kind: VaultRole
+    listKind: VaultRoleList
+    plural: vaultroles
+    singular: vaultrole
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: VaultRole can be used to define a VaultRole for the kube-auth
+          authentication method
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: VaultRoleSpec defines the desired state of VaultRole
+            properties:
+              TokenPeriodInteger:
+                default: 0
+                description: TokenPeriod The period, if any, to set on the token.
+                type: integer
+              audience:
+                description: Audience Audience claim to verify in the JWT.
+                type: string
+              authentication:
+                description: Authentication is the kube aoth configuraiton to be used
+                  to execute this request
+                properties:
+                  namespace:
+                    description: Namespace is the Vault namespace to be used in all
+                      the operations withing this connection/authentication. Only
+                      available in Vault Enterprise.
+                    type: string
+                  path:
+                    description: Path is the path of the role used for this kube auth
+                      authentication
+                    type: string
+                  serviceAccount:
+                    default:
+                      Name: default
+                    description: ServiceAccount is the service account used for the
+                      kube auth authentication
+                    properties:
+                      name:
+                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          TODO: Add other useful fields. apiVersion, kind, uid?'
+                        type: string
+                    type: object
+                type: object
+              policies:
+                description: Policies is a list of policy names to be bound to this
+                  role.
+                items:
+                  type: string
+                minItems: 1
+                type: array
+                uniqueItems: true
+              targetNamespaceSelector:
+                description: TargetNamespaceSelector is a selector of namespaces from
+                  which service accounts will receove this role. Either TargetNamespaceSelector
+                  or TargetNamespaces can be specified
+                properties:
+                  matchExpressions:
+                    description: matchExpressions is a list of label selector requirements.
+                      The requirements are ANDed.
+                    items:
+                      description: A label selector requirement is a selector that
+                        contains values, a key, and an operator that relates the key
+                        and values.
+                      properties:
+                        key:
+                          description: key is the label key that the selector applies
+                            to.
+                          type: string
+                        operator:
+                          description: operator represents a key's relationship to
+                            a set of values. Valid operators are In, NotIn, Exists
+                            and DoesNotExist.
+                          type: string
+                        values:
+                          description: values is an array of string values. If the
+                            operator is In or NotIn, the values array must be non-empty.
+                            If the operator is Exists or DoesNotExist, the values
+                            array must be empty. This array is replaced during a strategic
+                            merge patch.
+                          items:
+                            type: string
+                          type: array
+                      required:
+                      - key
+                      - operator
+                      type: object
+                    type: array
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    description: matchLabels is a map of {key,value} pairs. A single
+                      {key,value} in the matchLabels map is equivalent to an element
+                      of matchExpressions, whose key field is "key", the operator
+                      is "In", and the values array contains only "value". The requirements
+                      are ANDed.
+                    type: object
+                type: object
+              targetNamespaces:
+                description: TargetNamespaces is a list of namespace from which service
+                  accounts will receive this role. Either TargetNamespaceSelector
+                  or TargetNamespaces can be specified.
+                items:
+                  type: string
+                minItems: 1
+                type: array
+                uniqueItems: true
+                x-kubernetes-list-type: set
+              targetServiceAccounts:
+                default:
+                - default
+                description: TargetServiceAccounts is a list of service account names
+                  that will receive this role
+                items:
+                  type: string
+                minItems: 1
+                type: array
+                uniqueItems: true
+              tokenBoundCIDRs:
+                description: TokenBoundCIDRs List of CIDR blocks; if set, specifies
+                  blocks of IP addresses which can authenticate successfully, and
+                  ties the resulting token to these blocks as well.
+                items:
+                  type: string
+                type: array
+                uniqueItems: true
+                x-kubernetes-list-type: set
+              tokenExplicitMaxTTL:
+                default: 0
+                description: TokenExplicitMaxTTL If set, will encode an explicit max
+                  TTL onto the token. This is a hard cap even if token_ttl and token_max_ttl
+                  would otherwise allow a renewal.
+                type: integer
+              tokenMaxTTL:
+                default: 0
+                description: TokenMaxTTL The maximum lifetime for generated tokens.
+                  This current value of this will be referenced at renewal time.
+                type: integer
+              tokenNoDefaultPolicy:
+                default: false
+                description: TokenNoDefaultPolicy If set, the default policy will
+                  not be set on generated tokens; otherwise it will be added to the
+                  policies set in token_policies
+                type: boolean
+              tokenNumUses:
+                default: 0
+                description: TokenNumUses The maximum number of times a generated
+                  token may be used (within its lifetime); 0 means unlimited. If you
+                  require the token to have the ability to create child tokens, you
+                  will need to set this value to 0.
+                type: integer
+              tokenTTL:
+                default: 0
+                description: TokenTTL The incremental lifetime for generated tokens.
+                  This current value of this will be referenced at renewal time.
+                type: integer
+              tokenType:
+                description: 'TokenType The type of token that should be generated.
+                  Can be service, batch, or default to use the mount''s tuned default
+                  (which unless changed will be service tokens). For token store roles,
+                  there are two additional possibilities: default-service and default-batch
+                  which specify the type to return unless the client requests a different
+                  type at generation time.'
+                enum:
+                - service
+                - batch
+                - default
+                - default-service
+                - default-batch
+                type: string
+            required:
+            - policies
+            - targetServiceAccounts
+            type: object
+          status:
+            description: VaultRoleStatus defines the observed state of VaultRole
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

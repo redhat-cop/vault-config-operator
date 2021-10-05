@@ -594,8 +594,8 @@ func (in *VaultRoleSpec) DeepCopyInto(out *VaultRoleSpec) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	if in.consolidatedNamespaces != nil {
-		in, out := &in.consolidatedNamespaces, &out.consolidatedNamespaces
+	if in.ConsolidatedNamespaces != nil {
+		in, out := &in.ConsolidatedNamespaces, &out.ConsolidatedNamespaces
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}

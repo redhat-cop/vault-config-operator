@@ -43,7 +43,7 @@ type DatabaseSecretEngineConfigSpec struct {
 	// +kubebuilder:default={"*"}
 	// +listType=set
 	// +kubebuilder:validation:UniqueItems=true
-	AllowedRoles []string
+	AllowedRoles []string `json:"allowedRoles,omitempty"`
 
 	// RootRotationStatements Specifies the database statements to be executed to rotate the root user's credentials. See the plugin's API page for more information on support and formatting for this parameter.
 	// +kubebuilder:validation:Optional
@@ -77,7 +77,7 @@ type DatabaseSecretEngineConfigSpec struct {
 	DatabaseSpecificConfig map[string]string `json:"databaseSpecificConfig,omitempty"`
 
 	//internal field on the username
-	username string
+	Username string `json:"-"`
 }
 
 // DatabaseSecretEngineConfigStatus defines the observed state of DatabaseSecretEngineConfig
@@ -119,7 +119,7 @@ func DatabaseSecretEngineConfigSpecFromMap(payload map[string]interface{}) *Data
 	o.RootRotationStatements = payload["root_rotation_statements"].([]string)
 	o.PasswordPolicy = payload["password_policy"].(string)
 	o.ConnecectionURL = payload["connection_url"].(string)
-	o.username = payload["username"].(string)
+	o.Username = payload["username"].(string)
 	return o
 }
 
@@ -131,7 +131,7 @@ func (i *DatabaseSecretEngineConfigSpec) ToMap() map[string]interface{} {
 	payload["root_rotation_statements"] = i.RootRotationStatements
 	payload["password_policy"] = i.PasswordPolicy
 	payload["connection_url"] = i.ConnecectionURL
-	payload["username"] = i.username
+	payload["username"] = i.Username
 	for key, value := range i.DatabaseSpecificConfig {
 		payload[key] = value
 	}
