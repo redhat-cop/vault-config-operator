@@ -26,8 +26,31 @@ import (
 
 // DatabaseSecretEngineConfigSpec defines the desired state of DatabaseSecretEngineConfig
 type DatabaseSecretEngineConfigSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Authentication is the kube aoth configuraiton to be used to execute this request
+	// +kubebuilder:validation:Required
+	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+
+	// Path at which to make the configuration.
+	// The final path will be {[spec.authentication.namespace]}/{spec.path}/config/{metadata.name}.
+	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
+	// +kubebuilder:validation:Required
+	Path Path `json:"path,omitempty"`
+
+	DBSEConfig `json:",inline"`
+	//ConfiguationFromSecret retrieves the credentials from a Vault secret. This will map the "username" and "password" keys of the secret to the username and password of this config. All other keys will be ignored. Only one of RootCredentialsFromVaultSecret or RootCredentialsFromSecret can be specified.
+	// username: Specifies the name of the user to use as the "root" user when connecting to the database. This "root" user is used to create/update/delete users managed by these plugins, so you will need to ensure that this user has permissions to manipulate users appropriate to the database. This is typically used in the connection_url field via the templating directive {{username}} or {{name}}.
+	// password: Specifies the password to use when connecting with the username. This value will not be returned by Vault when performing a read upon the configuration. This is typically used in the connection_url field via the templating directive {{password}}.
+	// +kubebuilder:validation:Optional
+	RootCredentialsFromVaultSecret VaultSecretReference `json:"rootCredentialsFromVaultSecret,omitempty"`
+
+	// ConfiguationFromSecret retrieves the credentials from a Kubernetes secret. The secret must be of basicauth type (https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret). This will map the "username" and "password" keys of the secret to the username and password of this config. All other keys will be ignored. Only one of RootCredentialsFromVaultSecret or RootCredentialsFromSecret can be specified.
+	// username: Specifies the name of the user to use as the "root" user when connecting to the database. This "root" user is used to create/update/delete users managed by these plugins, so you will need to ensure that this user has permissions to manipulate users appropriate to the database. This is typically used in the connection_url field via the templating directive {{username}} or {{name}}.
+	// password: Specifies the password to use when connecting with the username. This value will not be returned by Vault when performing a read upon the configuration. This is typically used in the connection_url field via the templating directive {{password}}.
+	// +kubebuilder:validation:Optional
+	RootCredentialsFromSecret corev1.LocalObjectReference `json:"rootCredentialsFromSecret,omitempty"`
+}
+
+type DBSEConfig struct {
 
 	// PluginName Specifies the name of the plugin to use for this connection.
 	// +kubebuilder:validation:Required
@@ -57,19 +80,7 @@ type DatabaseSecretEngineConfigSpec struct {
 
 	// ConnecectionURL Specifies the connection string used to connect to the database. Some plugins use url rather than connection_url. This allows for simple templating of the username and password of the root user. Typically, this is done by including a {{username}}, {{name}}, and/or {{password}} field within the string. These fields are typically be replaced with the values in the username and password fields.
 	// +kubebuilder:validation:Required
-	ConnecectionURL string `json:"connecectionURL,omitempty"`
-
-	//ConfiguationFromSecret retrieves the credentials from a Vault secret. This will map the "username" and "password" keys of the secret to the username and password of this config. All other keys will be ignored. Only one of RootCredentialsFromVaultSecret or RootCredentialsFromSecret can be specified.
-	// username: Specifies the name of the user to use as the "root" user when connecting to the database. This "root" user is used to create/update/delete users managed by these plugins, so you will need to ensure that this user has permissions to manipulate users appropriate to the database. This is typically used in the connection_url field via the templating directive {{username}} or {{name}}.
-	// password: Specifies the password to use when connecting with the username. This value will not be returned by Vault when performing a read upon the configuration. This is typically used in the connection_url field via the templating directive {{password}}.
-	// +kubebuilder:validation:Optional
-	RootCredentialsFromVaultSecret VaultSecretReference `json:"rootCredentialsFromVaultSecret,omitempty"`
-
-	// ConfiguationFromSecret retrieves the credentials from a Kubernetes secret. The secret must be of basicauth type (https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret). This will map the "username" and "password" keys of the secret to the username and password of this config. All other keys will be ignored. Only one of RootCredentialsFromVaultSecret or RootCredentialsFromSecret can be specified.
-	// username: Specifies the name of the user to use as the "root" user when connecting to the database. This "root" user is used to create/update/delete users managed by these plugins, so you will need to ensure that this user has permissions to manipulate users appropriate to the database. This is typically used in the connection_url field via the templating directive {{username}} or {{name}}.
-	// password: Specifies the password to use when connecting with the username. This value will not be returned by Vault when performing a read upon the configuration. This is typically used in the connection_url field via the templating directive {{password}}.
-	// +kubebuilder:validation:Optional
-	RootCredentialsFromSecret corev1.LocalObjectReference `json:"rootCredentialsFromSecret,omitempty"`
+	ConnectionURL string `json:"connectionURL,omitempty"`
 
 	// DatabaseSpecificConfig this are the configuraiton specific to each database type
 	// +kubebuilder:validation:Optional
@@ -111,26 +122,26 @@ func init() {
 	SchemeBuilder.Register(&DatabaseSecretEngineConfig{}, &DatabaseSecretEngineConfigList{})
 }
 
-func DatabaseSecretEngineConfigSpecFromMap(payload map[string]interface{}) *DatabaseSecretEngineConfigSpec {
-	o := &DatabaseSecretEngineConfigSpec{}
+func DBSEConfigFromMap(payload map[string]interface{}) *DBSEConfig {
+	o := &DBSEConfig{}
 	o.PluginName = payload["plugin_name"].(string)
 	o.VerifyConnection = payload["verify_connection"].(bool)
 	o.AllowedRoles = payload["allowed_roles"].([]string)
 	o.RootRotationStatements = payload["root_rotation_statements"].([]string)
 	o.PasswordPolicy = payload["password_policy"].(string)
-	o.ConnecectionURL = payload["connection_url"].(string)
+	o.ConnectionURL = payload["connection_url"].(string)
 	o.Username = payload["username"].(string)
 	return o
 }
 
-func (i *DatabaseSecretEngineConfigSpec) ToMap() map[string]interface{} {
+func (i *DBSEConfig) ToMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["plugin_name"] = i.PluginName
 	payload["verify_connection"] = i.VerifyConnection
 	payload["allowed_roles"] = i.AllowedRoles
 	payload["root_rotation_statements"] = i.RootRotationStatements
 	payload["password_policy"] = i.PasswordPolicy
-	payload["connection_url"] = i.ConnecectionURL
+	payload["connection_url"] = i.ConnectionURL
 	payload["username"] = i.Username
 	for key, value := range i.DatabaseSpecificConfig {
 		payload[key] = value

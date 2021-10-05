@@ -32,18 +32,28 @@ type DatabaseSecretEngineRoleSpec struct {
 	// +kubebuilder:validation:Required
 	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
 
+	// Path at which to create the role.
+	// The final path will be {[spec.authentication.namespace]}/{spec.path}/roles/{metadata.name}.
+	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
+	// +kubebuilder:validation:Required
+	Path Path `json:"path,omitempty"`
+
+	DBSERole `json:",inline"`
+}
+
+type DBSERole struct {
 	// DBName The name of the database connection to use for this role.
 	// +kubebuilder:validation:Required
 	DBName string `json:"dBName,omitempty"`
 
 	// DeafulTTL Specifies the TTL for the leases associated with this role. Accepts time suffixed strings ("1h") or an integer number of seconds. Defaults to system/engine default TTL time.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=0
+	// +kubebuilder:default="0s"
 	DefaultTTL metav1.Duration `json:"defaultTTL,omitempty"`
 
 	// MaxTTL Specifies the maximum TTL for the leases associated with this role. Accepts time suffixed strings ("1h") or an integer number of seconds. Defaults to system/mount default TTL time; this value is allowed to be less than the mount max TTL (or, if not set, the system max TTL), but it is not allowed to be longer. See also The TTL General Case.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=0
+	// +kubebuilder:default="0s"
 	MaxTTL metav1.Duration `json:"maxTTL,omitempty"`
 
 	// CreationStatements Specifies the database statements executed to create and configure a user. See the plugin's API page for more information on support and formatting for this parameter.
@@ -102,8 +112,8 @@ func init() {
 	SchemeBuilder.Register(&DatabaseSecretEngineRole{}, &DatabaseSecretEngineRoleList{})
 }
 
-func DatabaseSecretEngineRoleSpecFromMap(payload map[string]interface{}) *DatabaseSecretEngineRoleSpec {
-	o := &DatabaseSecretEngineRoleSpec{}
+func DatabaseSecretEngineRoleSpecFromMap(payload map[string]interface{}) *DBSERole {
+	o := &DBSERole{}
 	o.DBName = payload["db_name"].(string)
 	o.DefaultTTL = parseOrDie(payload["default_ttl"].(string))
 	o.MaxTTL = parseOrDie(payload["max_ttl"].(string))
@@ -114,7 +124,7 @@ func DatabaseSecretEngineRoleSpecFromMap(payload map[string]interface{}) *Databa
 	return o
 }
 
-func (i *DatabaseSecretEngineRoleSpec) ToMap() map[string]interface{} {
+func (i *DBSERole) ToMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["db_name"] = i.DBName
 	payload["default_ttl"] = i.DefaultTTL

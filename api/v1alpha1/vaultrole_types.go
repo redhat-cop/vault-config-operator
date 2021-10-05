@@ -30,18 +30,7 @@ type VaultRoleSpec struct {
 	// +kubebuilder:validation:Required
 	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
 
-	// Policies is a list of policy names to be bound to this role.
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:UniqueItems=true
-	// +kubebuilder:validation:Required
-	Policies []string `json:"policies"`
-
-	// TargetServiceAccounts is a list of service account names that will receive this role
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:UniqueItems=true
-	// +kubebuilder:default={"default"}
-	TargetServiceAccounts []string `json:"targetServiceAccounts"`
+	VRole `json:",inline"`
 
 	// TargetNamespaceSelector is a selector of namespaces from which service accounts will receove this role. Either TargetNamespaceSelector or TargetNamespaces can be specified
 	// +kubebuilder:validation:Optional
@@ -53,6 +42,22 @@ type VaultRoleSpec struct {
 	// +kubebuilder:validation:UniqueItems=true
 	// +listType=set
 	TargetNamespaces []string `json:"targetNamespaces,omitempty"`
+}
+
+type VRole struct {
+
+	// TargetServiceAccounts is a list of service account names that will receive this role
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:UniqueItems=true
+	// +kubebuilder:default={"default"}
+	TargetServiceAccounts []string `json:"targetServiceAccounts"`
+
+	// Policies is a list of policy names to be bound to this role.
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:UniqueItems=true
+	// +kubebuilder:validation:Required
+	Policies []string `json:"policies"`
 
 	// Audience Audience claim to verify in the JWT.
 	// +kubebuilder:validation:Optional
@@ -100,7 +105,7 @@ type VaultRoleSpec struct {
 	TokenType string `json:"tokenType,omitempty"`
 
 	// this field is for internal use and will not be serialized
-	ConsolidatedNamespaces []string `json:"-"`
+	Namespaces []string `json:"-"`
 }
 
 // VaultRoleStatus defines the observed state of VaultRole
@@ -134,10 +139,10 @@ func init() {
 	SchemeBuilder.Register(&VaultRole{}, &VaultRoleList{})
 }
 
-func VaultRoleSpecFromMap(roleConfigMap map[string]interface{}) *VaultRoleSpec {
-	vr := &VaultRoleSpec{}
+func VRoleFromMap(roleConfigMap map[string]interface{}) *VRole {
+	vr := &VRole{}
 	vr.TargetServiceAccounts = roleConfigMap["bound_service_account_names"].([]string)
-	vr.ConsolidatedNamespaces = roleConfigMap["bound_service_account_namespaces"].([]string)
+	vr.Namespaces = roleConfigMap["bound_service_account_namespaces"].([]string)
 	vr.Audience = roleConfigMap["audience"].(string)
 	vr.TokenTTL = roleConfigMap["token_ttl"].(int)
 	vr.TokenMaxTTL = roleConfigMap["token_max_ttl"].(int)
@@ -151,14 +156,10 @@ func VaultRoleSpecFromMap(roleConfigMap map[string]interface{}) *VaultRoleSpec {
 	return vr
 }
 
-func (vr *VaultRoleSpec) SetConsolidatedNamespaces(namespaces []string) {
-	vr.ConsolidatedNamespaces = namespaces
-}
-
-func (i *VaultRoleSpec) ToMap() map[string]interface{} {
+func (i *VRole) ToMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["bound_service_account_names"] = i.TargetServiceAccounts
-	payload["bound_service_account_namespaces"] = i.ConsolidatedNamespaces
+	payload["bound_service_account_namespaces"] = i.Namespaces
 	payload["audience"] = i.Audience
 	payload["token_ttl"] = i.TokenTTL
 	payload["token_max_ttl"] = i.TokenMaxTTL

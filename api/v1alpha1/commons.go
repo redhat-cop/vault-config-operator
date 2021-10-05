@@ -7,15 +7,23 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// +kubebuilder:validation:Pattern:=`^(.*/)([^/]*)$`
+type Path string
+
 type KubeAuthConfiguration struct {
 	// ServiceAccount is the service account used for the kube auth authentication
 	// +kubebuilder:validation:Required
-	// +kubebuilder:default={Name:default}
+	// +kubebuilder:default={Name:&#34;default&#34;}
 	ServiceAccount corev1.LocalObjectReference `json:"serviceAccount,omitempty"`
 
 	// Path is the path of the role used for this kube auth authentication
 	// +kubebuilder:validation:Required
+	// +kubebuilder:default=kubernetes
 	Path string `json:"path,omitempty"`
+
+	// Role the role to be used during authentication
+	// +kubebuilder:validation:Required
+	Role string `json:"role,omitempty"`
 
 	//Namespace is the Vault namespace to be used in all the operations withing this connection/authentication. Only available in Vault Enterprise.
 	// +kubebuilder:validation:Optional

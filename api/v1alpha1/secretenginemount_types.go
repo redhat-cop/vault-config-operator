@@ -31,8 +31,17 @@ type SecretEngineMountSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of SecretEngineMount. Edit secretenginemount_types.go to remove/update
+	// Authentication is the kube aoth configuraiton to be used to execute this request
+	// +kubebuilder:validation:Required
+	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+
 	Mount `json:",inline"`
+
+	// Path at which this secret engine will be available
+	// The final path will be {[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
+	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path /sys/mounts/{[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
+	// +kubebuilder:validation:Required
+	Path Path `json:"path,omitempty"`
 }
 
 // +k8s:openapi-gen=true
@@ -72,6 +81,7 @@ type Mount struct {
 
 // +k8s:openapi-gen=true
 type MountConfig struct {
+	// Options undocumented
 	// +kubebuilder:validation:Optional
 	// +mapType=granular
 	Options map[string]string `json:"options,omitempty"`
@@ -123,7 +133,7 @@ type MountConfig struct {
 	// +kubebuilder:validation:UniqueItems=true
 	AllowedResponseHeaders []string `json:"allowedResponseHeaders,omitempty"`
 
-	// TokenType ??
+	// TokenType undocumented
 	// +kubebuilder:validation:Optional
 	TokenType string `json:"tokenType,omitempty"`
 }
