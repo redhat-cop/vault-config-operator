@@ -140,8 +140,20 @@ type MountConfig struct {
 
 // SecretEngineMountStatus defines the observed state of SecretEngineMount
 type SecretEngineMountStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+}
+
+func (m *SecretEngineMount) GetConditions() []metav1.Condition {
+	return m.Status.Conditions
+}
+
+func (m *SecretEngineMount) SetConditions(conditions []metav1.Condition) {
+	m.Status.Conditions = conditions
 }
 
 //+kubebuilder:object:root=true

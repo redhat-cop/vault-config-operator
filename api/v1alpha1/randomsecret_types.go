@@ -17,6 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"math/rand"
+	"time"
+
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	"github.com/scylladb/go-set/u8set"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -46,6 +51,20 @@ type RandomSecretSpec struct {
 	// RefreshPeriod if specified, the operator will refresh the secret with the given frequency
 	// +kubebuilder:validation:Optional
 	RefreshPeriod metav1.Duration `json:"refreshPeriod,omitempty"`
+
+	calculatedSecret map[string]interface{}
+}
+
+var _ vaultutils.VaultObject = &RandomSecret{}
+
+func (d *RandomSecret) GetPath() string {
+	return string(d.Spec.Path) + "/" + d.Name
+}
+func (d *RandomSecret) GetPayload() map[string]interface{} {
+	return d.Spec.calculatedSecret
+}
+func (d *RandomSecret) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+	return false
 }
 
 type PasswordPolicy struct {
@@ -62,8 +81,20 @@ type PasswordPolicy struct {
 
 // RandomSecretStatus defines the observed state of RandomSecret
 type RandomSecretStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+}
+
+func (m *RandomSecret) GetConditions() []metav1.Condition {
+	return m.Status.Conditions
+}
+
+func (m *RandomSecret) SetConditions(conditions []metav1.Condition) {
+	m.Status.Conditions = conditions
 }
 
 //+kubebuilder:object:root=true
@@ -99,5 +130,60 @@ type PasswordPolicyFormat struct {
 type PasswordPolicyRule struct {
 	RuleType string `hcl:"type,label"`
 	Charset  string `hcl:"charset"`
-	MinChars string `hcl:"min-chars"`
+	MinChars int    `hcl:"min-chars"`
+}
+
+func (d *RandomSecret) CalculateSecret(policy PasswordPolicyFormat, key string, attempts int) bool {
+	filteredPasswordPolicyRules := []PasswordPolicyRule{}
+	for i := range policy.Rules {
+		if policy.Rules[i].RuleType == "charset" {
+			filteredPasswordPolicyRules = append(filteredPasswordPolicyRules, policy.Rules[i])
+		}
+	}
+	// let's build the array of runes needed by this random password
+	intSet := u8set.New()
+	charSetToRule := map[*u8set.Set]PasswordPolicyRule{}
+	for i := range filteredPasswordPolicyRules {
+		charset := u8set.New([]byte(filteredPasswordPolicyRules[i].Charset)...)
+		intSet.Merge(charset)
+		charSetToRule[charset] = filteredPasswordPolicyRules[i]
+	}
+
+	var valid bool = true
+	var randomString string
+	for attempt := 0; attempt < attempts; attempt++ {
+		randomString = randStringBytes(policy.Length, intSet.List())
+		// now we need to check if the new string complies with the requirements
+		for charset, rule := range charSetToRule {
+			counter := 0
+			for i := range randomString {
+				if charset.Has(randomString[i]) {
+					counter++
+				}
+			}
+			if counter < rule.MinChars {
+				valid = false
+				break
+			}
+		}
+		if valid {
+			break
+		}
+	}
+	if valid {
+		d.Spec.calculatedSecret[key] = randomString
+	}
+	return valid
+}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+func randStringBytes(n int, letterUints []uint8) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterUints[rand.Intn(len(letterUints))]
+	}
+	return string(b)
 }

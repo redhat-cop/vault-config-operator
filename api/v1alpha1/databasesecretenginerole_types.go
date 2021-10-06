@@ -17,6 +17,9 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"reflect"
+
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -39,6 +42,19 @@ type DatabaseSecretEngineRoleSpec struct {
 	Path Path `json:"path,omitempty"`
 
 	DBSERole `json:",inline"`
+}
+
+var _ vaultutils.VaultObject = &DatabaseSecretEngineRole{}
+
+func (d *DatabaseSecretEngineRole) GetPath() string {
+	return string(d.Spec.Path) + "/" + "roles" + "/" + d.Name
+}
+func (d *DatabaseSecretEngineRole) GetPayload() map[string]interface{} {
+	return d.Spec.ToMap()
+}
+func (d *DatabaseSecretEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+	desiredState := d.Spec.DBSERole.ToMap()
+	return reflect.DeepEqual(desiredState, payload)
 }
 
 type DBSERole struct {
@@ -83,8 +99,20 @@ type DBSERole struct {
 
 // DatabaseSecretEngineRoleStatus defines the observed state of DatabaseSecretEngineRole
 type DatabaseSecretEngineRoleStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+}
+
+func (m *DatabaseSecretEngineRole) GetConditions() []metav1.Condition {
+	return m.Status.Conditions
+}
+
+func (m *DatabaseSecretEngineRole) SetConditions(conditions []metav1.Condition) {
+	m.Status.Conditions = conditions
 }
 
 //+kubebuilder:object:root=true

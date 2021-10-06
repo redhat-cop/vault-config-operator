@@ -17,6 +17,9 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"reflect"
+
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -60,6 +63,20 @@ type DatabaseSecretEngineConfigSpec struct {
 	RootCredentialsFromRandomSecret *corev1.LocalObjectReference `json:"rootCredentialsFromRandomSecret,omitempty"`
 }
 
+var _ vaultutils.VaultObject = &DatabaseSecretEngineConfig{}
+
+func (d *DatabaseSecretEngineConfig) GetPath() string {
+	return string(d.Spec.Path) + "/" + "config" + "/" + d.Name
+}
+func (d *DatabaseSecretEngineConfig) GetPayload() map[string]interface{} {
+	return d.Spec.ToMap()
+}
+func (d *DatabaseSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+	desiredState := d.Spec.DBSEConfig.ToMap()
+	delete(desiredState, "password")
+	return reflect.DeepEqual(desiredState, payload)
+}
+
 type DBSEConfig struct {
 
 	// PluginName Specifies the name of the plugin to use for this connection.
@@ -101,12 +118,28 @@ type DBSEConfig struct {
 	// +kubebuilder:validation:Optional
 	// +mapType=granular
 	DatabaseSpecificConfig map[string]string `json:"databaseSpecificConfig,omitempty"`
+
+	retrievedPassword string `json:"-"`
+
+	retrievedUsername string `json:"-"`
 }
 
 // DatabaseSecretEngineConfigStatus defines the observed state of DatabaseSecretEngineConfig
 type DatabaseSecretEngineConfigStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+}
+
+func (m *DatabaseSecretEngineConfig) GetConditions() []metav1.Condition {
+	return m.Status.Conditions
+}
+
+func (m *DatabaseSecretEngineConfig) SetConditions(conditions []metav1.Condition) {
+	m.Status.Conditions = conditions
 }
 
 //+kubebuilder:object:root=true
@@ -154,9 +187,14 @@ func (i *DBSEConfig) ToMap() map[string]interface{} {
 	payload["root_rotation_statements"] = i.RootRotationStatements
 	payload["password_policy"] = i.PasswordPolicy
 	payload["connection_url"] = i.ConnectionURL
-	payload["username"] = i.Username
 	for key, value := range i.DatabaseSpecificConfig {
 		payload[key] = value
 	}
+	if i.Username != "nil" {
+		payload["username"] = i.Username
+	} else {
+		payload["username"] = i.retrievedUsername
+	}
+	payload["password"] = i.retrievedPassword
 	return payload
 }

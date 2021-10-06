@@ -17,6 +17,9 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"reflect"
+
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -48,6 +51,19 @@ type VaultRoleSpec struct {
 	// +kubebuilder:validation:UniqueItems=true
 	// +listType=set
 	TargetNamespaces []string `json:"targetNamespaces,omitempty"`
+}
+
+var _ vaultutils.VaultObject = &VaultRole{}
+
+func (d *VaultRole) GetPath() string {
+	return string(d.Spec.Path) + "/role/" + d.Name
+}
+func (d *VaultRole) GetPayload() map[string]interface{} {
+	return d.Spec.VRole.ToMap()
+}
+func (d *VaultRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+	desiredState := d.Spec.VRole.ToMap()
+	return reflect.DeepEqual(desiredState, payload)
 }
 
 type VRole struct {
@@ -111,13 +127,25 @@ type VRole struct {
 	TokenType string `json:"tokenType,omitempty"`
 
 	// this field is for internal use and will not be serialized
-	Namespaces []string `json:"-"`
+	namespaces []string `json:"-"`
 }
 
 // VaultRoleStatus defines the observed state of VaultRole
 type VaultRoleStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+}
+
+func (m *VaultRole) GetConditions() []metav1.Condition {
+	return m.Status.Conditions
+}
+
+func (m *VaultRole) SetConditions(conditions []metav1.Condition) {
+	m.Status.Conditions = conditions
 }
 
 //+kubebuilder:object:root=true
@@ -148,7 +176,7 @@ func init() {
 func VRoleFromMap(roleConfigMap map[string]interface{}) *VRole {
 	vr := &VRole{}
 	vr.TargetServiceAccounts = roleConfigMap["bound_service_account_names"].([]string)
-	vr.Namespaces = roleConfigMap["bound_service_account_namespaces"].([]string)
+	vr.namespaces = roleConfigMap["bound_service_account_namespaces"].([]string)
 	vr.Audience = roleConfigMap["audience"].(string)
 	vr.TokenTTL = roleConfigMap["token_ttl"].(int)
 	vr.TokenMaxTTL = roleConfigMap["token_max_ttl"].(int)
@@ -165,7 +193,7 @@ func VRoleFromMap(roleConfigMap map[string]interface{}) *VRole {
 func (i *VRole) ToMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["bound_service_account_names"] = i.TargetServiceAccounts
-	payload["bound_service_account_namespaces"] = i.Namespaces
+	payload["bound_service_account_namespaces"] = i.namespaces
 	payload["audience"] = i.Audience
 	payload["token_ttl"] = i.TokenTTL
 	payload["token_max_ttl"] = i.TokenMaxTTL

@@ -39,8 +39,20 @@ type PolicySpec struct {
 
 // PolicyStatus defines the observed state of Policy
 type PolicyStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+}
+
+func (m *Policy) GetConditions() []metav1.Condition {
+	return m.Status.Conditions
+}
+
+func (m *Policy) SetConditions(conditions []metav1.Condition) {
+	m.Status.Conditions = conditions
 }
 
 //+kubebuilder:object:root=true
