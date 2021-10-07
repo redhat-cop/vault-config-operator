@@ -148,6 +148,10 @@ func (m *VaultRole) SetConditions(conditions []metav1.Condition) {
 	m.Status.Conditions = conditions
 }
 
+func (m *VaultRole) SetInternalNamespaces(namespaces []string) {
+	m.Spec.namespaces = namespaces
+}
+
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 

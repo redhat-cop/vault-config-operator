@@ -17,14 +17,21 @@ limitations under the License.
 package utils
 
 import (
+	"context"
+	"errors"
+	"strings"
+
 	"github.com/go-logr/logr"
 	vault "github.com/hashicorp/vault/api"
+	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type VaultConnection interface {
 	GetNamespace() string
 	GetRole() string
 	GetKubeAuthPath() string
+	GetServiceAccountName() string
 }
 
 type VaultObject interface {
@@ -40,11 +47,16 @@ type VaultEndpoint struct {
 	client *vault.Client
 }
 
-func NewVaultEndpoint(vaultConnection VaultConnection, vaultObject VaultObject, jwt string, log logr.Logger) (*VaultEndpoint, error) {
+func NewVaultEndpoint(context context.Context, vaultConnection VaultConnection, vaultObject VaultObject, kubeNamespace string, kubeClient client.Client, log logr.Logger) (*VaultEndpoint, error) {
 	vaultEndpoint := &VaultEndpoint{
 		log:             log,
 		VaultConnection: vaultConnection,
 		VaultObject:     vaultObject,
+	}
+	jwt, err := vaultEndpoint.getJWTToken(context, kubeNamespace, kubeClient)
+	if err != nil {
+		vaultEndpoint.log.Error(err, "unable to retrieve jwt token for", "namespace", kubeNamespace, "serviceaccount", vaultEndpoint.GetServiceAccountName())
+		return nil, err
 	}
 	vaultClient, err := vaultEndpoint.createVaultClient(jwt)
 	if err != nil {
@@ -53,6 +65,48 @@ func NewVaultEndpoint(vaultConnection VaultConnection, vaultObject VaultObject, 
 	}
 	vaultEndpoint.client = vaultClient
 	return vaultEndpoint, nil
+}
+
+func (ve *VaultEndpoint) getJWTToken(context context.Context, kubeNamespace string, kubeClient client.Client) (string, error) {
+	serviceAccount := &corev1.ServiceAccount{}
+	err := kubeClient.Get(context, client.ObjectKey{
+		Namespace: kubeNamespace,
+		Name:      ve.GetServiceAccountName(),
+	}, serviceAccount)
+	if err != nil {
+		ve.log.Error(err, "unable to retrieve", "service account", client.ObjectKey{
+			Namespace: kubeNamespace,
+			Name:      ve.GetServiceAccountName(),
+		})
+		return "", err
+	}
+	var tokenSecretName string
+	for _, secretName := range serviceAccount.Secrets {
+		if strings.Contains(secretName.Name, "token") {
+			tokenSecretName = secretName.Name
+			break
+		}
+	}
+	if tokenSecretName == "" {
+		return "", errors.New("unable to find token secret name for service account" + kubeNamespace + "/" + ve.GetServiceAccountName())
+	}
+	secret := &corev1.Secret{}
+	err = kubeClient.Get(context, client.ObjectKey{
+		Namespace: kubeNamespace,
+		Name:      tokenSecretName,
+	}, secret)
+	if err != nil {
+		ve.log.Error(err, "unable to retrieve", "secret", client.ObjectKey{
+			Namespace: kubeNamespace,
+			Name:      tokenSecretName,
+		})
+		return "", err
+	}
+	if jwt, ok := secret.Data["token"]; ok {
+		return string(jwt), nil
+	} else {
+		return "", errors.New("unable to find \"token\" key in secret" + kubeNamespace + "/" + tokenSecretName)
+	}
 }
 
 func (ve *VaultEndpoint) GetVaultClient() *vault.Client {
@@ -106,25 +160,32 @@ func (ve *VaultEndpoint) Write(payload map[string]interface{}) error {
 	}
 	return nil
 }
-func (ve *VaultEndpoint) Delete() error {
-	_, err := ve.GetVaultClient().Logical().Delete(ve.GetPath())
+func (ve *VaultEndpoint) DeleteIfExists() error {
+	_, found, err := ve.Read()
 	if err != nil {
-		ve.log.Error(err, "unable to delete object at", "path", ve.GetPath())
+		ve.log.Error(err, "unable to read object at", "path", ve.GetPath())
 		return err
+	}
+	if found {
+		_, err := ve.GetVaultClient().Logical().Delete(ve.GetPath())
+		if err != nil {
+			ve.log.Error(err, "unable to delete object at", "path", ve.GetPath())
+			return err
+		}
 	}
 	return nil
 }
-func (ve *VaultEndpoint) CreateOrUpdate(payload map[string]interface{}) error {
+func (ve *VaultEndpoint) CreateOrUpdate() error {
 	currentPayload, found, err := ve.Read()
 	if err != nil {
 		ve.log.Error(err, "unable to read object at", "path", ve.GetPath())
 		return err
 	}
 	if !found {
-		return ve.Write(payload)
+		return ve.Write(ve.GetPayload())
 	} else {
 		if !ve.IsEquivalentToDesiredState(currentPayload) {
-			return ve.Write(payload)
+			return ve.Write(ve.GetPayload())
 		}
 	}
 	return nil

@@ -46,7 +46,7 @@ func (r *DatabaseSecretEngineConfig) ValidateCreate() error {
 	databasesecretengineconfiglog.Info("validate create", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
-	return r.validateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+	return r.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
@@ -57,7 +57,7 @@ func (r *DatabaseSecretEngineConfig) ValidateUpdate(old runtime.Object) error {
 	if r.Spec.Path != old.(*RandomSecret).Spec.Path {
 		return errors.New("spec.path cannot be updated")
 	}
-	return r.validateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+	return r.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
@@ -68,7 +68,7 @@ func (r *DatabaseSecretEngineConfig) ValidateDelete() error {
 	return nil
 }
 
-func (r *DatabaseSecretEngineConfig) validateEitherFromVaultSecretOrFromSecretOrFromRandomSecret() error {
+func (r *DatabaseSecretEngineConfig) ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret() error {
 	count := 0
 	if r.Spec.RootCredentialsFromRandomSecret != nil {
 		count++

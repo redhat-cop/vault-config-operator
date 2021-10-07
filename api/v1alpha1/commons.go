@@ -59,6 +59,10 @@ func (kc *KubeAuthConfiguration) GetKubeAuthPath() string {
 	return kc.Role
 }
 
+func (kc *KubeAuthConfiguration) GetServiceAccountName() string {
+	return kc.ServiceAccount.Name
+}
+
 func parseOrDie(val string) metav1.Duration {
 	d, err := time.ParseDuration(val)
 	if err != nil {

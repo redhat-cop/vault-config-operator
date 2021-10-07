@@ -17,9 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"errors"
 	"math/rand"
 	"time"
 
+	"github.com/hashicorp/hcl/v2/hclsimple"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	"github.com/scylladb/go-set/u8set"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,13 +48,17 @@ type RandomSecretSpec struct {
 	// SecretFormat specifies a map of key and password policies used to generate random values
 	// +kubebuilder:validation:Required
 	// +mapType=granular
-	SecretFormat map[string]PasswordPolicy
+	SecretFormat PasswordPolicy
 
 	// RefreshPeriod if specified, the operator will refresh the secret with the given frequency
 	// +kubebuilder:validation:Optional
 	RefreshPeriod metav1.Duration `json:"refreshPeriod,omitempty"`
 
-	calculatedSecret map[string]interface{}
+	// SecretKey is the key to be used for this secret when stored in Vault kv
+	// +kubebuilder:validation:Required
+	SecretKey string `json:"secretKey,omitempty"`
+
+	calculatedSecret string `json:"-"`
 }
 
 var _ vaultutils.VaultObject = &RandomSecret{}
@@ -61,7 +67,9 @@ func (d *RandomSecret) GetPath() string {
 	return string(d.Spec.Path) + "/" + d.Name
 }
 func (d *RandomSecret) GetPayload() map[string]interface{} {
-	return d.Spec.calculatedSecret
+	return map[string]interface{}{
+		d.Spec.SecretKey: d.Spec.calculatedSecret,
+	}
 }
 func (d *RandomSecret) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	return false
@@ -87,6 +95,9 @@ type RandomSecretStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+
+	//LastVaultSecretUpdate last time when this secret was updated in Vault
+	LastVaultSecretUpdate metav1.Time `json:"lastVaultSecretUpdate,omitempty"`
 }
 
 func (m *RandomSecret) GetConditions() []metav1.Condition {
@@ -133,7 +144,34 @@ type PasswordPolicyRule struct {
 	MinChars int    `hcl:"min-chars"`
 }
 
-func (d *RandomSecret) CalculateSecret(policy PasswordPolicyFormat, key string, attempts int) bool {
+func (d *RandomSecret) GenerateNewPassword(vaultEdnpoint *vaultutils.VaultEndpoint) error {
+	if d.Spec.SecretFormat.InlinePasswordPolicy != "" {
+		policy := &PasswordPolicyFormat{}
+		err := hclsimple.Decode(d.Spec.SecretKey, []byte(d.Spec.SecretFormat.InlinePasswordPolicy), nil, policy)
+		if err != nil {
+			return err
+		}
+		found := d.calculateSecret(policy, 10000)
+		if !found {
+			return errors.New("passowrd could not be generated, will retry...")
+		} else {
+			return nil
+		}
+	}
+	if d.Spec.SecretFormat.PasswordPolicyName != "" {
+		response, err := vaultEdnpoint.GetVaultClient().Logical().Read("/sys/policies/password/" + d.Spec.SecretFormat.PasswordPolicyName + "/generate")
+		if err != nil {
+			return err
+		} else {
+			d.Spec.calculatedSecret = response.Data["secret"].(string)
+			return nil
+		}
+	}
+	return errors.New("no passowrd polic methos specified")
+}
+
+func (d *RandomSecret) calculateSecret(policy *PasswordPolicyFormat, attempts int) bool {
+
 	filteredPasswordPolicyRules := []PasswordPolicyRule{}
 	for i := range policy.Rules {
 		if policy.Rules[i].RuleType == "charset" {
@@ -171,7 +209,7 @@ func (d *RandomSecret) CalculateSecret(policy PasswordPolicyFormat, key string, 
 		}
 	}
 	if valid {
-		d.Spec.calculatedSecret[key] = randomString
+		d.Spec.calculatedSecret = randomString
 	}
 	return valid
 }

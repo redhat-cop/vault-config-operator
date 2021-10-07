@@ -46,7 +46,7 @@ func (r *VaultRole) ValidateCreate() error {
 	vaultrolelog.Info("validate create", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
-	return r.validateEitherTargetNamespaceSelectorOrTargetNamespace()
+	return r.ValidateEitherTargetNamespaceSelectorOrTargetNamespace()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
@@ -57,7 +57,7 @@ func (r *VaultRole) ValidateUpdate(old runtime.Object) error {
 	if r.Spec.Path != old.(*SecretEngineMount).Spec.Path {
 		return errors.New("spec.path cannot be updated")
 	}
-	return r.validateEitherTargetNamespaceSelectorOrTargetNamespace()
+	return r.ValidateEitherTargetNamespaceSelectorOrTargetNamespace()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
@@ -68,7 +68,7 @@ func (r *VaultRole) ValidateDelete() error {
 	return nil
 }
 
-func (r *VaultRole) validateEitherTargetNamespaceSelectorOrTargetNamespace() error {
+func (r *VaultRole) ValidateEitherTargetNamespaceSelectorOrTargetNamespace() error {
 	count := 0
 	if r.Spec.TargetNamespaceSelector != nil {
 		count++

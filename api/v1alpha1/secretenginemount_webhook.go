@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	"errors"
+	"reflect"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -57,8 +58,13 @@ func (r *SecretEngineMount) ValidateUpdate(old runtime.Object) error {
 	if r.Spec.Path != old.(*SecretEngineMount).Spec.Path {
 		return errors.New("spec.path cannot be updated")
 	}
-	if r.Spec.Type != old.(*SecretEngineMount).Spec.Type {
-		return errors.New("spec.type cannot be updated")
+	// only mount config can be modified
+	oldMount := old.(*SecretEngineMount).Spec.Mount
+	newMount := r.Spec.Mount
+	oldMount.Config = MountConfig{}
+	newMount.Config = MountConfig{}
+	if !reflect.DeepEqual(oldMount, newMount) {
+		return errors.New("only .spec.config can be modified")
 	}
 	return nil
 }

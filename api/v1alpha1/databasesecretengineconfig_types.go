@@ -142,6 +142,11 @@ func (m *DatabaseSecretEngineConfig) SetConditions(conditions []metav1.Condition
 	m.Status.Conditions = conditions
 }
 
+func (m *DatabaseSecretEngineConfig) SetUsernameAndPassword(username string, password string) {
+	m.Spec.DBSEConfig.retrievedUsername = username
+	m.Spec.DBSEConfig.retrievedPassword = password
+}
+
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 

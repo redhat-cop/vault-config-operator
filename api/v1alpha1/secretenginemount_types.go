@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"reflect"
 	"strconv"
 
 	vault "github.com/hashicorp/vault/api"
@@ -42,6 +43,10 @@ type SecretEngineMountSpec struct {
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path /sys/mounts/{[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
 	// +kubebuilder:validation:Required
 	Path Path `json:"path,omitempty"`
+}
+
+func (d *SecretEngineMount) GetPath() string {
+	return string(d.Spec.Path) + "/" + d.Name
 }
 
 // +k8s:openapi-gen=true
@@ -181,7 +186,7 @@ func init() {
 	SchemeBuilder.Register(&SecretEngineMount{}, &SecretEngineMountList{})
 }
 
-func FromMountConfigOutput(mountConfigOutput *vault.MountConfigOutput) *MountConfig {
+func fromMountConfigOutput(mountConfigOutput *vault.MountConfigOutput) *MountConfig {
 	return &MountConfig{
 		DefaultLeaseTTL:           strconv.Itoa(mountConfigOutput.DefaultLeaseTTL),
 		MaxLeaseTTL:               strconv.Itoa(mountConfigOutput.MaxLeaseTTL),
@@ -211,18 +216,6 @@ func (mountConfig *MountConfig) getMountConfigInputFromMountConfig() *vault.Moun
 	}
 }
 
-func FromMountOutput(mountOutput *vault.MountOutput) *Mount {
-	return &Mount{
-		Type:                  mountOutput.Type,
-		Description:           mountOutput.Description,
-		Config:                *FromMountConfigOutput(&mountOutput.Config),
-		Local:                 mountOutput.Local,
-		SealWrap:              mountOutput.SealWrap,
-		ExternalEntropyAccess: mountOutput.ExternalEntropyAccess,
-		Options:               mountOutput.Options,
-	}
-}
-
 func (mount *Mount) GetMountInputFromMount() *vault.MountInput {
 	return &vault.MountInput{
 		Type:                  mount.Type,
@@ -233,4 +226,9 @@ func (mount *Mount) GetMountInputFromMount() *vault.MountInput {
 		ExternalEntropyAccess: mount.ExternalEntropyAccess,
 		Options:               mount.Options,
 	}
+}
+
+func (mountConfig *MountConfig) IsEquivalentTo(secretEngineMount *vault.MountConfigOutput) bool {
+	currentMountConfig := fromMountConfigOutput(secretEngineMount)
+	return reflect.DeepEqual(currentMountConfig, mountConfig)
 }

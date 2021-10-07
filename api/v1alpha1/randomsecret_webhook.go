@@ -80,29 +80,23 @@ func (r *RandomSecret) validate() error {
 }
 
 func (r *RandomSecret) validateEitherPasswordPolicyReferenceOrInline() error {
-	result := &multierror.Error{}
-	for key, value := range r.Spec.SecretFormat {
-		count := 0
-		if value.InlinePasswordPolicy != "" {
-			count++
-		}
-		if value.PasswordPolicyName != "" {
-			count++
-		}
-		if count > 1 {
-			result = multierror.Append(result, errors.New("only one of InlinePasswordPolicy or PasswordPolicyName can be defined in key: "+key))
-		}
+	count := 0
+	if r.Spec.SecretFormat.InlinePasswordPolicy != "" {
+		count++
 	}
-	return result.ErrorOrNil()
+	if r.Spec.SecretFormat.PasswordPolicyName != "" {
+		count++
+	}
+	if count > 1 {
+		return errors.New("only one of InlinePasswordPolicy or PasswordPolicyName can be defined")
+	}
+	return nil
 }
 
 func (r *RandomSecret) validateInlinePasswordPolicyFormat() error {
-	result := &multierror.Error{}
-	for key, value := range r.Spec.SecretFormat {
-		if value.InlinePasswordPolicy != "" {
-			passwordPolicyFormat := &PasswordPolicyFormat{}
-			result = multierror.Append(result, hclsimple.Decode(key, []byte(value.InlinePasswordPolicy), nil, passwordPolicyFormat))
-		}
+	if r.Spec.SecretFormat.InlinePasswordPolicy != "" {
+		passwordPolicyFormat := &PasswordPolicyFormat{}
+		return hclsimple.Decode(r.Spec.SecretKey, []byte(r.Spec.SecretFormat.InlinePasswordPolicy), nil, passwordPolicyFormat)
 	}
-	return result.ErrorOrNil()
+	return nil
 }
