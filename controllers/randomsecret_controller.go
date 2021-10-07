@@ -110,7 +110,7 @@ func (r *RandomSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	if instance.Spec.RefreshPeriod.Size() > 0 {
-		r.ManageSuccessWithRequeue(ctx, instance, instance.Spec.RefreshPeriod.Duration)
+		return r.ManageSuccessWithRequeue(ctx, instance, instance.Spec.RefreshPeriod.Duration)
 	}
 	return r.ManageSuccess(ctx, instance)
 }
