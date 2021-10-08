@@ -48,7 +48,7 @@ type RandomSecretSpec struct {
 	// SecretFormat specifies a map of key and password policies used to generate random values
 	// +kubebuilder:validation:Required
 	// +mapType=granular
-	SecretFormat PasswordPolicy
+	SecretFormat PasswordPolicy `json:"secretFormat,omitempty"`
 
 	// RefreshPeriod if specified, the operator will refresh the secret with the given frequency
 	// +kubebuilder:validation:Optional

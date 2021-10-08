@@ -17,6 +17,7 @@ limitations under the License.
 package controllers
 
 import (
+	"bytes"
 	"context"
 	"errors"
 
@@ -29,9 +30,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
@@ -117,6 +121,60 @@ func (r *DatabaseSecretEngineConfigReconciler) Reconcile(ctx context.Context, re
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
+
+	// this will filter routes that have the annotation and on update only if the annotation is changed.
+	isBasicAuthSecret := predicate.Funcs{
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			newSecret, ok := e.ObjectNew.DeepCopyObject().(*corev1.Secret)
+			if !ok || newSecret.Type == "kubernetes.io/basic-auth" {
+				return false
+			}
+			oldSecret, ok := e.ObjectOld.DeepCopyObject().(*corev1.Secret)
+			if !ok {
+				return true
+			}
+			return bytes.Compare(oldSecret.Data["username"], newSecret.Data["username"]) != 0 || bytes.Compare(oldSecret.Data["password"], newSecret.Data["password"]) != 0
+		},
+		CreateFunc: func(e event.CreateEvent) bool {
+			newSecret, ok := e.Object.DeepCopyObject().(*corev1.Secret)
+			if !ok || newSecret.Type == "kubernetes.io/basic-auth" {
+				return false
+			}
+			return true
+		},
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			return false
+		},
+
+		GenericFunc: func(e event.GenericEvent) bool {
+			return false
+		},
+	}
+
+	isUpdatedRandomSecret := predicate.Funcs{
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			newSecret, ok := e.ObjectNew.DeepCopyObject().(*redhatcopv1alpha1.RandomSecret)
+			if !ok {
+				return false
+			}
+			oldSecret, ok := e.ObjectOld.DeepCopyObject().(*redhatcopv1alpha1.RandomSecret)
+			if !ok {
+				return true
+			}
+			return !newSecret.Status.LastVaultSecretUpdate.Time.Equal(oldSecret.Status.LastVaultSecretUpdate.Time)
+		},
+		CreateFunc: func(e event.CreateEvent) bool {
+			return true
+		},
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			return false
+		},
+
+		GenericFunc: func(e event.GenericEvent) bool {
+			return false
+		},
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&redhatcopv1alpha1.DatabaseSecretEngineConfig{}).
 		Watches(&source.Kind{Type: &corev1.Secret{
@@ -140,7 +198,7 @@ func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 				})
 			}
 			return res
-		})).
+		}), builder.WithPredicates(isBasicAuthSecret)).
 		Watches(&source.Kind{Type: &redhatcopv1alpha1.RandomSecret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Namespace",
@@ -162,7 +220,7 @@ func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 				})
 			}
 			return res
-		})).
+		}), builder.WithPredicates(isUpdatedRandomSecret)).
 		Complete(r)
 }
 
