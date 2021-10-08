@@ -4,8 +4,6 @@
 resources:
 - bases/redhatcop.redhat.io_vaultroles.yaml
 - bases/redhatcop.redhat.io_policies.yaml
-- bases/redhatcop.redhat.io_secretengines.yaml
-- bases/redhatcop.redhat.io_secretengineroles.yaml
 - bases/redhatcop.redhat.io_secretenginemounts.yaml
 - bases/redhatcop.redhat.io_databasesecretengineconfigs.yaml
 - bases/redhatcop.redhat.io_databasesecretengineroles.yaml

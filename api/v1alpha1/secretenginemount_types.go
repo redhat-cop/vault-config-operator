@@ -111,13 +111,13 @@ type MountConfig struct {
 	// AuditNonHMACRequestKeys list of keys that will not be HMAC'd by audit devices in the request data object.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	// +kubebuilder:validation:UniqueItems=true
+	// kubebuilder:validation:UniqueItems=true
 	AuditNonHMACRequestKeys []string `json:"auditNonHMACRequestKeys,omitempty"`
 
 	// AuditNonHMACResponseKeys list of keys that will not be HMAC'd by audit devices in the response data object.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	// +kubebuilder:validation:UniqueItems=true
+	// kubebuilder:validation:UniqueItems=true
 	AuditNonHMACResponseKeys []string `json:"auditNonHMACResponseKeys,omitempty"`
 
 	// ListingVisibility Specifies whether to show this mount in the UI-specific listing endpoint. Valid values are "unauth" or "hidden". If not set, behaves like "hidden"
@@ -129,13 +129,13 @@ type MountConfig struct {
 	// PassthroughRequestHeaders list of headers to whitelist and pass from the request to the plugin.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	// +kubebuilder:validation:UniqueItems=true
+	// kubebuilder:validation:UniqueItems=true
 	PassthroughRequestHeaders []string `json:"passthroughRequestHeaders,omitempty"`
 
 	// AllowedResponseHeaders list of headers to whitelist, allowing a plugin to include them in the response.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	// +kubebuilder:validation:UniqueItems=true
+	// kubebuilder:validation:UniqueItems=true
 	AllowedResponseHeaders []string `json:"allowedResponseHeaders,omitempty"`
 
 	// TokenType undocumented

@@ -30,8 +30,8 @@ type Path string
 type KubeAuthConfiguration struct {
 	// ServiceAccount is the service account used for the kube auth authentication
 	// +kubebuilder:validation:Required
-	// +kubebuilder:default="{Name: &#34;default&#34;}"
-	ServiceAccount corev1.LocalObjectReference `json:"serviceAccount,omitempty"`
+	// kubebuilder:default=`{Name: &#34;default&#34;}``
+	ServiceAccount *corev1.LocalObjectReference `json:"serviceAccount,omitempty"`
 
 	// Path is the path of the role used for this kube auth authentication
 	// +kubebuilder:validation:Required

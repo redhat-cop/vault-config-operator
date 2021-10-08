@@ -62,9 +62,8 @@ spec:
                     description: Role the role to be used during authentication
                     type: string
                   serviceAccount:
-                    default: '{Name: &#34;default&#34;}'
-                    description: ServiceAccount is the service account used for the
-                      kube auth authentication
+                    description: 'ServiceAccount is the service account used for the
+                      kube auth authentication kubebuilder:default=`{Name: &#34;default&#34;}``'
                     properties:
                       name:
                         description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
@@ -81,12 +80,11 @@ spec:
                 type: string
               policies:
                 description: Policies is a list of policy names to be bound to this
-                  role.
+                  role. kubebuilder:validation:UniqueItems=true
                 items:
                   type: string
                 minItems: 1
                 type: array
-                uniqueItems: true
               targetNamespaces:
                 description: TargetNamespaces specifies how to retrieve the namespaces
                   bound to this Vault role.
@@ -140,32 +138,29 @@ spec:
                   targetNamespaces:
                     description: TargetNamespaces is a list of namespace from which
                       service accounts will receive this role. Either TargetNamespaceSelector
-                      or TargetNamespaces can be specified.
+                      or TargetNamespaces can be specified. kubebuilder:validation:UniqueItems=true
                     items:
                       type: string
                     minItems: 1
                     type: array
-                    uniqueItems: true
                     x-kubernetes-list-type: set
                 type: object
               targetServiceAccounts:
                 default:
                 - default
                 description: TargetServiceAccounts is a list of service account names
-                  that will receive this role
+                  that will receive this role kubebuilder:validation:UniqueItems=true
                 items:
                   type: string
                 minItems: 1
                 type: array
-                uniqueItems: true
               tokenBoundCIDRs:
                 description: TokenBoundCIDRs List of CIDR blocks; if set, specifies
                   blocks of IP addresses which can authenticate successfully, and
-                  ties the resulting token to these blocks as well.
+                  ties the resulting token to these blocks as well. kubebuilder:validation:UniqueItems=true
                 items:
                   type: string
                 type: array
-                uniqueItems: true
                 x-kubernetes-list-type: set
               tokenExplicitMaxTTL:
                 default: 0

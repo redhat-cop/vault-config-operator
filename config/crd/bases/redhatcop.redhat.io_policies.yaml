@@ -54,9 +54,8 @@ spec:
                     description: Role the role to be used during authentication
                     type: string
                   serviceAccount:
-                    default: '{Name: &#34;default&#34;}'
-                    description: ServiceAccount is the service account used for the
-                      kube auth authentication
+                    description: 'ServiceAccount is the service account used for the
+                      kube auth authentication kubebuilder:default=`{Name: &#34;default&#34;}``'
                     properties:
                       name:
                         description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names

@@ -182,7 +182,7 @@ vault write [namespace/]postgresql-vault-demo/database/config/my-postgresql-data
 
 ## DatabaseSecretEngineRole
 
-The `DatabaseSecretEngineRole` CRD allows a user to create a Database Secret Engine Role, here is an example: 
+The `DatabaseSecretEngineRole` CRD allows a user to create a Database Secret Engine Role, here is an example:
 
 ```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
@@ -247,4 +247,226 @@ This CR is roughly equivalent to this Vault CLI command:
 
 ```shell
 vault kv put [namespace/]kv/vault-tenant password=<generated value>
+```
+
+## Metrics
+
+Prometheus compatible metrics are exposed by the Operator and can be integrated into OpenShift's default cluster monitoring. To enable OpenShift cluster monitoring, label the namespace the operator is deployed in with the label `openshift.io/cluster-monitoring="true"`.
+
+```shell
+oc label namespace <namespace> openshift.io/cluster-monitoring="true"
+```
+
+### Testing metrics
+
+```sh
+export operatorNamespace=vault-config-operator-local # or vault-config-operator
+oc label namespace ${operatorNamespace} openshift.io/cluster-monitoring="true"
+oc rsh -n openshift-monitoring -c prometheus prometheus-k8s-0 /bin/bash
+export operatorNamespace=vault-config-operator-local # or vault-config-operator
+curl -v -s -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://vault-config-operator-controller-manager-metrics.${operatorNamespace}.svc.cluster.local:8443/metrics
+exit
+```
+
+## Deploying the Operator
+
+This is a cluster-level operator that you can deploy in any namespace, `vault-config-operator` is recommended.
+
+It is recommended to deploy this operator via [`OperatorHub`](https://operatorhub.io/), but you can also deploy it using [`Helm`](https://helm.sh/).
+
+### Multiarch Support
+
+| Arch  | Support  |
+|:-:|:-:|
+| amd64  | ✅ |
+| arm64  | ✅  |
+| ppc64le  | ✅  |
+| s390x  | ❌  |
+
+### Deploying from OperatorHub
+
+> **Note**: This operator supports being installed disconnected environments
+
+If you want to utilize the Operator Lifecycle Manager (OLM) to install this operator, you can do so in two ways: from the UI or the CLI.
+
+#### Deploying from OperatorHub UI
+
+* If you would like to launch this operator from the UI, you'll need to navigate to the OperatorHub tab in the console. Before starting, make sure you've created the namespace that you want to install this operator to with the following:
+
+```shell
+oc new-project vault-config-operator
+```
+
+* Once there, you can search for this operator by name: `vault config operator`. This will then return an item for our operator and you can select it to get started. Once you've arrived here, you'll be presented with an option to install, which will begin the process.
+* After clicking the install button, you can then select the namespace that you would like to install this to as well as the installation strategy you would like to proceed with (`Automatic` or `Manual`).
+* Once you've made your selection, you can select `Subscribe` and the installation will begin. After a few moments you can go ahead and check your namespace and you should see the operator running.
+
+![Cert Utils Operator](./media/vault-config-operator.png)
+
+#### Deploying from OperatorHub using CLI
+
+If you'd like to launch this operator from the command line, you can use the manifests contained in this repository by running the following:
+
+oc new-project vault-config-operator
+
+```shell
+oc apply -f config/operatorhub -n vault-config-operator
+```
+
+This will create the appropriate OperatorGroup and Subscription and will trigger OLM to launch the operator in the specified namespace.
+
+### Deploying with Helm
+
+Here are the instructions to install the latest release with Helm.
+
+```shell
+oc new-project vault-config-operator
+helm repo add vault-config-operator https://redhat-cop.github.io/vault-config-operator
+helm repo update
+helm install vault-config-operator vault-config-operator/vault-config-operator
+```
+
+This can later be updated with the following commands:
+
+```shell
+helm repo update
+helm upgrade vault-config-operator vault-config-operator/vault-config-operator
+```
+
+## Development
+
+## Running the operator locally
+
+### Deploy a Vault instance
+
+If you don't have a Vault instance available for testing, deploy one with these steps:
+
+```shell
+helm repo add hashicorp https://helm.releases.hashicorp.com
+export cluster_base_domain=$(oc get dns cluster -o jsonpath='{.spec.baseDomain}')
+envsubst < ./config/local-development/vault-values.yaml > /tmp/values
+helm upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f /tmp/values
+
+INIT_RESPONSE=$(oc exec vault-0 -n vault -- vault operator init -address https://vault-internal.vault.svc:8200 -ca-path /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt -format=json -key-shares 1 -key-threshold 1)
+
+UNSEAL_KEY=$(echo "$INIT_RESPONSE" | jq -r .unseal_keys_b64[0])
+ROOT_TOKEN=$(echo "$INIT_RESPONSE" | jq -r .root_token)
+
+echo "$UNSEAL_KEY"
+echo "$ROOT_TOKEN"
+
+#here we are saving these variable in a secret, this is probably not what you should do in a production environment
+oc delete secret vault-init -n vault
+oc create secret generic vault-init -n vault --from-literal=unseal_key=${UNSEAL_KEY} --from-literal=root_token=${ROOT_TOKEN}
+export UNSEAL_KEY=$(oc get secret vault-init -n vault -o jsonpath='{.data.unseal_key}' | base64 -d )
+export ROOT_TOKEN=$(oc get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d )
+oc exec vault-0 -n vault -- vault operator unseal -address https://vault-internal.vault.svc:8200 -ca-path /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt $UNSEAL_KEY
+```
+
+### Configure an Kubernetes Authentication mount point
+
+All the configuration made by the operator need to authenticate via a Kubernetes Authentication. So you need a root Kubernetes Authentication mount point and role. The you can create more roles via the operator.
+If you don't have a root mount point and role, you can create them as follows:
+
+```shell
+oc new-project vault-admin
+export cluster_base_domain=$(oc get dns cluster -o jsonpath='{.spec.baseDomain}')
+export VAULT_ADDR=https://vault-vault.apps.${cluster_base_domain}
+export VAULT_TOKEN=$(oc get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d )
+# this policy is intentionally broad to allow to test anything in Vault. In a real life scenario this policy would be scoped down.
+vault policy write -tls-skip-verify vault-admin  ./config/local-development/vault-admin-policy.hcl
+vault auth enable -tls-skip-verify kubernetes
+export sa_secret_name=$(oc get sa default -n vault -o jsonpath='{.secrets[*].name}' | grep -o '\b\w*\-token-\w*\b')
+oc get secret ${sa_secret_name} -n vault -o jsonpath='{.data.ca\.crt}' | base64 -d > /tmp/ca.crt
+vault write -tls-skip-verify auth/kubernetes/config token_reviewer_jwt="$(oc serviceaccounts get-token vault -n vault)" kubernetes_host=https://kubernetes.default.svc:443 kubernetes_ca_cert=@/tmp/ca.crt
+vault write -tls-skip-verify auth/kubernetes/role/policy-admin bound_service_account_names=default bound_service_account_namespaces=vault-admin policies=vault-admin ttl=1h
+```
+
+### Run the operator
+
+```shell
+make install
+oc new-project vault-config-operator-local
+kustomize build ./config/local-development | oc apply -f - -n vault-config-operator-local
+export token=$(oc serviceaccounts get-token 'vault-config-controller-manager' -n vault-config-operator-local)
+oc login --token ${token}
+export VAULT_ADDR=https://vault-vault.apps.${cluster_base_domain}
+unset VAULT_TOKEN
+make run ENABLE_WEBHOOKS=false
+```
+
+### Test helm chart locally
+
+Define an image and tag. For example...
+
+```shell
+export imageRepository="quay.io/redhat-cop/vault-config-operator"
+export imageTag="$(git -c 'versionsort.suffix=-' ls-remote --exit-code --refs --sort='version:refname' --tags https://github.com/redhat-cop/vault-config-operator.git '*.*.*' | tail --lines=1 | cut --delimiter='/' --fields=3)"
+```
+
+Deploy chart...
+
+```shell
+make helmchart IMG=${imageRepository} VERSION=${imageTag}
+helm upgrade -i vault-config-operator-local charts/vault-config-operator -n vault-config-operator-local --create-namespace
+```
+
+Delete...
+
+```shell
+helm delete vault-config-operator-local -n vault-config-operator-local
+kubectl delete -f charts/vault-config-operator/crds/crds.yaml
+```
+
+## Building/Pushing the operator image
+
+```shell
+export repo=raffaelespazzoli #replace with yours
+docker login quay.io/$repo
+make docker-build IMG=quay.io/$repo/vault-config-operator:latest
+make docker-push IMG=quay.io/$repo/vault-config-operator:latest
+```
+
+## Deploy to OLM via bundle
+
+```shell
+make manifests
+make bundle IMG=quay.io/$repo/vault-config-operator:latest
+operator-sdk bundle validate ./bundle --select-optional name=operatorhub
+make bundle-build BUNDLE_IMG=quay.io/$repo/vault-config-operator-bundle:latest
+docker push quay.io/$repo/vault-config-operator-bundle:latest
+operator-sdk bundle validate quay.io/$repo/vault-config-operator-bundle:latest --select-optional name=operatorhub
+oc new-project vault-config-operator
+oc label namespace vault-config-operator openshift.io/cluster-monitoring="true"
+operator-sdk cleanup vault-config-operator -n vault-config-operator
+operator-sdk run bundle --install-mode AllNamespaces -n vault-config-operator quay.io/$repo/vault-config-operator-bundle:latest
+```
+
+## Releasing
+
+```shell
+git tag -a "<tagname>" -m "<commit message>"
+git push upstream <tagname>
+```
+
+If you need to remove a release:
+
+```shell
+git tag -d <tagname>
+git push upstream --delete <tagname>
+```
+
+If you need to "move" a release to the current main
+
+```shell
+git tag -f <tagname>
+git push upstream -f <tagname>
+```
+
+### Cleaning up
+
+```shell
+operator-sdk cleanup vault-config-operator -n vault-config-operator
+oc delete operatorgroup operator-sdk-og
+oc delete catalogsource vault-config-operator-catalog
 ```

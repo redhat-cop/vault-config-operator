@@ -54,7 +54,7 @@ type TargetNamespaceConfig struct {
 	// TargetNamespaces is a list of namespace from which service accounts will receive this role. Either TargetNamespaceSelector or TargetNamespaces can be specified.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:UniqueItems=true
+	// kubebuilder:validation:UniqueItems=true
 	// +listType=set
 	TargetNamespaces []string `json:"targetNamespaces,omitempty"`
 }
@@ -77,13 +77,13 @@ type VRole struct {
 	// TargetServiceAccounts is a list of service account names that will receive this role
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:UniqueItems=true
+	// kubebuilder:validation:UniqueItems=true
 	// +kubebuilder:default={"default"}
 	TargetServiceAccounts []string `json:"targetServiceAccounts"`
 
 	// Policies is a list of policy names to be bound to this role.
 	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:UniqueItems=true
+	// kubebuilder:validation:UniqueItems=true
 	// +kubebuilder:validation:Required
 	Policies []string `json:"policies"`
 
@@ -104,7 +104,7 @@ type VRole struct {
 	// TokenBoundCIDRs List of CIDR blocks; if set, specifies blocks of IP addresses which can authenticate successfully, and ties the resulting token to these blocks as well.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	// +kubebuilder:validation:UniqueItems=true
+	// kubebuilder:validation:UniqueItems=true
 	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty"`
 
 	// TokenExplicitMaxTTL If set, will encode an explicit max TTL onto the token. This is a hard cap even if token_ttl and token_max_ttl would otherwise allow a renewal.

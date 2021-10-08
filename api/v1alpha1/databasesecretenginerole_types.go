@@ -75,25 +75,25 @@ type DBSERole struct {
 	// CreationStatements Specifies the database statements executed to create and configure a user. See the plugin's API page for more information on support and formatting for this parameter.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	// +kubebuilder:validation:UniqueItems=true
+	// kubebuilder:validation:UniqueItems=true
 	CreationStatements []string `json:"creationStatements,omitempty"`
 
 	// RevocationStatements Specifies the database statements to be executed to revoke a user. See the plugin's API page for more information on support and formatting for this parameter.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	// +kubebuilder:validation:UniqueItems=true
+	// kubebuilder:validation:UniqueItems=true
 	RevocationStatements []string `json:"revocationStatements,omitempty"`
 
 	// RollbackStatements Specifies the database statements to be executed to rollback a create operation in the event of an error. Not every plugin type will support this functionality. See the plugin's API page for more information on support and formatting for this parameter.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	// +kubebuilder:validation:UniqueItems=true
+	// kubebuilder:validation:UniqueItems=true
 	RollbackStatements []string `json:"rollbackStatements,omitempty"`
 
 	// RenewStatements Specifies the database statements to be executed to renew a user. Not every plugin type will support this functionality. See the plugin's API page for more information on support and formatting for this parameter.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	// +kubebuilder:validation:UniqueItems=true
+	// kubebuilder:validation:UniqueItems=true
 	RenewStatements []string `json:"renewStatements,omitempty"`
 }
 

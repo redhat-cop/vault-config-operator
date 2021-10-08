@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vault-config-operator.fullname" . }}
+  labels:
+    {{- include "vault-config-operator.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "vault-config-operator.selectorLabels" . | nindent 6 }}
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "vault-config-operator.selectorLabels" . | nindent 8 }}
+        operator: vault-config-operator
+    spec:
+      serviceAccountName: vault-config-operator-controller-manager
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}   
+      containers:
+      - args:
+        - --secure-listen-address=0.0.0.0:8443
+        - --upstream=http://127.0.0.1:8080/
+        - --logtostderr=true
+        - --tls-cert-file=/etc/certs/tls/tls.crt
+        - --tls-private-key-file=/etc/certs/tls/tls.key
+        - --v=10
+        image: "{{ .Values.kube_rbac_proxy.image.repository }}:{{ .Values.kube_rbac_proxy.image.tag }}"
+        name: kube-rbac-proxy
+        ports:
+        - containerPort: 8443
+          name: https
+        volumeMounts:
+        - mountPath: /etc/certs/tls
+          name: tls-cert
+        imagePullPolicy: {{ .Values.kube_rbac_proxy.image.pullPolicy }}
+        resources:
+          {{- toYaml .Values.kube_rbac_proxy.resources | nindent 10 }}
+      - command:
+        - /manager
+        args:
+        - --leader-elect
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        {{- with .Values.env }}
+        env:
+         {{- toYaml . | nindent 8 }}
+        {{- end }}        
+        name: {{ .Chart.Name }}
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: tls-cert
+        secret:
+          defaultMode: 420
+          secretName: vault-config-operator-certs      
