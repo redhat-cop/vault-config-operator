@@ -70,13 +70,13 @@ func (r *DatabaseSecretEngineConfig) ValidateDelete() error {
 
 func (r *DatabaseSecretEngineConfig) ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret() error {
 	count := 0
-	if r.Spec.RootCredentialsFromRandomSecret != nil {
+	if r.Spec.RootCredentials.RandomSecret != nil {
 		count++
 	}
-	if r.Spec.RootCredentialsFromSecret != nil {
+	if r.Spec.RootCredentials.Secret != nil {
 		count++
 	}
-	if r.Spec.RootCredentialsFromVaultSecret != nil {
+	if r.Spec.RootCredentials.VaultSecret != nil {
 		count++
 	}
 	if count > 1 {

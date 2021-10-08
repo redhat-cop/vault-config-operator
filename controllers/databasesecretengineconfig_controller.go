@@ -235,7 +235,7 @@ func (r *DatabaseSecretEngineConfigReconciler) findApplicableBDSCForSecret(secre
 		return nil, err
 	}
 	for _, vr := range vrl.Items {
-		if vr.Spec.RootCredentialsFromSecret != nil && vr.Spec.RootCredentialsFromSecret.Name == secret.Name {
+		if vr.Spec.RootCredentials.Secret != nil && vr.Spec.RootCredentials.Secret.Name == secret.Name {
 			result = append(result, vr)
 		}
 	}
@@ -252,7 +252,7 @@ func (r *DatabaseSecretEngineConfigReconciler) findApplicableDBSCForRandomSecret
 		return nil, err
 	}
 	for _, vr := range vrl.Items {
-		if vr.Spec.RootCredentialsFromRandomSecret != nil && vr.Spec.RootCredentialsFromRandomSecret.Name == randomSecret.Name {
+		if vr.Spec.RootCredentials.RandomSecret != nil && vr.Spec.RootCredentials.RandomSecret.Name == randomSecret.Name {
 			result = append(result, vr)
 		}
 	}
@@ -297,11 +297,11 @@ func (r *DatabaseSecretEngineConfigReconciler) manageCleanUpLogic(context contex
 }
 
 func (r *DatabaseSecretEngineConfigReconciler) setInternalCredentials(context context.Context, instance *redhatcopv1alpha1.DatabaseSecretEngineConfig, vaultEndpoint *vaultutils.VaultEndpoint) error {
-	if instance.Spec.RootCredentialsFromRandomSecret != nil {
+	if instance.Spec.RootCredentials.RandomSecret != nil {
 		randomSecret := &redhatcopv1alpha1.RandomSecret{}
 		err := r.GetClient().Get(context, types.NamespacedName{
 			Namespace: instance.Namespace,
-			Name:      instance.Spec.RootCredentialsFromRandomSecret.Name,
+			Name:      instance.Spec.RootCredentials.RandomSecret.Name,
 		}, randomSecret)
 		if err != nil {
 			r.Log.Error(err, "unable to retrieve RandomSecret", "instance", instance)
@@ -315,11 +315,11 @@ func (r *DatabaseSecretEngineConfigReconciler) setInternalCredentials(context co
 		instance.SetUsernameAndPassword(instance.Spec.Username, secret.Data[randomSecret.Spec.SecretKey].(string))
 		return nil
 	}
-	if instance.Spec.RootCredentialsFromSecret != nil {
+	if instance.Spec.RootCredentials.Secret != nil {
 		secret := &corev1.Secret{}
 		err := r.GetClient().Get(context, types.NamespacedName{
 			Namespace: instance.Namespace,
-			Name:      instance.Spec.RootCredentialsFromRandomSecret.Name,
+			Name:      instance.Spec.RootCredentials.RandomSecret.Name,
 		}, secret)
 		if err != nil {
 			r.Log.Error(err, "unable to retrieve Secret", "instance", instance)
@@ -332,7 +332,7 @@ func (r *DatabaseSecretEngineConfigReconciler) setInternalCredentials(context co
 		}
 		return nil
 	}
-	if instance.Spec.RootCredentialsFromVaultSecret != nil {
+	if instance.Spec.RootCredentials.VaultSecret != nil {
 		secret, err := vaultEndpoint.GetVaultClient().Logical().Read(string(instance.Spec.Path))
 		if err != nil {
 			r.Log.Error(err, "unable to retrieve vault secret", "instance", instance)

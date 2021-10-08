@@ -41,6 +41,12 @@ type VaultRoleSpec struct {
 
 	VRole `json:",inline"`
 
+	// TargetNamespaces specifies how to retrieve the namespaces bound to this Vault role.
+	// +kubebuilder:validation:Required
+	TargetNamespaces TargetNamespaceConfig `json:"targetNamespaces,omitempty"`
+}
+
+type TargetNamespaceConfig struct {
 	// TargetNamespaceSelector is a selector of namespaces from which service accounts will receove this role. Either TargetNamespaceSelector or TargetNamespaces can be specified
 	// +kubebuilder:validation:Optional
 	TargetNamespaceSelector *metav1.LabelSelector `json:"targetNamespaceSelector,omitempty"`

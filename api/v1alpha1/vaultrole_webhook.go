@@ -70,10 +70,10 @@ func (r *VaultRole) ValidateDelete() error {
 
 func (r *VaultRole) ValidateEitherTargetNamespaceSelectorOrTargetNamespace() error {
 	count := 0
-	if r.Spec.TargetNamespaceSelector != nil {
+	if r.Spec.TargetNamespaces.TargetNamespaceSelector != nil {
 		count++
 	}
-	if r.Spec.TargetNamespaces != nil {
+	if r.Spec.TargetNamespaces.TargetNamespaces != nil {
 		count++
 	}
 	if count > 1 {

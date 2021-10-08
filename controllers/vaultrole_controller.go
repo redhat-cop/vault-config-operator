@@ -155,10 +155,10 @@ func (r *VaultRoleReconciler) findApplicableVaultRoles(namespace *corev1.Namespa
 		return []redhatcopv1alpha1.VaultRole{}, err
 	}
 	for _, vr := range vrl.Items {
-		if vr.Spec.TargetNamespaceSelector != nil {
-			labelSelector, err := metav1.LabelSelectorAsSelector(vr.Spec.TargetNamespaceSelector)
+		if vr.Spec.TargetNamespaces.TargetNamespaceSelector != nil {
+			labelSelector, err := metav1.LabelSelectorAsSelector(vr.Spec.TargetNamespaces.TargetNamespaceSelector)
 			if err != nil {
-				r.Log.Error(err, "unable to create selector from label selector", "selector", vr.Spec.TargetNamespaceSelector)
+				r.Log.Error(err, "unable to create selector from label selector", "selector", vr.Spec.TargetNamespaces.TargetNamespaceSelector)
 				return []redhatcopv1alpha1.VaultRole{}, err
 			}
 			labelsAslabels := labels.Set(namespace.GetLabels())
@@ -173,9 +173,9 @@ func (r *VaultRoleReconciler) findApplicableVaultRoles(namespace *corev1.Namespa
 func (r *VaultRoleReconciler) findSelectedNamespaceNames(context context.Context, instance *redhatcopv1alpha1.VaultRole) ([]string, error) {
 	result := []string{}
 	namespaceList := &corev1.NamespaceList{}
-	labelSelector, err := metav1.LabelSelectorAsSelector(instance.Spec.TargetNamespaceSelector)
+	labelSelector, err := metav1.LabelSelectorAsSelector(instance.Spec.TargetNamespaces.TargetNamespaceSelector)
 	if err != nil {
-		r.Log.Error(err, "unable to create selector from label selector", "selector", instance.Spec.TargetNamespaceSelector)
+		r.Log.Error(err, "unable to create selector from label selector", "selector", instance.Spec.TargetNamespaces.TargetNamespaceSelector)
 		return nil, err
 	}
 	err = r.GetClient().List(context, namespaceList, &client.ListOptions{
@@ -229,7 +229,7 @@ func (r *VaultRoleReconciler) manageCleanUpLogic(context context.Context, instan
 }
 
 func (r *VaultRoleReconciler) manageReconcileLogic(context context.Context, instance *redhatcopv1alpha1.VaultRole) error {
-	if instance.Spec.TargetNamespaceSelector != nil {
+	if instance.Spec.TargetNamespaces.TargetNamespaceSelector != nil {
 		namespaces, err := r.findSelectedNamespaceNames(context, instance)
 		if err != nil {
 			r.Log.Error(err, "unable to retrieve selected namespaces", "instance", instance)
@@ -237,7 +237,7 @@ func (r *VaultRoleReconciler) manageReconcileLogic(context context.Context, inst
 		}
 		instance.SetInternalNamespaces(namespaces)
 	} else {
-		instance.SetInternalNamespaces(instance.Spec.TargetNamespaces)
+		instance.SetInternalNamespaces(instance.Spec.TargetNamespaces.TargetNamespaces)
 	}
 	vaultEndpoint, err := vaultutils.NewVaultEndpoint(context, &instance.Spec.Authentication, instance, instance.Namespace, r.GetClient(), r.Log.WithName("vaultutils"))
 	if err != nil {
