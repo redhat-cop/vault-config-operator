@@ -127,25 +127,27 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "RandomSecret")
 		os.Exit(1)
 	}
-	if err = (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "RandomSecret")
-		os.Exit(1)
-	}
-	if err = (&redhatcopv1alpha1.SecretEngineMount{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "SecretEngineMount")
-		os.Exit(1)
-	}
-	if err = (&redhatcopv1alpha1.DatabaseSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "DatabaseSecretEngineRole")
-		os.Exit(1)
-	}
-	if err = (&redhatcopv1alpha1.DatabaseSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "DatabaseSecretEngineConfig")
-		os.Exit(1)
-	}
-	if err = (&redhatcopv1alpha1.VaultRole{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "VaultRole")
-		os.Exit(1)
+	if webhooks, ok := os.LookupEnv("ENABLE_WEBHOOKS"); ok && webhooks != "false" {
+		if err = (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "RandomSecret")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.SecretEngineMount{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "SecretEngineMount")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.DatabaseSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "DatabaseSecretEngineRole")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.DatabaseSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "DatabaseSecretEngineConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.VaultRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "VaultRole")
+			os.Exit(1)
+		}
 	}
 	//+kubebuilder:scaffold:builder
 

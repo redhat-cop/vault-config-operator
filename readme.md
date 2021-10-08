@@ -388,7 +388,7 @@ vault write -tls-skip-verify auth/kubernetes/role/policy-admin bound_service_acc
 make install
 oc new-project vault-config-operator-local
 kustomize build ./config/local-development | oc apply -f - -n vault-config-operator-local
-export token=$(oc serviceaccounts get-token 'vault-config-controller-manager' -n vault-config-operator-local)
+export token=$(oc serviceaccounts get-token 'vault-config-operator-controller-manager' -n vault-config-operator-local)
 oc login --token ${token}
 export VAULT_ADDR=https://vault-vault.apps.${cluster_base_domain}
 unset VAULT_TOKEN
