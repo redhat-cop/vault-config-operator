@@ -60,6 +60,11 @@ func (r *RandomSecret) ValidateUpdate(old runtime.Object) error {
 		return errors.New("spec.path cannot be updated")
 	}
 
+	// the secret key cannot be updated
+	if r.Spec.SecretKey != old.(*RandomSecret).Spec.SecretKey {
+		return errors.New("spec.secretKey cannot be updated")
+	}
+
 	// TODO(user): fill in your validation logic upon object update.
 	return r.validate()
 }

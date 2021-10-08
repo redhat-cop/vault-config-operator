@@ -51,7 +51,7 @@ type RandomSecretSpec struct {
 
 	// RefreshPeriod if specified, the operator will refresh the secret with the given frequency
 	// +kubebuilder:validation:Optional
-	RefreshPeriod metav1.Duration `json:"refreshPeriod,omitempty"`
+	RefreshPeriod *metav1.Duration `json:"refreshPeriod,omitempty"`
 
 	// SecretKey is the key to be used for this secret when stored in Vault kv
 	// +kubebuilder:validation:Required
@@ -96,7 +96,7 @@ type RandomSecretStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 
 	//LastVaultSecretUpdate last time when this secret was updated in Vault
-	LastVaultSecretUpdate metav1.Time `json:"lastVaultSecretUpdate,omitempty"`
+	LastVaultSecretUpdate *metav1.Time `json:"lastVaultSecretUpdate,omitempty"`
 }
 
 func (m *RandomSecret) GetConditions() []metav1.Condition {

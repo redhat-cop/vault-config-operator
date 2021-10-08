@@ -19,13 +19,17 @@ package controllers
 import (
 	"context"
 	"errors"
+	"reflect"
 	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/go-logr/logr"
@@ -117,8 +121,43 @@ func (r *RandomSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *RandomSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
+
+	needsCreation := predicate.Funcs{
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			newSecret, ok := e.ObjectNew.DeepCopyObject().(*redhatcopv1alpha1.RandomSecret)
+			if !ok {
+				return false
+			}
+			oldSecret, ok := e.ObjectOld.DeepCopyObject().(*redhatcopv1alpha1.RandomSecret)
+			if !ok {
+				return false
+			}
+			return newSecret.Spec.RefreshPeriod != oldSecret.Spec.RefreshPeriod || !reflect.DeepEqual(newSecret.Spec.SecretFormat, oldSecret.Spec.SecretFormat)
+		},
+		CreateFunc: func(e event.CreateEvent) bool {
+			secret, ok := e.Object.DeepCopyObject().(*redhatcopv1alpha1.RandomSecret)
+			if !ok {
+				return false
+			}
+			if secret.Status.LastVaultSecretUpdate != nil {
+				if secret.Spec.RefreshPeriod != nil {
+					return secret.Status.LastVaultSecretUpdate.Add(secret.Spec.RefreshPeriod.Duration).Before(time.Now())
+				}
+				return false
+			}
+			return true
+		},
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			return false
+		},
+
+		GenericFunc: func(e event.GenericEvent) bool {
+			return false
+		},
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.RandomSecret{}).
+		For(&redhatcopv1alpha1.RandomSecret{}, builder.WithPredicates(needsCreation)).
 		Complete(r)
 }
 
@@ -170,11 +209,7 @@ func (r *RandomSecretReconciler) manageReconcileLogic(context context.Context, i
 		r.Log.Error(err, "unable to create/update VaultRole", "instance", instance)
 		return err
 	}
-	instance.Status.LastVaultSecretUpdate = metav1.NewTime(time.Now())
-	err = r.GetClient().Status().Patch(context, instance, client.MergeFrom(instance))
-	if err != nil {
-		r.Log.Error(err, "unable to update status", "instance", instance)
-		return err
-	}
+	now := metav1.NewTime(time.Now())
+	instance.Status.LastVaultSecretUpdate = &now
 	return nil
 }
