@@ -162,11 +162,11 @@ func (d *RandomSecret) GenerateNewPassword(vaultEdnpoint *vaultutils.VaultEndpoi
 		if err != nil {
 			return err
 		} else {
-			d.Spec.calculatedSecret = response.Data["secret"].(string)
+			d.Spec.calculatedSecret = response.Data["password"].(string)
 			return nil
 		}
 	}
-	return errors.New("no passowrd polic methos specified")
+	return errors.New("no passowrd policy method specified")
 }
 
 func (d *RandomSecret) calculateSecret(policy *PasswordPolicyFormat, attempts int) bool {

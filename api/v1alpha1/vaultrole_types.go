@@ -125,7 +125,7 @@ type VRole struct {
 	// TokenPeriod The period, if any, to set on the token.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=0
-	TokenPeriod int `json:"TokenPeriodInteger,omitempty"`
+	TokenPeriod int `json:"tokenPeriod,omitempty"`
 
 	// TokenType The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens). For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time.
 	// +kubebuilder:validation:Optional

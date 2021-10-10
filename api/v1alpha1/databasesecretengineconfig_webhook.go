@@ -79,8 +79,8 @@ func (r *DatabaseSecretEngineConfig) ValidateEitherFromVaultSecretOrFromSecretOr
 	if r.Spec.RootCredentials.VaultSecret != nil {
 		count++
 	}
-	if count > 1 {
-		return errors.New("Only one of RootCredentialsFromVaultSecret or RootCredentialsFromSecret or RootCredentialsFromRandomSecret can be specified.")
+	if count != 1 {
+		return errors.New("Only one of spec.rootCredentials.vaultSecret or spec.rootCredentials.secret or spec.rootCredentials.randomSecret can be specified.")
 	}
 	return nil
 }

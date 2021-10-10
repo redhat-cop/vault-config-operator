@@ -92,7 +92,7 @@ func (r *RandomSecret) validateEitherPasswordPolicyReferenceOrInline() error {
 	if r.Spec.SecretFormat.PasswordPolicyName != "" {
 		count++
 	}
-	if count > 1 {
+	if count != 1 {
 		return errors.New("only one of InlinePasswordPolicy or PasswordPolicyName can be defined")
 	}
 	return nil

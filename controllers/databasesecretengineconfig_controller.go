@@ -161,7 +161,14 @@ func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 			if !ok {
 				return true
 			}
-			return !newSecret.Status.LastVaultSecretUpdate.Time.Equal(oldSecret.Status.LastVaultSecretUpdate.Time)
+
+			if newSecret.Status.LastVaultSecretUpdate != nil {
+				if oldSecret.Status.LastVaultSecretUpdate != nil {
+					return !newSecret.Status.LastVaultSecretUpdate.Time.Equal(oldSecret.Status.LastVaultSecretUpdate.Time)
+				}
+				return true
+			}
+			return false
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
 			return true
@@ -176,7 +183,7 @@ func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.DatabaseSecretEngineConfig{}).
+		For(&redhatcopv1alpha1.DatabaseSecretEngineConfig{}, builder.WithPredicates(util.ResourceGenerationOrFinalizerChangedPredicate{})).
 		Watches(&source.Kind{Type: &corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Namespace",
@@ -265,7 +272,7 @@ func (r *DatabaseSecretEngineConfigReconciler) IsValid(obj metav1.Object) (bool,
 		return false, errors.New("unable to conver metav1.Object to *VaultRoleReconciler")
 	}
 	err := instance.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
-	return err != nil, err
+	return err == nil, err
 }
 
 func (r *DatabaseSecretEngineConfigReconciler) IsInitialized(obj metav1.Object) bool {
@@ -277,6 +284,17 @@ func (r *DatabaseSecretEngineConfigReconciler) IsInitialized(obj metav1.Object) 
 	}
 	if !util.HasFinalizer(cobj, r.ControllerName) {
 		util.AddFinalizer(cobj, r.ControllerName)
+		isInitialized = false
+	}
+	instance, ok := obj.(*redhatcopv1alpha1.DatabaseSecretEngineConfig)
+	if !ok {
+		r.Log.Error(errors.New("unable to convert to redhatcopv1alpha1.DatabaseSecretEngineConfig"), "unable to convert to redhatcopv1alpha1.DatabaseSecretEngineConfig")
+		return false
+	}
+	if instance.Spec.Authentication.ServiceAccount == nil {
+		instance.Spec.Authentication.ServiceAccount = &corev1.LocalObjectReference{
+			Name: "default",
+		}
 		isInitialized = false
 	}
 	return isInitialized
@@ -313,35 +331,40 @@ func (r *DatabaseSecretEngineConfigReconciler) setInternalCredentials(context co
 			return err
 		}
 		instance.SetUsernameAndPassword(instance.Spec.Username, secret.Data[randomSecret.Spec.SecretKey].(string))
+		r.Log.V(1).Info("", "username", instance.Spec.Username, "password", secret.Data[randomSecret.Spec.SecretKey].(string))
 		return nil
 	}
 	if instance.Spec.RootCredentials.Secret != nil {
 		secret := &corev1.Secret{}
 		err := r.GetClient().Get(context, types.NamespacedName{
 			Namespace: instance.Namespace,
-			Name:      instance.Spec.RootCredentials.RandomSecret.Name,
+			Name:      instance.Spec.RootCredentials.Secret.Name,
 		}, secret)
 		if err != nil {
 			r.Log.Error(err, "unable to retrieve Secret", "instance", instance)
 			return err
 		}
-		if username, ok := secret.Data["username"]; ok {
-			instance.SetUsernameAndPassword(string(username), string(secret.Data["password"]))
+		if instance.Spec.Username == "" {
+			instance.SetUsernameAndPassword(string(secret.Data[instance.Spec.RootCredentials.UsernameKey]), string(secret.Data[instance.Spec.RootCredentials.PasswordKey]))
+			r.Log.V(1).Info("", "username", string(secret.Data[instance.Spec.RootCredentials.UsernameKey]), "password", string(secret.Data[instance.Spec.RootCredentials.PasswordKey]))
 		} else {
-			instance.SetUsernameAndPassword(instance.Spec.Username, string(secret.Data["password"]))
+			instance.SetUsernameAndPassword(instance.Spec.Username, string(secret.Data[instance.Spec.RootCredentials.PasswordKey]))
+			r.Log.V(1).Info("", "username", instance.Spec.Username, "password", string(secret.Data[instance.Spec.RootCredentials.PasswordKey]))
 		}
 		return nil
 	}
 	if instance.Spec.RootCredentials.VaultSecret != nil {
-		secret, err := vaultEndpoint.GetVaultClient().Logical().Read(string(instance.Spec.Path))
+		secret, err := vaultEndpoint.GetVaultClient().Logical().Read(string(instance.Spec.RootCredentials.VaultSecret.Path))
 		if err != nil {
 			r.Log.Error(err, "unable to retrieve vault secret", "instance", instance)
 			return err
 		}
-		if username, ok := secret.Data["username"]; ok {
-			instance.SetUsernameAndPassword(username.(string), secret.Data["password"].(string))
+		if instance.Spec.Username == "" {
+			instance.SetUsernameAndPassword(secret.Data[instance.Spec.RootCredentials.UsernameKey].(string), secret.Data[instance.Spec.RootCredentials.PasswordKey].(string))
+			r.Log.V(1).Info("", "username", secret.Data[instance.Spec.RootCredentials.UsernameKey].(string), "password", secret.Data[instance.Spec.RootCredentials.PasswordKey].(string))
 		} else {
-			instance.SetUsernameAndPassword(instance.Spec.Username, secret.Data["password"].(string))
+			instance.SetUsernameAndPassword(instance.Spec.Username, secret.Data[instance.Spec.RootCredentials.PasswordKey].(string))
+			r.Log.V(1).Info("", "username", instance.Spec.Username, "password", secret.Data[instance.Spec.RootCredentials.PasswordKey].(string))
 		}
 		return nil
 	}

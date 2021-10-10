@@ -37,10 +37,6 @@ spec:
           spec:
             description: VaultRoleSpec defines the desired state of VaultRole
             properties:
-              TokenPeriodInteger:
-                default: 0
-                description: TokenPeriod The period, if any, to set on the token.
-                type: integer
               audience:
                 description: Audience Audience claim to verify in the JWT.
                 type: string
@@ -57,13 +53,14 @@ spec:
                     default: kubernetes
                     description: Path is the path of the role used for this kube auth
                       authentication
+                    pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
                     type: string
                   role:
                     description: Role the role to be used during authentication
                     type: string
                   serviceAccount:
                     description: 'ServiceAccount is the service account used for the
-                      kube auth authentication kubebuilder:default=`{Name: &#34;default&#34;}``'
+                      kube auth authentication kubebuilder:default={Name: &#34;default&#34;}'
                     properties:
                       name:
                         description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
@@ -76,7 +73,7 @@ spec:
                   will be {[spec.authentication.namespace]}/{spec.path}/role/{metadata.name}.
                   The authentication role must have the following capabilities = [
                   "create", "read", "update", "delete"] on that path.
-                pattern: ^(.*/)([^/]*)$
+                pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
                 type: string
               policies:
                 description: Policies is a list of policy names to be bound to this
@@ -185,6 +182,10 @@ spec:
                   token may be used (within its lifetime); 0 means unlimited. If you
                   require the token to have the ability to create child tokens, you
                   will need to set this value to 0.
+                type: integer
+              tokenPeriod:
+                default: 0
+                description: TokenPeriod The period, if any, to set on the token.
                 type: integer
               tokenTTL:
                 default: 0

@@ -76,7 +76,7 @@ func (r *VaultRole) ValidateEitherTargetNamespaceSelectorOrTargetNamespace() err
 	if r.Spec.TargetNamespaces.TargetNamespaces != nil {
 		count++
 	}
-	if count > 1 {
+	if count != 1 {
 		return errors.New("Only one of TargetNamespaceSelector or TargetNamespaces can be specified.")
 	}
 	return nil

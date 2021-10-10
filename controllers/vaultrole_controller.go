@@ -197,7 +197,7 @@ func (r *VaultRoleReconciler) IsValid(obj metav1.Object) (bool, error) {
 		return false, errors.New("unable to conver metav1.Object to *VaultRoleReconciler")
 	}
 	err := instance.ValidateEitherTargetNamespaceSelectorOrTargetNamespace()
-	return err != nil, err
+	return err == nil, err
 }
 
 func (r *VaultRoleReconciler) IsInitialized(obj metav1.Object) bool {
@@ -209,6 +209,17 @@ func (r *VaultRoleReconciler) IsInitialized(obj metav1.Object) bool {
 	}
 	if !util.HasFinalizer(cobj, r.ControllerName) {
 		util.AddFinalizer(cobj, r.ControllerName)
+		isInitialized = false
+	}
+	instance, ok := obj.(*redhatcopv1alpha1.VaultRole)
+	if !ok {
+		r.Log.Error(errors.New("unable to convert to redhatcopv1alpha1.VaultRole"), "unable to convert to redhatcopv1alpha1.VaultRole")
+		return false
+	}
+	if instance.Spec.Authentication.ServiceAccount == nil {
+		instance.Spec.Authentication.ServiceAccount = &corev1.LocalObjectReference{
+			Name: "default",
+		}
 		isInitialized = false
 	}
 	return isInitialized

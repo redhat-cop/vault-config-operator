@@ -66,6 +66,14 @@ type RootCredentialConfig struct {
 	// password: Specifies the password to use when connecting with the username. This value will not be returned by Vault when performing a read upon the configuration. This is typically used in the connection_url field via the templating directive {{password}}.
 	// +kubebuilder:validation:Optional
 	RandomSecret *corev1.LocalObjectReference `json:"randomSecret,omitempty"`
+
+	// PasswordKey key to be used when retrieving the password, required with VaultSecrets and Kubernetes secrets, ignored with RandomSecret
+	// +kubebuilder:validation:Optional
+	PasswordKey string `json:"passwordKey,omitempty"`
+
+	// UsernameKey key to be used when retrieving the username, optional with VaultSecrets and Kubernetes secrets, ignored with RandomSecret
+	// +kubebuilder:validation:Optional
+	UsernameKey string `json:"usernameKey,omitempty"`
 }
 
 var _ vaultutils.VaultObject = &DatabaseSecretEngineConfig{}
@@ -200,11 +208,7 @@ func (i *DBSEConfig) ToMap() map[string]interface{} {
 	for key, value := range i.DatabaseSpecificConfig {
 		payload[key] = value
 	}
-	if i.Username != "nil" {
-		payload["username"] = i.Username
-	} else {
-		payload["username"] = i.retrievedUsername
-	}
+	payload["username"] = i.retrievedUsername
 	payload["password"] = i.retrievedPassword
 	return payload
 }

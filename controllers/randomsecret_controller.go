@@ -22,6 +22,7 @@ import (
 	"reflect"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -157,7 +158,7 @@ func (r *RandomSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.RandomSecret{}, builder.WithPredicates(needsCreation)).
+		For(&redhatcopv1alpha1.RandomSecret{}, builder.WithPredicates(needsCreation, util.ResourceGenerationOrFinalizerChangedPredicate{})).
 		Complete(r)
 }
 
@@ -174,6 +175,17 @@ func (r *RandomSecretReconciler) IsInitialized(obj metav1.Object) bool {
 	}
 	if !util.HasFinalizer(cobj, r.ControllerName) {
 		util.AddFinalizer(cobj, r.ControllerName)
+		isInitialized = false
+	}
+	instance, ok := obj.(*redhatcopv1alpha1.RandomSecret)
+	if !ok {
+		r.Log.Error(errors.New("unable to convert to redhatcopv1alpha1.RandomSecret"), "unable to convert to redhatcopv1alpha1.RandomSecret")
+		return false
+	}
+	if instance.Spec.Authentication.ServiceAccount == nil {
+		instance.Spec.Authentication.ServiceAccount = &corev1.LocalObjectReference{
+			Name: "default",
+		}
 		isInitialized = false
 	}
 	return isInitialized
@@ -204,9 +216,9 @@ func (r *RandomSecretReconciler) manageReconcileLogic(context context.Context, i
 		r.Log.Error(err, "unable to generate new secret", "instance", instance)
 		return err
 	}
-	err = vaultEndpoint.CreateOrUpdate()
+	err = vaultEndpoint.Write(vaultEndpoint.GetPayload())
 	if err != nil {
-		r.Log.Error(err, "unable to create/update VaultRole", "instance", instance)
+		r.Log.Error(err, "unable to create/update Vault Secret", "instance", instance)
 		return err
 	}
 	now := metav1.NewTime(time.Now())

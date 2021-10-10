@@ -20,18 +20,19 @@ import (
 	"context"
 	"errors"
 
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
 	"github.com/go-logr/logr"
 	vault "github.com/hashicorp/vault/api"
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // SecretEngineMountReconciler reconciles a SecretEngineMount object
@@ -115,7 +116,7 @@ func (r *SecretEngineMountReconciler) Reconcile(ctx context.Context, req ctrl.Re
 // SetupWithManager sets up the controller with the Manager.
 func (r *SecretEngineMountReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.SecretEngineMount{}).
+		For(&redhatcopv1alpha1.SecretEngineMount{}, builder.WithPredicates(util.ResourceGenerationOrFinalizerChangedPredicate{})).
 		Complete(r)
 }
 
@@ -132,6 +133,17 @@ func (r *SecretEngineMountReconciler) IsInitialized(obj metav1.Object) bool {
 	}
 	if !util.HasFinalizer(cobj, r.ControllerName) {
 		util.AddFinalizer(cobj, r.ControllerName)
+		isInitialized = false
+	}
+	instance, ok := obj.(*redhatcopv1alpha1.SecretEngineMount)
+	if !ok {
+		r.Log.Error(errors.New("unable to convert to redhatcopv1alpha1.SecretEngineMount"), "unable to convert to redhatcopv1alpha1.SecretEngineMount")
+		return false
+	}
+	if instance.Spec.Authentication.ServiceAccount == nil {
+		instance.Spec.Authentication.ServiceAccount = &corev1.LocalObjectReference{
+			Name: "default",
+		}
 		isInitialized = false
 	}
 	return isInitialized
@@ -170,7 +182,7 @@ func (r *SecretEngineMountReconciler) manageReconcileLogic(context context.Conte
 	secretEngineMount, err := vaultEndpoint.GetVaultClient().Sys().MountConfig(instance.GetPath())
 	if err != nil {
 		if respErr, ok := err.(*vault.ResponseError); ok {
-			if respErr.StatusCode == 404 {
+			if respErr.StatusCode == 404 || respErr.StatusCode == 400 {
 				err = vaultEndpoint.GetVaultClient().Sys().Mount(instance.GetPath(), instance.Spec.GetMountInputFromMount())
 				if err != nil {
 					r.Log.Error(err, "unable to create", "secretEngineMount", instance.Name)
@@ -181,8 +193,9 @@ func (r *SecretEngineMountReconciler) manageReconcileLogic(context context.Conte
 		r.Log.Error(err, "unable to retrieve", "secretEngineMount", instance.Name)
 		return err
 	}
+	r.Log.V(1).Info("comparing", "current state", secretEngineMount, "desired state", instance.Spec.Mount.Config)
 	if !instance.Spec.Mount.Config.IsEquivalentTo(secretEngineMount) {
-		err = vaultEndpoint.GetVaultClient().Sys().TuneMount(instance.Name, instance.Spec.GetMountInputFromMount().Config)
+		err = vaultEndpoint.GetVaultClient().Sys().TuneMount(instance.GetPath(), instance.Spec.GetMountInputFromMount().Config)
 		if err != nil {
 			r.Log.Error(err, "unable to update", "secretEngineMount", instance.Name)
 			return err

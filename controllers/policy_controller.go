@@ -25,9 +25,11 @@ import (
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -112,7 +114,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 // SetupWithManager sets up the controller with the Manager.
 func (r *PolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.Policy{}).
+		For(&redhatcopv1alpha1.Policy{}, builder.WithPredicates(util.ResourceGenerationOrFinalizerChangedPredicate{})).
 		Complete(r)
 }
 
@@ -129,6 +131,17 @@ func (r *PolicyReconciler) IsInitialized(obj metav1.Object) bool {
 	}
 	if !util.HasFinalizer(cobj, r.ControllerName) {
 		util.AddFinalizer(cobj, r.ControllerName)
+		isInitialized = false
+	}
+	instance, ok := obj.(*redhatcopv1alpha1.Policy)
+	if !ok {
+		r.Log.Error(errors.New("unable to convert to redhatcopv1alpha1.Policy"), "unable to convert to redhatcopv1alpha1.Policy")
+		return false
+	}
+	if instance.Spec.Authentication.ServiceAccount == nil {
+		instance.Spec.Authentication.ServiceAccount = &corev1.LocalObjectReference{
+			Name: "default",
+		}
 		isInitialized = false
 	}
 	return isInitialized

@@ -108,7 +108,7 @@ func main() {
 		Log:            ctrl.Log.WithName("controllers").WithName("DatabaseSecretEngineRole"),
 		ControllerName: "DatabaseSecretEngineRole",
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "My")
+		setupLog.Error(err, "unable to create controller", "controller", "DatabaseSecretEngineRole")
 		os.Exit(1)
 	}
 	if err = (&controllers.SecretEngineMountReconciler{

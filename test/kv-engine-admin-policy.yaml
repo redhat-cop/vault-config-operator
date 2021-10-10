@@ -1,0 +1,23 @@
+
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Policy
+metadata:
+  name: kv-engine-admin
+spec:
+  # Add fields here
+  authentication: 
+    path: auth/kubernetes
+    role: policy-admin
+  policy: |
+    # mount database kv engines
+    path "/sys/mounts/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/kv" {
+      capabilities = [ "create", "read", "update", "delete", "list" ]
+      allowed_parameters = {
+        "type" = ["kv"]
+        "*"   = []
+      }
+    }
+    # tune database secrets engines
+    path "/sys/mounts/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/kv/tune" {
+      capabilities = [ "create", "read", "update", "delete"]
+    }    

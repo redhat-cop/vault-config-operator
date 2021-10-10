@@ -123,7 +123,7 @@ func (ve *VaultEndpoint) createVaultClient(jwt string) (*vault.Client, error) {
 	if ve.GetNamespace() != "" {
 		client.SetNamespace(ve.GetNamespace())
 	}
-	secret, err := client.Logical().Write(ve.GetKubeAuthPath()+"/login", map[string]interface{}{
+	secret, err := client.Logical().Write(ve.GetKubeAuthPath(), map[string]interface{}{
 		"jwt":  jwt,
 		"role": ve.GetRole(),
 	})
@@ -148,6 +148,9 @@ func (ve *VaultEndpoint) Read() (map[string]interface{}, bool, error) {
 		}
 		ve.log.Error(err, "unable to read object at", "path", ve.GetPath())
 		return nil, false, err
+	}
+	if secret == nil {
+		return nil, false, nil
 	}
 	return secret.Data, true, nil
 }

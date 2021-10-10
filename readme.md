@@ -380,6 +380,7 @@ export sa_secret_name=$(oc get sa default -n vault -o jsonpath='{.secrets[*].nam
 oc get secret ${sa_secret_name} -n vault -o jsonpath='{.data.ca\.crt}' | base64 -d > /tmp/ca.crt
 vault write -tls-skip-verify auth/kubernetes/config token_reviewer_jwt="$(oc serviceaccounts get-token vault -n vault)" kubernetes_host=https://kubernetes.default.svc:443 kubernetes_ca_cert=@/tmp/ca.crt
 vault write -tls-skip-verify auth/kubernetes/role/policy-admin bound_service_account_names=default bound_service_account_namespaces=vault-admin policies=vault-admin ttl=1h
+export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.data["kubernetes/"].accessor')
 ```
 
 ### Run the operator
@@ -392,7 +393,58 @@ export token=$(oc serviceaccounts get-token 'vault-config-operator-controller-ma
 oc login --token ${token}
 export VAULT_ADDR=https://vault-vault.apps.${cluster_base_domain}
 unset VAULT_TOKEN
+export VAULT_SKIP_VERIFY=true
 make run ENABLE_WEBHOOKS=false
+```
+
+### Test Manually
+
+Policy
+
+```shell
+envsubst < ./test/database-engine-admin-policy.yaml | oc apply -f - -n vault-admin
+```
+
+Vault Role
+
+```shell
+oc new-project test-vault-config-operator
+oc label namespace test-vault-config-operator database-engine-admin=true
+oc apply -f ./test/database-engine-admin-role.yaml -n vault-admin
+```
+
+Secret Engine Mount
+
+```shell
+oc apply -f ./test/database-secret-engine.yaml -n test-vault-config-operator
+```
+
+Database secret engine connection. This will deploy a postgresql database to connect to
+
+```shell
+oc create secret generic postgresql-admin-password --from-literal=postgresql-password=changeit -n test-vault-config-operator
+export uid=$(oc get project test-vault-config-operator -o jsonpath='{.metadata.annotations.openshift\.io/sa\.scc\.uid-range}'|sed 's/\/.*//')
+export guid=$(oc get project test-vault-config-operator -o jsonpath='{.metadata.annotations.openshift\.io/sa\.scc\.supplemental-groups}'|sed 's/\/.*//')
+helm upgrade my-postgresql-database bitnami/postgresql -i --create-namespace -n test-vault-config-operator -f ./examples/postgresql/postgresql-values.yaml --set securityContext.fsGroup=${guid} --set containerSecurityContext.runAsUser=${uid} --set volumePermissions.securityContext.runAsUser=${uid} --set metrics.securityContext.runAsUser=${uid}
+oc apply -f ./test/database-engine-config.yaml -n test-vault-config-operator
+```
+
+Database Secret engine role
+
+```shell
+oc apply -f ./test/database-engine-read-only-role.yaml -n test-vault-config-operator
+```
+
+RandomSecret
+
+```shell
+vault write -tls-skip-verify /sys/policies/password/simple-password-policy policy=@./test/password-policy.hcl
+envsubst < ./test/kv-engine-admin-policy.yaml | oc apply -f - -n vault-admin
+envsubst < ./test/secret-writer-policy.yaml | oc apply -f - -n vault-admin
+oc apply -f ./test/kv-engine-admin-role.yaml -n vault-admin
+oc apply -f ./test/secret-writer-role.yaml -n vault-admin
+oc apply -f ./test/kv-secret-engine.yaml -n test-vault-config-operator
+oc apply -f ./test/random-secret.yaml -n test-vault-config-operator
 ```
 
 ### Test helm chart locally
