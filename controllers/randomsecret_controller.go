@@ -115,7 +115,14 @@ func (r *RandomSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	if instance.Spec.RefreshPeriod.Size() > 0 {
-		return r.ManageSuccessWithRequeue(ctx, instance, instance.Spec.RefreshPeriod.Duration)
+		//we reschedule the next reconcile at the time in the future corresponding to
+		nextSchedule := time.Until(instance.Status.LastVaultSecretUpdate.Add(instance.Spec.RefreshPeriod.Duration))
+		if nextSchedule > 0 {
+			return r.ManageSuccessWithRequeue(ctx, instance, nextSchedule)
+		} else {
+			return r.ManageSuccessWithRequeue(ctx, instance, time.Second)
+		}
+
 	}
 	return r.ManageSuccess(ctx, instance)
 }
@@ -136,20 +143,10 @@ func (r *RandomSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			return newSecret.Spec.RefreshPeriod != oldSecret.Spec.RefreshPeriod || !reflect.DeepEqual(newSecret.Spec.SecretFormat, oldSecret.Spec.SecretFormat)
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
-			secret, ok := e.Object.DeepCopyObject().(*redhatcopv1alpha1.RandomSecret)
-			if !ok {
-				return false
-			}
-			if secret.Status.LastVaultSecretUpdate != nil {
-				if secret.Spec.RefreshPeriod != nil {
-					return secret.Status.LastVaultSecretUpdate.Add(secret.Spec.RefreshPeriod.Duration).Before(time.Now())
-				}
-				return false
-			}
 			return true
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
-			return false
+			return true
 		},
 
 		GenericFunc: func(e event.GenericEvent) bool {
@@ -199,13 +196,17 @@ func (r *RandomSecretReconciler) manageCleanUpLogic(context context.Context, ins
 	}
 	err = vaultEndpoint.DeleteIfExists()
 	if err != nil {
-		r.Log.Error(err, "unable to delete VaultRole", "instance", instance)
+		r.Log.Error(err, "unable to delete Vault Secret", "instance", instance)
 		return err
 	}
 	return nil
 }
 
 func (r *RandomSecretReconciler) manageReconcileLogic(context context.Context, instance *redhatcopv1alpha1.RandomSecret) error {
+	// how to read this if: if the secret has been initialized once and there no refresh period or time ro refresh has not arrived yet, return.
+	if instance.Status.LastVaultSecretUpdate != nil && (instance.Spec.RefreshPeriod != nil || (instance.Spec.RefreshPeriod != nil && !instance.Status.LastVaultSecretUpdate.Add(instance.Spec.RefreshPeriod.Duration).Before(time.Now()))) {
+		return nil
+	}
 	vaultEndpoint, err := vaultutils.NewVaultEndpoint(context, &instance.Spec.Authentication, instance, instance.Namespace, r.GetClient(), r.Log.WithName("vaultutils"))
 	if err != nil {
 		r.Log.Error(err, "unable to initialize vaultEndpoint with", "instance", instance)

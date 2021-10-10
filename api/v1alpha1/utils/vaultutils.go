@@ -164,17 +164,15 @@ func (ve *VaultEndpoint) Write(payload map[string]interface{}) error {
 	return nil
 }
 func (ve *VaultEndpoint) DeleteIfExists() error {
-	_, found, err := ve.Read()
+	_, err := ve.GetVaultClient().Logical().Delete(ve.GetPath())
 	if err != nil {
-		ve.log.Error(err, "unable to read object at", "path", ve.GetPath())
-		return err
-	}
-	if found {
-		_, err := ve.GetVaultClient().Logical().Delete(ve.GetPath())
-		if err != nil {
-			ve.log.Error(err, "unable to delete object at", "path", ve.GetPath())
-			return err
+		if respErr, ok := err.(*vault.ResponseError); ok {
+			if respErr.StatusCode == 404 {
+				return nil
+			}
 		}
+		ve.log.Error(err, "unable to delete object at", "path", ve.GetPath())
+		return err
 	}
 	return nil
 }
