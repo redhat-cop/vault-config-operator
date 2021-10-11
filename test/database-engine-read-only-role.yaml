@@ -4,7 +4,7 @@ metadata:
   name: read-only
 spec:
   authentication: 
-    path: auth/kubernetes
+    path: kubernetes
     role: database-engine-admin
   path: test-vault-config-operator/database
   defaultTTL: 1h

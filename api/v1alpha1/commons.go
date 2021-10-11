@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"strings"
 	"time"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
@@ -33,7 +34,7 @@ type KubeAuthConfiguration struct {
 	// kubebuilder:default={Name: &#34;default&#34;}
 	ServiceAccount *corev1.LocalObjectReference `json:"serviceAccount,omitempty"`
 
-	// Path is the path of the role used for this kube auth authentication
+	// Path is the path of the role used for this kube auth authentication. The operator will try to authenticate at {[namespace/]}auth/{spec.path}
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=kubernetes
 	Path Path `json:"path,omitempty"`
@@ -56,11 +57,15 @@ func (kc *KubeAuthConfiguration) GetRole() string {
 	return kc.Role
 }
 func (kc *KubeAuthConfiguration) GetKubeAuthPath() string {
-	return string(kc.Path) + "/login"
+	return cleansePath("auth/" + string(kc.Path) + "/login")
 }
 
 func (kc *KubeAuthConfiguration) GetServiceAccountName() string {
 	return kc.ServiceAccount.Name
+}
+
+func cleansePath(path string) string {
+	return strings.Trim(strings.ReplaceAll(path, "//", "/"), "/")
 }
 
 func parseOrDie(val string) metav1.Duration {

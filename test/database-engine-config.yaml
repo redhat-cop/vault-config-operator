@@ -4,7 +4,7 @@ metadata:
   name: my-postgresql-database
 spec:
   authentication: 
-    path: auth/kubernetes
+    path: kubernetes
     role: database-engine-admin
   pluginName: postgresql-database-plugin
   allowedRoles:

@@ -5,9 +5,9 @@ metadata:
 spec:
   # Add fields here
   authentication: 
-    path: auth/kubernetes
+    path: kubernetes
     role: policy-admin
-  path: auth/kubernetes  
+  path: kubernetes  
   policies:
     - kv-engine-admin
   targetNamespaces:
