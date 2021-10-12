@@ -1,7 +1,16 @@
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: VaultRole
 metadata:
-  name: vaultrole-sample
+  name: database-engine-admin
 spec:
   # Add fields here
-  foo: bar
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  path: kubernetes  
+  policies:
+    - database-engine-admin
+  targetNamespaces:
+    targetNamespaceSelector:
+      matchLabels:
+        database-engine-admin: "true"

@@ -1,7 +1,34 @@
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: Policy
 metadata:
-  name: policy-sample
+  name: database-engine-admin
 spec:
   # Add fields here
-  foo: bar
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  policy: |
+    # mount database secrets engines
+    path "/sys/mounts/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/database" {
+      capabilities = [ "create", "read", "update", "delete"]
+      allowed_parameters = {
+        "type" = ["database"]
+        "*"   = []
+      }
+    }
+
+    # tune database secrets engines
+    path "/sys/mounts/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/database/tune" {
+      capabilities = [ "create", "read", "update", "delete"]
+    }
+
+    # Configure database secrets engines
+    path "/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/database/config/+" {
+      capabilities = [ "create", "read", "update", "delete"]
+    }
+
+    # Configure database roles
+    path "/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/database/roles/+" {
+      capabilities = [ "create", "read", "update", "delete"]
+    }
+    

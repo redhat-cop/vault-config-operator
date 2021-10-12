@@ -2,25 +2,25 @@ apiVersion: v1
 kind: Namespace
 metadata:
   labels:
-    control-plane: controller-manager
+    control-plane: vault-config-operator
   name: system
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: controller-manager
+  name: vault-config-operator
   namespace: system
   labels:
-    control-plane: controller-manager
+    control-plane: vault-config-operator
 spec:
   selector:
     matchLabels:
-      control-plane: controller-manager
+      control-plane: vault-config-operator
   replicas: 1
   template:
     metadata:
       labels:
-        control-plane: controller-manager
+        control-plane: vault-config-operator
     spec:
       securityContext:
         runAsNonRoot: true
@@ -52,5 +52,5 @@ spec:
           requests:
             cpu: 100m
             memory: 20Mi
-      serviceAccountName: controller-manager
+      serviceAccountName: vault-config-operator
       terminationGracePeriodSeconds: 10

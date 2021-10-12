@@ -12,15 +12,15 @@ resources:
 
 patchesStrategicMerge:
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
-# patches here are for enabling the conversion webhook for each CRD
-#- patches/webhook_in_vaultroles.yaml
-#- patches/webhook_in_policies.yaml
-#- patches/webhook_in_secretengines.yaml
-#- patches/webhook_in_secretengineroles.yaml
-#- patches/webhook_in_secretenginemounts.yaml
-#- patches/webhook_in_databasesecretengineconfigs.yaml
-#- patches/webhook_in_databasesecretengineroles.yaml
-#- patches/webhook_in_randomsecrets.yaml
+patches here are for enabling the conversion webhook for each CRD
+- patches/webhook_in_vaultroles.yaml
+- patches/webhook_in_policies.yaml
+- patches/webhook_in_secretengines.yaml
+- patches/webhook_in_secretengineroles.yaml
+- patches/webhook_in_secretenginemounts.yaml
+- patches/webhook_in_databasesecretengineconfigs.yaml
+- patches/webhook_in_databasesecretengineroles.yaml
+- patches/webhook_in_randomsecrets.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable cert-manager, uncomment all the sections with [CERTMANAGER] prefix.

@@ -201,3 +201,27 @@ catalog-build: opm ## Build a catalog image.
 .PHONY: catalog-push
 catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
+
+# Generate helm chart
+helmchart: kustomize
+	mkdir -p ./charts/${OPERATOR_NAME}/templates
+	mkdir -p ./charts/${OPERATOR_NAME}/crds
+	cp ./config/helmchart/templates/* ./charts/${OPERATOR_NAME}/templates
+	$(KUSTOMIZE) build ./config/helmchart | sed 's/release-namespace/{{.Release.Namespace}}/' > ./charts/${OPERATOR_NAME}/templates/rbac.yaml
+	if [ -d "./config/crd" ]; then $(KUSTOMIZE) build ./config/crd > ./charts/${OPERATOR_NAME}/crds/crds.yaml; fi
+	version=${VERSION} envsubst < ./config/helmchart/Chart.yaml.tpl  > ./charts/${OPERATOR_NAME}/Chart.yaml
+	version=${VERSION} image_repo=$${IMG%:*} envsubst < ./config/helmchart/values.yaml.tpl  > ./charts/${OPERATOR_NAME}/values.yaml
+	sed -i '/^apiVersion: monitoring.coreos.com/i {{ if .Values.enableMonitoring }}' ./charts/${OPERATOR_NAME}/templates/rbac.yaml
+	echo {{ end }} >> ./charts/${OPERATOR_NAME}/templates/rbac.yaml
+	helm lint ./charts/${OPERATOR_NAME}	
+
+helmchart-repo: helmchart
+	mkdir -p ${HELM_REPO_DEST}/${OPERATOR_NAME}
+	helm package -d ${HELM_REPO_DEST}/${OPERATOR_NAME} ./charts/${OPERATOR_NAME}
+	helm repo index --url ${CHART_REPO_URL} ${HELM_REPO_DEST}
+
+helmchart-repo-push: helmchart-repo	
+	git -C ${HELM_REPO_DEST} add .
+	git -C ${HELM_REPO_DEST} status
+	git -C ${HELM_REPO_DEST} commit -m "Release ${VERSION}"
+	git -C ${HELM_REPO_DEST} push origin "gh-pages"	
