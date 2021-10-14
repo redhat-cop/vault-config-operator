@@ -23,3 +23,7 @@ testbin/*
 *.swp
 *.swo
 *~
+
+bundle/
+bundle.Dockerfile
+charts/

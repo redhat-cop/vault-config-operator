@@ -12,11 +12,9 @@ resources:
 
 patchesStrategicMerge:
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
-patches here are for enabling the conversion webhook for each CRD
+# patches here are for enabling the conversion webhook for each CRD
 - patches/webhook_in_vaultroles.yaml
 - patches/webhook_in_policies.yaml
-- patches/webhook_in_secretengines.yaml
-- patches/webhook_in_secretengineroles.yaml
 - patches/webhook_in_secretenginemounts.yaml
 - patches/webhook_in_databasesecretengineconfigs.yaml
 - patches/webhook_in_databasesecretengineroles.yaml
@@ -27,8 +25,6 @@ patches here are for enabling the conversion webhook for each CRD
 # patches here are for enabling the CA injection for each CRD
 #- patches/cainjection_in_vaultroles.yaml
 #- patches/cainjection_in_policies.yaml
-#- patches/cainjection_in_secretengines.yaml
-#- patches/cainjection_in_secretengineroles.yaml
 #- patches/cainjection_in_secretenginemounts.yaml
 #- patches/cainjection_in_databasesecretengineconfigs.yaml
 #- patches/cainjection_in_databasesecretengineroles.yaml

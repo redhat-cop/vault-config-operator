@@ -8,7 +8,7 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: vault-config-operator
+  name: controller-manager
   namespace: system
   labels:
     control-plane: vault-config-operator
