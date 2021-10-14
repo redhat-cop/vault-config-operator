@@ -191,7 +191,7 @@ spec:
     Currently this operator supports the following CRDs:
 
     1. [Policy](https://github.com/redhat-cop/vault-config-operator#policy) Configures Vault [Policies](https://www.vaultproject.io/docs/concepts/policies)
-    2. [VaultRole](https://github.com/redhat-cop/vault-config-operator#VaultRole) Configures a Vault [Kubernetes Authentication](https://www.vaultproject.io/docs/auth/kubernetes) Role
+    2. [KubernetesAuthEngineRole](https://github.com/redhat-cop/vault-config-operator#KubernetesAuthEngineRole) Configures a Vault [Kubernetes Authentication](https://www.vaultproject.io/docs/auth/kubernetes) Role
     3. [SecretEngineMount](https://github.com/redhat-cop/vault-config-operator#SecretEngineMount) Configures a Mount point for a [SecretEngine](https://www.vaultproject.io/docs/secrets)
     4. [DatabaseSecretEngineConfig](https://github.com/redhat-cop/vault-config-operator#DatabaseSecretEngineConfig) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Connection
     5. [DatabaseSecretEngineRole](https://github.com/redhat-cop/vault-config-operator#DatabaseSecretEngineRole) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Role

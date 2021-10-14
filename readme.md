@@ -9,7 +9,7 @@ There are two main principles through all of the capabilities of this operator:
 Currently this operator supports the following CRDs:
 
 1. [Policy](#policy) Configures Vault [Policies](https://www.vaultproject.io/docs/concepts/policies)
-2. [VaultRole](#VaultRole) Configures a Vault [Kubernetes Authentication](https://www.vaultproject.io/docs/auth/kubernetes) Role
+2. [KubernetesAuthEngineRole](#KubernetesAuthEngineRole) Configures a Vault [Kubernetes Authentication](https://www.vaultproject.io/docs/auth/kubernetes) Role
 3. [SecretEngineMount](#SecretEngineMount) Configures a Mount point for a [SecretEngine](https://www.vaultproject.io/docs/secrets)
 4. [DatabaseSecretEngineConfig](#DatabaseSecretEngineConfig) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Connection
 5. [DatabaseSecretEngineRole](#DatabaseSecretEngineRole) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Role
@@ -64,13 +64,13 @@ spec:
 
 Notice that in this policy we have parametrized the path based on the namespace of the connecting service account.
 
-## VaultRole
+## KubernetesAuthEngineRole
 
-The `VaultRole` creates a Vault Authentication Role for a Kubernetes Authentication mount, here is an example:
+The `KubernetesAuthEngineRole` creates a Vault Authentication Role for a Kubernetes Authentication mount, here is an example:
 
 ```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
-kind: VaultRole
+kind: KubernetesAuthEngineRole
 metadata:
   name: database-engine-admin
 spec:

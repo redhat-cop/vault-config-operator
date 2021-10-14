@@ -26,15 +26,15 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// VaultRoleSpec defines the desired state of VaultRole
-type VaultRoleSpec struct {
+// KubernetesAuthEngineRoleSpec defines the desired state of KubernetesAuthEngineRole
+type KubernetesAuthEngineRoleSpec struct {
 
 	// Authentication is the kube aoth configuraiton to be used to execute this request
 	// +kubebuilder:validation:Required
 	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
-	// The final path will be {[spec.authentication.namespace]}/{spec.path}/role/{metadata.name}.
+	// The final path will be {[spec.authentication.namespace]}/auth/{spec.path}/role/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
 	Path Path `json:"path,omitempty"`
@@ -59,15 +59,15 @@ type TargetNamespaceConfig struct {
 	TargetNamespaces []string `json:"targetNamespaces,omitempty"`
 }
 
-var _ vaultutils.VaultObject = &VaultRole{}
+var _ vaultutils.VaultObject = &KubernetesAuthEngineRole{}
 
-func (d *VaultRole) GetPath() string {
-	return string(d.Spec.Path) + "/role/" + d.Name
+func (d *KubernetesAuthEngineRole) GetPath() string {
+	return cleansePath("auth/" + string(d.Spec.Path) + "/role/" + d.Name)
 }
-func (d *VaultRole) GetPayload() map[string]interface{} {
+func (d *KubernetesAuthEngineRole) GetPayload() map[string]interface{} {
 	return d.Spec.VRole.ToMap()
 }
-func (d *VaultRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *KubernetesAuthEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.VRole.ToMap()
 	return reflect.DeepEqual(desiredState, payload)
 }
@@ -136,8 +136,8 @@ type VRole struct {
 	namespaces []string `json:"-"`
 }
 
-// VaultRoleStatus defines the observed state of VaultRole
-type VaultRoleStatus struct {
+// KubernetesAuthEngineRoleStatus defines the observed state of KubernetesAuthEngineRole
+type KubernetesAuthEngineRoleStatus struct {
 
 	// +patchMergeKey=type
 	// +patchStrategy=merge
@@ -146,41 +146,41 @@ type VaultRoleStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
-func (m *VaultRole) GetConditions() []metav1.Condition {
+func (m *KubernetesAuthEngineRole) GetConditions() []metav1.Condition {
 	return m.Status.Conditions
 }
 
-func (m *VaultRole) SetConditions(conditions []metav1.Condition) {
+func (m *KubernetesAuthEngineRole) SetConditions(conditions []metav1.Condition) {
 	m.Status.Conditions = conditions
 }
 
-func (m *VaultRole) SetInternalNamespaces(namespaces []string) {
+func (m *KubernetesAuthEngineRole) SetInternalNamespaces(namespaces []string) {
 	m.Spec.namespaces = namespaces
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// VaultRole can be used to define a VaultRole for the kube-auth authentication method
-type VaultRole struct {
+// KubernetesAuthEngineRole can be used to define a KubernetesAuthEngineRole for the kube-auth authentication method
+type KubernetesAuthEngineRole struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   VaultRoleSpec   `json:"spec,omitempty"`
-	Status VaultRoleStatus `json:"status,omitempty"`
+	Spec   KubernetesAuthEngineRoleSpec   `json:"spec,omitempty"`
+	Status KubernetesAuthEngineRoleStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// VaultRoleList contains a list of VaultRole
-type VaultRoleList struct {
+// KubernetesAuthEngineRoleList contains a list of KubernetesAuthEngineRole
+type KubernetesAuthEngineRoleList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []VaultRole `json:"items"`
+	Items           []KubernetesAuthEngineRole `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&VaultRole{}, &VaultRoleList{})
+	SchemeBuilder.Register(&KubernetesAuthEngineRole{}, &KubernetesAuthEngineRoleList{})
 }
 
 func VRoleFromMap(roleConfigMap map[string]interface{}) *VRole {

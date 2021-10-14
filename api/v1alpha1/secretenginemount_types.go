@@ -39,14 +39,14 @@ type SecretEngineMountSpec struct {
 	Mount `json:",inline"`
 
 	// Path at which this secret engine will be available
-	// The final path will be {[spec.authentication.namespace]}/auth/{spec.path}/{metadata.name}.
+	// The final path will be {[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path /sys/mounts/{[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
 	// +kubebuilder:validation:Required
 	Path Path `json:"path,omitempty"`
 }
 
 func (d *SecretEngineMount) GetPath() string {
-	return cleansePath("auth/" + string(d.Spec.Path) + "/" + d.Name)
+	return cleansePath(string(d.Spec.Path) + "/" + d.Name)
 }
 
 // +k8s:openapi-gen=true

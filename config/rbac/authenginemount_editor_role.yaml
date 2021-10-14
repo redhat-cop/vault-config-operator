@@ -1,0 +1,24 @@
+# permissions for end users to edit authenginemounts.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: authenginemount-editor-role
+rules:
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - authenginemounts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - authenginemounts/status
+  verbs:
+  - get

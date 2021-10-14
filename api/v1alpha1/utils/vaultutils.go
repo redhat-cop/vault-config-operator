@@ -24,6 +24,7 @@ import (
 	"github.com/go-logr/logr"
 	vault "github.com/hashicorp/vault/api"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -38,6 +39,11 @@ type VaultObject interface {
 	GetPath() string
 	GetPayload() map[string]interface{}
 	IsEquivalentToDesiredState(payload map[string]interface{}) bool
+	InInitialized() bool
+	IsValid() (bool, error)
+	GetGKV() schema.GroupVersionKind
+	IsEngine() bool
+	GetEngineListPah() string
 }
 
 type VaultEndpoint struct {

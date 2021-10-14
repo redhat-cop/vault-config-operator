@@ -55,6 +55,27 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-kubernetesauthenginerole
+  failurePolicy: Fail
+  name: vkubernetesauthenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - kubernetesauthengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /validate-redhatcop-redhat-io-v1alpha1-randomsecret
   failurePolicy: Fail
   name: vrandomsecret.kb.io
@@ -89,25 +110,4 @@ webhooks:
     - UPDATE
     resources:
     - secretenginemounts
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  - v1beta1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-redhatcop-redhat-io-v1alpha1-vaultrole
-  failurePolicy: Fail
-  name: vvaultrole.kb.io
-  rules:
-  - apiGroups:
-    - redhatcop.redhat.io
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - vaultroles
   sideEffects: None

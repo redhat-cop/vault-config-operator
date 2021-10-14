@@ -89,6 +89,32 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
+  - kubernetesauthengineroles
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - kubernetesauthengineroles/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - kubernetesauthengineroles/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
   - policies
   verbs:
   - create
@@ -160,32 +186,6 @@ rules:
   - redhatcop.redhat.io
   resources:
   - secretenginemounts/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - redhatcop.redhat.io
-  resources:
-  - vaultroles
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - redhatcop.redhat.io
-  resources:
-  - vaultroles/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - redhatcop.redhat.io
-  resources:
-  - vaultroles/status
   verbs:
   - get
   - patch

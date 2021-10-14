@@ -1,0 +1,20 @@
+# permissions for end users to view kubernetesauthengineconfigs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubernetesauthengineconfig-viewer-role
+rules:
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - kubernetesauthengineconfigs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - kubernetesauthengineconfigs/status
+  verbs:
+  - get

@@ -6,21 +6,21 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.1
   creationTimestamp: null
-  name: vaultroles.redhatcop.redhat.io
+  name: kubernetesauthengineroles.redhatcop.redhat.io
 spec:
   group: redhatcop.redhat.io
   names:
-    kind: VaultRole
-    listKind: VaultRoleList
-    plural: vaultroles
-    singular: vaultrole
+    kind: KubernetesAuthEngineRole
+    listKind: KubernetesAuthEngineRoleList
+    plural: kubernetesauthengineroles
+    singular: kubernetesauthenginerole
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: VaultRole can be used to define a VaultRole for the kube-auth
-          authentication method
+        description: KubernetesAuthEngineRole can be used to define a KubernetesAuthEngineRole
+          for the kube-auth authentication method
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -35,7 +35,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: VaultRoleSpec defines the desired state of VaultRole
+            description: KubernetesAuthEngineRoleSpec defines the desired state of
+              KubernetesAuthEngineRole
             properties:
               audience:
                 description: Audience Audience claim to verify in the JWT.
@@ -211,7 +212,8 @@ spec:
             - targetServiceAccounts
             type: object
           status:
-            description: VaultRoleStatus defines the observed state of VaultRole
+            description: KubernetesAuthEngineRoleStatus defines the observed state
+              of KubernetesAuthEngineRole
             properties:
               conditions:
                 items:

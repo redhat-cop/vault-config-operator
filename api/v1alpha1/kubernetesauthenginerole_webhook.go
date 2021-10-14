@@ -26,9 +26,9 @@ import (
 )
 
 // log is for logging in this package.
-var vaultrolelog = logf.Log.WithName("vaultrole-resource")
+var kubernetesauthenginerolelog = logf.Log.WithName("kubernetesauthenginerole-resource")
 
-func (r *VaultRole) SetupWebhookWithManager(mgr ctrl.Manager) error {
+func (r *KubernetesAuthEngineRole) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
 		Complete()
@@ -37,21 +37,21 @@ func (r *VaultRole) SetupWebhookWithManager(mgr ctrl.Manager) error {
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-vaultrole,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=vaultroles,verbs=create;update,versions=v1alpha1,name=vvaultrole.kb.io,admissionReviewVersions={v1,v1beta1}
+//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-kubernetesauthenginerole,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=kubernetesauthengineroles,verbs=create;update,versions=v1alpha1,name=vkubernetesauthenginerole.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Validator = &VaultRole{}
+var _ webhook.Validator = &KubernetesAuthEngineRole{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *VaultRole) ValidateCreate() error {
-	vaultrolelog.Info("validate create", "name", r.Name)
+func (r *KubernetesAuthEngineRole) ValidateCreate() error {
+	kubernetesauthenginerolelog.Info("validate create", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
 	return r.ValidateEitherTargetNamespaceSelectorOrTargetNamespace()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *VaultRole) ValidateUpdate(old runtime.Object) error {
-	vaultrolelog.Info("validate update", "name", r.Name)
+func (r *KubernetesAuthEngineRole) ValidateUpdate(old runtime.Object) error {
+	kubernetesauthenginerolelog.Info("validate update", "name", r.Name)
 
 	// the path cannot be updated
 	if r.Spec.Path != old.(*SecretEngineMount).Spec.Path {
@@ -61,14 +61,14 @@ func (r *VaultRole) ValidateUpdate(old runtime.Object) error {
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *VaultRole) ValidateDelete() error {
-	vaultrolelog.Info("validate delete", "name", r.Name)
+func (r *KubernetesAuthEngineRole) ValidateDelete() error {
+	kubernetesauthenginerolelog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil
 }
 
-func (r *VaultRole) ValidateEitherTargetNamespaceSelectorOrTargetNamespace() error {
+func (r *KubernetesAuthEngineRole) ValidateEitherTargetNamespaceSelectorOrTargetNamespace() error {
 	count := 0
 	if r.Spec.TargetNamespaces.TargetNamespaceSelector != nil {
 		count++

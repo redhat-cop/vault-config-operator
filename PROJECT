@@ -13,7 +13,7 @@ resources:
   controller: true
   domain: redhat.io
   group: redhatcop
-  kind: VaultRole
+  kind: KubernetesAuthEngineRole
   path: github.com/redhat-cop/vault-config-operator/api/v1alpha1
   version: v1alpha1
   webhooks:
@@ -74,6 +74,32 @@ resources:
   path: github.com/redhat-cop/vault-config-operator/api/v1alpha1
   version: v1alpha1
   webhooks:
+    validation: true
+    webhookVersion: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: redhat.io
+  group: redhatcop
+  kind: AuthEngineMount
+  path: github.com/redhat-cop/vault-config-operator/api/v1alpha1
+  version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: redhat.io
+  group: redhatcop
+  kind: KubernetesAuthEngineConfig
+  path: github.com/redhat-cop/vault-config-operator/api/v1alpha1
+  version: v1alpha1
+  webhooks:
+    defaulting: true
     validation: true
     webhookVersion: v1
 version: "3"

@@ -193,7 +193,7 @@ func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 			s := a.(*corev1.Secret)
 			dbsecs, err := r.findApplicableBDSCForSecret(s)
 			if err != nil {
-				r.Log.Error(err, "unable to find applicable vaultRoles for namespace", "namespace", s.Name)
+				r.Log.Error(err, "unable to find applicable databaseSecretEngines for namespace", "namespace", s.Name)
 				return []reconcile.Request{}
 			}
 			for _, dbsec := range dbsecs {
@@ -215,7 +215,7 @@ func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 			rs := a.(*redhatcopv1alpha1.RandomSecret)
 			dbsecs, err := r.findApplicableDBSCForRandomSecret(rs)
 			if err != nil {
-				r.Log.Error(err, "unable to find applicable vaultRoles for namespace", "namespace", rs.Name)
+				r.Log.Error(err, "unable to find applicable databaseSecretEngines for namespace", "namespace", rs.Name)
 				return []reconcile.Request{}
 			}
 			for _, dbsec := range dbsecs {
@@ -269,7 +269,7 @@ func (r *DatabaseSecretEngineConfigReconciler) findApplicableDBSCForRandomSecret
 func (r *DatabaseSecretEngineConfigReconciler) IsValid(obj metav1.Object) (bool, error) {
 	instance, ok := obj.(*redhatcopv1alpha1.DatabaseSecretEngineConfig)
 	if !ok {
-		return false, errors.New("unable to conver metav1.Object to *VaultRoleReconciler")
+		return false, errors.New("unable to conver metav1.Object to *KubernetesAuthEngineRoleReconciler")
 	}
 	err := instance.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
 	return err == nil, err
@@ -308,7 +308,7 @@ func (r *DatabaseSecretEngineConfigReconciler) manageCleanUpLogic(context contex
 	}
 	err = vaultEndpoint.DeleteIfExists()
 	if err != nil {
-		r.Log.Error(err, "unable to delete VaultRole", "instance", instance)
+		r.Log.Error(err, "unable to delete KubernetesAuthEngineRole", "instance", instance)
 		return err
 	}
 	return nil
@@ -384,7 +384,7 @@ func (r *DatabaseSecretEngineConfigReconciler) manageReconcileLogic(context cont
 	}
 	err = vaultEndpoint.CreateOrUpdate()
 	if err != nil {
-		r.Log.Error(err, "unable to create/update VaultRole", "instance", instance)
+		r.Log.Error(err, "unable to create/update KubernetesAuthEngineRole", "instance", instance)
 		return err
 	}
 	return nil

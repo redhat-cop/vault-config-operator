@@ -2,12 +2,14 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/redhatcop.redhat.io_vaultroles.yaml
+- bases/redhatcop.redhat.io_kubernetesauthengineroles.yaml
 - bases/redhatcop.redhat.io_policies.yaml
 - bases/redhatcop.redhat.io_secretenginemounts.yaml
 - bases/redhatcop.redhat.io_databasesecretengineconfigs.yaml
 - bases/redhatcop.redhat.io_databasesecretengineroles.yaml
 - bases/redhatcop.redhat.io_randomsecrets.yaml
+- bases/redhatcop.redhat.io_authenginemounts.yaml
+- bases/redhatcop.redhat.io_kubernetesauthengineconfigs.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
@@ -19,6 +21,8 @@ patchesStrategicMerge:
 # - patches/webhook_in_databasesecretengineconfigs.yaml
 # - patches/webhook_in_databasesecretengineroles.yaml
 # - patches/webhook_in_randomsecrets.yaml
+#- patches/webhook_in_authenginemounts.yaml
+#- patches/webhook_in_kubernetesauthengineconfigs.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # ocp ca injection patches
@@ -32,12 +36,14 @@ patchesStrategicMerge:
 
 # [CERTMANAGER] To enable cert-manager, uncomment all the sections with [CERTMANAGER] prefix.
 # patches here are for enabling the CA injection for each CRD
-#- patches/cainjection_in_vaultroles.yaml
+#- patches/cainjection_in_kubernetesauthengineroles.yaml
 #- patches/cainjection_in_policies.yaml
 #- patches/cainjection_in_secretenginemounts.yaml
 #- patches/cainjection_in_databasesecretengineconfigs.yaml
 #- patches/cainjection_in_databasesecretengineroles.yaml
 #- patches/cainjection_in_randomsecrets.yaml
+#- patches/cainjection_in_authenginemounts.yaml
+#- patches/cainjection_in_kubernetesauthengineconfigs.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.
