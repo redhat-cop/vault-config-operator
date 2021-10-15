@@ -29,8 +29,8 @@ spec:
         - "--health-probe-bind-address=:8081"
         - "--metrics-bind-address=127.0.0.1:8080"
         - "--leader-elect"
-    volumes:
-      - name: tls-cert
-        secret:
-          defaultMode: 420
-          secretName: vault-config-operator-certs
+      volumes:
+        - name: tls-cert
+          secret:
+            defaultMode: 420
+            secretName: vault-config-operator-certs

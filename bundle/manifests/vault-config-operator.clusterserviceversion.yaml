@@ -131,7 +131,7 @@ metadata:
       Vault.
     operatorframework.io/suggested-namespace: vault-config-operator
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
-    operators.operatorframework.io/builder: operator-sdk-v1.12.0+git
+    operators.operatorframework.io/builder: operator-sdk-v1.13.0+git
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
     repository: https://github.com/redhat-cop/vault-config-operator
     support: Best Effort
@@ -200,6 +200,205 @@ spec:
     mediatype: image/png
   install:
     spec:
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - namespaces
+          - secrets
+          - serviceaccounts
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - secrets
+          - serviceaccounts
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - databasesecretengineconfigs
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - databasesecretengineconfigs
+          - randomsecrets
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - databasesecretengineconfigs/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - databasesecretengineconfigs/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - databasesecretengineroles
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - databasesecretengineroles/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - databasesecretengineroles/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - policies
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - policies/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - policies/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - randomsecrets
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - randomsecrets/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - randomsecrets/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - secretenginemounts
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - secretenginemounts/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - secretenginemounts/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - vaultroles
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - vaultroles/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - vaultroles/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - authentication.k8s.io
+          resources:
+          - tokenreviews
+          verbs:
+          - create
+        - apiGroups:
+          - authorization.k8s.io
+          resources:
+          - subjectaccessreviews
+          verbs:
+          - create
+        serviceAccountName: controller-manager
       deployments:
       - name: vault-config-operator-controller-manager
         spec:
@@ -241,6 +440,7 @@ spec:
                   httpGet:
                     path: /healthz
                     port: 8081
+                    scheme: HTTPS
                   initialDelaySeconds: 15
                   periodSeconds: 20
                 name: manager
@@ -252,6 +452,7 @@ spec:
                   httpGet:
                     path: /readyz
                     port: 8081
+                    scheme: HTTPS
                   initialDelaySeconds: 5
                   periodSeconds: 10
                 resources:
@@ -269,13 +470,51 @@ spec:
                   readOnly: true
               securityContext:
                 runAsNonRoot: true
-              serviceAccountName: vault-config-operator
+              serviceAccountName: controller-manager
               terminationGracePeriodSeconds: 10
               volumes:
               - name: cert
                 secret:
                   defaultMode: 420
                   secretName: webhook-server-cert
+              - name: tls-cert
+                secret:
+                  defaultMode: 420
+                  secretName: vault-config-operator-certs
+      permissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - patch
+          - delete
+        - apiGroups:
+          - coordination.k8s.io
+          resources:
+          - leases
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - patch
+          - delete
+        - apiGroups:
+          - ""
+          resources:
+          - events
+          verbs:
+          - create
+          - patch
+        serviceAccountName: controller-manager
     strategy: deployment
   installModes:
   - supported: false

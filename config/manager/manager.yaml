@@ -3,6 +3,7 @@ kind: Namespace
 metadata:
   labels:
     control-plane: vault-config-operator
+    openshift.io/cluster-monitoring: "true"
   name: system
 ---
 apiVersion: apps/v1
@@ -37,12 +38,14 @@ spec:
           httpGet:
             path: /healthz
             port: 8081
+            scheme: HTTPS
           initialDelaySeconds: 15
           periodSeconds: 20
         readinessProbe:
           httpGet:
             path: /readyz
             port: 8081
+            scheme: HTTPS
           initialDelaySeconds: 5
           periodSeconds: 10
         resources:
@@ -52,5 +55,5 @@ spec:
           requests:
             cpu: 100m
             memory: 20Mi
-      serviceAccountName: vault-config-operator
+      serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10
