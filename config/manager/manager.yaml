@@ -38,22 +38,22 @@ spec:
           httpGet:
             path: /healthz
             port: 8081
-            scheme: HTTPS
+            scheme: HTTP
           initialDelaySeconds: 15
           periodSeconds: 20
         readinessProbe:
           httpGet:
             path: /readyz
             port: 8081
-            scheme: HTTPS
+            scheme: HTTP
           initialDelaySeconds: 5
           periodSeconds: 10
         resources:
           limits:
             cpu: 200m
-            memory: 100Mi
+            memory: 250Mi
           requests:
             cpu: 100m
-            memory: 20Mi
+            memory: 250Mi
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10

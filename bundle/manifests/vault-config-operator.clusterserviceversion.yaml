@@ -143,6 +143,8 @@ metadata:
   name: vault-config-operator.v0.0.1
   namespace: placeholder
 spec:
+  annotations:
+    service.beta.openshift.io/inject-cabundle: "true"
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
@@ -440,7 +442,7 @@ spec:
                   httpGet:
                     path: /healthz
                     port: 8081
-                    scheme: HTTPS
+                    scheme: HTTP
                   initialDelaySeconds: 15
                   periodSeconds: 20
                 name: manager
@@ -452,16 +454,16 @@ spec:
                   httpGet:
                     path: /readyz
                     port: 8081
-                    scheme: HTTPS
+                    scheme: HTTP
                   initialDelaySeconds: 5
                   periodSeconds: 10
                 resources:
                   limits:
                     cpu: 200m
-                    memory: 100Mi
+                    memory: 250Mi
                   requests:
                     cpu: 100m
-                    memory: 20Mi
+                    memory: 250Mi
                 securityContext:
                   allowPrivilegeEscalation: false
                 volumeMounts:

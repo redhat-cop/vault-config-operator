@@ -4,4 +4,4 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     service.beta.openshift.io/inject-cabundle: 'true'
-  name: databasesecretengineconfigs.redhatcop.redhat.io
+  name: policies.redhatcop.redhat.io
