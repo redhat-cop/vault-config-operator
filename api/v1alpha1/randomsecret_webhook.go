@@ -19,8 +19,6 @@ package v1alpha1
 import (
 	"errors"
 
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/hcl/v2/hclsimple"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -48,7 +46,7 @@ func (r *RandomSecret) ValidateCreate() error {
 	randomsecretlog.Info("validate create", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
-	return r.validate()
+	return r.isValid()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
@@ -66,7 +64,7 @@ func (r *RandomSecret) ValidateUpdate(old runtime.Object) error {
 	}
 
 	// TODO(user): fill in your validation logic upon object update.
-	return r.validate()
+	return r.isValid()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
@@ -74,34 +72,5 @@ func (r *RandomSecret) ValidateDelete() error {
 	randomsecretlog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
-}
-
-func (r *RandomSecret) validate() error {
-	result := &multierror.Error{}
-	result = multierror.Append(result, r.validateEitherPasswordPolicyReferenceOrInline())
-	result = multierror.Append(result, r.validateInlinePasswordPolicyFormat())
-	return result.ErrorOrNil()
-}
-
-func (r *RandomSecret) validateEitherPasswordPolicyReferenceOrInline() error {
-	count := 0
-	if r.Spec.SecretFormat.InlinePasswordPolicy != "" {
-		count++
-	}
-	if r.Spec.SecretFormat.PasswordPolicyName != "" {
-		count++
-	}
-	if count != 1 {
-		return errors.New("only one of InlinePasswordPolicy or PasswordPolicyName can be defined")
-	}
-	return nil
-}
-
-func (r *RandomSecret) validateInlinePasswordPolicyFormat() error {
-	if r.Spec.SecretFormat.InlinePasswordPolicy != "" {
-		passwordPolicyFormat := &PasswordPolicyFormat{}
-		return hclsimple.Decode(r.Spec.SecretKey, []byte(r.Spec.SecretFormat.InlinePasswordPolicy), nil, passwordPolicyFormat)
-	}
 	return nil
 }

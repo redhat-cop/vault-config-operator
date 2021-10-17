@@ -19,12 +19,11 @@ package controllers
 import (
 	"bytes"
 	"context"
-	"errors"
 
 	"github.com/go-logr/logr"
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
-	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -79,44 +78,16 @@ func (r *DatabaseSecretEngineConfigReconciler) Reconcile(ctx context.Context, re
 		return reconcile.Result{}, err
 	}
 
-	if ok, err := r.IsValid(instance); !ok {
-		return r.ManageError(ctx, instance, err)
-	}
-
-	if ok := r.IsInitialized(instance); !ok {
-		err := r.GetClient().Update(ctx, instance)
-		if err != nil {
-			r.Log.Error(err, "unable to update instance", "instance", instance)
-			return r.ManageError(ctx, instance, err)
-		}
-		return reconcile.Result{}, nil
-	}
-
-	if util.IsBeingDeleted(instance) {
-		if !util.HasFinalizer(instance, r.ControllerName) {
-			return reconcile.Result{}, nil
-		}
-		err := r.manageCleanUpLogic(ctx, instance)
-		if err != nil {
-			r.Log.Error(err, "unable to delete instance", "instance", instance)
-			return r.ManageError(ctx, instance, err)
-		}
-		util.RemoveFinalizer(instance, r.ControllerName)
-		err = r.GetClient().Update(ctx, instance)
-		if err != nil {
-			r.Log.Error(err, "unable to update instance", "instance", instance)
-			return r.ManageError(ctx, instance, err)
-		}
-		return reconcile.Result{}, nil
-	}
-
-	err = r.manageReconcileLogic(ctx, instance)
+	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
+	vaultClient, err := instance.Spec.Authentication.GetVaultClient(ctx, instance.Namespace)
 	if err != nil {
-		r.Log.Error(err, "unable to complete reconcile logic", "instance", instance)
+		r.Log.Error(err, "unable to create vault client", "instance", instance)
 		return r.ManageError(ctx, instance, err)
 	}
+	ctx = context.WithValue(ctx, "vaultClient", vaultClient)
+	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
 
-	return r.ManageSuccess(ctx, instance)
+	return vaultResource.Reconcile(ctx, instance)
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -133,7 +104,7 @@ func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 			if !ok {
 				return true
 			}
-			return bytes.Compare(oldSecret.Data["username"], newSecret.Data["username"]) != 0 || bytes.Compare(oldSecret.Data["password"], newSecret.Data["password"]) != 0
+			return bytes.Equal(oldSecret.Data["username"], newSecret.Data["username"]) || bytes.Equal(oldSecret.Data["password"], newSecret.Data["password"])
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
 			newSecret, ok := e.Object.DeepCopyObject().(*corev1.Secret)
@@ -264,128 +235,4 @@ func (r *DatabaseSecretEngineConfigReconciler) findApplicableDBSCForRandomSecret
 		}
 	}
 	return result, nil
-}
-
-func (r *DatabaseSecretEngineConfigReconciler) IsValid(obj metav1.Object) (bool, error) {
-	instance, ok := obj.(*redhatcopv1alpha1.DatabaseSecretEngineConfig)
-	if !ok {
-		return false, errors.New("unable to conver metav1.Object to *KubernetesAuthEngineRoleReconciler")
-	}
-	err := instance.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
-	return err == nil, err
-}
-
-func (r *DatabaseSecretEngineConfigReconciler) IsInitialized(obj metav1.Object) bool {
-	isInitialized := true
-	cobj, ok := obj.(client.Object)
-	if !ok {
-		r.Log.Error(errors.New("unable to convert to client.Object"), "unable to convert to client.Object")
-		return false
-	}
-	if !util.HasFinalizer(cobj, r.ControllerName) {
-		util.AddFinalizer(cobj, r.ControllerName)
-		isInitialized = false
-	}
-	instance, ok := obj.(*redhatcopv1alpha1.DatabaseSecretEngineConfig)
-	if !ok {
-		r.Log.Error(errors.New("unable to convert to redhatcopv1alpha1.DatabaseSecretEngineConfig"), "unable to convert to redhatcopv1alpha1.DatabaseSecretEngineConfig")
-		return false
-	}
-	if instance.Spec.Authentication.ServiceAccount == nil {
-		instance.Spec.Authentication.ServiceAccount = &corev1.LocalObjectReference{
-			Name: "default",
-		}
-		isInitialized = false
-	}
-	return isInitialized
-}
-
-func (r *DatabaseSecretEngineConfigReconciler) manageCleanUpLogic(context context.Context, instance *redhatcopv1alpha1.DatabaseSecretEngineConfig) error {
-	vaultEndpoint, err := vaultutils.NewVaultEndpoint(context, &instance.Spec.Authentication, instance, instance.Namespace, r.GetClient(), r.Log.WithName("vaultutils"))
-	if err != nil {
-		r.Log.Error(err, "unable to initialize vaultEndpoint with", "instance", instance)
-		return err
-	}
-	err = vaultEndpoint.DeleteIfExists()
-	if err != nil {
-		r.Log.Error(err, "unable to delete KubernetesAuthEngineRole", "instance", instance)
-		return err
-	}
-	return nil
-}
-
-func (r *DatabaseSecretEngineConfigReconciler) setInternalCredentials(context context.Context, instance *redhatcopv1alpha1.DatabaseSecretEngineConfig, vaultEndpoint *vaultutils.VaultEndpoint) error {
-	if instance.Spec.RootCredentials.RandomSecret != nil {
-		randomSecret := &redhatcopv1alpha1.RandomSecret{}
-		err := r.GetClient().Get(context, types.NamespacedName{
-			Namespace: instance.Namespace,
-			Name:      instance.Spec.RootCredentials.RandomSecret.Name,
-		}, randomSecret)
-		if err != nil {
-			r.Log.Error(err, "unable to retrieve RandomSecret", "instance", instance)
-			return err
-		}
-		secret, err := vaultEndpoint.GetVaultClient().Logical().Read(randomSecret.GetPath())
-		if err != nil {
-			r.Log.Error(err, "unable to retrieve vault secret", "instance", instance)
-			return err
-		}
-		instance.SetUsernameAndPassword(instance.Spec.Username, secret.Data[randomSecret.Spec.SecretKey].(string))
-		r.Log.V(1).Info("", "username", instance.Spec.Username, "password", secret.Data[randomSecret.Spec.SecretKey].(string))
-		return nil
-	}
-	if instance.Spec.RootCredentials.Secret != nil {
-		secret := &corev1.Secret{}
-		err := r.GetClient().Get(context, types.NamespacedName{
-			Namespace: instance.Namespace,
-			Name:      instance.Spec.RootCredentials.Secret.Name,
-		}, secret)
-		if err != nil {
-			r.Log.Error(err, "unable to retrieve Secret", "instance", instance)
-			return err
-		}
-		if instance.Spec.Username == "" {
-			instance.SetUsernameAndPassword(string(secret.Data[instance.Spec.RootCredentials.UsernameKey]), string(secret.Data[instance.Spec.RootCredentials.PasswordKey]))
-			r.Log.V(1).Info("", "username", string(secret.Data[instance.Spec.RootCredentials.UsernameKey]), "password", string(secret.Data[instance.Spec.RootCredentials.PasswordKey]))
-		} else {
-			instance.SetUsernameAndPassword(instance.Spec.Username, string(secret.Data[instance.Spec.RootCredentials.PasswordKey]))
-			r.Log.V(1).Info("", "username", instance.Spec.Username, "password", string(secret.Data[instance.Spec.RootCredentials.PasswordKey]))
-		}
-		return nil
-	}
-	if instance.Spec.RootCredentials.VaultSecret != nil {
-		secret, err := vaultEndpoint.GetVaultClient().Logical().Read(string(instance.Spec.RootCredentials.VaultSecret.Path))
-		if err != nil {
-			r.Log.Error(err, "unable to retrieve vault secret", "instance", instance)
-			return err
-		}
-		if instance.Spec.Username == "" {
-			instance.SetUsernameAndPassword(secret.Data[instance.Spec.RootCredentials.UsernameKey].(string), secret.Data[instance.Spec.RootCredentials.PasswordKey].(string))
-			r.Log.V(1).Info("", "username", secret.Data[instance.Spec.RootCredentials.UsernameKey].(string), "password", secret.Data[instance.Spec.RootCredentials.PasswordKey].(string))
-		} else {
-			instance.SetUsernameAndPassword(instance.Spec.Username, secret.Data[instance.Spec.RootCredentials.PasswordKey].(string))
-			r.Log.V(1).Info("", "username", instance.Spec.Username, "password", secret.Data[instance.Spec.RootCredentials.PasswordKey].(string))
-		}
-		return nil
-	}
-	return errors.New("no means of retrieving a secret was specified")
-}
-
-func (r *DatabaseSecretEngineConfigReconciler) manageReconcileLogic(context context.Context, instance *redhatcopv1alpha1.DatabaseSecretEngineConfig) error {
-	vaultEndpoint, err := vaultutils.NewVaultEndpoint(context, &instance.Spec.Authentication, instance, instance.Namespace, r.GetClient(), r.Log.WithName("vaultutils"))
-	if err != nil {
-		r.Log.Error(err, "unable to initialize vaultEndpoint with", "instance", instance)
-		return err
-	}
-	err = r.setInternalCredentials(context, instance, vaultEndpoint)
-	if err != nil {
-		r.Log.Error(err, "unable to retrieve needed secret", "instance", instance)
-		return err
-	}
-	err = vaultEndpoint.CreateOrUpdate()
-	if err != nil {
-		r.Log.Error(err, "unable to create/update KubernetesAuthEngineRole", "instance", instance)
-		return err
-	}
-	return nil
 }

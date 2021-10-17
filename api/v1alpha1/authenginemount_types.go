@@ -17,11 +17,12 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"reflect"
-	"strconv"
 
-	vault "github.com/hashicorp/vault/api"
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -108,47 +109,63 @@ type AuthMountConfig struct {
 	AllowedResponseHeaders []string `json:"allowedResponseHeaders,omitempty"`
 }
 
-func (mount *AuthMount) GetMountInputFromMount() *vault.MountInput {
-	return &vault.MountInput{
-		Type:        mount.Type,
-		Description: mount.Description,
-		Config:      *mount.Config.getMountConfigInputFromMountConfig(),
-		Local:       mount.Local,
-		SealWrap:    mount.SealWrap,
+var _ vaultutils.VaultObject = &AuthEngineMount{}
+var _ vaultutils.VaultEngineObject = &AuthEngineMount{}
+
+func (mc *AuthMountConfig) toMap() map[string]interface{} {
+	return map[string]interface{}{
+		"default_lease_ttl":            mc.DefaultLeaseTTL,
+		"max_lease_ttl":                mc.MaxLeaseTTL,
+		"audit_non_hmac_request_keys":  mc.AuditNonHMACRequestKeys,
+		"audit_non_hmac_response_keys": mc.AuditNonHMACResponseKeys,
+		"listing_visibility":           mc.ListingVisibility,
+		"passthrough_request_headers":  mc.PassthroughRequestHeaders,
+		"allowed_response_headers":     mc.AllowedResponseHeaders,
 	}
 }
 
-func (mountConfig *AuthMountConfig) getMountConfigInputFromMountConfig() *vault.MountConfigInput {
-	return &vault.MountConfigInput{
-		DefaultLeaseTTL:           mountConfig.DefaultLeaseTTL,
-		MaxLeaseTTL:               mountConfig.MaxLeaseTTL,
-		AuditNonHMACRequestKeys:   mountConfig.AuditNonHMACRequestKeys,
-		AuditNonHMACResponseKeys:  mountConfig.AuditNonHMACResponseKeys,
-		ListingVisibility:         mountConfig.ListingVisibility,
-		PassthroughRequestHeaders: mountConfig.PassthroughRequestHeaders,
-		AllowedResponseHeaders:    mountConfig.AllowedResponseHeaders,
+func (m *AuthMount) toMap() map[string]interface{} {
+	return map[string]interface{}{
+		"type":        m.Type,
+		"description": m.Description,
+		"config":      m.Config.toMap(),
+		"local":       m.Local,
+		"seal_wrap":   m.SealWrap,
 	}
 }
 
 func (d *AuthEngineMount) GetPath() string {
-	return cleansePath(string("auth/"+d.Spec.Path) + "/" + d.Name)
+	return cleansePath("sys/auth/" + string(d.Spec.Path) + "/" + d.Name)
 }
 
-func (mountConfig *AuthMountConfig) IsEquivalentTo(secretEngineMount *vault.MountConfigOutput) bool {
-	currentMountConfig := authMountConfigFromMountConfigOutput(secretEngineMount)
-	return reflect.DeepEqual(currentMountConfig, mountConfig)
+func (d *AuthEngineMount) GetPayload() map[string]interface{} {
+	return d.Spec.toMap()
+}
+func (d *AuthEngineMount) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+	configMap := d.Spec.Config.toMap()
+	return reflect.DeepEqual(configMap, payload)
 }
 
-func authMountConfigFromMountConfigOutput(mountConfigOutput *vault.MountConfigOutput) *AuthMountConfig {
-	return &AuthMountConfig{
-		DefaultLeaseTTL:           strconv.Itoa(mountConfigOutput.DefaultLeaseTTL),
-		MaxLeaseTTL:               strconv.Itoa(mountConfigOutput.MaxLeaseTTL),
-		AuditNonHMACRequestKeys:   mountConfigOutput.AuditNonHMACRequestKeys,
-		AuditNonHMACResponseKeys:  mountConfigOutput.AuditNonHMACResponseKeys,
-		ListingVisibility:         mountConfigOutput.ListingVisibility,
-		PassthroughRequestHeaders: mountConfigOutput.PassthroughRequestHeaders,
-		AllowedResponseHeaders:    mountConfigOutput.AllowedResponseHeaders,
-	}
+func (d *AuthEngineMount) IsInitialized() bool {
+	return d.Spec.Authentication.IsInitialized()
+}
+
+func (d *AuthEngineMount) IsValid() (bool, error) {
+	return true, nil
+}
+
+func (d *AuthEngineMount) PrepareInternalValues(context context.Context, object client.Object) error {
+	return nil
+}
+
+func (d *AuthEngineMount) GetEngineListPah() string {
+	return "sys/auth"
+}
+func (d *AuthEngineMount) GetEngineTunePath() string {
+	return d.GetPath() + "/tune"
+}
+func (d *AuthEngineMount) GetTunePayload() map[string]interface{} {
+	return d.Spec.Config.toMap()
 }
 
 // AuthEngineMountStatus defines the observed state of AuthEngineMount

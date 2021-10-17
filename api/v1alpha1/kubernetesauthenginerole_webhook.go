@@ -46,7 +46,7 @@ func (r *KubernetesAuthEngineRole) ValidateCreate() error {
 	kubernetesauthenginerolelog.Info("validate create", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
-	return r.ValidateEitherTargetNamespaceSelectorOrTargetNamespace()
+	return r.isValid()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
@@ -57,7 +57,7 @@ func (r *KubernetesAuthEngineRole) ValidateUpdate(old runtime.Object) error {
 	if r.Spec.Path != old.(*SecretEngineMount).Spec.Path {
 		return errors.New("spec.path cannot be updated")
 	}
-	return r.ValidateEitherTargetNamespaceSelectorOrTargetNamespace()
+	return r.isValid()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
@@ -65,19 +65,5 @@ func (r *KubernetesAuthEngineRole) ValidateDelete() error {
 	kubernetesauthenginerolelog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
-}
-
-func (r *KubernetesAuthEngineRole) ValidateEitherTargetNamespaceSelectorOrTargetNamespace() error {
-	count := 0
-	if r.Spec.TargetNamespaces.TargetNamespaceSelector != nil {
-		count++
-	}
-	if r.Spec.TargetNamespaces.TargetNamespaces != nil {
-		count++
-	}
-	if count != 1 {
-		return errors.New("Only one of TargetNamespaceSelector or TargetNamespaces can be specified.")
-	}
 	return nil
 }

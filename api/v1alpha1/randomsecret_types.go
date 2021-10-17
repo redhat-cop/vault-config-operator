@@ -17,14 +17,18 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"errors"
 	"math/rand"
 	"time"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2/hclsimple"
+	vault "github.com/hashicorp/vault/api"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	"github.com/scylladb/go-set/u8set"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -72,6 +76,14 @@ func (d *RandomSecret) GetPayload() map[string]interface{} {
 }
 func (d *RandomSecret) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	return false
+}
+
+func (d *RandomSecret) IsInitialized() bool {
+	return d.Spec.Authentication.IsInitialized()
+}
+
+func (d *RandomSecret) PrepareInternalValues(context context.Context, object client.Object) error {
+	return d.GenerateNewPassword(context)
 }
 
 type PasswordPolicy struct {
@@ -143,7 +155,7 @@ type PasswordPolicyRule struct {
 	MinChars int    `hcl:"min-chars"`
 }
 
-func (d *RandomSecret) GenerateNewPassword(vaultEdnpoint *vaultutils.VaultEndpoint) error {
+func (d *RandomSecret) GenerateNewPassword(context context.Context) error {
 	if d.Spec.SecretFormat.InlinePasswordPolicy != "" {
 		policy := &PasswordPolicyFormat{}
 		err := hclsimple.Decode(d.Spec.SecretKey, []byte(d.Spec.SecretFormat.InlinePasswordPolicy), nil, policy)
@@ -158,7 +170,8 @@ func (d *RandomSecret) GenerateNewPassword(vaultEdnpoint *vaultutils.VaultEndpoi
 		}
 	}
 	if d.Spec.SecretFormat.PasswordPolicyName != "" {
-		response, err := vaultEdnpoint.GetVaultClient().Logical().Read("/sys/policies/password/" + d.Spec.SecretFormat.PasswordPolicyName + "/generate")
+		vaultClient := context.Value("vaultClient").(*vault.Client)
+		response, err := vaultClient.Logical().Read("/sys/policies/password/" + d.Spec.SecretFormat.PasswordPolicyName + "/generate")
 		if err != nil {
 			return err
 		} else {
@@ -223,4 +236,38 @@ func randStringBytes(n int, letterUints []uint8) string {
 		b[i] = letterUints[rand.Intn(len(letterUints))]
 	}
 	return string(b)
+}
+
+func (r *RandomSecret) IsValid() (bool, error) {
+	err := r.isValid()
+	return err == nil, err
+}
+
+func (r *RandomSecret) isValid() error {
+	result := &multierror.Error{}
+	result = multierror.Append(result, r.validateEitherPasswordPolicyReferenceOrInline())
+	result = multierror.Append(result, r.validateInlinePasswordPolicyFormat())
+	return result.ErrorOrNil()
+}
+
+func (r *RandomSecret) validateEitherPasswordPolicyReferenceOrInline() error {
+	count := 0
+	if r.Spec.SecretFormat.InlinePasswordPolicy != "" {
+		count++
+	}
+	if r.Spec.SecretFormat.PasswordPolicyName != "" {
+		count++
+	}
+	if count != 1 {
+		return errors.New("only one of InlinePasswordPolicy or PasswordPolicyName can be defined")
+	}
+	return nil
+}
+
+func (r *RandomSecret) validateInlinePasswordPolicyFormat() error {
+	if r.Spec.SecretFormat.InlinePasswordPolicy != "" {
+		passwordPolicyFormat := &PasswordPolicyFormat{}
+		return hclsimple.Decode(r.Spec.SecretKey, []byte(r.Spec.SecretFormat.InlinePasswordPolicy), nil, passwordPolicyFormat)
+	}
+	return nil
 }

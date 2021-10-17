@@ -17,11 +17,42 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
+	"reflect"
+
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+
+var _ vaultutils.VaultObject = &Policy{}
+
+func (d *Policy) GetPath() string {
+	return "sys/policy"
+}
+func (d *Policy) GetPayload() map[string]interface{} {
+	return map[string]interface{}{
+		"policy": d.Spec.Policy,
+	}
+}
+func (d *Policy) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+	return reflect.DeepEqual(d.GetPayload(), payload)
+}
+
+func (d *Policy) IsInitialized() bool {
+	return d.Spec.Authentication.IsInitialized()
+}
+
+func (d *Policy) PrepareInternalValues(context context.Context, object client.Object) error {
+	return nil
+}
+
+func (r *Policy) IsValid() (bool, error) {
+	return true, nil
+}
 
 // PolicySpec defines the desired state of Policy
 type PolicySpec struct {

@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"errors"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -36,7 +35,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
-	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 )
 
 // KubernetesAuthEngineRoleReconciler reconciles a KubernetesAuthEngineRole object
@@ -77,44 +76,16 @@ func (r *KubernetesAuthEngineRoleReconciler) Reconcile(ctx context.Context, req 
 		return reconcile.Result{}, err
 	}
 
-	if ok, err := r.IsValid(instance); !ok {
-		return r.ManageError(ctx, instance, err)
-	}
-
-	if ok := r.IsInitialized(instance); !ok {
-		err := r.GetClient().Update(ctx, instance)
-		if err != nil {
-			r.Log.Error(err, "unable to update instance", "instance", instance)
-			return r.ManageError(ctx, instance, err)
-		}
-		return reconcile.Result{}, nil
-	}
-
-	if util.IsBeingDeleted(instance) {
-		if !util.HasFinalizer(instance, r.ControllerName) {
-			return reconcile.Result{}, nil
-		}
-		err := r.manageCleanUpLogic(ctx, instance)
-		if err != nil {
-			r.Log.Error(err, "unable to delete instance", "instance", instance)
-			return r.ManageError(ctx, instance, err)
-		}
-		util.RemoveFinalizer(instance, r.ControllerName)
-		err = r.GetClient().Update(ctx, instance)
-		if err != nil {
-			r.Log.Error(err, "unable to update instance", "instance", instance)
-			return r.ManageError(ctx, instance, err)
-		}
-		return reconcile.Result{}, nil
-	}
-
-	err = r.manageReconcileLogic(ctx, instance)
+	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
+	vaultClient, err := instance.Spec.Authentication.GetVaultClient(ctx, instance.Namespace)
 	if err != nil {
-		r.Log.Error(err, "unable to complete reconcile logic", "instance", instance)
+		r.Log.Error(err, "unable to create vault client", "instance", instance)
 		return r.ManageError(ctx, instance, err)
 	}
+	ctx = context.WithValue(ctx, "vaultClient", vaultClient)
+	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
 
-	return r.ManageSuccess(ctx, instance)
+	return vaultResource.Reconcile(ctx, instance)
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -168,97 +139,4 @@ func (r *KubernetesAuthEngineRoleReconciler) findApplicableKubernetesAuthEngineR
 		}
 	}
 	return result, nil
-}
-
-func (r *KubernetesAuthEngineRoleReconciler) findSelectedNamespaceNames(context context.Context, instance *redhatcopv1alpha1.KubernetesAuthEngineRole) ([]string, error) {
-	result := []string{}
-	namespaceList := &corev1.NamespaceList{}
-	labelSelector, err := metav1.LabelSelectorAsSelector(instance.Spec.TargetNamespaces.TargetNamespaceSelector)
-	if err != nil {
-		r.Log.Error(err, "unable to create selector from label selector", "selector", instance.Spec.TargetNamespaces.TargetNamespaceSelector)
-		return nil, err
-	}
-	err = r.GetClient().List(context, namespaceList, &client.ListOptions{
-		LabelSelector: labelSelector,
-	})
-	if err != nil {
-		r.Log.Error(err, "unable to retrieve the list of namespaces")
-		return nil, err
-	}
-	for i := range namespaceList.Items {
-		result = append(result, namespaceList.Items[i].Name)
-	}
-	return result, nil
-}
-
-func (r *KubernetesAuthEngineRoleReconciler) IsValid(obj metav1.Object) (bool, error) {
-	instance, ok := obj.(*redhatcopv1alpha1.KubernetesAuthEngineRole)
-	if !ok {
-		return false, errors.New("unable to conver metav1.Object to *KubernetesAuthEngineRoleReconciler")
-	}
-	err := instance.ValidateEitherTargetNamespaceSelectorOrTargetNamespace()
-	return err == nil, err
-}
-
-func (r *KubernetesAuthEngineRoleReconciler) IsInitialized(obj metav1.Object) bool {
-	isInitialized := true
-	cobj, ok := obj.(client.Object)
-	if !ok {
-		r.Log.Error(errors.New("unable to convert to client.Object"), "unable to convert to client.Object")
-		return false
-	}
-	if !util.HasFinalizer(cobj, r.ControllerName) {
-		util.AddFinalizer(cobj, r.ControllerName)
-		isInitialized = false
-	}
-	instance, ok := obj.(*redhatcopv1alpha1.KubernetesAuthEngineRole)
-	if !ok {
-		r.Log.Error(errors.New("unable to convert to redhatcopv1alpha1.KubernetesAuthEngineRole"), "unable to convert to redhatcopv1alpha1.KubernetesAuthEngineRole")
-		return false
-	}
-	if instance.Spec.Authentication.ServiceAccount == nil {
-		instance.Spec.Authentication.ServiceAccount = &corev1.LocalObjectReference{
-			Name: "default",
-		}
-		isInitialized = false
-	}
-	return isInitialized
-}
-
-func (r *KubernetesAuthEngineRoleReconciler) manageCleanUpLogic(context context.Context, instance *redhatcopv1alpha1.KubernetesAuthEngineRole) error {
-	vaultEndpoint, err := vaultutils.NewVaultEndpoint(context, &instance.Spec.Authentication, instance, instance.Namespace, r.GetClient(), r.Log.WithName("vaultutils"))
-	if err != nil {
-		r.Log.Error(err, "unable to initialize vaultEndpoint with", "instance", instance)
-		return err
-	}
-	err = vaultEndpoint.DeleteIfExists()
-	if err != nil {
-		r.Log.Error(err, "unable to delete KubernetesAuthEngineRole", "instance", instance)
-		return err
-	}
-	return nil
-}
-
-func (r *KubernetesAuthEngineRoleReconciler) manageReconcileLogic(context context.Context, instance *redhatcopv1alpha1.KubernetesAuthEngineRole) error {
-	if instance.Spec.TargetNamespaces.TargetNamespaceSelector != nil {
-		namespaces, err := r.findSelectedNamespaceNames(context, instance)
-		if err != nil {
-			r.Log.Error(err, "unable to retrieve selected namespaces", "instance", instance)
-			return err
-		}
-		instance.SetInternalNamespaces(namespaces)
-	} else {
-		instance.SetInternalNamespaces(instance.Spec.TargetNamespaces.TargetNamespaces)
-	}
-	vaultEndpoint, err := vaultutils.NewVaultEndpoint(context, &instance.Spec.Authentication, instance, instance.Namespace, r.GetClient(), r.Log.WithName("vaultutils"))
-	if err != nil {
-		r.Log.Error(err, "unable to initialize vaultEndpoint with", "instance", instance)
-		return err
-	}
-	err = vaultEndpoint.CreateOrUpdate()
-	if err != nil {
-		r.Log.Error(err, "unable to create/update KubernetesAuthEngineRole", "instance", instance)
-		return err
-	}
-	return nil
 }

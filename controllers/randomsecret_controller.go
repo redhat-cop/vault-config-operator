@@ -18,16 +18,13 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	"reflect"
 	"time"
 
-	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -36,7 +33,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
-	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 )
 
 // RandomSecretReconciler reconciles a RandomSecret object
@@ -77,54 +74,38 @@ func (r *RandomSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return reconcile.Result{}, err
 	}
 
-	if ok, err := r.IsValid(instance); !ok {
-		return r.ManageError(ctx, instance, err)
-	}
-
-	if ok := r.IsInitialized(instance); !ok {
-		err := r.GetClient().Update(ctx, instance)
-		if err != nil {
-			r.Log.Error(err, "unable to update instance", "instance", instance)
-			return r.ManageError(ctx, instance, err)
-		}
+	// how to read this if: if the secret has been initialized once and there is no refresh period or time to refresh has not arrived yet, return.
+	if instance.Status.LastVaultSecretUpdate != nil && (instance.Spec.RefreshPeriod != nil || (instance.Spec.RefreshPeriod != nil && !instance.Status.LastVaultSecretUpdate.Add(instance.Spec.RefreshPeriod.Duration).Before(time.Now()))) {
 		return reconcile.Result{}, nil
 	}
 
-	if util.IsBeingDeleted(instance) {
-		if !util.HasFinalizer(instance, r.ControllerName) {
-			return reconcile.Result{}, nil
-		}
-		err := r.manageCleanUpLogic(ctx, instance)
-		if err != nil {
-			r.Log.Error(err, "unable to delete instance", "instance", instance)
-			return r.ManageError(ctx, instance, err)
-		}
-		util.RemoveFinalizer(instance, r.ControllerName)
-		err = r.GetClient().Update(ctx, instance)
-		if err != nil {
-			r.Log.Error(err, "unable to update instance", "instance", instance)
-			return r.ManageError(ctx, instance, err)
-		}
-		return reconcile.Result{}, nil
-	}
-
-	err = r.manageReconcileLogic(ctx, instance)
+	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
+	vaultClient, err := instance.Spec.Authentication.GetVaultClient(ctx, instance.Namespace)
 	if err != nil {
-		r.Log.Error(err, "unable to complete reconcile logic", "instance", instance)
+		r.Log.Error(err, "unable to create vault client", "instance", instance)
 		return r.ManageError(ctx, instance, err)
 	}
+	ctx = context.WithValue(ctx, "vaultClient", vaultClient)
+	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
 
-	if instance.Spec.RefreshPeriod.Size() > 0 {
-		//we reschedule the next reconcile at the time in the future corresponding to
-		nextSchedule := time.Until(instance.Status.LastVaultSecretUpdate.Add(instance.Spec.RefreshPeriod.Duration))
-		if nextSchedule > 0 {
-			return r.ManageSuccessWithRequeue(ctx, instance, nextSchedule)
-		} else {
-			return r.ManageSuccessWithRequeue(ctx, instance, time.Second)
-		}
+	result, err := vaultResource.Reconcile(ctx, instance)
+
+	if err != nil {
+		return result, err
+	}
+
+	now := metav1.NewTime(time.Now())
+	instance.Status.LastVaultSecretUpdate = &now
+	err = r.GetClient().Status().Update(ctx, instance)
+	if err != nil {
+		r.Log.Error(err, "unable to update random secret", "instance", instance)
+		return r.ManageError(ctx, instance, err)
+	}
+	if instance.Spec.RefreshPeriod != nil {
+		result.RequeueAfter = instance.Spec.RefreshPeriod.Duration
 
 	}
-	return r.ManageSuccess(ctx, instance)
+	return result, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -157,72 +138,4 @@ func (r *RandomSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&redhatcopv1alpha1.RandomSecret{}, builder.WithPredicates(needsCreation, util.ResourceGenerationOrFinalizerChangedPredicate{})).
 		Complete(r)
-}
-
-func (r *RandomSecretReconciler) IsValid(obj metav1.Object) (bool, error) {
-	return true, nil
-}
-
-func (r *RandomSecretReconciler) IsInitialized(obj metav1.Object) bool {
-	isInitialized := true
-	cobj, ok := obj.(client.Object)
-	if !ok {
-		r.Log.Error(errors.New("unable to convert to client.Object"), "unable to convert to client.Object")
-		return false
-	}
-	if !util.HasFinalizer(cobj, r.ControllerName) {
-		util.AddFinalizer(cobj, r.ControllerName)
-		isInitialized = false
-	}
-	instance, ok := obj.(*redhatcopv1alpha1.RandomSecret)
-	if !ok {
-		r.Log.Error(errors.New("unable to convert to redhatcopv1alpha1.RandomSecret"), "unable to convert to redhatcopv1alpha1.RandomSecret")
-		return false
-	}
-	if instance.Spec.Authentication.ServiceAccount == nil {
-		instance.Spec.Authentication.ServiceAccount = &corev1.LocalObjectReference{
-			Name: "default",
-		}
-		isInitialized = false
-	}
-	return isInitialized
-}
-
-func (r *RandomSecretReconciler) manageCleanUpLogic(context context.Context, instance *redhatcopv1alpha1.RandomSecret) error {
-	vaultEndpoint, err := vaultutils.NewVaultEndpoint(context, &instance.Spec.Authentication, instance, instance.Namespace, r.GetClient(), r.Log.WithName("vaultutils"))
-	if err != nil {
-		r.Log.Error(err, "unable to initialize vaultEndpoint with", "instance", instance)
-		return err
-	}
-	err = vaultEndpoint.DeleteIfExists()
-	if err != nil {
-		r.Log.Error(err, "unable to delete Vault Secret", "instance", instance)
-		return err
-	}
-	return nil
-}
-
-func (r *RandomSecretReconciler) manageReconcileLogic(context context.Context, instance *redhatcopv1alpha1.RandomSecret) error {
-	// how to read this if: if the secret has been initialized once and there no refresh period or time ro refresh has not arrived yet, return.
-	if instance.Status.LastVaultSecretUpdate != nil && (instance.Spec.RefreshPeriod != nil || (instance.Spec.RefreshPeriod != nil && !instance.Status.LastVaultSecretUpdate.Add(instance.Spec.RefreshPeriod.Duration).Before(time.Now()))) {
-		return nil
-	}
-	vaultEndpoint, err := vaultutils.NewVaultEndpoint(context, &instance.Spec.Authentication, instance, instance.Namespace, r.GetClient(), r.Log.WithName("vaultutils"))
-	if err != nil {
-		r.Log.Error(err, "unable to initialize vaultEndpoint with", "instance", instance)
-		return err
-	}
-	err = instance.GenerateNewPassword(vaultEndpoint)
-	if err != nil {
-		r.Log.Error(err, "unable to generate new secret", "instance", instance)
-		return err
-	}
-	err = vaultEndpoint.Write(vaultEndpoint.GetPayload())
-	if err != nil {
-		r.Log.Error(err, "unable to create/update Vault Secret", "instance", instance)
-		return err
-	}
-	now := metav1.NewTime(time.Now())
-	instance.Status.LastVaultSecretUpdate = &now
-	return nil
 }

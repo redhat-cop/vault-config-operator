@@ -17,15 +17,54 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"reflect"
-	"strconv"
 
-	vault "github.com/hashicorp/vault/api"
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+
+var _ vaultutils.VaultObject = &SecretEngineMount{}
+var _ vaultutils.VaultEngineObject = &SecretEngineMount{}
+
+func (d *SecretEngineMount) GetPath() string {
+	return cleansePath("sys/mounts/" + string(d.Spec.Path) + "/" + d.Name)
+}
+func (d *SecretEngineMount) GetPayload() map[string]interface{} {
+	return d.Spec.toMap()
+}
+func (d *SecretEngineMount) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+	configMap := d.Spec.Config.toMap()
+	delete(configMap, "options")
+	delete(configMap, "description")
+	return reflect.DeepEqual(configMap, payload)
+}
+
+func (d *SecretEngineMount) IsInitialized() bool {
+	return d.Spec.Authentication.IsInitialized()
+}
+
+func (d *SecretEngineMount) IsValid() (bool, error) {
+	return true, nil
+}
+
+func (d *SecretEngineMount) PrepareInternalValues(context context.Context, object client.Object) error {
+	return nil
+}
+
+func (d *SecretEngineMount) GetEngineListPah() string {
+	return "sys/mounts"
+}
+func (d *SecretEngineMount) GetEngineTunePath() string {
+	return d.GetPath() + "/tune"
+}
+func (d *SecretEngineMount) GetTunePayload() map[string]interface{} {
+	return d.Spec.Config.toMap()
+}
 
 // SecretEngineMountSpec defines the desired state of SecretEngineMount
 type SecretEngineMountSpec struct {
@@ -43,10 +82,6 @@ type SecretEngineMountSpec struct {
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path /sys/mounts/{[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
 	// +kubebuilder:validation:Required
 	Path Path `json:"path,omitempty"`
-}
-
-func (d *SecretEngineMount) GetPath() string {
-	return cleansePath(string(d.Spec.Path) + "/" + d.Name)
 }
 
 // +k8s:openapi-gen=true
@@ -186,49 +221,30 @@ func init() {
 	SchemeBuilder.Register(&SecretEngineMount{}, &SecretEngineMountList{})
 }
 
-func fromMountConfigOutput(mountConfigOutput *vault.MountConfigOutput) *MountConfig {
-	return &MountConfig{
-		DefaultLeaseTTL:           strconv.Itoa(mountConfigOutput.DefaultLeaseTTL),
-		MaxLeaseTTL:               strconv.Itoa(mountConfigOutput.MaxLeaseTTL),
-		ForceNoCache:              mountConfigOutput.ForceNoCache,
-		AuditNonHMACRequestKeys:   mountConfigOutput.AuditNonHMACRequestKeys,
-		AuditNonHMACResponseKeys:  mountConfigOutput.AuditNonHMACResponseKeys,
-		ListingVisibility:         mountConfigOutput.ListingVisibility,
-		PassthroughRequestHeaders: mountConfigOutput.PassthroughRequestHeaders,
-		AllowedResponseHeaders:    mountConfigOutput.AllowedResponseHeaders,
-		TokenType:                 mountConfigOutput.TokenType,
+func (mc *MountConfig) toMap() map[string]interface{} {
+	return map[string]interface{}{
+		"default_lease_ttl":            mc.DefaultLeaseTTL,
+		"max_lease_ttl":                mc.MaxLeaseTTL,
+		"force_no_cache":               mc.ForceNoCache,
+		"audit_non_hmac_request_keys":  mc.AuditNonHMACRequestKeys,
+		"audit_non_hmac_response_keys": mc.AuditNonHMACResponseKeys,
+		"listing_visibility":           mc.ListingVisibility,
+		"passthrough_request_headers":  mc.PassthroughRequestHeaders,
+		"allowed_response_headers":     mc.AllowedResponseHeaders,
+		"token_type":                   mc.TokenType,
+		"description":                  mc.Description,
+		"options":                      mc.Options,
 	}
 }
 
-func (mountConfig *MountConfig) getMountConfigInputFromMountConfig() *vault.MountConfigInput {
-	return &vault.MountConfigInput{
-		Options:                   mountConfig.Options,
-		DefaultLeaseTTL:           mountConfig.DefaultLeaseTTL,
-		Description:               mountConfig.Description,
-		MaxLeaseTTL:               mountConfig.MaxLeaseTTL,
-		ForceNoCache:              mountConfig.ForceNoCache,
-		AuditNonHMACRequestKeys:   mountConfig.AuditNonHMACRequestKeys,
-		AuditNonHMACResponseKeys:  mountConfig.AuditNonHMACResponseKeys,
-		ListingVisibility:         mountConfig.ListingVisibility,
-		PassthroughRequestHeaders: mountConfig.PassthroughRequestHeaders,
-		AllowedResponseHeaders:    mountConfig.AllowedResponseHeaders,
-		TokenType:                 mountConfig.TokenType,
+func (m *Mount) toMap() map[string]interface{} {
+	return map[string]interface{}{
+		"type":                    m.Type,
+		"description":             m.Description,
+		"config":                  m.Config.toMap(),
+		"local":                   m.Local,
+		"seal_wrap":               m.SealWrap,
+		"external_entropy_access": m.ExternalEntropyAccess,
+		"options":                 m.Options,
 	}
-}
-
-func (mount *Mount) GetMountInputFromMount() *vault.MountInput {
-	return &vault.MountInput{
-		Type:                  mount.Type,
-		Description:           mount.Description,
-		Config:                *mount.Config.getMountConfigInputFromMountConfig(),
-		Local:                 mount.Local,
-		SealWrap:              mount.SealWrap,
-		ExternalEntropyAccess: mount.ExternalEntropyAccess,
-		Options:               mount.Options,
-	}
-}
-
-func (mountConfig *MountConfig) IsEquivalentTo(secretEngineMount *vault.MountConfigOutput) bool {
-	currentMountConfig := fromMountConfigOutput(secretEngineMount)
-	return reflect.DeepEqual(currentMountConfig, mountConfig)
 }

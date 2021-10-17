@@ -17,10 +17,15 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
+	"errors"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -70,6 +75,53 @@ func (d *KubernetesAuthEngineRole) GetPayload() map[string]interface{} {
 func (d *KubernetesAuthEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.VRole.ToMap()
 	return reflect.DeepEqual(desiredState, payload)
+}
+
+func (d *KubernetesAuthEngineRole) IsInitialized() bool {
+	return d.Spec.Authentication.IsInitialized()
+}
+
+func (d *KubernetesAuthEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
+	log := log.FromContext(context)
+	if d.Spec.TargetNamespaces.TargetNamespaceSelector != nil {
+		namespaces, err := d.findSelectedNamespaceNames(context)
+		if err != nil {
+			log.Error(err, "unable to retrieve selected namespaces", "instance", object)
+			return err
+		}
+		d.SetInternalNamespaces(namespaces)
+	} else {
+		d.SetInternalNamespaces(d.Spec.TargetNamespaces.TargetNamespaces)
+	}
+	return nil
+}
+
+func (r *KubernetesAuthEngineRole) findSelectedNamespaceNames(context context.Context) ([]string, error) {
+	log := log.FromContext(context)
+	result := []string{}
+	namespaceList := &corev1.NamespaceList{}
+	labelSelector, err := metav1.LabelSelectorAsSelector(r.Spec.TargetNamespaces.TargetNamespaceSelector)
+	if err != nil {
+		log.Error(err, "unable to create selector from label selector", "selector", r.Spec.TargetNamespaces.TargetNamespaceSelector)
+		return nil, err
+	}
+	kubeClient := context.Value("kubeClient").(client.Client)
+	err = kubeClient.List(context, namespaceList, &client.ListOptions{
+		LabelSelector: labelSelector,
+	})
+	if err != nil {
+		log.Error(err, "unable to retrieve the list of namespaces")
+		return nil, err
+	}
+	for i := range namespaceList.Items {
+		result = append(result, namespaceList.Items[i].Name)
+	}
+	return result, nil
+}
+
+func (r *KubernetesAuthEngineRole) IsValid() (bool, error) {
+	err := r.isValid()
+	return err == nil, err
 }
 
 type VRole struct {
@@ -215,4 +267,22 @@ func (i *VRole) ToMap() map[string]interface{} {
 	payload["tokenPeriod"] = i.TokenPeriod
 	payload["token_type"] = i.TokenType
 	return payload
+}
+
+func (r *KubernetesAuthEngineRole) isValid() error {
+	return r.validateEitherTargetNamespaceSelectorOrTargetNamespace()
+}
+
+func (r *KubernetesAuthEngineRole) validateEitherTargetNamespaceSelectorOrTargetNamespace() error {
+	count := 0
+	if r.Spec.TargetNamespaces.TargetNamespaceSelector != nil {
+		count++
+	}
+	if r.Spec.TargetNamespaces.TargetNamespaces != nil {
+		count++
+	}
+	if count != 1 {
+		return errors.New("Only one of TargetNamespaceSelector or TargetNamespaces can be specified.")
+	}
+	return nil
 }
