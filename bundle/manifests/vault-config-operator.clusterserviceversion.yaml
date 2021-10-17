@@ -548,7 +548,7 @@ spec:
     - randomsecrets.redhatcop.redhat.io
     - secretenginemounts.redhatcop.redhat.io
     - vaultroles.redhatcop.redhat.io
-    deploymentName: vault-config-operator-webhook
+    deploymentName: vault-config-operator-controller-manager
     generateName: cdatabasesecretengineconfigsdatabasesecretenginerolespoliciesrandomsecretssecretenginemountsvaultroles.kb.io
     sideEffects: None
     targetPort: 9443
@@ -558,7 +558,7 @@ spec:
     - v1
     - v1beta1
     containerPort: 443
-    deploymentName: vault-config-operator-webhook
+    deploymentName: vault-config-operator-controller-manager
     failurePolicy: Fail
     generateName: vdatabasesecretengineconfig.kb.io
     rules:
@@ -579,7 +579,7 @@ spec:
     - v1
     - v1beta1
     containerPort: 443
-    deploymentName: vault-config-operator-webhook
+    deploymentName: vault-config-operator-controller-manager
     failurePolicy: Fail
     generateName: vdatabasesecretenginerole.kb.io
     rules:
@@ -600,7 +600,7 @@ spec:
     - v1
     - v1beta1
     containerPort: 443
-    deploymentName: vault-config-operator-webhook
+    deploymentName: vault-config-operator-controller-manager
     failurePolicy: Fail
     generateName: vrandomsecret.kb.io
     rules:
@@ -621,7 +621,7 @@ spec:
     - v1
     - v1beta1
     containerPort: 443
-    deploymentName: vault-config-operator-webhook
+    deploymentName: vault-config-operator-controller-manager
     failurePolicy: Fail
     generateName: vsecretenginemount.kb.io
     rules:
@@ -642,7 +642,7 @@ spec:
     - v1
     - v1beta1
     containerPort: 443
-    deploymentName: vault-config-operator-webhook
+    deploymentName: vault-config-operator-controller-manager
     failurePolicy: Fail
     generateName: vvaultrole.kb.io
     rules:

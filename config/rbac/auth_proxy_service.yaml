@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    control-plane: controller-manager
+    control-plane: vault-config-operator
   annotations:
     service.alpha.openshift.io/serving-cert-secret-name: vault-config-operator-certs    
   name: controller-manager-metrics-service
@@ -14,4 +14,4 @@ spec:
     protocol: TCP
     targetPort: https
   selector:
-    control-plane: controller-manager
+    control-plane: vault-config-operator
