@@ -466,19 +466,11 @@ spec:
                     memory: 250Mi
                 securityContext:
                   allowPrivilegeEscalation: false
-                volumeMounts:
-                - mountPath: /tmp/k8s-webhook-server/serving-certs
-                  name: cert
-                  readOnly: true
               securityContext:
                 runAsNonRoot: true
               serviceAccountName: controller-manager
               terminationGracePeriodSeconds: 10
               volumes:
-              - name: cert
-                secret:
-                  defaultMode: 420
-                  secretName: webhook-server-cert
               - name: tls-cert
                 secret:
                   defaultMode: 420
