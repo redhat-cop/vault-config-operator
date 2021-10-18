@@ -81,18 +81,18 @@ func (kc *KubeAuthConfiguration) GetVaultClient(context context.Context, kubeNam
 	return vaultClient, nil
 }
 
-func (kc *KubeAuthConfiguration) getJWTToken(context context.Context, kubeNamespace string) (string, error) {
+func getJWTToken(context context.Context, serviceAccountName string, kubeNamespace string) (string, error) {
 	log := log.FromContext(context)
 	kubeClient := context.Value("kubeClient").(client.Client)
 	serviceAccount := &corev1.ServiceAccount{}
 	err := kubeClient.Get(context, client.ObjectKey{
 		Namespace: kubeNamespace,
-		Name:      kc.GetServiceAccountName(),
+		Name:      serviceAccountName,
 	}, serviceAccount)
 	if err != nil {
 		log.Error(err, "unable to retrieve", "service account", client.ObjectKey{
 			Namespace: kubeNamespace,
-			Name:      kc.GetServiceAccountName(),
+			Name:      serviceAccountName,
 		})
 		return "", err
 	}
@@ -104,7 +104,7 @@ func (kc *KubeAuthConfiguration) getJWTToken(context context.Context, kubeNamesp
 		}
 	}
 	if tokenSecretName == "" {
-		return "", errors.New("unable to find token secret name for service account" + kubeNamespace + "/" + kc.GetServiceAccountName())
+		return "", errors.New("unable to find token secret name for service account" + kubeNamespace + "/" + serviceAccountName)
 	}
 	secret := &corev1.Secret{}
 	err = kubeClient.Get(context, client.ObjectKey{
@@ -123,6 +123,10 @@ func (kc *KubeAuthConfiguration) getJWTToken(context context.Context, kubeNamesp
 	} else {
 		return "", errors.New("unable to find \"token\" key in secret" + kubeNamespace + "/" + tokenSecretName)
 	}
+}
+
+func (kc *KubeAuthConfiguration) getJWTToken(context context.Context, kubeNamespace string) (string, error) {
+	return getJWTToken(context, kc.GetServiceAccountName(), kubeNamespace)
 }
 
 func (kc *KubeAuthConfiguration) createVaultClient(context context.Context, jwt string) (*vault.Client, error) {

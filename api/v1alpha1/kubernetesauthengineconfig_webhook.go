@@ -18,9 +18,11 @@ package v1alpha1
 
 import (
 	"errors"
+	"io/ioutil"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
@@ -43,8 +45,17 @@ var _ webhook.Defaulter = &KubernetesAuthEngineConfig{}
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *KubernetesAuthEngineConfig) Default() {
 	kubernetesauthengineconfiglog.Info("default", "name", r.Name)
-
-	// TODO(user): fill in your defaulting logic.
+	if !controllerutil.ContainsFinalizer(r, GetFinalizer(r)) {
+		controllerutil.AddFinalizer(r, GetFinalizer(r))
+	}
+	if r.Spec.KubernetesCACert == "" {
+		b, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
+		if err != nil {
+			kubernetesauthengineconfiglog.Error(err, "unable to read file /var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
+			return
+		}
+		r.Spec.KubernetesCACert = string(b)
+	}
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.

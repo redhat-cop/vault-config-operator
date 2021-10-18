@@ -21,8 +21,10 @@ import (
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -41,6 +43,11 @@ type KubernetesAuthEngineConfigSpec struct {
 	Path Path `json:"path,omitempty"`
 
 	KAECConfig `json:",inline"`
+
+	// TokenReviewerServiceAccount A service account JWT used to access the TokenReview API to validate other JWTs during login. If not set, the JWT submitted in the login payload will be used to access the Kubernetes TokenReview API.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default={"name": "default"}
+	TokenReviewerServiceAccount *corev1.LocalObjectReference `json:"tokenReviewerServiceAccount,omitempty"`
 }
 
 func (d *KubernetesAuthEngineConfig) GetPath() string {
@@ -62,7 +69,18 @@ func (d *KubernetesAuthEngineConfig) IsInitialized() bool {
 }
 
 func (d *KubernetesAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
+	log := log.FromContext(context)
+	jwt, err := d.getJWTToken(context)
+	if err != nil {
+		log.Error(err, "unable retrieve jwt token for ", "service account", d.Namespace+"/"+d.Spec.TokenReviewerServiceAccount.Name)
+		return err
+	}
+	d.Spec.retrievedTokenReviewerJWT = jwt
 	return nil
+}
+
+func (kc *KubernetesAuthEngineConfig) getJWTToken(context context.Context) (string, error) {
+	return getJWTToken(context, kc.Spec.TokenReviewerServiceAccount.Name, kc.Namespace)
 }
 
 func (r *KubernetesAuthEngineConfig) IsValid() (bool, error) {
@@ -73,19 +91,17 @@ type KAECConfig struct {
 
 	// KubernetesHost Host must be a host string, a host:port pair, or a URL to the base of the Kubernetes API server.
 	// +kubebuilder:validation:Required
+	// +kubebuilder:default="https://kubernetes.default.svc:443"
 	KubernetesHost string `json:"kubernetesHost,omitempty"`
 
 	// kubernetesCACert PEM encoded CA cert for use by the TLS client used to talk with the Kubernetes API. NOTE: Every line must end with a newline: \n
-	// +kubebuilder:validation:Required
+	// if omitted will default to the content of the file "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt" in the operator pod
+	// +kubebuilder:validation:Optional
 	KubernetesCACert string `json:"kubernetesCACert,omitempty"`
-
-	// TokenReviewerJWT A service account JWT used to access the TokenReview API to validate other JWTs during login. If not set, the JWT submitted in the login payload will be used to access the Kubernetes TokenReview API.
-	// +kubebuilder:validation:Required
-	TokenReviewerJWT string `json:"tokenReviewerJWT,omitempty"`
 
 	// PEMKeys Optional list of PEM-formatted public keys or certificates used to verify the signatures of Kubernetes service account JWTs. If a certificate is given, its public key will be extracted. Not every installation of Kubernetes exposes these keys.
 	// +kubebuilder:validation:Optional
-	PEMKeys []string `json:"pEMKeys,omitempty"`
+	PEMKeys []string `json:"PEMKeys,omitempty"`
 
 	// Issuer Optional JWT issuer. If no issuer is specified, then this plugin will use kubernetes/serviceaccount as the default issuer. See these instructions for looking up the issuer for a given Kubernetes cluster.
 	// +kubebuilder:validation:Optional
@@ -96,10 +112,12 @@ type KAECConfig struct {
 	// +kubebuilder:default=false
 	DisableISSValidation bool `json:"disableISSValidation,omitempty"`
 
-	// DisableLoaclCAJWT Disable defaulting to the local CA cert and service account JWT when running in a Kubernetes pod.
+	// DisableLocalCAJWT Disable defaulting to the local CA cert and service account JWT when running in a Kubernetes pod.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=false
-	DisableLoaclCAJWT bool `json:"disableLoaclCAJWT,omitempty"`
+	DisableLocalCAJWT bool `json:"disableLocalCAJWT,omitempty"`
+
+	retrievedTokenReviewerJWT string `json:"-"`
 }
 
 // KubernetesAuthEngineConfigStatus defines the observed state of KubernetesAuthEngineConfig
@@ -145,26 +163,14 @@ func init() {
 	SchemeBuilder.Register(&KubernetesAuthEngineConfig{}, &KubernetesAuthEngineConfigList{})
 }
 
-func KAECConfigFromMap(payload map[string]interface{}) *KAECConfig {
-	o := &KAECConfig{}
-	o.KubernetesHost = payload["kubernetes_host"].(string)
-	o.KubernetesCACert = payload["kubernetes_ca_host"].(string)
-	o.TokenReviewerJWT = payload["token_reviewer_jwt"].(string)
-	o.PEMKeys = payload["pem_keys"].([]string)
-	o.Issuer = payload["issuer"].(string)
-	o.DisableISSValidation = payload["disable_iss_validation"].(bool)
-	o.DisableLoaclCAJWT = payload["disable_local_ca_jwt"].(bool)
-	return o
-}
-
 func (i *KAECConfig) ToMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["kubernetes_host"] = i.KubernetesHost
 	payload["kubernetes_ca_host"] = i.KubernetesCACert
-	payload["token_reviewer_jwt"] = i.TokenReviewerJWT
+	payload["token_reviewer_jwt"] = i.retrievedTokenReviewerJWT
 	payload["pem_keys"] = i.PEMKeys
 	payload["issuer"] = i.Issuer
 	payload["disable_iss_validation"] = i.DisableISSValidation
-	payload["disable_local_ca_jwt"] = i.DisableLoaclCAJWT
+	payload["disable_local_ca_jwt"] = i.DisableLocalCAJWT
 	return payload
 }
