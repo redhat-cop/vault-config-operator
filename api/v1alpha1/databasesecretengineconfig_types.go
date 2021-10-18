@@ -97,7 +97,7 @@ func (d *DatabaseSecretEngineConfig) IsEquivalentToDesiredState(payload map[stri
 }
 
 func (d *DatabaseSecretEngineConfig) IsInitialized() bool {
-	return d.Spec.Authentication.IsInitialized()
+	return true
 }
 
 func (d *DatabaseSecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {

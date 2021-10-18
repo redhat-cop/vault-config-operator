@@ -28,6 +28,32 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
+  - authenginemounts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - authenginemounts/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - authenginemounts/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
   - databasesecretengineconfigs
   verbs:
   - create
@@ -82,6 +108,32 @@ rules:
   - redhatcop.redhat.io
   resources:
   - databasesecretengineroles/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - kubernetesauthengineconfigs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - kubernetesauthengineconfigs/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - kubernetesauthengineconfigs/status
   verbs:
   - get
   - patch

@@ -58,7 +58,7 @@ func (d *KubernetesAuthEngineConfig) IsEquivalentToDesiredState(payload map[stri
 var _ vaultutils.VaultObject = &KubernetesAuthEngineConfig{}
 
 func (d *KubernetesAuthEngineConfig) IsInitialized() bool {
-	return d.Spec.Authentication.IsInitialized()
+	return true
 }
 
 func (d *KubernetesAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
@@ -94,12 +94,12 @@ type KAECConfig struct {
 	// DisableISSValidation Disable JWT issuer validation. Allows to skip ISS validation.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=false
-	DisableISSValidation bool
+	DisableISSValidation bool `json:"disableISSValidation,omitempty"`
 
 	// DisableLoaclCAJWT Disable defaulting to the local CA cert and service account JWT when running in a Kubernetes pod.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=false
-	DisableLoaclCAJWT bool
+	DisableLoaclCAJWT bool `json:"disableLoaclCAJWT,omitempty"`
 }
 
 // KubernetesAuthEngineConfigStatus defines the observed state of KubernetesAuthEngineConfig

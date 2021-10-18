@@ -12,7 +12,7 @@ spec:
     scheme: https
     tlsConfig:
       caFile: /etc/prometheus/configmaps/serving-certs-ca-bundle/service-ca.crt
-      serverName: $(METRICS_SERVICE_NAME).$(METRICS_SERVICE_NAMESPACE).svc
+      serverName: vault-config-operator-controller-manager-metrics-service.vault-config-operator.svc
   selector:
     matchLabels:
       control-plane: vault-config-operator

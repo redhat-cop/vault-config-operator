@@ -21,6 +21,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
@@ -35,6 +36,18 @@ func (r *RandomSecret) SetupWebhookWithManager(mgr ctrl.Manager) error {
 }
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+
+//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-randomsecret,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=randomsecrets,verbs=create,versions=v1alpha1,name=mrandomsecret.kb.io,admissionReviewVersions={v1,v1beta1}
+
+var _ webhook.Defaulter = &RandomSecret{}
+
+// Default implements webhook.Defaulter so a webhook will be registered for the type
+func (r *RandomSecret) Default() {
+	authenginemountlog.Info("default", "name", r.Name)
+	if !controllerutil.ContainsFinalizer(r, GetFinalizer(r)) {
+		controllerutil.AddFinalizer(r, GetFinalizer(r))
+	}
+}
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-randomsecret,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=randomsecrets,verbs=create;update,versions=v1alpha1,name=vrandomsecret.kb.io,admissionReviewVersions={v1,v1beta1}

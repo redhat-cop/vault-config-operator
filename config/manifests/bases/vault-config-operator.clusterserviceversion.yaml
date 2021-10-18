@@ -27,6 +27,11 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
+    - description: AuthEngineMount is the Schema for the authenginemounts API
+      displayName: Auth Engine Mount
+      kind: AuthEngineMount
+      name: authenginemounts.redhatcop.redhat.io
+      version: v1alpha1
     - description: DatabaseSecretEngineConfig is the Schema for the databasesecretengineconfigs
         API
       displayName: Database Secret Engine Config
@@ -38,6 +43,18 @@ spec:
       displayName: Database Secret Engine Role
       kind: DatabaseSecretEngineRole
       name: databasesecretengineroles.redhatcop.redhat.io
+      version: v1alpha1
+    - description: KubernetesAuthEngineConfig is the Schema for the kubernetesauthengineconfigs
+        API
+      displayName: Kubernetes Auth Engine Config
+      kind: KubernetesAuthEngineConfig
+      name: kubernetesauthengineconfigs.redhatcop.redhat.io
+      version: v1alpha1
+    - description: KubernetesAuthEngineRole can be used to define a KubernetesAuthEngineRole
+        for the kube-auth authentication method
+      displayName: Kubernetes Auth Engine Role
+      kind: KubernetesAuthEngineRole
+      name: kubernetesauthengineroles.redhatcop.redhat.io
       version: v1alpha1
     - description: Policy is the Schema for the policies API
       displayName: Policy
@@ -53,12 +70,6 @@ spec:
       displayName: Secret Engine Mount
       kind: SecretEngineMount
       name: secretenginemounts.redhatcop.redhat.io
-      version: v1alpha1
-    - description: KubernetesAuthEngineRole can be used to define a KubernetesAuthEngineRole for the kube-auth authentication
-        method
-      displayName: Vault Role
-      kind: KubernetesAuthEngineRole
-      name: kubernetesauthengineroles.redhatcop.redhat.io
       version: v1alpha1
   description: |
     This operator helps set up Vault Configurations. The main intent is to do so such that subsequently pods can consume the secrets made available.

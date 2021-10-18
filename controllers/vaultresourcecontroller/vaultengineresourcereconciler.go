@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/redhat-cop/operator-utils/pkg/util"
+	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -52,21 +53,8 @@ func (r *VaultEngineResource) manageCleanUpLogic(context context.Context, instan
 func (r *VaultEngineResource) Reconcile(ctx context.Context, instance client.Object) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 
-	if ok, err := r.reconcilerBase.IsValid(instance); !ok {
-		return r.reconcilerBase.ManageError(ctx, instance, err)
-	}
-
-	if ok := r.reconcilerBase.IsInitialized(instance); !ok {
-		err := r.reconcilerBase.GetClient().Update(ctx, instance)
-		if err != nil {
-			log.Error(err, "unable to update instance", "instance", instance)
-			return r.reconcilerBase.ManageError(ctx, instance, err)
-		}
-		return reconcile.Result{}, nil
-	}
-
 	if util.IsBeingDeleted(instance) {
-		if !util.HasFinalizer(instance, getFinalizer(instance)) {
+		if !util.HasFinalizer(instance, redhatcopv1alpha1.GetFinalizer(instance)) {
 			return reconcile.Result{}, nil
 		}
 		err := r.manageCleanUpLogic(ctx, instance)
@@ -74,7 +62,7 @@ func (r *VaultEngineResource) Reconcile(ctx context.Context, instance client.Obj
 			log.Error(err, "unable to delete instance", "instance", instance)
 			return r.reconcilerBase.ManageError(ctx, instance, err)
 		}
-		util.RemoveFinalizer(instance, getFinalizer(instance))
+		util.RemoveFinalizer(instance, redhatcopv1alpha1.GetFinalizer(instance))
 		err = r.reconcilerBase.GetClient().Update(ctx, instance)
 		if err != nil {
 			log.Error(err, "unable to update instance", "instance", instance)

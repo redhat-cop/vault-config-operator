@@ -6,20 +6,21 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.1
   creationTimestamp: null
-  name: policies.redhatcop.redhat.io
+  name: kubernetesauthengineconfigs.redhatcop.redhat.io
 spec:
   group: redhatcop.redhat.io
   names:
-    kind: Policy
-    listKind: PolicyList
-    plural: policies
-    singular: policy
+    kind: KubernetesAuthEngineConfig
+    listKind: KubernetesAuthEngineConfigList
+    plural: kubernetesauthengineconfigs
+    singular: kubernetesauthengineconfig
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Policy is the Schema for the policies API
+        description: KubernetesAuthEngineConfig is the Schema for the kubernetesauthengineconfigs
+          API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -34,7 +35,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: PolicySpec defines the desired state of Policy
+            description: KubernetesAuthEngineConfigSpec defines the desired state
+              of KubernetesAuthEngineConfig
             properties:
               authentication:
                 description: Authentication is the kube aoth configuraiton to be used
@@ -66,12 +68,56 @@ spec:
                         type: string
                     type: object
                 type: object
-              policy:
-                description: Policy is a Vault policy expressed in HCL language.
+              disableISSValidation:
+                default: false
+                description: DisableISSValidation Disable JWT issuer validation. Allows
+                  to skip ISS validation.
+                type: boolean
+              disableLoaclCAJWT:
+                default: false
+                description: DisableLoaclCAJWT Disable defaulting to the local CA
+                  cert and service account JWT when running in a Kubernetes pod.
+                type: boolean
+              issuer:
+                description: Issuer Optional JWT issuer. If no issuer is specified,
+                  then this plugin will use kubernetes/serviceaccount as the default
+                  issuer. See these instructions for looking up the issuer for a given
+                  Kubernetes cluster.
+                type: string
+              kubernetesCACert:
+                description: 'kubernetesCACert PEM encoded CA cert for use by the
+                  TLS client used to talk with the Kubernetes API. NOTE: Every line
+                  must end with a newline: \n'
+                type: string
+              kubernetesHost:
+                description: KubernetesHost Host must be a host string, a host:port
+                  pair, or a URL to the base of the Kubernetes API server.
+                type: string
+              pEMKeys:
+                description: PEMKeys Optional list of PEM-formatted public keys or
+                  certificates used to verify the signatures of Kubernetes service
+                  account JWTs. If a certificate is given, its public key will be
+                  extracted. Not every installation of Kubernetes exposes these keys.
+                items:
+                  type: string
+                type: array
+              path:
+                description: Path at which to make the configuration. The final path
+                  will be {[spec.authentication.namespace]}/auth/{spec.path}/config/{metadata.name}.
+                  The authentication role must have the following capabilities = [
+                  "create", "read", "update", "delete"] on that path.
+                pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
+                type: string
+              tokenReviewerJWT:
+                description: TokenReviewerJWT A service account JWT used to access
+                  the TokenReview API to validate other JWTs during login. If not
+                  set, the JWT submitted in the login payload will be used to access
+                  the Kubernetes TokenReview API.
                 type: string
             type: object
           status:
-            description: PolicyStatus defines the observed state of Policy
+            description: KubernetesAuthEngineConfigStatus defines the observed state
+              of KubernetesAuthEngineConfig
             properties:
               conditions:
                 items:

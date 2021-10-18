@@ -45,7 +45,7 @@ func (d *SecretEngineMount) IsEquivalentToDesiredState(payload map[string]interf
 }
 
 func (d *SecretEngineMount) IsInitialized() bool {
-	return d.Spec.Authentication.IsInitialized()
+	return true
 }
 
 func (d *SecretEngineMount) IsValid() (bool, error) {

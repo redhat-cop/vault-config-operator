@@ -6,20 +6,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.1
   creationTimestamp: null
-  name: policies.redhatcop.redhat.io
+  name: authenginemounts.redhatcop.redhat.io
 spec:
   group: redhatcop.redhat.io
   names:
-    kind: Policy
-    listKind: PolicyList
-    plural: policies
-    singular: policy
+    kind: AuthEngineMount
+    listKind: AuthEngineMountList
+    plural: authenginemounts
+    singular: authenginemount
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Policy is the Schema for the policies API
+        description: AuthEngineMount is the Schema for the authenginemounts API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -34,7 +34,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: PolicySpec defines the desired state of Policy
+            description: AuthEngineMountSpec defines the desired state of AuthEngineMount
             properties:
               authentication:
                 description: Authentication is the kube aoth configuraiton to be used
@@ -66,12 +66,87 @@ spec:
                         type: string
                     type: object
                 type: object
-              policy:
-                description: Policy is a Vault policy expressed in HCL language.
+              config:
+                description: Config Specifies configuration options for this auth
+                  method.
+                properties:
+                  allowedResponseHeaders:
+                    description: AllowedResponseHeaders list of headers to whitelist,
+                      allowing a plugin to include them in the response. kubebuilder:validation:UniqueItems=true
+                    items:
+                      type: string
+                    type: array
+                    x-kubernetes-list-type: set
+                  auditNonHMACRequestKeys:
+                    description: AuditNonHMACRequestKeys list of keys that will not
+                      be HMAC'd by audit devices in the request data object. kubebuilder:validation:UniqueItems=true
+                    items:
+                      type: string
+                    type: array
+                    x-kubernetes-list-type: set
+                  auditNonHMACResponseKeys:
+                    description: AuditNonHMACResponseKeys list of keys that will not
+                      be HMAC'd by audit devices in the response data object. kubebuilder:validation:UniqueItems=true
+                    items:
+                      type: string
+                    type: array
+                    x-kubernetes-list-type: set
+                  defaultLeaseTTL:
+                    description: DefaultLeaseTTL  The default lease duration, specified
+                      as a string duration like "5s" or "30m".
+                    type: string
+                  listingVisibility:
+                    default: hidden
+                    description: ListingVisibility Specifies whether to show this
+                      mount in the UI-specific listing endpoint. Valid values are
+                      "unauth" or "hidden". If not set, behaves like "hidden"
+                    enum:
+                    - unauth
+                    - hidden
+                    type: string
+                  maxLeaseTTL:
+                    description: MaxLeaseTTL The maximum lease duration, specified
+                      as a string duration like "5s" or "30m".
+                    type: string
+                  passthroughRequestHeaders:
+                    description: PassthroughRequestHeaders list of headers to whitelist
+                      and pass from the request to the plugin. kubebuilder:validation:UniqueItems=true
+                    items:
+                      type: string
+                    type: array
+                    x-kubernetes-list-type: set
+                type: object
+              description:
+                description: Description Specifies a human-friendly description of
+                  the auth method.
+                type: string
+              local:
+                default: true
+                description: Local Specifies if the auth method is local only. Local
+                  auth methods are not replicated nor (if a secondary) removed by
+                  replication. Logins via local auth methods do not make use of identity,
+                  i.e. no entity or groups will be attached to the token.
+                type: boolean
+              path:
+                description: Path at which this auth engine will be mounted The final
+                  path will be {[spec.authentication.namespace]}/auth/{spec.path}/{metadata.name}.
+                  The authentication role must have the following capabilities = [
+                  "create", "read", "update", "delete"] on that path /sys/auth/{[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
+                pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
+                type: string
+              sealwrap:
+                default: true
+                description: SealWrap Enable seal wrapping for the mount, causing
+                  values stored by the mount to be wrapped by the seal's encryption
+                  capability.
+                type: boolean
+              type:
+                description: Type Specifies the name of the authentication method
+                  type, such as "github" or "token".
                 type: string
             type: object
           status:
-            description: PolicyStatus defines the observed state of Policy
+            description: AuthEngineMountStatus defines the observed state of AuthEngineMount
             properties:
               conditions:
                 items:

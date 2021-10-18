@@ -60,7 +60,7 @@ func (d *DatabaseSecretEngineRole) IsEquivalentToDesiredState(payload map[string
 }
 
 func (d *DatabaseSecretEngineRole) IsInitialized() bool {
-	return d.Spec.Authentication.IsInitialized()
+	return true
 }
 
 func (d *DatabaseSecretEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {

@@ -35,7 +35,7 @@ type Path string
 type KubeAuthConfiguration struct {
 	// ServiceAccount is the service account used for the kube auth authentication
 	// +kubebuilder:validation:Required
-	// kubebuilder:default={Name: &#34;default&#34;}
+	// +kubebuilder:default={"name": "default"}
 	ServiceAccount *corev1.LocalObjectReference `json:"serviceAccount,omitempty"`
 
 	// Path is the path of the role used for this kube auth authentication. The operator will try to authenticate at {[namespace/]}auth/{spec.path}
@@ -50,16 +50,6 @@ type KubeAuthConfiguration struct {
 	//Namespace is the Vault namespace to be used in all the operations withing this connection/authentication. Only available in Vault Enterprise.
 	// +kubebuilder:validation:Optional
 	Namespace string `json:"namespace,omitempty"`
-}
-
-func (d *KubeAuthConfiguration) IsInitialized() bool {
-	if d.ServiceAccount == nil {
-		d.ServiceAccount = &corev1.LocalObjectReference{
-			Name: "default",
-		}
-		return false
-	}
-	return true
 }
 
 func (kc *KubeAuthConfiguration) GetNamespace() string {
@@ -179,4 +169,8 @@ type VaultSecretReference struct {
 	// Path is the path to the secret
 	// +kubebuilder:validation:Required
 	Path string `json:"path,omitempty"`
+}
+
+func GetFinalizer(instance client.Object) string {
+	return "controller-" + strings.ToLower(instance.GetObjectKind().GroupVersionKind().Kind)
 }

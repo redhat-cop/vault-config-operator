@@ -79,7 +79,7 @@ func (d *RandomSecret) IsEquivalentToDesiredState(payload map[string]interface{}
 }
 
 func (d *RandomSecret) IsInitialized() bool {
-	return d.Spec.Authentication.IsInitialized()
+	return true
 }
 
 func (d *RandomSecret) PrepareInternalValues(context context.Context, object client.Object) error {

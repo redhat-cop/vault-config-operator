@@ -15,7 +15,6 @@ resources:
 patchesStrategicMerge:
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
 # patches here are for enabling the conversion webhook for each CRD
-# - patches/webhook_in_vaultroles.yaml
 # - patches/webhook_in_policies.yaml
 # - patches/webhook_in_secretenginemounts.yaml
 # - patches/webhook_in_databasesecretengineconfigs.yaml
@@ -24,15 +23,6 @@ patchesStrategicMerge:
 #- patches/webhook_in_authenginemounts.yaml
 #- patches/webhook_in_kubernetesauthengineconfigs.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
-
-# ocp ca injection patches
-
-# - patches/ocp-cainjection_in_vaultroles.yaml
-# - patches/ocp-cainjection_in_policies.yaml
-# - patches/ocp-cainjection_in_secretenginemounts.yaml
-# - patches/ocp-cainjection_in_databasesecretengineconfigs.yaml
-# - patches/ocp-cainjection_in_databasesecretengineroles.yaml
-# - patches/ocp-cainjection_in_randomsecrets.yaml
 
 # [CERTMANAGER] To enable cert-manager, uncomment all the sections with [CERTMANAGER] prefix.
 # patches here are for enabling the CA injection for each CRD

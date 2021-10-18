@@ -27,3 +27,4 @@ testbin/*
 bundle/
 bundle.Dockerfile
 charts/
+bundle*/

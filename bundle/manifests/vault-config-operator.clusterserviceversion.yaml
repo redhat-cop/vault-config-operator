@@ -6,6 +6,16 @@ metadata:
       [
         {
           "apiVersion": "redhatcop.redhat.io/v1alpha1",
+          "kind": "AuthEngineMount",
+          "metadata": {
+            "name": "authenginemount-sample"
+          },
+          "spec": {
+            "foo": "bar"
+          }
+        },
+        {
+          "apiVersion": "redhatcop.redhat.io/v1alpha1",
           "kind": "DatabaseSecretEngineConfig",
           "metadata": {
             "name": "my-postgresql-database"
@@ -48,6 +58,40 @@ metadata:
             "defaultTTL": "1h",
             "maxTTL": "24h",
             "path": "test-vault-config-operator/database"
+          }
+        },
+        {
+          "apiVersion": "redhatcop.redhat.io/v1alpha1",
+          "kind": "KubernetesAuthEngineConfig",
+          "metadata": {
+            "name": "kubernetesauthengineconfig-sample"
+          },
+          "spec": {
+            "foo": "bar"
+          }
+        },
+        {
+          "apiVersion": "redhatcop.redhat.io/v1alpha1",
+          "kind": "KubernetesAuthEngineRole",
+          "metadata": {
+            "name": "database-engine-admin"
+          },
+          "spec": {
+            "authentication": {
+              "path": "kubernetes",
+              "role": "policy-admin"
+            },
+            "path": "kubernetes",
+            "policies": [
+              "database-engine-admin"
+            ],
+            "targetNamespaces": {
+              "targetNamespaceSelector": {
+                "matchLabels": {
+                  "database-engine-admin": "true"
+                }
+              }
+            }
           }
         },
         {
@@ -96,30 +140,6 @@ metadata:
             "path": "test-vault-config-operator",
             "type": "database"
           }
-        },
-        {
-          "apiVersion": "redhatcop.redhat.io/v1alpha1",
-          "kind": "VaultRole",
-          "metadata": {
-            "name": "database-engine-admin"
-          },
-          "spec": {
-            "authentication": {
-              "path": "kubernetes",
-              "role": "policy-admin"
-            },
-            "path": "kubernetes",
-            "policies": [
-              "database-engine-admin"
-            ],
-            "targetNamespaces": {
-              "targetNamespaceSelector": {
-                "matchLabels": {
-                  "database-engine-admin": "true"
-                }
-              }
-            }
-          }
         }
       ]
     capabilities: Full Lifecycle
@@ -148,6 +168,11 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
+    - description: AuthEngineMount is the Schema for the authenginemounts API
+      displayName: Auth Engine Mount
+      kind: AuthEngineMount
+      name: authenginemounts.redhatcop.redhat.io
+      version: v1alpha1
     - description: DatabaseSecretEngineConfig is the Schema for the databasesecretengineconfigs
         API
       displayName: Database Secret Engine Config
@@ -159,6 +184,18 @@ spec:
       displayName: Database Secret Engine Role
       kind: DatabaseSecretEngineRole
       name: databasesecretengineroles.redhatcop.redhat.io
+      version: v1alpha1
+    - description: KubernetesAuthEngineConfig is the Schema for the kubernetesauthengineconfigs
+        API
+      displayName: Kubernetes Auth Engine Config
+      kind: KubernetesAuthEngineConfig
+      name: kubernetesauthengineconfigs.redhatcop.redhat.io
+      version: v1alpha1
+    - description: KubernetesAuthEngineRole can be used to define a KubernetesAuthEngineRole
+        for the kube-auth authentication method
+      displayName: Kubernetes Auth Engine Role
+      kind: KubernetesAuthEngineRole
+      name: kubernetesauthengineroles.redhatcop.redhat.io
       version: v1alpha1
     - description: Policy is the Schema for the policies API
       displayName: Policy
@@ -174,12 +211,6 @@ spec:
       displayName: Secret Engine Mount
       kind: SecretEngineMount
       name: secretenginemounts.redhatcop.redhat.io
-      version: v1alpha1
-    - description: VaultRole can be used to define a VaultRole for the kube-auth authentication
-        method
-      displayName: Vault Role
-      kind: VaultRole
-      name: vaultroles.redhatcop.redhat.io
       version: v1alpha1
   description: |
     This operator helps set up Vault Configurations. The main intent is to do so such that subsequently pods can consume the secrets made available.
@@ -223,6 +254,32 @@ spec:
           - get
           - list
           - watch
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - authenginemounts
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - authenginemounts/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - authenginemounts/status
+          verbs:
+          - get
+          - patch
+          - update
         - apiGroups:
           - redhatcop.redhat.io
           resources:
@@ -280,6 +337,58 @@ spec:
           - redhatcop.redhat.io
           resources:
           - databasesecretengineroles/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - kubernetesauthengineconfigs
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - kubernetesauthengineconfigs/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - kubernetesauthengineconfigs/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - kubernetesauthengineroles
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - kubernetesauthengineroles/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - kubernetesauthengineroles/status
           verbs:
           - get
           - patch
@@ -363,32 +472,6 @@ spec:
           - patch
           - update
         - apiGroups:
-          - redhatcop.redhat.io
-          resources:
-          - vaultroles
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - redhatcop.redhat.io
-          resources:
-          - vaultroles/finalizers
-          verbs:
-          - update
-        - apiGroups:
-          - redhatcop.redhat.io
-          resources:
-          - vaultroles/status
-          verbs:
-          - get
-          - patch
-          - update
-        - apiGroups:
           - authentication.k8s.io
           resources:
           - tokenreviews
@@ -437,7 +520,7 @@ spec:
                 - --leader-elect
                 command:
                 - /manager
-                image: quay.io/raffaelespazzoli/vault-config-operator:latest
+                image: controller:latest
                 livenessProbe:
                   httpGet:
                     path: /healthz
@@ -544,7 +627,7 @@ spec:
     containerPort: 443
     deploymentName: vault-config-operator-controller-manager
     failurePolicy: Fail
-    generateName: vdatabasesecretengineconfig.kb.io
+    generateName: mauthenginemount.kb.io
     rules:
     - apiGroups:
       - redhatcop.redhat.io
@@ -552,20 +635,19 @@ spec:
       - v1alpha1
       operations:
       - CREATE
-      - UPDATE
       resources:
-      - databasesecretengineconfigs
+      - authenginemounts
     sideEffects: None
     targetPort: 9443
-    type: ValidatingAdmissionWebhook
-    webhookPath: /validate-redhatcop-redhat-io-v1alpha1-databasesecretengineconfig
+    type: MutatingAdmissionWebhook
+    webhookPath: /mutate-redhatcop-redhat-io-v1alpha1-authenginemount
   - admissionReviewVersions:
     - v1
     - v1beta1
     containerPort: 443
     deploymentName: vault-config-operator-controller-manager
     failurePolicy: Fail
-    generateName: vdatabasesecretenginerole.kb.io
+    generateName: mrandomsecret.kb.io
     rules:
     - apiGroups:
       - redhatcop.redhat.io
@@ -573,13 +655,132 @@ spec:
       - v1alpha1
       operations:
       - CREATE
-      - UPDATE
+      resources:
+      - randomsecrets
+    sideEffects: None
+    targetPort: 9443
+    type: MutatingAdmissionWebhook
+    webhookPath: /mutate-redhatcop-redhat-io-v1alpha1-randomsecret
+  - admissionReviewVersions:
+    - v1
+    - v1beta1
+    containerPort: 443
+    deploymentName: vault-config-operator-controller-manager
+    failurePolicy: Fail
+    generateName: mkubernetesauthenginerole.kb.io
+    rules:
+    - apiGroups:
+      - redhatcop.redhat.io
+      apiVersions:
+      - v1alpha1
+      operations:
+      - CREATE
+      resources:
+      - kubernetesauthengineroles
+    sideEffects: None
+    targetPort: 9443
+    type: MutatingAdmissionWebhook
+    webhookPath: /mutate-redhatcop-redhat-io-v1alpha1-kubernetesauthenginerole
+  - admissionReviewVersions:
+    - v1
+    - v1beta1
+    containerPort: 443
+    deploymentName: vault-config-operator-controller-manager
+    failurePolicy: Fail
+    generateName: mkubernetesauthengineconfig.kb.io
+    rules:
+    - apiGroups:
+      - redhatcop.redhat.io
+      apiVersions:
+      - v1alpha1
+      operations:
+      - CREATE
+      resources:
+      - kubernetesauthengineconfigs
+    sideEffects: None
+    targetPort: 9443
+    type: MutatingAdmissionWebhook
+    webhookPath: /mutate-redhatcop-redhat-io-v1alpha1-kubernetesauthengineconfig
+  - admissionReviewVersions:
+    - v1
+    - v1beta1
+    containerPort: 443
+    deploymentName: vault-config-operator-controller-manager
+    failurePolicy: Fail
+    generateName: mdatabasesecretenginerole.kb.io
+    rules:
+    - apiGroups:
+      - redhatcop.redhat.io
+      apiVersions:
+      - v1alpha1
+      operations:
+      - CREATE
       resources:
       - databasesecretengineroles
     sideEffects: None
     targetPort: 9443
+    type: MutatingAdmissionWebhook
+    webhookPath: /mutate-redhatcop-redhat-io-v1alpha1-databasesecretenginerole
+  - admissionReviewVersions:
+    - v1
+    - v1beta1
+    containerPort: 443
+    deploymentName: vault-config-operator-controller-manager
+    failurePolicy: Fail
+    generateName: mdatabasesecretengineconfig.kb.io
+    rules:
+    - apiGroups:
+      - redhatcop.redhat.io
+      apiVersions:
+      - v1alpha1
+      operations:
+      - CREATE
+      resources:
+      - databasesecretengineconfigs
+    sideEffects: None
+    targetPort: 9443
+    type: MutatingAdmissionWebhook
+    webhookPath: /mutate-redhatcop-redhat-io-v1alpha1-databasesecretengineconfig
+  - admissionReviewVersions:
+    - v1
+    - v1beta1
+    containerPort: 443
+    deploymentName: vault-config-operator-controller-manager
+    failurePolicy: Fail
+    generateName: msecretenginemount.kb.io
+    rules:
+    - apiGroups:
+      - redhatcop.redhat.io
+      apiVersions:
+      - v1alpha1
+      operations:
+      - CREATE
+      resources:
+      - secretenginemounts
+    sideEffects: None
+    targetPort: 9443
+    type: MutatingAdmissionWebhook
+    webhookPath: /mutate-redhatcop-redhat-io-v1alpha1-secretenginemount
+  - admissionReviewVersions:
+    - v1
+    - v1beta1
+    containerPort: 443
+    deploymentName: vault-config-operator-controller-manager
+    failurePolicy: Fail
+    generateName: vsecretenginemount.kb.io
+    rules:
+    - apiGroups:
+      - redhatcop.redhat.io
+      apiVersions:
+      - v1alpha1
+      operations:
+      - UPDATE
+      resources:
+      - secretenginemounts
+    sideEffects: None
+    targetPort: 9443
     type: ValidatingAdmissionWebhook
-    webhookPath: /validate-redhatcop-redhat-io-v1alpha1-databasesecretenginerole
+    webhookPath: /validate-redhatcop-redhat-io-v1alpha1-secretenginemount
   - admissionReviewVersions:
     - v1
     - v1beta1
@@ -607,7 +808,7 @@ spec:
     containerPort: 443
     deploymentName: vault-config-operator-controller-manager
     failurePolicy: Fail
-    generateName: vsecretenginemount.kb.io
+    generateName: vkubernetesauthenginerole.kb.io
     rules:
     - apiGroups:
       - redhatcop.redhat.io
@@ -617,18 +818,58 @@ spec:
       - CREATE
       - UPDATE
       resources:
-      - secretenginemounts
+      - kubernetesauthengineroles
     sideEffects: None
     targetPort: 9443
     type: ValidatingAdmissionWebhook
-    webhookPath: /validate-redhatcop-redhat-io-v1alpha1-secretenginemount
+    webhookPath: /validate-redhatcop-redhat-io-v1alpha1-kubernetesauthenginerole
   - admissionReviewVersions:
     - v1
     - v1beta1
     containerPort: 443
     deploymentName: vault-config-operator-controller-manager
     failurePolicy: Fail
-    generateName: vvaultrole.kb.io
+    generateName: vkubernetesauthengineconfig.kb.io
+    rules:
+    - apiGroups:
+      - redhatcop.redhat.io
+      apiVersions:
+      - v1alpha1
+      operations:
+      - UPDATE
+      resources:
+      - kubernetesauthengineconfigs
+    sideEffects: None
+    targetPort: 9443
+    type: ValidatingAdmissionWebhook
+    webhookPath: /validate-redhatcop-redhat-io-v1alpha1-kubernetesauthengineconfig
+  - admissionReviewVersions:
+    - v1
+    - v1beta1
+    containerPort: 443
+    deploymentName: vault-config-operator-controller-manager
+    failurePolicy: Fail
+    generateName: vdatabasesecretenginerole.kb.io
+    rules:
+    - apiGroups:
+      - redhatcop.redhat.io
+      apiVersions:
+      - v1alpha1
+      operations:
+      - UPDATE
+      resources:
+      - databasesecretengineroles
+    sideEffects: None
+    targetPort: 9443
+    type: ValidatingAdmissionWebhook
+    webhookPath: /validate-redhatcop-redhat-io-v1alpha1-databasesecretenginerole
+  - admissionReviewVersions:
+    - v1
+    - v1beta1
+    containerPort: 443
+    deploymentName: vault-config-operator-controller-manager
+    failurePolicy: Fail
+    generateName: vdatabasesecretengineconfig.kb.io
     rules:
     - apiGroups:
       - redhatcop.redhat.io
@@ -638,8 +879,28 @@ spec:
       - CREATE
       - UPDATE
       resources:
-      - vaultroles
+      - databasesecretengineconfigs
     sideEffects: None
     targetPort: 9443
     type: ValidatingAdmissionWebhook
-    webhookPath: /validate-redhatcop-redhat-io-v1alpha1-vaultrole
+    webhookPath: /validate-redhatcop-redhat-io-v1alpha1-databasesecretengineconfig
+  - admissionReviewVersions:
+    - v1
+    - v1beta1
+    containerPort: 443
+    deploymentName: vault-config-operator-controller-manager
+    failurePolicy: Fail
+    generateName: vauthenginemount.kb.io
+    rules:
+    - apiGroups:
+      - redhatcop.redhat.io
+      apiVersions:
+      - v1alpha1
+      operations:
+      - UPDATE
+      resources:
+      - authenginemounts
+    sideEffects: None
+    targetPort: 9443
+    type: ValidatingAdmissionWebhook
+    webhookPath: /validate-redhatcop-redhat-io-v1alpha1-authenginemount

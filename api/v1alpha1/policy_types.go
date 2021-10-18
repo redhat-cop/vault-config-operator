@@ -43,7 +43,7 @@ func (d *Policy) IsEquivalentToDesiredState(payload map[string]interface{}) bool
 }
 
 func (d *Policy) IsInitialized() bool {
-	return d.Spec.Authentication.IsInitialized()
+	return true
 }
 
 func (d *Policy) PrepareInternalValues(context context.Context, object client.Object) error {

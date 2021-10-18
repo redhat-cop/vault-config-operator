@@ -147,7 +147,7 @@ func (d *AuthEngineMount) IsEquivalentToDesiredState(payload map[string]interfac
 }
 
 func (d *AuthEngineMount) IsInitialized() bool {
-	return d.Spec.Authentication.IsInitialized()
+	return true
 }
 
 func (d *AuthEngineMount) IsValid() (bool, error) {

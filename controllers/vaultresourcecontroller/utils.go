@@ -17,26 +17,10 @@ limitations under the License.
 package vaultresourcecontroller
 
 import (
-	"strings"
-
-	"github.com/redhat-cop/operator-utils/pkg/util"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func getFinalizer(instance client.Object) string {
-	return "controller-" + strings.ToLower(instance.GetObjectKind().GroupVersionKind().Kind)
-}
-
 func isValid(obj client.Object) (bool, error) {
 	return obj.(vaultutils.VaultObject).IsValid()
-}
-
-func isInitialized(obj client.Object) bool {
-	isInitialized := true
-	if !util.HasFinalizer(obj, getFinalizer(obj)) {
-		util.AddFinalizer(obj, getFinalizer(obj))
-		isInitialized = false
-	}
-	return isInitialized || obj.(vaultutils.VaultObject).IsInitialized()
 }

@@ -78,7 +78,7 @@ func (d *KubernetesAuthEngineRole) IsEquivalentToDesiredState(payload map[string
 }
 
 func (d *KubernetesAuthEngineRole) IsInitialized() bool {
-	return d.Spec.Authentication.IsInitialized()
+	return true
 }
 
 func (d *KubernetesAuthEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
