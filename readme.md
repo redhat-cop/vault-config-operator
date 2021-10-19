@@ -517,3 +517,12 @@ operator-sdk cleanup vault-config-operator -n vault-config-operator
 oc delete operatorgroup operator-sdk-og
 oc delete catalogsource vault-config-operator-catalog
 ```
+
+
+TODO:
+add password policy CRD
+replace password policy in test
+add kube auth engine config and role in tests
+document the three new apis and move the api doc to a separate document
+create an end to end example
+ensure helm packaging works
