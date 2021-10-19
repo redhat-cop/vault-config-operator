@@ -25,7 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -49,6 +48,7 @@ type KubernetesAuthEngineRoleReconciler struct {
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=kubernetesauthengineroles/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=kubernetesauthengineroles/finalizers,verbs=update
 //+kubebuilder:rbac:groups=core,resources=serviceaccounts;secrets;namespaces,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -91,7 +91,7 @@ func (r *KubernetesAuthEngineRoleReconciler) Reconcile(ctx context.Context, req 
 // SetupWithManager sets up the controller with the Manager.
 func (r *KubernetesAuthEngineRoleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.KubernetesAuthEngineRole{}, builder.WithPredicates(util.ResourceGenerationOrFinalizerChangedPredicate{})).
+		For(&redhatcopv1alpha1.KubernetesAuthEngineRole{}).
 		Watches(&source.Kind{Type: &corev1.Namespace{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Namespace",

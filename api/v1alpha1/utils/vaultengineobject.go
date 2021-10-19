@@ -27,7 +27,7 @@ import (
 )
 
 type VaultEngineObject interface {
-	GetEngineListPah() string
+	GetEngineListPath() string
 	GetEngineTunePath() string
 	GetTunePayload() map[string]interface{}
 }
@@ -47,14 +47,17 @@ func NewVaultEngineEndpoint(obj client.Object) *VaultEngineEndpoint {
 func (ve *VaultEngineEndpoint) Exists(context context.Context) (bool, error) {
 	log := log.FromContext(context)
 	vaultClient := context.Value("vaultClient").(*vault.Client)
-	secret, err := vaultClient.Logical().List(ve.vaultEngineObject.GetEngineListPah())
-	if err != nil || secret == nil {
-		log.Error(err, "unable to list engines at", "path", ve.vaultEngineObject.GetEngineListPah())
+	secret, err := vaultClient.Logical().Read(ve.vaultEngineObject.GetEngineListPath())
+	if err != nil {
+		log.Error(err, "unable to read engines at", "path", ve.vaultEngineObject.GetEngineListPath())
 		return false, err
+	}
+	if secret == nil {
+		return false, errors.New("read returned null secret")
 	}
 	found := false
 	for key := range secret.Data {
-		if strings.Trim(key, "/") == strings.Split(ve.vaultObject.GetPath(), "/")[len(strings.Split(ve.vaultObject.GetPath(), "/"))] {
+		if strings.Trim(key, "/") == strings.Trim(strings.TrimPrefix(ve.vaultObject.GetPath(), ve.vaultEngineObject.GetEngineListPath()), "/") {
 			found = true
 			break
 		}

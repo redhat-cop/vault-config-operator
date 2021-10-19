@@ -51,6 +51,7 @@ type DatabaseSecretEngineConfigReconciler struct {
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=databasesecretengineconfigs/finalizers,verbs=update
 //+kubebuilder:rbac:groups=core,resources=serviceaccounts;secrets,verbs=get;list;watch
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=databasesecretengineconfigs;randomsecrets,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -154,7 +155,7 @@ func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.DatabaseSecretEngineConfig{}, builder.WithPredicates(util.ResourceGenerationOrFinalizerChangedPredicate{})).
+		For(&redhatcopv1alpha1.DatabaseSecretEngineConfig{}).
 		Watches(&source.Kind{Type: &corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Namespace",

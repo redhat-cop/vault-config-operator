@@ -107,6 +107,19 @@ type AuthMountConfig struct {
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
 	AllowedResponseHeaders []string `json:"allowedResponseHeaders,omitempty"`
+
+	// Options undocumented
+	// +kubebuilder:validation:Optional
+	// +mapType=granular
+	Options map[string]string `json:"options,omitempty"`
+
+	// TokenType undocumented
+	// +kubebuilder:validation:Optional
+	TokenType string `json:"tokenType,omitempty"`
+
+	// Description another description...
+	// +kubebuilder:validation:Optional
+	Description *string `json:"description,omitempty"`
 }
 
 var _ vaultutils.VaultObject = &AuthEngineMount{}
@@ -121,6 +134,9 @@ func (mc *AuthMountConfig) toMap() map[string]interface{} {
 		"listing_visibility":           mc.ListingVisibility,
 		"passthrough_request_headers":  mc.PassthroughRequestHeaders,
 		"allowed_response_headers":     mc.AllowedResponseHeaders,
+		"token_type":                   mc.TokenType,
+		"description":                  mc.Description,
+		"options":                      mc.Options,
 	}
 }
 
@@ -135,7 +151,7 @@ func (m *AuthMount) toMap() map[string]interface{} {
 }
 
 func (d *AuthEngineMount) GetPath() string {
-	return cleansePath("sys/auth/" + string(d.Spec.Path) + "/" + d.Name)
+	return cleansePath(d.GetEngineListPath() + "/" + string(d.Spec.Path) + "/" + d.Name)
 }
 
 func (d *AuthEngineMount) GetPayload() map[string]interface{} {
@@ -158,7 +174,7 @@ func (d *AuthEngineMount) PrepareInternalValues(context context.Context, object 
 	return nil
 }
 
-func (d *AuthEngineMount) GetEngineListPah() string {
+func (d *AuthEngineMount) GetEngineListPath() string {
 	return "sys/auth"
 }
 func (d *AuthEngineMount) GetEngineTunePath() string {

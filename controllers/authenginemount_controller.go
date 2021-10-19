@@ -21,7 +21,6 @@ import (
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -41,6 +40,7 @@ type AuthEngineMountReconciler struct {
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=authenginemounts,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=authenginemounts/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=authenginemounts/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -85,6 +85,6 @@ func (r *AuthEngineMountReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 // SetupWithManager sets up the controller with the Manager.
 func (r *AuthEngineMountReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.SecretEngineMount{}, builder.WithPredicates(util.ResourceGenerationOrFinalizerChangedPredicate{})).
+		For(&redhatcopv1alpha1.SecretEngineMount{}).
 		Complete(r)
 }

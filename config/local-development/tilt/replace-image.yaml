@@ -1,0 +1,4 @@
+- op: replace
+  path: /spec/template/spec/containers/1/image
+  value:
+    quay.io/raffaelespazzoli/vault-config-operator:latest

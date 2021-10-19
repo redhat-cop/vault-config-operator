@@ -25,7 +25,6 @@ import (
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -40,6 +39,7 @@ type PolicyReconciler struct {
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=policies/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=policies/finalizers,verbs=update
 //+kubebuilder:rbac:groups=core,resources=serviceaccounts;secrets,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -81,6 +81,6 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 // SetupWithManager sets up the controller with the Manager.
 func (r *PolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.Policy{}, builder.WithPredicates(util.ResourceGenerationOrFinalizerChangedPredicate{})).
+		For(&redhatcopv1alpha1.Policy{}).
 		Complete(r)
 }

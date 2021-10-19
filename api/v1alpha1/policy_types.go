@@ -31,7 +31,7 @@ import (
 var _ vaultutils.VaultObject = &Policy{}
 
 func (d *Policy) GetPath() string {
-	return "sys/policy"
+	return "sys/policy/" + d.Name
 }
 func (d *Policy) GetPayload() map[string]interface{} {
 	return map[string]interface{}{

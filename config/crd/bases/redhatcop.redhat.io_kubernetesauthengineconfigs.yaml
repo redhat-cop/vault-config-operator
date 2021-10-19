@@ -38,6 +38,14 @@ spec:
             description: KubernetesAuthEngineConfigSpec defines the desired state
               of KubernetesAuthEngineConfig
             properties:
+              PEMKeys:
+                description: PEMKeys Optional list of PEM-formatted public keys or
+                  certificates used to verify the signatures of Kubernetes service
+                  account JWTs. If a certificate is given, its public key will be
+                  extracted. Not every installation of Kubernetes exposes these keys.
+                items:
+                  type: string
+                type: array
               authentication:
                 description: Authentication is the kube aoth configuraiton to be used
                   to execute this request
@@ -73,9 +81,9 @@ spec:
                 description: DisableISSValidation Disable JWT issuer validation. Allows
                   to skip ISS validation.
                 type: boolean
-              disableLoaclCAJWT:
+              disableLocalCAJWT:
                 default: false
-                description: DisableLoaclCAJWT Disable defaulting to the local CA
+                description: DisableLocalCAJWT Disable defaulting to the local CA
                   cert and service account JWT when running in a Kubernetes pod.
                 type: boolean
               issuer:
@@ -87,20 +95,15 @@ spec:
               kubernetesCACert:
                 description: 'kubernetesCACert PEM encoded CA cert for use by the
                   TLS client used to talk with the Kubernetes API. NOTE: Every line
-                  must end with a newline: \n'
+                  must end with a newline: \n if omitted will default to the content
+                  of the file "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+                  in the operator pod'
                 type: string
               kubernetesHost:
+                default: https://kubernetes.default.svc:443
                 description: KubernetesHost Host must be a host string, a host:port
                   pair, or a URL to the base of the Kubernetes API server.
                 type: string
-              pEMKeys:
-                description: PEMKeys Optional list of PEM-formatted public keys or
-                  certificates used to verify the signatures of Kubernetes service
-                  account JWTs. If a certificate is given, its public key will be
-                  extracted. Not every installation of Kubernetes exposes these keys.
-                items:
-                  type: string
-                type: array
               path:
                 description: Path at which to make the configuration. The final path
                   will be {[spec.authentication.namespace]}/auth/{spec.path}/config/{metadata.name}.
@@ -108,12 +111,19 @@ spec:
                   "create", "read", "update", "delete"] on that path.
                 pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
                 type: string
-              tokenReviewerJWT:
-                description: TokenReviewerJWT A service account JWT used to access
-                  the TokenReview API to validate other JWTs during login. If not
-                  set, the JWT submitted in the login payload will be used to access
-                  the Kubernetes TokenReview API.
-                type: string
+              tokenReviewerServiceAccount:
+                default:
+                  name: default
+                description: TokenReviewerServiceAccount A service account JWT used
+                  to access the TokenReview API to validate other JWTs during login.
+                  If not set, the JWT submitted in the login payload will be used
+                  to access the Kubernetes TokenReview API.
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
             type: object
           status:
             description: KubernetesAuthEngineConfigStatus defines the observed state

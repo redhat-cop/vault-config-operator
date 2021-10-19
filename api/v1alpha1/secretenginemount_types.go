@@ -32,7 +32,7 @@ var _ vaultutils.VaultObject = &SecretEngineMount{}
 var _ vaultutils.VaultEngineObject = &SecretEngineMount{}
 
 func (d *SecretEngineMount) GetPath() string {
-	return cleansePath("sys/mounts/" + string(d.Spec.Path) + "/" + d.Name)
+	return cleansePath(d.GetEngineListPath() + "/" + string(d.Spec.Path) + "/" + d.Name)
 }
 func (d *SecretEngineMount) GetPayload() map[string]interface{} {
 	return d.Spec.toMap()
@@ -56,7 +56,7 @@ func (d *SecretEngineMount) PrepareInternalValues(context context.Context, objec
 	return nil
 }
 
-func (d *SecretEngineMount) GetEngineListPah() string {
+func (d *SecretEngineMount) GetEngineListPath() string {
 	return "sys/mounts"
 }
 func (d *SecretEngineMount) GetEngineTunePath() string {
@@ -121,18 +121,10 @@ type Mount struct {
 
 // +k8s:openapi-gen=true
 type MountConfig struct {
-	// Options undocumented
-	// +kubebuilder:validation:Optional
-	// +mapType=granular
-	Options map[string]string `json:"options,omitempty"`
 
 	// DefaultLeaseTTL  The default lease duration, specified as a string duration like "5s" or "30m".
 	// +kubebuilder:validation:Optional
 	DefaultLeaseTTL string `json:"defaultLeaseTTL"`
-
-	// Description another description...
-	// +kubebuilder:validation:Optional
-	Description *string `json:"description,omitempty"`
 
 	// MaxLeaseTTL The maximum lease duration, specified as a string duration like "5s" or "30m".
 	// +kubebuilder:validation:Optional
@@ -172,10 +164,6 @@ type MountConfig struct {
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
 	AllowedResponseHeaders []string `json:"allowedResponseHeaders,omitempty"`
-
-	// TokenType undocumented
-	// +kubebuilder:validation:Optional
-	TokenType string `json:"tokenType,omitempty"`
 }
 
 // SecretEngineMountStatus defines the observed state of SecretEngineMount
@@ -231,9 +219,6 @@ func (mc *MountConfig) toMap() map[string]interface{} {
 		"listing_visibility":           mc.ListingVisibility,
 		"passthrough_request_headers":  mc.PassthroughRequestHeaders,
 		"allowed_response_headers":     mc.AllowedResponseHeaders,
-		"token_type":                   mc.TokenType,
-		"description":                  mc.Description,
-		"options":                      mc.Options,
 	}
 }
 

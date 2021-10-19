@@ -9,6 +9,15 @@ spec:
     path: kubernetes
     role: policy-admin
   policy: |
+    # query existing mounts
+    path "/sys/mounts" {
+      capabilities = [ "list", "read"]
+      allowed_parameters = {
+        "type" = ["database"]
+        "*"   = []
+      }
+    }
+
     # mount database kv engines
     path "/sys/mounts/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/kv" {
       capabilities = [ "create", "read", "update", "delete", "list" ]
