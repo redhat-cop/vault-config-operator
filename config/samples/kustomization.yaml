@@ -1,9 +1,11 @@
 ## Append samples you want in your CSV to this file as resources ##
 resources:
-- redhatcop_v1alpha1_vaultrole.yaml
+- redhatcop_v1alpha1_kubernetesauthenginerole.yaml
 - redhatcop_v1alpha1_policy.yaml
 - redhatcop_v1alpha1_secretenginemount.yaml
 - redhatcop_v1alpha1_databasesecretengineconfig.yaml
 - redhatcop_v1alpha1_databasesecretenginerole.yaml
 - redhatcop_v1alpha1_randomsecret.yaml
+- redhatcop_v1alpha1_authenginemount.yaml
+- redhatcop_v1alpha1_kubernetesauthengineconfig.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

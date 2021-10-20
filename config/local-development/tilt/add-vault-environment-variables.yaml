@@ -1,0 +1,7 @@
+- op: add
+  path: /spec/template/spec/containers/1/env
+  value:
+    - name: VAULT_ADDR
+      value: https://vault.vault.svc:8200
+    - name: VAULT_SKIP_VERIFY
+      value: "true"  

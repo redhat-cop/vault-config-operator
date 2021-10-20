@@ -1,13 +1,13 @@
-# permissions for end users to edit vaultroles.
+# permissions for end users to edit kubernetesauthengineroles.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: vaultrole-editor-role
+  name: kubernetesauthenginerole-editor-role
 rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
-  - vaultroles
+  - kubernetesauthengineroles
   verbs:
   - create
   - delete
@@ -19,6 +19,6 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
-  - vaultroles/status
+  - kubernetesauthengineroles/status
   verbs:
   - get

@@ -17,10 +17,12 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -55,6 +57,18 @@ func (d *DatabaseSecretEngineRole) GetPayload() map[string]interface{} {
 func (d *DatabaseSecretEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.DBSERole.ToMap()
 	return reflect.DeepEqual(desiredState, payload)
+}
+
+func (d *DatabaseSecretEngineRole) IsInitialized() bool {
+	return true
+}
+
+func (d *DatabaseSecretEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
+	return nil
+}
+
+func (r *DatabaseSecretEngineRole) IsValid() (bool, error) {
+	return true, nil
 }
 
 type DBSERole struct {

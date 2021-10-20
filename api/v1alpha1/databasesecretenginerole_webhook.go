@@ -21,6 +21,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
@@ -36,8 +37,20 @@ func (r *DatabaseSecretEngineRole) SetupWebhookWithManager(mgr ctrl.Manager) err
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
+//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-databasesecretenginerole,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=databasesecretengineroles,verbs=create,versions=v1alpha1,name=mdatabasesecretenginerole.kb.io,admissionReviewVersions={v1,v1beta1}
+
+var _ webhook.Defaulter = &DatabaseSecretEngineRole{}
+
+// Default implements webhook.Defaulter so a webhook will be registered for the type
+func (r *DatabaseSecretEngineRole) Default() {
+	authenginemountlog.Info("default", "name", r.Name)
+	if !controllerutil.ContainsFinalizer(r, GetFinalizer(r)) {
+		controllerutil.AddFinalizer(r, GetFinalizer(r))
+	}
+}
+
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-databasesecretenginerole,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=databasesecretengineroles,verbs=create;update,versions=v1alpha1,name=vdatabasesecretenginerole.kb.io,admissionReviewVersions={v1,v1beta1}
+//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-databasesecretenginerole,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=databasesecretengineroles,verbs=update,versions=v1alpha1,name=vdatabasesecretenginerole.kb.io,admissionReviewVersions={v1,v1beta1}
 
 var _ webhook.Validator = &DatabaseSecretEngineRole{}
 

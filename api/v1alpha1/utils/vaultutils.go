@@ -18,176 +18,37 @@ package utils
 
 import (
 	"context"
-	"errors"
-	"strings"
 
-	"github.com/go-logr/logr"
 	vault "github.com/hashicorp/vault/api"
-	corev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-type VaultConnection interface {
-	GetNamespace() string
-	GetRole() string
-	GetKubeAuthPath() string
-	GetServiceAccountName() string
-}
-
-type VaultObject interface {
-	GetPath() string
-	GetPayload() map[string]interface{}
-	IsEquivalentToDesiredState(payload map[string]interface{}) bool
-}
-
-type VaultEndpoint struct {
-	VaultConnection
-	VaultObject
-	log    logr.Logger
-	client *vault.Client
-}
-
-func NewVaultEndpoint(context context.Context, vaultConnection VaultConnection, vaultObject VaultObject, kubeNamespace string, kubeClient client.Client, log logr.Logger) (*VaultEndpoint, error) {
-	vaultEndpoint := &VaultEndpoint{
-		log:             log,
-		VaultConnection: vaultConnection,
-		VaultObject:     vaultObject,
-	}
-	jwt, err := vaultEndpoint.getJWTToken(context, kubeNamespace, kubeClient)
+func write(context context.Context, path string, payload map[string]interface{}) error {
+	log := log.FromContext(context)
+	vaultClient := context.Value("vaultClient").(*vault.Client)
+	_, err := vaultClient.Logical().Write(path, payload)
 	if err != nil {
-		vaultEndpoint.log.Error(err, "unable to retrieve jwt token for", "namespace", kubeNamespace, "serviceaccount", vaultEndpoint.GetServiceAccountName())
-		return nil, err
+		log.Error(err, "unable to write object at", "path", path)
+		return err
 	}
-	vaultClient, err := vaultEndpoint.createVaultClient(jwt)
-	if err != nil {
-		vaultEndpoint.log.Error(err, "unable to create vault client")
-		return nil, err
-	}
-	vaultEndpoint.client = vaultClient
-	return vaultEndpoint, nil
+	return nil
 }
 
-func (ve *VaultEndpoint) getJWTToken(context context.Context, kubeNamespace string, kubeClient client.Client) (string, error) {
-	serviceAccount := &corev1.ServiceAccount{}
-	err := kubeClient.Get(context, client.ObjectKey{
-		Namespace: kubeNamespace,
-		Name:      ve.GetServiceAccountName(),
-	}, serviceAccount)
-	if err != nil {
-		ve.log.Error(err, "unable to retrieve", "service account", client.ObjectKey{
-			Namespace: kubeNamespace,
-			Name:      ve.GetServiceAccountName(),
-		})
-		return "", err
-	}
-	var tokenSecretName string
-	for _, secretName := range serviceAccount.Secrets {
-		if strings.Contains(secretName.Name, "token") {
-			tokenSecretName = secretName.Name
-			break
-		}
-	}
-	if tokenSecretName == "" {
-		return "", errors.New("unable to find token secret name for service account" + kubeNamespace + "/" + ve.GetServiceAccountName())
-	}
-	secret := &corev1.Secret{}
-	err = kubeClient.Get(context, client.ObjectKey{
-		Namespace: kubeNamespace,
-		Name:      tokenSecretName,
-	}, secret)
-	if err != nil {
-		ve.log.Error(err, "unable to retrieve", "secret", client.ObjectKey{
-			Namespace: kubeNamespace,
-			Name:      tokenSecretName,
-		})
-		return "", err
-	}
-	if jwt, ok := secret.Data["token"]; ok {
-		return string(jwt), nil
-	} else {
-		return "", errors.New("unable to find \"token\" key in secret" + kubeNamespace + "/" + tokenSecretName)
-	}
-}
-
-func (ve *VaultEndpoint) GetVaultClient() *vault.Client {
-	return ve.client
-}
-
-func (ve *VaultEndpoint) createVaultClient(jwt string) (*vault.Client, error) {
-	config := vault.DefaultConfig()
-	client, err := vault.NewClient(config)
-	if err != nil {
-		ve.log.Error(err, "unable initialize vault client")
-		return nil, err
-	}
-	if ve.GetNamespace() != "" {
-		client.SetNamespace(ve.GetNamespace())
-	}
-	secret, err := client.Logical().Write(ve.GetKubeAuthPath(), map[string]interface{}{
-		"jwt":  jwt,
-		"role": ve.GetRole(),
-	})
-
-	if err != nil {
-		ve.log.Error(err, "unable to login to vault")
-		return nil, err
-	}
-
-	client.SetToken(secret.Auth.ClientToken)
-
-	return client, nil
-}
-
-func (ve *VaultEndpoint) Read() (map[string]interface{}, bool, error) {
-	secret, err := ve.GetVaultClient().Logical().Read(ve.GetPath())
+func read(context context.Context, path string) (map[string]interface{}, bool, error) {
+	log := log.FromContext(context)
+	vaultClient := context.Value("vaultClient").(*vault.Client)
+	secret, err := vaultClient.Logical().Read(path)
 	if err != nil {
 		if respErr, ok := err.(*vault.ResponseError); ok {
 			if respErr.StatusCode == 404 {
 				return nil, false, nil
 			}
 		}
-		ve.log.Error(err, "unable to read object at", "path", ve.GetPath())
+		log.Error(err, "unable to read object at", "path", path)
 		return nil, false, err
 	}
 	if secret == nil {
 		return nil, false, nil
 	}
 	return secret.Data, true, nil
-}
-
-func (ve *VaultEndpoint) Write(payload map[string]interface{}) error {
-	_, err := ve.GetVaultClient().Logical().Write(ve.GetPath(), payload)
-	if err != nil {
-		ve.log.Error(err, "unable to write object at", "path", ve.GetPath())
-		return err
-	}
-	return nil
-}
-func (ve *VaultEndpoint) DeleteIfExists() error {
-	_, err := ve.GetVaultClient().Logical().Delete(ve.GetPath())
-	if err != nil {
-		if respErr, ok := err.(*vault.ResponseError); ok {
-			if respErr.StatusCode == 404 {
-				return nil
-			}
-		}
-		ve.log.Error(err, "unable to delete object at", "path", ve.GetPath())
-		return err
-	}
-	return nil
-}
-func (ve *VaultEndpoint) CreateOrUpdate() error {
-	currentPayload, found, err := ve.Read()
-	if err != nil {
-		ve.log.Error(err, "unable to read object at", "path", ve.GetPath())
-		return err
-	}
-	if !found {
-		return ve.Write(ve.GetPayload())
-	} else {
-		if !ve.IsEquivalentToDesiredState(currentPayload) {
-			return ve.Write(ve.GetPayload())
-		}
-	}
-	return nil
 }

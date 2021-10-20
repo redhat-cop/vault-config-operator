@@ -27,6 +27,11 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
+    - description: AuthEngineMount is the Schema for the authenginemounts API
+      displayName: Auth Engine Mount
+      kind: AuthEngineMount
+      name: authenginemounts.redhatcop.redhat.io
+      version: v1alpha1
     - description: DatabaseSecretEngineConfig is the Schema for the databasesecretengineconfigs
         API
       displayName: Database Secret Engine Config
@@ -38,6 +43,18 @@ spec:
       displayName: Database Secret Engine Role
       kind: DatabaseSecretEngineRole
       name: databasesecretengineroles.redhatcop.redhat.io
+      version: v1alpha1
+    - description: KubernetesAuthEngineConfig is the Schema for the kubernetesauthengineconfigs
+        API
+      displayName: Kubernetes Auth Engine Config
+      kind: KubernetesAuthEngineConfig
+      name: kubernetesauthengineconfigs.redhatcop.redhat.io
+      version: v1alpha1
+    - description: KubernetesAuthEngineRole can be used to define a KubernetesAuthEngineRole
+        for the kube-auth authentication method
+      displayName: Kubernetes Auth Engine Role
+      kind: KubernetesAuthEngineRole
+      name: kubernetesauthengineroles.redhatcop.redhat.io
       version: v1alpha1
     - description: Policy is the Schema for the policies API
       displayName: Policy
@@ -54,12 +71,6 @@ spec:
       kind: SecretEngineMount
       name: secretenginemounts.redhatcop.redhat.io
       version: v1alpha1
-    - description: VaultRole can be used to define a VaultRole for the kube-auth authentication
-        method
-      displayName: Vault Role
-      kind: VaultRole
-      name: vaultroles.redhatcop.redhat.io
-      version: v1alpha1
   description: |
     This operator helps set up Vault Configurations. The main intent is to do so such that subsequently pods can consume the secrets made available.
     There are two main principles through all of the capabilities of this operator:
@@ -70,7 +81,7 @@ spec:
     Currently this operator supports the following CRDs:
 
     1. [Policy](https://github.com/redhat-cop/vault-config-operator#policy) Configures Vault [Policies](https://www.vaultproject.io/docs/concepts/policies)
-    2. [VaultRole](https://github.com/redhat-cop/vault-config-operator#VaultRole) Configures a Vault [Kubernetes Authentication](https://www.vaultproject.io/docs/auth/kubernetes) Role
+    2. [KubernetesAuthEngineRole](https://github.com/redhat-cop/vault-config-operator#KubernetesAuthEngineRole) Configures a Vault [Kubernetes Authentication](https://www.vaultproject.io/docs/auth/kubernetes) Role
     3. [SecretEngineMount](https://github.com/redhat-cop/vault-config-operator#SecretEngineMount) Configures a Mount point for a [SecretEngine](https://www.vaultproject.io/docs/secrets)
     4. [DatabaseSecretEngineConfig](https://github.com/redhat-cop/vault-config-operator#DatabaseSecretEngineConfig) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Connection
     5. [DatabaseSecretEngineRole](https://github.com/redhat-cop/vault-config-operator#DatabaseSecretEngineRole) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Role

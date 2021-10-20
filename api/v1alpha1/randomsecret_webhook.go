@@ -19,10 +19,9 @@ package v1alpha1
 import (
 	"errors"
 
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/hcl/v2/hclsimple"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
@@ -38,6 +37,18 @@ func (r *RandomSecret) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
+//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-randomsecret,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=randomsecrets,verbs=create,versions=v1alpha1,name=mrandomsecret.kb.io,admissionReviewVersions={v1,v1beta1}
+
+var _ webhook.Defaulter = &RandomSecret{}
+
+// Default implements webhook.Defaulter so a webhook will be registered for the type
+func (r *RandomSecret) Default() {
+	authenginemountlog.Info("default", "name", r.Name)
+	if !controllerutil.ContainsFinalizer(r, GetFinalizer(r)) {
+		controllerutil.AddFinalizer(r, GetFinalizer(r))
+	}
+}
+
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-randomsecret,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=randomsecrets,verbs=create;update,versions=v1alpha1,name=vrandomsecret.kb.io,admissionReviewVersions={v1,v1beta1}
 
@@ -48,7 +59,7 @@ func (r *RandomSecret) ValidateCreate() error {
 	randomsecretlog.Info("validate create", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
-	return r.validate()
+	return r.isValid()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
@@ -66,7 +77,7 @@ func (r *RandomSecret) ValidateUpdate(old runtime.Object) error {
 	}
 
 	// TODO(user): fill in your validation logic upon object update.
-	return r.validate()
+	return r.isValid()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
@@ -74,34 +85,5 @@ func (r *RandomSecret) ValidateDelete() error {
 	randomsecretlog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
-}
-
-func (r *RandomSecret) validate() error {
-	result := &multierror.Error{}
-	result = multierror.Append(result, r.validateEitherPasswordPolicyReferenceOrInline())
-	result = multierror.Append(result, r.validateInlinePasswordPolicyFormat())
-	return result.ErrorOrNil()
-}
-
-func (r *RandomSecret) validateEitherPasswordPolicyReferenceOrInline() error {
-	count := 0
-	if r.Spec.SecretFormat.InlinePasswordPolicy != "" {
-		count++
-	}
-	if r.Spec.SecretFormat.PasswordPolicyName != "" {
-		count++
-	}
-	if count != 1 {
-		return errors.New("only one of InlinePasswordPolicy or PasswordPolicyName can be defined")
-	}
-	return nil
-}
-
-func (r *RandomSecret) validateInlinePasswordPolicyFormat() error {
-	if r.Spec.SecretFormat.InlinePasswordPolicy != "" {
-		passwordPolicyFormat := &PasswordPolicyFormat{}
-		return hclsimple.Decode(r.Spec.SecretKey, []byte(r.Spec.SecretFormat.InlinePasswordPolicy), nil, passwordPolicyFormat)
-	}
 	return nil
 }

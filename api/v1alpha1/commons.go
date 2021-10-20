@@ -17,12 +17,16 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
+	"errors"
 	"strings"
 	"time"
 
-	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	vault "github.com/hashicorp/vault/api"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // +kubebuilder:validation:Pattern:=`^(?:/?[\w;:@&=\$-\.\+]*)+/?`
@@ -31,7 +35,7 @@ type Path string
 type KubeAuthConfiguration struct {
 	// ServiceAccount is the service account used for the kube auth authentication
 	// +kubebuilder:validation:Required
-	// kubebuilder:default={Name: &#34;default&#34;}
+	// +kubebuilder:default={"name": "default"}
 	ServiceAccount *corev1.LocalObjectReference `json:"serviceAccount,omitempty"`
 
 	// Path is the path of the role used for this kube auth authentication. The operator will try to authenticate at {[namespace/]}auth/{spec.path}
@@ -48,8 +52,6 @@ type KubeAuthConfiguration struct {
 	Namespace string `json:"namespace,omitempty"`
 }
 
-var _ vaultutils.VaultConnection = &KubeAuthConfiguration{}
-
 func (kc *KubeAuthConfiguration) GetNamespace() string {
 	return kc.Namespace
 }
@@ -62,6 +64,95 @@ func (kc *KubeAuthConfiguration) GetKubeAuthPath() string {
 
 func (kc *KubeAuthConfiguration) GetServiceAccountName() string {
 	return kc.ServiceAccount.Name
+}
+
+func (kc *KubeAuthConfiguration) GetVaultClient(context context.Context, kubeNamespace string) (*vault.Client, error) {
+	log := log.FromContext(context)
+	jwt, err := kc.getJWTToken(context, kubeNamespace)
+	if err != nil {
+		log.Error(err, "unable to retrieve jwt token for", "namespace", kubeNamespace, "serviceaccount", kc.GetServiceAccountName())
+		return nil, err
+	}
+	vaultClient, err := kc.createVaultClient(context, jwt)
+	if err != nil {
+		log.Error(err, "unable to create vault client")
+		return nil, err
+	}
+	return vaultClient, nil
+}
+
+func getJWTToken(context context.Context, serviceAccountName string, kubeNamespace string) (string, error) {
+	log := log.FromContext(context)
+	kubeClient := context.Value("kubeClient").(client.Client)
+	serviceAccount := &corev1.ServiceAccount{}
+	err := kubeClient.Get(context, client.ObjectKey{
+		Namespace: kubeNamespace,
+		Name:      serviceAccountName,
+	}, serviceAccount)
+	if err != nil {
+		log.Error(err, "unable to retrieve", "service account", client.ObjectKey{
+			Namespace: kubeNamespace,
+			Name:      serviceAccountName,
+		})
+		return "", err
+	}
+	var tokenSecretName string
+	for _, secretName := range serviceAccount.Secrets {
+		if strings.Contains(secretName.Name, "token") {
+			tokenSecretName = secretName.Name
+			break
+		}
+	}
+	if tokenSecretName == "" {
+		return "", errors.New("unable to find token secret name for service account" + kubeNamespace + "/" + serviceAccountName)
+	}
+	secret := &corev1.Secret{}
+	err = kubeClient.Get(context, client.ObjectKey{
+		Namespace: kubeNamespace,
+		Name:      tokenSecretName,
+	}, secret)
+	if err != nil {
+		log.Error(err, "unable to retrieve", "secret", client.ObjectKey{
+			Namespace: kubeNamespace,
+			Name:      tokenSecretName,
+		})
+		return "", err
+	}
+	if jwt, ok := secret.Data["token"]; ok {
+		return string(jwt), nil
+	} else {
+		return "", errors.New("unable to find \"token\" key in secret" + kubeNamespace + "/" + tokenSecretName)
+	}
+}
+
+func (kc *KubeAuthConfiguration) getJWTToken(context context.Context, kubeNamespace string) (string, error) {
+	return getJWTToken(context, kc.GetServiceAccountName(), kubeNamespace)
+}
+
+func (kc *KubeAuthConfiguration) createVaultClient(context context.Context, jwt string) (*vault.Client, error) {
+	log := log.FromContext(context)
+	config := vault.DefaultConfig()
+	client, err := vault.NewClient(config)
+	if err != nil {
+		log.Error(err, "unable initialize vault client")
+		return nil, err
+	}
+	if kc.GetNamespace() != "" {
+		client.SetNamespace(kc.GetNamespace())
+	}
+	secret, err := client.Logical().Write(kc.GetKubeAuthPath(), map[string]interface{}{
+		"jwt":  jwt,
+		"role": kc.GetRole(),
+	})
+
+	if err != nil {
+		log.Error(err, "unable to login to vault")
+		return nil, err
+	}
+
+	client.SetToken(secret.Auth.ClientToken)
+
+	return client, nil
 }
 
 func cleansePath(path string) string {
@@ -82,4 +173,8 @@ type VaultSecretReference struct {
 	// Path is the path to the secret
 	// +kubebuilder:validation:Required
 	Path string `json:"path,omitempty"`
+}
+
+func GetFinalizer(instance client.Object) string {
+	return "controller-" + strings.ToLower(instance.GetObjectKind().GroupVersionKind().Kind)
 }

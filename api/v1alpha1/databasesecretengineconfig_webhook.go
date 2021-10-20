@@ -21,6 +21,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
@@ -32,6 +33,18 @@ func (r *DatabaseSecretEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) e
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
 		Complete()
+}
+
+//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-databasesecretengineconfig,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=databasesecretengineconfigs,verbs=create,versions=v1alpha1,name=mdatabasesecretengineconfig.kb.io,admissionReviewVersions={v1,v1beta1}
+
+var _ webhook.Defaulter = &DatabaseSecretEngineConfig{}
+
+// Default implements webhook.Defaulter so a webhook will be registered for the type
+func (r *DatabaseSecretEngineConfig) Default() {
+	authenginemountlog.Info("default", "name", r.Name)
+	if !controllerutil.ContainsFinalizer(r, GetFinalizer(r)) {
+		controllerutil.AddFinalizer(r, GetFinalizer(r))
+	}
 }
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -46,7 +59,7 @@ func (r *DatabaseSecretEngineConfig) ValidateCreate() error {
 	databasesecretengineconfiglog.Info("validate create", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
-	return r.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+	return r.isValid()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
@@ -57,7 +70,7 @@ func (r *DatabaseSecretEngineConfig) ValidateUpdate(old runtime.Object) error {
 	if r.Spec.Path != old.(*RandomSecret).Spec.Path {
 		return errors.New("spec.path cannot be updated")
 	}
-	return r.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+	return r.isValid()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
@@ -65,22 +78,5 @@ func (r *DatabaseSecretEngineConfig) ValidateDelete() error {
 	databasesecretengineconfiglog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
-}
-
-func (r *DatabaseSecretEngineConfig) ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret() error {
-	count := 0
-	if r.Spec.RootCredentials.RandomSecret != nil {
-		count++
-	}
-	if r.Spec.RootCredentials.Secret != nil {
-		count++
-	}
-	if r.Spec.RootCredentials.VaultSecret != nil {
-		count++
-	}
-	if count != 1 {
-		return errors.New("Only one of spec.rootCredentials.vaultSecret or spec.rootCredentials.secret or spec.rootCredentials.randomSecret can be specified.")
-	}
 	return nil
 }

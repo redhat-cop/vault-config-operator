@@ -17,11 +17,17 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
+	"errors"
 	"reflect"
 
+	vault "github.com/hashicorp/vault/api"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -88,6 +94,76 @@ func (d *DatabaseSecretEngineConfig) IsEquivalentToDesiredState(payload map[stri
 	desiredState := d.Spec.DBSEConfig.ToMap()
 	delete(desiredState, "password")
 	return reflect.DeepEqual(desiredState, payload)
+}
+
+func (d *DatabaseSecretEngineConfig) IsInitialized() bool {
+	return true
+}
+
+func (d *DatabaseSecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
+	return d.setInternalCredentials(context)
+}
+
+func (r *DatabaseSecretEngineConfig) IsValid() (bool, error) {
+	err := r.isValid()
+	return err == nil, err
+}
+
+func (r *DatabaseSecretEngineConfig) setInternalCredentials(context context.Context) error {
+	log := log.FromContext(context)
+	kubeClient := context.Value("kubeClient").(client.Client)
+	vaultClient := context.Value("vaultClient").(*vault.Client)
+	if r.Spec.RootCredentials.RandomSecret != nil {
+		randomSecret := &RandomSecret{}
+		err := kubeClient.Get(context, types.NamespacedName{
+			Namespace: r.Namespace,
+			Name:      r.Spec.RootCredentials.RandomSecret.Name,
+		}, randomSecret)
+		if err != nil {
+			log.Error(err, "unable to retrieve RandomSecret", "instance", r)
+			return err
+		}
+		secret, err := vaultClient.Logical().Read(randomSecret.GetPath())
+		if err != nil {
+			log.Error(err, "unable to retrieve vault secret", "instance", r)
+			return err
+		}
+		r.SetUsernameAndPassword(r.Spec.Username, secret.Data[randomSecret.Spec.SecretKey].(string))
+		return nil
+	}
+	if r.Spec.RootCredentials.Secret != nil {
+		secret := &corev1.Secret{}
+		err := kubeClient.Get(context, types.NamespacedName{
+			Namespace: r.Namespace,
+			Name:      r.Spec.RootCredentials.Secret.Name,
+		}, secret)
+		if err != nil {
+			log.Error(err, "unable to retrieve Secret", "instance", r)
+			return err
+		}
+		if r.Spec.Username == "" {
+			r.SetUsernameAndPassword(string(secret.Data[r.Spec.RootCredentials.UsernameKey]), string(secret.Data[r.Spec.RootCredentials.PasswordKey]))
+		} else {
+			r.SetUsernameAndPassword(r.Spec.Username, string(secret.Data[r.Spec.RootCredentials.PasswordKey]))
+		}
+		return nil
+	}
+	if r.Spec.RootCredentials.VaultSecret != nil {
+		secret, err := vaultClient.Logical().Read(string(r.Spec.RootCredentials.VaultSecret.Path))
+		if err != nil {
+			log.Error(err, "unable to retrieve vault secret", "instance", r)
+			return err
+		}
+		if r.Spec.Username == "" {
+			r.SetUsernameAndPassword(secret.Data[r.Spec.RootCredentials.UsernameKey].(string), secret.Data[r.Spec.RootCredentials.PasswordKey].(string))
+			log.V(1).Info("", "username", secret.Data[r.Spec.RootCredentials.UsernameKey].(string), "password", secret.Data[r.Spec.RootCredentials.PasswordKey].(string))
+		} else {
+			r.SetUsernameAndPassword(r.Spec.Username, secret.Data[r.Spec.RootCredentials.PasswordKey].(string))
+			log.V(1).Info("", "username", r.Spec.Username, "password", secret.Data[r.Spec.RootCredentials.PasswordKey].(string))
+		}
+		return nil
+	}
+	return errors.New("no means of retrieving a secret was specified")
 }
 
 type DBSEConfig struct {
@@ -211,4 +287,25 @@ func (i *DBSEConfig) ToMap() map[string]interface{} {
 	payload["username"] = i.retrievedUsername
 	payload["password"] = i.retrievedPassword
 	return payload
+}
+
+func (r *DatabaseSecretEngineConfig) isValid() error {
+	return r.validateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+}
+
+func (r *DatabaseSecretEngineConfig) validateEitherFromVaultSecretOrFromSecretOrFromRandomSecret() error {
+	count := 0
+	if r.Spec.RootCredentials.RandomSecret != nil {
+		count++
+	}
+	if r.Spec.RootCredentials.Secret != nil {
+		count++
+	}
+	if r.Spec.RootCredentials.VaultSecret != nil {
+		count++
+	}
+	if count != 1 {
+		return errors.New("Only one of spec.rootCredentials.vaultSecret or spec.rootCredentials.secret or spec.rootCredentials.randomSecret can be specified.")
+	}
+	return nil
 }

@@ -9,7 +9,7 @@ There are two main principles through all of the capabilities of this operator:
 Currently this operator supports the following CRDs:
 
 1. [Policy](#policy) Configures Vault [Policies](https://www.vaultproject.io/docs/concepts/policies)
-2. [VaultRole](#VaultRole) Configures a Vault [Kubernetes Authentication](https://www.vaultproject.io/docs/auth/kubernetes) Role
+2. [KubernetesAuthEngineRole](#KubernetesAuthEngineRole) Configures a Vault [Kubernetes Authentication](https://www.vaultproject.io/docs/auth/kubernetes) Role
 3. [SecretEngineMount](#SecretEngineMount) Configures a Mount point for a [SecretEngine](https://www.vaultproject.io/docs/secrets)
 4. [DatabaseSecretEngineConfig](#DatabaseSecretEngineConfig) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Connection
 5. [DatabaseSecretEngineRole](#DatabaseSecretEngineRole) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Role
@@ -64,13 +64,13 @@ spec:
 
 Notice that in this policy we have parametrized the path based on the namespace of the connecting service account.
 
-## VaultRole
+## KubernetesAuthEngineRole
 
-The `VaultRole` creates a Vault Authentication Role for a Kubernetes Authentication mount, here is an example:
+The `KubernetesAuthEngineRole` creates a Vault Authentication Role for a Kubernetes Authentication mount, here is an example:
 
 ```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
-kind: VaultRole
+kind: KubernetesAuthEngineRole
 metadata:
   name: database-engine-admin
 spec:
@@ -347,7 +347,7 @@ export cluster_base_domain=$(oc get dns cluster -o jsonpath='{.spec.baseDomain}'
 envsubst < ./config/local-development/vault-values.yaml > /tmp/values
 helm upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f /tmp/values
 
-INIT_RESPONSE=$(oc exec vault-0 -n vault -- vault operator init -address https://vault-internal.vault.svc:8200 -ca-path /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt -format=json -key-shares 1 -key-threshold 1)
+INIT_RESPONSE=$(oc exec vault-0 -n vault -- vault operator init -address https://vault.vault.svc:8200 -ca-path /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt -format=json -key-shares 1 -key-threshold 1)
 
 UNSEAL_KEY=$(echo "$INIT_RESPONSE" | jq -r .unseal_keys_b64[0])
 ROOT_TOKEN=$(echo "$INIT_RESPONSE" | jq -r .root_token)
@@ -360,7 +360,7 @@ oc delete secret vault-init -n vault
 oc create secret generic vault-init -n vault --from-literal=unseal_key=${UNSEAL_KEY} --from-literal=root_token=${ROOT_TOKEN}
 export UNSEAL_KEY=$(oc get secret vault-init -n vault -o jsonpath='{.data.unseal_key}' | base64 -d )
 export ROOT_TOKEN=$(oc get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d )
-oc exec vault-0 -n vault -- vault operator unseal -address https://vault-internal.vault.svc:8200 -ca-path /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt $UNSEAL_KEY
+oc exec vault-0 -n vault -- vault operator unseal -address https://vault.vault.svc:8200 -ca-path /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt $UNSEAL_KEY
 ```
 
 ### Configure an Kubernetes Authentication mount point
@@ -386,15 +386,10 @@ export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.da
 ### Run the operator
 
 ```shell
-make install
-oc new-project vault-config-operator-local
-kustomize build ./config/local-development | oc apply -f - -n vault-config-operator-local
-export token=$(oc serviceaccounts get-token 'vault-config-operator-controller-manager' -n vault-config-operator-local)
-oc login --token ${token}
-export VAULT_ADDR=https://vault-vault.apps.${cluster_base_domain}
-unset VAULT_TOKEN
-export VAULT_SKIP_VERIFY=true
-make run ENABLE_WEBHOOKS=false
+export repo=raffaelespazzoli #replace with yours, this has also to be replaced in the following files: Tiltfile, ./config/local-development/tilt/replace-image.yaml. Further improvements may be able to remove this constraint.
+docker login quay.io/$repo
+oc new-project vault-config-operator
+tilt up
 ```
 
 ### Test Manually
@@ -522,3 +517,12 @@ operator-sdk cleanup vault-config-operator -n vault-config-operator
 oc delete operatorgroup operator-sdk-og
 oc delete catalogsource vault-config-operator-catalog
 ```
+
+
+TODO:
+add password policy CRD
+replace password policy in test
+add kube auth engine config and role in tests
+document the three new apis and move the api doc to a separate document
+create an end to end example
+ensure helm packaging works
