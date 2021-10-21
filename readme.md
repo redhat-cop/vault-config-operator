@@ -442,6 +442,14 @@ oc apply -f ./test/kv-secret-engine.yaml -n test-vault-config-operator
 oc apply -f ./test/random-secret.yaml -n test-vault-config-operator
 ```
 
+Kube auth engine mount and config and role
+
+```shell
+oc apply -f ./test/kube-auth-engine-mount.yaml -n vault-admin
+oc apply -f ./test/kube-auth-engine-config.yaml -n vault-admin
+oc apply -f ./test/kube-auth-engine-role.yaml -n vault-admin
+```
+
 ### Test helm chart locally
 
 Define an image and tag. For example...
@@ -520,8 +528,8 @@ oc delete catalogsource vault-config-operator-catalog
 
 
 TODO:
-add password policy CRD
-replace password policy in test
+*add password policy CRD
+*replace password policy in test
 add kube auth engine config and role in tests
 document the three new apis and move the api doc to a separate document
 create an end to end example

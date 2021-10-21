@@ -128,6 +128,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "RandomSecret")
 		os.Exit(1)
 	}
+	setupLog.Info("starting AuthEngineMountReconciler")
 	if err = (&controllers.AuthEngineMountReconciler{
 		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("AuthEngineMount"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("AuthEngineMount"),
@@ -136,6 +137,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "AuthEngineMount")
 		os.Exit(1)
 	}
+	setupLog.Info("started AuthEngineMountReconciler")
 	if err = (&controllers.KubernetesAuthEngineConfigReconciler{
 		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("KubernetesAuthEngineConfig"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("KubernetesAuthEngineConfig"),

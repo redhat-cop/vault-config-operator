@@ -41,6 +41,7 @@ type AuthEngineMountReconciler struct {
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=authenginemounts/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=authenginemounts/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
+//+kubebuilder:rbac:groups=core,resources=serviceaccounts;secrets,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -85,6 +86,6 @@ func (r *AuthEngineMountReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 // SetupWithManager sets up the controller with the Manager.
 func (r *AuthEngineMountReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.SecretEngineMount{}).
+		For(&redhatcopv1alpha1.AuthEngineMount{}).
 		Complete(r)
 }
