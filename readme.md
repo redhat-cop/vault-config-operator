@@ -433,7 +433,7 @@ oc apply -f ./test/database-engine-read-only-role.yaml -n test-vault-config-oper
 RandomSecret
 
 ```shell
-vault write -tls-skip-verify /sys/policies/password/simple-password-policy policy=@./test/password-policy.hcl
+oc apply -f ./test/password-policy.yaml -n vault-admin
 envsubst < ./test/kv-engine-admin-policy.yaml | oc apply -f - -n vault-admin
 envsubst < ./test/secret-writer-policy.yaml | oc apply -f - -n vault-admin
 oc apply -f ./test/kv-engine-admin-role.yaml -n vault-admin

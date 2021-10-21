@@ -76,7 +76,7 @@ func (r *KubernetesAuthEngineConfig) ValidateUpdate(old runtime.Object) error {
 	kubernetesauthengineconfiglog.Info("validate update", "name", r.Name)
 
 	// the path cannot be updated
-	if r.Spec.Path != old.(*RandomSecret).Spec.Path {
+	if r.Spec.Path != old.(*KubernetesAuthEngineConfig).Spec.Path {
 		return errors.New("spec.path cannot be updated")
 	}
 	return nil

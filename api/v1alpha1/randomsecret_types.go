@@ -51,7 +51,7 @@ type RandomSecretSpec struct {
 
 	// SecretFormat specifies a map of key and password policies used to generate random values
 	// +kubebuilder:validation:Required
-	SecretFormat PasswordPolicy `json:"secretFormat,omitempty"`
+	SecretFormat VaultPasswordPolicy `json:"secretFormat,omitempty"`
 
 	// RefreshPeriod if specified, the operator will refresh the secret with the given frequency
 	// +kubebuilder:validation:Optional
@@ -86,7 +86,7 @@ func (d *RandomSecret) PrepareInternalValues(context context.Context, object cli
 	return d.GenerateNewPassword(context)
 }
 
-type PasswordPolicy struct {
+type VaultPasswordPolicy struct {
 	// PasswordPolicyName a ref to a password policy defined in Vault. Notice that in order to use this, the Vault role you use needs the following capabilities = ["read"] on /sys/policy/password.
 	// Only one of PasswordPolicyName or InlinePasswordPolicy can be specified
 	// +kubebuilder:validation:Optional
@@ -259,7 +259,7 @@ func (r *RandomSecret) validateEitherPasswordPolicyReferenceOrInline() error {
 		count++
 	}
 	if count != 1 {
-		return errors.New("only one of InlinePasswordPolicy or PasswordPolicyName can be defined")
+		return errors.New("only one of InlinePasswordPolicy or passwordPolicyName can be defined")
 	}
 	return nil
 }
