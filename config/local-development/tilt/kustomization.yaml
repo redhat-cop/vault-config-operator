@@ -7,7 +7,7 @@ namespace: vault-config-operator
 
 bases:
 - ../../default
-- ./service_account.yaml
+- ./service-account.yaml
 
 
 patchesJson6902:
