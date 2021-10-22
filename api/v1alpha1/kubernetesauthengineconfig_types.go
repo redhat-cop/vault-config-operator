@@ -51,7 +51,7 @@ type KubernetesAuthEngineConfigSpec struct {
 }
 
 func (d *KubernetesAuthEngineConfig) GetPath() string {
-	return cleansePath("auth/" + string(d.Spec.Path) + "/role/" + d.Name)
+	return cleansePath("sys/auth/" + string(d.Spec.Path) + "/" + d.Name + "/tune")
 }
 
 func (d *KubernetesAuthEngineConfig) GetPayload() map[string]interface{} {

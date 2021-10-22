@@ -79,7 +79,6 @@ func (r *AuthEngineMountReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	}
 	ctx = context.WithValue(ctx, "vaultClient", vaultClient)
 	vaultEngineResource := vaultresourcecontroller.NewVaultEngineResource(&r.ReconcilerBase, instance)
-
 	return vaultEngineResource.Reconcile(ctx, instance)
 }
 
