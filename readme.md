@@ -37,38 +37,23 @@ There are two main principles through all of the capabilities of this operator:
 
 Currently this operator supports the following CRDs:
 
-1. [Policy](./api.md#policy) Configures Vault [Policies](https://www.vaultproject.io/docs/concepts/policies)
-2. [PasswordPolicy](./api.md#passwordpolicy) Configures Vault [Password Policies](https://www.vaultproject.io/docs/concepts/password-policies)
-3. [AuthEngineMount](./api.md#authenginemount) Sets up a [Vault Authentication Endpoint](https://www.vaultproject.io/docs/auth)
-4. [KubernetesAuthEngineConfig](./api.md#kubernetesauthengineconfig) Configures a [Vault Kubernetes Authentication Endpoint](https://www.vaultproject.io/docs/auth/kubernetes).
-5. [KubernetesAuthEngineRole](./api.md#KubernetesAuthEngineRole) Configures a Vault [Kubernetes Authentication](https://www.vaultproject.io/docs/auth/kubernetes) Role
-6. [SecretEngineMount](./api.md#SecretEngineMount) Configures a Mount point for a [SecretEngine](https://www.vaultproject.io/docs/secrets)
-7. [DatabaseSecretEngineConfig](./api.md#DatabaseSecretEngineConfig) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Connection
-8. [DatabaseSecretEngineRole](./api.md#DatabaseSecretEngineRole) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Role
-9. [RandomSecret](./api.md#RandomSecret) Creates a random secret in a vault [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv) with one password field generated using a [PasswordPolicy](https://www.vaultproject.io/docs/concepts/password-policies)
+1. [Policy](./docs/api.md#policy) Configures Vault [Policies](https://www.vaultproject.io/docs/concepts/policies)
+2. [PasswordPolicy](./docs/api.md#passwordpolicy) Configures Vault [Password Policies](https://www.vaultproject.io/docs/concepts/password-policies)
+3. [AuthEngineMount](./docs/api.md#authenginemount) Sets up a [Vault Authentication Endpoint](https://www.vaultproject.io/docs/auth)
+4. [KubernetesAuthEngineConfig](./docs/api.md#kubernetesauthengineconfig) Configures a [Vault Kubernetes Authentication Endpoint](https://www.vaultproject.io/docs/auth/kubernetes).
+5. [KubernetesAuthEngineRole](./docs/api.md#KubernetesAuthEngineRole) Configures a Vault [Kubernetes Authentication](https://www.vaultproject.io/docs/auth/kubernetes) Role
+6. [SecretEngineMount](./docs/api.md#SecretEngineMount) Configures a Mount point for a [SecretEngine](https://www.vaultproject.io/docs/secrets)
+7. [DatabaseSecretEngineConfig](./docs/api.md#DatabaseSecretEngineConfig) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Connection
+8. [DatabaseSecretEngineRole](./docs/api.md#DatabaseSecretEngineRole) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Role
+9. [RandomSecret](./docs/api.md#RandomSecret) Creates a random secret in a vault [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv) with one password field generated using a [PasswordPolicy](https://www.vaultproject.io/docs/concepts/password-policies)
+
+## End to end example
+
+See [this section](./docs/end-to-end-example.md) for an example scenario in which this operator could be used.
 
 ## Contributing a new Vault type
 
-See [this section](./contributing-vault-apis.md) of the documentation for a details on how to contribute a new type.
-
-## Metrics
-
-Prometheus compatible metrics are exposed by the Operator and can be integrated into OpenShift's default cluster monitoring. To enable OpenShift cluster monitoring, label the namespace the operator is deployed in with the label `openshift.io/cluster-monitoring="true"`.
-
-```shell
-oc label namespace <namespace> openshift.io/cluster-monitoring="true"
-```
-
-### Testing metrics
-
-```sh
-export operatorNamespace=vault-config-operator-local # or vault-config-operator
-oc label namespace ${operatorNamespace} openshift.io/cluster-monitoring="true"
-oc rsh -n openshift-monitoring -c prometheus prometheus-k8s-0 /bin/bash
-export operatorNamespace=vault-config-operator-local # or vault-config-operator
-curl -v -s -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://vault-config-operator-controller-manager-metrics.${operatorNamespace}.svc.cluster.local:8443/metrics
-exit
-```
+See [this section](./docs/contributing-vault-apis.md) of the documentation for a details on how to contribute a new type.
 
 ## Deploying the Operator
 
@@ -135,11 +120,30 @@ helm repo update
 helm upgrade vault-config-operator vault-config-operator/vault-config-operator
 ```
 
+## Metrics
+
+Prometheus compatible metrics are exposed by the Operator and can be integrated into OpenShift's default cluster monitoring. To enable OpenShift cluster monitoring, label the namespace the operator is deployed in with the label `openshift.io/cluster-monitoring="true"`.
+
+```shell
+oc label namespace <namespace> openshift.io/cluster-monitoring="true"
+```
+
+### Testing metrics
+
+```sh
+export operatorNamespace=vault-config-operator-local # or vault-config-operator
+oc label namespace ${operatorNamespace} openshift.io/cluster-monitoring="true"
+oc rsh -n openshift-monitoring -c prometheus prometheus-k8s-0 /bin/bash
+export operatorNamespace=vault-config-operator-local # or vault-config-operator
+curl -v -s -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://vault-config-operator-controller-manager-metrics.${operatorNamespace}.svc.cluster.local:8443/metrics
+exit
+```
+
 ## Development
 
-## Running the operator locally
+### Running the operator locally
 
-### Deploy a Vault instance
+#### Deploy a Vault instance
 
 If you don't have a Vault instance available for testing, deploy one with these steps:
 
@@ -165,7 +169,7 @@ export ROOT_TOKEN=$(oc get secret vault-init -n vault -o jsonpath='{.data.root_t
 oc exec vault-0 -n vault -- vault operator unseal -address https://vault.vault.svc:8200 -ca-path /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt $UNSEAL_KEY
 ```
 
-### Configure an Kubernetes Authentication mount point
+#### Configure an Kubernetes Authentication mount point
 
 All the configuration made by the operator need to authenticate via a Kubernetes Authentication. So you need a root Kubernetes Authentication mount point and role. The you can create more roles via the operator.
 If you don't have a root mount point and role, you can create them as follows:
@@ -185,7 +189,7 @@ vault write -tls-skip-verify auth/kubernetes/role/policy-admin bound_service_acc
 export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.data["kubernetes/"].accessor')
 ```
 
-### Run the operator
+#### Run the operator
 
 ```shell
 export repo=raffaelespazzoli #replace with yours, this has also to be replaced in the following files: Tiltfile, ./config/local-development/tilt/replace-image.yaml. Further improvements may be able to remove this constraint.
@@ -335,7 +339,7 @@ TODO:
 *add kube auth engine config and role in tests
 *document the three new apis and move the api doc to a separate document
 *document how to contribute a new type
-add status for the kuberneets auth engine.
+*add status for the kuberneets auth engine.
 create an end to end example
 ensure helm packaging works
 vault init

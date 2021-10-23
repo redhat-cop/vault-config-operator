@@ -65,6 +65,9 @@ func (ve *VaultEngineEndpoint) retrieveAccessor(context context.Context) (string
 			break
 		}
 	}
+	if !found {
+		return "", found, nil
+	}
 	return foundData["accessor"].(string), found, nil
 }
 

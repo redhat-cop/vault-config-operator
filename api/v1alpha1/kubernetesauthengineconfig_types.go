@@ -51,14 +51,14 @@ type KubernetesAuthEngineConfigSpec struct {
 }
 
 func (d *KubernetesAuthEngineConfig) GetPath() string {
-	return cleansePath("sys/auth/" + string(d.Spec.Path) + "/" + d.Name + "/tune")
+	return cleansePath("auth/" + string(d.Spec.Path) + "/" + d.Name + "/config")
 }
 
 func (d *KubernetesAuthEngineConfig) GetPayload() map[string]interface{} {
-	return d.Spec.KAECConfig.ToMap()
+	return d.Spec.KAECConfig.toMap()
 }
 func (d *KubernetesAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
-	desiredState := d.Spec.KAECConfig.ToMap()
+	desiredState := d.Spec.KAECConfig.toMap()
 	return reflect.DeepEqual(desiredState, payload)
 }
 
@@ -163,7 +163,7 @@ func init() {
 	SchemeBuilder.Register(&KubernetesAuthEngineConfig{}, &KubernetesAuthEngineConfigList{})
 }
 
-func (i *KAECConfig) ToMap() map[string]interface{} {
+func (i *KAECConfig) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["kubernetes_host"] = i.KubernetesHost
 	payload["kubernetes_ca_host"] = i.KubernetesCACert

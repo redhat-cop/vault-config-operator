@@ -89,10 +89,10 @@ func (d *DatabaseSecretEngineConfig) GetPath() string {
 	return string(d.Spec.Path) + "/" + "config" + "/" + d.Name
 }
 func (d *DatabaseSecretEngineConfig) GetPayload() map[string]interface{} {
-	return d.Spec.ToMap()
+	return d.Spec.toMap()
 }
 func (d *DatabaseSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
-	desiredState := d.Spec.DBSEConfig.ToMap()
+	desiredState := d.Spec.DBSEConfig.toMap()
 	delete(desiredState, "password")
 	return reflect.DeepEqual(desiredState, payload)
 }
@@ -264,19 +264,7 @@ func init() {
 	SchemeBuilder.Register(&DatabaseSecretEngineConfig{}, &DatabaseSecretEngineConfigList{})
 }
 
-func DBSEConfigFromMap(payload map[string]interface{}) *DBSEConfig {
-	o := &DBSEConfig{}
-	o.PluginName = payload["plugin_name"].(string)
-	o.VerifyConnection = payload["verify_connection"].(bool)
-	o.AllowedRoles = payload["allowed_roles"].([]string)
-	o.RootRotationStatements = payload["root_rotation_statements"].([]string)
-	o.PasswordPolicy = payload["password_policy"].(string)
-	o.ConnectionURL = payload["connection_url"].(string)
-	o.Username = payload["username"].(string)
-	return o
-}
-
-func (i *DBSEConfig) ToMap() map[string]interface{} {
+func (i *DBSEConfig) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["plugin_name"] = i.PluginName
 	payload["verify_connection"] = i.VerifyConnection
