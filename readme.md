@@ -6,20 +6,21 @@
 [![CRD Docs](https://img.shields.io/badge/CRD-Docs-brightgreen)](https://doc.crds.dev/github.com/redhat-cop/vault-config-operator)
 
 - [Vault Config Operator](#vault-config-operator)
+  - [End to end example](#end-to-end-example)
   - [Contributing a new Vault type](#contributing-a-new-vault-type)
-  - [Metrics](#metrics)
-    - [Testing metrics](#testing-metrics)
   - [Deploying the Operator](#deploying-the-operator)
     - [Multiarch Support](#multiarch-support)
     - [Deploying from OperatorHub](#deploying-from-operatorhub)
       - [Deploying from OperatorHub UI](#deploying-from-operatorhub-ui)
       - [Deploying from OperatorHub using CLI](#deploying-from-operatorhub-using-cli)
     - [Deploying with Helm](#deploying-with-helm)
+  - [Metrics](#metrics)
+    - [Testing metrics](#testing-metrics)
   - [Development](#development)
-  - [Running the operator locally](#running-the-operator-locally)
-    - [Deploy a Vault instance](#deploy-a-vault-instance)
-    - [Configure an Kubernetes Authentication mount point](#configure-an-kubernetes-authentication-mount-point)
-    - [Run the operator](#run-the-operator)
+    - [Running the operator locally](#running-the-operator-locally)
+      - [Deploy a Vault instance](#deploy-a-vault-instance)
+      - [Configure an Kubernetes Authentication mount point](#configure-an-kubernetes-authentication-mount-point)
+      - [Run the operator](#run-the-operator)
     - [Test Manually](#test-manually)
     - [Test helm chart locally](#test-helm-chart-locally)
   - [Building/Pushing the operator image](#buildingpushing-the-operator-image)
@@ -340,6 +341,6 @@ TODO:
 *document the three new apis and move the api doc to a separate document
 *document how to contribute a new type
 *add status for the kuberneets auth engine.
-create an end to end example
+*create an end to end example
 ensure helm packaging works
 vault init
