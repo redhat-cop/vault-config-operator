@@ -8,6 +8,7 @@
 - [Vault Config Operator](#vault-config-operator)
   - [End to end example](#end-to-end-example)
   - [Contributing a new Vault type](#contributing-a-new-vault-type)
+  - [Initializing the connection to Vault](#initializing-the-connection-to-vault)
   - [Deploying the Operator](#deploying-the-operator)
     - [Multiarch Support](#multiarch-support)
     - [Deploying from OperatorHub](#deploying-from-operatorhub)
@@ -55,6 +56,11 @@ See [this section](./docs/end-to-end-example.md) for an example scenario in whic
 ## Contributing a new Vault type
 
 See [this section](./docs/contributing-vault-apis.md) of the documentation for a details on how to contribute a new type.
+
+## Initializing the connection to Vault
+
+At the moment the connection to Vault can be initialized with [Vault's standard environment variables](https://www.vaultproject.io/docs/commands#environment-variables).
+See the [OLM documentation](https://github.com/operator-framework/operator-lifecycle-manager/blob/master/doc/design/subscription-config.md#env) on how to pass environment variables via a Subscription.
 
 ## Deploying the Operator
 
@@ -332,15 +338,3 @@ operator-sdk cleanup vault-config-operator -n vault-config-operator
 oc delete operatorgroup operator-sdk-og
 oc delete catalogsource vault-config-operator-catalog
 ```
-
-
-TODO:
-*add password policy CRD
-*replace password policy in test
-*add kube auth engine config and role in tests
-*document the three new apis and move the api doc to a separate document
-*document how to contribute a new type
-*add status for the kuberneets auth engine.
-*create an end to end example
-ensure helm packaging works
-vault init
