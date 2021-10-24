@@ -70,13 +70,11 @@ func (r *VaultEngineResource) Reconcile(ctx context.Context, instance client.Obj
 		}
 		return reconcile.Result{}, nil
 	}
-
 	err := r.manageReconcileLogic(ctx, instance)
 	if err != nil {
 		log.Error(err, "unable to complete reconcile logic", "instance", instance)
 		return r.reconcilerBase.ManageError(ctx, instance, err)
 	}
-
 	return r.reconcilerBase.ManageSuccess(ctx, instance)
 }
 
@@ -106,5 +104,11 @@ func (r *VaultEngineResource) manageReconcileLogic(context context.Context, inst
 			return err
 		}
 	}
+	accessor, err := r.vaultEngineEndpoint.GetAccessor(context)
+	if err != nil {
+		log.Error(err, "unable to get accessor", "instance", instance)
+		return err
+	}
+	instance.(vaultutils.VaultEngineObject).SetAccessor(accessor)
 	return nil
 }

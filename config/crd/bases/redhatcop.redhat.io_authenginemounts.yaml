@@ -95,6 +95,9 @@ spec:
                     description: DefaultLeaseTTL  The default lease duration, specified
                       as a string duration like "5s" or "30m".
                     type: string
+                  description:
+                    description: Description another description...
+                    type: string
                   listingVisibility:
                     default: hidden
                     description: ListingVisibility Specifies whether to show this
@@ -108,6 +111,12 @@ spec:
                     description: MaxLeaseTTL The maximum lease duration, specified
                       as a string duration like "5s" or "30m".
                     type: string
+                  options:
+                    additionalProperties:
+                      type: string
+                    description: Options undocumented
+                    type: object
+                    x-kubernetes-map-type: granular
                   passthroughRequestHeaders:
                     description: PassthroughRequestHeaders list of headers to whitelist
                       and pass from the request to the plugin. kubebuilder:validation:UniqueItems=true
@@ -115,6 +124,9 @@ spec:
                       type: string
                     type: array
                     x-kubernetes-list-type: set
+                  tokenType:
+                    description: TokenType undocumented
+                    type: string
                 type: object
               description:
                 description: Description Specifies a human-friendly description of
@@ -148,6 +160,8 @@ spec:
           status:
             description: AuthEngineMountStatus defines the observed state of AuthEngineMount
             properties:
+              accessor:
+                type: string
               conditions:
                 items:
                   description: "Condition contains details for one aspect of the current

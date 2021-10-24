@@ -1,0 +1,124 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: NamespaceConfig
+metadata:
+  name: vault-config
+spec:
+  labelSelector:
+    matchLabels:
+      environment: dev
+  templates:
+  - objectTemplate: |
+      apiVersion: redhatcop.redhat.io/v1alpha1
+      kind: AuthEngineMount
+      metadata:
+        name: {{ index .Labels "team" }}-kubernetes
+        namespace: vault-admin
+      spec:
+        authentication: 
+          path: cluster1-admin
+          role: vault-admin
+        type: kubernetes
+        path: cluster1
+  - objectTemplate: |
+      apiVersion: redhatcop.redhat.io/v1alpha1
+      kind: KubernetesAuthEngineConfig
+      metadata:
+        name: {{ index .Labels "team" }}-kubernetes
+        namespace: vault-admin
+      spec:
+        authentication: 
+          path: cluster1-admin
+          role: vault-admin
+        path: cluster1        
+  - objectTemplate:  |     
+      apiVersion: redhatcop.redhat.io/v1alpha1
+      kind: Policy
+      metadata:
+        name: {{ index .Labels "team" }}-secret-engine-admin
+        namespace: vault-admin
+      spec:
+        authentication: 
+          path: cluster1-admin
+          role: vault-admin
+        policy: |
+          # query existing mounts
+          path "/sys/mounts" {
+            capabilities = [ "list", "read"]
+          }
+
+          # mount database,kv secret engines
+          path "/sys/mounts/cluster1/{{ index .Labels "team" }}/+" {
+            capabilities = [ "create", "read", "update", "delete"]
+            allowed_parameters = {
+              "type" = ["database","kv"]
+              "*"   = []
+            }
+          }
+
+          # tune database,kv secret engines
+          path "/sys/mounts/cluster1/{{ index .Labels "team" }}/+/tune" {
+            capabilities = [ "create", "read", "update", "delete"]
+          }
+
+          # configure database,kv secrets engines
+          path "/cluster1/{{ index .Labels "team" }}/+/config/+" {
+            capabilities = [ "create", "read", "update", "delete"]
+          }
+
+          # configure database,kv roles
+          path "/cluster1/{{ index .Labels "team" }}/+/roles/+" {
+            capabilities = [ "create", "read", "update", "delete"]
+          }
+  - objectTemplate:  |     
+      apiVersion: redhatcop.redhat.io/v1alpha1
+      kind: Policy
+      metadata:
+        name: {{ index .Labels "team" }}-secret-reader
+        namespace: vault-admin
+      spec:
+        authentication: 
+          path: cluster1-admin
+          role: vault-admin
+        policy: |
+          # Configure read secrets
+          path "/cluster1/{{ index .Labels "team" }}/*" {
+            capabilities = ["read"]
+          }
+  - objectTemplate: | 
+      apiVersion: redhatcop.redhat.io/v1alpha1
+      kind: KubernetesAuthEngineRole
+      metadata:
+        name: {{ index .Labels "team" }}-secret-engine-admin
+        namespace: vault-admin
+      spec:
+        authentication: 
+          path: cluster1-admin
+          role: vault-admin
+        path: cluster1/{{ index .Labels "team" }}-kubernetes
+        policies:
+          - {{ index .Labels "team" }}-secret-engine-admin
+        targetServiceAccounts:
+        - default  
+        targetNamespaces:
+          targetNamespaceSelector:
+            matchLabels:
+              team: {{ index .Labels "team" }}
+  - objectTemplate: | 
+      apiVersion: redhatcop.redhat.io/v1alpha1
+      kind: KubernetesAuthEngineRole
+      metadata:
+        name: {{ index .Labels "team" }}-secret-reader
+        namespace: vault-admin
+      spec:
+        authentication: 
+          path: cluster1-admin
+          role: vault-admin
+        path: cluster1/{{ index .Labels "team" }}-kubernetes
+        policies:
+          - {{ index .Labels "team" }}-secret-reader
+        targetServiceAccounts:
+        - default           
+        targetNamespaces:
+          targetNamespaceSelector:
+            matchLabels:
+              team: {{ index .Labels "team" }}                                          

@@ -8,4 +8,5 @@ resources:
 - redhatcop_v1alpha1_randomsecret.yaml
 - redhatcop_v1alpha1_authenginemount.yaml
 - redhatcop_v1alpha1_kubernetesauthengineconfig.yaml
+- redhatcop_v1alpha1_PasswordPolicy.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

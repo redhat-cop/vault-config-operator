@@ -52,10 +52,10 @@ func (d *DatabaseSecretEngineRole) GetPath() string {
 	return string(d.Spec.Path) + "/" + "roles" + "/" + d.Name
 }
 func (d *DatabaseSecretEngineRole) GetPayload() map[string]interface{} {
-	return d.Spec.ToMap()
+	return d.Spec.toMap()
 }
 func (d *DatabaseSecretEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
-	desiredState := d.Spec.DBSERole.ToMap()
+	desiredState := d.Spec.DBSERole.toMap()
 	return reflect.DeepEqual(desiredState, payload)
 }
 
@@ -154,19 +154,7 @@ func init() {
 	SchemeBuilder.Register(&DatabaseSecretEngineRole{}, &DatabaseSecretEngineRoleList{})
 }
 
-func DatabaseSecretEngineRoleSpecFromMap(payload map[string]interface{}) *DBSERole {
-	o := &DBSERole{}
-	o.DBName = payload["db_name"].(string)
-	o.DefaultTTL = parseOrDie(payload["default_ttl"].(string))
-	o.MaxTTL = parseOrDie(payload["max_ttl"].(string))
-	o.CreationStatements = payload["creation_statements"].([]string)
-	o.RevocationStatements = payload["revocation_statetments"].([]string)
-	o.RollbackStatements = payload["rollback_statements"].([]string)
-	o.RenewStatements = payload["renew_statements"].([]string)
-	return o
-}
-
-func (i *DBSERole) ToMap() map[string]interface{} {
+func (i *DBSERole) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["db_name"] = i.DBName
 	payload["default_ttl"] = i.DefaultTTL

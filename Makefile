@@ -1,3 +1,7 @@
+CHART_REPO_URL ?= http://example.com
+HELM_REPO_DEST ?= /tmp/gh-pages
+OPERATOR_NAME ?=$(shell basename -z `pwd`)
+
 # VERSION defines the project version for the bundle.
 # Update this value when you upgrade the version of your project.
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
@@ -203,16 +207,18 @@ catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
 
 # Generate helm chart
-helmchart: kustomize
+helmchart: kustomize manifests
 	mkdir -p ./charts/${OPERATOR_NAME}/templates
 	mkdir -p ./charts/${OPERATOR_NAME}/crds
+	$(KUSTOMIZE) build ./config/helmchart -o ./charts/${OPERATOR_NAME}/templates
+	sed -i 's/release-namespace/{{.Release.Namespace}}/' ./charts/${OPERATOR_NAME}/templates/*.yaml
+	rm ./charts/${OPERATOR_NAME}/templates/v1_namespace_release-namespace.yaml ./charts/${OPERATOR_NAME}/templates/apps_v1_deployment_vault-config-operator-controller-manager.yaml
+	mv ./charts/${OPERATOR_NAME}/templates/apiextensions.k8s.io_v1_customresourcedefinition* ./charts/${OPERATOR_NAME}/crds
 	cp ./config/helmchart/templates/* ./charts/${OPERATOR_NAME}/templates
-	$(KUSTOMIZE) build ./config/helmchart | sed 's/release-namespace/{{.Release.Namespace}}/' > ./charts/${OPERATOR_NAME}/templates/rbac.yaml
-	if [ -d "./config/crd" ]; then $(KUSTOMIZE) build ./config/crd > ./charts/${OPERATOR_NAME}/crds/crds.yaml; fi
 	version=${VERSION} envsubst < ./config/helmchart/Chart.yaml.tpl  > ./charts/${OPERATOR_NAME}/Chart.yaml
 	version=${VERSION} image_repo=$${IMG%:*} envsubst < ./config/helmchart/values.yaml.tpl  > ./charts/${OPERATOR_NAME}/values.yaml
-	sed -i '/^apiVersion: monitoring.coreos.com/i {{ if .Values.enableMonitoring }}' ./charts/${OPERATOR_NAME}/templates/rbac.yaml
-	echo {{ end }} >> ./charts/${OPERATOR_NAME}/templates/rbac.yaml
+	sed -i '1s/^/{{ if .Values.enableMonitoring }}/' ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_vault-config-operator-controller-manager-metrics-monitor.yaml
+	echo {{ end }} >> ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_vault-config-operator-controller-manager-metrics-monitor.yaml
 	helm lint ./charts/${OPERATOR_NAME}	
 
 helmchart-repo: helmchart

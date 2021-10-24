@@ -177,6 +177,32 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
+  - passwordpolicies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - passwordpolicies/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - passwordpolicies/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
   - policies
   verbs:
   - create

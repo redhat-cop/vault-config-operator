@@ -128,6 +128,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "RandomSecret")
 		os.Exit(1)
 	}
+	setupLog.Info("starting AuthEngineMountReconciler")
 	if err = (&controllers.AuthEngineMountReconciler{
 		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("AuthEngineMount"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("AuthEngineMount"),
@@ -136,12 +137,21 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "AuthEngineMount")
 		os.Exit(1)
 	}
+	setupLog.Info("started AuthEngineMountReconciler")
 	if err = (&controllers.KubernetesAuthEngineConfigReconciler{
 		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("KubernetesAuthEngineConfig"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("KubernetesAuthEngineConfig"),
 		ControllerName: "KubernetesAuthEngineConfig",
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "KubernetesAuthEngineConfig")
+		os.Exit(1)
+	}
+	if err = (&controllers.PasswordPolicyReconciler{
+		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("PasswordPolicy"), mgr.GetAPIReader()),
+		Log:            ctrl.Log.WithName("controllers").WithName("PasswordPolicy"),
+		ControllerName: "PasswordPolicy",
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "PasswordPolicy")
 		os.Exit(1)
 	}
 
@@ -174,7 +184,16 @@ func main() {
 			setupLog.Error(err, "unable to create webhook", "webhook", "KubernetesAuthEngineConfig")
 			os.Exit(1)
 		}
+		if err = (&redhatcopv1alpha1.PasswordPolicy{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "PasswordPolicy")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.Policy{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Policy")
+			os.Exit(1)
+		}
 	}
+
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

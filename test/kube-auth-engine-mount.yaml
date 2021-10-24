@@ -1,9 +1,10 @@
 apiVersion: redhatcop.redhat.io/v1alpha1
-kind: KubernetesAuthEngineConfig
+kind: AuthEngineMount
 metadata:
-  name: kubernetesauthengineconfig-sample
+  name: authenginemount-sample
 spec:
   authentication: 
     path: kubernetes
     role: policy-admin
-  path: kube-authengine-mount-sample
+  type: kubernetes
+  path: kube-authengine-mount-sample  

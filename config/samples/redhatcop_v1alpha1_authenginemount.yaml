@@ -3,5 +3,8 @@ kind: AuthEngineMount
 metadata:
   name: authenginemount-sample
 spec:
-  # Add fields here
-  foo: bar
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  type: kubernetes
+  path: kube-authengine-mount-sample
