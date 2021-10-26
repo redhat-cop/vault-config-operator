@@ -65,6 +65,47 @@ The variable that are read at client initialization are listed [here](https://gi
 
 For certificates, the recommended approach is to mount the secret or configmap containing the certificate as described [here](https://github.com/operator-framework/operator-lifecycle-manager/blob/master/doc/design/subscription-config.md#volumes), and the configure the corresponding variables to point at the files location in the mounted path.
 
+Here is an example:
+
+This is a configmap that will be injected with the OpenShift service-ca, you will have different ways of injecting your CA:
+
+```yaml
+apiVersion: v1
+
+kind: ConfigMap
+metadata:
+  annotations:
+    service.beta.openshift.io/inject-cabundle: "true"
+  name: ocp-service-ca
+data: []
+```
+
+Here is the subscription using that configmap:
+
+```yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: vault-config-operator 
+spec:
+  channel: alpha
+  installPlanApproval: Automatic
+  name: vault-config-operator
+  source: community-operators
+  sourceNamespace: openshift-marketplace
+  config:
+    env:
+    - name: VAULT_CACERT
+      value: /vault-ca/ca.crt
+    volumes:
+    - name: vault-ca
+      configMap:
+        name: ocp-service-ca
+    volumeMounts:
+    - mountPath: /vault-ca
+      name: vault-ca  
+```
+
 ## Deploying the Operator
 
 This is a cluster-level operator that you can deploy in any namespace, `vault-config-operator` is recommended.
