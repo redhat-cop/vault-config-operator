@@ -61,6 +61,9 @@ See [this section](./docs/contributing-vault-apis.md) of the documentation for a
 
 At the moment the connection to Vault can be initialized with [Vault's standard environment variables](https://www.vaultproject.io/docs/commands#environment-variables).
 See the [OLM documentation](https://github.com/operator-framework/operator-lifecycle-manager/blob/master/doc/design/subscription-config.md#env) on how to pass environment variables via a Subscription.
+The variable that are read at client initialization are listed [here](https://github.com/hashicorp/vault/blob/14101f866414d2ed7850648b465c746ac8fda621/api/client.go#L35).
+
+For certificates, the recommended approach is to mount the secret or configmap containing the certificate as described [here](https://github.com/operator-framework/operator-lifecycle-manager/blob/master/doc/design/subscription-config.md#volumes), and the configure the corresponding variables to point at the files location in the mounted path.
 
 ## Deploying the Operator
 
