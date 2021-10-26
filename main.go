@@ -144,6 +144,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "KubernetesAuthEngineConfig")
 		os.Exit(1)
 	}
+	if err = (&controllers.VaultSecretReconciler{
+		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("VaultSecret"), mgr.GetAPIReader()),
+		Log:            ctrl.Log.WithName("controllers").WithName("VaultSecret"),
+		ControllerName: "VaultSecret",
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "VaultSecret")
+		os.Exit(1)
+	}
 
 	if webhooks, ok := os.LookupEnv("ENABLE_WEBHOOKS"); !ok || webhooks != "false" {
 		if err = (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(mgr); err != nil {
@@ -174,7 +182,12 @@ func main() {
 			setupLog.Error(err, "unable to create webhook", "webhook", "KubernetesAuthEngineConfig")
 			os.Exit(1)
 		}
+		if err = (&redhatcopv1alpha1.VaultSecret{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "VaultSecret")
+			os.Exit(1)
+		}
 	}
+
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
