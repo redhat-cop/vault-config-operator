@@ -55,23 +55,17 @@ var _ webhook.Validator = &VaultSecret{}
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
 func (r *VaultSecret) ValidateCreate() error {
 	vaultsecretlog.Info("validate create", "name", r.Name)
-
-	// TODO(user): fill in your validation logic upon object creation.
 	return r.isValid()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *VaultSecret) ValidateUpdate(old runtime.Object) error {
 	vaultsecretlog.Info("validate update", "name", r.Name)
-
-	// TODO(user): fill in your validation logic upon object update.
-	return nil
+	return r.isValid()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
 func (r *VaultSecret) ValidateDelete() error {
 	vaultsecretlog.Info("validate delete", "name", r.Name)
-
-	// TODO(user): fill in your validation logic upon object deletion.
 	return nil
 }

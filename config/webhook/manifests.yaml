@@ -146,6 +146,27 @@ webhooks:
     resources:
     - secretenginemounts
   sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-vaultsecret
+  failurePolicy: Fail
+  name: mvaultsecret.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - vaultsecrets
+  sideEffects: None
 
 ---
 apiVersion: admissionregistration.k8s.io/v1
@@ -296,4 +317,25 @@ webhooks:
     - UPDATE
     resources:
     - secretenginemounts
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-vaultsecret
+  failurePolicy: Fail
+  name: vvaultsecret.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - vaultsecrets
   sideEffects: None

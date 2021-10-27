@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	"net/url"
+	"time"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -35,19 +36,19 @@ type VaultSecretSpec struct {
 	// Url of the Vault instance.
 	// +kubebuilder:validation:Required
 	Url string `json:"url,omitempty"`
-	// ResyncDuration is the duration of time between syncing the Vault KV secrets.
-	// A duration string is a possibly signed sequence of
+	// ResyncInterval is the duration of time between syncing the Vault KV secrets.
+	// The duration string must be at least 1 minute and a positively signed sequence of
 	// decimal numbers, each with optional fraction and a unit suffix,
-	// such as "300ms", "-1.5h" or "2h45m".
+	// such as "60000ms", "5m", "1.5h" or "2h45m".
 	// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 	// +kubebuilder:validation:Optional
-	ResyncDuration string `json:"resyncDuration,omitempty"`
+	ResyncInterval string `json:"resyncDuration,omitempty"`
 	// KVSecrets are the Key/Value secrets in Vault.
 	// +kubebuilder:validation:Required
 	KVSecrets []KVSecret `json:"kvSecrets,omitempty"`
-	// Output is the formatted Kubernetes Secret created by templating from the Vault KV secrets.
+	// TemplatizedK8sSecret is the formatted Kubernetes Secret created by templating from the Vault KV secrets.
 	// +kubebuilder:validation:Required
-	Output Output `json:"output,omitempty"`
+	TemplatizedK8sSecret TemplatizedK8sSecret `json:"output,omitempty"`
 }
 
 // VaultSecretStatus defines the observed state of VaultSecret
@@ -107,7 +108,7 @@ type KVSecret struct {
 	Keys []string `json:"keys,omitempty"`
 }
 
-type Output struct {
+type TemplatizedK8sSecret struct {
 	// Name is the Kubernetes Secret name to output to.
 	// +kubebuilder:validation:Required
 	Name string `json:"name,omitempty"`
@@ -132,6 +133,7 @@ func (vs *VaultSecret) IsValid() (bool, error) {
 func (vs *VaultSecret) isValid() error {
 	result := &multierror.Error{}
 	result = multierror.Append(result, vs.validUrl())
+	result = multierror.Append(result, vs.validResyncInterval())
 	return result.ErrorOrNil()
 }
 
@@ -162,4 +164,16 @@ func (vs *VaultSecret) validUrl() error {
 	}
 
 	return nil
+}
+
+func (vs *VaultSecret) validResyncInterval() error {
+	d, err := time.ParseDuration(vs.Spec.ResyncInterval)
+
+	if err == nil {
+		if d.Minutes() < 1 {
+			return errors.New("ResyncInterval must be at least 1 minute")
+		}
+	}
+
+	return err
 }
