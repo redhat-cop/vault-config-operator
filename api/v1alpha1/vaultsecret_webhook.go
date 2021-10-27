@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
@@ -41,8 +42,9 @@ var _ webhook.Defaulter = &VaultSecret{}
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *VaultSecret) Default() {
 	vaultsecretlog.Info("default", "name", r.Name)
-
-	// TODO(user): fill in your defaulting logic.
+	if !controllerutil.ContainsFinalizer(r, GetFinalizer(r)) {
+		controllerutil.AddFinalizer(r, GetFinalizer(r))
+	}
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
@@ -55,7 +57,7 @@ func (r *VaultSecret) ValidateCreate() error {
 	vaultsecretlog.Info("validate create", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
-	return nil
+	return r.isValid()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type

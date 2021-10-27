@@ -17,7 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	corev1 "k8s.io/api/core/v1"
+	"net/url"
+
+	"github.com/hashicorp/go-multierror"
+	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -59,12 +62,12 @@ type VaultSecretStatus struct {
 	LastVaultSecretUpdate *metav1.Time `json:"lastVaultSecretUpdate,omitempty"`
 }
 
-func (m *VaultSecret) GetConditions() []metav1.Condition {
-	return m.Status.Conditions
+func (vs *VaultSecret) GetConditions() []metav1.Condition {
+	return vs.Status.Conditions
 }
 
-func (m *VaultSecret) SetConditions(conditions []metav1.Condition) {
-	m.Status.Conditions = conditions
+func (vs *VaultSecret) SetConditions(conditions []metav1.Condition) {
+	vs.Status.Conditions = conditions
 }
 
 //+kubebuilder:object:root=true
@@ -110,7 +113,7 @@ type Output struct {
 	Name string `json:"name,omitempty"`
 	// Type is the Kubernetes Secret type to output to.
 	// +kubebuilder:validation:Required
-	Type corev1.SecretType `json:"type,omitempty"`
+	Type string `json:"type,omitempty"`
 	// StringData is the Kubernetes Secret stringData and allows specifying non-binary secret data in string form with go templating support
 	// to transform the Vault KV secrets into a formatted Kubernetes Secret.
 	// The Sprig template library and Helm functions (like toYaml) are supported.
@@ -119,4 +122,44 @@ type Output struct {
 	// Annotations are annotations to add to the final Kubernetes Secret.
 	// +kubebuilder:validation:Optional
 	Annotations map[string]string `json:"annotations,omitempty"`
+}
+
+func (vs *VaultSecret) IsValid() (bool, error) {
+	err := vs.isValid()
+	return err == nil, err
+}
+
+func (vs *VaultSecret) isValid() error {
+	result := &multierror.Error{}
+	result = multierror.Append(result, vs.validUrl())
+	return result.ErrorOrNil()
+}
+
+func (vs *VaultSecret) validUrl() error {
+
+	u, err := url.Parse(vs.Spec.Url)
+
+	errCount := 0
+
+	errs := errors.New("invalid url")
+	if err != nil {
+		errs = errors.Wrap(errs, err.Error())
+		errCount++
+	}
+
+	if u.Scheme == "" {
+		errs = errors.Wrap(errs, "no valid scheme in url")
+		errCount++
+	}
+
+	if u.Host == "" {
+		errs = errors.Wrap(errs, "no valid host in url")
+		errCount++
+	}
+
+	if errCount > 0 {
+		return errs
+	}
+
+	return nil
 }
