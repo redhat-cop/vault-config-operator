@@ -36,7 +36,7 @@ type VaultSecretSpec struct {
 	// Url of the Vault instance.
 	// +kubebuilder:validation:Required
 	Url string `json:"url,omitempty"`
-	// ResyncInterval is the duration of time between syncing the Vault KV secrets.
+	// ResyncInterval is the duration of time between syncing the Vault KV secrets to a templatized K8s Secret.
 	// The duration string must be at least 1 minute and a positively signed sequence of
 	// decimal numbers, each with optional fraction and a unit suffix,
 	// such as "60000ms", "5m", "1.5h" or "2h45m".
@@ -46,7 +46,7 @@ type VaultSecretSpec struct {
 	// KVSecrets are the Key/Value secrets in Vault.
 	// +kubebuilder:validation:Required
 	KVSecrets []KVSecret `json:"kvSecrets,omitempty"`
-	// TemplatizedK8sSecret is the formatted Kubernetes Secret created by templating from the Vault KV secrets.
+	// TemplatizedK8sSecret is the formatted K8s Secret created by templating from the Vault KV secrets.
 	// +kubebuilder:validation:Required
 	TemplatizedK8sSecret TemplatizedK8sSecret `json:"output,omitempty"`
 }
@@ -109,18 +109,18 @@ type KVSecret struct {
 }
 
 type TemplatizedK8sSecret struct {
-	// Name is the Kubernetes Secret name to output to.
+	// Name is the K8s Secret name to output to.
 	// +kubebuilder:validation:Required
 	Name string `json:"name,omitempty"`
-	// Type is the Kubernetes Secret type to output to.
+	// Type is the K8s Secret type to output to.
 	// +kubebuilder:validation:Required
 	Type string `json:"type,omitempty"`
-	// StringData is the Kubernetes Secret stringData and allows specifying non-binary secret data in string form with go templating support
-	// to transform the Vault KV secrets into a formatted Kubernetes Secret.
+	// StringData is the K8s Secret stringData and allows specifying non-binary secret data in string form with go templating support
+	// to transform the Vault KV secrets into a formatted K8s Secret.
 	// The Sprig template library and Helm functions (like toYaml) are supported.
 	// +kubebuilder:validation:Required
 	StringData map[string]string `json:"stringData,omitempty"`
-	// Annotations are annotations to add to the final Kubernetes Secret.
+	// Annotations are annotations to add to the final K8s Secret.
 	// +kubebuilder:validation:Optional
 	Annotations map[string]string `json:"annotations,omitempty"`
 }
