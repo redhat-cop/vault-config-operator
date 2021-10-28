@@ -161,7 +161,7 @@ func main() {
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "PasswordPolicy")
 		os.Exit(1)
-	}	
+	}
 	if err = (&controllers.RabbitMQSecretEngineConfigReconciler{
 		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("RabbitMQSecretEngineConfig"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("RabbitMQSecretEngineConfig"),
@@ -241,6 +241,10 @@ func main() {
 		}
 	}
 
+	if err = (&redhatcopv1alpha1.RabbitMQSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "RabbitMQSecretEngineConfig")
+		os.Exit(1)
+	}
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
