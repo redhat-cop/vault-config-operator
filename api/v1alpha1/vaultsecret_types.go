@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	"net/url"
-	"time"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -36,13 +35,11 @@ type VaultSecretSpec struct {
 	// Url of the Vault instance.
 	// +kubebuilder:validation:Required
 	Url string `json:"url,omitempty"`
-	// ResyncInterval is the duration of time between syncing the Vault KV secrets to a templatized K8s Secret.
-	// The duration string must be at least 1 minute and a positively signed sequence of
-	// decimal numbers, each with optional fraction and a unit suffix,
-	// such as "60000ms", "5m", "1.5h" or "2h45m".
-	// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
+	// RefreshPeriod if specified, the operator will refresh the secret with the given frequency.
+	// Defaults to five minutes, and must be at least one minute.
 	// +kubebuilder:validation:Optional
-	ResyncInterval string `json:"resyncDuration,omitempty"`
+	// +kubebuilder:default="5m"
+	RefreshPeriod *metav1.Duration `json:"refreshPeriod,omitempty"`
 	// KVSecrets are the Key/Value secrets in Vault.
 	// +kubebuilder:validation:Required
 	KVSecrets []KVSecret `json:"kvSecrets,omitempty"`
@@ -167,13 +164,10 @@ func (vs *VaultSecret) validUrl() error {
 }
 
 func (vs *VaultSecret) validResyncInterval() error {
-	d, err := time.ParseDuration(vs.Spec.ResyncInterval)
 
-	if err == nil {
-		if d.Minutes() < 1 {
-			return errors.New("ResyncInterval must be at least 1 minute")
-		}
+	if vs.Spec.RefreshPeriod.Minutes() < 1 {
+		return errors.New("ResyncInterval must be at least 1 minute")
 	}
 
-	return err
+	return nil
 }
