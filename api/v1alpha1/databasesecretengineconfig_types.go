@@ -21,7 +21,6 @@ import (
 	"errors"
 	"reflect"
 
-	vault "github.com/hashicorp/vault/api"
 	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -83,7 +82,6 @@ func (r *DatabaseSecretEngineConfig) IsValid() (bool, error) {
 func (r *DatabaseSecretEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
 	kubeClient := context.Value("kubeClient").(client.Client)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
 	if r.Spec.RootCredentials.RandomSecret != nil {
 		randomSecret := &RandomSecret{}
 		err := kubeClient.Get(context, types.NamespacedName{
@@ -94,9 +92,8 @@ func (r *DatabaseSecretEngineConfig) setInternalCredentials(context context.Cont
 			log.Error(err, "unable to retrieve RandomSecret", "instance", r)
 			return err
 		}
-		secret, err := vaultClient.Logical().Read(randomSecret.GetPath())
+		secret, err := GetVaultSecret(randomSecret.GetPath(), context)
 		if err != nil {
-			log.Error(err, "unable to retrieve vault secret", "instance", r)
 			return err
 		}
 		r.SetUsernameAndPassword(r.Spec.Username, secret.Data[randomSecret.Spec.SecretKey].(string))
@@ -119,10 +116,9 @@ func (r *DatabaseSecretEngineConfig) setInternalCredentials(context context.Cont
 		}
 		return nil
 	}
-	if r.Spec.RootCredentials.VaultSecret != nil {
-		secret, err := vaultClient.Logical().Read(string(r.Spec.RootCredentials.VaultSecret.Path))
+	if r.Spec.RootCredentials.VaultSecret != nil {		
+		secret, err := GetVaultSecret(string(r.Spec.RootCredentials.VaultSecret.Path), context)
 		if err != nil {
-			log.Error(err, "unable to retrieve vault secret", "instance", r)
 			return err
 		}
 		if r.Spec.Username == "" {
