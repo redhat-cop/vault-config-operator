@@ -161,6 +161,14 @@ func main() {
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "PasswordPolicy")
 		os.Exit(1)
+	}	
+	if err = (&controllers.RabbitMQSecretEngineConfigReconciler{
+		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("RabbitMQSecretEngineConfig"), mgr.GetAPIReader()),
+		Log:            ctrl.Log.WithName("controllers").WithName("RabbitMQSecretEngineConfig"),
+		ControllerName: "RabbitMQSecretEngineConfig",
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "RabbitMQSecretEngineConfig")
+		os.Exit(1)
 	}
 
 	if err = (&controllers.GitHubSecretEngineConfigReconciler{
