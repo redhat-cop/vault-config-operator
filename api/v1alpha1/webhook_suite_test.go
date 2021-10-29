@@ -168,6 +168,9 @@ var _ = BeforeSuite(func() {
 	err = (&RabbitMQSecretEngineConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
+	err = (&RabbitMQSecretEngineRole{}).SetupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
 	//+kubebuilder:scaffold:webhook
 
 	go func() {

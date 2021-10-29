@@ -73,7 +73,15 @@ type RMQSEConfig struct {
 	PasswordPolicy string `json:"passwordPolicy,omitempty"`
 
 	// UsernameTemplate Vault username template describing how dynamic usernames are generated.
-	UsernameTemplate string `json:"UsernameTemplate,omitempty"`
+	UsernameTemplate string `json:"usernameTemplate,omitempty"`
+
+	// Lease TTL for generated credentials in seconds.
+	// +kubebuilder:validation:Optional
+	LeaseTTL int `json:"leaseTTL,omitempty"`
+
+	// Lease maximum TTL for generated credentials in seconds.
+	// +kubebuilder:validation:Optional
+	LeaseMaxTTL int `json:"leaseMaxTTL,omitempty"`
 
 	retrievedPassword string `json:"-"`
 
@@ -151,9 +159,11 @@ var _ vaultutils.VaultObject = &RabbitMQSecretEngineConfig{}
 func (rabbitMQ *RabbitMQSecretEngineConfig) GetPath() string {
 	return string(rabbitMQ.Spec.Path) + "/config/connection"
 }
+
 func (rabbitMQ *RabbitMQSecretEngineConfig) GetPayload() map[string]interface{} {
 	return rabbitMQ.Spec.rabbitMQToMap()
 }
+
 func (rabbitMQ *RabbitMQSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := rabbitMQ.Spec.RMQSEConfig.rabbitMQToMap()
 	delete(desiredState, "password")
@@ -225,4 +235,8 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) setInternalCredentials(context conte
 		return nil
 	}
 	return errors.New("no means of retrieving a secret was specified")
+}
+
+func (rabbitMQ *RabbitMQSecretEngineConfig) GetLeasePath() string {
+	return string(rabbitMQ.Spec.Path) + "/config/lease"
 }

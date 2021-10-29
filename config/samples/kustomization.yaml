@@ -13,4 +13,5 @@ resources:
 - redhatcop_v1alpha1_githubsecretengineconfig.yaml
 - redhatcop_v1alpha1_githubsecretenginerole.yaml
 - redhatcop_v1alpha1_rabbitmqsecretengineconfig.yaml
+- redhatcop_v1alpha1_rabbitmqsecretenginerole.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
