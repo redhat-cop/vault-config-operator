@@ -17,8 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"errors"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
@@ -41,8 +44,9 @@ var _ webhook.Defaulter = &RabbitMQSecretEngineRole{}
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *RabbitMQSecretEngineRole) Default() {
 	rabbitmqsecretenginerolelog.Info("default", "name", r.Name)
-
-	// TODO(user): fill in your defaulting logic.
+	if !controllerutil.ContainsFinalizer(r, GetFinalizer(r)) {
+		controllerutil.AddFinalizer(r, GetFinalizer(r))
+	}
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
@@ -62,7 +66,10 @@ func (r *RabbitMQSecretEngineRole) ValidateCreate() error {
 func (r *RabbitMQSecretEngineRole) ValidateUpdate(old runtime.Object) error {
 	rabbitmqsecretenginerolelog.Info("validate update", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object update.
+	// the path cannot be updated
+	if r.Spec.Path != old.(*RabbitMQSecretEngineRole).Spec.Path {
+		return errors.New("spec.path cannot be updated")
+	}
 	return nil
 }
 

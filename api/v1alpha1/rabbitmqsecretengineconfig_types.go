@@ -22,9 +22,9 @@ import (
 	"reflect"
 
 	"github.com/redhat-cop/operator-utils/pkg/util/apis"
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -54,21 +54,21 @@ type RabbitMQSecretEngineConfigSpec struct {
 }
 
 type RMQSEConfig struct {
-	// ConnectionURL Specifies the connection string used to connect to the RabbitMQ cluster. 
+	// ConnectionURL Specifies the connection string used to connect to the RabbitMQ cluster.
 	// +kubebuilder:validation:Required
 	ConnectionURI string `json:"connectionURI,omitempty"`
 
-	// Username Specifies the name of the user to use as the "administrator" user when connecting to the RabbitMQ cluster. This "administrator" user is used to create/update/delete users, so you will need to ensure that this user has permissions to manipulate users. If management plugin is used, this user need to have "administrator" tag, no additional permissions necessary.  
+	// Username Specifies the name of the user to use as the "administrator" user when connecting to the RabbitMQ cluster. This "administrator" user is used to create/update/delete users, so you will need to ensure that this user has permissions to manipulate users. If management plugin is used, this user need to have "administrator" tag, no additional permissions necessary.
 	// If username is provided it takes precedence over the username retrieved from the referenced secrets
 	// +kubebuilder:validation:Optional
 	Username string `json:"username,omitempty"`
-	
+
 	// VerifyConnection Specifies if the connection is verified during initial configuration. Defaults to true.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=true
 	VerifyConnection bool `json:"verifyConnection,omitempty"`
 
-	// PasswordPolicy The name of the password policy to use when generating passwords for this database. Defaults to generating an alphanumeric password if not set.
+	// PasswordPolicy The name of the password policy to use when generating passwords for this engine. Defaults to generating an alphanumeric password if not set.
 	// +kubebuilder:validation:Optional
 	PasswordPolicy string `json:"passwordPolicy,omitempty"`
 

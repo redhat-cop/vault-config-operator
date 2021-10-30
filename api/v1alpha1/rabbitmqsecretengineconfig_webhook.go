@@ -67,7 +67,7 @@ func (r *RabbitMQSecretEngineConfig) ValidateUpdate(old runtime.Object) error {
 	rabbitmqsecretengineconfiglog.Info("validate update", "name", r.Name)
 
 	// the path cannot be updated
-	if r.Spec.Path != old.(*DatabaseSecretEngineRole).Spec.Path {
+	if r.Spec.Path != old.(*RabbitMQSecretEngineConfig).Spec.Path {
 		return errors.New("spec.path cannot be updated")
 	}
 	return nil

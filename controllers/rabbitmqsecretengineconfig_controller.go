@@ -62,30 +62,30 @@ type RabbitMQSecretEngineConfigReconciler struct {
 func (r *RabbitMQSecretEngineConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-		// Fetch the instance
-		instance := &redhatcopv1alpha1.DatabaseSecretEngineConfig{}
-		err := r.GetClient().Get(ctx, req.NamespacedName, instance)
-		if err != nil {
-			if apierrors.IsNotFound(err) {
-				// Request object not found, could have been deleted after reconcile request.
-				// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-				// Return and don't requeue
-				return reconcile.Result{}, nil
-			}
-			// Error reading the object - requeue the request.
-			return reconcile.Result{}, err
+	// Fetch the instance
+	instance := &redhatcopv1alpha1.DatabaseSecretEngineConfig{}
+	err := r.GetClient().Get(ctx, req.NamespacedName, instance)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			// Request object not found, could have been deleted after reconcile request.
+			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+			// Return and don't requeue
+			return reconcile.Result{}, nil
 		}
-	
-		ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
-		vaultClient, err := instance.Spec.Authentication.GetVaultClient(ctx, instance.Namespace)
-		if err != nil {
-			r.Log.Error(err, "unable to create vault client", "instance", instance)
-			return r.ManageError(ctx, instance, err)
-		}
-		ctx = context.WithValue(ctx, "vaultClient", vaultClient)
-		vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
-	
-		return vaultResource.Reconcile(ctx, instance)
+		// Error reading the object - requeue the request.
+		return reconcile.Result{}, err
+	}
+
+	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
+	vaultClient, err := instance.Spec.Authentication.GetVaultClient(ctx, instance.Namespace)
+	if err != nil {
+		r.Log.Error(err, "unable to create vault client", "instance", instance)
+		return r.ManageError(ctx, instance, err)
+	}
+	ctx = context.WithValue(ctx, "vaultClient", vaultClient)
+	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
+
+	return vaultResource.Reconcile(ctx, instance)
 }
 
 // SetupWithManager sets up the controller with the Manager.

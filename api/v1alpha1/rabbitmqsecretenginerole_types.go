@@ -20,8 +20,8 @@ import (
 	"context"
 	"reflect"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -50,37 +50,37 @@ type RMQSERole struct {
 	Tags []string `json:"tags,omitempty"`
 
 	// +kubebuilder:validation:Required
-	Vhosts []Vhost `json:",inline"`
+	Vhosts []Vhost `json:"vhosts,omitempty"`
 
 	// This option requires RabbitMQ 3.7.0 or later.
 	// +kubebuilder:validation:Optional
-	VhostTopics []VhostTopic `json:",inline"`
+	VhostTopics []VhostTopic `json:"vhostTopics,omitempty"`
 }
 
 type Vhost struct {
-	// Name of an existing vhost; required property
+	// Name of an existing vhost.
 	// +kubebuilder:validation:Required
-	VhostName string `json:"vhostName"`
-	// Permissions to grant to the user in the specific vhost; required property.
+	VhostName string `json:"vhostName,omitempty"`
+	// Permissions to grant to the user in the specific vhost.
 	// +kubebuilder:validation:Required
-	Permissions VhostPermissions `json:"permissions"`
+	Permissions VhostPermissions `json:"permissions,omitempty"`
 }
 
 type VhostTopic struct {
-	// Name of an existing vhost; required property
+	// Name of an existing vhost.
 	// +kubebuilder:validation:Required
-	VhostName string `json:"vhostName"`
+	VhostName string `json:"vhostName,omitempty"`
 
 	// List of topics to provide
 	// +kubebuilder:validation:Required
-	Topics []Topic `json:",inline"`
+	Topics []Topic `json:"topics,omitempty"`
 }
 
 type Topic struct {
-	// Name of an existing topic; required property
+	// Name of an existing topic.
 	// +kubebuilder:validation:Required
-	TopicName string `json:"vhostName"`
-	
+	TopicName string `json:"vhostName,omitempty"`
+
 	// Permissions to grant to the user in the specific vhost
 	// +kubebuilder:validation:Required
 	Permissions VhostPermissions `json:"permissions"`
