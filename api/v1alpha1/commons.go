@@ -226,7 +226,7 @@ func GetFinalizer(instance client.Object) string {
 	return "controller-" + strings.ToLower(instance.GetObjectKind().GroupVersionKind().Kind)
 }
 
-func GetVaultSecret(path string, context context.Context) (*vault.Secret, error) {
+func GetVaultKV2Secret(path string, context context.Context) (*vault.Secret, error) {
 	log := log.FromContext(context)
 	vaultClient := context.Value("vaultClient").(*vault.Client)
 	secret, err := vaultClient.Logical().Read(path)

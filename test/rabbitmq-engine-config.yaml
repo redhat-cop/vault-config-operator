@@ -1,0 +1,16 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: RabbitMQSecretEngineConfig
+metadata:
+  name: rabbitmq-secret-engine-config
+spec:
+  authentication: 
+    path: kubernetes
+    role: rabbitmq-engine-admin
+  connectionURI: https://test.com
+  rootCredentials:
+    secret:
+      name: rabbitmq-admin-password
+    passwordKey: rabbitmq-password
+  path: test-vault-config-operator/rabbitmq
+  username: rabbitmq
+  verifyConnection: false

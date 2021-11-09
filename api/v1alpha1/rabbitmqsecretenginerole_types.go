@@ -18,6 +18,8 @@ package v1alpha1
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
@@ -29,13 +31,13 @@ import (
 type RabbitMQSecretEngineRoleSpec struct {
 	// Authentication is the k8s auth configuration to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication KubeAuthConfiguration `json:"authentication"`
 
 	// Path at which to make the configuration.
 	// The final path will be {[spec.authentication.namespace]}/{spec.path}/config/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path Path `json:"path"`
 
 	// +kubebuilder:validation:Required
 	RMQSERole `json:",inline"`
@@ -47,9 +49,9 @@ type RMQSERole struct {
 	// lead to a user than can still connect to the cluster through messaging protocols,
 	// but cannot perform any management actions.
 	// +kubebuilder:validation:Optional
-	Tags []string `json:"tags,omitempty"`
+	Tags string `json:"tags,omitempty"`
 
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Vhosts []Vhost `json:"vhosts,omitempty"`
 
 	// This option requires RabbitMQ 3.7.0 or later.
@@ -60,6 +62,7 @@ type RMQSERole struct {
 type Vhost struct {
 	// Name of an existing vhost.
 	// +kubebuilder:validation:Required
+	// +kubebuilder:default="/"
 	VhostName string `json:"vhostName,omitempty"`
 	// Permissions to grant to the user in the specific vhost.
 	// +kubebuilder:validation:Required
@@ -83,7 +86,7 @@ type Topic struct {
 
 	// Permissions to grant to the user in the specific vhost
 	// +kubebuilder:validation:Required
-	Permissions VhostPermissions `json:"permissions"`
+	Permissions VhostPermissions `json:"permissions,omitempty"`
 }
 
 // Set of RabbitMQ permissions: configure, read and write.
@@ -156,10 +159,18 @@ func (rabbitMQ *RabbitMQSecretEngineRole) IsValid() (bool, error) {
 	return true, nil
 }
 
+func convertToJson(vhosts interface{}) (string) {
+	result, err := json.Marshal(vhosts)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return string(result)
+}
+
 func (fields *RMQSERole) rabbitMQToMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["tags"] = fields.Tags
-	payload["vhosts"] = fields.Vhosts
-	payload["vhost_topics"] = fields.VhostTopics
+	payload["vhosts"] = convertToJson(fields.Vhosts)
+	payload["vhost_topics"] = convertToJson(fields.VhostTopics)
 	return payload
 }

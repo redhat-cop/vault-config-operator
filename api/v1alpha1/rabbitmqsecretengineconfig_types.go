@@ -65,7 +65,6 @@ type RMQSEConfig struct {
 
 	// VerifyConnection Specifies if the connection is verified during initial configuration. Defaults to true.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=true
 	VerifyConnection bool `json:"verifyConnection,omitempty"`
 
 	// PasswordPolicy The name of the password policy to use when generating passwords for this engine. Defaults to generating an alphanumeric password if not set.
@@ -125,7 +124,7 @@ func init() {
 func (fields *RMQSEConfig) rabbitMQToMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["connection_uri"] = fields.ConnectionURI
-	payload["verify_connection"] = fields.VerifyConnection
+	payload["verify_connection"] = &fields.VerifyConnection
 	payload["username"] = fields.retrievedUsername
 	payload["password"] = fields.retrievedPassword
 
@@ -185,7 +184,7 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) IsValid() (bool, error) {
 
 func (rabbitMQ *RabbitMQSecretEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
-	k8sClient := context.Value("k8sClient").(client.Client)
+	k8sClient := context.Value("kubeClient").(client.Client)
 	if rabbitMQ.Spec.RootCredentials.RandomSecret != nil {
 		randomSecret := &RandomSecret{}
 		err := k8sClient.Get(context, types.NamespacedName{
@@ -196,7 +195,7 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) setInternalCredentials(context conte
 			log.Error(err, "unable to retrieve RandomSecret", "instance", rabbitMQ)
 			return err
 		}
-		secret, err := GetVaultSecret(randomSecret.GetPath(), context)
+		secret, err := GetVaultKV2Secret(randomSecret.GetPath(), context)
 		if err != nil {
 			return err
 		}
@@ -221,7 +220,7 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) setInternalCredentials(context conte
 		return nil
 	}
 	if rabbitMQ.Spec.RootCredentials.VaultSecret != nil {
-		secret, err := GetVaultSecret(string(rabbitMQ.Spec.RootCredentials.VaultSecret.Path), context)
+		secret, err := GetVaultKV2Secret(string(rabbitMQ.Spec.RootCredentials.VaultSecret.Path), context)
 		if err != nil {
 			return err
 		}

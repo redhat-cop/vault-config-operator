@@ -1,0 +1,43 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Policy
+metadata:
+  name: rabbitmq-engine-admin
+spec:
+  # Add fields here
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  policy: |
+    # query existing mounts
+    path "/sys/mounts" {
+      capabilities = [ "list", "read"]
+      allowed_parameters = {
+        "type" = ["rabbitmq"]
+        "*"   = []
+      }
+    }
+
+    # mount rabbitmq secrets engines
+    path "/sys/mounts/test-vault-config-operator/rabbitmq" {
+      capabilities = [ "create", "read", "update", "delete"]
+      allowed_parameters = {
+        "type" = ["rabbitmq"]
+        "*"   = []
+      }
+    }
+
+    # tune rabbitmq secrets engines
+    path "/sys/mounts/test-vault-config-operator/rabbitmq/tune" {
+      capabilities = [ "create", "read", "update", "delete"]
+    }
+
+    # Configure rabbitmq secrets engines
+    path "/test-vault-config-operator/rabbitmq/config/+" {
+      capabilities = [ "create", "read", "update", "delete"]
+    }
+
+    # Configure rabbitmq roles
+    path "/test-vault-config-operator/rabbitmq/roles/+" {
+      capabilities = [ "create", "read", "update", "delete"]
+    }
+    

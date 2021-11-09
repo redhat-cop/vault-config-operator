@@ -1,0 +1,10 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: SecretEngineMount
+metadata:
+  name: rabbitmq
+spec:
+  authentication: 
+    path: kubernetes
+    role: rabbitmq-engine-admin
+  type: rabbitmq
+  path: test-vault-config-operator

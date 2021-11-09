@@ -92,7 +92,7 @@ func (r *DatabaseSecretEngineConfig) setInternalCredentials(context context.Cont
 			log.Error(err, "unable to retrieve RandomSecret", "instance", r)
 			return err
 		}
-		secret, err := GetVaultSecret(randomSecret.GetPath(), context)
+		secret, err := GetVaultKV2Secret(randomSecret.GetPath(), context)
 		if err != nil {
 			return err
 		}
@@ -117,7 +117,7 @@ func (r *DatabaseSecretEngineConfig) setInternalCredentials(context context.Cont
 		return nil
 	}
 	if r.Spec.RootCredentials.VaultSecret != nil {
-		secret, err := GetVaultSecret(string(r.Spec.RootCredentials.VaultSecret.Path), context)
+		secret, err := GetVaultKV2Secret(string(r.Spec.RootCredentials.VaultSecret.Path), context)
 		if err != nil {
 			return err
 		}
