@@ -159,6 +159,13 @@ func cleansePath(path string) string {
 	return strings.Trim(strings.ReplaceAll(path, "//", "/"), "/")
 }
 
+func toString(name interface{}) string {
+	if name != nil {
+		return name.(string)
+	}
+	return ""
+}
+
 func parseOrDie(val string) metav1.Duration {
 	d, err := time.ParseDuration(val)
 	if err != nil {

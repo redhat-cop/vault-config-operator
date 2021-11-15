@@ -18,6 +18,8 @@ This section of the documentation provides high-level documentation on the suppo
   - [VaultSecret](#vaultsecret)
   - [RabbitMQSecretEngineConfig](#rabbitmqsecretengineconfig)
   - [RabbitMQSecretEngineRole](#rabbitmqsecretenginerole)
+  - [PKISecretEngineConfig](#pkisecretengineconfig)
+  - [PKISecretEngineRole](#pkisecretenginerole)
 
 ## The Authentication Section
 
@@ -565,3 +567,69 @@ The `vhostName` field specifies the name of vhost where permissions will be prov
 Permissions `read/write/configure` provides ability to `read/write/configure` specified queues and/or exchanges.
 
 [Vault Documentation](https://www.vaultproject.io/api-docs/secret/rabbitmq#create-role)
+
+## PKISecretEngineConfig
+
+`PKISecretEngineConfig` CRD allows a user to create a PKI Secret Engine configuration. Here is an example
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: PKISecretEngineConfig
+metadata:
+  name: my-pki
+spec:
+  authentication: 
+    path: kubernetes
+    role: pki-engine-admin
+  path: pki-vault-demo/pki
+  commonName: pki-vault-demo.internal.io
+  TTL: "8760h"
+```
+
+The `commonName` specifies the requested CN for the certificate.
+
+The `path` field specifies the path of the secret engine to which this connection will be added.
+
+The `TTL` specifies the requested Time To Live (after which the certificate will be expired). This cannot be larger than the engine's max (or, if not set, the system max).
+
+This CR is roughly equivalent to this Vault CLI command:
+
+```shell
+vault write pki-vault-demo/pki/root/generate/internal \
+    common_name=pki-vault-demo.internal.io \
+    ttl=8760h
+```
+
+## PKISecretEngineRole
+
+The `PKISecretEngineRole` CRD allows a user to create a PKI Secret Engine Role, here is an example:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: PKISecretEngineRole
+metadata:
+  name: my-role
+spec:
+  authentication: 
+    path: kubernetes
+    role: database-engine-admin
+  path: pki-vault-demo/pki
+  allowedDomains: 
+   - internal.io
+   - pki-vault-demo.svc
+  maxTTL: "8760h"
+```
+
+The `allowedDomains` specifies the domains of the role. This is used with the allow_bare_domains and allow_subdomains options.
+
+The `maxTTL` specifies the maximum Time To Live provided as a string duration with time suffix. Hour is the largest suffix. If not set, defaults to the system maximum lease TTL.
+
+The `path` field specifies the path of the secret engine to which this connection will be added.
+
+This CR is roughly equivalent to this Vault CLI command:
+
+```shell
+vault write pki-vault-demo/pki/roles/my-role \
+    allowed_domains=internal.io,pki-vault-demo.svc \
+    max_ttl="8760h"
+```

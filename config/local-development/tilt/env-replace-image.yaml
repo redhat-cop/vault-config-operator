@@ -1,4 +1,16 @@
-- op: replace
-  path: /spec/template/spec/containers/1/image
-  value:
-    quay.io/$repo/vault-config-operator:latest
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: system
+spec:
+  template:
+    spec:
+      containers:
+        - name: manager
+          image: quay.io/$repo/vault-config-operator:latest
+          env:
+          - name: VAULT_ADDR
+            value: https://vault.vault.svc:8200
+          - name: VAULT_SKIP_VERIFY
+            value: "true"  
