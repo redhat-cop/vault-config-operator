@@ -67,7 +67,7 @@ func (r *DatabaseSecretEngineConfig) ValidateUpdate(old runtime.Object) error {
 	databasesecretengineconfiglog.Info("validate update", "name", r.Name)
 
 	// the path cannot be updated
-	if r.Spec.Path != old.(*RandomSecret).Spec.Path {
+	if r.Spec.Path != old.(*DatabaseSecretEngineConfig).Spec.Path {
 		return errors.New("spec.path cannot be updated")
 	}
 	return r.isValid()

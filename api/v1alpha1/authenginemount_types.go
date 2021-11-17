@@ -184,6 +184,10 @@ func (d *AuthEngineMount) GetTunePayload() map[string]interface{} {
 	return d.Spec.Config.toMap()
 }
 
+func (d *AuthEngineMount) SetAccessor(accessor string) {
+	d.Status.Accessor = accessor
+}
+
 // AuthEngineMountStatus defines the observed state of AuthEngineMount
 type AuthEngineMountStatus struct {
 
@@ -192,6 +196,9 @@ type AuthEngineMountStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+
+	// +kubebuilder:validation:Optional
+	Accessor string `json:"accessor,omitempty"`
 }
 
 func (m *AuthEngineMount) GetConditions() []metav1.Condition {

@@ -66,6 +66,10 @@ func (d *SecretEngineMount) GetTunePayload() map[string]interface{} {
 	return d.Spec.Config.toMap()
 }
 
+func (d *SecretEngineMount) SetAccessor(accessor string) {
+	d.Status.Accessor = accessor
+}
+
 // SecretEngineMountSpec defines the desired state of SecretEngineMount
 type SecretEngineMountSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -174,6 +178,9 @@ type SecretEngineMountStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+
+	// +kubebuilder:validation:Optional
+	Accessor string `json:"accessor,omitempty"`
 }
 
 func (m *SecretEngineMount) GetConditions() []metav1.Condition {

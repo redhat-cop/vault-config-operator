@@ -19,7 +19,7 @@ spec:
         {{- include "vault-config-operator.selectorLabels" . | nindent 8 }}
         operator: vault-config-operator
     spec:
-      serviceAccountName: vault-config-operator-controller-manager
+      serviceAccountName: controller-manager
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -49,6 +49,10 @@ spec:
         - --leader-elect
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        volumeMounts:
+        - name: cert
+          readOnly: true
+          mountPath: /tmp/k8s-webhook-server/serving-certs
         {{- with .Values.env }}
         env:
          {{- toYaml . | nindent 8 }}
@@ -84,4 +88,8 @@ spec:
       - name: tls-cert
         secret:
           defaultMode: 420
-          secretName: vault-config-operator-certs      
+          secretName: vault-config-operator-certs  
+      - name: cert
+        secret:
+          secretName: webhook-server-cert
+          defaultMode: 420              

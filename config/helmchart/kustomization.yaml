@@ -1,31 +1,19 @@
 # Adds namespace to all resources.
 namespace: release-namespace
 
-# Value of this field is prepended to the
-# names of all resources, e.g. a deployment named
-# "wordpress" becomes "alices-wordpress".
-# Note that it should also match with the prefix (text before '-') of the namespace
-# field above.
-namePrefix: vault-config-operator-
-
-# Labels to add to all resources and selectors.
-#commonLabels:
-#  someName: someValue
-
 bases:
-- ../rbac
-- ../prometheus
+- ../local-development/tilt
 
-vars:
-- name: METRICS_SERVICE_NAME
-  objref:
-    kind: Service
+patchesJson6902:
+- target:
+    group: admissionregistration.k8s.io
     version: v1
-    name: controller-manager-metrics
-- name: METRICS_SERVICE_NAMESPACE
-  objref:
-    kind: Service
+    kind: MutatingWebhookConfiguration
+    name: vault-config-operator-mutating-webhook-configuration
+  path: ./cert-manager-ca-injection.yaml
+- target:
+    group: admissionregistration.k8s.io
     version: v1
-    name: controller-manager-metrics
-  fieldref:
-    fieldpath: metadata.namespace
+    kind: ValidatingWebhookConfiguration
+    name: vault-config-operator-validating-webhook-configuration
+  path: ./cert-manager-ca-injection.yaml

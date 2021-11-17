@@ -80,3 +80,7 @@ func (ve *VaultEndpoint) CreateOrUpdate(context context.Context) error {
 	}
 	return nil
 }
+
+func (ve *VaultEndpoint) Read(context context.Context) (map[string]interface{}, bool, error) {
+	return read(context, ve.vaultObject.GetPath())
+}
