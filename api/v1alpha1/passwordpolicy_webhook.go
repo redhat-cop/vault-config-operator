@@ -17,8 +17,6 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"errors"
-
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -27,9 +25,9 @@ import (
 )
 
 // log is for logging in this package.
-var databasesecretenginerolelog = logf.Log.WithName("databasesecretenginerole-resource")
+var passwordpolicylog = logf.Log.WithName("passwordpolicy-resource")
 
-func (r *DatabaseSecretEngineRole) SetupWebhookWithManager(mgr ctrl.Manager) error {
+func (r *PasswordPolicy) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
 		Complete()
@@ -37,45 +35,42 @@ func (r *DatabaseSecretEngineRole) SetupWebhookWithManager(mgr ctrl.Manager) err
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
-//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-databasesecretenginerole,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=databasesecretengineroles,verbs=create,versions=v1alpha1,name=mdatabasesecretenginerole.kb.io,admissionReviewVersions={v1,v1beta1}
+//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-passwordpolicy,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=passwordpolicies,verbs=create,versions=v1alpha1,name=mpasswordpolicy.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Defaulter = &DatabaseSecretEngineRole{}
+var _ webhook.Defaulter = &PasswordPolicy{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *DatabaseSecretEngineRole) Default() {
-	authenginemountlog.Info("default", "name", r.Name)
+func (r *PasswordPolicy) Default() {
+	passwordpolicylog.Info("default", "name", r.Name)
 	if !controllerutil.ContainsFinalizer(r, GetFinalizer(r)) {
 		controllerutil.AddFinalizer(r, GetFinalizer(r))
 	}
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-databasesecretenginerole,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=databasesecretengineroles,verbs=update,versions=v1alpha1,name=vdatabasesecretenginerole.kb.io,admissionReviewVersions={v1,v1beta1}
+//kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-passwordpolicy,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=passwordpolicies,verbs=create;update,versions=v1alpha1,name=vpasswordpolicy.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Validator = &DatabaseSecretEngineRole{}
+var _ webhook.Validator = &PasswordPolicy{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseSecretEngineRole) ValidateCreate() error {
-	databasesecretenginerolelog.Info("validate create", "name", r.Name)
+func (r *PasswordPolicy) ValidateCreate() error {
+	passwordpolicylog.Info("validate create", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
 	return nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseSecretEngineRole) ValidateUpdate(old runtime.Object) error {
-	databasesecretenginerolelog.Info("validate update", "name", r.Name)
+func (r *PasswordPolicy) ValidateUpdate(old runtime.Object) error {
+	passwordpolicylog.Info("validate update", "name", r.Name)
 
-	// the path cannot be updated
-	if r.Spec.Path != old.(*DatabaseSecretEngineRole).Spec.Path {
-		return errors.New("spec.path cannot be updated")
-	}
+	// TODO(user): fill in your validation logic upon object update.
 	return nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseSecretEngineRole) ValidateDelete() error {
-	databasesecretenginerolelog.Info("validate delete", "name", r.Name)
+func (r *PasswordPolicy) ValidateDelete() error {
+	passwordpolicylog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil

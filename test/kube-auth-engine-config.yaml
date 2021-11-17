@@ -1,7 +1,7 @@
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: KubernetesAuthEngineConfig
 metadata:
-  name: kubernetesauthengineconfig-sample
+  name: authenginemount-sample
 spec:
   authentication: 
     path: kubernetes

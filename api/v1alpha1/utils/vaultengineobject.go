@@ -30,6 +30,7 @@ type VaultEngineObject interface {
 	GetEngineListPath() string
 	GetEngineTunePath() string
 	GetTunePayload() map[string]interface{}
+	SetAccessor(accessor string)
 }
 
 type VaultEngineEndpoint struct {
@@ -44,25 +45,40 @@ func NewVaultEngineEndpoint(obj client.Object) *VaultEngineEndpoint {
 	}
 }
 
-func (ve *VaultEngineEndpoint) Exists(context context.Context) (bool, error) {
+func (ve *VaultEngineEndpoint) retrieveAccessor(context context.Context) (string, bool, error) {
 	log := log.FromContext(context)
 	vaultClient := context.Value("vaultClient").(*vault.Client)
 	secret, err := vaultClient.Logical().Read(ve.vaultEngineObject.GetEngineListPath())
 	if err != nil {
 		log.Error(err, "unable to read engines at", "path", ve.vaultEngineObject.GetEngineListPath())
-		return false, err
+		return "", false, err
 	}
 	if secret == nil {
-		return false, errors.New("read returned null secret")
+		return "", false, errors.New("read returned null secret")
 	}
 	found := false
-	for key := range secret.Data {
+	foundData := map[string]interface{}{}
+	for key, data := range secret.Data {
 		if strings.Trim(key, "/") == strings.Trim(strings.TrimPrefix(ve.vaultObject.GetPath(), ve.vaultEngineObject.GetEngineListPath()), "/") {
 			found = true
+			foundData = data.(map[string]interface{})
 			break
 		}
 	}
-	return found, nil
+	if !found {
+		return "", found, nil
+	}
+	return foundData["accessor"].(string), found, nil
+}
+
+func (ve *VaultEngineEndpoint) GetAccessor(context context.Context) (string, error) {
+	accessor, _, err := ve.retrieveAccessor(context)
+	return accessor, err
+}
+
+func (ve *VaultEngineEndpoint) Exists(context context.Context) (bool, error) {
+	_, found, err := ve.retrieveAccessor(context)
+	return found, err
 }
 
 func (ve *VaultEngineEndpoint) CreateOrUpdateTuneConfig(context context.Context) error {

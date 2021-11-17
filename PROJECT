@@ -17,6 +17,7 @@ resources:
   path: github.com/redhat-cop/vault-config-operator/api/v1alpha1
   version: v1alpha1
   webhooks:
+    defaulting: true
     validation: true
     webhookVersion: v1
 - api:
@@ -28,6 +29,10 @@ resources:
   kind: Policy
   path: github.com/redhat-cop/vault-config-operator/api/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -38,6 +43,7 @@ resources:
   path: github.com/redhat-cop/vault-config-operator/api/v1alpha1
   version: v1alpha1
   webhooks:
+    defaulting: true
     validation: true
     webhookVersion: v1
 - api:
@@ -50,6 +56,7 @@ resources:
   path: github.com/redhat-cop/vault-config-operator/api/v1alpha1
   version: v1alpha1
   webhooks:
+    defaulting: true
     validation: true
     webhookVersion: v1
 - api:
@@ -109,6 +116,19 @@ resources:
   domain: redhat.io
   group: redhatcop
   kind: VaultSecret
+  path: github.com/redhat-cop/vault-config-operator/api/v1alpha1
+  version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: redhat.io
+  group: redhatcop
+  kind: PasswordPolicy
   path: github.com/redhat-cop/vault-config-operator/api/v1alpha1
   version: v1alpha1
   webhooks:

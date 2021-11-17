@@ -128,6 +128,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "RandomSecret")
 		os.Exit(1)
 	}
+	setupLog.Info("starting AuthEngineMountReconciler")
 	if err = (&controllers.AuthEngineMountReconciler{
 		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("AuthEngineMount"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("AuthEngineMount"),
@@ -136,6 +137,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "AuthEngineMount")
 		os.Exit(1)
 	}
+	setupLog.Info("started AuthEngineMountReconciler")
 	if err = (&controllers.KubernetesAuthEngineConfigReconciler{
 		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("KubernetesAuthEngineConfig"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("KubernetesAuthEngineConfig"),
@@ -150,6 +152,14 @@ func main() {
 		ControllerName: "VaultSecret",
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VaultSecret")
+		os.Exit(1)
+	}
+	if err = (&controllers.PasswordPolicyReconciler{
+		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("PasswordPolicy"), mgr.GetAPIReader()),
+		Log:            ctrl.Log.WithName("controllers").WithName("PasswordPolicy"),
+		ControllerName: "PasswordPolicy",
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "PasswordPolicy")
 		os.Exit(1)
 	}
 
@@ -184,6 +194,14 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.VaultSecret{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "VaultSecret")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.PasswordPolicy{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "PasswordPolicy")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.Policy{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Policy")
 			os.Exit(1)
 		}
 	}

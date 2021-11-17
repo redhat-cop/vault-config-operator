@@ -70,10 +70,10 @@ func (d *KubernetesAuthEngineRole) GetPath() string {
 	return cleansePath("auth/" + string(d.Spec.Path) + "/role/" + d.Name)
 }
 func (d *KubernetesAuthEngineRole) GetPayload() map[string]interface{} {
-	return d.Spec.VRole.ToMap()
+	return d.Spec.VRole.toMap()
 }
 func (d *KubernetesAuthEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
-	desiredState := d.Spec.VRole.ToMap()
+	desiredState := d.Spec.VRole.toMap()
 	return reflect.DeepEqual(desiredState, payload)
 }
 
@@ -235,24 +235,7 @@ func init() {
 	SchemeBuilder.Register(&KubernetesAuthEngineRole{}, &KubernetesAuthEngineRoleList{})
 }
 
-func VRoleFromMap(roleConfigMap map[string]interface{}) *VRole {
-	vr := &VRole{}
-	vr.TargetServiceAccounts = roleConfigMap["bound_service_account_names"].([]string)
-	vr.namespaces = roleConfigMap["bound_service_account_namespaces"].([]string)
-	vr.Audience = roleConfigMap["audience"].(string)
-	vr.TokenTTL = roleConfigMap["token_ttl"].(int)
-	vr.TokenMaxTTL = roleConfigMap["token_max_ttl"].(int)
-	vr.Policies = roleConfigMap["token_policies"].([]string)
-	vr.TokenBoundCIDRs = roleConfigMap["token_bound_cidrs"].([]string)
-	vr.TokenExplicitMaxTTL = roleConfigMap["token_explicit_max_ttl"].(int)
-	vr.TokenNoDefaultPolicy = roleConfigMap["token_no_default_policy"].(bool)
-	vr.TokenNumUses = roleConfigMap["token_num_uses"].(int)
-	vr.TokenPeriod = roleConfigMap["tokenPeriod"].(int)
-	vr.TokenType = roleConfigMap["token_type"].(string)
-	return vr
-}
-
-func (i *VRole) ToMap() map[string]interface{} {
+func (i *VRole) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["bound_service_account_names"] = i.TargetServiceAccounts
 	payload["bound_service_account_namespaces"] = i.namespaces

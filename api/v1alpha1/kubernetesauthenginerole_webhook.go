@@ -67,7 +67,7 @@ func (r *KubernetesAuthEngineRole) ValidateUpdate(old runtime.Object) error {
 	kubernetesauthenginerolelog.Info("validate update", "name", r.Name)
 
 	// the path cannot be updated
-	if r.Spec.Path != old.(*SecretEngineMount).Spec.Path {
+	if r.Spec.Path != old.(*KubernetesAuthEngineRole).Spec.Path {
 		return errors.New("spec.path cannot be updated")
 	}
 	return r.isValid()
