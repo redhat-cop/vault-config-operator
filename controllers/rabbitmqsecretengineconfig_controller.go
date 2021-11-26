@@ -87,6 +87,11 @@ func (r *RabbitMQSecretEngineConfigReconciler) Reconcile(ctx context.Context, re
 		return r.ManageError(ctx, instance, err)
 	}
 
+	if instance.CheckTTLvalues() {
+		leasePath := instance.GetLeasePath()
+		updateLeaseConfiguration(ctx, leasePath)
+	}
+
 	return r.ManageSuccess(ctx, instance)
 }
 
@@ -105,6 +110,10 @@ func (r *RabbitMQSecretEngineConfigReconciler) manageReconcileLogic(context cont
 		return err
 	}
 	return nil
+}
+
+func updateLeaseConfiguration(context context.Context, leasePath string) {
+	vaultutils.write(context, path, payload)
 }
 
 // SetupWithManager sets up the controller with the Manager.
