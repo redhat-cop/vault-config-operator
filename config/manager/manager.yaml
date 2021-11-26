@@ -55,11 +55,5 @@ spec:
           requests:
             cpu: 100m
             memory: 250Mi
-        imagePullPolicy: Always
-        env:
-        - name: VAULT_ADDR
-          value: http://172.17.0.10:8200
-        - name: VAULT_SKIP_VERIFY
-          value: "true"  
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10
