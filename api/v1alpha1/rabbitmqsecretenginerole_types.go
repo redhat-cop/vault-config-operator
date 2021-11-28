@@ -51,19 +51,13 @@ type RMQSERole struct {
 	// +kubebuilder:validation:Optional
 	Tags string `json:"tags,omitempty"`
 
-	// +listType=map
-	// +listMapKey=vhostName
-	// +listMapKey=permissions
-	// +kubebuilder:validation:UniqueItems=true
 	// +kubebuilder:validation:Optional
+	// +listType=atomic
 	Vhosts []Vhost `json:"vhosts,omitempty"`
 
 	// This option requires RabbitMQ 3.7.0 or later.
-	// +listType=map
-	// +listMapKey=vhostName
-	// +listMapKey=topics
-	// +kubebuilder:validation:UniqueItems=true
 	// +kubebuilder:validation:Optional
+	// +listType=atomic
 	VhostTopics []VhostTopic `json:"vhostTopics,omitempty"`
 }
 
@@ -82,10 +76,8 @@ type VhostTopic struct {
 	VhostName string `json:"vhostName,omitempty"`
 
 	// List of topics to provide
-	// +listType=map
-	// +listMapKey=topicName
-	// +listMapKey=permissions
 	// +kubebuilder:validation:Required
+	// +listType=atomic
 	Topics []Topic `json:"topics,omitempty"`
 }
 
@@ -169,8 +161,34 @@ func (rabbitMQ *RabbitMQSecretEngineRole) IsValid() (bool, error) {
 	return true, nil
 }
 
-func convertToJson(vhosts interface{}) (string) {
-	result, err := json.Marshal(vhosts)
+func convertVhostsToJson(vhosts []Vhost) (string) {
+	vhostData := make(map[string]interface{})
+	for _, vhost := range vhosts {
+		vhostData = map[string]interface{}{
+			vhost.VhostName: vhost.Permissions,
+		}
+	}
+	result, err := json.Marshal(vhostData)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return string(result)
+}
+
+func convertTopicsToJson(vhosts []VhostTopic) (string) {
+	vhostData := make(map[string]interface{})
+	topicData := make(map[string]interface{})	
+	for _, vhost := range vhosts {
+		for _, topic := range vhost.Topics {
+			topicData = map[string]interface{}{
+				topic.TopicName: topic.Permissions,
+			}
+		}
+		vhostData = map[string]interface{}{
+			vhost.VhostName: topicData,
+		}
+	}
+	result, err := json.Marshal(vhostData)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -180,7 +198,7 @@ func convertToJson(vhosts interface{}) (string) {
 func (fields *RMQSERole) rabbitMQToMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["tags"] = fields.Tags
-	payload["vhosts"] = convertToJson(fields.Vhosts)
-	payload["vhost_topics"] = convertToJson(fields.VhostTopics)
+	payload["vhosts"] = convertVhostsToJson(fields.Vhosts)
+	payload["vhost_topics"] = convertTopicsToJson(fields.VhostTopics)
 	return payload
 }
