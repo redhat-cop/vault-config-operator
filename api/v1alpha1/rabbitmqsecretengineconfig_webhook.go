@@ -34,20 +34,7 @@ func (r *RabbitMQSecretEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) e
 		Complete()
 }
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-
-//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-rabbitmqsecretengineconfig,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=rabbitmqsecretengineconfigs,verbs=create;update,versions=v1alpha1,name=mrabbitmqsecretengineconfig.kb.io,admissionReviewVersions={v1,v1beta1}
-
-var _ webhook.Defaulter = &RabbitMQSecretEngineConfig{}
-
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *RabbitMQSecretEngineConfig) Default() {
-	rabbitmqsecretengineconfiglog.Info("default", "name", r.Name)
-	// Doesn't have any resources to be deleted.
-}
-
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-rabbitmqsecretengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=rabbitmqsecretengineconfigs,verbs=create;update,versions=v1alpha1,name=vrabbitmqsecretengineconfig.kb.io,admissionReviewVersions={v1,v1beta1}
+//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-rabbitmqsecretengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=rabbitmqsecretengineconfigs,verbs=update,versions=v1alpha1,name=vrabbitmqsecretengineconfig.kb.io,admissionReviewVersions={v1,v1beta1}
 
 var _ webhook.Validator = &RabbitMQSecretEngineConfig{}
 

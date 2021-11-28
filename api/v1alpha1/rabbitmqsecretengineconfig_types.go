@@ -56,6 +56,7 @@ type RabbitMQSecretEngineConfigSpec struct {
 type RMQSEConfig struct {
 	// ConnectionURL Specifies the connection string used to connect to the RabbitMQ cluster.
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Pattern=`^(http|https):\/\/.+$`
 	ConnectionURI string `json:"connectionURI,omitempty"`
 
 	// Username Specifies the name of the user to use as the "administrator" user when connecting to the RabbitMQ cluster. This "administrator" user is used to create/update/delete users, so you will need to ensure that this user has permissions to manipulate users. If management plugin is used, this user need to have "administrator" tag, no additional permissions necessary.
@@ -124,7 +125,7 @@ func init() {
 func (fields *RMQSEConfig) rabbitMQToMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["connection_uri"] = fields.ConnectionURI
-	payload["verify_connection"] = &fields.VerifyConnection
+	payload["verify_connection"] = fields.VerifyConnection
 	payload["username"] = fields.retrievedUsername
 	payload["password"] = fields.retrievedPassword
 

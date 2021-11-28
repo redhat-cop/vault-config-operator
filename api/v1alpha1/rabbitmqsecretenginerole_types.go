@@ -51,10 +51,18 @@ type RMQSERole struct {
 	// +kubebuilder:validation:Optional
 	Tags string `json:"tags,omitempty"`
 
+	// +listType=map
+	// +listMapKey=vhostName
+	// +listMapKey=permissions
+	// +kubebuilder:validation:UniqueItems=true
 	// +kubebuilder:validation:Optional
 	Vhosts []Vhost `json:"vhosts,omitempty"`
 
 	// This option requires RabbitMQ 3.7.0 or later.
+	// +listType=map
+	// +listMapKey=vhostName
+	// +listMapKey=topics
+	// +kubebuilder:validation:UniqueItems=true
 	// +kubebuilder:validation:Optional
 	VhostTopics []VhostTopic `json:"vhostTopics,omitempty"`
 }
@@ -62,7 +70,6 @@ type RMQSERole struct {
 type Vhost struct {
 	// Name of an existing vhost.
 	// +kubebuilder:validation:Required
-	// +kubebuilder:default="/"
 	VhostName string `json:"vhostName,omitempty"`
 	// Permissions to grant to the user in the specific vhost.
 	// +kubebuilder:validation:Required
@@ -75,6 +82,9 @@ type VhostTopic struct {
 	VhostName string `json:"vhostName,omitempty"`
 
 	// List of topics to provide
+	// +listType=map
+	// +listMapKey=topicName
+	// +listMapKey=permissions
 	// +kubebuilder:validation:Required
 	Topics []Topic `json:"topics,omitempty"`
 }
@@ -82,7 +92,7 @@ type VhostTopic struct {
 type Topic struct {
 	// Name of an existing topic.
 	// +kubebuilder:validation:Required
-	TopicName string `json:"vhostName,omitempty"`
+	TopicName string `json:"topicName,omitempty"`
 
 	// Permissions to grant to the user in the specific vhost
 	// +kubebuilder:validation:Required
