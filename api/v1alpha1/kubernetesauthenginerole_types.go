@@ -129,7 +129,7 @@ type VRole struct {
 	// TargetServiceAccounts is a list of service account names that will receive this role
 	// +kubebuilder:validation:MinItems=1
 	// kubebuilder:validation:UniqueItems=true
-	// +kubebuilder:default={"default"}
+	// +kubebuilder:validation:Required
 	TargetServiceAccounts []string `json:"targetServiceAccounts"`
 
 	// Policies is a list of policy names to be bound to this role.
