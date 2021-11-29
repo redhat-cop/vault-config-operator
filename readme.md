@@ -277,6 +277,7 @@ Database secret engine connection. This will deploy a postgresql database to con
 oc create secret generic postgresql-admin-password --from-literal=postgresql-password=changeit -n test-vault-config-operator
 export uid=$(oc get project test-vault-config-operator -o jsonpath='{.metadata.annotations.openshift\.io/sa\.scc\.uid-range}'|sed 's/\/.*//')
 export guid=$(oc get project test-vault-config-operator -o jsonpath='{.metadata.annotations.openshift\.io/sa\.scc\.supplemental-groups}'|sed 's/\/.*//')
+helm repo add bitnami https://charts.bitnami.com/bitnami
 helm upgrade my-postgresql-database bitnami/postgresql -i --create-namespace -n test-vault-config-operator -f ./examples/postgresql/postgresql-values.yaml --set securityContext.fsGroup=${guid} --set containerSecurityContext.runAsUser=${uid} --set volumePermissions.securityContext.runAsUser=${uid} --set metrics.securityContext.runAsUser=${uid}
 oc apply -f ./test/database-engine-config.yaml -n test-vault-config-operator
 ```
