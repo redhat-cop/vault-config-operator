@@ -154,7 +154,7 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) isValid() error {
 	return rabbitMQ.Spec.RootCredentials.validateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
 }
 
-var _ vaultutils.VaultObject = &RabbitMQSecretEngineConfig{}
+var _ vaultutils.VaultObjectWithLease = &RabbitMQSecretEngineConfig{}
 
 func (rabbitMQ *RabbitMQSecretEngineConfig) GetPath() string {
 	return string(rabbitMQ.Spec.Path) + "/config/connection"
@@ -235,4 +235,26 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) setInternalCredentials(context conte
 		return nil
 	}
 	return errors.New("no means of retrieving a secret was specified")
+}
+
+func (fields *RMQSEConfig) leasesToMap() map[string]interface{} {
+	payload := map[string]interface{}{}
+	payload["ttl"] = fields.LeaseTTL
+	payload["max_ttl"] = fields.LeaseMaxTTL
+	return payload
+}
+
+func (rabbitMQ *RabbitMQSecretEngineConfig) GetLeasePayload() map[string]interface{} {
+	return rabbitMQ.Spec.leasesToMap()
+}
+
+func (rabbitMQ *RabbitMQSecretEngineConfig) GetLeasePath() string {
+	return string(rabbitMQ.Spec.Path) + "/config/lease"
+}
+
+func (rabbitMQ *RabbitMQSecretEngineConfig) CheckTTLValuesProvided() bool {
+	if rabbitMQ.Spec.LeaseTTL != 0 || rabbitMQ.Spec.LeaseMaxTTL != 0 {
+		return true
+	}
+	return false
 }

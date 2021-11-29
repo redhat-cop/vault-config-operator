@@ -14,3 +14,5 @@ spec:
   path: test-vault-config-operator/rabbitmq
   username: rabbitmq
   verifyConnection: false
+  leaseTTL: 86400 # 24 hours
+  leaseMaxTTL: 86400 # 24 hours

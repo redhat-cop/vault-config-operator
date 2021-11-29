@@ -86,7 +86,15 @@ func (r *RabbitMQSecretEngineConfigReconciler) Reconcile(ctx context.Context, re
 		r.Log.Error(err, "unable to complete reconcile logic", "instance", instance)
 		return r.ManageError(ctx, instance, err)
 	}
-	
+
+	if instance.CheckTTLValuesProvided() {
+		err = r.manageLeaseLogic(ctx, instance)
+		if err != nil {
+			r.Log.Error(err, "unable to complete lease logic", "instance", instance)
+			return r.ManageError(ctx, instance, err)
+		}
+	}
+
 	return r.ManageSuccess(ctx, instance)
 }
 
@@ -102,6 +110,17 @@ func (r *RabbitMQSecretEngineConfigReconciler) manageReconcileLogic(context cont
 	err = vaultEndpoint.Create(context)
 	if err != nil {
 		log.Error(err, "unable to create/update vault resource", "instance", instance)
+		return err
+	}
+	return nil
+}
+
+func (r *RabbitMQSecretEngineConfigReconciler) manageLeaseLogic(context context.Context, instance client.Object) error {
+	log := log.FromContext(context)
+	vaultEndpointWithLease := vaultutils.NewVaultEndpointWithLease(instance)
+
+	if err := vaultEndpointWithLease.CreateOrUpdateLease(context); err != nil {
+		log.Error(err, "unable to create/update lease resource", "instance", instance)
 		return err
 	}
 	return nil
