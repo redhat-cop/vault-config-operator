@@ -246,6 +246,7 @@ export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.da
 export repo=raffaelespazzoli #replace with yours, this has also to be replaced in the following files: Tiltfile, ./config/local-development/tilt/replace-image.yaml. Further improvements may be able to remove this constraint.
 docker login quay.io/$repo
 oc new-project vault-config-operator
+oc project vault-config-operator
 tilt up
 ```
 
