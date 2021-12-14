@@ -301,6 +301,12 @@ oc apply -f ./test/kv-secret-engine.yaml -n test-vault-config-operator
 oc apply -f ./test/random-secret.yaml -n test-vault-config-operator
 ```
 
+VaultSecret
+
+```shell
+oc apply -f ./test/vaultsecret/ -n vault-admin
+```
+
 Kube auth engine mount and config and role
 
 ```shell

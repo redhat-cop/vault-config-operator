@@ -9,7 +9,15 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}"
+            "program": "${workspaceFolder}",
+            "env": {
+                "VAULT_SKIP_VERIFY": "true",
+                "VAULT_ADDR": "https://vault.vault.svc:8200"
+            },
+            "args": [
+                "--health-probe-bind-address=:8081",
+                "--metrics-bind-address=127.0.0.1:8080"
+            ]
         }
     ]
 }
