@@ -17,11 +17,13 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"net/url"
+	"context"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -32,9 +34,6 @@ type VaultSecretSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Url of the Vault instance.
-	// +kubebuilder:validation:Required
-	Url string `json:"url,omitempty"`
 	// RefreshPeriod if specified, the operator will refresh the secret with the given frequency.
 	// Defaults to five minutes, and must be at least one minute.
 	// +kubebuilder:validation:Optional
@@ -93,6 +92,7 @@ func init() {
 	SchemeBuilder.Register(&VaultSecret{}, &VaultSecretList{})
 }
 
+//TODO must implement VaultObject Interface
 type KVSecret struct {
 	// Name is an arbitrary, but unique, name for this KV Vault secret and referenced when templating.
 	// +kubebuilder:validation:Required
@@ -133,38 +133,8 @@ func (vs *VaultSecret) IsValid() (bool, error) {
 
 func (vs *VaultSecret) isValid() error {
 	result := &multierror.Error{}
-	result = multierror.Append(result, vs.validUrl())
 	result = multierror.Append(result, vs.validResyncInterval())
 	return result.ErrorOrNil()
-}
-
-func (vs *VaultSecret) validUrl() error {
-
-	u, err := url.Parse(vs.Spec.Url)
-
-	errCount := 0
-
-	errs := errors.New("invalid url")
-	if err != nil {
-		errs = errors.Wrap(errs, err.Error())
-		errCount++
-	}
-
-	if u.Scheme == "" {
-		errs = errors.Wrap(errs, "no valid scheme in url")
-		errCount++
-	}
-
-	if u.Host == "" {
-		errs = errors.Wrap(errs, "no valid host in url")
-		errCount++
-	}
-
-	if errCount > 0 {
-		return errs
-	}
-
-	return nil
 }
 
 func (vs *VaultSecret) validResyncInterval() error {
@@ -173,5 +143,28 @@ func (vs *VaultSecret) validResyncInterval() error {
 		return errors.New("ResyncInterval must be at least 1 minute")
 	}
 
+	return nil
+}
+
+var _ vaultutils.VaultObject = &KVSecret{}
+
+func (d *KVSecret) GetPath() string {
+	return string(d.Path)
+}
+func (d *KVSecret) GetPayload() map[string]interface{} {
+	return nil
+}
+func (d *KVSecret) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+	return true
+}
+
+func (d *KVSecret) IsInitialized() bool {
+	return true
+}
+
+func (r *KVSecret) IsValid() (bool, error) {
+	return true, nil
+}
+func (d *KVSecret) PrepareInternalValues(context context.Context, object client.Object) error {
 	return nil
 }

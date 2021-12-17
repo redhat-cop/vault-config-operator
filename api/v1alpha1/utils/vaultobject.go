@@ -44,6 +44,12 @@ func NewVaultEndpoint(obj client.Object) *VaultEndpoint {
 	}
 }
 
+func NewVaultEndpointObj(obj interface{}) *VaultEndpoint {
+	return &VaultEndpoint{
+		vaultObject: obj.(VaultObject),
+	}
+}
+
 func (ve *VaultEndpoint) DeleteIfExists(context context.Context) error {
 	log := log.FromContext(context)
 	vaultClient := context.Value("vaultClient").(*vault.Client)
