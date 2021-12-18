@@ -37,6 +37,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // VaultSecretReconciler reconciles a VaultSecret object
@@ -50,6 +51,7 @@ type VaultSecretReconciler struct {
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=vaultsecrets/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=vaultsecrets/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
+// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -77,10 +79,17 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return reconcile.Result{}, err
 	}
 
+	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
+	//TODO this doesnt seem to be working https://sdk.operatorframework.io/docs/building-operators/golang/advanced-topics/#external-resources
 	if util.IsBeingDeleted(instance) {
 		if !util.HasFinalizer(instance, redhatcopv1alpha1.GetFinalizer(instance)) {
 			return reconcile.Result{}, nil
 		}
+		// err := r.manageCleanUpLogic(ctx, instance)
+		// if err != nil {
+		// 	r.Log.Error(err, "unable to delete instance", "instance", instance)
+		// 	return r.ManageError(ctx, instance, err)
+		// }
 		util.RemoveFinalizer(instance, redhatcopv1alpha1.GetFinalizer(instance))
 		err = r.GetClient().Update(ctx, instance)
 		if err != nil {
@@ -93,8 +102,6 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	if instance.Status.LastVaultSecretUpdate != nil && (instance.Spec.RefreshPeriod != nil || (instance.Spec.RefreshPeriod != nil && !instance.Status.LastVaultSecretUpdate.Add(instance.Spec.RefreshPeriod.Duration).Before(time.Now()))) {
 		return reconcile.Result{}, nil
 	}
-
-	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
 
 	err = r.manageReconcileLogic(ctx, instance)
 	if err != nil {
@@ -145,6 +152,8 @@ func (r *VaultSecretReconciler) formatK8sSecret(instance *redhatcopv1alpha1.Vaul
 		Type:       corev1.SecretType(instance.Spec.TemplatizedK8sSecret.Type),
 	}
 
+	ctrl.SetControllerReference(instance, k8sSecret, r.GetScheme())
+
 	return k8sSecret, nil
 }
 
@@ -159,7 +168,11 @@ func (r *VaultSecretReconciler) manageReconcileLogic(ctx context.Context, instan
 		}
 
 		ctx = context.WithValue(ctx, "vaultClient", vaultClient)
-		vaultEndpoint := vaultutils.NewVaultEndpointObj(kvSecret)
+		vaultEndpoint, err := vaultutils.NewVaultEndpointObj(&kvSecret)
+		if err != nil {
+			r.Log.Error(err, "unable to create vaultObject", "kvSecret", kvSecret)
+			return err
+		}
 
 		data, _, err := vaultEndpoint.Read(ctx)
 		if err != nil {
@@ -177,7 +190,13 @@ func (r *VaultSecretReconciler) manageReconcileLogic(ctx context.Context, instan
 		return err
 	}
 
-	err = r.CreateOrUpdateResource(ctx, instance, instance.Namespace, k8sSecret)
+	kubeClient := ctx.Value("kubeClient").(client.Client)
+
+	//TODO Handle update or Create. Strangely r.CreateOrUpdateResource() isnt working.
+
+	err = kubeClient.Create(ctx, k8sSecret)
+
+	// err = r.CreateOrUpdateResource(ctx, instance, instance.Namespace, k8sSecret)
 
 	if err != nil {
 		r.Log.Error(err, "unable to create or update k8s secret", "secret", k8sSecret)

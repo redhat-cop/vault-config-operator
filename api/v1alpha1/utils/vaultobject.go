@@ -44,10 +44,10 @@ func NewVaultEndpoint(obj client.Object) *VaultEndpoint {
 	}
 }
 
-func NewVaultEndpointObj(obj interface{}) *VaultEndpoint {
+func NewVaultEndpointObj(obj VaultObject) (*VaultEndpoint, error) {
 	return &VaultEndpoint{
-		vaultObject: obj.(VaultObject),
-	}
+		vaultObject: obj,
+	}, nil
 }
 
 func (ve *VaultEndpoint) DeleteIfExists(context context.Context) error {

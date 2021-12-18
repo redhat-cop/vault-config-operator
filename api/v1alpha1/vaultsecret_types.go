@@ -155,7 +155,7 @@ func (d *KVSecret) GetPayload() map[string]interface{} {
 	return nil
 }
 func (d *KVSecret) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
-	return true
+	return false
 }
 
 func (d *KVSecret) IsInitialized() bool {

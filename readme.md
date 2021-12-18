@@ -304,7 +304,9 @@ oc apply -f ./test/random-secret.yaml -n test-vault-config-operator
 VaultSecret
 
 ```shell
-oc apply -f ./test/vaultsecret/ -n vault-admin
+oc apply -f ./test/vaultsecret/kubernetesauthenginerole-secret-reader.yaml -n vault-admin
+envsubst < ./test/vaultsecret/policy-secret-reader.yaml | oc apply -f - -n vault-admin
+oc apply -f ./test/vaultsecret/vaultsecret-randomsecret.yaml -n test-vault-config-operator
 ```
 
 Kube auth engine mount and config and role
