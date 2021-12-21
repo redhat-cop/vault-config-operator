@@ -121,6 +121,9 @@ type TemplatizedK8sSecret struct {
 	// The Sprig template library and Helm functions (like toYaml) are supported.
 	// +kubebuilder:validation:Required
 	StringData map[string]string `json:"stringData,omitempty"`
+	// Labels are labels to add to the final K8s Secret.
+	// +kubebuilder:validation:Optional
+	Labels map[string]string `json:"labels,omitempty"`
 	// Annotations are annotations to add to the final K8s Secret.
 	// +kubebuilder:validation:Optional
 	Annotations map[string]string `json:"annotations,omitempty"`

@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"reflect"
 
 	"time"
@@ -37,7 +38,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // VaultSecretReconciler reconciles a VaultSecret object
@@ -80,28 +81,6 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	}
 
 	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
-	//TODO this doesnt seem to be working https://sdk.operatorframework.io/docs/building-operators/golang/advanced-topics/#external-resources
-	if util.IsBeingDeleted(instance) {
-		if !util.HasFinalizer(instance, redhatcopv1alpha1.GetFinalizer(instance)) {
-			return reconcile.Result{}, nil
-		}
-		// err := r.manageCleanUpLogic(ctx, instance)
-		// if err != nil {
-		// 	r.Log.Error(err, "unable to delete instance", "instance", instance)
-		// 	return r.ManageError(ctx, instance, err)
-		// }
-		util.RemoveFinalizer(instance, redhatcopv1alpha1.GetFinalizer(instance))
-		err = r.GetClient().Update(ctx, instance)
-		if err != nil {
-			r.Log.Error(err, "unable to update instance", "instance", instance)
-			return r.ManageError(ctx, instance, err)
-		}
-		return reconcile.Result{}, nil
-	}
-	// how to read this if: if the secret has been initialized once and there is no refresh period or time to refresh has not arrived yet, return.
-	if instance.Status.LastVaultSecretUpdate != nil && (instance.Spec.RefreshPeriod != nil || (instance.Spec.RefreshPeriod != nil && !instance.Status.LastVaultSecretUpdate.Add(instance.Spec.RefreshPeriod.Duration).Before(time.Now()))) {
-		return reconcile.Result{}, nil
-	}
 
 	err = r.manageReconcileLogic(ctx, instance)
 	if err != nil {
@@ -147,6 +126,7 @@ func (r *VaultSecretReconciler) formatK8sSecret(instance *redhatcopv1alpha1.Vaul
 			Name:        instance.Spec.TemplatizedK8sSecret.Name,
 			Namespace:   instance.Namespace,
 			Annotations: instance.Spec.TemplatizedK8sSecret.Annotations,
+			Labels:      instance.Spec.TemplatizedK8sSecret.Labels,
 		},
 		StringData: stringData,
 		Type:       corev1.SecretType(instance.Spec.TemplatizedK8sSecret.Type),
@@ -168,39 +148,42 @@ func (r *VaultSecretReconciler) manageReconcileLogic(ctx context.Context, instan
 		}
 
 		ctx = context.WithValue(ctx, "vaultClient", vaultClient)
-		vaultEndpoint, err := vaultutils.NewVaultEndpointObj(&kvSecret)
-		if err != nil {
-			r.Log.Error(err, "unable to create vaultObject", "kvSecret", kvSecret)
-			return err
-		}
+		vaultEndpoint := vaultutils.NewVaultEndpointObj(&kvSecret)
 
-		data, _, err := vaultEndpoint.Read(ctx)
-		if err != nil {
-			r.Log.Error(err, "unable to read Vault Secret", "instance", instance)
-			return err
+		data, ok, _ := vaultEndpoint.Read(ctx)
+		if !ok {
+			return errors.New("unable to read Key/Value Secret from Vault for " + kvSecret.GetPath())
 		}
 
 		mergedMap[kvSecret.Name] = data
 	}
 
 	k8sSecret, err := r.formatK8sSecret(instance, mergedMap)
-
 	if err != nil {
 		r.Log.Error(err, "unable to format k8s secret", "instance", instance)
 		return err
 	}
 
-	kubeClient := ctx.Value("kubeClient").(client.Client)
-
-	//TODO Handle update or Create. Strangely r.CreateOrUpdateResource() isnt working.
-
-	err = kubeClient.Create(ctx, k8sSecret)
-
-	// err = r.CreateOrUpdateResource(ctx, instance, instance.Namespace, k8sSecret)
+	existingK8sSecret := &corev1.Secret{}
+	err = r.GetClient().Get(ctx, types.NamespacedName{
+		Namespace: instance.GetNamespace(),
+		Name:      k8sSecret.GetName(),
+	}, existingK8sSecret)
 
 	if err != nil {
-		r.Log.Error(err, "unable to create or update k8s secret", "secret", k8sSecret)
-		return err
+		// doesn't exist yet so create it
+		err := r.GetClient().Create(ctx, k8sSecret)
+		if err != nil {
+			r.Log.Error(err, "unable to create k8s secret", "secret", k8sSecret)
+			return err
+		}
+	} else {
+		// already exists, update if needed
+		err := r.GetClient().Update(ctx, k8sSecret)
+		if err != nil {
+			r.Log.Error(err, "unable to update k8s secret", "secret", k8sSecret)
+			return err
+		}
 	}
 
 	now := metav1.NewTime(time.Now())
@@ -214,16 +197,21 @@ func (r *VaultSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	needsCreation := predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
-			newSecret, ok := e.ObjectNew.DeepCopyObject().(*redhatcopv1alpha1.VaultSecret)
+			newVaultSecret, ok := e.ObjectNew.DeepCopyObject().(*redhatcopv1alpha1.VaultSecret)
 			if !ok {
 				return false
 			}
-			oldSecret, ok := e.ObjectOld.DeepCopyObject().(*redhatcopv1alpha1.VaultSecret)
+			oldVaultSecret, ok := e.ObjectOld.DeepCopyObject().(*redhatcopv1alpha1.VaultSecret)
 			if !ok {
 				return false
 			}
-			//TODO this is probably wrong
-			return !reflect.DeepEqual(oldSecret.Spec, newSecret.Spec)
+
+			if !reflect.DeepEqual(oldVaultSecret.Spec, newVaultSecret.Spec) {
+				log.Log.Info("Update event - Specs NOT equal")
+				return true
+			}
+			log.Log.Info("No Update event - Specs equal")
+			return false
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
 			return true

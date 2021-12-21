@@ -204,7 +204,7 @@ export cluster_base_domain=$(oc get dns cluster -o jsonpath='{.spec.baseDomain}'
 envsubst < ./config/local-development/vault-values.yaml > /tmp/values
 helm upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f /tmp/values
 
-INIT_RESPONSE=$(oc exec vault-0 -n vault -- vault operator init -address https://vault-internal.vault.svc:8200 -ca-path /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt -format=json -key-shares 1 -key-threshold 1)
+INIT_RESPONSE=$(oc exec vault-0 -n vault -- vault operator init -address https://vault.vault.svc:8200 -ca-path /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt -format=json -key-shares 1 -key-threshold 1)
 
 UNSEAL_KEY=$(echo "$INIT_RESPONSE" | jq -r .unseal_keys_b64[0])
 ROOT_TOKEN=$(echo "$INIT_RESPONSE" | jq -r .root_token)
@@ -217,7 +217,7 @@ oc delete secret vault-init -n vault
 oc create secret generic vault-init -n vault --from-literal=unseal_key=${UNSEAL_KEY} --from-literal=root_token=${ROOT_TOKEN}
 export UNSEAL_KEY=$(oc get secret vault-init -n vault -o jsonpath='{.data.unseal_key}' | base64 -d )
 export ROOT_TOKEN=$(oc get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d )
-oc exec vault-0 -n vault -- vault operator unseal -address https://vault-internal.vault.svc:8200 -ca-path /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt $UNSEAL_KEY
+oc exec vault-0 -n vault -- vault operator unseal -address https://vault.vault.svc:8200 -ca-path /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt $UNSEAL_KEY
 ```
 
 #### Configure an Kubernetes Authentication mount point
@@ -303,9 +303,12 @@ oc apply -f ./test/random-secret.yaml -n test-vault-config-operator
 
 VaultSecret
 
+> Note: you must run the previous tests
+
 ```shell
 oc apply -f ./test/vaultsecret/kubernetesauthenginerole-secret-reader.yaml -n vault-admin
 envsubst < ./test/vaultsecret/policy-secret-reader.yaml | oc apply -f - -n vault-admin
+oc apply -f ./test/vaultsecret/randomsecret-another-password.yaml -n test-vault-config-operator
 oc apply -f ./test/vaultsecret/vaultsecret-randomsecret.yaml -n test-vault-config-operator
 ```
 

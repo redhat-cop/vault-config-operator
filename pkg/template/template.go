@@ -158,8 +158,13 @@ func funcMap(i *funcMapInput) template.FuncMap {
 		"spew_sprintf": spewSprintf,
 	}
 
+	sprigFuncs := sprig.FuncMap()
+	// Removed these functions from the core Sprig package for security concerns
+	delete(sprigFuncs, "env")
+	delete(sprigFuncs, "expandenv")
+
 	// add sprig functions
-	for k, v := range sprig.FuncMap() {
+	for k, v := range sprigFuncs {
 		r[k] = v
 	}
 
