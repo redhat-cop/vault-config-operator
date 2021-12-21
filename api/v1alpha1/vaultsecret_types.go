@@ -100,9 +100,6 @@ type KVSecret struct {
 	// Authentication is the kube auth configuraiton to be used to execute this request
 	// +kubebuilder:validation:Required
 	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
-	// Keys is a list of keys to use for templating. If none are listed all keys are referenceable for templating.
-	// +kubebuilder:validation:Optional
-	Keys []string `json:"keys,omitempty"`
 	// Path is the path of the secret.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=kubernetes
