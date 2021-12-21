@@ -206,12 +206,7 @@ func (r *VaultSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 				return false
 			}
 
-			if !reflect.DeepEqual(oldVaultSecret.Spec, newVaultSecret.Spec) {
-				log.Log.Info("Update event - Specs NOT equal")
-				return true
-			}
-			log.Log.Info("No Update event - Specs equal")
-			return false
+			return !reflect.DeepEqual(oldVaultSecret.Spec, newVaultSecret.Spec)
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
 			return true
