@@ -17,28 +17,28 @@ limitations under the License.
 package controllers
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"reflect"
-
+	"text/template"
 	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/redhat-cop/operator-utils/pkg/util"
+	utilstemplates "github.com/redhat-cop/operator-utils/pkg/util/templates"
+	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
-	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
-	template "github.com/redhat-cop/vault-config-operator/pkg/template"
-	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 // VaultSecretReconciler reconciles a VaultSecret object
@@ -102,23 +102,21 @@ func (r *VaultSecretReconciler) formatK8sSecret(instance *redhatcopv1alpha1.Vaul
 
 	stringData := make(map[string]string)
 	for k, v := range instance.Spec.TemplatizedK8sSecret.StringData {
-		tpl, err := template.NewTemplate(&template.NewTemplateInput{
-			Contents: v,
-			Data:     data,
-		})
 
+		tpl, err := template.New("").Funcs(utilstemplates.AdvancedTemplateFuncMap(r.GetRestConfig(), r.Log)).Parse(v)
 		if err != nil {
 			r.Log.Error(err, "unable to create template", "instance", instance)
 			return nil, err
 		}
 
-		rslt, err := tpl.Execute()
-
+		var b bytes.Buffer
+		err = tpl.Execute(&b, data)
 		if err != nil {
 			r.Log.Error(err, "unable to execute template", "instance", instance)
 			return nil, err
 		}
-		stringData[k] = string(rslt.Output)
+
+		stringData[k] = b.String()
 	}
 
 	k8sSecret := &corev1.Secret{

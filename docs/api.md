@@ -13,6 +13,7 @@ This section of the documentation provides high-level documentation on the suppo
   - [DatabaseSecretEngineConfig](#databasesecretengineconfig)
   - [DatabaseSecretEngineRole](#databasesecretenginerole)
   - [RandomSecret](#randomsecret)
+  - [VaultSecret](#vaultsecret)
 
 ## The Authentication Section
 
@@ -317,3 +318,60 @@ This CR is roughly equivalent to this Vault CLI command:
 ```shell
 vault kv put [namespace/]kv/vault-tenant password=<generated value>
 ```
+
+## VaultSecret
+
+The VaultSecret CRD allows a user to create a K8s Secret from one or more Vault Key/Value Secrets. It uses go templating to allow formatting of the K8s Secret in the `output` section.
+
+Example CR...
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: VaultSecret
+metadata:
+  name: randomsecret
+spec:
+  kvSecrets:
+    - authentication:
+        path: kubernetes
+        role: secret-reader
+        serviceAccount:
+          name: default
+      keys:
+        - password
+      name: randomsecret
+      path: test-vault-config-operator/kv/randomsecret-password
+    - authentication:
+        path: kubernetes
+        role: secret-reader
+        serviceAccount:
+          name: default
+      keys:
+        - password
+      name: anotherrandomsecret
+      path: test-vault-config-operator/kv/another-password
+  output:
+    name: randomsecret
+    stringData:
+      password: '{{ .randomsecret.password }}'
+      anotherpassword: '{{ .anotherrandomsecret.password }}'
+    type: Opaque
+    labels:
+      app: test-vault-config-operator
+    annotations:
+      refresh: every-minute    
+  refreshPeriod: 1m0s
+```
+
+- `kvSecrets` is an array of Vault Key/Value Secrets. Every `kvSecret` has...
+  - [authentication](#the-authentication-section) section.
+  - `keys` which is a list of keys in the Vault K/V secret to make available for templating. If left blank all keys are available for templating.
+  - `name` a unique name for the Vault K/V secret to reference when templating, since many Vault K/V secrets may have the same name.
+  - `path` field specifies the path at which the secret will be read from.
+- `output` is the K8s Secret to output to after go template processing.
+  - `name` the final K8s Secret Name to output to.
+  - `stringData` stringData allows specifying non-binary secret data in string form. It is provided as a write-only input field for convenience. All keys and values are merged into the data field on write, overwriting any existing values. The stringData field is never output when reading from the API. You specify variables from `kvSecrets` in the form of *'{{ .name.key }}'* using go templating. The go text and most [sprig](http://masterminds.github.io/sprig/) library functions are also available when templating.
+  - `type` is the K8s Secret type used to facilitate programmatic handling of secret data.
+  - `labels` are any k8s Secret [labels](http://kubernetes.io/docs/user-guide/labels) to include.
+  - `annotations` are any k8s Secret [annotations](http://kubernetes.io/docs/user-guide/annotations) to include.
+- `refreshPeriod` the pull interval for syncing Vault K/V secrets with the K8s Secret. Defaults to every 5 minutes.

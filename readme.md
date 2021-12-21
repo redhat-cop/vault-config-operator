@@ -48,6 +48,7 @@ Currently this operator supports the following CRDs:
 7. [DatabaseSecretEngineConfig](./docs/api.md#DatabaseSecretEngineConfig) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Connection
 8. [DatabaseSecretEngineRole](./docs/api.md#DatabaseSecretEngineRole) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Role
 9. [RandomSecret](./docs/api.md#RandomSecret) Creates a random secret in a vault [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv) with one password field generated using a [PasswordPolicy](https://www.vaultproject.io/docs/concepts/password-policies)
+10. [VaultSecret](./docs/api.md#VaultSecret) Creates a K8s Secret from one or more Key/Value Vault Secrets, See [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv)
 
 ## End to end example
 
@@ -310,6 +311,8 @@ oc apply -f ./test/vaultsecret/kubernetesauthenginerole-secret-reader.yaml -n va
 envsubst < ./test/vaultsecret/policy-secret-reader.yaml | oc apply -f - -n vault-admin
 oc apply -f ./test/vaultsecret/randomsecret-another-password.yaml -n test-vault-config-operator
 oc apply -f ./test/vaultsecret/vaultsecret-randomsecret.yaml -n test-vault-config-operator
+# test a pullsecret... Create the secret in test-vault-config-operator/kv/pullsecret using the Vault UI first
+oc apply -f ./test/vaultsecret/vaultsecret-pullsecret.yaml -n test-vault-config-operator
 ```
 
 Kube auth engine mount and config and role
