@@ -158,7 +158,7 @@ func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 		For(&redhatcopv1alpha1.DatabaseSecretEngineConfig{}).
 		Watches(&source.Kind{Type: &corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
-				Kind: "Namespace",
+				Kind: "Secret",
 			},
 		}}, handler.EnqueueRequestsFromMapFunc(func(a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
@@ -180,7 +180,7 @@ func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 		}), builder.WithPredicates(isBasicAuthSecret)).
 		Watches(&source.Kind{Type: &redhatcopv1alpha1.RandomSecret{
 			TypeMeta: metav1.TypeMeta{
-				Kind: "Namespace",
+				Kind: "RandomSecret",
 			},
 		}}, handler.EnqueueRequestsFromMapFunc(func(a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
