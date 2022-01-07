@@ -138,22 +138,22 @@ func (r *VaultSecretReconciler) formatK8sSecret(instance *redhatcopv1alpha1.Vaul
 func (r *VaultSecretReconciler) manageReconcileLogic(ctx context.Context, instance *redhatcopv1alpha1.VaultSecret) error {
 
 	mergedMap := make(map[string]interface{})
-	for _, kvSecret := range instance.Spec.KVSecrets {
-		vaultClient, err := kvSecret.Authentication.GetVaultClient(ctx, instance.Namespace)
+	for _, vaultSecretDefinition := range instance.Spec.VaultSecretDefinitions {
+		vaultClient, err := vaultSecretDefinition.Authentication.GetVaultClient(ctx, instance.Namespace)
 		if err != nil {
 			r.Log.Error(err, "unable to create vault client", "instance", instance)
 			return err
 		}
 
 		ctx = context.WithValue(ctx, "vaultClient", vaultClient)
-		vaultEndpoint := vaultutils.NewVaultEndpointObj(&kvSecret)
+		vaultEndpoint := vaultutils.NewVaultEndpointObj(&vaultSecretDefinition)
 
 		data, ok, _ := vaultEndpoint.Read(ctx)
 		if !ok {
-			return errors.New("unable to read Key/Value Secret from Vault for " + kvSecret.GetPath())
+			return errors.New("unable to read Vault Secret for " + vaultSecretDefinition.GetPath())
 		}
 
-		mergedMap[kvSecret.Name] = data
+		mergedMap[vaultSecretDefinition.Name] = data
 	}
 
 	k8sSecret, err := r.formatK8sSecret(instance, mergedMap)

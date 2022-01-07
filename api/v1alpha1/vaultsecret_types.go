@@ -39,15 +39,16 @@ type VaultSecretSpec struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="5m"
 	RefreshPeriod *metav1.Duration `json:"refreshPeriod,omitempty"`
-	// KVSecrets are the Key/Value secrets in Vault.
+	// VaultSecretDefinitions are the secrets in Vault.
 	// +kubebuilder:validation:Required
-	KVSecrets []KVSecret `json:"kvSecrets,omitempty"`
+	VaultSecretDefinitions []VaultSecretDefinition `json:"vaultSecretDefinitions,omitempty"`
 	// TemplatizedK8sSecret is the formatted K8s Secret created by templating from the Vault KV secrets.
 	// +kubebuilder:validation:Required
 	TemplatizedK8sSecret TemplatizedK8sSecret `json:"output,omitempty"`
 }
 
 // VaultSecretStatus defines the observed state of VaultSecret
+//TODO add the TTL/expiration timestamp to the Status field per VaultSecretDefinition
 type VaultSecretStatus struct {
 	// +patchMergeKey=type
 	// +patchStrategy=merge
@@ -92,8 +93,7 @@ func init() {
 	SchemeBuilder.Register(&VaultSecret{}, &VaultSecretList{})
 }
 
-//TODO must implement VaultObject Interface
-type KVSecret struct {
+type VaultSecretDefinition struct {
 	// Name is an arbitrary, but unique, name for this KV Vault secret and referenced when templating.
 	// +kubebuilder:validation:Required
 	Name string `json:"name,omitempty"`
@@ -146,25 +146,25 @@ func (vs *VaultSecret) validResyncInterval() error {
 	return nil
 }
 
-var _ vaultutils.VaultObject = &KVSecret{}
+var _ vaultutils.VaultObject = &VaultSecretDefinition{}
 
-func (d *KVSecret) GetPath() string {
+func (d *VaultSecretDefinition) GetPath() string {
 	return string(d.Path)
 }
-func (d *KVSecret) GetPayload() map[string]interface{} {
+func (d *VaultSecretDefinition) GetPayload() map[string]interface{} {
 	return nil
 }
-func (d *KVSecret) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *VaultSecretDefinition) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	return false
 }
 
-func (d *KVSecret) IsInitialized() bool {
+func (d *VaultSecretDefinition) IsInitialized() bool {
 	return true
 }
 
-func (r *KVSecret) IsValid() (bool, error) {
+func (r *VaultSecretDefinition) IsValid() (bool, error) {
 	return true, nil
 }
-func (d *KVSecret) PrepareInternalValues(context context.Context, object client.Object) error {
+func (d *VaultSecretDefinition) PrepareInternalValues(context context.Context, object client.Object) error {
 	return nil
 }

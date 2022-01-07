@@ -48,7 +48,7 @@ Currently this operator supports the following CRDs:
 7. [DatabaseSecretEngineConfig](./docs/api.md#DatabaseSecretEngineConfig) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Connection
 8. [DatabaseSecretEngineRole](./docs/api.md#DatabaseSecretEngineRole) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Role
 9. [RandomSecret](./docs/api.md#RandomSecret) Creates a random secret in a vault [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv) with one password field generated using a [PasswordPolicy](https://www.vaultproject.io/docs/concepts/password-policies)
-10. [VaultSecret](./docs/api.md#VaultSecret) Creates a K8s Secret from one or more Key/Value Vault Secrets, See [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv)
+10. [VaultSecret](./docs/api.md#VaultSecret) Creates a K8s Secret from one or more Vault Secrets, See [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv)
 
 ## End to end example
 
