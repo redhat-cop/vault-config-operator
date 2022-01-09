@@ -132,7 +132,7 @@ server:
             if [[ $(vault status | grep "Initialized" | grep "true") ]]; then
               if [[ $(vault status | grep "Sealed" | grep "true") ]]; then
                 if [[ -f /vault-root-token/unseal_key ]]; then
-                  vault operator unseal -reset $(cat /vault-root-token/unseal_key)
+                  #vault operator unseal -reset $(cat /vault-root-token/unseal_key)
                   vault operator unseal $(cat /vault-root-token/unseal_key)
                 else
                   echo unseal key not initialized yet  
@@ -162,13 +162,17 @@ server:
             sleep 5
             if [[ -f /vault-root-token/root_token ]]; then
               export VAULT_TOKEN=$(cat /vault-root-token/root_token)
-              if [[ $(vault plugin list secret | grep vault-plugin-secrets-github) ]]; then
-                echo vault-plugin-secrets-github plugin already installed
-                sleep 5
+              if [[ $(vault status | grep "Sealed" | grep "false") ]]; then
+                if [[ $(vault plugin list secret | grep vault-plugin-secrets-github) ]]; then
+                  echo vault-plugin-secrets-github plugin already installed
+                  sleep 5
+                else
+                  echo SHA256SUM $(grep vault-plugin-secrets-github-linux-amd64 /usr/local/libexec/vault/SHA256SUMS | cut -d' ' -f1)
+                  vault plugin register -sha256=$(grep vault-plugin-secrets-github-linux-amd64 /usr/local/libexec/vault/SHA256SUMS | cut -d' ' -f1) -command=vault-plugin-secrets-github-linux-amd64 secret vault-plugin-secrets-github
+                fi
               else
-                echo SHA256SUM $(grep vault-plugin-secrets-github-linux-amd64 /usr/local/libexec/vault/SHA256SUMS | cut -d' ' -f1)
-                vault plugin register -sha256=$(grep vault-plugin-secrets-github-linux-amd64 /usr/local/libexec/vault/SHA256SUMS | cut -d' ' -f1) -command=vault-plugin-secrets-github-linux-amd64 secret vault-plugin-secrets-github
-              fi  
+                echo vault still sealed
+              fi    
             else 
               echo root token not initialized yet    
             fi    
