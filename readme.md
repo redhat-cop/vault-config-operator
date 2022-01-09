@@ -199,10 +199,13 @@ exit
 If you don't have a Vault instance available for testing, deploy one with these steps:
 
 ```shell
+oc new-project vault
+oc adm policy add-role-to-user admin -z vault -n vault
 helm repo add hashicorp https://helm.releases.hashicorp.com
 export cluster_base_domain=$(oc get dns cluster -o jsonpath='{.spec.baseDomain}')
 envsubst < ./config/local-development/vault-values.yaml > /tmp/values
 helm upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f /tmp/values
+
 
 INIT_RESPONSE=$(oc exec vault-0 -n vault -- vault operator init -address https://vault.vault.svc:8200 -ca-path /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt -format=json -key-shares 1 -key-threshold 1)
 
