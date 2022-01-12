@@ -20,7 +20,6 @@ import (
 	"context"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/pkg/errors"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -35,9 +34,7 @@ type VaultSecretSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// RefreshPeriod if specified, the operator will refresh the secret with the given frequency.
-	// Defaults to five minutes, and must be at least one minute.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default="5m"
 	RefreshPeriod *metav1.Duration `json:"refreshPeriod,omitempty"`
 	// VaultSecretDefinitions are the secrets in Vault.
 	// +kubebuilder:validation:Required
@@ -56,8 +53,14 @@ type VaultSecretStatus struct {
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 
-	//LastVaultSecretUpdate last time when this secret was updated from Vault
+	//LastVaultSecretUpdate the last time when this secret was updated from Vault
 	LastVaultSecretUpdate *metav1.Time `json:"lastVaultSecretUpdate,omitempty"`
+
+	//NextVaultSecretUpdate the next time when this secret will be synced with Vault
+	NextVaultSecretUpdate *metav1.Time `json:"nextVaultSecretUpdate,omitempty"`
+
+	//VaultSecretDefinitionsStatus information used to determine if the secret should be rereconciled
+	VaultSecretDefinitionsStatus []VaultSecretDefinitionStatus `json:"vaultSecretDefinitionsStatus,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
 func (vs *VaultSecret) GetConditions() []metav1.Condition {
@@ -106,6 +109,21 @@ type VaultSecretDefinition struct {
 	Path Path `json:"path,omitempty"`
 }
 
+type VaultSecretDefinitionStatus struct {
+	// Name is an arbitrary, but unique, name for this KV Vault secret and referenced when templating.
+	// +kubebuilder:validation:Required
+	Name string `json:"name,omitempty"`
+	// LeaseID is the id of a lease, this denotes the secret is dynamic
+	// +kubebuilder:validation:Optional
+	LeaseID string `json:"lease_id,omitempty"`
+	// LeaseDuration is the time until the secret should be read in again, thus recreating the k8s Secret
+	// +kubebuilder:validation:Optional
+	LeaseDuration int `json:"lease_duration,omitempty"`
+	// Renewable informs if the lease is renewable for the dynamic secret
+	// +kubebuilder:validation:Optional
+	Renewable bool `json:"renewable,omitempty"`
+}
+
 type TemplatizedK8sSecret struct {
 	// Name is the K8s Secret name to output to.
 	// +kubebuilder:validation:Required
@@ -133,17 +151,7 @@ func (vs *VaultSecret) IsValid() (bool, error) {
 
 func (vs *VaultSecret) isValid() error {
 	result := &multierror.Error{}
-	result = multierror.Append(result, vs.validResyncInterval())
 	return result.ErrorOrNil()
-}
-
-func (vs *VaultSecret) validResyncInterval() error {
-
-	if vs.Spec.RefreshPeriod.Minutes() < 1 {
-		return errors.New("ResyncInterval must be at least 1 minute")
-	}
-
-	return nil
 }
 
 var _ vaultutils.VaultObject = &VaultSecretDefinition{}

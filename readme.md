@@ -280,7 +280,7 @@ oc create secret generic postgresql-admin-password --from-literal=postgresql-pas
 export uid=$(oc get project test-vault-config-operator -o jsonpath='{.metadata.annotations.openshift\.io/sa\.scc\.uid-range}'|sed 's/\/.*//')
 export guid=$(oc get project test-vault-config-operator -o jsonpath='{.metadata.annotations.openshift\.io/sa\.scc\.supplemental-groups}'|sed 's/\/.*//')
 helm repo add bitnami https://charts.bitnami.com/bitnami
-helm upgrade my-postgresql-database bitnami/postgresql -i --create-namespace -n test-vault-config-operator -f ./examples/postgresql/postgresql-values.yaml --set securityContext.fsGroup=${guid} --set containerSecurityContext.runAsUser=${uid} --set volumePermissions.securityContext.runAsUser=${uid} --set metrics.securityContext.runAsUser=${uid}
+helm upgrade my-postgresql-database bitnami/postgresql -i --create-namespace -n test-vault-config-operator -f ./docs/examples/postgresql/postgresql-values.yaml --set securityContext.fsGroup=${guid} --set containerSecurityContext.runAsUser=${uid} --set volumePermissions.securityContext.runAsUser=${uid} --set metrics.securityContext.runAsUser=${uid}
 oc apply -f ./test/database-engine-config.yaml -n test-vault-config-operator
 ```
 
@@ -311,6 +311,7 @@ oc apply -f ./test/vaultsecret/kubernetesauthenginerole-secret-reader.yaml -n va
 envsubst < ./test/vaultsecret/policy-secret-reader.yaml | oc apply -f - -n vault-admin
 oc apply -f ./test/vaultsecret/randomsecret-another-password.yaml -n test-vault-config-operator
 oc apply -f ./test/vaultsecret/vaultsecret-randomsecret.yaml -n test-vault-config-operator
+oc apply -f ./test/vaultsecret/vaultsecret-dynamicsecret.yaml -n test-vault-config-operator
 # test a pullsecret... Create the secret in test-vault-config-operator/kv/pullsecret using the Vault UI first
 oc apply -f ./test/vaultsecret/vaultsecret-pullsecret.yaml -n test-vault-config-operator
 ```
