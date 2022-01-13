@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"math"
 	"reflect"
 	"text/template"
@@ -88,15 +89,7 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return r.ManageError(ctx, instance, err)
 	}
 
-	duration, ok := r.calculateDuration(instance)
-
-	if !ok {
-		var err = errors.New("unable to determine when to next schedule reconcilitation")
-		r.Log.Error(err, "failed to requeue", "instance", instance)
-		return r.ManageError(ctx, instance, err)
-	}
-
-	nextUpdateTime := instance.Status.LastVaultSecretUpdate.Add(duration)
+	nextUpdateTime := instance.Status.LastVaultSecretUpdate.Add(r.calculateDuration(instance))
 
 	nextTimestamp := metav1.NewTime(nextUpdateTime)
 	instance.Status.NextVaultSecretUpdate = &nextTimestamp
@@ -152,12 +145,11 @@ func (r *VaultSecretReconciler) formatK8sSecret(instance *redhatcopv1alpha1.Vaul
 	return k8sSecret, nil
 }
 
-func (r *VaultSecretReconciler) calculateDuration(instance *redhatcopv1alpha1.VaultSecret) (time.Duration, bool) {
+func (r *VaultSecretReconciler) calculateDuration(instance *redhatcopv1alpha1.VaultSecret) time.Duration {
 
 	// if set, always use refresh period if set
-	if instance.Spec.RefreshPeriod != nil {
-
-		return instance.Spec.RefreshPeriod.Duration, true
+	if instance.Spec.RefreshPeriodOverride != nil {
+		return instance.Spec.RefreshPeriodOverride.Duration
 	}
 
 	if instance.Status.LastVaultSecretUpdate != nil {
@@ -169,23 +161,25 @@ func (r *VaultSecretReconciler) calculateDuration(instance *redhatcopv1alpha1.Va
 			}
 		}
 
-		return time.Duration(smallestLeaseDurationSeconds) * time.Second, true
+		percentage := float64(instance.Spec.LeaseDurationRefreshScale) / float64(100)
+		scaledSeconds := float64(smallestLeaseDurationSeconds) * percentage
+		duration := time.Duration(scaledSeconds) * time.Second
+		return duration
 	}
 
 	//No release period or durations known
-	return -1, false
+	return instance.Spec.DefaultRefreshPeriod.Duration
 
 }
 
 func (r *VaultSecretReconciler) manageReconcileLogic(ctx context.Context, instance *redhatcopv1alpha1.VaultSecret) error {
 
-	duration, ok := r.calculateDuration(instance)
-
-	if ok {
-		if !instance.Status.LastVaultSecretUpdate.Add(duration).Before(time.Now()) {
-			return nil
-		}
+	// If the resync period has not elapsed don't reconcile
+	if instance.Status.LastVaultSecretUpdate != nil && !instance.Status.LastVaultSecretUpdate.Add(r.calculateDuration(instance)).Before(time.Now()) {
+		return nil
 	}
+
+	r.Log.V(1).Info("Reconcile VaultSecret", "namespacedName", fmt.Sprintf("%v/%v", instance.Namespace, instance.Name))
 
 	mergedMap := make(map[string]interface{})
 

@@ -9,7 +9,6 @@ require (
 	github.com/hashicorp/vault/api v1.1.1
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0
-	github.com/pkg/errors v0.9.1
 	github.com/redhat-cop/operator-utils v1.3.1
 	github.com/scylladb/go-set v1.0.2
 	k8s.io/api v0.22.1
