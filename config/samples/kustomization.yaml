@@ -10,4 +10,6 @@ resources:
 - redhatcop_v1alpha1_kubernetesauthengineconfig.yaml
 - redhatcop_v1alpha1_vaultsecret.yaml
 - redhatcop_v1alpha1_passwordpolicy.yaml
+- redhatcop_v1alpha1_githubsecretengineconfig.yaml
+- redhatcop_v1alpha1_githubsecretenginerole.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

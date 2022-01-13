@@ -89,7 +89,14 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return r.ManageError(ctx, instance, err)
 	}
 
-	nextUpdateTime := instance.Status.LastVaultSecretUpdate.Add(r.calculateDuration(instance))
+	duration, ok := r.calculateDuration(instance)
+
+	// If a duration incalculable, simply don't requeue
+	if !ok {
+		return r.ManageSuccess(ctx, instance)
+	}
+
+	nextUpdateTime := instance.Status.LastVaultSecretUpdate.Add(duration)
 
 	nextTimestamp := metav1.NewTime(nextUpdateTime)
 	instance.Status.NextVaultSecretUpdate = &nextTimestamp
@@ -145,38 +152,55 @@ func (r *VaultSecretReconciler) formatK8sSecret(instance *redhatcopv1alpha1.Vaul
 	return k8sSecret, nil
 }
 
-func (r *VaultSecretReconciler) calculateDuration(instance *redhatcopv1alpha1.VaultSecret) time.Duration {
+// Calculates the resync period based on the RefreshPeriod, and LeaseDurations returned from Vault for each secret defined (the smallest duration will be returned).
+// If no RefreshPeriod or Leasedurations are found return -1 and bool of false indicating that its was incalculable.
+func (r *VaultSecretReconciler) calculateDuration(instance *redhatcopv1alpha1.VaultSecret) (time.Duration, bool) {
 
 	// if set, always use refresh period if set
-	if instance.Spec.RefreshPeriodOverride != nil {
-		return instance.Spec.RefreshPeriodOverride.Duration
+	if instance.Spec.RefreshPeriod != nil {
+		return instance.Spec.RefreshPeriod.Duration, true
 	}
 
-	if instance.Status.LastVaultSecretUpdate != nil {
-		// use the smallest leaseduration in the VaultDefinitionsStatus array
+	if instance.Status.VaultSecretDefinitionsStatus != nil {
+		// use the smallest LeaseDuration in the VaultDefinitionsStatus array
 		var smallestLeaseDurationSeconds int = math.MaxInt64
+
 		for _, defstat := range instance.Status.VaultSecretDefinitionsStatus {
 			if defstat.LeaseDuration < smallestLeaseDurationSeconds {
 				smallestLeaseDurationSeconds = defstat.LeaseDuration
 			}
 		}
 
-		percentage := float64(instance.Spec.LeaseDurationRefreshScale) / float64(100)
+		//No lease durations found
+		if smallestLeaseDurationSeconds == math.MaxInt64 {
+			return -1, false
+		}
+
+		percentage := float64(instance.Spec.RefreshThreshold) / float64(100)
 		scaledSeconds := float64(smallestLeaseDurationSeconds) * percentage
 		duration := time.Duration(scaledSeconds) * time.Second
-		return duration
+		return duration, true
 	}
 
-	//No release period or durations known
-	return instance.Spec.DefaultRefreshPeriod.Duration
+	//No refresh period or definitions status known
+	return -1, false
 
 }
 
 func (r *VaultSecretReconciler) manageReconcileLogic(ctx context.Context, instance *redhatcopv1alpha1.VaultSecret) error {
 
-	// If the resync period has not elapsed don't reconcile
-	if instance.Status.LastVaultSecretUpdate != nil && !instance.Status.LastVaultSecretUpdate.Add(r.calculateDuration(instance)).Before(time.Now()) {
-		return nil
+	duration, ok := r.calculateDuration(instance)
+
+	// if this has reconciled before
+	if instance.Status.LastVaultSecretUpdate != nil {
+		// if the next duration is incalculable (no refreshperiod or lease duration), do not reconcile
+		if !ok {
+			return nil
+		}
+		// if the resync period has not elapsed, do not reconcile
+		if !instance.Status.LastVaultSecretUpdate.Add(duration).Before(time.Now()) {
+			return nil
+		}
 	}
 
 	r.Log.V(1).Info("Reconcile VaultSecret", "namespacedName", fmt.Sprintf("%v/%v", instance.Namespace, instance.Name))

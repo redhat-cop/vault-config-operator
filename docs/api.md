@@ -13,8 +13,10 @@ This section of the documentation provides high-level documentation on the suppo
   - [DatabaseSecretEngineConfig](#databasesecretengineconfig)
   - [DatabaseSecretEngineRole](#databasesecretenginerole)
   - [RandomSecret](#randomsecret)
+  - [GitHubSecretEngineConfig](#githubsecretengineconfig)
+  - [GitHubSecretEngineRole](#githubsecretenginerole)
   - [VaultSecret](#vaultsecret)
-
+  
 ## The Authentication Section
 
 Each API has an Authentication section that specifies how to authenticate to Vault. Here is an example:
@@ -319,6 +321,79 @@ This CR is roughly equivalent to this Vault CLI command:
 vault kv put [namespace/]kv/vault-tenant password=<generated value>
 ```
 
+## GitHubSecretEngineConfig
+
+The `GitHubSecretEngineConfig` CRD allows a user to create a GitHub Secret engine configuration. Only one configuration can exists per GitHub secret engine mount point, here is an example:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GitHubSecretEngineConfig
+metadata:
+  name: raf-backstage-demo-org
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  sSHKeyReference:
+    secret:
+      name: vault-github-app-key
+  path: github/raf-backstage-demo
+  applicationID: 123456
+  organizationName: raf-backstage-demo
+```
+
+The `path` field specifies the path of the secret engine that will contain this configuration.
+
+The `sSHKeyReference` field specifies how to retrieve the ssh key to the GitHub application.
+
+The `applicationID` field specifies application id of the GitHub application.
+
+The `organizationName` field specifies organization in which the application is installed.
+
+More parameters exists for their explanation and for how to install the vault-plugin-secret-github engine see [here](https://github.com/martinbaillie/vault-plugin-secrets-github#config)
+
+This CR is roughly equivalent to this Vault CLI command:
+
+```shell
+vault write [namespace/]github/raf-backstage-demo/config app_id=123456 prv_key=@key.pem org_name=raf-backstage-demo
+```
+
+## GitHubSecretEngineRole
+
+The `GitHubSecretEngineRole` CRD allows a user to create a GitHub Secret engine role. A role allows to create narrowly scoped github tokens limiting the permission or the repositories on which they can be used, here is an example:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GitHubSecretEngineRole
+metadata:
+  name: one-repo-only
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  path: github/raf-backstage-demo
+  repositories:
+  - hello-world
+```
+
+The `path` field specifies the path of the secret engine that will contain this role.
+
+The `repositories` field specifies on which repositories the generated credential can act.
+
+More parameters exists for their explanation and for how to install the vault-plugin-secret-github engine see [here](https://github.com/martinbaillie/vault-plugin-secrets-github#permission-sets)
+
+This CR is roughly equivalent to this Vault CLI command:
+
+```shell
+vault write [namespace/]github/raf-backstage-demo/permissionset/one-repo-only repositories=hello-world
+```
+
+to read a new credential from this role, execute the following:
+
+```shell
+vault read -tls-skip-verify github/raf-backstage-demo/token/one-repo-only
+```
+
 ## VaultSecret
 
 The VaultSecret CRD allows a user to create a K8s Secret from one or more Vault Secrets. It uses go templating to allow formatting of the K8s Secret in the `output` section.
@@ -370,3 +445,4 @@ spec:
   - `labels` are any k8s Secret [labels](http://kubernetes.io/docs/user-guide/labels) to include.
   - `annotations` are any k8s Secret [annotations](http://kubernetes.io/docs/user-guide/annotations) to include.
 - `refreshPeriod` the pull interval for syncing Vault K/V secrets with the K8s Secret. Defaults to every 5 minutes.
+

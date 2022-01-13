@@ -33,21 +33,16 @@ type VaultSecretSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// RefreshPeriodOverride if specified, the operator will refresh the secret with the given frequency.
+	// RefreshPeriod if specified, the operator will refresh the secret with the given frequency.
 	// This takes precedence over any vault secret lease duration and can be used to force a refresh.
 	// +kubebuilder:validation:Optional
-	RefreshPeriodOverride *metav1.Duration `json:"refreshPeriodOverride,omitempty"`
-	// DefaultRefreshPeriod if specified, the operator will refresh the secret with the given frequency if the RefreshPeriodOverride is not specified and no vault secrets have a lease duration.
-	// In, general every vault secret should have a lease duration but this field handles any edge cases.
-	// +kubebuilder:validation:Required
-	// +kubebuilder:default="1h"
-	DefaultRefreshPeriod *metav1.Duration `json:"defaultRefreshPeriod,omitempty"`
-	// LeaseDurationRefreshScale if specified, will instruct the operator to refresh when a percentage of the lease duration is met when there is no RefreshPeriodOverride specified.
+	RefreshPeriod *metav1.Duration `json:"refreshPeriod,omitempty"`
+	// RefreshThreshold if specified, will instruct the operator to refresh when a percentage of the lease duration is met when there is no RefreshPeriod specified.
 	// This is particularly useful for controlling when dynamic secrets should be refreshed before the lease duration is exceeded.
 	// The default is 90, meaning the secret would refresh after 90% of the time has passed from the vault secret's lease duration.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=90
-	LeaseDurationRefreshScale int `json:"leaseDurationRefreshScale,omitempty"`
+	RefreshThreshold int `json:"refreshThreshold,omitempty"`
 	// VaultSecretDefinitions are the secrets in Vault.
 	// +kubebuilder:validation:Required
 	VaultSecretDefinitions []VaultSecretDefinition `json:"vaultSecretDefinitions,omitempty"`

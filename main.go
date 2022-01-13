@@ -163,6 +163,24 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controllers.GitHubSecretEngineConfigReconciler{
+		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("GitHubSecretEngineConfig"), mgr.GetAPIReader()),
+		Log:            ctrl.Log.WithName("controllers").WithName("GitHubSecretEngineConfig"),
+		ControllerName: "GitHubSecretEngineConfig",
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GitHubSecretEngineConfig")
+		os.Exit(1)
+	}
+
+	if err = (&controllers.GitHubSecretEngineRoleReconciler{
+		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("GitHubSecretEngineRole"), mgr.GetAPIReader()),
+		Log:            ctrl.Log.WithName("controllers").WithName("GitHubSecretEngineRole"),
+		ControllerName: "GitHubSecretEngineRole",
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GitHubSecretEngineRole")
+		os.Exit(1)
+	}
+
 	if webhooks, ok := os.LookupEnv("ENABLE_WEBHOOKS"); !ok || webhooks != "false" {
 		if err = (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "RandomSecret")
@@ -202,6 +220,15 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.Policy{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Policy")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.GitHubSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "GitHubSecretEngineConfig")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.GitHubSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "GitHubSecretEngineRole")
 			os.Exit(1)
 		}
 	}
