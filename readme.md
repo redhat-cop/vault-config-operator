@@ -47,7 +47,9 @@ Currently this operator supports the following CRDs:
 6. [SecretEngineMount](./docs/api.md#SecretEngineMount) Configures a Mount point for a [SecretEngine](https://www.vaultproject.io/docs/secrets)
 7. [DatabaseSecretEngineConfig](./docs/api.md#DatabaseSecretEngineConfig) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Connection
 8. [DatabaseSecretEngineRole](./docs/api.md#DatabaseSecretEngineRole) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Role
-9. [RandomSecret](./docs/api.md#RandomSecret) Creates a random secret in a vault [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv) with one password field generated using a [PasswordPolicy](https://www.vaultproject.io/docs/concepts/password-policies)
+9. [GitHubSecretEngineConfig](./docs/api.md#GitHubSecretEngineConfig) Configures a Github Application to produce tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
+10. [GitHubSecretEngineRole](./docs/api.md#GitHubSecretEngineRole) Configures a Github Application to produce scoped tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
+11. [RandomSecret](./docs/api.md#RandomSecret) Creates a random secret in a vault [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv) with one password field generated using a [PasswordPolicy](https://www.vaultproject.io/docs/concepts/password-policies)
 
 ## End to end example
 
@@ -199,28 +201,11 @@ exit
 If you don't have a Vault instance available for testing, deploy one with these steps:
 
 ```shell
+helm repo add hashicorp https://helm.releases.hashicorp.com
 oc new-project vault
 oc adm policy add-role-to-user admin -z vault -n vault
-helm repo add hashicorp https://helm.releases.hashicorp.com
 export cluster_base_domain=$(oc get dns cluster -o jsonpath='{.spec.baseDomain}')
-envsubst < ./config/local-development/vault-values.yaml > /tmp/values
-helm upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f /tmp/values
-
-
-INIT_RESPONSE=$(oc exec vault-0 -n vault -- vault operator init -address https://vault.vault.svc:8200 -ca-path /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt -format=json -key-shares 1 -key-threshold 1)
-
-UNSEAL_KEY=$(echo "$INIT_RESPONSE" | jq -r .unseal_keys_b64[0])
-ROOT_TOKEN=$(echo "$INIT_RESPONSE" | jq -r .root_token)
-
-echo "$UNSEAL_KEY"
-echo "$ROOT_TOKEN"
-
-#here we are saving these variable in a secret, this is probably not what you should do in a production environment
-oc delete secret vault-init -n vault
-oc create secret generic vault-init -n vault --from-literal=unseal_key=${UNSEAL_KEY} --from-literal=root_token=${ROOT_TOKEN}
-export UNSEAL_KEY=$(oc get secret vault-init -n vault -o jsonpath='{.data.unseal_key}' | base64 -d )
-export ROOT_TOKEN=$(oc get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d )
-oc exec vault-0 -n vault -- vault operator unseal -address https://vault.vault.svc:8200 -ca-path /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt $UNSEAL_KEY
+helm upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f ./config/local-development/vault-values.yaml --set server.route.host=vault-vault.apps.${cluster_base_domain}
 ```
 
 #### Configure an Kubernetes Authentication mount point
@@ -309,6 +294,22 @@ Kube auth engine mount and config and role
 oc apply -f ./test/kube-auth-engine-mount.yaml -n vault-admin
 oc apply -f ./test/kube-auth-engine-config.yaml -n vault-admin
 oc apply -f ./test/kube-auth-engine-role.yaml -n vault-admin
+```
+
+Github secret engine
+
+create a github application following the instructions [here](https://github.com/martinbaillie/vault-plugin-secrets-github#setup-github).
+save the ssh key in a file called: ./test/vault-secret-engine.private-key.pem and the application id
+
+```shell
+export application_id=163698 #replace with your own
+export ssh_key=$(cat ./test/vault-secret-engine.private-key.pem | base64 -w 0)
+envsubst < ./test/github-secret-engine-config-secret-template.yaml | oc apply -f - -n vault-admin
+oc apply -f ./test/github-secret-engine-mount.yaml -n vault-admin
+envsubst < ./test/github-secret-engine-config.yaml | oc apply -f - -n vault-admin
+vault read -tls-skip-verify github/raf-backstage-demo/token
+oc apply -f ./test/github-secret-engine-role.yaml -n vault-admin
+vault read -tls-skip-verify github/raf-backstage-demo/token/one-repo-only
 ```
 
 ### Test helm chart locally

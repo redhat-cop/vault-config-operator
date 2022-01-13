@@ -22,6 +22,7 @@ import (
 	"reflect"
 
 	vault "github.com/hashicorp/vault/api"
+	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -70,6 +71,7 @@ type GHConfig struct {
 
 	// GitHubAPIBaseURL the base URL for API requests (defaults to the public GitHub API).
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default="https://api.github.com"
 	GitHubAPIBaseURL string `json:"gitHubAPIBaseURL,omitempty"`
 
 	retrievedSSHKey string `json:"-"`
@@ -80,7 +82,7 @@ func (i *GHConfig) toMap() map[string]interface{} {
 	payload["app_id"] = i.ApplicationID
 	payload["ins_id"] = i.InstanceID
 	payload["org_name"] = i.OrganizationName
-	payload["private_key"] = i.retrievedSSHKey
+	payload["prv_key"] = i.retrievedSSHKey
 	payload["base_url"] = i.GitHubAPIBaseURL
 	return payload
 }
@@ -154,7 +156,22 @@ func (r *GitHubSecretEngineConfig) setInternalCredentials(context context.Contex
 // GitHubSecretEngineConfigStatus defines the observed state of GitHubSecretEngineConfig
 type GitHubSecretEngineConfigStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+}
+
+var _ apis.ConditionsAware = &GitHubSecretEngineConfig{}
+
+func (m *GitHubSecretEngineConfig) GetConditions() []metav1.Condition {
+	return m.Status.Conditions
+}
+
+func (m *GitHubSecretEngineConfig) SetConditions(conditions []metav1.Condition) {
+	m.Status.Conditions = conditions
 }
 
 //+kubebuilder:object:root=true

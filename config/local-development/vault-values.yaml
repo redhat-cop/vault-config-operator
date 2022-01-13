@@ -101,9 +101,10 @@ server:
           while true; do
             sleep 5
             if [[ $(vault status | grep "Initialized" | grep "false") ]]; then
-              INIT_RESPONSE=$(vault operator init -format=json -key-shares 1 -key-threshold 1)
-              UNSEAL_KEY=$(echo "$INIT_RESPONSE" | /usr/local/libexec/vault/jq -r .unseal_keys_b64[0])
-              ROOT_TOKEN=$(echo "$INIT_RESPONSE" | /usr/local/libexec/vault/jq -r .root_token)
+              export INIT_RESPONSE=$(vault operator init -format=json -key-shares 1 -key-threshold 1)
+              echo "$INIT_RESPONSE"
+              export UNSEAL_KEY=$(echo "$INIT_RESPONSE" | /usr/local/libexec/vault/jq -r .unseal_keys_b64[0])
+              export ROOT_TOKEN=$(echo "$INIT_RESPONSE" | /usr/local/libexec/vault/jq -r .root_token)
               echo "$UNSEAL_KEY"
               echo "$ROOT_TOKEN"
               /usr/local/libexec/vault/kubectl delete secret vault-init -n vault
@@ -168,7 +169,7 @@ server:
                   sleep 5
                 else
                   echo SHA256SUM $(grep vault-plugin-secrets-github-linux-amd64 /usr/local/libexec/vault/SHA256SUMS | cut -d' ' -f1)
-                  vault plugin register -sha256=$(grep vault-plugin-secrets-github-linux-amd64 /usr/local/libexec/vault/SHA256SUMS | cut -d' ' -f1) -command=vault-plugin-secrets-github-linux-amd64 secret vault-plugin-secrets-github
+                  vault plugin register -sha256=$(grep vault-plugin-secrets-github-linux-amd64 /usr/local/libexec/vault/SHA256SUMS | cut -d' ' -f1) -command=vault-plugin-secrets-github-linux-amd64 -args="--tls-skip-verify=true" secret vault-plugin-secrets-github
                 fi
               else
                 echo vault still sealed
