@@ -65,7 +65,7 @@ func (r *GitHubSecretEngineConfig) ValidateUpdate(old runtime.Object) error {
 	githubsecretengineconfiglog.Info("validate update", "name", r.Name)
 
 	// the path cannot be updated
-	if r.Spec.Path != old.(*DatabaseSecretEngineConfig).Spec.Path {
+	if r.Spec.Path != old.(*GitHubSecretEngineConfig).Spec.Path {
 		return errors.New("spec.path cannot be updated")
 	}
 	return r.isValid()
