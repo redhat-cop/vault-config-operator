@@ -28,3 +28,4 @@ bundle/
 bundle.Dockerfile
 charts/
 bundle*/
+test/vault-secret-engine.private-key.pem
