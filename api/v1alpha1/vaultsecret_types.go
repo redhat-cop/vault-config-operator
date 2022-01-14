@@ -52,7 +52,6 @@ type VaultSecretSpec struct {
 }
 
 // VaultSecretStatus defines the observed state of VaultSecret
-//TODO add the TTL/expiration timestamp to the Status field per VaultSecretDefinition
 type VaultSecretStatus struct {
 	// +patchMergeKey=type
 	// +patchStrategy=merge
@@ -63,7 +62,7 @@ type VaultSecretStatus struct {
 	//LastVaultSecretUpdate the last time when this secret was updated from Vault
 	LastVaultSecretUpdate *metav1.Time `json:"lastVaultSecretUpdate,omitempty"`
 
-	//NextVaultSecretUpdate the next time when this secret will be synced with Vault
+	//NextVaultSecretUpdate the next time when this secret will be synced with Vault. If nil, it will not be refreshed.
 	NextVaultSecretUpdate *metav1.Time `json:"nextVaultSecretUpdate,omitempty"`
 
 	//VaultSecretDefinitionsStatus information used to determine if the secret should be rereconciled

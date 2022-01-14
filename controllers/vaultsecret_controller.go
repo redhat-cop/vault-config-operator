@@ -93,6 +93,7 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	// If a duration incalculable, simply don't requeue
 	if !ok {
+		instance.Status.NextVaultSecretUpdate = nil
 		return r.ManageSuccess(ctx, instance)
 	}
 
@@ -266,14 +267,17 @@ func (r *VaultSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			}
 
 			if !reflect.DeepEqual(oldVaultSecret.Spec, newVaultSecret.Spec) {
+				r.Log.V(1).Info("Update Event - Spec changed", "object", e.ObjectNew)
 				return true
 			}
 			return false
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
+			r.Log.V(1).Info("Create Event", "object", e.Object)
 			return true
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
+			r.Log.V(1).Info("Delete Event", "object", e.Object)
 			return true
 		},
 		GenericFunc: func(e event.GenericEvent) bool {
@@ -283,34 +287,13 @@ func (r *VaultSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	k8sSecretPredicate := predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
-			newK8sSecret, ok := e.ObjectNew.DeepCopyObject().(*corev1.Secret)
-			if !ok {
-				return false
-			}
-			oldK8sSecret, ok := e.ObjectOld.DeepCopyObject().(*corev1.Secret)
-			if !ok {
-				return false
-			}
-
-			if !reflect.DeepEqual(oldK8sSecret.Data, newK8sSecret.Data) {
-				return true
-			}
-
-			if !reflect.DeepEqual(oldK8sSecret.Annotations, newK8sSecret.Annotations) {
-				return true
-			}
-
-			if !reflect.DeepEqual(oldK8sSecret.Labels, newK8sSecret.Labels) {
-				return true
-			}
-
 			return false
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
 			return false
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
-			return true
+			return false
 		},
 		GenericFunc: func(e event.GenericEvent) bool {
 			return false
