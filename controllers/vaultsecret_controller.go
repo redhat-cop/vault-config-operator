@@ -285,23 +285,7 @@ func (r *VaultSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		},
 	}
 
-	k8sSecretPredicate := predicate.Funcs{
-		UpdateFunc: func(e event.UpdateEvent) bool {
-			return false
-		},
-		CreateFunc: func(e event.CreateEvent) bool {
-			return false
-		},
-		DeleteFunc: func(e event.DeleteEvent) bool {
-			return false
-		},
-		GenericFunc: func(e event.GenericEvent) bool {
-			return false
-		},
-	}
-
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&redhatcopv1alpha1.VaultSecret{}, builder.WithPredicates(vaultSecretPredicate)).
-		Owns(&corev1.Secret{}, builder.WithPredicates(k8sSecretPredicate)).
 		Complete(r)
 }
