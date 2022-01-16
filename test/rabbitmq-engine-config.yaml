@@ -15,4 +15,4 @@ spec:
   username: rabbitmq
   verifyConnection: false
   leaseTTL: 86400 # 24 hours
-  leaseMaxTTL: 86400 # 24 hours
+  leaseMaxTTL: 86400 # 24 hours, this will disable lease renewal after specified period

@@ -11,7 +11,12 @@ metadata:
             "name": "authenginemount-sample"
           },
           "spec": {
-            "foo": "bar"
+            "authentication": {
+              "path": "kubernetes",
+              "role": "policy-admin"
+            },
+            "path": "kube-authengine-mount-sample",
+            "type": "kubernetes"
           }
         },
         {
@@ -67,7 +72,11 @@ metadata:
             "name": "kubernetesauthengineconfig-sample"
           },
           "spec": {
-            "foo": "bar"
+            "authentication": {
+              "path": "kubernetes",
+              "role": "policy-admin"
+            },
+            "path": "kube-authengine-mount-sample"
           }
         },
         {
@@ -96,6 +105,20 @@ metadata:
         },
         {
           "apiVersion": "redhatcop.redhat.io/v1alpha1",
+          "kind": "PasswordPolicy",
+          "metadata": {
+            "name": "simple-password-policy"
+          },
+          "spec": {
+            "authentication": {
+              "path": "kubernetes",
+              "role": "policy-admin"
+            },
+            "passwordPolicy": "length = 20\nrule \"charset\" {\n  charset = \"abcdefghijklmnopqrstuvwxyz\"\n}\n"
+          }
+        },
+        {
+          "apiVersion": "redhatcop.redhat.io/v1alpha1",
           "kind": "Policy",
           "metadata": {
             "name": "database-engine-admin"
@@ -106,6 +129,76 @@ metadata:
               "role": "policy-admin"
             },
             "policy": "# mount database secrets engines\npath \"/sys/mounts/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/database\" {\n  capabilities = [ \"create\", \"read\", \"update\", \"delete\"]\n  allowed_parameters = {\n    \"type\" = [\"database\"]\n    \"*\"   = []\n  }\n}\n\n# tune database secrets engines\npath \"/sys/mounts/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/database/tune\" {\n  capabilities = [ \"create\", \"read\", \"update\", \"delete\"]\n}\n\n# Configure database secrets engines\npath \"/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/database/config/+\" {\n  capabilities = [ \"create\", \"read\", \"update\", \"delete\"]\n}\n\n# Configure database roles\npath \"/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/database/roles/+\" {\n  capabilities = [ \"create\", \"read\", \"update\", \"delete\"]\n}\n"
+          }
+        },
+        {
+          "apiVersion": "redhatcop.redhat.io/v1alpha1",
+          "kind": "RabbitMQSecretEngineConfig",
+          "metadata": {
+            "name": "rabbitmqsecretengineconfig-sample"
+          },
+          "spec": {
+            "authentication": {
+              "path": "kubernetes",
+              "role": "rabbitMQ-engine-admin"
+            },
+            "connectionURI": "https://test.com",
+            "leaseMaxTTL": 86400,
+            "leaseTTL": 86400,
+            "path": "vault-config-operator/rabbitmq"
+          }
+        },
+        {
+          "apiVersion": "redhatcop.redhat.io/v1alpha1",
+          "kind": "RabbitMQSecretEngineRole",
+          "metadata": {
+            "name": "rabbitmqsecretenginerole-sample"
+          },
+          "spec": {
+            "authentication": {
+              "path": "kubernetes",
+              "role": "rabbitmq-engine-admin"
+            },
+            "path": "vault-config-operator/rabbitmq",
+            "tags": "administrator",
+            "vhostTopics": [
+              {
+                "topics": [
+                  {
+                    "permissions": {
+                      "configure": ".*",
+                      "read": ".*",
+                      "write": ".*"
+                    },
+                    "topicName": "my-topic"
+                  },
+                  {
+                    "permissions": {
+                      "read": ".*"
+                    },
+                    "topicName": "my-read-topic"
+                  }
+                ],
+                "vhostName": "/"
+              }
+            ],
+            "vhosts": [
+              {
+                "permissions": {
+                  "configure": ".*",
+                  "read": ".*",
+                  "write": ".*"
+                },
+                "vhostName": "/"
+              },
+              {
+                "permissions": {
+                  "read": "my-queue",
+                  "write": "my-exchange"
+                },
+                "vhostName": "my-vhost"
+              }
+            ]
           }
         },
         {
@@ -151,7 +244,7 @@ metadata:
       Vault.
     operatorframework.io/suggested-namespace: vault-config-operator
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
-    operators.operatorframework.io/builder: operator-sdk-v1.13.0+git
+    operators.operatorframework.io/builder: operator-sdk-v1.13.1
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
     repository: https://github.com/redhat-cop/vault-config-operator
     support: Best Effort
@@ -197,10 +290,27 @@ spec:
       kind: KubernetesAuthEngineRole
       name: kubernetesauthengineroles.redhatcop.redhat.io
       version: v1alpha1
+    - description: PasswordPolicy is the Schema for the passowordpolicies API
+      displayName: Password Policy
+      kind: PasswordPolicy
+      name: passwordpolicies.redhatcop.redhat.io
+      version: v1alpha1
     - description: Policy is the Schema for the policies API
       displayName: Policy
       kind: Policy
       name: policies.redhatcop.redhat.io
+      version: v1alpha1
+    - description: RabbitMQSecretEngineConfig is the Schema for the rabbitmqsecretengineconfigs
+        API
+      displayName: Rabbit MQSecret Engine Config
+      kind: RabbitMQSecretEngineConfig
+      name: rabbitmqsecretengineconfigs.redhatcop.redhat.io
+      version: v1alpha1
+    - description: RabbitMQSecretEngineRole is the Schema for the rabbitmqsecretengineroles
+        API
+      displayName: Rabbit MQSecret Engine Role
+      kind: RabbitMQSecretEngineRole
+      name: rabbitmqsecretengineroles.redhatcop.redhat.io
       version: v1alpha1
     - description: RandomSecret is the Schema for the randomsecrets API
       displayName: Random Secret
@@ -235,6 +345,16 @@ spec:
     spec:
       clusterPermissions:
       - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - events
+          verbs:
+          - create
+          - get
+          - list
+          - patch
+          - watch
         - apiGroups:
           - ""
           resources:
@@ -396,6 +516,32 @@ spec:
         - apiGroups:
           - redhatcop.redhat.io
           resources:
+          - passwordpolicies
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - passwordpolicies/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - passwordpolicies/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
           - policies
           verbs:
           - create
@@ -415,6 +561,52 @@ spec:
           - redhatcop.redhat.io
           resources:
           - policies/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - rabbitmqsecretengineconfigs
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - rabbitmqsecretengineconfigs/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - rabbitmqsecretengineroles
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - rabbitmqsecretengineroles/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - rabbitmqsecretengineroles/status
           verbs:
           - get
           - patch
@@ -505,7 +697,7 @@ spec:
                 - --v=10
                 - --tls-cert-file=/etc/certs/tls/tls.crt
                 - --tls-private-key-file=/etc/certs/tls/tls.key
-                image: registry.redhat.io/openshift4/ose-kube-rbac-proxy@sha256:6d57bfd91fac9b68eb72d27226bc297472ceb136c996628b845ecc54a48b31cb
+                image: quay.io/redhat-cop/kube-rbac-proxy:v0.11.0
                 name: kube-rbac-proxy
                 ports:
                 - containerPort: 8443
@@ -667,6 +859,66 @@ spec:
     containerPort: 443
     deploymentName: vault-config-operator-controller-manager
     failurePolicy: Fail
+    generateName: mrabbitmqsecretenginerole.kb.io
+    rules:
+    - apiGroups:
+      - redhatcop.redhat.io
+      apiVersions:
+      - v1alpha1
+      operations:
+      - CREATE
+      resources:
+      - rabbitmqsecretengineroles
+    sideEffects: None
+    targetPort: 9443
+    type: MutatingAdmissionWebhook
+    webhookPath: /mutate-redhatcop-redhat-io-v1alpha1-rabbitmqsecretenginerole
+  - admissionReviewVersions:
+    - v1
+    - v1beta1
+    containerPort: 443
+    deploymentName: vault-config-operator-controller-manager
+    failurePolicy: Fail
+    generateName: mpolicy.kb.io
+    rules:
+    - apiGroups:
+      - redhatcop.redhat.io
+      apiVersions:
+      - v1alpha1
+      operations:
+      - CREATE
+      resources:
+      - policies
+    sideEffects: None
+    targetPort: 9443
+    type: MutatingAdmissionWebhook
+    webhookPath: /mutate-redhatcop-redhat-io-v1alpha1-policy
+  - admissionReviewVersions:
+    - v1
+    - v1beta1
+    containerPort: 443
+    deploymentName: vault-config-operator-controller-manager
+    failurePolicy: Fail
+    generateName: mpasswordpolicy.kb.io
+    rules:
+    - apiGroups:
+      - redhatcop.redhat.io
+      apiVersions:
+      - v1alpha1
+      operations:
+      - CREATE
+      resources:
+      - passwordpolicies
+    sideEffects: None
+    targetPort: 9443
+    type: MutatingAdmissionWebhook
+    webhookPath: /mutate-redhatcop-redhat-io-v1alpha1-passwordpolicy
+  - admissionReviewVersions:
+    - v1
+    - v1beta1
+    containerPort: 443
+    deploymentName: vault-config-operator-controller-manager
+    failurePolicy: Fail
     generateName: mkubernetesauthenginerole.kb.io
     rules:
     - apiGroups:
@@ -802,6 +1054,46 @@ spec:
     targetPort: 9443
     type: ValidatingAdmissionWebhook
     webhookPath: /validate-redhatcop-redhat-io-v1alpha1-randomsecret
+  - admissionReviewVersions:
+    - v1
+    - v1beta1
+    containerPort: 443
+    deploymentName: vault-config-operator-controller-manager
+    failurePolicy: Fail
+    generateName: vrabbitmqsecretenginerole.kb.io
+    rules:
+    - apiGroups:
+      - redhatcop.redhat.io
+      apiVersions:
+      - v1alpha1
+      operations:
+      - UPDATE
+      resources:
+      - rabbitmqsecretengineroles
+    sideEffects: None
+    targetPort: 9443
+    type: ValidatingAdmissionWebhook
+    webhookPath: /validate-redhatcop-redhat-io-v1alpha1-rabbitmqsecretenginerole
+  - admissionReviewVersions:
+    - v1
+    - v1beta1
+    containerPort: 443
+    deploymentName: vault-config-operator-controller-manager
+    failurePolicy: Fail
+    generateName: vrabbitmqsecretengineconfig.kb.io
+    rules:
+    - apiGroups:
+      - redhatcop.redhat.io
+      apiVersions:
+      - v1alpha1
+      operations:
+      - UPDATE
+      resources:
+      - rabbitmqsecretengineconfigs
+    sideEffects: None
+    targetPort: 9443
+    type: ValidatingAdmissionWebhook
+    webhookPath: /validate-redhatcop-redhat-io-v1alpha1-rabbitmqsecretengineconfig
   - admissionReviewVersions:
     - v1
     - v1beta1

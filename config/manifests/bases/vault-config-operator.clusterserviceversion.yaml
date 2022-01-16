@@ -56,10 +56,27 @@ spec:
       kind: KubernetesAuthEngineRole
       name: kubernetesauthengineroles.redhatcop.redhat.io
       version: v1alpha1
+    - description: PasswordPolicy is the Schema for the passowordpolicies API
+      displayName: Password Policy
+      kind: PasswordPolicy
+      name: passwordpolicies.redhatcop.redhat.io
+      version: v1alpha1
     - description: Policy is the Schema for the policies API
       displayName: Policy
       kind: Policy
       name: policies.redhatcop.redhat.io
+      version: v1alpha1
+    - description: RabbitMQSecretEngineConfig is the Schema for the rabbitmqsecretengineconfigs
+        API
+      displayName: Rabbit MQSecret Engine Config
+      kind: RabbitMQSecretEngineConfig
+      name: rabbitmqsecretengineconfigs.redhatcop.redhat.io
+      version: v1alpha1
+    - description: RabbitMQSecretEngineRole is the Schema for the rabbitmqsecretengineroles
+        API
+      displayName: Rabbit MQSecret Engine Role
+      kind: RabbitMQSecretEngineRole
+      name: rabbitmqsecretengineroles.redhatcop.redhat.io
       version: v1alpha1
     - description: RandomSecret is the Schema for the randomsecrets API
       displayName: Random Secret

@@ -17,8 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"errors"
+	"fmt"
 
+	vault "github.com/hashicorp/vault/api"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -42,7 +45,25 @@ var _ webhook.Validator = &RabbitMQSecretEngineConfig{}
 func (r *RabbitMQSecretEngineConfig) ValidateCreate() error {
 	rabbitmqsecretengineconfiglog.Info("validate create", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object creation.
+	var ctx context.Context
+
+	vaultClient, err := r.Spec.Authentication.GetVaultClient(ctx, r.Namespace)
+	if err != nil {
+		rabbitmqsecretengineconfiglog.Error(err, "unable to create vault client required for instance validation", "instance", r)
+		return err
+	}
+	mounts, err := vaultClient.Sys().ListMounts()
+	if err != nil {
+		// Operator requires permission to list mounts for validation
+		rabbitmqsecretengineconfiglog.Error(err, "failed to list mounts", "instance", r)
+		return err
+	}
+	if mountExists := checkIfMountExists(mounts, r.Spec.Path); mountExists {
+		err := fmt.Errorf("RabbitMQ Engine with path '%s' already exists", r.Spec.Path)
+		rabbitmqsecretengineconfiglog.Error(err, "Error! Engine already mounted")
+		return err
+	}
+
 	return nil
 }
 
@@ -63,4 +84,16 @@ func (r *RabbitMQSecretEngineConfig) ValidateDelete() error {
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil
+}
+
+// Iterate over mounts list and return true if provided path is found 
+func checkIfMountExists(mounts map[string]*vault.MountOutput, path Path) (bool) {
+	// Make sure path has / at the end as mounts always have it
+
+	for mount, _ := range mounts {
+		if mount == string(path) { 
+			return true
+		}
+	}
+	return false
 }

@@ -40,7 +40,7 @@ type RabbitMQSecretEngineConfigSpec struct {
 	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
-	// The final path will be {[spec.authentication.namespace]}/{spec.path}/config/{metadata.name}.
+	// The final path will be {[spec.authentication.namespace]}/{spec.path}/{metadata.name}/config/connection.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
 	Path Path `json:"path,omitempty"`
