@@ -203,25 +203,13 @@ If you don't have a Vault instance available for testing, deploy one with these 
 
 ```shell
 helm repo add hashicorp https://helm.releases.hashicorp.com
+oc new-project vault
+oc adm policy add-role-to-user admin -z vault -n vault
 export cluster_base_domain=$(oc get dns cluster -o jsonpath='{.spec.baseDomain}')
-envsubst < ./config/local-development/vault-values.yaml > /tmp/values
-helm upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f /tmp/values
-
-INIT_RESPONSE=$(oc exec vault-0 -n vault -- vault operator init -address https://vault.vault.svc:8200 -ca-path /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt -format=json -key-shares 1 -key-threshold 1)
-
-UNSEAL_KEY=$(echo "$INIT_RESPONSE" | jq -r .unseal_keys_b64[0])
-ROOT_TOKEN=$(echo "$INIT_RESPONSE" | jq -r .root_token)
-
-echo "$UNSEAL_KEY"
-echo "$ROOT_TOKEN"
-
-#here we are saving these variable in a secret, this is probably not what you should do in a production environment
-oc delete secret vault-init -n vault
-oc create secret generic vault-init -n vault --from-literal=unseal_key=${UNSEAL_KEY} --from-literal=root_token=${ROOT_TOKEN}
-export UNSEAL_KEY=$(oc get secret vault-init -n vault -o jsonpath='{.data.unseal_key}' | base64 -d )
-export ROOT_TOKEN=$(oc get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d )
-oc exec vault-0 -n vault -- vault operator unseal -address https://vault.vault.svc:8200 -ca-path /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt $UNSEAL_KEY
+helm upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f ./config/local-development/vault-values.yaml --set server.route.host=vault-vault.apps.${cluster_base_domain}
 ```
+
+> Note: you may need to manually remove the `service.beta.openshift.io/serving-cert-secret-name: vault-server-tls` annotation from the Service `vault-internal` and force the recreation of the service serving certificate since the annotation gets applied to both `vault` and `vault-internal` Services by the helm chart. The implementation expects the vault.vault.svc certificate. See [server-service.yaml](https://github.com/hashicorp/vault-helm/blob/main/templates/server-service.yaml) and [server-headless-service.yaml](https://github.com/hashicorp/vault-helm/blob/main/templates/server-headless-service.yaml).
 
 #### Configure an Kubernetes Authentication mount point
 
