@@ -25,6 +25,7 @@ import (
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 )
 
 // RabbitMQSecretEngineRoleSpec defines the desired state of RabbitMQSecretEngineRole
@@ -130,6 +131,16 @@ type RabbitMQSecretEngineRoleList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []RabbitMQSecretEngineRole `json:"items"`
+}
+
+var _ apis.ConditionsAware = &RabbitMQSecretEngineConfig{}
+
+func (m *RabbitMQSecretEngineRole) GetConditions() []metav1.Condition {
+	return m.Status.Conditions
+}
+
+func (m *RabbitMQSecretEngineRole) SetConditions(conditions []metav1.Condition) {
+	m.Status.Conditions = conditions
 }
 
 func init() {

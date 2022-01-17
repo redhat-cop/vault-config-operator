@@ -19,7 +19,7 @@ package v1alpha1
 import (
 	"context"
 	"errors"
-	"fmt"
+	"strings"
 
 	vault "github.com/hashicorp/vault/api"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -58,10 +58,8 @@ func (r *RabbitMQSecretEngineConfig) ValidateCreate() error {
 		rabbitmqsecretengineconfiglog.Error(err, "failed to list mounts", "instance", r)
 		return err
 	}
-	if mountExists := checkIfMountExists(mounts, r.Spec.Path); mountExists {
-		err := fmt.Errorf("RabbitMQ Engine with path '%s' already exists", r.Spec.Path)
-		rabbitmqsecretengineconfiglog.Error(err, "Error! Engine already mounted")
-		return err
+	if mountExists := checkIfMountExists(mounts, string(r.Spec.Path)); mountExists {
+		return errors.New("rabbitMQ engine already mounted at spec.path")
 	}
 
 	return nil
@@ -87,11 +85,14 @@ func (r *RabbitMQSecretEngineConfig) ValidateDelete() error {
 }
 
 // Iterate over mounts list and return true if provided path is found 
-func checkIfMountExists(mounts map[string]*vault.MountOutput, path Path) (bool) {
+func checkIfMountExists(mounts map[string]*vault.MountOutput, path string) (bool) {
 	// Make sure path has / at the end as mounts always have it
+	if !strings.HasSuffix(path, "/") {
+		path = path + "/"
+	}
 
-	for mount, _ := range mounts {
-		if mount == string(path) { 
+	for mount := range mounts {
+		if mount == path { 
 			return true
 		}
 	}
