@@ -42,6 +42,9 @@ type RabbitMQSecretEngineConfigReconciler struct {
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=rabbitmqsecretengineconfigs,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=rabbitmqsecretengineconfigs/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=core,resources=serviceaccounts;secrets,verbs=get;list;watch
+//+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=randomsecrets,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

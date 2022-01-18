@@ -167,7 +167,7 @@ resources:
   controller: true
   domain: redhat.io
   group: redhatcop
-  kind: RabbitMQSecretEngineRole
+  kind: RabbitMQSecretEngineConfig
   path: github.com/redhat-cop/vault-config-operator/api/v1alpha1
   version: v1alpha1
   webhooks:
