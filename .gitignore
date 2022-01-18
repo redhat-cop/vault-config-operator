@@ -28,4 +28,6 @@ bundle/
 bundle.Dockerfile
 charts/
 bundle*/
+
+.vscode
 test/vault-secret-engine.private-key.pem

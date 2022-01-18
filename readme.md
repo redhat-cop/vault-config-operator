@@ -47,9 +47,10 @@ Currently this operator supports the following CRDs:
 6. [SecretEngineMount](./docs/api.md#SecretEngineMount) Configures a Mount point for a [SecretEngine](https://www.vaultproject.io/docs/secrets)
 7. [DatabaseSecretEngineConfig](./docs/api.md#DatabaseSecretEngineConfig) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Connection
 8. [DatabaseSecretEngineRole](./docs/api.md#DatabaseSecretEngineRole) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Role
-9. [GitHubSecretEngineConfig](./docs/api.md#GitHubSecretEngineConfig) Configures a Github Application to produce tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
-10. [GitHubSecretEngineRole](./docs/api.md#GitHubSecretEngineRole) Configures a Github Application to produce scoped tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
-11. [RandomSecret](./docs/api.md#RandomSecret) Creates a random secret in a vault [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv) with one password field generated using a [PasswordPolicy](https://www.vaultproject.io/docs/concepts/password-policies)
+9. [RandomSecret](./docs/api.md#RandomSecret) Creates a random secret in a vault [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv) with one password field generated using a [PasswordPolicy](https://www.vaultproject.io/docs/concepts/password-policies)
+10. [GitHubSecretEngineConfig](./docs/api.md#GitHubSecretEngineConfig) Configures a Github Application to produce tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
+11. [GitHubSecretEngineRole](./docs/api.md#GitHubSecretEngineRole) Configures a Github Application to produce scoped tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
+13. [VaultSecret](./docs/api.md#VaultSecret) Creates a K8s Secret from one or more Vault Secrets, See [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv)
 
 ## End to end example
 
@@ -208,6 +209,8 @@ export cluster_base_domain=$(oc get dns cluster -o jsonpath='{.spec.baseDomain}'
 helm upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f ./config/local-development/vault-values.yaml --set server.route.host=vault-vault.apps.${cluster_base_domain}
 ```
 
+> Note: you may need to manually remove the `service.beta.openshift.io/serving-cert-secret-name: vault-server-tls` annotation from the Service `vault-internal` and force the recreation of the service serving certificate since the annotation gets applied to both `vault` and `vault-internal` Services by the helm chart. The implementation expects the vault.vault.svc certificate. See [server-service.yaml](https://github.com/hashicorp/vault-helm/blob/main/templates/server-service.yaml) and [server-headless-service.yaml](https://github.com/hashicorp/vault-helm/blob/main/templates/server-headless-service.yaml).
+
 #### Configure an Kubernetes Authentication mount point
 
 All the configuration made by the operator need to authenticate via a Kubernetes Authentication. So you need a root Kubernetes Authentication mount point and role. The you can create more roles via the operator.
@@ -266,7 +269,8 @@ Database secret engine connection. This will deploy a postgresql database to con
 oc create secret generic postgresql-admin-password --from-literal=postgresql-password=changeit -n test-vault-config-operator
 export uid=$(oc get project test-vault-config-operator -o jsonpath='{.metadata.annotations.openshift\.io/sa\.scc\.uid-range}'|sed 's/\/.*//')
 export guid=$(oc get project test-vault-config-operator -o jsonpath='{.metadata.annotations.openshift\.io/sa\.scc\.supplemental-groups}'|sed 's/\/.*//')
-helm upgrade my-postgresql-database bitnami/postgresql -i --create-namespace -n test-vault-config-operator -f ./examples/postgresql/postgresql-values.yaml --set securityContext.fsGroup=${guid} --set containerSecurityContext.runAsUser=${uid} --set volumePermissions.securityContext.runAsUser=${uid} --set metrics.securityContext.runAsUser=${uid}
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm upgrade my-postgresql-database bitnami/postgresql -i --create-namespace -n test-vault-config-operator -f ./docs/examples/postgresql/postgresql-values.yaml --set securityContext.fsGroup=${guid} --set containerSecurityContext.runAsUser=${uid} --set volumePermissions.securityContext.runAsUser=${uid} --set metrics.securityContext.runAsUser=${uid}
 oc apply -f ./test/database-engine-config.yaml -n test-vault-config-operator
 ```
 
@@ -286,6 +290,20 @@ oc apply -f ./test/kv-engine-admin-role.yaml -n vault-admin
 oc apply -f ./test/secret-writer-role.yaml -n vault-admin
 oc apply -f ./test/kv-secret-engine.yaml -n test-vault-config-operator
 oc apply -f ./test/random-secret.yaml -n test-vault-config-operator
+```
+
+VaultSecret
+
+> Note: you must run the previous tests
+
+```shell
+oc apply -f ./test/vaultsecret/kubernetesauthenginerole-secret-reader.yaml -n vault-admin
+envsubst < ./test/vaultsecret/policy-secret-reader.yaml | oc apply -f - -n vault-admin
+oc apply -f ./test/vaultsecret/randomsecret-another-password.yaml -n test-vault-config-operator
+oc apply -f ./test/vaultsecret/vaultsecret-randomsecret.yaml -n test-vault-config-operator
+oc apply -f ./test/vaultsecret/vaultsecret-dynamicsecret.yaml -n test-vault-config-operator
+# test a pullsecret... Create the secret in test-vault-config-operator/kv/pullsecret using the Vault UI first
+oc apply -f ./test/vaultsecret/vaultsecret-pullsecret.yaml -n test-vault-config-operator
 ```
 
 Kube auth engine mount and config and role

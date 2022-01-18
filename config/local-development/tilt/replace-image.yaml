@@ -1,4 +1,4 @@
 - op: replace
-  path: /spec/template/spec/containers/1/image
+  path: /spec/template/spec/containers/0/image
   value:
-    quay.io/raffaelespazzoli/vault-config-operator:latest
+    quay.io/trevorbox/vault-config-operator:latest

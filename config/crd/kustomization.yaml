@@ -10,6 +10,7 @@ resources:
 - bases/redhatcop.redhat.io_randomsecrets.yaml
 - bases/redhatcop.redhat.io_authenginemounts.yaml
 - bases/redhatcop.redhat.io_kubernetesauthengineconfigs.yaml
+- bases/redhatcop.redhat.io_vaultsecrets.yaml
 - bases/redhatcop.redhat.io_passwordpolicies.yaml
 - bases/redhatcop.redhat.io_githubsecretengineconfigs.yaml
 - bases/redhatcop.redhat.io_githubsecretengineroles.yaml
@@ -25,6 +26,7 @@ patchesStrategicMerge:
 # - patches/webhook_in_randomsecrets.yaml
 #- patches/webhook_in_authenginemounts.yaml
 #- patches/webhook_in_kubernetesauthengineconfigs.yaml
+#- patches/webhook_in_vaultsecrets.yaml
 #- patches/webhook_in_passwordpolicies.yaml
 #- patches/webhook_in_githubsecretengineconfigs.yaml
 #- patches/webhook_in_githubsecretengineroles.yaml
@@ -40,6 +42,7 @@ patchesStrategicMerge:
 #- patches/cainjection_in_randomsecrets.yaml
 #- patches/cainjection_in_authenginemounts.yaml
 #- patches/cainjection_in_kubernetesauthengineconfigs.yaml
+#- patches/cainjection_in_vaultsecrets.yaml
 #- patches/cainjection_in_passwordpolicies.yaml
 #- patches/cainjection_in_githubsecretengineconfigs.yaml
 #- patches/cainjection_in_githubsecretengineroles.yaml

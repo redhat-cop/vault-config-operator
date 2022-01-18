@@ -44,6 +44,12 @@ func NewVaultEndpoint(obj client.Object) *VaultEndpoint {
 	}
 }
 
+func NewVaultEndpointObj(obj VaultObject) *VaultEndpoint {
+	return &VaultEndpoint{
+		vaultObject: obj,
+	}
+}
+
 func (ve *VaultEndpoint) DeleteIfExists(context context.Context) error {
 	log := log.FromContext(context)
 	vaultClient := context.Value("vaultClient").(*vault.Client)
@@ -79,4 +85,12 @@ func (ve *VaultEndpoint) CreateOrUpdate(context context.Context) error {
 		}
 	}
 	return nil
+}
+
+func (ve *VaultEndpoint) Read(context context.Context) (map[string]interface{}, bool, error) {
+	return read(context, ve.vaultObject.GetPath())
+}
+
+func (ve *VaultEndpoint) ReadSecret(context context.Context) (*vault.Secret, bool, error) {
+	return readSecret(context, ve.vaultObject.GetPath())
 }

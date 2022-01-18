@@ -52,3 +52,22 @@ func read(context context.Context, path string) (map[string]interface{}, bool, e
 	}
 	return secret.Data, true, nil
 }
+
+func readSecret(context context.Context, path string) (*vault.Secret, bool, error) {
+	log := log.FromContext(context)
+	vaultClient := context.Value("vaultClient").(*vault.Client)
+	secret, err := vaultClient.Logical().Read(path)
+	if err != nil {
+		if respErr, ok := err.(*vault.ResponseError); ok {
+			if respErr.StatusCode == 404 {
+				return nil, false, nil
+			}
+		}
+		log.Error(err, "unable to read object at", "path", path)
+		return nil, false, err
+	}
+	if secret == nil {
+		return nil, false, nil
+	}
+	return secret, true, nil
+}

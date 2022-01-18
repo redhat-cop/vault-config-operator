@@ -151,6 +151,8 @@ var _ = BeforeSuite(func() {
 	err = (&KubernetesAuthEngineConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
+	err = (&VaultSecret{}).SetupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
 	err = (&PasswordPolicy{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
