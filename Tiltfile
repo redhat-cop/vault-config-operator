@@ -1,7 +1,7 @@
 # -*- mode: Python -*-
 
 compile_cmd = 'CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/manager main.go'
-image = 'quay.io/' + os.environ['REPO'] + '/vault-config-operator'
+image = 'quay.io/' + os.environ['repo'] + '/vault-config-operator'
 
 local_resource(
   'vault-config-operator-compile',
