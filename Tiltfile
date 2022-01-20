@@ -1,6 +1,7 @@
 # -*- mode: Python -*-
 
 compile_cmd = 'CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/manager main.go'
+image = 'quay.io/' + os.environ['repo'] + '/vault-config-operator'
 
 local_resource(
   'vault-config-operator-compile',
@@ -9,8 +10,8 @@ local_resource(
 
 
 custom_build(
-  'quay.io/raffaelespazzoli/vault-config-operator',
-  'buildah bud -t $EXPECTED_REF --ignorefile ci.dockerignore -f ./ci.Dockerfile .  && buildah push $EXPECTED_REF $EXPECTED_REF',
+  image,
+  'podman build -t $EXPECTED_REF --ignorefile ci.dockerignore -f ./ci.Dockerfile .  && podman push $EXPECTED_REF $EXPECTED_REF',
   entrypoint=['/manager'],
   deps=['./bin'],
   live_update=[

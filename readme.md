@@ -233,11 +233,14 @@ export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.da
 
 #### Run the operator
 
+> Note: this operator build process is tested with [podman](https://podman.io/), but some of the build files (Makefile specifically) use docker because they are generated automatically by operator-sdk. It is recommended [remap the docker command to the podman command](https://developers.redhat.com/blog/2020/11/19/transitioning-from-docker-to-podman#transition_to_the_podman_cli).
+
 ```shell
 export repo=raffaelespazzoli #replace with yours, this has also to be replaced in the following files: Tiltfile, ./config/local-development/tilt/replace-image.yaml. Further improvements may be able to remove this constraint.
-docker login quay.io/$repo
+docker login quay.io/$REPO
 oc new-project vault-config-operator
 oc project vault-config-operator
+envsubst < config/local-development/tilt/env-replace-image.yaml > config/local-development/tilt/replace-image.yaml
 tilt up
 ```
 

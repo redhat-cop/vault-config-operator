@@ -1,4 +1,0 @@
-- op: replace
-  path: /spec/template/spec/containers/0/image
-  value:
-    quay.io/trevorbox/vault-config-operator:latest
