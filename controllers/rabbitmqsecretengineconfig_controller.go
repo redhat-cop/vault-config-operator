@@ -90,39 +90,22 @@ func (r *RabbitMQSecretEngineConfigReconciler) Reconcile(ctx context.Context, re
 		return r.ManageError(ctx, instance, err)
 	}
 
-	if instance.CheckTTLValuesProvided() {
-		err = r.manageLeaseLogic(ctx, instance)
-		if err != nil {
-			r.Log.Error(err, "unable to complete lease logic", "instance", instance)
-			return r.ManageError(ctx, instance, err)
-		}
-	}
-
 	return r.ManageSuccess(ctx, instance)
 }
 
 func (r *RabbitMQSecretEngineConfigReconciler) manageReconcileLogic(context context.Context, instance client.Object) error {
 	log := log.FromContext(context)
-	vaultEndpoint := vaultutils.NewVaultEndpoint(instance)
+	rabbitMQVaultEndpoint := vaultutils.NewRabbitMQEngineConfigVaultEndpoint(instance)
 	// prepare internal values
-	err := instance.(vaultutils.VaultObject).PrepareInternalValues(context, instance)
-	if err != nil {
+	if err := instance.(vaultutils.VaultObject).PrepareInternalValues(context, instance); err != nil {
 		log.Error(err, "unable to prepare internal values", "instance", instance)
 		return err
 	}
-	err = vaultEndpoint.Create(context)
-	if err != nil {
+	if err := rabbitMQVaultEndpoint.Create(context); err != nil {
 		log.Error(err, "unable to create/update vault resource", "instance", instance)
 		return err
 	}
-	return nil
-}
-
-func (r *RabbitMQSecretEngineConfigReconciler) manageLeaseLogic(context context.Context, instance client.Object) error {
-	log := log.FromContext(context)
-	vaultEndpointWithLease := vaultutils.NewVaultEndpointWithLease(instance)
-
-	if err := vaultEndpointWithLease.CreateOrUpdateLease(context); err != nil {
+	if err := rabbitMQVaultEndpoint.CreateOrUpdateLease(context); err != nil {
 		log.Error(err, "unable to create/update lease resource", "instance", instance)
 		return err
 	}

@@ -154,7 +154,7 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) isValid() error {
 	return rabbitMQ.Spec.RootCredentials.validateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
 }
 
-var _ vaultutils.VaultObjectWithLease = &RabbitMQSecretEngineConfig{}
+var _ vaultutils.RabbitMQEngineConfigVaultObject = &RabbitMQSecretEngineConfig{}
 
 func (rabbitMQ *RabbitMQSecretEngineConfig) GetPath() string {
 	return string(rabbitMQ.Spec.Path) + "/config/connection"
@@ -165,8 +165,7 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) GetPayload() map[string]interface{} 
 }
 
 func (rabbitMQ *RabbitMQSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
-	desiredState := rabbitMQ.Spec.RMQSEConfig.rabbitMQToMap()
-	delete(desiredState, "password")
+	desiredState := rabbitMQ.Spec.RMQSEConfig.leasesToMap()
 	return reflect.DeepEqual(desiredState, payload)
 }
 

@@ -146,6 +146,8 @@ spec:
                     x-kubernetes-list-type: set
                 type: object
               targetServiceAccounts:
+                default:
+                - default
                 description: TargetServiceAccounts is a list of service account names
                   that will receive this role kubebuilder:validation:UniqueItems=true
                 items:
