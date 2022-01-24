@@ -421,26 +421,6 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-redhatcop-redhat-io-v1alpha1-rabbitmqsecretengineconfig
-  failurePolicy: Fail
-  name: vrabbitmqsecretengineconfig.kb.io
-  rules:
-  - apiGroups:
-    - redhatcop.redhat.io
-    apiVersions:
-    - v1alpha1
-    operations:
-    - UPDATE
-    resources:
-    - rabbitmqsecretengineconfigs
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  - v1beta1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
       path: /validate-redhatcop-redhat-io-v1alpha1-rabbitmqsecretenginerole
   failurePolicy: Fail
   name: vrabbitmqsecretenginerole.kb.io

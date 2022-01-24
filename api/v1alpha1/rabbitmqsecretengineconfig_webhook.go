@@ -17,49 +17,61 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"errors"
-
-	"k8s.io/apimachinery/pkg/runtime"
-	ctrl "sigs.k8s.io/controller-runtime"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	
+	"k8s.io/apimachinery/pkg/util/json"
+	"net/http"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// log is for logging in this package.
-var rabbitmqsecretengineconfiglog = logf.Log.WithName("rabbitmqsecretengineconfig-resource")
-
-func (r *RabbitMQSecretEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
-		Complete()
+// +kubebuilder:object:generate:=false
+type RabbitMQSecretEngineConfigValidation struct {
+	Client  client.Client
 }
 
-//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-rabbitmqsecretengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=rabbitmqsecretengineconfigs,verbs=update,versions=v1alpha1,name=vrabbitmqsecretengineconfig.kb.io,admissionReviewVersions={v1,v1beta1}
-
-var _ webhook.Validator = &RabbitMQSecretEngineConfig{}
-
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *RabbitMQSecretEngineConfig) ValidateCreate() error {
-	rabbitmqsecretengineconfiglog.Info("validate create", "name", r.Name)
-
-	return nil
-}
-
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *RabbitMQSecretEngineConfig) ValidateUpdate(old runtime.Object) error {
-	rabbitmqsecretengineconfiglog.Info("validate update", "name", r.Name)
-
-	// the path cannot be updated
-	if r.Spec.Path != old.(*RabbitMQSecretEngineConfig).Spec.Path {
-		return errors.New("spec.path cannot be updated")
+func (r *RabbitMQSecretEngineConfigValidation) Handle(ctx context.Context, req admission.Request) admission.Response {
+	switch req.Operation {
+	case "CREATE":
+		rabbitMQSecretEngineConfig := &RabbitMQSecretEngineConfig{}
+		// Using json Unmarshal as Decoder has issues to decode specific type 
+		if err := json.Unmarshal(req.Object.Raw, rabbitMQSecretEngineConfig); err != nil {
+			return admission.Errored(http.StatusBadRequest, err)
+		}
+		vaultNamespace := rabbitMQSecretEngineConfig.Spec.Authentication.Namespace
+		rabbitMQSecretEngineConfigList := &RabbitMQSecretEngineConfigList{}
+		if err := r.Client.List(ctx, rabbitMQSecretEngineConfigList); err != nil {
+			return admission.Errored(http.StatusBadRequest, err)
+		}
+		for _, config := range rabbitMQSecretEngineConfigList.Items {
+			if vaultNamespace != "" {
+				// Check Vault namespace with the path
+				if vaultNamespace == config.Spec.Authentication.Namespace && config.Spec.Path == rabbitMQSecretEngineConfig.Spec.Path {
+					return admission.Errored(http.StatusBadRequest, errors.New("rabbitMQ engine already configured at spec.path in Vault Namespace " + vaultNamespace))
+				}
+			} else {
+				if config.Spec.Path == rabbitMQSecretEngineConfig.Spec.Path {
+					return admission.Errored(http.StatusBadRequest, errors.New("rabbitMQ engine already configured at spec.path"))
+				}
+			}
+		}
+		return admission.Allowed("")
+	case "UPDATE":
+		rabbitMQSecretEngineConfig := &RabbitMQSecretEngineConfig{}
+		// Using json Unmarshal as Decoder has issues to decode specific type 
+		if err := json.Unmarshal(req.Object.Raw, rabbitMQSecretEngineConfig); err != nil {
+			return admission.Errored(http.StatusBadRequest, err)
+		}
+		oldRabbitMQSecretEngineConfig := &RabbitMQSecretEngineConfig{}
+		if err := json.Unmarshal(req.OldObject.Raw, oldRabbitMQSecretEngineConfig); err != nil {
+			return admission.Errored(http.StatusBadRequest, err)
+		}
+		if rabbitMQSecretEngineConfig.Spec.Path != oldRabbitMQSecretEngineConfig.Spec.Path {
+			return admission.Errored(http.StatusBadRequest, errors.New("spec.path cannot be updated"))
+		}
+		return admission.Allowed("")
+	default:
+		return admission.Allowed("")
 	}
-	return nil
-}
-
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *RabbitMQSecretEngineConfig) ValidateDelete() error {
-	rabbitmqsecretengineconfiglog.Info("validate delete", "name", r.Name)
-
-	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
 }

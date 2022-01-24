@@ -35,6 +35,7 @@ import (
 
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	"github.com/redhat-cop/vault-config-operator/controllers"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -247,16 +248,13 @@ func main() {
 			setupLog.Error(err, "unable to create webhook", "webhook", "GitHubSecretEngineRole")
 			os.Exit(1)
 		}
-
-		if err = (&redhatcopv1alpha1.RabbitMQSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "RabbitMQSecretEngineConfig")
-			os.Exit(1)
-		}
 	
 		if err = (&redhatcopv1alpha1.RabbitMQSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "RabbitMQSecretEngineRole")
 			os.Exit(1)
 		}
+
+		mgr.GetWebhookServer().Register("/validate-redhatcop-redhat-io-v1alpha1-rabbitmqsecretengineconfig", &webhook.Admission{Handler: &redhatcopv1alpha1.RabbitMQSecretEngineConfigValidation{Client: mgr.GetClient()}})
 	}
 	//+kubebuilder:scaffold:builder
 
