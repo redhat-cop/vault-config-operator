@@ -225,18 +225,3 @@ func (credentials *RootCredentialConfig) validateEitherFromVaultSecretOrFromSecr
 func GetFinalizer(instance client.Object) string {
 	return "controller-" + strings.ToLower(instance.GetObjectKind().GroupVersionKind().Kind)
 }
-
-func GetVaultKV2Secret(path string, context context.Context) (*vault.Secret, error) {
-	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
-	secret, err := vaultClient.Logical().Read(path)
-	if err != nil {
-		log.Error(err, "unable to retrieve vault secret", "path", path)
-		return nil, err
-	}
-	if secret == nil || secret.Data == nil {
-		log.Error(err, "secret not found", "path", path)
-		return nil, err
-	}
-	return secret, nil
-}

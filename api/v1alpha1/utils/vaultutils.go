@@ -53,7 +53,7 @@ func read(context context.Context, path string) (map[string]interface{}, bool, e
 	return secret.Data, true, nil
 }
 
-func readSecret(context context.Context, path string) (*vault.Secret, bool, error) {
+func ReadSecret(context context.Context, path string) (*vault.Secret, bool, error) {
 	log := log.FromContext(context)
 	vaultClient := context.Value("vaultClient").(*vault.Client)
 	secret, err := vaultClient.Logical().Read(path)
@@ -66,7 +66,8 @@ func readSecret(context context.Context, path string) (*vault.Secret, bool, erro
 		log.Error(err, "unable to read object at", "path", path)
 		return nil, false, err
 	}
-	if secret == nil {
+	// Add Data interface nil check to cover cases when kv2 secret latest version is deleted, but secret is still available 
+	if secret == nil || secret.Data == nil {
 		return nil, false, nil
 	}
 	return secret, true, nil

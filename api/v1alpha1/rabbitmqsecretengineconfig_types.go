@@ -195,8 +195,13 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) setInternalCredentials(context conte
 			log.Error(err, "unable to retrieve RandomSecret", "instance", rabbitMQ)
 			return err
 		}
-		secret, err := GetVaultKV2Secret(randomSecret.GetPath(), context)
+		secret, exists, err := vaultutils.ReadSecret(context, randomSecret.GetPath())
 		if err != nil {
+			return err
+		}
+		if !exists {
+			err = errors.New("secret not found")
+			log.Error(err, "unable to retrieve vault secret", "instance", rabbitMQ)
 			return err
 		}
 		rabbitMQ.SetUsernameAndPassword(rabbitMQ.Spec.Username, secret.Data[randomSecret.Spec.SecretKey].(string))
@@ -220,8 +225,13 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) setInternalCredentials(context conte
 		return nil
 	}
 	if rabbitMQ.Spec.RootCredentials.VaultSecret != nil {
-		secret, err := GetVaultKV2Secret(string(rabbitMQ.Spec.RootCredentials.VaultSecret.Path), context)
-		if err != nil {
+		secret, exists, err := vaultutils.ReadSecret(context, string(rabbitMQ.Spec.RootCredentials.VaultSecret.Path))
+			if err != nil {
+			return err
+		}
+		if !exists {
+			err = errors.New("secret not found")
+			log.Error(err, "unable to retrieve vault secret", "instance", rabbitMQ)
 			return err
 		}
 		if rabbitMQ.Spec.Username == "" {

@@ -87,12 +87,8 @@ func (ve *VaultEndpoint) CreateOrUpdate(context context.Context) error {
 	return nil
 }
 
-func (ve *VaultEndpoint) Read(context context.Context) (map[string]interface{}, bool, error) {
-	return read(context, ve.vaultObject.GetPath())
-}
-
-func (ve *VaultEndpoint) ReadSecret(context context.Context) (*vault.Secret, bool, error) {
-	return readSecret(context, ve.vaultObject.GetPath())
+func (ve *VaultEndpoint) GetSecret(context context.Context) (*vault.Secret, bool, error) {
+	return ReadSecret(context, ve.vaultObject.GetPath())
 }
 
 type RabbitMQEngineConfigVaultObject interface {

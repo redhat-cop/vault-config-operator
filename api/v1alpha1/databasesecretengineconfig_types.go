@@ -92,8 +92,13 @@ func (r *DatabaseSecretEngineConfig) setInternalCredentials(context context.Cont
 			log.Error(err, "unable to retrieve RandomSecret", "instance", r)
 			return err
 		}
-		secret, err := GetVaultKV2Secret(randomSecret.GetPath(), context)
+		secret, exists, err := vaultutils.ReadSecret(context, randomSecret.GetPath())
 		if err != nil {
+			return err
+		}
+		if !exists {
+			err = errors.New("secret not found")
+			log.Error(err, "unable to retrieve vault secret", "instance", r)
 			return err
 		}
 		r.SetUsernameAndPassword(r.Spec.Username, secret.Data[randomSecret.Spec.SecretKey].(string))
@@ -117,8 +122,13 @@ func (r *DatabaseSecretEngineConfig) setInternalCredentials(context context.Cont
 		return nil
 	}
 	if r.Spec.RootCredentials.VaultSecret != nil {
-		secret, err := GetVaultKV2Secret(string(r.Spec.RootCredentials.VaultSecret.Path), context)
+		secret, exists, err := vaultutils.ReadSecret(context, string(r.Spec.RootCredentials.VaultSecret.Path))
 		if err != nil {
+			return err
+		}
+		if !exists {
+			err = errors.New("secret not found")
+			log.Error(err, "unable to retrieve vault secret", "instance", r)
 			return err
 		}
 		if r.Spec.Username == "" {
