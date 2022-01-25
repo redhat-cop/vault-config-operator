@@ -25,7 +25,8 @@ testbin/*
 *.swo
 *~
 
-bundle/
+bundle
+bundle/**
 bundle.Dockerfile
 charts/
 bundle*/
