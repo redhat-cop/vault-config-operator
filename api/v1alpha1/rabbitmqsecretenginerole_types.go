@@ -22,10 +22,10 @@ import (
 	"log"
 	"reflect"
 
+	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 )
 
 // RabbitMQSecretEngineRoleSpec defines the desired state of RabbitMQSecretEngineRole
@@ -172,7 +172,7 @@ func (rabbitMQ *RabbitMQSecretEngineRole) IsValid() (bool, error) {
 	return true, nil
 }
 
-func convertVhostsToJson(vhosts []Vhost) (string) {
+func convertVhostsToJson(vhosts []Vhost) string {
 	vhostData := make(map[string]interface{})
 	for _, vhost := range vhosts {
 		vhostData = map[string]interface{}{
@@ -186,9 +186,9 @@ func convertVhostsToJson(vhosts []Vhost) (string) {
 	return string(result)
 }
 
-func convertTopicsToJson(vhosts []VhostTopic) (string) {
+func convertTopicsToJson(vhosts []VhostTopic) string {
 	vhostData := make(map[string]interface{})
-	topicData := make(map[string]interface{})	
+	topicData := make(map[string]interface{})
 	for _, vhost := range vhosts {
 		for _, topic := range vhost.Topics {
 			topicData = map[string]interface{}{

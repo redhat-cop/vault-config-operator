@@ -66,7 +66,7 @@ func ReadSecret(context context.Context, path string) (*vault.Secret, bool, erro
 		log.Error(err, "unable to read object at", "path", path)
 		return nil, false, err
 	}
-	// Add Data interface nil check to cover cases when kv2 secret latest version is deleted, but secret is still available 
+	// Add Data interface nil check to cover cases when kv2 secret latest version is deleted, but secret is still available
 	if secret == nil || secret.Data == nil {
 		return nil, false, nil
 	}

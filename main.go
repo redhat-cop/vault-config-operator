@@ -248,7 +248,7 @@ func main() {
 			setupLog.Error(err, "unable to create webhook", "webhook", "GitHubSecretEngineRole")
 			os.Exit(1)
 		}
-	
+
 		if err = (&redhatcopv1alpha1.RabbitMQSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "RabbitMQSecretEngineRole")
 			os.Exit(1)

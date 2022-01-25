@@ -19,23 +19,23 @@ package v1alpha1
 import (
 	"context"
 	"errors"
-	
+
 	"k8s.io/apimachinery/pkg/util/json"
 	"net/http"
-	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // +kubebuilder:object:generate:=false
 type RabbitMQSecretEngineConfigValidation struct {
-	Client  client.Client
+	Client client.Client
 }
 
 func (r *RabbitMQSecretEngineConfigValidation) Handle(ctx context.Context, req admission.Request) admission.Response {
 	switch req.Operation {
 	case "CREATE":
 		rabbitMQSecretEngineConfig := &RabbitMQSecretEngineConfig{}
-		// Using json Unmarshal as Decoder has issues to decode specific type 
+		// Using json Unmarshal as Decoder has issues to decode specific type
 		if err := json.Unmarshal(req.Object.Raw, rabbitMQSecretEngineConfig); err != nil {
 			return admission.Errored(http.StatusBadRequest, err)
 		}
@@ -48,7 +48,7 @@ func (r *RabbitMQSecretEngineConfigValidation) Handle(ctx context.Context, req a
 			if vaultNamespace != "" {
 				// Check Vault namespace with the path
 				if vaultNamespace == config.Spec.Authentication.Namespace && config.Spec.Path == rabbitMQSecretEngineConfig.Spec.Path {
-					return admission.Errored(http.StatusBadRequest, errors.New("rabbitMQ engine already configured at spec.path in Vault Namespace " + vaultNamespace))
+					return admission.Errored(http.StatusBadRequest, errors.New("rabbitMQ engine already configured at spec.path in Vault Namespace "+vaultNamespace))
 				}
 			} else {
 				if config.Spec.Path == rabbitMQSecretEngineConfig.Spec.Path {
@@ -59,7 +59,7 @@ func (r *RabbitMQSecretEngineConfigValidation) Handle(ctx context.Context, req a
 		return admission.Allowed("")
 	case "UPDATE":
 		rabbitMQSecretEngineConfig := &RabbitMQSecretEngineConfig{}
-		// Using json Unmarshal as Decoder has issues to decode specific type 
+		// Using json Unmarshal as Decoder has issues to decode specific type
 		if err := json.Unmarshal(req.Object.Raw, rabbitMQSecretEngineConfig); err != nil {
 			return admission.Errored(http.StatusBadRequest, err)
 		}

@@ -226,7 +226,7 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) setInternalCredentials(context conte
 	}
 	if rabbitMQ.Spec.RootCredentials.VaultSecret != nil {
 		secret, exists, err := vaultutils.ReadSecret(context, string(rabbitMQ.Spec.RootCredentials.VaultSecret.Path))
-			if err != nil {
+		if err != nil {
 			return err
 		}
 		if !exists {
