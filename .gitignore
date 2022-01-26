@@ -20,11 +20,13 @@ testbin/*
 
 # editor and IDE paraphernalia
 .idea
+.vscode
 *.swp
 *.swo
 *~
 
-bundle/
+bundle
+bundle/**
 bundle.Dockerfile
 charts/
 bundle*/

@@ -16,7 +16,9 @@ This section of the documentation provides high-level documentation on the suppo
   - [GitHubSecretEngineConfig](#githubsecretengineconfig)
   - [GitHubSecretEngineRole](#githubsecretenginerole)
   - [VaultSecret](#vaultsecret)
-  
+  - [RabbitMQSecretEngineConfig](#rabbitmqsecretengineconfig)
+  - [RabbitMQSecretEngineRole](#rabbitmqsecretenginerole)
+
 ## The Authentication Section
 
 Each API has an Authentication section that specifies how to authenticate to Vault. Here is an example:
@@ -479,3 +481,87 @@ spec:
     annotations:
       refresh: test-annotation
 ```
+
+## RabbitMQSecretEngineConfig
+
+`RabbitMQSecretEngineConfig` CRD allows a user to create a RabbitMQ Secret Engine configuration, also called connection for an existing RabbitMQ Secret Engine Mount. Here is an example
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: RabbitMQSecretEngineConfig
+metadata:
+  name: example-rabbitmq-secret-engine-config
+spec:
+  authentication: 
+    path: kubernetes
+    role: rabbitmq-engine-admin
+  connectionURI: https://my-rabbitMQ.com
+  rootCredentials:
+    secret:
+      name: rabbitmq-admin-password
+    passwordKey: rabbitmq-password
+  path: vault-config-operator/rabbitmq
+  username: rabbitmq
+  leaseTTL: 86400 # 24 hours
+  leaseMaxTTL: 86400 # 24 hours
+```
+
+The `connectionURI` field specifies how to connect to the rabbitMQ cluster. Supports http and https protocols.
+
+The `username` field specific the username to be used to connect to the rabbitMQ cluster. This field is optional, if not specified the username will be retrieved from the credential secret.
+
+The `path` field specifies the path of the secret engine to which this connection will be added.
+
+The password and possibly the username can be retrieved in three different ways:
+
+1. From a Kubernetes secret, specifying the `rootCredentialsFromSecret` field. The secret must be of [basic auth type](https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret). If the secret is updated this connection will also be updated.
+2. From a Vault secret, specifying the `rootCredentialsFromVaultSecret` field.
+3. From a [RandomSecret](#RandomSecret), specifying the `rootCredentialsFromRandomSecret` field. When the RandomSecret generates a new secret, this connection will also be updated.
+
+Additional options supported from [Vault Documentation](https://www.vaultproject.io/api-docs/secret/rabbitmq#configure-connection)
+
+## RabbitMQSecretEngineRole
+
+The `RabbitMQSecretEngineRole` CRD allows a user to create a Database Secret Engine Role, here is an example:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: RabbitMQSecretEngineRole
+metadata:
+  name: rabbitmqsecretenginerole-sample
+spec:
+  authentication: 
+    path: kubernetes
+    role: rabbitmq-engine-admin
+  path: vault-config-operator/rabbitmq
+  tags: 'administrator'
+  vhosts:
+  - vhostName: '/'
+    permissions:
+      read: '.*'
+      write: '.*'
+      configure: '.*'
+  - vhostName: 'my-vhost'
+    permissions:
+      read: 'my-queue'
+      write: 'my-exchange'
+  vhostTopics:
+  - vhostName: '/'
+    topics:
+    - topicName: 'my-topic'
+      permissions:
+        read: '.*'
+        write: '.*'
+        configure: '.*'
+    - topicName: 'my-read-topic'
+      permissions:
+        read: '.*'
+```
+
+The `tags` field specifies RabbitMQ permissions tags to associate with the user. This determines the level of access to the RabbitMQ management UI granted to the user.
+
+The `vhostName` field specifies the name of vhost where permissions will be provided.
+
+Permissions `read/write/configure` provides ability to `read/write/configure` specified queues and/or exchanges.
+
+[Vault Documentation](https://www.vaultproject.io/api-docs/secret/rabbitmq#create-role)

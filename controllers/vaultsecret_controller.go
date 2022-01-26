@@ -219,7 +219,7 @@ func (r *VaultSecretReconciler) manageReconcileLogic(ctx context.Context, instan
 
 		ctx = context.WithValue(ctx, "vaultClient", vaultClient)
 		vaultEndpoint := vaultutils.NewVaultEndpointObj(&vaultSecretDefinition)
-		vaultSecret, ok, _ := vaultEndpoint.ReadSecret(ctx)
+		vaultSecret, ok, _ := vaultEndpoint.GetSecret(ctx)
 		if !ok {
 			return errors.New("unable to read Vault Secret for " + vaultSecretDefinition.GetPath())
 		}
