@@ -11,6 +11,7 @@ metadata:
     description: This operator provides primitives to declaratively configure Hashicorp
       Vault.
     operatorframework.io/suggested-namespace: vault-config-operator
+    operatorframework.io/cluster-monitoring: "true"
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     repository: https://github.com/redhat-cop/vault-config-operator
     support: Best Effort
@@ -18,6 +19,7 @@ metadata:
     operatorframework.io/arch.amd64: supported
     operatorframework.io/arch.arm64: supported
     operatorframework.io/arch.ppc64le: supported
+    operatorframework.io/arch.s390x: supported
     operatorframework.io/os.linux: supported
   name: vault-config-operator.v0.0.0
   namespace: placeholder

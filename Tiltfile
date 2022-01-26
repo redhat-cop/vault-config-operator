@@ -11,7 +11,7 @@ local_resource(
 
 custom_build(
   image,
-  'podman build -t $EXPECTED_REF --ignorefile ci.dockerignore -f ./ci.Dockerfile .  && podman push $EXPECTED_REF $EXPECTED_REF',
+  'podman build -t $EXPECTED_REF --ignorefile ci.Dockerfile.dockerignore -f ./ci.Dockerfile .  && podman push $EXPECTED_REF $EXPECTED_REF',
   entrypoint=['/manager'],
   deps=['./bin'],
   live_update=[
