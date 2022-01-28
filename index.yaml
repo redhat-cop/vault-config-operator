@@ -3,9 +3,9 @@ entries:
   vault-config-operator:
   - apiVersion: v1
     appVersion: 0.2.0
-    created: "2022-01-28T02:21:08.445145126Z"
+    created: "2022-01-28T02:34:18.771844776Z"
     description: Helm chart that deploys vault-config-operator
-    digest: 3ec380d9a7b4df689ba0060deecd429525837b814c3256442cb9fc79093589d5
+    digest: e1f020b6369078b9df108e12b51648956df18783b9be7aa64b2647f806b51a61
     keywords:
     - volume
     - storage
@@ -20,9 +20,9 @@ entries:
     version: 0.2.0
   - apiVersion: v1
     appVersion: v0.2.0
-    created: "2022-01-28T02:21:08.456914848Z"
+    created: "2022-01-28T02:34:18.778408272Z"
     description: Helm chart that deploys vault-config-operator
-    digest: 9105618e79275dc7f3d75e0faf585a82bc2deb92aee99cb96ddc61b295f2bc76
+    digest: 8e8ed1b4452c3d8eec7af1b7e6d27341c898d14e90ac2a2bb4eadaac5d4377e7
     keywords:
     - volume
     - storage
@@ -37,7 +37,7 @@ entries:
     version: v0.2.0
   - apiVersion: v1
     appVersion: v0.1.2
-    created: "2022-01-28T02:21:08.455300731Z"
+    created: "2022-01-28T02:34:18.775951773Z"
     description: Helm chart that deploys vault-config-operator
     digest: 3d2a41efc27037e32536ba78e48fb629cabd8384b062481d3f6c895a34913fdb
     keywords:
@@ -54,7 +54,7 @@ entries:
     version: v0.1.2
   - apiVersion: v1
     appVersion: v0.1.1
-    created: "2022-01-28T02:21:08.454331121Z"
+    created: "2022-01-28T02:34:18.774200675Z"
     description: Helm chart that deploys vault-config-operator
     digest: d90c92ba424c7871e01da34de221cf5d741f42f5ef60e016c172df7b9816a8f4
     keywords:
@@ -71,7 +71,7 @@ entries:
     version: v0.1.1
   - apiVersion: v1
     appVersion: v0.1.0
-    created: "2022-01-28T02:21:08.446103036Z"
+    created: "2022-01-28T02:34:18.773082975Z"
     description: Helm chart that deploys vault-config-operator
     digest: e24d4e563c07567ca39914a1769da30fbdce6186ecf58511c21aff5a765eef18
     keywords:
@@ -86,4 +86,4 @@ entries:
     urls:
     - https://redhat-cop.github.io/vault-config-operator/vault-config-operator/vault-config-operator-v0.1.0.tgz
     version: v0.1.0
-generated: "2022-01-28T02:21:08.443738911Z"
+generated: "2022-01-28T02:34:18.770192678Z"
