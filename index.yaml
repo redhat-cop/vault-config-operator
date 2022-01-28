@@ -2,8 +2,42 @@ apiVersion: v1
 entries:
   vault-config-operator:
   - apiVersion: v1
+    appVersion: 0.2.0
+    created: "2022-01-28T02:21:08.445145126Z"
+    description: Helm chart that deploys vault-config-operator
+    digest: 3ec380d9a7b4df689ba0060deecd429525837b814c3256442cb9fc79093589d5
+    keywords:
+    - volume
+    - storage
+    - csi
+    - expansion
+    - monitoring
+    name: vault-config-operator
+    sources:
+    - https://github.com/redhat-cop/vault-config-operator
+    urls:
+    - https://redhat-cop.github.io/vault-config-operator/vault-config-operator/vault-config-operator-0.2.0.tgz
+    version: 0.2.0
+  - apiVersion: v1
+    appVersion: v0.2.0
+    created: "2022-01-28T02:21:08.456914848Z"
+    description: Helm chart that deploys vault-config-operator
+    digest: 9105618e79275dc7f3d75e0faf585a82bc2deb92aee99cb96ddc61b295f2bc76
+    keywords:
+    - volume
+    - storage
+    - csi
+    - expansion
+    - monitoring
+    name: vault-config-operator
+    sources:
+    - https://github.com/redhat-cop/vault-config-operator
+    urls:
+    - https://redhat-cop.github.io/vault-config-operator/vault-config-operator/vault-config-operator-v0.2.0.tgz
+    version: v0.2.0
+  - apiVersion: v1
     appVersion: v0.1.2
-    created: "2021-11-26T16:57:52.370586617Z"
+    created: "2022-01-28T02:21:08.455300731Z"
     description: Helm chart that deploys vault-config-operator
     digest: 3d2a41efc27037e32536ba78e48fb629cabd8384b062481d3f6c895a34913fdb
     keywords:
@@ -20,7 +54,7 @@ entries:
     version: v0.1.2
   - apiVersion: v1
     appVersion: v0.1.1
-    created: "2021-11-26T16:57:52.369438009Z"
+    created: "2022-01-28T02:21:08.454331121Z"
     description: Helm chart that deploys vault-config-operator
     digest: d90c92ba424c7871e01da34de221cf5d741f42f5ef60e016c172df7b9816a8f4
     keywords:
@@ -37,7 +71,7 @@ entries:
     version: v0.1.1
   - apiVersion: v1
     appVersion: v0.1.0
-    created: "2021-11-26T16:57:52.368277901Z"
+    created: "2022-01-28T02:21:08.446103036Z"
     description: Helm chart that deploys vault-config-operator
     digest: e24d4e563c07567ca39914a1769da30fbdce6186ecf58511c21aff5a765eef18
     keywords:
@@ -52,4 +86,4 @@ entries:
     urls:
     - https://redhat-cop.github.io/vault-config-operator/vault-config-operator/vault-config-operator-v0.1.0.tgz
     version: v0.1.0
-generated: "2021-11-26T16:57:52.366856091Z"
+generated: "2022-01-28T02:21:08.443738911Z"
