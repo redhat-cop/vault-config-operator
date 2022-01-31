@@ -171,6 +171,46 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-pkisecretengineconfig
+  failurePolicy: Fail
+  name: mpkisecretengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - pkisecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-pkisecretenginerole
+  failurePolicy: Fail
+  name: mpkisecretenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - pkisecretengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /mutate-redhatcop-redhat-io-v1alpha1-policy
   failurePolicy: Fail
   name: mpolicy.kb.io
@@ -413,6 +453,46 @@ webhooks:
     - UPDATE
     resources:
     - kubernetesauthengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-pkisecretengineconfig
+  failurePolicy: Fail
+  name: vpkisecretengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - UPDATE
+    resources:
+    - pkisecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-pkisecretenginerole
+  failurePolicy: Fail
+  name: vpkisecretenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - UPDATE
+    resources:
+    - pkisecretengineroles
   sideEffects: None
 - admissionReviewVersions:
   - v1

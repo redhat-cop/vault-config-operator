@@ -33,4 +33,5 @@ bundle*/
 
 .vscode
 test/vault-secret-engine.private-key.pem
+.history/
 config/local-development/tilt/replace-image.yaml

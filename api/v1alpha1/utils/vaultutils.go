@@ -24,14 +24,22 @@ import (
 )
 
 func write(context context.Context, path string, payload map[string]interface{}) error {
-	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
-	_, err := vaultClient.Logical().Write(path, payload)
+	_, err := writeWithResponse(context, path, payload)
 	if err != nil {
-		log.Error(err, "unable to write object at", "path", path)
 		return err
 	}
 	return nil
+}
+
+func writeWithResponse(context context.Context, path string, payload map[string]interface{}) (*vault.Secret, error) {
+	log := log.FromContext(context)
+	vaultClient := context.Value("vaultClient").(*vault.Client)
+	secret, err := vaultClient.Logical().Write(path, payload)
+	if err != nil {
+		log.Error(err, "unable to write object at", "path", path)
+		return nil, err
+	}
+	return secret, nil
 }
 
 func read(context context.Context, path string) (map[string]interface{}, bool, error) {
@@ -40,7 +48,7 @@ func read(context context.Context, path string) (map[string]interface{}, bool, e
 	secret, err := vaultClient.Logical().Read(path)
 	if err != nil {
 		if respErr, ok := err.(*vault.ResponseError); ok {
-			if respErr.StatusCode == 404 {
+			if respErr.StatusCode == 404 || respErr.StatusCode == 204 {
 				return nil, false, nil
 			}
 		}

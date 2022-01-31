@@ -180,6 +180,23 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controllers.PKISecretEngineConfigReconciler{
+		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("PKISecretEngineConfig"), mgr.GetAPIReader()),
+		Log:            ctrl.Log.WithName("controllers").WithName("PKISecretEngineConfig"),
+		ControllerName: "PKISecretEngineConfig",
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "PKISecretEngineConfig")
+		os.Exit(1)
+	}
+	if err = (&controllers.PKISecretEngineRoleReconciler{
+		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("PKISecretEngineRole"), mgr.GetAPIReader()),
+		Log:            ctrl.Log.WithName("controllers").WithName("PKISecretEngineRole"),
+		ControllerName: "PKISecretEngineRole",
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "PKISecretEngineRole")
+		os.Exit(1)
+	}
+
 	if err = (&controllers.GitHubSecretEngineConfigReconciler{
 		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("GitHubSecretEngineConfig"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("GitHubSecretEngineConfig"),
@@ -246,6 +263,16 @@ func main() {
 
 		if err = (&redhatcopv1alpha1.GitHubSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "GitHubSecretEngineRole")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.PKISecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "PKISecretEngineConfig")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.PKISecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "PKISecretEngineRole")
 			os.Exit(1)
 		}
 

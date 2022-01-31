@@ -46,6 +46,18 @@ spec:
       kind: DatabaseSecretEngineRole
       name: databasesecretengineroles.redhatcop.redhat.io
       version: v1alpha1
+    - description: GitHubSecretEngineConfig is the Schema for the githubsecretengineconfigs
+        API
+      displayName: Git Hub Secret Engine Config
+      kind: GitHubSecretEngineConfig
+      name: githubsecretengineconfigs.redhatcop.redhat.io
+      version: v1alpha1
+    - description: GitHubSecretEngineRole is the Schema for the githubsecretengineroles
+        API
+      displayName: Git Hub Secret Engine Role
+      kind: GitHubSecretEngineRole
+      name: githubsecretengineroles.redhatcop.redhat.io
+      version: v1alpha1
     - description: KubernetesAuthEngineConfig is the Schema for the kubernetesauthengineconfigs
         API
       displayName: Kubernetes Auth Engine Config
@@ -62,6 +74,18 @@ spec:
       displayName: Password Policy
       kind: PasswordPolicy
       name: passwordpolicies.redhatcop.redhat.io
+      version: v1alpha1
+    - description: PKISecretEngineConfig is the Schema for the pkisecretengineconfigs
+        API
+      displayName: PKISecret Engine Config
+      kind: PKISecretEngineConfig
+      name: pkisecretengineconfigs.redhatcop.redhat.io
+      version: v1alpha1
+    - description: PKISecretEngineRole is the Schema for the pkisecretengineroles
+        API
+      displayName: PKISecret Engine Role
+      kind: PKISecretEngineRole
+      name: pkisecretengineroles.redhatcop.redhat.io
       version: v1alpha1
     - description: Policy is the Schema for the policies API
       displayName: Policy
@@ -89,6 +113,11 @@ spec:
       displayName: Secret Engine Mount
       kind: SecretEngineMount
       name: secretenginemounts.redhatcop.redhat.io
+      version: v1alpha1
+    - description: VaultSecret is the Schema for the vaultsecrets API
+      displayName: Vault Secret
+      kind: VaultSecret
+      name: vaultsecrets.redhatcop.redhat.io
       version: v1alpha1
   description: |
     This operator helps set up Vault Configurations. The main intent is to do so such that subsequently pods can consume the secrets made available.
