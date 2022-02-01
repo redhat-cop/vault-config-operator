@@ -20,14 +20,18 @@ testbin/*
 
 # editor and IDE paraphernalia
 .idea
+.vscode
 *.swp
 *.swo
 *~
 
-bundle/
+bundle
+bundle/**
 bundle.Dockerfile
 charts/
 bundle*/
 
 .vscode
 test/vault-secret-engine.private-key.pem
+.history/
+config/local-development/tilt/replace-image.yaml

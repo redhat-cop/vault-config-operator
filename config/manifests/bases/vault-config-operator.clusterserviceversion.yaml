@@ -11,6 +11,7 @@ metadata:
     description: This operator provides primitives to declaratively configure Hashicorp
       Vault.
     operatorframework.io/suggested-namespace: vault-config-operator
+    operatorframework.io/cluster-monitoring: "true"
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     repository: https://github.com/redhat-cop/vault-config-operator
     support: Best Effort
@@ -18,6 +19,7 @@ metadata:
     operatorframework.io/arch.amd64: supported
     operatorframework.io/arch.arm64: supported
     operatorframework.io/arch.ppc64le: supported
+    operatorframework.io/arch.s390x: supported
     operatorframework.io/os.linux: supported
   name: vault-config-operator.v0.0.0
   namespace: placeholder
@@ -44,6 +46,18 @@ spec:
       kind: DatabaseSecretEngineRole
       name: databasesecretengineroles.redhatcop.redhat.io
       version: v1alpha1
+    - description: GitHubSecretEngineConfig is the Schema for the githubsecretengineconfigs
+        API
+      displayName: Git Hub Secret Engine Config
+      kind: GitHubSecretEngineConfig
+      name: githubsecretengineconfigs.redhatcop.redhat.io
+      version: v1alpha1
+    - description: GitHubSecretEngineRole is the Schema for the githubsecretengineroles
+        API
+      displayName: Git Hub Secret Engine Role
+      kind: GitHubSecretEngineRole
+      name: githubsecretengineroles.redhatcop.redhat.io
+      version: v1alpha1
     - description: KubernetesAuthEngineConfig is the Schema for the kubernetesauthengineconfigs
         API
       displayName: Kubernetes Auth Engine Config
@@ -56,10 +70,39 @@ spec:
       kind: KubernetesAuthEngineRole
       name: kubernetesauthengineroles.redhatcop.redhat.io
       version: v1alpha1
+    - description: PasswordPolicy is the Schema for the passowordpolicies API
+      displayName: Password Policy
+      kind: PasswordPolicy
+      name: passwordpolicies.redhatcop.redhat.io
+      version: v1alpha1
+    - description: PKISecretEngineConfig is the Schema for the pkisecretengineconfigs
+        API
+      displayName: PKISecret Engine Config
+      kind: PKISecretEngineConfig
+      name: pkisecretengineconfigs.redhatcop.redhat.io
+      version: v1alpha1
+    - description: PKISecretEngineRole is the Schema for the pkisecretengineroles
+        API
+      displayName: PKISecret Engine Role
+      kind: PKISecretEngineRole
+      name: pkisecretengineroles.redhatcop.redhat.io
+      version: v1alpha1
     - description: Policy is the Schema for the policies API
       displayName: Policy
       kind: Policy
       name: policies.redhatcop.redhat.io
+      version: v1alpha1
+    - description: RabbitMQSecretEngineConfig is the Schema for the rabbitmqsecretengineconfigs
+        API
+      displayName: Rabbit MQSecret Engine Config
+      kind: RabbitMQSecretEngineConfig
+      name: rabbitmqsecretengineconfigs.redhatcop.redhat.io
+      version: v1alpha1
+    - description: RabbitMQSecretEngineRole is the Schema for the rabbitmqsecretengineroles
+        API
+      displayName: Rabbit MQSecret Engine Role
+      kind: RabbitMQSecretEngineRole
+      name: rabbitmqsecretengineroles.redhatcop.redhat.io
       version: v1alpha1
     - description: RandomSecret is the Schema for the randomsecrets API
       displayName: Random Secret
@@ -70,6 +113,11 @@ spec:
       displayName: Secret Engine Mount
       kind: SecretEngineMount
       name: secretenginemounts.redhatcop.redhat.io
+      version: v1alpha1
+    - description: VaultSecret is the Schema for the vaultsecrets API
+      displayName: Vault Secret
+      kind: VaultSecret
+      name: vaultsecrets.redhatcop.redhat.io
       version: v1alpha1
   description: |
     This operator helps set up Vault Configurations. The main intent is to do so such that subsequently pods can consume the secrets made available.

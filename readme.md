@@ -51,6 +51,8 @@ Currently this operator supports the following CRDs:
 10. [GitHubSecretEngineConfig](./docs/api.md#GitHubSecretEngineConfig) Configures a Github Application to produce tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
 11. [GitHubSecretEngineRole](./docs/api.md#GitHubSecretEngineRole) Configures a Github Application to produce scoped tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
 13. [VaultSecret](./docs/api.md#VaultSecret) Creates a K8s Secret from one or more Vault Secrets, See [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv)
+14. [PKISecretEngineConfig](./docs/api.md#pkisecretengineconfig)  Configures a [PKI Secret Engine](https://www.vaultproject.io/docs/secrets/pki)
+15. [PKISecretEngineRole](./docs/api.md#pkisecretenginerole)  Configures a [PKI Secret Engine](https://www.vaultproject.io/docs/secrets/pki) Role
 
 ## End to end example
 
@@ -122,7 +124,7 @@ It is recommended to deploy this operator via [`OperatorHub`](https://operatorhu
 | amd64  | ✅ |
 | arm64  | ✅  |
 | ppc64le  | ✅  |
-| s390x  | ❌  |
+| s390x  | ✅  |
 
 ### Deploying from OperatorHub
 
@@ -233,8 +235,10 @@ export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.da
 
 #### Run the operator
 
+> Note: this operator build process is tested with [podman](https://podman.io/), but some of the build files (Makefile specifically) use docker because they are generated automatically by operator-sdk. It is recommended [remap the docker command to the podman command](https://developers.redhat.com/blog/2020/11/19/transitioning-from-docker-to-podman#transition_to_the_podman_cli).
+
 ```shell
-export repo=raffaelespazzoli #replace with yours, this has also to be replaced in the following files: Tiltfile, ./config/local-development/tilt/replace-image.yaml. Further improvements may be able to remove this constraint.
+export repo=raffaelespazzoli
 docker login quay.io/$repo
 oc new-project vault-config-operator
 oc project vault-config-operator

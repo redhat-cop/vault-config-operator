@@ -127,7 +127,6 @@ func (r *KubernetesAuthEngineRole) IsValid() (bool, error) {
 type VRole struct {
 
 	// TargetServiceAccounts is a list of service account names that will receive this role
-	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
 	// kubebuilder:validation:UniqueItems=true
 	// +kubebuilder:default={"default"}

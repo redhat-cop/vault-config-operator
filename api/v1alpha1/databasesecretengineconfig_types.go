@@ -21,7 +21,6 @@ import (
 	"errors"
 	"reflect"
 
-	vault "github.com/hashicorp/vault/api"
 	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -51,36 +50,6 @@ type DatabaseSecretEngineConfigSpec struct {
 	// RootCredentials specifies how to retrieve the credentials for this DatabaseEngine connection.
 	// +kubebuilder:validation:Required
 	RootCredentials RootCredentialConfig `json:"rootCredentials,omitempty"`
-}
-
-type RootCredentialConfig struct {
-	// VaultSecret retrieves the credentials from a Vault secret. This will map the "username" and "password" keys of the secret to the username and password of this config. All other keys will be ignored. Only one of RootCredentialsFromVaultSecret or RootCredentialsFromSecret or RootCredentialsFromRandomSecret can be specified.
-	// username: Specifies the name of the user to use as the "root" user when connecting to the database. This "root" user is used to create/update/delete users managed by these plugins, so you will need to ensure that this user has permissions to manipulate users appropriate to the database. This is typically used in the connection_url field via the templating directive "{{"username"}}" or "{{"name"}}".
-	// password: Specifies the password to use when connecting with the username. This value will not be returned by Vault when performing a read upon the configuration. This is typically used in the connection_url field via the templating directive "{{"password"}}".
-	// If username is provided as spec.username, it takes precedence over the username retrieved from the referenced secret
-	// +kubebuilder:validation:Optional
-	VaultSecret *VaultSecretReference `json:"vaultSecret,omitempty"`
-
-	// Secret retrieves the credentials from a Kubernetes secret. The secret must be of basicauth type (https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret). This will map the "username" and "password" keys of the secret to the username and password of this config. If the kubernetes secret is updated, this configuration will also be updated. All other keys will be ignored. Only one of RootCredentialsFromVaultSecret or RootCredentialsFromSecret or RootCredentialsFromRandomSecret can be specified.
-	// username: Specifies the name of the user to use as the "root" user when connecting to the database. This "root" user is used to create/update/delete users managed by these plugins, so you will need to ensure that this user has permissions to manipulate users appropriate to the database. This is typically used in the connection_url field via the templating directive "{{"username"}}" or "{{"name"}}".
-	// password: Specifies the password to use when connecting with the username. This value will not be returned by Vault when performing a read upon the configuration. This is typically used in the connection_url field via the templating directive "{{"password"}}".
-	// If username is provided as spec.username, it takes precedence over the username retrieved from the referenced secret
-	// +kubebuilder:validation:Optional
-	Secret *corev1.LocalObjectReference `json:"secret,omitempty"`
-
-	// RandomSecret retrieves the credentials from the Vault secret corresponding to this RandomSecret. This will map the "username" and "password" keys of the secret to the username and password of this config. All other keys will be ignored. If the RandomSecret is refreshed the operator retrieves the new secret from Vault and updates this configuration. Only one of RootCredentialsFromVaultSecret or RootCredentialsFromSecret or RootCredentialsFromRandomSecret can be specified.
-	// When using randomSecret a username must be specified in the spec.username
-	// password: Specifies the password to use when connecting with the username. This value will not be returned by Vault when performing a read upon the configuration. This is typically used in the connection_url field via the templating directive "{{"password"}}"".
-	// +kubebuilder:validation:Optional
-	RandomSecret *corev1.LocalObjectReference `json:"randomSecret,omitempty"`
-
-	// PasswordKey key to be used when retrieving the password, required with VaultSecrets and Kubernetes secrets, ignored with RandomSecret
-	// +kubebuilder:validation:Optional
-	PasswordKey string `json:"passwordKey,omitempty"`
-
-	// UsernameKey key to be used when retrieving the username, optional with VaultSecrets and Kubernetes secrets, ignored with RandomSecret
-	// +kubebuilder:validation:Optional
-	UsernameKey string `json:"usernameKey,omitempty"`
 }
 
 var _ vaultutils.VaultObject = &DatabaseSecretEngineConfig{}
@@ -113,7 +82,6 @@ func (r *DatabaseSecretEngineConfig) IsValid() (bool, error) {
 func (r *DatabaseSecretEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
 	kubeClient := context.Value("kubeClient").(client.Client)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
 	if r.Spec.RootCredentials.RandomSecret != nil {
 		randomSecret := &RandomSecret{}
 		err := kubeClient.Get(context, types.NamespacedName{
@@ -124,8 +92,12 @@ func (r *DatabaseSecretEngineConfig) setInternalCredentials(context context.Cont
 			log.Error(err, "unable to retrieve RandomSecret", "instance", r)
 			return err
 		}
-		secret, err := vaultClient.Logical().Read(randomSecret.GetPath())
+		secret, exists, err := vaultutils.ReadSecret(context, randomSecret.GetPath())
 		if err != nil {
+			return err
+		}
+		if !exists {
+			err = errors.New("secret not found")
 			log.Error(err, "unable to retrieve vault secret", "instance", r)
 			return err
 		}
@@ -150,8 +122,12 @@ func (r *DatabaseSecretEngineConfig) setInternalCredentials(context context.Cont
 		return nil
 	}
 	if r.Spec.RootCredentials.VaultSecret != nil {
-		secret, err := vaultClient.Logical().Read(string(r.Spec.RootCredentials.VaultSecret.Path))
+		secret, exists, err := vaultutils.ReadSecret(context, string(r.Spec.RootCredentials.VaultSecret.Path))
 		if err != nil {
+			return err
+		}
+		if !exists {
+			err = errors.New("secret not found")
 			log.Error(err, "unable to retrieve vault secret", "instance", r)
 			return err
 		}
@@ -281,22 +257,5 @@ func (i *DBSEConfig) toMap() map[string]interface{} {
 }
 
 func (r *DatabaseSecretEngineConfig) isValid() error {
-	return r.validateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
-}
-
-func (r *DatabaseSecretEngineConfig) validateEitherFromVaultSecretOrFromSecretOrFromRandomSecret() error {
-	count := 0
-	if r.Spec.RootCredentials.RandomSecret != nil {
-		count++
-	}
-	if r.Spec.RootCredentials.Secret != nil {
-		count++
-	}
-	if r.Spec.RootCredentials.VaultSecret != nil {
-		count++
-	}
-	if count != 1 {
-		return errors.New("Only one of spec.rootCredentials.vaultSecret or spec.rootCredentials.secret or spec.rootCredentials.randomSecret can be specified.")
-	}
-	return nil
+	return r.Spec.RootCredentials.validateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
 }

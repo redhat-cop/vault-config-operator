@@ -12,4 +12,8 @@ resources:
 - redhatcop_v1alpha1_passwordpolicy.yaml
 - redhatcop_v1alpha1_githubsecretengineconfig.yaml
 - redhatcop_v1alpha1_githubsecretenginerole.yaml
+- redhatcop_v1alpha1_rabbitmqsecretengineconfig.yaml
+- redhatcop_v1alpha1_rabbitmqsecretenginerole.yaml
+- redhatcop_v1alpha1_pkisecretengineconfig.yaml
+- redhatcop_v1alpha1_pkisecretenginerole.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
