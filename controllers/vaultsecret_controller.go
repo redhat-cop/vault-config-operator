@@ -88,7 +88,7 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	shouldReconcile, err := r.shouldReconcile(ctx, instance)
 	if err != nil {
 		// There was a problem determining if the event should reconcile. Requeue the request.
-		return reconcile.Result{}, err
+		return r.ManageError(ctx, instance, err)
 	}
 	if !shouldReconcile {
 		return r.ManageSuccess(ctx, instance)
@@ -215,6 +215,18 @@ func (r *VaultSecretReconciler) shouldReconcile(ctx context.Context, instance *r
 		// Else there was an Error reading the object. It should Requeue.
 		return false, err
 	} else {
+		// verify secret ownership
+		for _, e := range secret.ObjectMeta.OwnerReferences {
+			instanceNamespacedName := &types.NamespacedName{
+				Name:      instance.Name,
+				Namespace: instance.Namespace,
+			}
+			//if the secret exists and isn't owned by this VaultSecret then the name needs to be different
+			if e.Kind == instance.Kind && e.UID != instance.UID {
+				return false, fmt.Errorf("the k8s Secret %v is not owned by VaultSecret %v", secretNamespacedName.String(), instanceNamespacedName.String())
+			}
+		}
+
 		if secret.Annotations != nil {
 			hash, ok := secret.Annotations[hashAnnotationName]
 			if !ok {
