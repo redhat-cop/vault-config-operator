@@ -46,7 +46,7 @@ import (
 	vaultsecretutils "github.com/redhat-cop/vault-config-operator/controllers/vaultsecretutils"
 )
 
-const hashAnnotationName = "vaultsecret.redhat-cop.io/secret-hash"
+const hashAnnotationName = "vaultsecret.redhatcop.redhat.io/secret-hash"
 
 // VaultSecretReconciler reconciles a VaultSecret object
 type VaultSecretReconciler struct {
@@ -85,7 +85,12 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
 
-	if !r.shouldReconcile(ctx, instance) {
+	shouldReconcile, err := r.shouldReconcile(ctx, instance)
+	if err != nil {
+		// There was a problem determining if the event should reconcile. Requeue the request.
+		return reconcile.Result{}, err
+	}
+	if !shouldReconcile {
 		return r.ManageSuccess(ctx, instance)
 	}
 
@@ -194,9 +199,8 @@ func (r *VaultSecretReconciler) calculateDuration(instance *redhatcopv1alpha1.Va
 
 }
 
-func (r *VaultSecretReconciler) shouldReconcile(ctx context.Context, instance *redhatcopv1alpha1.VaultSecret) bool {
+func (r *VaultSecretReconciler) shouldReconcile(ctx context.Context, instance *redhatcopv1alpha1.VaultSecret) (bool, error) {
 
-	//if k8s secret does not exist, reconcile
 	secretNamespacedName := &types.NamespacedName{
 		Name:      instance.Spec.TemplatizedK8sSecret.Name,
 		Namespace: instance.Namespace,
@@ -204,40 +208,43 @@ func (r *VaultSecretReconciler) shouldReconcile(ctx context.Context, instance *r
 	secret := &corev1.Secret{}
 	err := r.GetClient().Get(ctx, *secretNamespacedName, secret)
 	if err != nil {
+		//if k8s secret does not exist, reconcile
 		if apierrors.IsNotFound(err) {
-			return true
+			return true, nil
 		}
+		// Else there was an Error reading the object. It should Requeue.
+		return false, err
 	} else {
 		if secret.Annotations != nil {
 			hash, ok := secret.Annotations[hashAnnotationName]
 			if !ok {
-				return true
+				return true, nil
 			}
 			// if the hash value in the k8s secret doesnt matches the final data section, reconcile
 			if hash != vaultsecretutils.HashData(secret.Data) {
-				return true
+				return true, nil
 			}
+			// else the hash matches. continue with logic.
 		} else {
-			// if annotation is nil reconcile
-			return true
+			// if annotation is nil, reconcile
+			return true, nil
 		}
 	}
 
-	duration, ok := r.calculateDuration(instance)
-
-	// if this has reconciled before
+	// if the vaultsecret has reconciled before
 	if instance.Status.LastVaultSecretUpdate != nil {
+		duration, ok := r.calculateDuration(instance)
 		// if the next duration is incalculable (no refreshperiod or lease duration), do not reconcile
 		if !ok {
-			return false
+			return false, nil
 		}
 		// if the resync period has not elapsed, do not reconcile
 		if !instance.Status.LastVaultSecretUpdate.Add(duration).Before(time.Now()) {
-			return false
+			return false, nil
 		}
 	}
 
-	return true
+	return true, nil
 }
 
 func (r *VaultSecretReconciler) manageReconcileLogic(ctx context.Context, instance *redhatcopv1alpha1.VaultSecret) error {

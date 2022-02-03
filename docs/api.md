@@ -402,6 +402,8 @@ vault read -tls-skip-verify github/raf-backstage-demo/token/one-repo-only
 
 The VaultSecret CRD allows a user to create a K8s Secret from one or more Vault Secrets. It uses go templating to allow formatting of the K8s Secret in the `output.stringData` section of the spec.
 
+Any manual data change or deletion of the K8s Secret owned by a VaultSecret CR will result in a re-reconciliation by the controller. A hash annotation `vaultsecret.redhatcop.redhat.io/secret-hash`, computed when the K8s Secret is created/updated, is used to verify the integrity of the K8s Secret data.
+
 > Note: if reading a dynamic secret you typically care to set the `refreshThreshold` only (not the `refreshPeriod`). For just Key/Value Vault secrets, set the `refreshPeriod`.
 > 
 > See https://www.vaultproject.io/docs/concepts/lease to understand lease durations.

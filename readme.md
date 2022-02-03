@@ -187,10 +187,10 @@ oc label namespace <namespace> openshift.io/cluster-monitoring="true"
 ### Testing metrics
 
 ```sh
-export operatorNamespace=vault-config-operator-local # or vault-config-operator
+export operatorNamespace=vault-config-operator
 oc label namespace ${operatorNamespace} openshift.io/cluster-monitoring="true"
 oc rsh -n openshift-monitoring -c prometheus prometheus-k8s-0 /bin/bash
-export operatorNamespace=vault-config-operator-local # or vault-config-operator
+export operatorNamespace=vault-config-operator
 curl -v --data-urlencode "query=controller_runtime_active_workers{namespace=\"${operatorNamespace}\"}" localhost:9090/api/v1/query
 exit
 ```
