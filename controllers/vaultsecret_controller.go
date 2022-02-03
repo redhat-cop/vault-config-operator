@@ -19,6 +19,7 @@ package controllers
 import (
 	"bytes"
 	"context"
+
 	"errors"
 	"fmt"
 	"math"
@@ -34,13 +35,18 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	vaultsecretutils "github.com/redhat-cop/vault-config-operator/controllers/vaultsecretutils"
 )
+
+const hashAnnotationName = "vaultsecret.redhat-cop.io/secret-hash"
 
 // VaultSecretReconciler reconciles a VaultSecret object
 type VaultSecretReconciler struct {
@@ -57,10 +63,6 @@ type VaultSecretReconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the VaultSecret object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
@@ -82,6 +84,10 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	}
 
 	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
+
+	if !r.shouldReconcile(ctx, instance) {
+		return r.ManageSuccess(ctx, instance)
+	}
 
 	err = r.manageReconcileLogic(ctx, instance)
 	if err != nil {
@@ -114,7 +120,7 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 func (r *VaultSecretReconciler) formatK8sSecret(instance *redhatcopv1alpha1.VaultSecret, data interface{}) (*corev1.Secret, error) {
 
-	stringData := make(map[string]string)
+	bytesData := make(map[string][]byte)
 	for k, v := range instance.Spec.TemplatizedK8sSecret.StringData {
 
 		tpl, err := template.New("").Funcs(utilstemplates.AdvancedTemplateFuncMap(r.GetRestConfig(), r.Log)).Parse(v)
@@ -129,12 +135,11 @@ func (r *VaultSecretReconciler) formatK8sSecret(instance *redhatcopv1alpha1.Vaul
 			r.Log.Error(err, "unable to execute template", "instance", instance)
 			return nil, err
 		}
-
-		stringData[k] = b.String()
+		bytesData[k] = b.Bytes()
 	}
 
-	// TODO put the hash in the annotation
-	// TODO example: cert-utils-operator.redhat-cop.io/secret-hash: <hash-value>
+	annotations := instance.Spec.TemplatizedK8sSecret.Annotations
+	annotations[hashAnnotationName] = vaultsecretutils.HashData(bytesData)
 
 	k8sSecret := &corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
@@ -144,14 +149,12 @@ func (r *VaultSecretReconciler) formatK8sSecret(instance *redhatcopv1alpha1.Vaul
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        instance.Spec.TemplatizedK8sSecret.Name,
 			Namespace:   instance.Namespace,
-			Annotations: instance.Spec.TemplatizedK8sSecret.Annotations,
+			Annotations: annotations,
 			Labels:      instance.Spec.TemplatizedK8sSecret.Labels,
 		},
-		StringData: stringData,
-		Type:       corev1.SecretType(instance.Spec.TemplatizedK8sSecret.Type),
+		Data: bytesData,
+		Type: corev1.SecretType(instance.Spec.TemplatizedK8sSecret.Type),
 	}
-
-	//ctrl.SetControllerReference(instance, k8sSecret, r.GetScheme())
 
 	return k8sSecret, nil
 }
@@ -191,25 +194,53 @@ func (r *VaultSecretReconciler) calculateDuration(instance *redhatcopv1alpha1.Va
 
 }
 
-func (r *VaultSecretReconciler) manageReconcileLogic(ctx context.Context, instance *redhatcopv1alpha1.VaultSecret) error {
+func (r *VaultSecretReconciler) shouldReconcile(ctx context.Context, instance *redhatcopv1alpha1.VaultSecret) bool {
+
+	//if k8s secret does not exist, reconcile
+	secretNamespacedName := &types.NamespacedName{
+		Name:      instance.Spec.TemplatizedK8sSecret.Name,
+		Namespace: instance.Namespace,
+	}
+	secret := &corev1.Secret{}
+	err := r.GetClient().Get(ctx, *secretNamespacedName, secret)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return true
+		}
+	} else {
+		if secret.Annotations != nil {
+			hash, ok := secret.Annotations[hashAnnotationName]
+			if !ok {
+				return true
+			}
+			// if the hash value in the k8s secret doesnt matches the final data section, reconcile
+			if hash != vaultsecretutils.HashData(secret.Data) {
+				return true
+			}
+		} else {
+			// if annotation is nil reconcile
+			return true
+		}
+	}
 
 	duration, ok := r.calculateDuration(instance)
-
-	// TODO check if k8s secret does not exist, reconcile
-
-	// TODO check if the hash value in the k8s secret doesnt matches the final data section, reconcile
 
 	// if this has reconciled before
 	if instance.Status.LastVaultSecretUpdate != nil {
 		// if the next duration is incalculable (no refreshperiod or lease duration), do not reconcile
 		if !ok {
-			return nil
+			return false
 		}
 		// if the resync period has not elapsed, do not reconcile
 		if !instance.Status.LastVaultSecretUpdate.Add(duration).Before(time.Now()) {
-			return nil
+			return false
 		}
 	}
+
+	return true
+}
+
+func (r *VaultSecretReconciler) manageReconcileLogic(ctx context.Context, instance *redhatcopv1alpha1.VaultSecret) error {
 
 	r.Log.V(1).Info("Reconcile VaultSecret", "namespacedName", fmt.Sprintf("%v/%v", instance.Namespace, instance.Name))
 
@@ -292,39 +323,8 @@ func (r *VaultSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		},
 	}
 
-	secretPredicate := predicate.Funcs{
-		UpdateFunc: func(e event.UpdateEvent) bool {
-
-			newSecret, ok := e.ObjectNew.DeepCopyObject().(*corev1.Secret)
-			if !ok {
-				return false
-			}
-			oldSecret, ok := e.ObjectOld.DeepCopyObject().(*corev1.Secret)
-			if !ok {
-				return false
-			}
-
-			if !reflect.DeepEqual(oldSecret.Data, newSecret.Data) {
-				r.Log.V(1).Info("Update Event - Data changed", "object", e.ObjectNew)
-				return true
-			}
-			return false
-		},
-		CreateFunc: func(e event.CreateEvent) bool {
-			r.Log.V(1).Info("Create Event", "object", e.Object)
-			return false
-		},
-		DeleteFunc: func(e event.DeleteEvent) bool {
-			r.Log.V(1).Info("Delete Event", "object", e.Object)
-			return true
-		},
-		GenericFunc: func(e event.GenericEvent) bool {
-			return false
-		},
-	}
-
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&redhatcopv1alpha1.VaultSecret{}, builder.WithPredicates(vaultSecretPredicate)).
-		Owns(&corev1.Secret{}, builder.WithPredicates(secretPredicate)).
+		Owns(&corev1.Secret{}).
 		Complete(r)
 }

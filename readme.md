@@ -50,9 +50,9 @@ Currently this operator supports the following CRDs:
 9. [RandomSecret](./docs/api.md#RandomSecret) Creates a random secret in a vault [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv) with one password field generated using a [PasswordPolicy](https://www.vaultproject.io/docs/concepts/password-policies)
 10. [GitHubSecretEngineConfig](./docs/api.md#GitHubSecretEngineConfig) Configures a Github Application to produce tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
 11. [GitHubSecretEngineRole](./docs/api.md#GitHubSecretEngineRole) Configures a Github Application to produce scoped tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
-13. [VaultSecret](./docs/api.md#VaultSecret) Creates a K8s Secret from one or more Vault Secrets, See [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv)
-14. [PKISecretEngineConfig](./docs/api.md#pkisecretengineconfig)  Configures a [PKI Secret Engine](https://www.vaultproject.io/docs/secrets/pki)
-15. [PKISecretEngineRole](./docs/api.md#pkisecretenginerole)  Configures a [PKI Secret Engine](https://www.vaultproject.io/docs/secrets/pki) Role
+12. [VaultSecret](./docs/api.md#VaultSecret) Creates a K8s Secret from one or more Vault Secrets
+13. [PKISecretEngineConfig](./docs/api.md#pkisecretengineconfig)  Configures a [PKI Secret Engine](https://www.vaultproject.io/docs/secrets/pki)
+14. [PKISecretEngineRole](./docs/api.md#pkisecretenginerole)  Configures a [PKI Secret Engine](https://www.vaultproject.io/docs/secrets/pki) Role
 
 ## End to end example
 
@@ -191,7 +191,7 @@ export operatorNamespace=vault-config-operator-local # or vault-config-operator
 oc label namespace ${operatorNamespace} openshift.io/cluster-monitoring="true"
 oc rsh -n openshift-monitoring -c prometheus prometheus-k8s-0 /bin/bash
 export operatorNamespace=vault-config-operator-local # or vault-config-operator
-curl -v -s -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://vault-config-operator-controller-manager-metrics.${operatorNamespace}.svc.cluster.local:8443/metrics
+curl -v --data-urlencode "query=controller_runtime_active_workers{namespace=\"${operatorNamespace}\"}" localhost:9090/api/v1/query
 exit
 ```
 
