@@ -46,7 +46,12 @@ import (
 	vaultsecretutils "github.com/redhat-cop/vault-config-operator/controllers/vaultsecretutils"
 )
 
-const hashAnnotationName = "vaultsecret.redhatcop.redhat.io/secret-hash"
+const (
+	hashAnnotationName = "vaultsecret.redhatcop.redhat.io/secret-hash"
+	vaultSecretKind    = "VaultSecret"
+	secretKind         = "Secret"
+	secretAPIVersion   = "v1"
+)
 
 // VaultSecretReconciler reconciles a VaultSecret object
 type VaultSecretReconciler struct {
@@ -85,14 +90,14 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
 
-	shouldReconcile, err := r.shouldReconcile(ctx, instance)
+	shouldSync, err := r.shouldSync(ctx, instance)
 	if err != nil {
 		// There was a problem determining if the event should reconcile. Requeue the request.
 		return r.ManageError(ctx, instance, err)
 	}
 
-	if shouldReconcile {
-		err = r.manageReconcileLogic(ctx, instance)
+	if shouldSync {
+		err = r.manageSyncLogic(ctx, instance)
 		if err != nil {
 			r.Log.Error(err, "unable to complete reconcile logic", "instance", instance)
 			return r.ManageError(ctx, instance, err)
@@ -147,8 +152,8 @@ func (r *VaultSecretReconciler) formatK8sSecret(instance *redhatcopv1alpha1.Vaul
 
 	k8sSecret := &corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "Secret",
-			APIVersion: "v1",
+			Kind:       secretKind,
+			APIVersion: secretAPIVersion,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        instance.Spec.TemplatizedK8sSecret.Name,
@@ -198,7 +203,19 @@ func (r *VaultSecretReconciler) calculateDuration(instance *redhatcopv1alpha1.Va
 
 }
 
-func (r *VaultSecretReconciler) shouldReconcile(ctx context.Context, instance *redhatcopv1alpha1.VaultSecret) (bool, error) {
+func toNamespacedName(obj metav1.Object) string {
+	if obj == nil {
+		return ""
+	}
+
+	namespacedName := &types.NamespacedName{
+		Name:      obj.GetName(),
+		Namespace: obj.GetNamespace(),
+	}
+	return namespacedName.String()
+}
+
+func (r *VaultSecretReconciler) shouldSync(ctx context.Context, instance *redhatcopv1alpha1.VaultSecret) (bool, error) {
 
 	secretNamespacedName := &types.NamespacedName{
 		Name:      instance.Spec.TemplatizedK8sSecret.Name,
@@ -214,16 +231,10 @@ func (r *VaultSecretReconciler) shouldReconcile(ctx context.Context, instance *r
 		// Else there was an Error reading the object. It should Requeue.
 		return false, err
 	} else {
-		// verify secret ownership
-		for _, e := range secret.ObjectMeta.OwnerReferences {
-			instanceNamespacedName := &types.NamespacedName{
-				Name:      instance.Name,
-				Namespace: instance.Namespace,
-			}
-			//if the secret exists and isn't owned by this VaultSecret then the name needs to be different
-			if e.Kind == instance.Kind && e.UID != instance.UID {
-				return false, fmt.Errorf("the k8s Secret %v is not owned by VaultSecret %v", secretNamespacedName.String(), instanceNamespacedName.String())
-			}
+
+		//if the secret exists and isn't owned by this VaultSecret then the name needs to be different
+		if !util.IsOwner(instance, secret) {
+			return false, fmt.Errorf("the k8s Secret %v is not owned by VaultSecret %v", secretNamespacedName.String(), toNamespacedName(instance))
 		}
 
 		if secret.Annotations != nil {
@@ -258,9 +269,9 @@ func (r *VaultSecretReconciler) shouldReconcile(ctx context.Context, instance *r
 	return true, nil
 }
 
-func (r *VaultSecretReconciler) manageReconcileLogic(ctx context.Context, instance *redhatcopv1alpha1.VaultSecret) error {
+func (r *VaultSecretReconciler) manageSyncLogic(ctx context.Context, instance *redhatcopv1alpha1.VaultSecret) error {
 
-	r.Log.V(1).Info("Reconcile VaultSecret", "namespacedName", fmt.Sprintf("%v/%v", instance.Namespace, instance.Name))
+	r.Log.V(1).Info("Sync VaultSecret", "namespacedName", toNamespacedName(instance))
 
 	mergedMap := make(map[string]interface{})
 
@@ -323,18 +334,55 @@ func (r *VaultSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			}
 
 			if !reflect.DeepEqual(oldVaultSecret.Spec, newVaultSecret.Spec) {
-				r.Log.V(1).Info("Update Event - Spec changed", "object", e.ObjectNew)
+				r.Log.V(1).Info("Update Event - Spec changed", "kind", vaultSecretKind, "namespacedName", toNamespacedName(e.ObjectNew))
 				return true
 			}
 			return false
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
-			r.Log.V(1).Info("Create Event", "object", e.Object)
+			r.Log.V(1).Info("Create Event", "kind", vaultSecretKind, "namespacedName", toNamespacedName(e.Object))
 			return true
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
-			r.Log.V(1).Info("Delete Event", "object", e.Object)
+			r.Log.V(1).Info("Delete Event", "kind", vaultSecretKind, "namespacedName", toNamespacedName(e.Object))
 			return true
+		},
+		GenericFunc: func(e event.GenericEvent) bool {
+			return false
+		},
+	}
+
+	k8sSecretPredicate := predicate.Funcs{
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			newSecret, ok := e.ObjectNew.DeepCopyObject().(*corev1.Secret)
+			if !ok {
+				return false
+			}
+
+			if r.isOwnedSecretByController(newSecret) {
+				hash, ok := newSecret.Annotations[hashAnnotationName]
+				if !ok || hash != vaultsecretutils.HashData(newSecret.Data) {
+					r.Log.V(1).Info("Update Event - hash mismatch", "kind", secretKind, "namespacedName", toNamespacedName(e.ObjectNew))
+					return true
+				}
+			}
+
+			return false
+		},
+		CreateFunc: func(e event.CreateEvent) bool {
+			return false
+		},
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			//Useful for debugging
+			secret, ok := e.Object.DeepCopyObject().(*corev1.Secret)
+			if !ok {
+				return false
+			}
+			if r.isOwnedSecretByController(secret) {
+				r.Log.V(1).Info("Delete Event", "kind", secretKind, "namespacedName", toNamespacedName(e.Object))
+				return true
+			}
+			return false
 		},
 		GenericFunc: func(e event.GenericEvent) bool {
 			return false
@@ -343,6 +391,15 @@ func (r *VaultSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&redhatcopv1alpha1.VaultSecret{}, builder.WithPredicates(vaultSecretPredicate)).
-		Owns(&corev1.Secret{}).
+		Owns(&corev1.Secret{}, builder.WithPredicates(k8sSecretPredicate)).
 		Complete(r)
+}
+
+func (r *VaultSecretReconciler) isOwnedSecretByController(secret *corev1.Secret) bool {
+	for _, ownerRef := range secret.ObjectMeta.OwnerReferences {
+		if ownerRef.Kind == vaultSecretKind {
+			return true
+		}
+	}
+	return false
 }
