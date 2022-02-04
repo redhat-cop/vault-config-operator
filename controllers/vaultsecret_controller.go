@@ -90,14 +90,13 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		// There was a problem determining if the event should reconcile. Requeue the request.
 		return r.ManageError(ctx, instance, err)
 	}
-	if !shouldReconcile {
-		return r.ManageSuccess(ctx, instance)
-	}
 
-	err = r.manageReconcileLogic(ctx, instance)
-	if err != nil {
-		r.Log.Error(err, "unable to complete reconcile logic", "instance", instance)
-		return r.ManageError(ctx, instance, err)
+	if shouldReconcile {
+		err = r.manageReconcileLogic(ctx, instance)
+		if err != nil {
+			r.Log.Error(err, "unable to complete reconcile logic", "instance", instance)
+			return r.ManageError(ctx, instance, err)
+		}
 	}
 
 	duration, ok := r.calculateDuration(instance)
