@@ -92,14 +92,14 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	shouldSync, err := r.shouldSync(ctx, instance)
 	if err != nil {
-		// There was a problem determining if the event should reconcile. Requeue the request.
+		// There was a problem determining if the event should cause a sync.
 		return r.ManageError(ctx, instance, err)
 	}
 
 	if shouldSync {
 		err = r.manageSyncLogic(ctx, instance)
 		if err != nil {
-			r.Log.Error(err, "unable to complete reconcile logic", "instance", instance)
+			r.Log.Error(err, "unable to complete sync logic", "instance", instance)
 			return r.ManageError(ctx, instance, err)
 		}
 	}
@@ -224,11 +224,11 @@ func (r *VaultSecretReconciler) shouldSync(ctx context.Context, instance *redhat
 	secret := &corev1.Secret{}
 	err := r.GetClient().Get(ctx, *secretNamespacedName, secret)
 	if err != nil {
-		//if k8s secret does not exist, reconcile
+		//if k8s secret does not exist (it was deleted), it should sync
 		if apierrors.IsNotFound(err) {
 			return true, nil
 		}
-		// Else there was an Error reading the object. It should Requeue.
+		// else there was an Error reading the object. It should not sync.
 		return false, err
 	} else {
 
@@ -242,25 +242,25 @@ func (r *VaultSecretReconciler) shouldSync(ctx context.Context, instance *redhat
 			if !ok {
 				return true, nil
 			}
-			// if the hash value in the k8s secret doesnt matches the final data section, reconcile
+			// if the hash value in the k8s secret doesnt match the final data section, sync
 			if hash != vaultsecretutils.HashData(secret.Data) {
 				return true, nil
 			}
 			// else the hash matches. continue with logic.
 		} else {
-			// if annotation is nil, reconcile
+			// if annotation is nil, sync
 			return true, nil
 		}
 	}
 
-	// if the vaultsecret has reconciled before
+	// if the vaultsecret has synced before
 	if instance.Status.LastVaultSecretUpdate != nil {
 		duration, ok := r.calculateDuration(instance)
-		// if the next duration is incalculable (no refreshperiod or lease duration), do not reconcile
+		// if the next duration is incalculable (no refreshperiod or lease duration), do not sync
 		if !ok {
 			return false, nil
 		}
-		// if the resync period has not elapsed, do not reconcile
+		// if the resync period has not elapsed, do not sync
 		if !instance.Status.LastVaultSecretUpdate.Add(duration).Before(time.Now()) {
 			return false, nil
 		}
