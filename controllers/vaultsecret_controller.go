@@ -288,7 +288,7 @@ func (r *VaultSecretReconciler) manageSyncLogic(ctx context.Context, instance *r
 		vaultEndpoint := vaultutils.NewVaultEndpointObj(&vaultSecretDefinition)
 		vaultSecret, ok, _ := vaultEndpoint.GetSecret(ctx)
 		if !ok {
-			return errors.New("unable to read Vault Secret for " + vaultSecretDefinition.GetPath())
+			return errors.New("unable to read vault secret for " + vaultSecretDefinition.GetPath())
 		}
 
 		definitionsStatus[idx] = redhatcopv1alpha1.VaultSecretDefinitionStatus{
@@ -298,7 +298,18 @@ func (r *VaultSecretReconciler) manageSyncLogic(ctx context.Context, instance *r
 			Renewable:     vaultSecret.Renewable,
 		}
 
-		mergedMap[vaultSecretDefinition.Name] = vaultSecret.Data
+		if vaultSecret.Data == nil {
+			return errors.New("no data returned from vault secret for " + vaultSecretDefinition.GetPath())
+		}
+
+		// if its a kv v2, then the structure returned is different
+		kv2DataMap, ok := vaultSecret.Data["data"]
+		if ok && reflect.ValueOf(kv2DataMap).Kind() == reflect.Map {
+			mergedMap[vaultSecretDefinition.Name] = kv2DataMap
+		} else {
+			mergedMap[vaultSecretDefinition.Name] = vaultSecret.Data
+		}
+
 	}
 
 	k8sSecret, err := r.formatK8sSecret(instance, mergedMap)
