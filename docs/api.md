@@ -302,6 +302,7 @@ spec:
   authentication: 
     path: kubernetes
     role: database-engine-admin
+  isKVSecretsEngineV2: false
   path: kv/vault-tenant
   secretKey: password
   secretFormat:
@@ -310,6 +311,8 @@ spec:
 ```
 
 The `path` field specifies the path at which the secret will be written, it must correspond to a kv Secret Engine mount.
+
+The `isKVSecretsEngineV2` field is used to indicate if the KV Secrets Engine (defined in the `path`) expects a v1 or v2 data payload. Defaults to false to indicate that a v1 payload will be sent.
 
 The `secretKey` field is the key of the secret.
 

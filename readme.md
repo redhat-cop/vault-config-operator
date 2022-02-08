@@ -310,6 +310,23 @@ oc apply -f ./test/vaultsecret/vaultsecret-dynamicsecret.yaml -n test-vault-conf
 oc apply -f ./test/vaultsecret/vaultsecret-pullsecret.yaml -n test-vault-config-operator
 ```
 
+VaultSecret & RandomSecret using KV Secret Engine V2
+
+> Note: you must run the previous tests
+
+```sh
+#Random Secret using v2 steps
+envsubst < ./test/randomsecret/v2/01-policy-kv-engine-admin-v2.yaml | oc apply -f - -n vault-admin 
+oc apply -f ./test/randomsecret/v2/02-kubernetesauthenginerole-kv-engine-admin-v2.yaml -n vault-admin 
+oc apply -f test/randomsecret/v2/03-secretenginemount-kv-v2.yaml -n test-vault-config-operator
+envsubst < ./test/randomsecret/v2/04-policy-secret-writer-v2.yaml | oc apply -f - -n vault-admin
+oc apply -f ./test/randomsecret/v2/05-kubernetesauthenginerole-secret-writer-v2.yaml -n vault-admin
+oc apply -f ./test/randomsecret/v2/06-randomsecret-randomsecret-password-v2.yaml -n test-vault-config-operator
+
+#VaultSecret reading RandomSecret v2 steps
+oc apply -f ./test/vaultsecret/v2/07-vaultsecret-randomsecret-v2.yaml -n test-vault-config-operator
+```
+
 Kube auth engine mount and config and role
 
 ```shell
