@@ -1,3 +1,6 @@
+//go:build integration
+// +build integration
+
 /*
 Copyright 2021.
 
@@ -13,7 +16,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
 package controllers
 
 import (
@@ -26,6 +28,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	controllertestutils "github.com/redhat-cop/vault-config-operator/controllers/controllertestutils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -63,6 +66,8 @@ func TestAPIs(t *testing.T) {
 		"Controller Integration Suite",
 		[]Reporter{printer.NewlineReporter{}})
 }
+
+var decoder = controllertestutils.NewDecoder()
 
 var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))

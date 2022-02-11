@@ -17,43 +17,40 @@ import (
 //TODO: Example: https://github.com/kubernetes-sigs/kubebuilder/blob/master/docs/book/src/cronjob-tutorial/testdata/project/controllers/cronjob_controller_test.go
 // Define utility constants for object names and testing timeouts/durations and intervals.
 
-var _ = Describe("VaultSecret controller", func() {
+var _ = Describe("Policy controller", func() {
+
 	timeout := time.Second * 10
 	interval := time.Millisecond * 250
-	Context("When creating VaultSecret", func() {
+
+	Context("When creating the Policy", func() {
 		It("Should be Successful when created", func() {
-			By("By creating a new VaultSecret")
+			By("By creating a new Policy")
 			ctx := context.Background()
 
-			instance, err := decoder.GetVaultSecretInstance("../test/vaultsecret/vaultsecret-randomsecret.yaml")
+			instance, err := decoder.GetPolicyInstance("../test/kv-engine-admin-policy.yaml")
 			Expect(err).To(BeNil())
-			instance.Namespace = vaultTestNamespaceName
+			instance.Namespace = vaultAdminNamespaceName
+
+			Expect(k8sClient.Create(ctx, instance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}
-			createdVaultSecret := &redhatcopv1alpha1.VaultSecret{}
+			created := &redhatcopv1alpha1.Policy{}
 
-			// We'll need to retry getting this newly created VaultSecret, given that creation may not immediately happen.
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, lookupKey, createdVaultSecret)
+				err := k8sClient.Get(ctx, lookupKey, created)
 				if err != nil {
 					return false
 				}
-				if createdVaultSecret.Status.LastVaultSecretUpdate == nil {
-					return false
+
+				for _, condition := range created.Status.Conditions {
+					if condition.Type == "ReconcileSuccess" {
+						return true
+					}
 				}
-				return true
+
+				return false
 			}, timeout, interval).Should(BeTrue())
 
 		})
 	})
 })
-
-var files = []string{
-	"",
-	"../test/kv-engine-admin-policy.yaml",
-	"../test/secret-writer-policy.yaml",
-	"../test/kv-engine-admin-role.yaml",
-	"../test/secret-writer-role.yaml",
-	"../test/kv-secret-engine.yaml",
-	"../test/random-secret.yaml",
-}
