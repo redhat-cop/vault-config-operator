@@ -62,6 +62,11 @@ type RandomSecretSpec struct {
 	SecretKey string `json:"secretKey,omitempty"`
 
 	calculatedSecret string `json:"-"`
+
+	// IsKVSecretsEngineV2 indicates if the KV Secrets engine is V2 or not. Default is false to indicate the payload to send is for KV Secret Engine V1.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default=false
+	IsKVSecretsEngineV2 bool `json:"isKVSecretsEngineV2,omitempty"`
 }
 
 var _ vaultutils.VaultObject = &RandomSecret{}
@@ -69,11 +74,22 @@ var _ vaultutils.VaultObject = &RandomSecret{}
 func (d *RandomSecret) GetPath() string {
 	return string(d.Spec.Path) + "/" + d.Name
 }
-func (d *RandomSecret) GetPayload() map[string]interface{} {
+
+func (d *RandomSecret) getV1Payload() map[string]interface{} {
 	return map[string]interface{}{
 		d.Spec.SecretKey: d.Spec.calculatedSecret,
 	}
 }
+
+func (d *RandomSecret) GetPayload() map[string]interface{} {
+	if d.Spec.IsKVSecretsEngineV2 {
+		return map[string]interface{}{
+			"data": d.getV1Payload(),
+		}
+	}
+	return d.getV1Payload()
+}
+
 func (d *RandomSecret) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	return false
 }
