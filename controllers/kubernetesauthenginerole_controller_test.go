@@ -5,8 +5,6 @@ package controllers
 
 import (
 	"context"
-	"os"
-	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -16,30 +14,24 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-//TODO: Example: https://github.com/kubernetes-sigs/kubebuilder/blob/master/docs/book/src/cronjob-tutorial/testdata/project/controllers/cronjob_controller_test.go
-// Define utility constants for object names and testing timeouts/durations and intervals.
-
-var _ = Describe("Policy controller", func() {
+var _ = Describe("KubernetesAuthEngineRole controller", func() {
 
 	timeout := time.Second * 10
 	interval := time.Millisecond * 250
 
-	Context("When creating the kv-engine-admin Policy", func() {
+	Context("When creating the kv-engine-admin KubernetesAuthEngineRole", func() {
 		It("Should be Successful when created", func() {
-			By("By creating a new Policy")
+			By("By creating a new KubernetesAuthEngineRole")
 			ctx := context.Background()
 
-			instance, err := decoder.GetPolicyInstance("../test/kv-engine-admin-policy.yaml")
+			instance, err := decoder.GetKubernetesAuthEngineRoleInstance("../test/kv-engine-admin-role.yaml")
 			Expect(err).To(BeNil())
 			instance.Namespace = vaultAdminNamespaceName
-
-			//SUBSTITUE
-			instance.Spec.Policy = strings.Replace(instance.Spec.Policy, "${accessor}", os.Getenv("ACCESSOR"), -1)
 
 			Expect(k8sClient.Create(ctx, instance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}
-			created := &redhatcopv1alpha1.Policy{}
+			created := &redhatcopv1alpha1.KubernetesAuthEngineRole{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, lookupKey, created)
@@ -59,22 +51,19 @@ var _ = Describe("Policy controller", func() {
 		})
 	})
 
-	Context("When creating the secret-writer Policy", func() {
+	Context("When creating the secret-writer KubernetesAuthEngineRole", func() {
 		It("Should be Successful when created", func() {
-			By("By creating a new Policy")
+			By("By creating a new KubernetesAuthEngineRole")
 			ctx := context.Background()
 
-			instance, err := decoder.GetPolicyInstance("../test/secret-writer-policy.yaml")
+			instance, err := decoder.GetKubernetesAuthEngineRoleInstance("../test/secret-writer-role.yaml")
 			Expect(err).To(BeNil())
 			instance.Namespace = vaultAdminNamespaceName
-
-			//SUBSTITUE
-			instance.Spec.Policy = strings.Replace(instance.Spec.Policy, "${accessor}", os.Getenv("ACCESSOR"), -1)
 
 			Expect(k8sClient.Create(ctx, instance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}
-			created := &redhatcopv1alpha1.Policy{}
+			created := &redhatcopv1alpha1.KubernetesAuthEngineRole{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, lookupKey, created)
@@ -94,22 +83,19 @@ var _ = Describe("Policy controller", func() {
 		})
 	})
 
-	Context("When creating the secret-reader Policy", func() {
+	Context("When creating the secret-reader KubernetesAuthEngineRole", func() {
 		It("Should be Successful when created", func() {
-			By("By creating a new Policy")
+			By("By creating a new KubernetesAuthEngineRole")
 			ctx := context.Background()
 
-			instance, err := decoder.GetPolicyInstance("../test/vaultsecret/policy-secret-reader.yaml")
+			instance, err := decoder.GetKubernetesAuthEngineRoleInstance("../test/vaultsecret/kubernetesauthenginerole-secret-reader.yaml")
 			Expect(err).To(BeNil())
 			instance.Namespace = vaultAdminNamespaceName
-
-			//SUBSTITUE
-			instance.Spec.Policy = strings.Replace(instance.Spec.Policy, "${accessor}", os.Getenv("ACCESSOR"), -1)
 
 			Expect(k8sClient.Create(ctx, instance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}
-			created := &redhatcopv1alpha1.Policy{}
+			created := &redhatcopv1alpha1.KubernetesAuthEngineRole{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, lookupKey, created)

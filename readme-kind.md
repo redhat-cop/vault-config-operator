@@ -45,7 +45,7 @@ helm upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f ./
 
 kubectl port-forward pod/vault-0 8200:8200 -n vault
 
-kubectl create namespace vault-admin
+# kubectl create namespace vault-admin
 export VAULT_ADDR=http://localhost:8200
 export VAULT_TOKEN=$(kubectl get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d )
 # this policy is intentionally broad to allow to test anything in Vault. In a real life scenario this policy would be scoped down.
@@ -61,11 +61,8 @@ export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.da
 > TODO
 
 ```sh
-oc apply -f ./test/password-policy.yaml -n vault-admin
-envsubst < ./test/kv-engine-admin-policy.yaml | oc apply -f - -n vault-admin
-envsubst < ./test/secret-writer-policy.yaml | oc apply -f - -n vault-admin
-oc apply -f ./test/kv-engine-admin-role.yaml -n vault-admin
-oc apply -f ./test/secret-writer-role.yaml -n vault-admin
-oc apply -f ./test/kv-secret-engine.yaml -n test-vault-config-operator
-oc apply -f ./test/random-secret.yaml -n test-vault-config-operator
+helm delete vault -n vault --wait
+kubectl delete pvc data-vault-0 -n vault
 ```
+
+
