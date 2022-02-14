@@ -138,7 +138,12 @@ func (r *GitHubSecretEngineConfig) setInternalCredentials(context context.Contex
 			log.Error(err, "unable to retrieve Secret", "instance", r)
 			return err
 		}
-		r.Spec.retrievedSSHKey = string(secret.Data["ssh-privatekey"])
+		if secret.Type != corev1.SecretTypeSSHAuth {
+			err := errors.New("secret must be of type: " + string(corev1.SecretTypeSSHAuth))
+			log.Error(err, "wrong ", "secret type", secret.Type)
+			return err
+		}
+		r.Spec.retrievedSSHKey = string(secret.Data[corev1.SSHAuthPrivateKey])
 		return nil
 	}
 	if r.Spec.SSHKeyReference.VaultSecret != nil {
