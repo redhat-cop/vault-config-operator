@@ -17,11 +17,12 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"net/url"
+	"context"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/pkg/errors"
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -32,17 +33,19 @@ type VaultSecretSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Url of the Vault instance.
-	// +kubebuilder:validation:Required
-	Url string `json:"url,omitempty"`
 	// RefreshPeriod if specified, the operator will refresh the secret with the given frequency.
-	// Defaults to five minutes, and must be at least one minute.
+	// This takes precedence over any vault secret lease duration and can be used to force a refresh.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default="5m"
 	RefreshPeriod *metav1.Duration `json:"refreshPeriod,omitempty"`
-	// KVSecrets are the Key/Value secrets in Vault.
+	// RefreshThreshold if specified, will instruct the operator to refresh when a percentage of the lease duration is met when there is no RefreshPeriod specified.
+	// This is particularly useful for controlling when dynamic secrets should be refreshed before the lease duration is exceeded.
+	// The default is 90, meaning the secret would refresh after 90% of the time has passed from the vault secret's lease duration.
 	// +kubebuilder:validation:Required
-	KVSecrets []KVSecret `json:"kvSecrets,omitempty"`
+	// +kubebuilder:default=90
+	RefreshThreshold int `json:"refreshThreshold,omitempty"`
+	// VaultSecretDefinitions are the secrets in Vault.
+	// +kubebuilder:validation:Required
+	VaultSecretDefinitions []VaultSecretDefinition `json:"vaultSecretDefinitions,omitempty"`
 	// TemplatizedK8sSecret is the formatted K8s Secret created by templating from the Vault KV secrets.
 	// +kubebuilder:validation:Required
 	TemplatizedK8sSecret TemplatizedK8sSecret `json:"output,omitempty"`
@@ -56,8 +59,14 @@ type VaultSecretStatus struct {
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 
-	//LastVaultSecretUpdate last time when this secret was updated from Vault
+	//LastVaultSecretUpdate the last time when this secret was updated from Vault
 	LastVaultSecretUpdate *metav1.Time `json:"lastVaultSecretUpdate,omitempty"`
+
+	//NextVaultSecretUpdate the next time when this secret will be synced with Vault. If nil, it will not be refreshed.
+	NextVaultSecretUpdate *metav1.Time `json:"nextVaultSecretUpdate,omitempty"`
+
+	//VaultSecretDefinitionsStatus information used to determine if the secret should be rereconciled
+	VaultSecretDefinitionsStatus []VaultSecretDefinitionStatus `json:"vaultSecretDefinitionsStatus,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
 func (vs *VaultSecret) GetConditions() []metav1.Condition {
@@ -93,16 +102,32 @@ func init() {
 	SchemeBuilder.Register(&VaultSecret{}, &VaultSecretList{})
 }
 
-type KVSecret struct {
+type VaultSecretDefinition struct {
 	// Name is an arbitrary, but unique, name for this KV Vault secret and referenced when templating.
 	// +kubebuilder:validation:Required
 	Name string `json:"name,omitempty"`
-	// Authentication is the kube aoth configuraiton to be used to execute this request
+	// Authentication is the kube auth configuraiton to be used to execute this request
 	// +kubebuilder:validation:Required
 	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
-	// Keys is a list of keys to use for templating. If none are listed all keys are referenceable for templating.
+	// Path is the path of the secret.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default=kubernetes
+	Path Path `json:"path,omitempty"`
+}
+
+type VaultSecretDefinitionStatus struct {
+	// Name is an arbitrary, but unique, name for this KV Vault secret and referenced when templating.
+	// +kubebuilder:validation:Required
+	Name string `json:"name,omitempty"`
+	// LeaseID is the id of a lease, this denotes the secret is dynamic
 	// +kubebuilder:validation:Optional
-	Keys []string `json:"keys,omitempty"`
+	LeaseID string `json:"lease_id,omitempty"`
+	// LeaseDuration is the time until the secret should be read in again, thus recreating the k8s Secret
+	// +kubebuilder:validation:Optional
+	LeaseDuration int `json:"lease_duration,omitempty"`
+	// Renewable informs if the lease is renewable for the dynamic secret
+	// +kubebuilder:validation:Optional
+	Renewable bool `json:"renewable,omitempty"`
 }
 
 type TemplatizedK8sSecret struct {
@@ -117,6 +142,9 @@ type TemplatizedK8sSecret struct {
 	// The Sprig template library and Helm functions (like toYaml) are supported.
 	// +kubebuilder:validation:Required
 	StringData map[string]string `json:"stringData,omitempty"`
+	// Labels are labels to add to the final K8s Secret.
+	// +kubebuilder:validation:Optional
+	Labels map[string]string `json:"labels,omitempty"`
 	// Annotations are annotations to add to the final K8s Secret.
 	// +kubebuilder:validation:Optional
 	Annotations map[string]string `json:"annotations,omitempty"`
@@ -129,45 +157,28 @@ func (vs *VaultSecret) IsValid() (bool, error) {
 
 func (vs *VaultSecret) isValid() error {
 	result := &multierror.Error{}
-	result = multierror.Append(result, vs.validUrl())
-	result = multierror.Append(result, vs.validResyncInterval())
 	return result.ErrorOrNil()
 }
 
-func (vs *VaultSecret) validUrl() error {
+var _ vaultutils.VaultObject = &VaultSecretDefinition{}
 
-	u, err := url.Parse(vs.Spec.Url)
-
-	errCount := 0
-
-	errs := errors.New("invalid url")
-	if err != nil {
-		errs = errors.Wrap(errs, err.Error())
-		errCount++
-	}
-
-	if u.Scheme == "" {
-		errs = errors.Wrap(errs, "no valid scheme in url")
-		errCount++
-	}
-
-	if u.Host == "" {
-		errs = errors.Wrap(errs, "no valid host in url")
-		errCount++
-	}
-
-	if errCount > 0 {
-		return errs
-	}
-
+func (d *VaultSecretDefinition) GetPath() string {
+	return string(d.Path)
+}
+func (d *VaultSecretDefinition) GetPayload() map[string]interface{} {
 	return nil
 }
+func (d *VaultSecretDefinition) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+	return false
+}
 
-func (vs *VaultSecret) validResyncInterval() error {
+func (d *VaultSecretDefinition) IsInitialized() bool {
+	return true
+}
 
-	if vs.Spec.RefreshPeriod.Minutes() < 1 {
-		return errors.New("ResyncInterval must be at least 1 minute")
-	}
-
+func (r *VaultSecretDefinition) IsValid() (bool, error) {
+	return true, nil
+}
+func (d *VaultSecretDefinition) PrepareInternalValues(context context.Context, object client.Object) error {
 	return nil
 }

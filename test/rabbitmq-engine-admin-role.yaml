@@ -1,0 +1,18 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KubernetesAuthEngineRole
+metadata:
+  name: rabbitmq-engine-admin
+spec:
+  # Add fields here
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+    # serviceAccount: {"name": "default"}
+  path: kubernetes  
+  policies:
+    - rabbitmq-engine-admin
+  targetServiceAccounts: ["default"]
+  targetNamespaces:
+    targetNamespaceSelector:
+      matchLabels:
+        rabbitmq-engine-admin: "true"

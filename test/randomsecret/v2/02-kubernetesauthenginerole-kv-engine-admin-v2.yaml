@@ -1,0 +1,16 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KubernetesAuthEngineRole
+metadata:
+  name: kv-engine-admin-v2
+spec:
+  # Add fields here
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  path: kubernetes
+  policies:
+    - kv-engine-admin-v2
+  targetNamespaces:
+    targetNamespaceSelector:
+      matchLabels:
+        database-engine-admin: "true"

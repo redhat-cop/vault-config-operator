@@ -166,7 +166,7 @@ func init() {
 func (i *KAECConfig) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["kubernetes_host"] = i.KubernetesHost
-	payload["kubernetes_ca_host"] = i.KubernetesCACert
+	payload["kubernetes_ca_cert"] = i.KubernetesCACert
 	payload["token_reviewer_jwt"] = i.retrievedTokenReviewerJWT
 	payload["pem_keys"] = i.PEMKeys
 	payload["issuer"] = i.Issuer

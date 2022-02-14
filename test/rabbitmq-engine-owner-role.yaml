@@ -1,0 +1,16 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: RabbitMQSecretEngineRole
+metadata:
+  name: owner-role
+spec:
+  authentication: 
+    path: kubernetes
+    role: rabbitmq-engine-admin
+  path: test-vault-config-operator/rabbitmq
+  tags: 'administrator'
+  vhosts:
+  - vhostName: '/'
+    permissions:
+      read: '.*'
+      write: '.*'
+      configure: '.*'

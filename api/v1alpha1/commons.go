@@ -159,6 +159,13 @@ func cleansePath(path string) string {
 	return strings.Trim(strings.ReplaceAll(path, "//", "/"), "/")
 }
 
+func toString(name interface{}) string {
+	if name != nil {
+		return name.(string)
+	}
+	return ""
+}
+
 func parseOrDie(val string) metav1.Duration {
 	d, err := time.ParseDuration(val)
 	if err != nil {
@@ -173,6 +180,53 @@ type VaultSecretReference struct {
 	// Path is the path to the secret
 	// +kubebuilder:validation:Required
 	Path string `json:"path,omitempty"`
+}
+
+type RootCredentialConfig struct {
+	// VaultSecret retrieves the credentials from a Vault secret. This will map the "username" and "password" keys of the secret to the username and password of this config. All other keys will be ignored. Only one of RootCredentialsFromVaultSecret or RootCredentialsFromSecret or RootCredentialsFromRandomSecret can be specified.
+	// username: Specifies the name of the user to use as the "root" user when connecting to the database. This "root" user is used to create/update/delete users managed by these plugins, so you will need to ensure that this user has permissions to manipulate users appropriate to the database. This is typically used in the connection_url field via the templating directive "{{"username"}}" or "{{"name"}}".
+	// password: Specifies the password to use when connecting with the username. This value will not be returned by Vault when performing a read upon the configuration. This is typically used in the connection_url field via the templating directive "{{"password"}}".
+	// If username is provided as spec.username, it takes precedence over the username retrieved from the referenced secret
+	// +kubebuilder:validation:Optional
+	VaultSecret *VaultSecretReference `json:"vaultSecret,omitempty"`
+
+	// Secret retrieves the credentials from a Kubernetes secret. The secret must be of basicauth type (https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret). This will map the "username" and "password" keys of the secret to the username and password of this config. If the kubernetes secret is updated, this configuration will also be updated. All other keys will be ignored. Only one of RootCredentialsFromVaultSecret or RootCredentialsFromSecret or RootCredentialsFromRandomSecret can be specified.
+	// username: Specifies the name of the user to use as the "root" user when connecting to the database. This "root" user is used to create/update/delete users managed by these plugins, so you will need to ensure that this user has permissions to manipulate users appropriate to the database. This is typically used in the connection_url field via the templating directive "{{"username"}}" or "{{"name"}}".
+	// password: Specifies the password to use when connecting with the username. This value will not be returned by Vault when performing a read upon the configuration. This is typically used in the connection_url field via the templating directive "{{"password"}}".
+	// If username is provided as spec.username, it takes precedence over the username retrieved from the referenced secret
+	// +kubebuilder:validation:Optional
+	Secret *corev1.LocalObjectReference `json:"secret,omitempty"`
+
+	// RandomSecret retrieves the credentials from the Vault secret corresponding to this RandomSecret. This will map the "username" and "password" keys of the secret to the username and password of this config. All other keys will be ignored. If the RandomSecret is refreshed the operator retrieves the new secret from Vault and updates this configuration. Only one of RootCredentialsFromVaultSecret or RootCredentialsFromSecret or RootCredentialsFromRandomSecret can be specified.
+	// When using randomSecret a username must be specified in the spec.username
+	// password: Specifies the password to use when connecting with the username. This value will not be returned by Vault when performing a read upon the configuration. This is typically used in the connection_url field via the templating directive "{{"password"}}"".
+	// +kubebuilder:validation:Optional
+	RandomSecret *corev1.LocalObjectReference `json:"randomSecret,omitempty"`
+
+	// PasswordKey key to be used when retrieving the password, required with VaultSecrets and Kubernetes secrets, ignored with RandomSecret
+	// +kubebuilder:validation:Optional
+	PasswordKey string `json:"passwordKey,omitempty"`
+
+	// UsernameKey key to be used when retrieving the username, optional with VaultSecrets and Kubernetes secrets, ignored with RandomSecret
+	// +kubebuilder:validation:Optional
+	UsernameKey string `json:"usernameKey,omitempty"`
+}
+
+func (credentials *RootCredentialConfig) validateEitherFromVaultSecretOrFromSecretOrFromRandomSecret() error {
+	count := 0
+	if credentials.RandomSecret != nil {
+		count++
+	}
+	if credentials.Secret != nil {
+		count++
+	}
+	if credentials.VaultSecret != nil {
+		count++
+	}
+	if count != 1 {
+		return errors.New("only one of spec.rootCredentials.vaultSecret or spec.rootCredentials.secret or spec.rootCredentials.randomSecret can be specified")
+	}
+	return nil
 }
 
 func GetFinalizer(instance client.Object) string {

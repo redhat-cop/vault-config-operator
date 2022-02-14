@@ -73,6 +73,12 @@ Here are the steps:
 6. Implement the controller, under normal circumstances this should be straightfornad, just use this code:
 
   ```golang
+    type MyVaultTypeReconciler struct {
+      util.ReconcilerBase
+      Log            logr.Logger
+      ControllerName string
+    }
+
     func (r *MyVaultTypeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
       _ = log.FromContext(ctx)
       instance := &redhatcopv1alpha1.MyVaultType{}
@@ -100,5 +106,18 @@ Here are the steps:
       return ctrl.NewControllerManagedBy(mgr).
         For(&redhatcopv1alpha1.MyVaultType{}).
         Complete(r)
+    }
+  ```
+
+7. On the `main.go` update the controller reconciler to use the new operator util structur.
+
+  ```golang
+  	if err = (&controllers.MyVaultTypeReconciler{
+      ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("MyVaultType"), mgr.GetAPIReader()),
+      Log:            ctrl.Log.WithName("controllers").WithName("MyVaultType"),
+      ControllerName: "MyVaultType",
+    }).SetupWithManager(mgr); err != nil {
+      setupLog.Error(err, "unable to create controller", "controller", "MyVaultType")
+      os.Exit(1)
     }
   ```

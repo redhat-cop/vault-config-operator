@@ -48,6 +48,11 @@ Currently this operator supports the following CRDs:
 7. [DatabaseSecretEngineConfig](./docs/api.md#DatabaseSecretEngineConfig) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Connection
 8. [DatabaseSecretEngineRole](./docs/api.md#DatabaseSecretEngineRole) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Role
 9. [RandomSecret](./docs/api.md#RandomSecret) Creates a random secret in a vault [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv) with one password field generated using a [PasswordPolicy](https://www.vaultproject.io/docs/concepts/password-policies)
+10. [GitHubSecretEngineConfig](./docs/api.md#GitHubSecretEngineConfig) Configures a Github Application to produce tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
+11. [GitHubSecretEngineRole](./docs/api.md#GitHubSecretEngineRole) Configures a Github Application to produce scoped tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
+12. [VaultSecret](./docs/api.md#VaultSecret) Creates a K8s Secret from one or more Vault Secrets
+13. [PKISecretEngineConfig](./docs/api.md#pkisecretengineconfig)  Configures a [PKI Secret Engine](https://www.vaultproject.io/docs/secrets/pki)
+14. [PKISecretEngineRole](./docs/api.md#pkisecretenginerole)  Configures a [PKI Secret Engine](https://www.vaultproject.io/docs/secrets/pki) Role
 
 ## End to end example
 
@@ -119,7 +124,7 @@ It is recommended to deploy this operator via [`OperatorHub`](https://operatorhu
 | amd64  | ✅ |
 | arm64  | ✅  |
 | ppc64le  | ✅  |
-| s390x  | ❌  |
+| s390x  | ✅  |
 
 ### Deploying from OperatorHub
 
@@ -182,11 +187,11 @@ oc label namespace <namespace> openshift.io/cluster-monitoring="true"
 ### Testing metrics
 
 ```sh
-export operatorNamespace=vault-config-operator-local # or vault-config-operator
+export operatorNamespace=vault-config-operator
 oc label namespace ${operatorNamespace} openshift.io/cluster-monitoring="true"
 oc rsh -n openshift-monitoring -c prometheus prometheus-k8s-0 /bin/bash
-export operatorNamespace=vault-config-operator-local # or vault-config-operator
-curl -v -s -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://vault-config-operator-controller-manager-metrics.${operatorNamespace}.svc.cluster.local:8443/metrics
+export operatorNamespace=vault-config-operator
+curl -v --data-urlencode "query=controller_runtime_active_workers{namespace=\"${operatorNamespace}\"}" localhost:9090/api/v1/query
 exit
 ```
 
@@ -200,25 +205,13 @@ If you don't have a Vault instance available for testing, deploy one with these 
 
 ```shell
 helm repo add hashicorp https://helm.releases.hashicorp.com
+oc new-project vault
+oc adm policy add-role-to-user admin -z vault -n vault
 export cluster_base_domain=$(oc get dns cluster -o jsonpath='{.spec.baseDomain}')
-envsubst < ./config/local-development/vault-values.yaml > /tmp/values
-helm upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f /tmp/values
-
-INIT_RESPONSE=$(oc exec vault-0 -n vault -- vault operator init -address https://vault.vault.svc:8200 -ca-path /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt -format=json -key-shares 1 -key-threshold 1)
-
-UNSEAL_KEY=$(echo "$INIT_RESPONSE" | jq -r .unseal_keys_b64[0])
-ROOT_TOKEN=$(echo "$INIT_RESPONSE" | jq -r .root_token)
-
-echo "$UNSEAL_KEY"
-echo "$ROOT_TOKEN"
-
-#here we are saving these variable in a secret, this is probably not what you should do in a production environment
-oc delete secret vault-init -n vault
-oc create secret generic vault-init -n vault --from-literal=unseal_key=${UNSEAL_KEY} --from-literal=root_token=${ROOT_TOKEN}
-export UNSEAL_KEY=$(oc get secret vault-init -n vault -o jsonpath='{.data.unseal_key}' | base64 -d )
-export ROOT_TOKEN=$(oc get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d )
-oc exec vault-0 -n vault -- vault operator unseal -address https://vault.vault.svc:8200 -ca-path /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt $UNSEAL_KEY
+helm upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f ./config/local-development/vault-values.yaml --set server.route.host=vault-vault.apps.${cluster_base_domain}
 ```
+
+> Note: you may need to manually remove the `service.beta.openshift.io/serving-cert-secret-name: vault-server-tls` annotation from the Service `vault-internal` and force the recreation of the service serving certificate since the annotation gets applied to both `vault` and `vault-internal` Services by the helm chart. The implementation expects the vault.vault.svc certificate. See [server-service.yaml](https://github.com/hashicorp/vault-helm/blob/main/templates/server-service.yaml) and [server-headless-service.yaml](https://github.com/hashicorp/vault-helm/blob/main/templates/server-headless-service.yaml).
 
 #### Configure an Kubernetes Authentication mount point
 
@@ -242,10 +235,13 @@ export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.da
 
 #### Run the operator
 
+> Note: this operator build process is tested with [podman](https://podman.io/), but some of the build files (Makefile specifically) use docker because they are generated automatically by operator-sdk. It is recommended [remap the docker command to the podman command](https://developers.redhat.com/blog/2020/11/19/transitioning-from-docker-to-podman#transition_to_the_podman_cli).
+
 ```shell
-export repo=raffaelespazzoli #replace with yours, this has also to be replaced in the following files: Tiltfile, ./config/local-development/tilt/replace-image.yaml. Further improvements may be able to remove this constraint.
+export repo=raffaelespazzoli
 docker login quay.io/$repo
 oc new-project vault-config-operator
+oc project vault-config-operator
 tilt up
 ```
 
@@ -277,7 +273,8 @@ Database secret engine connection. This will deploy a postgresql database to con
 oc create secret generic postgresql-admin-password --from-literal=postgresql-password=changeit -n test-vault-config-operator
 export uid=$(oc get project test-vault-config-operator -o jsonpath='{.metadata.annotations.openshift\.io/sa\.scc\.uid-range}'|sed 's/\/.*//')
 export guid=$(oc get project test-vault-config-operator -o jsonpath='{.metadata.annotations.openshift\.io/sa\.scc\.supplemental-groups}'|sed 's/\/.*//')
-helm upgrade my-postgresql-database bitnami/postgresql -i --create-namespace -n test-vault-config-operator -f ./examples/postgresql/postgresql-values.yaml --set securityContext.fsGroup=${guid} --set containerSecurityContext.runAsUser=${uid} --set volumePermissions.securityContext.runAsUser=${uid} --set metrics.securityContext.runAsUser=${uid}
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm upgrade my-postgresql-database bitnami/postgresql -i --create-namespace -n test-vault-config-operator -f ./docs/examples/postgresql/postgresql-values.yaml --set securityContext.fsGroup=${guid} --set containerSecurityContext.runAsUser=${uid} --set volumePermissions.securityContext.runAsUser=${uid} --set metrics.securityContext.runAsUser=${uid}
 oc apply -f ./test/database-engine-config.yaml -n test-vault-config-operator
 ```
 
@@ -299,12 +296,59 @@ oc apply -f ./test/kv-secret-engine.yaml -n test-vault-config-operator
 oc apply -f ./test/random-secret.yaml -n test-vault-config-operator
 ```
 
+VaultSecret
+
+> Note: you must run the previous tests
+
+```shell
+oc apply -f ./test/vaultsecret/kubernetesauthenginerole-secret-reader.yaml -n vault-admin
+envsubst < ./test/vaultsecret/policy-secret-reader.yaml | oc apply -f - -n vault-admin
+oc apply -f ./test/vaultsecret/randomsecret-another-password.yaml -n test-vault-config-operator
+oc apply -f ./test/vaultsecret/vaultsecret-randomsecret.yaml -n test-vault-config-operator
+oc apply -f ./test/vaultsecret/vaultsecret-dynamicsecret.yaml -n test-vault-config-operator
+# test a pullsecret... Create the secret in test-vault-config-operator/kv/pullsecret using the Vault UI first
+oc apply -f ./test/vaultsecret/vaultsecret-pullsecret.yaml -n test-vault-config-operator
+```
+
+VaultSecret & RandomSecret using KV Secret Engine V2
+
+> Note: you must run the previous tests
+
+```sh
+#Random Secret using v2 steps
+envsubst < ./test/randomsecret/v2/01-policy-kv-engine-admin-v2.yaml | oc apply -f - -n vault-admin 
+oc apply -f ./test/randomsecret/v2/02-kubernetesauthenginerole-kv-engine-admin-v2.yaml -n vault-admin 
+oc apply -f test/randomsecret/v2/03-secretenginemount-kv-v2.yaml -n test-vault-config-operator
+envsubst < ./test/randomsecret/v2/04-policy-secret-writer-v2.yaml | oc apply -f - -n vault-admin
+oc apply -f ./test/randomsecret/v2/05-kubernetesauthenginerole-secret-writer-v2.yaml -n vault-admin
+oc apply -f ./test/randomsecret/v2/06-randomsecret-randomsecret-password-v2.yaml -n test-vault-config-operator
+
+#VaultSecret reading RandomSecret v2 steps
+oc apply -f ./test/vaultsecret/v2/07-vaultsecret-randomsecret-v2.yaml -n test-vault-config-operator
+```
+
 Kube auth engine mount and config and role
 
 ```shell
 oc apply -f ./test/kube-auth-engine-mount.yaml -n vault-admin
 oc apply -f ./test/kube-auth-engine-config.yaml -n vault-admin
 oc apply -f ./test/kube-auth-engine-role.yaml -n vault-admin
+```
+
+Github secret engine
+
+create a github application following the instructions [here](https://github.com/martinbaillie/vault-plugin-secrets-github#setup-github).
+save the ssh key in a file called: ./test/vault-secret-engine.private-key.pem and the application id
+
+```shell
+export application_id=163698 #replace with your own
+export ssh_key=$(cat ./test/vault-secret-engine.private-key.pem | base64 -w 0)
+envsubst < ./test/github-secret-engine-config-secret-template.yaml | oc apply -f - -n vault-admin
+oc apply -f ./test/github-secret-engine-mount.yaml -n vault-admin
+envsubst < ./test/github-secret-engine-config.yaml | oc apply -f - -n vault-admin
+vault read -tls-skip-verify github/raf-backstage-demo/token
+oc apply -f ./test/github-secret-engine-role.yaml -n vault-admin
+vault read -tls-skip-verify github/raf-backstage-demo/token/one-repo-only
 ```
 
 ### Test helm chart locally

@@ -24,17 +24,44 @@ import (
 )
 
 func write(context context.Context, path string, payload map[string]interface{}) error {
-	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
-	_, err := vaultClient.Logical().Write(path, payload)
+	_, err := writeWithResponse(context, path, payload)
 	if err != nil {
-		log.Error(err, "unable to write object at", "path", path)
 		return err
 	}
 	return nil
 }
 
+func writeWithResponse(context context.Context, path string, payload map[string]interface{}) (*vault.Secret, error) {
+	log := log.FromContext(context)
+	vaultClient := context.Value("vaultClient").(*vault.Client)
+	secret, err := vaultClient.Logical().Write(path, payload)
+	if err != nil {
+		log.Error(err, "unable to write object at", "path", path)
+		return nil, err
+	}
+	return secret, nil
+}
+
 func read(context context.Context, path string) (map[string]interface{}, bool, error) {
+	log := log.FromContext(context)
+	vaultClient := context.Value("vaultClient").(*vault.Client)
+	secret, err := vaultClient.Logical().Read(path)
+	if err != nil {
+		if respErr, ok := err.(*vault.ResponseError); ok {
+			if respErr.StatusCode == 404 || respErr.StatusCode == 204 {
+				return nil, false, nil
+			}
+		}
+		log.Error(err, "unable to read object at", "path", path)
+		return nil, false, err
+	}
+	if secret == nil {
+		return nil, false, nil
+	}
+	return secret.Data, true, nil
+}
+
+func ReadSecret(context context.Context, path string) (*vault.Secret, bool, error) {
 	log := log.FromContext(context)
 	vaultClient := context.Value("vaultClient").(*vault.Client)
 	secret, err := vaultClient.Logical().Read(path)
@@ -47,8 +74,9 @@ func read(context context.Context, path string) (map[string]interface{}, bool, e
 		log.Error(err, "unable to read object at", "path", path)
 		return nil, false, err
 	}
-	if secret == nil {
+	// Add Data interface nil check to cover cases when kv2 secret latest version is deleted, but secret is still available
+	if secret == nil || secret.Data == nil {
 		return nil, false, nil
 	}
-	return secret.Data, true, nil
+	return secret, true, nil
 }

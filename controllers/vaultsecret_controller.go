@@ -17,13 +17,25 @@ limitations under the License.
 package controllers
 
 import (
+	"bytes"
 	"context"
-	"reflect"
 
+	"errors"
+	"fmt"
+	"math"
+	"reflect"
+	"text/template"
 	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/redhat-cop/operator-utils/pkg/util"
+	utilstemplates "github.com/redhat-cop/operator-utils/pkg/util/templates"
+	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -31,12 +43,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
-	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
-	template "github.com/redhat-cop/vault-config-operator/pkg/template"
-	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	vaultsecretutils "github.com/redhat-cop/vault-config-operator/controllers/vaultsecretutils"
+)
+
+const (
+	hashAnnotationName = "vaultsecret.redhatcop.redhat.io/secret-hash"
+	vaultSecretKind    = "VaultSecret"
+	secretKind         = "Secret"
+	secretAPIVersion   = "v1"
 )
 
 // VaultSecretReconciler reconciles a VaultSecret object
@@ -49,13 +63,11 @@ type VaultSecretReconciler struct {
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=vaultsecrets,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=vaultsecrets/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=vaultsecrets/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
+// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the VaultSecret object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
@@ -76,33 +88,37 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return reconcile.Result{}, err
 	}
 
-	if util.IsBeingDeleted(instance) {
-		if !util.HasFinalizer(instance, redhatcopv1alpha1.GetFinalizer(instance)) {
-			return reconcile.Result{}, nil
-		}
-		util.RemoveFinalizer(instance, redhatcopv1alpha1.GetFinalizer(instance))
-		err = r.GetClient().Update(ctx, instance)
-		if err != nil {
-			r.Log.Error(err, "unable to update instance", "instance", instance)
-			return r.ManageError(ctx, instance, err)
-		}
-		return reconcile.Result{}, nil
-	}
-	// how to read this if: if the secret has been initialized once and there is no refresh period or time to refresh has not arrived yet, return.
-	if instance.Status.LastVaultSecretUpdate != nil && (instance.Spec.RefreshPeriod != nil || (instance.Spec.RefreshPeriod != nil && !instance.Status.LastVaultSecretUpdate.Add(instance.Spec.RefreshPeriod.Duration).Before(time.Now()))) {
-		return reconcile.Result{}, nil
-	}
-
 	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
 
-	err = r.manageReconcileLogic(ctx, instance)
+	shouldSync, err := r.shouldSync(ctx, instance)
 	if err != nil {
-		r.Log.Error(err, "unable to complete reconcile logic", "instance", instance)
+		// There was a problem determining if the event should cause a sync.
 		return r.ManageError(ctx, instance, err)
 	}
 
+	if shouldSync {
+		err = r.manageSyncLogic(ctx, instance)
+		if err != nil {
+			r.Log.Error(err, "unable to complete sync logic", "instance", instance)
+			return r.ManageError(ctx, instance, err)
+		}
+	}
+
+	duration, ok := r.calculateDuration(instance)
+
+	// If a duration incalculable, simply don't requeue
+	if !ok {
+		instance.Status.NextVaultSecretUpdate = nil
+		return r.ManageSuccess(ctx, instance)
+	}
+
+	nextUpdateTime := instance.Status.LastVaultSecretUpdate.Add(duration)
+
+	nextTimestamp := metav1.NewTime(nextUpdateTime)
+	instance.Status.NextVaultSecretUpdate = &nextTimestamp
+
 	//we reschedule the next reconcile at the time in the future corresponding to
-	nextSchedule := time.Until(instance.Status.LastVaultSecretUpdate.Add(instance.Spec.RefreshPeriod.Duration))
+	nextSchedule := time.Until(nextUpdateTime)
 	if nextSchedule > 0 {
 		return r.ManageSuccessWithRequeue(ctx, instance, nextSchedule)
 	} else {
@@ -111,83 +127,209 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 }
 
-func (r *VaultSecretReconciler) mergeKVSecret(mergedMap map[string]interface{}, kvSecret redhatcopv1alpha1.KVSecret, data map[string]interface{}) {
-	mergedMap[kvSecret.Name] = data
-}
-
 func (r *VaultSecretReconciler) formatK8sSecret(instance *redhatcopv1alpha1.VaultSecret, data interface{}) (*corev1.Secret, error) {
 
-	stringData := make(map[string]string)
+	bytesData := make(map[string][]byte)
 	for k, v := range instance.Spec.TemplatizedK8sSecret.StringData {
-		tpl, err := template.NewTemplate(&template.NewTemplateInput{
-			Contents: v,
-			Data:     data,
-		})
 
+		tpl, err := template.New("").Funcs(utilstemplates.AdvancedTemplateFuncMap(r.GetRestConfig(), r.Log)).Parse(v)
 		if err != nil {
 			r.Log.Error(err, "unable to create template", "instance", instance)
 			return nil, err
 		}
 
-		rslt, err := tpl.Execute()
-
+		var b bytes.Buffer
+		err = tpl.Execute(&b, data)
 		if err != nil {
 			r.Log.Error(err, "unable to execute template", "instance", instance)
 			return nil, err
 		}
-		stringData[k] = string(rslt.Output)
+		bytesData[k] = b.Bytes()
+	}
+
+	annotations := make(map[string]string)
+	annotations[hashAnnotationName] = vaultsecretutils.HashData(bytesData)
+
+	for k, v := range instance.Spec.TemplatizedK8sSecret.Annotations {
+		annotations[k] = v
 	}
 
 	k8sSecret := &corev1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       secretKind,
+			APIVersion: secretAPIVersion,
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        instance.Spec.TemplatizedK8sSecret.Name,
 			Namespace:   instance.Namespace,
-			Annotations: instance.Spec.TemplatizedK8sSecret.Annotations,
+			Annotations: annotations,
+			Labels:      instance.Spec.TemplatizedK8sSecret.Labels,
 		},
-		StringData: stringData,
-		Type:       corev1.SecretType(instance.Spec.TemplatizedK8sSecret.Type),
+		Data: bytesData,
+		Type: corev1.SecretType(instance.Spec.TemplatizedK8sSecret.Type),
 	}
 
 	return k8sSecret, nil
 }
 
-func (r *VaultSecretReconciler) manageReconcileLogic(ctx context.Context, instance *redhatcopv1alpha1.VaultSecret) error {
+// Calculates the resync period based on the RefreshPeriod, and LeaseDurations returned from Vault for each secret defined (the smallest duration will be returned).
+// If no RefreshPeriod or Leasedurations are found return -1 and bool of false indicating that its was incalculable.
+func (r *VaultSecretReconciler) calculateDuration(instance *redhatcopv1alpha1.VaultSecret) (time.Duration, bool) {
+
+	// if set, always use refresh period if set
+	if instance.Spec.RefreshPeriod != nil {
+		return instance.Spec.RefreshPeriod.Duration, true
+	}
+
+	if instance.Status.VaultSecretDefinitionsStatus != nil {
+		// use the smallest LeaseDuration in the VaultDefinitionsStatus array
+		var smallestLeaseDurationSeconds int = math.MaxInt64
+
+		for _, defstat := range instance.Status.VaultSecretDefinitionsStatus {
+			if defstat.LeaseDuration < smallestLeaseDurationSeconds {
+				smallestLeaseDurationSeconds = defstat.LeaseDuration
+			}
+		}
+
+		//No lease durations found
+		if smallestLeaseDurationSeconds == math.MaxInt64 {
+			return -1, false
+		}
+
+		percentage := float64(instance.Spec.RefreshThreshold) / float64(100)
+		scaledSeconds := float64(smallestLeaseDurationSeconds) * percentage
+		duration := time.Duration(scaledSeconds) * time.Second
+		return duration, true
+	}
+
+	//No refresh period or definitions status known
+	return -1, false
+
+}
+
+func toNamespacedName(obj metav1.Object) string {
+	if obj == nil {
+		return ""
+	}
+
+	namespacedName := &types.NamespacedName{
+		Name:      obj.GetName(),
+		Namespace: obj.GetNamespace(),
+	}
+	return namespacedName.String()
+}
+
+func (r *VaultSecretReconciler) shouldSync(ctx context.Context, instance *redhatcopv1alpha1.VaultSecret) (bool, error) {
+
+	secretNamespacedName := &types.NamespacedName{
+		Name:      instance.Spec.TemplatizedK8sSecret.Name,
+		Namespace: instance.Namespace,
+	}
+	secret := &corev1.Secret{}
+	err := r.GetClient().Get(ctx, *secretNamespacedName, secret)
+	if err != nil {
+		//if k8s secret does not exist (it was deleted), it should sync
+		if apierrors.IsNotFound(err) {
+			return true, nil
+		}
+		// else there was an Error reading the object. It should not sync.
+		return false, err
+	} else {
+
+		//if the secret exists and isn't owned by this VaultSecret then the name needs to be different
+		if !util.IsOwner(instance, secret) {
+			return false, fmt.Errorf("the k8s Secret %v is not owned by VaultSecret %v", secretNamespacedName.String(), toNamespacedName(instance))
+		}
+
+		if secret.Annotations != nil {
+			hash, ok := secret.Annotations[hashAnnotationName]
+			if !ok {
+				return true, nil
+			}
+			// if the hash value in the k8s secret doesnt match the final data section, sync
+			if hash != vaultsecretutils.HashData(secret.Data) {
+				return true, nil
+			}
+			// else the hash matches. continue with logic.
+		} else {
+			// if annotation is nil, sync
+			return true, nil
+		}
+	}
+
+	// if the vaultsecret has synced before
+	if instance.Status.LastVaultSecretUpdate != nil {
+		duration, ok := r.calculateDuration(instance)
+		// if the next duration is incalculable (no refreshperiod or lease duration), do not sync
+		if !ok {
+			return false, nil
+		}
+		// if the resync period has not elapsed, do not sync
+		if !instance.Status.LastVaultSecretUpdate.Add(duration).Before(time.Now()) {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
+
+func (r *VaultSecretReconciler) manageSyncLogic(ctx context.Context, instance *redhatcopv1alpha1.VaultSecret) error {
+
+	r.Log.V(1).Info("Sync VaultSecret", "namespacedName", toNamespacedName(instance))
 
 	mergedMap := make(map[string]interface{})
-	for _, kvSecret := range instance.Spec.KVSecrets {
-		vaultClient, err := kvSecret.Authentication.GetVaultClient(ctx, instance.Namespace)
+
+	definitionsStatus := make([]redhatcopv1alpha1.VaultSecretDefinitionStatus, len(instance.Spec.VaultSecretDefinitions))
+
+	for idx, vaultSecretDefinition := range instance.Spec.VaultSecretDefinitions {
+		vaultClient, err := vaultSecretDefinition.Authentication.GetVaultClient(ctx, instance.Namespace)
 		if err != nil {
 			r.Log.Error(err, "unable to create vault client", "instance", instance)
 			return err
 		}
 
 		ctx = context.WithValue(ctx, "vaultClient", vaultClient)
-		vaultEndpoint := vaultutils.NewVaultEndpoint(instance)
-		data, _, err := vaultEndpoint.Read(ctx)
-		if err != nil {
-			r.Log.Error(err, "unable to read Vault Secret", "instance", instance)
-			return err
+		vaultEndpoint := vaultutils.NewVaultEndpointObj(&vaultSecretDefinition)
+		vaultSecret, ok, _ := vaultEndpoint.GetSecret(ctx)
+		if !ok {
+			return errors.New("unable to read vault secret for " + vaultSecretDefinition.GetPath())
 		}
 
-		r.mergeKVSecret(mergedMap, kvSecret, data)
+		definitionsStatus[idx] = redhatcopv1alpha1.VaultSecretDefinitionStatus{
+			Name:          vaultSecretDefinition.Name,
+			LeaseID:       vaultSecret.LeaseID,
+			LeaseDuration: vaultSecret.LeaseDuration,
+			Renewable:     vaultSecret.Renewable,
+		}
+
+		if vaultSecret.Data == nil {
+			return errors.New("no data returned from vault secret for " + vaultSecretDefinition.GetPath())
+		}
+
+		// if its a kv v2, then the structure returned is different
+		kv2DataMap, ok := vaultSecret.Data["data"]
+		if ok && reflect.ValueOf(kv2DataMap).Kind() == reflect.Map {
+			mergedMap[vaultSecretDefinition.Name] = kv2DataMap
+		} else {
+			mergedMap[vaultSecretDefinition.Name] = vaultSecret.Data
+		}
+
 	}
 
 	k8sSecret, err := r.formatK8sSecret(instance, mergedMap)
-
 	if err != nil {
 		r.Log.Error(err, "unable to format k8s secret", "instance", instance)
 		return err
 	}
 
-	err = r.CreateOrUpdateResource(ctx, instance, instance.Namespace, k8sSecret)
-
+	err = r.CreateOrUpdateResource(ctx, instance, instance.GetNamespace(), k8sSecret)
 	if err != nil {
-		r.Log.Error(err, "unable to create or update k8s secret", "secret", k8sSecret)
 		return err
 	}
 
 	now := metav1.NewTime(time.Now())
 	instance.Status.LastVaultSecretUpdate = &now
+	instance.Status.VaultSecretDefinitionsStatus = definitionsStatus
 
 	return nil
 }
@@ -195,23 +337,29 @@ func (r *VaultSecretReconciler) manageReconcileLogic(ctx context.Context, instan
 // SetupWithManager sets up the controller with the Manager.
 func (r *VaultSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
-	needsCreation := predicate.Funcs{
+	vaultSecretPredicate := predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
-			newSecret, ok := e.ObjectNew.DeepCopyObject().(*redhatcopv1alpha1.VaultSecret)
+			newVaultSecret, ok := e.ObjectNew.DeepCopyObject().(*redhatcopv1alpha1.VaultSecret)
 			if !ok {
 				return false
 			}
-			oldSecret, ok := e.ObjectOld.DeepCopyObject().(*redhatcopv1alpha1.VaultSecret)
+			oldVaultSecret, ok := e.ObjectOld.DeepCopyObject().(*redhatcopv1alpha1.VaultSecret)
 			if !ok {
 				return false
 			}
-			//TODO this is probably wrong
-			return !reflect.DeepEqual(oldSecret.Spec, newSecret.Spec)
+
+			if !reflect.DeepEqual(oldVaultSecret.Spec, newVaultSecret.Spec) {
+				r.Log.V(1).Info("Update Event - Spec changed", "kind", vaultSecretKind, "namespacedName", toNamespacedName(e.ObjectNew))
+				return true
+			}
+			return false
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
+			r.Log.V(1).Info("Create Event", "kind", vaultSecretKind, "namespacedName", toNamespacedName(e.Object))
 			return true
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
+			r.Log.V(1).Info("Delete Event", "kind", vaultSecretKind, "namespacedName", toNamespacedName(e.Object))
 			return true
 		},
 		GenericFunc: func(e event.GenericEvent) bool {
@@ -219,8 +367,54 @@ func (r *VaultSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		},
 	}
 
+	k8sSecretPredicate := predicate.Funcs{
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			newSecret, ok := e.ObjectNew.DeepCopyObject().(*corev1.Secret)
+			if !ok {
+				return false
+			}
+
+			if r.isOwnedSecretByController(newSecret) {
+				hash, ok := newSecret.Annotations[hashAnnotationName]
+				if !ok || hash != vaultsecretutils.HashData(newSecret.Data) {
+					r.Log.V(1).Info("Update Event - hash mismatch", "kind", secretKind, "namespacedName", toNamespacedName(e.ObjectNew))
+					return true
+				}
+			}
+
+			return false
+		},
+		CreateFunc: func(e event.CreateEvent) bool {
+			return false
+		},
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			//Useful for debugging
+			secret, ok := e.Object.DeepCopyObject().(*corev1.Secret)
+			if !ok {
+				return false
+			}
+			if r.isOwnedSecretByController(secret) {
+				r.Log.V(1).Info("Delete Event", "kind", secretKind, "namespacedName", toNamespacedName(e.Object))
+				return true
+			}
+			return false
+		},
+		GenericFunc: func(e event.GenericEvent) bool {
+			return false
+		},
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.VaultSecret{}, builder.WithPredicates(needsCreation)).
-		Owns(&corev1.Secret{}).
+		For(&redhatcopv1alpha1.VaultSecret{}, builder.WithPredicates(vaultSecretPredicate)).
+		Owns(&corev1.Secret{}, builder.WithPredicates(k8sSecretPredicate)).
 		Complete(r)
+}
+
+func (r *VaultSecretReconciler) isOwnedSecretByController(secret *corev1.Secret) bool {
+	for _, ownerRef := range secret.ObjectMeta.OwnerReferences {
+		if ownerRef.Kind == vaultSecretKind {
+			return true
+		}
+	}
+	return false
 }

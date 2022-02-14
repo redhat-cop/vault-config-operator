@@ -20,8 +20,10 @@ import (
 	"context"
 
 	"github.com/redhat-cop/operator-utils/pkg/util"
+	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -72,10 +74,16 @@ func (r *VaultResource) Reconcile(ctx context.Context, instance client.Object) (
 
 func (r *VaultResource) manageCleanUpLogic(context context.Context, instance client.Object) error {
 	log := log.FromContext(context)
-	err := r.vaultEndpoint.DeleteIfExists(context)
-	if err != nil {
-		log.Error(err, "unable to delete vault resource", "instance", instance)
-		return err
+	if conditionAware, ok := instance.(apis.ConditionsAware); ok {
+		for _, condition := range conditionAware.GetConditions() {
+			if condition.Status == metav1.ConditionTrue && condition.Type == apis.ReconcileSuccess {
+				err := r.vaultEndpoint.DeleteIfExists(context)
+				if err != nil {
+					log.Error(err, "unable to delete vault resource", "instance", instance)
+					return err
+				}
+			}
+		}
 	}
 	return nil
 }

@@ -13,6 +13,13 @@ This section of the documentation provides high-level documentation on the suppo
   - [DatabaseSecretEngineConfig](#databasesecretengineconfig)
   - [DatabaseSecretEngineRole](#databasesecretenginerole)
   - [RandomSecret](#randomsecret)
+  - [GitHubSecretEngineConfig](#githubsecretengineconfig)
+  - [GitHubSecretEngineRole](#githubsecretenginerole)
+  - [VaultSecret](#vaultsecret)
+  - [RabbitMQSecretEngineConfig](#rabbitmqsecretengineconfig)
+  - [RabbitMQSecretEngineRole](#rabbitmqsecretenginerole)
+  - [PKISecretEngineConfig](#pkisecretengineconfig)
+  - [PKISecretEngineRole](#pkisecretenginerole)
 
 ## The Authentication Section
 
@@ -295,6 +302,7 @@ spec:
   authentication: 
     path: kubernetes
     role: database-engine-admin
+  isKVSecretsEngineV2: false
   path: kv/vault-tenant
   secretKey: password
   secretFormat:
@@ -303,6 +311,8 @@ spec:
 ```
 
 The `path` field specifies the path at which the secret will be written, it must correspond to a kv Secret Engine mount.
+
+The `isKVSecretsEngineV2` field is used to indicate if the KV Secrets Engine (defined in the `path`) expects a v1 or v2 data payload. Defaults to false to indicate that a v1 payload will be sent.
 
 The `secretKey` field is the key of the secret.
 
@@ -316,4 +326,315 @@ This CR is roughly equivalent to this Vault CLI command:
 
 ```shell
 vault kv put [namespace/]kv/vault-tenant password=<generated value>
+```
+
+## GitHubSecretEngineConfig
+
+The `GitHubSecretEngineConfig` CRD allows a user to create a GitHub Secret engine configuration. Only one configuration can exists per GitHub secret engine mount point, here is an example:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GitHubSecretEngineConfig
+metadata:
+  name: raf-backstage-demo-org
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  sSHKeyReference:
+    secret:
+      name: vault-github-app-key
+  path: github/raf-backstage-demo
+  applicationID: 123456
+  organizationName: raf-backstage-demo
+```
+
+The `path` field specifies the path of the secret engine that will contain this configuration.
+
+The `sSHKeyReference` field specifies how to retrieve the ssh key to the GitHub application.
+
+The `applicationID` field specifies application id of the GitHub application.
+
+The `organizationName` field specifies organization in which the application is installed.
+
+More parameters exists for their explanation and for how to install the vault-plugin-secret-github engine see [here](https://github.com/martinbaillie/vault-plugin-secrets-github#config)
+
+This CR is roughly equivalent to this Vault CLI command:
+
+```shell
+vault write [namespace/]github/raf-backstage-demo/config app_id=123456 prv_key=@key.pem org_name=raf-backstage-demo
+```
+
+## GitHubSecretEngineRole
+
+The `GitHubSecretEngineRole` CRD allows a user to create a GitHub Secret engine role. A role allows to create narrowly scoped github tokens limiting the permission or the repositories on which they can be used, here is an example:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GitHubSecretEngineRole
+metadata:
+  name: one-repo-only
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  path: github/raf-backstage-demo
+  repositories:
+  - hello-world
+```
+
+The `path` field specifies the path of the secret engine that will contain this role.
+
+The `repositories` field specifies on which repositories the generated credential can act.
+
+More parameters exists for their explanation and for how to install the vault-plugin-secret-github engine see [here](https://github.com/martinbaillie/vault-plugin-secrets-github#permission-sets)
+
+This CR is roughly equivalent to this Vault CLI command:
+
+```shell
+vault write [namespace/]github/raf-backstage-demo/permissionset/one-repo-only repositories=hello-world
+```
+
+to read a new credential from this role, execute the following:
+
+```shell
+vault read -tls-skip-verify github/raf-backstage-demo/token/one-repo-only
+```
+
+## VaultSecret
+
+The VaultSecret CRD allows a user to create a K8s Secret from one or more Vault Secrets. It uses go templating to allow formatting of the K8s Secret in the `output.stringData` section of the spec.
+
+Any manual data change or deletion of the K8s Secret owned by a VaultSecret CR will result in a re-reconciliation by the controller. A hash annotation `vaultsecret.redhatcop.redhat.io/secret-hash`, computed when the K8s Secret is created/updated, is used to verify the integrity of the K8s Secret data.
+
+> Note: if reading a dynamic secret you typically care to set the `refreshThreshold` only (not the `refreshPeriod`). For just Key/Value Vault secrets, set the `refreshPeriod`.
+> 
+> See https://www.vaultproject.io/docs/concepts/lease to understand lease durations.
+
+- `refreshPeriod` the pull interval for syncing Vault secrets with the K8s Secret. This settings takes precedence over any lease duration returned by vault, effectively controlling when exactly all vault secrets defined in the vaultSecretDefinitions should re-sync.
+- `refreshThreshold` this is will instruct the operator to refresh the K8s Secret when a percentage of the lease duration has elapsed, if no `refreshPeriod` is specified. This is particularly useful for controlling when dynamic secrets should be refreshed before the lease duration is exceeded. The default is 90, meaning the secret would refresh after 90% of the time has passed from the vault secret's lease duration. When multiple vaultSecretDefinitions are defined, the smallest lease duration will be used when performing the scheduling for the next refresh.
+- `vaultSecretDefinitions` is an array of Vault Secret References. Every `vaultSecretDefinition` has...
+  - [authentication](#the-authentication-section) section.
+  - `name` a unique name for the Vault secret to reference when templating, since many Vault secrets may have the same name.
+  - `path` field specifies the path at which the secret will be read from.
+- `output` is the K8s Secret to output to after go template processing.
+  - `name` the final K8s Secret Name to output to.
+  - `stringData` stringData allows specifying non-binary secret data in string form. It is provided as a write-only input field for convenience. All keys and values are merged into the data field on write, overwriting any existing values. The stringData field is never output when reading from the API. You specify variables from `vaultSecretDefinitions` in the form of *'{{ .name.key }}'* using go templating where name is the arbitrary name in the vaultSecretDefinition and key matches the Vault secret key. The go text and most [sprig](http://masterminds.github.io/sprig/) library functions are also available when templating.
+  - `type` is the K8s Secret type used to facilitate programmatic handling of secret data.
+  - `labels` are any k8s Secret [labels](http://kubernetes.io/docs/user-guide/labels) to include.
+  - `annotations` are any k8s Secret [annotations](http://kubernetes.io/docs/user-guide/annotations) to include.
+
+Example CR for Key/Value Vault Secrets with `refreshPeriod`...
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: VaultSecret
+metadata:
+  name: randomsecret
+spec:
+  refreshPeriod: 1m0s
+  vaultSecretDefinitions:
+    - authentication:
+        path: kubernetes
+        role: secret-reader
+        serviceAccount:
+          name: default
+      name: randomsecret
+      path: test-vault-config-operator/kv/randomsecret-password
+    - authentication:
+        path: kubernetes
+        role: secret-reader
+        serviceAccount:
+          name: default
+      name: anotherrandomsecret
+      path: test-vault-config-operator/kv/another-password
+  output:
+    name: randomsecret
+    stringData:
+      password: '{{ .randomsecret.password }}'
+      anotherpassword: '{{ .anotherrandomsecret.password }}'
+    type: Opaque
+    labels:
+      app: test-vault-config-operator
+    annotations:
+      refresh: every-minute
+```
+
+Example CR for a dynamic Vault Secret without `refreshPeriod` defined (we rely on the lease duration returned to us by Vault to calculate when to refresh next)...
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: VaultSecret
+metadata:
+  name: dynamicsecret
+spec:
+  refreshThreshold: 85 # after 85% of the lease_duration of the dynamic secret has elapsed, refresh the secret
+  vaultSecretDefinitions:
+    - authentication:
+        path: kubernetes
+        role: secret-reader
+        serviceAccount:
+          name: default
+      name: dynamicsecret
+      path: test-vault-config-operator/database/creds/read-only
+  output:
+    name: dynamicsecret
+    stringData:
+      username: '{{ .dynamicsecret.username }}'
+      password: '{{ .dynamicsecret.password }}'
+    type: Opaque
+    labels:
+      app: test-label
+    annotations:
+      refresh: test-annotation
+```
+
+## RabbitMQSecretEngineConfig
+
+`RabbitMQSecretEngineConfig` CRD allows a user to create a RabbitMQ Secret Engine configuration, also called connection for an existing RabbitMQ Secret Engine Mount. Here is an example
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: RabbitMQSecretEngineConfig
+metadata:
+  name: example-rabbitmq-secret-engine-config
+spec:
+  authentication: 
+    path: kubernetes
+    role: rabbitmq-engine-admin
+  connectionURI: https://my-rabbitMQ.com
+  rootCredentials:
+    secret:
+      name: rabbitmq-admin-password
+    passwordKey: rabbitmq-password
+  path: vault-config-operator/rabbitmq
+  username: rabbitmq
+  leaseTTL: 86400 # 24 hours
+  leaseMaxTTL: 86400 # 24 hours
+```
+
+The `connectionURI` field specifies how to connect to the rabbitMQ cluster. Supports http and https protocols.
+
+The `username` field specific the username to be used to connect to the rabbitMQ cluster. This field is optional, if not specified the username will be retrieved from the credential secret.
+
+The `path` field specifies the path of the secret engine to which this connection will be added.
+
+The password and possibly the username can be retrieved in three different ways:
+
+1. From a Kubernetes secret, specifying the `rootCredentialsFromSecret` field. The secret must be of [basic auth type](https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret). If the secret is updated this connection will also be updated.
+2. From a Vault secret, specifying the `rootCredentialsFromVaultSecret` field.
+3. From a [RandomSecret](#RandomSecret), specifying the `rootCredentialsFromRandomSecret` field. When the RandomSecret generates a new secret, this connection will also be updated.
+
+Additional options supported from [Vault Documentation](https://www.vaultproject.io/api-docs/secret/rabbitmq#configure-connection)
+
+## RabbitMQSecretEngineRole
+
+The `RabbitMQSecretEngineRole` CRD allows a user to create a Database Secret Engine Role, here is an example:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: RabbitMQSecretEngineRole
+metadata:
+  name: rabbitmqsecretenginerole-sample
+spec:
+  authentication: 
+    path: kubernetes
+    role: rabbitmq-engine-admin
+  path: vault-config-operator/rabbitmq
+  tags: 'administrator'
+  vhosts:
+  - vhostName: '/'
+    permissions:
+      read: '.*'
+      write: '.*'
+      configure: '.*'
+  - vhostName: 'my-vhost'
+    permissions:
+      read: 'my-queue'
+      write: 'my-exchange'
+  vhostTopics:
+  - vhostName: '/'
+    topics:
+    - topicName: 'my-topic'
+      permissions:
+        read: '.*'
+        write: '.*'
+        configure: '.*'
+    - topicName: 'my-read-topic'
+      permissions:
+        read: '.*'
+```
+
+The `tags` field specifies RabbitMQ permissions tags to associate with the user. This determines the level of access to the RabbitMQ management UI granted to the user.
+
+The `vhostName` field specifies the name of vhost where permissions will be provided.
+
+Permissions `read/write/configure` provides ability to `read/write/configure` specified queues and/or exchanges.
+
+[Vault Documentation](https://www.vaultproject.io/api-docs/secret/rabbitmq#create-role)
+
+## PKISecretEngineConfig
+
+`PKISecretEngineConfig` CRD allows a user to create a PKI Secret Engine configuration. Here is an example
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: PKISecretEngineConfig
+metadata:
+  name: my-pki
+spec:
+  authentication: 
+    path: kubernetes
+    role: pki-engine-admin
+  path: pki-vault-demo/pki
+  commonName: pki-vault-demo.internal.io
+  TTL: "8760h"
+```
+
+The `commonName` specifies the requested CN for the certificate.
+
+The `path` field specifies the path of the secret engine to which this connection will be added.
+
+The `TTL` specifies the requested Time To Live (after which the certificate will be expired). This cannot be larger than the engine's max (or, if not set, the system max).
+
+This CR is roughly equivalent to this Vault CLI command:
+
+```shell
+vault write pki-vault-demo/pki/root/generate/internal \
+    common_name=pki-vault-demo.internal.io \
+    ttl=8760h
+```
+
+## PKISecretEngineRole
+
+The `PKISecretEngineRole` CRD allows a user to create a PKI Secret Engine Role, here is an example:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: PKISecretEngineRole
+metadata:
+  name: my-role
+spec:
+  authentication: 
+    path: kubernetes
+    role: database-engine-admin
+  path: pki-vault-demo/pki
+  allowedDomains: 
+   - internal.io
+   - pki-vault-demo.svc
+  maxTTL: "8760h"
+```
+
+The `allowedDomains` specifies the domains of the role. This is used with the allow_bare_domains and allow_subdomains options.
+
+The `maxTTL` specifies the maximum Time To Live provided as a string duration with time suffix. Hour is the largest suffix. If not set, defaults to the system maximum lease TTL.
+
+The `path` field specifies the path of the secret engine to which this connection will be added.
+
+This CR is roughly equivalent to this Vault CLI command:
+
+```shell
+vault write pki-vault-demo/pki/roles/my-role \
+    allowed_domains=internal.io,pki-vault-demo.svc \
+    max_ttl="8760h"
 ```
