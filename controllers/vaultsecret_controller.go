@@ -147,8 +147,12 @@ func (r *VaultSecretReconciler) formatK8sSecret(instance *redhatcopv1alpha1.Vaul
 		bytesData[k] = b.Bytes()
 	}
 
-	annotations := instance.Spec.TemplatizedK8sSecret.Annotations
+	annotations := make(map[string]string)
 	annotations[hashAnnotationName] = vaultsecretutils.HashData(bytesData)
+
+	for k, v := range instance.Spec.TemplatizedK8sSecret.Annotations {
+		annotations[k] = v
+	}
 
 	k8sSecret := &corev1.Secret{
 		TypeMeta: metav1.TypeMeta{

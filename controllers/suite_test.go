@@ -24,6 +24,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"net/http"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/redhat-cop/operator-utils/pkg/util"
@@ -75,7 +77,16 @@ var _ = BeforeSuite(func() {
 	ctx, cancel = context.WithCancel(context.TODO())
 
 	Expect(os.Setenv("USE_EXISTING_CLUSTER", "true")).To(Succeed())
-	Expect(os.Setenv("VAULT_ADDR", "http://localhost:8200")).To(Succeed())
+
+	_, isSet := os.LookupEnv("VAULT_ADDR")
+	if !isSet {
+		Expect(os.Setenv("VAULT_ADDR", "http://localhost:8200")).To(Succeed())
+	}
+
+	Expect(os.Getenv("ACCESSOR")).ToNot(BeEmpty())
+
+	_, err := http.Get(os.Getenv("VAULT_ADDR"))
+	Expect(err).To(BeNil())
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{

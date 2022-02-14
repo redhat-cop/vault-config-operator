@@ -58,6 +58,12 @@ vault write -tls-skip-verify auth/kubernetes/role/policy-admin bound_service_acc
 export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.data["kubernetes/"].accessor')
 ```
 
+```sh
+make integration ACCESSOR=${accessor}
+```
+
+
+
 > TODO
 
 ```sh
