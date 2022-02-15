@@ -205,7 +205,7 @@ func (d *RandomSecret) GenerateNewPassword(context context.Context) error {
 			return nil
 		}
 	}
-	return errors.New("no passowrd policy method specified")
+	return errors.New("no password policy method specified")
 }
 
 func (d *RandomSecret) calculateSecret(policy *PasswordPolicyFormat, attempts int) bool {
