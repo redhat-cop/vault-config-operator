@@ -35,3 +35,4 @@ bundle*/
 test/vault-secret-engine.private-key.pem
 .history/
 config/local-development/tilt/replace-image.yaml
+test/artifactory/secrets.sh
