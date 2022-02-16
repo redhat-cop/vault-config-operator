@@ -6,6 +6,11 @@
 [![CRD Docs](https://img.shields.io/badge/CRD-Docs-brightgreen)](https://doc.crds.dev/github.com/redhat-cop/vault-config-operator)
 
 - [Vault Config Operator](#vault-config-operator)
+  - [Authentication Engines](#authentication-engines)
+  - [Policy management](#policy-management)
+  - [Secret Engines](#secret-engines)
+  - [Secret Management](#secret-management)
+  - [The common authentication section](#the-common-authentication-section)
   - [End to end example](#end-to-end-example)
   - [Contributing a new Vault type](#contributing-a-new-vault-type)
   - [Initializing the connection to Vault](#initializing-the-connection-to-vault)
@@ -37,22 +42,39 @@ There are two main principles through all of the capabilities of this operator:
 1. high-fidelity API. The CRD exposed by this operator reflect field by field the Vault APIs. This is because we don't want to make any assumption on the kinds of configuration workflow that user will set up. That being said the Vault API is very extensive and we are starting with enough API coverage to support, we think, some simple and very common configuration workflows.
 2. attention to security (after all we are integrating with a security tool). To prevent credential leaks we give no permissions to the operator itself against Vault. All APIs exposed by this operator contains enough information to authenticate to Vault using a local service account (local to the namespace where the API exist). In other word for a namespace user to be abel to successfully configure Vault, a service account in that namespace must have been previously given the needed Vault permissions.
 
-Currently this operator supports the following CRDs:
+Currently this operator covers the following Vault APIs:
 
-1. [Policy](./docs/api.md#policy) Configures Vault [Policies](https://www.vaultproject.io/docs/concepts/policies)
-2. [PasswordPolicy](./docs/api.md#passwordpolicy) Configures Vault [Password Policies](https://www.vaultproject.io/docs/concepts/password-policies)
-3. [AuthEngineMount](./docs/api.md#authenginemount) Sets up a [Vault Authentication Endpoint](https://www.vaultproject.io/docs/auth)
-4. [KubernetesAuthEngineConfig](./docs/api.md#kubernetesauthengineconfig) Configures a [Vault Kubernetes Authentication Endpoint](https://www.vaultproject.io/docs/auth/kubernetes).
-5. [KubernetesAuthEngineRole](./docs/api.md#KubernetesAuthEngineRole) Configures a Vault [Kubernetes Authentication](https://www.vaultproject.io/docs/auth/kubernetes) Role
-6. [SecretEngineMount](./docs/api.md#SecretEngineMount) Configures a Mount point for a [SecretEngine](https://www.vaultproject.io/docs/secrets)
-7. [DatabaseSecretEngineConfig](./docs/api.md#DatabaseSecretEngineConfig) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Connection
-8. [DatabaseSecretEngineRole](./docs/api.md#DatabaseSecretEngineRole) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Role
-9. [RandomSecret](./docs/api.md#RandomSecret) Creates a random secret in a vault [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv) with one password field generated using a [PasswordPolicy](https://www.vaultproject.io/docs/concepts/password-policies)
-10. [GitHubSecretEngineConfig](./docs/api.md#GitHubSecretEngineConfig) Configures a Github Application to produce tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
-11. [GitHubSecretEngineRole](./docs/api.md#GitHubSecretEngineRole) Configures a Github Application to produce scoped tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
-12. [VaultSecret](./docs/api.md#VaultSecret) Creates a K8s Secret from one or more Vault Secrets
-13. [PKISecretEngineConfig](./docs/api.md#pkisecretengineconfig)  Configures a [PKI Secret Engine](https://www.vaultproject.io/docs/secrets/pki)
-14. [PKISecretEngineRole](./docs/api.md#pkisecretenginerole)  Configures a [PKI Secret Engine](https://www.vaultproject.io/docs/secrets/pki) Role
+## Authentication Engines
+
+1. [AuthEngineMount](./docs/auth-engines.md#authenginemount) Sets up a [Vault Authentication Endpoint](https://www.vaultproject.io/docs/auth)
+2. [KubernetesAuthEngineConfig](./docs/auth-engines.md#kubernetesauthengineconfig) Configures a [Vault Kubernetes Authentication Endpoint](https://www.vaultproject.io/docs/auth/kubernetes).
+3. [KubernetesAuthEngineRole](./docs/auth-engines.md#KubernetesAuthEngineRole) Configures a Vault [Kubernetes Authentication](https://www.vaultproject.io/docs/auth/kubernetes) Role
+
+## Policy management
+
+1. [Policy](./docs/policy-management.md#policy) Configures Vault [Policies](https://www.vaultproject.io/docs/concepts/policies)
+2. [PasswordPolicy](./docs/policy-management.md#passwordpolicy) Configures Vault [Password Policies](https://www.vaultproject.io/docs/concepts/password-policies)
+
+## Secret Engines
+
+1. [SecretEngineMount](./docs/secret-engines.md#SecretEngineMount) Configures a Mount point for a [SecretEngine](https://www.vaultproject.io/docs/secrets)
+2. [DatabaseSecretEngineConfig](./docs/secret-engines.md#DatabaseSecretEngineConfig) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Connection
+3. [DatabaseSecretEngineRole](./docs/secret-engines.md#DatabaseSecretEngineRole) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Role
+4. [GitHubSecretEngineConfig](./docs/secret-engines.md#GitHubSecretEngineConfig) Configures a Github Application to produce tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
+5. [GitHubSecretEngineRole](./docs/secret-engines.md#GitHubSecretEngineRole) Configures a Github Application to produce scoped tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
+6. [PKISecretEngineConfig](./docs/secret-engines.md#pkisecretengineconfig)  Configures a [PKI Secret Engine](https://www.vaultproject.io/docs/secrets/pki)
+7. [PKISecretEngineRole](./docs/secret-engines.md#pkisecretenginerole)  Configures a [PKI Secret Engine](https://www.vaultproject.io/docs/secrets/pki) Role
+8. [RabbitMQSecretEngineConfig](./docs/secret-engines.md#rabbitmqsecretengineconfig) Configures a [RabbitMQ Secret Engine](https://www.vaultproject.io/docs/secrets/rabbitmq#rabbitmq-secrets-engine)
+9. [RabbitMQSecretEngineRole](./docs/secret-engines.md#rabbitmqsecretenginerole) Configures a [RabbitMQ Secret Engine Role](https://www.vaultproject.io/docs/secrets/rabbitmq#rabbitmq-secrets-engine)
+
+## Secret Management
+
+1. [RandomSecret](./docs/secret-management.md#RandomSecret) Creates a random secret in a vault [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv) with one password field generated using a [PasswordPolicy](https://www.vaultproject.io/docs/concepts/password-policies)
+2. [VaultSecret](./docs/secret-management.md#VaultSecret) Creates a K8s Secret from one or more Vault Secrets
+
+## The common authentication section
+
+All APIs share a common authentication section, details can be found [here](./docs/auth-section.md)
 
 ## End to end example
 
