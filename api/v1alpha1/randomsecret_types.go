@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -53,7 +54,7 @@ type RandomSecretSpec struct {
 	// +kubebuilder:validation:Required
 	SecretFormat VaultPasswordPolicy `json:"secretFormat,omitempty"`
 
-	// RefreshPeriod if specified, the operator will refresh the secret with the given frequency
+	// RefreshPeriod if specified, the operator will refresh the secret with the given frequency. This will also set the ttl of the secret which provides a hint for how often consumers should check back for a new value when reading the secret's lease_duration.
 	// +kubebuilder:validation:Optional
 	RefreshPeriod *metav1.Duration `json:"refreshPeriod,omitempty"`
 
@@ -69,6 +70,8 @@ type RandomSecretSpec struct {
 	IsKVSecretsEngineV2 bool `json:"isKVSecretsEngineV2,omitempty"`
 }
 
+const ttlKey string = "ttl"
+
 var _ vaultutils.VaultObject = &RandomSecret{}
 
 func (d *RandomSecret) GetPath() string {
@@ -76,9 +79,16 @@ func (d *RandomSecret) GetPath() string {
 }
 
 func (d *RandomSecret) getV1Payload() map[string]interface{} {
-	return map[string]interface{}{
+
+	payload := map[string]interface{}{
 		d.Spec.SecretKey: d.Spec.calculatedSecret,
 	}
+
+	if d.Spec.RefreshPeriod != nil && d.Spec.RefreshPeriod.Duration > 0 {
+		payload[ttlKey] = d.Spec.RefreshPeriod.Duration.String()
+	}
+
+	return payload
 }
 
 func (d *RandomSecret) GetPayload() map[string]interface{} {
@@ -195,7 +205,7 @@ func (d *RandomSecret) GenerateNewPassword(context context.Context) error {
 			return nil
 		}
 	}
-	return errors.New("no passowrd policy method specified")
+	return errors.New("no password policy method specified")
 }
 
 func (d *RandomSecret) calculateSecret(policy *PasswordPolicyFormat, attempts int) bool {
@@ -263,6 +273,7 @@ func (r *RandomSecret) isValid() error {
 	result := &multierror.Error{}
 	result = multierror.Append(result, r.validateEitherPasswordPolicyReferenceOrInline())
 	result = multierror.Append(result, r.validateInlinePasswordPolicyFormat())
+	result = multierror.Append(result, r.validateSecretKey())
 	return result.ErrorOrNil()
 }
 
@@ -284,6 +295,13 @@ func (r *RandomSecret) validateInlinePasswordPolicyFormat() error {
 	if r.Spec.SecretFormat.InlinePasswordPolicy != "" {
 		passwordPolicyFormat := &PasswordPolicyFormat{}
 		return hclsimple.Decode(r.Spec.SecretKey, []byte(r.Spec.SecretFormat.InlinePasswordPolicy), nil, passwordPolicyFormat)
+	}
+	return nil
+}
+
+func (r *RandomSecret) validateSecretKey() error {
+	if r.Spec.RefreshPeriod != nil && r.Spec.RefreshPeriod.Duration > 0 && r.Spec.SecretKey == ttlKey {
+		return fmt.Errorf("secretKey must not be %v since this is a protected key when RefreshPeriod is set", ttlKey)
 	}
 	return nil
 }
