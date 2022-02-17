@@ -1,5 +1,5 @@
-//go:build integration
-// +build integration
+//go:build integrationz
+// +build integrationz
 
 package controllers
 

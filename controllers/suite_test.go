@@ -181,8 +181,8 @@ var _ = BeforeSuite(func() {
 }, 60)
 
 var _ = AfterSuite(func() {
-	Expect(k8sClient.Delete(ctx, vaultTestNamespace)).Should(Succeed())
-	Expect(k8sClient.Delete(ctx, vaultAdminNamespace)).Should(Succeed())
+	// Expect(k8sClient.Delete(ctx, vaultTestNamespace)).Should(Succeed())
+	// Expect(k8sClient.Delete(ctx, vaultAdminNamespace)).Should(Succeed())
 
 	cancel()
 	By("tearing down the test environment")
