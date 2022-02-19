@@ -94,9 +94,6 @@ vet: ## Run go vet against code.
 test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
 
-integration: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration -v
-
 ##@ Build
 
 build: generate fmt vet ## Build manager binary.
@@ -235,3 +232,70 @@ helmchart-repo-push: helmchart-repo
 	git -C ${HELM_REPO_DEST} status
 	git -C ${HELM_REPO_DEST} commit -m "Release ${VERSION}"
 	git -C ${HELM_REPO_DEST} push origin "gh-pages"	
+
+.PHONY: kind
+KIND = ./bin/kind
+kind: ## Download kind locally if necessary.
+ifeq (,$(wildcard $(KIND)))
+ifeq (,$(shell which kind 2>/dev/null))
+	$(call go-get-tool,$(KIND),sigs.k8s.io/kind@v0.11.1)
+else
+KIND = $(shell which kind)
+endif
+endif
+
+.PHONY: kubectl
+KUBECTL = ./bin/kubectl
+kubectl: ## Download kubectl locally if necessary.
+ifeq (,$(wildcard $(KUBECTL)))
+ifeq (,$(shell which kubectl 2>/dev/null))
+	echo "Downloading ${KUBECTL} for managing k8s resources."
+	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && curl --create-dirs -sSLo ${KUBECTL} https://dl.k8s.io/release/v1.21.1/bin/$${OS}/$${ARCH}/kubectl
+	chmod +x ${KUBECTL}
+else
+KUBECTL = $(shell which kubectl)
+endif
+endif
+
+.PHONY: vault
+VAULT = ./bin/vault
+vault: ## Download vault cli locally if necessary.
+ifeq (,$(wildcard $(VAULT)))
+ifeq (,$(shell which vault 2>/dev/null))
+	echo "Downloading ${VAULT} cli."
+	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && curl --create-dirs -sSLo ${VAULT}.zip https://releases.hashicorp.com/vault/1.9.3/vault_1.9.3_$${OS}_$${ARCH}.zip && unzip ${VAULT}.zip -d ./bin/
+	chmod +x ${VAULT}
+else
+VAULT = $(shell which vault)
+endif
+endif
+
+integration-kind: kind-setup manifests generate fmt vet envtest ## Run tests.
+	echo ${ACCESSOR}
+	ACCESSOR=${ACCESSOR} KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration
+
+integration: manifests generate fmt vet envtest ## Run tests.
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration
+
+ACCESSOR = "nil"
+
+VAULT_ADDR := "http://localhost:8200"
+
+.PHONY: kind-setup
+kind-setup: kind kubectl vault
+	$(KIND) delete cluster
+	$(KIND) create cluster
+	$(KUBECTL) create namespace vault
+	$(KUBECTL) apply -f integration/rolebinding-admin.yaml -n vault
+	helm repo add hashicorp https://helm.releases.hashicorp.com
+	helm upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f ./integration/vault-values.yaml
+	$(KUBECTL) wait --for=condition=ready pod/vault-0 -n vault --timeout=5m
+	$(KUBECTL) port-forward pod/vault-0 8200:8200 -n vault > /dev/null 2>&1 &
+	$(KUBECTL) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d > ~/.vault-token
+	$(VAULT) policy write -address=${VAULT_ADDR} -tls-skip-verify vault-admin ./config/local-development/vault-admin-policy.hcl
+	$(VAULT) auth enable -address=${VAULT_ADDR} -tls-skip-verify kubernetes
+	$(eval SA_TOKEN := "$(shell $(KUBECTL) get sa default -n vault -o jsonpath='{.secrets[*].name}' | grep -o '\b\w*\-token-\w*\b')")
+	$(KUBECTL) get secret ${SA_TOKEN} -n vault -o jsonpath='{.data.ca\.crt}' | base64 -d > /tmp/ca.crt
+	$(VAULT) write -address=${VAULT_ADDR} -tls-skip-verify auth/kubernetes/config token_reviewer_jwt="$(shell $(KUBECTL) get $(shell $(KUBECTL) get secret -n vault -o name | grep vault-token) -n vault -o jsonpath={.data.token} | base64 -d)" kubernetes_host=https://kubernetes.default.svc:443 kubernetes_ca_cert=@/tmp/ca.crt
+	$(VAULT) write -address=${VAULT_ADDR} -tls-skip-verify auth/kubernetes/role/policy-admin bound_service_account_names=default bound_service_account_namespaces=vault-admin policies=vault-admin ttl=1h
+	$(eval ACCESSOR="$(shell $(VAULT) read -address=${VAULT_ADDR} -tls-skip-verify -format json sys/auth | jq -r '.data["kubernetes/"].accessor')")

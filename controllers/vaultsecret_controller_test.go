@@ -5,9 +5,9 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -16,20 +16,41 @@ import (
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
 //TODO: Example: https://github.com/kubernetes-sigs/kubebuilder/blob/master/docs/book/src/cronjob-tutorial/testdata/project/controllers/cronjob_controller_test.go
 // Define utility constants for object names and testing timeouts/durations and intervals.
 
+var vaultTestNamespace *corev1.Namespace
+var vaultAdminNamespace *corev1.Namespace
+
+const (
+	vaultTestNamespaceName  = "test-vault-config-operator"
+	vaultAdminNamespaceName = "vault-admin"
+)
+
 var _ = Describe("VaultSecret controller", func() {
+
+	AfterEach(func() {
+		Expect(k8sClient.Delete(ctx, vaultTestNamespace)).Should(Succeed())
+		Expect(k8sClient.Delete(ctx, vaultAdminNamespace)).Should(Succeed())
+	})
 
 	BeforeEach(func() {
 		ctx := context.Background()
 
-		rightNow := time.Now()
+		// rightNow := time.Now()
+		// namespace := fmt.Sprintf("vaultsecret-controller-test-%v%v%v", rightNow.Hour(), rightNow.Minute(), rightNow.Second())
 
-		fmt.Sprintf("vaultsecret-controller-test-%v%v%v", rightNow.Hour(), rightNow.Minute(), rightNow.Second())
+		vaultAdminNamespace = &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: vaultAdminNamespaceName,
+			},
+		}
+
+		Expect(k8sClient.Create(ctx, vaultAdminNamespace)).Should(Succeed())
 
 		func() {
 			By("By creating a new PasswordPolicy")
@@ -84,6 +105,17 @@ var _ = Describe("VaultSecret controller", func() {
 			Expect(k8sClient.Create(ctx, instance)).Should(Succeed())
 
 		}()
+
+		vaultTestNamespace = &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: vaultTestNamespaceName,
+				Labels: map[string]string{
+					"database-engine-admin": "true",
+				},
+			},
+		}
+
+		Expect(k8sClient.Create(ctx, vaultTestNamespace)).Should(Succeed())
 
 		func() {
 			By("By creating a new SecretEngineMount")
@@ -140,7 +172,7 @@ var _ = Describe("VaultSecret controller", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
-			By("By checking the Secret Exists")
+			By("By checking the Secret Exists with proper Owner Reference")
 
 			lookupKey = types.NamespacedName{Name: instance.Spec.TemplatizedK8sSecret.Name, Namespace: instance.Namespace}
 			secret := &corev1.Secret{}
@@ -155,6 +187,17 @@ var _ = Describe("VaultSecret controller", func() {
 
 			kind := reflect.TypeOf(redhatcopv1alpha1.VaultSecret{}).Name()
 			Expect(secret.GetObjectMeta().GetOwnerReferences()[0].Kind).Should(Equal(kind))
+
+			By("By checking the Secret Data matches expected pattern")
+
+			var isLowerCaseLetter = regexp.MustCompile(`^[a-z]+$`).MatchString
+			for k := range instance.Spec.TemplatizedK8sSecret.StringData {
+				val, ok := secret.Data[k]
+				Expect(ok).To(BeTrue())
+				s := string(val)
+				Expect(isLowerCaseLetter(s)).To(BeTrue())
+				Expect(len(s)).To(Equal(20))
+			}
 
 		})
 	})

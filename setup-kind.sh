@@ -2,10 +2,7 @@
 
 set -ex
 
-go install sigs.k8s.io/kind@v0.11.1
-
 kind delete cluster
-
 kind create cluster
 
 kubectl create namespace vault
@@ -17,11 +14,9 @@ kubectl wait --for=condition=ready pod/vault-0 -n vault --timeout=5m
 
 kubectl port-forward pod/vault-0 8200:8200 -n vault > /dev/null 2>&1 & 
 
-jobs -l
-
 # kubectl create namespace vault-admin
 export VAULT_ADDR=http://localhost:8200
-export VAULT_TOKEN=$(kubectl get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d )
+kubectl get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d > ~/.vault-token
 # this policy is intentionally broad to allow to test anything in Vault. In a real life scenario this policy would be scoped down.
 vault policy write -tls-skip-verify vault-admin  ./config/local-development/vault-admin-policy.hcl
 vault auth enable -tls-skip-verify kubernetes
@@ -31,4 +26,4 @@ vault write -tls-skip-verify auth/kubernetes/config token_reviewer_jwt="$(kubect
 vault write -tls-skip-verify auth/kubernetes/role/policy-admin bound_service_account_names=default bound_service_account_namespaces=vault-admin policies=vault-admin ttl=1h
 export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.data["kubernetes/"].accessor')
 
-make integration ACCESSOR=${accessor} 
+exit 0

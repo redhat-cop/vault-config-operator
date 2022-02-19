@@ -31,8 +31,6 @@ import (
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	controllertestutils "github.com/redhat-cop/vault-config-operator/controllers/controllertestutils"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -52,14 +50,6 @@ var k8sClient client.Client
 var testEnv *envtest.Environment
 var ctx context.Context
 var cancel context.CancelFunc
-
-const (
-	vaultTestNamespaceName  = "test-vault-config-operator"
-	vaultAdminNamespaceName = "vault-admin"
-)
-
-var vaultTestNamespace *corev1.Namespace
-var vaultAdminNamespace *corev1.Namespace
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -106,25 +96,6 @@ var _ = BeforeSuite(func() {
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
-
-	vaultTestNamespace = &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: vaultTestNamespaceName,
-			Labels: map[string]string{
-				"database-engine-admin": "true",
-			},
-		},
-	}
-
-	vaultAdminNamespace = &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: vaultAdminNamespaceName,
-		},
-	}
-
-	Expect(k8sClient.Create(ctx, vaultTestNamespace)).Should(Succeed())
-
-	Expect(k8sClient.Create(ctx, vaultAdminNamespace)).Should(Succeed())
 
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 		Scheme: scheme.Scheme,
@@ -181,8 +152,6 @@ var _ = BeforeSuite(func() {
 }, 60)
 
 var _ = AfterSuite(func() {
-	// Expect(k8sClient.Delete(ctx, vaultTestNamespace)).Should(Succeed())
-	// Expect(k8sClient.Delete(ctx, vaultAdminNamespace)).Should(Succeed())
 
 	cancel()
 	By("tearing down the test environment")
