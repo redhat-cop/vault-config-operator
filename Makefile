@@ -59,7 +59,7 @@ endif
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
 
-all: build
+all: build integration
 
 ##@ General
 
@@ -207,7 +207,7 @@ catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
 
 # Generate helm chart
-helmchart: kustomize
+helmchart: kustomize helm
 	mkdir -p ./charts/${OPERATOR_NAME}/templates
 	mkdir -p ./charts/${OPERATOR_NAME}/crds
 	repo=${OPERATOR_NAME} envsubst < ./config/local-development/tilt/env-replace-image.yaml > ./config/local-development/tilt/replace-image.yaml
@@ -220,12 +220,12 @@ helmchart: kustomize
 	version=${VERSION} image_repo=$${IMG%:*} envsubst < ./config/helmchart/values.yaml.tpl  > ./charts/${OPERATOR_NAME}/values.yaml
 	sed -i '1s/^/{{ if .Values.enableMonitoring }}/' ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_vault-config-operator-controller-manager-metrics-monitor.yaml
 	echo {{ end }} >> ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_vault-config-operator-controller-manager-metrics-monitor.yaml
-	helm lint ./charts/${OPERATOR_NAME}	
+	$(HELM) lint ./charts/${OPERATOR_NAME}	
 
 helmchart-repo: helmchart
 	mkdir -p ${HELM_REPO_DEST}/${OPERATOR_NAME}
-	helm package -d ${HELM_REPO_DEST}/${OPERATOR_NAME} ./charts/${OPERATOR_NAME}
-	helm repo index --url ${CHART_REPO_URL} ${HELM_REPO_DEST}
+	$(HELM) package -d ${HELM_REPO_DEST}/${OPERATOR_NAME} ./charts/${OPERATOR_NAME}
+	$(HELM) repo index --url ${CHART_REPO_URL} ${HELM_REPO_DEST}
 
 helmchart-repo-push: helmchart-repo	
 	git -C ${HELM_REPO_DEST} add .
@@ -250,7 +250,9 @@ kubectl: ## Download kubectl locally if necessary.
 ifeq (,$(wildcard $(KUBECTL)))
 ifeq (,$(shell which kubectl 2>/dev/null))
 	echo "Downloading ${KUBECTL} for managing k8s resources."
-	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && curl --create-dirs -sSLo ${KUBECTL} https://dl.k8s.io/release/v1.21.1/bin/$${OS}/$${ARCH}/kubectl
+	OS=$(shell go env GOOS) ;\
+	ARCH=$(shell go env GOARCH) ;\
+	curl --create-dirs -sSLo ${KUBECTL} https://dl.k8s.io/release/v1.21.1/bin/$${OS}/$${ARCH}/kubectl ;\
 	chmod +x ${KUBECTL}
 else
 KUBECTL = $(shell which kubectl)
@@ -263,39 +265,57 @@ vault: ## Download vault cli locally if necessary.
 ifeq (,$(wildcard $(VAULT)))
 ifeq (,$(shell which vault 2>/dev/null))
 	echo "Downloading ${VAULT} cli."
-	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && curl --create-dirs -sSLo ${VAULT}.zip https://releases.hashicorp.com/vault/1.9.3/vault_1.9.3_$${OS}_$${ARCH}.zip && unzip ${VAULT}.zip -d ./bin/
+	OS=$(shell go env GOOS) ;\
+	ARCH=$(shell go env GOARCH) ;\
+	curl --create-dirs -sSLo ${VAULT}.zip https://releases.hashicorp.com/vault/1.9.3/vault_1.9.3_$${OS}_$${ARCH}.zip ;\
+	unzip ${VAULT}.zip -d ./bin/ ;\
 	chmod +x ${VAULT}
 else
 VAULT = $(shell which vault)
 endif
 endif
 
-integration-kind: kind-setup manifests generate fmt vet envtest ## Run tests.
-	echo ${ACCESSOR}
-	ACCESSOR=${ACCESSOR} KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration
+.PHONY: helm
+HELM = ./bin/helm
+helm: ## Download helm locally if necessary.
+ifeq (,$(wildcard $(HELM)))
+ifeq (,$(shell which helm 2>/dev/null))
+	echo "Downloading ${HELM}."
+	OS=$(shell go env GOOS) ;\
+	ARCH=$(shell go env GOARCH) ;\
+	curl --create-dirs -sSLo ${HELM}.tar.gz https://get.helm.sh/helm-v3.8.0-$${OS}-$${ARCH}.tar.gz ;\
+	tar -xf ${HELM}.tar.gz -C ./bin/ ;\
+	mv ./bin/$${OS}-$${ARCH}/helm ${HELM}
+else
+HELM = $(shell which helm)
+endif
+endif
 
-integration: manifests generate fmt vet envtest ## Run tests.
+VAULT_ADDR := "http://localhost"
+
+.PHONY: integration
+integration: kind-setup manifests generate fmt vet envtest ## Run tests.
+	export VAULT_TOKEN=$$($(KUBECTL) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
+	export VAULT_ADDR=${VAULT_ADDR} ;\
+	export ACCESSOR=$$($(VAULT) read -tls-skip-verify -format json sys/auth | jq -r '.data["kubernetes/"].accessor') ;\
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration
 
-ACCESSOR = "nil"
-
-VAULT_ADDR := "http://localhost:8200"
-
 .PHONY: kind-setup
-kind-setup: kind kubectl vault
+kind-setup: kind kubectl vault helm
 	$(KIND) delete cluster
-	$(KIND) create cluster
+	$(KIND) create cluster --config=./integration/cluster-kind.yaml
 	$(KUBECTL) create namespace vault
-	$(KUBECTL) apply -f integration/rolebinding-admin.yaml -n vault
-	helm repo add hashicorp https://helm.releases.hashicorp.com
-	helm upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f ./integration/vault-values.yaml
-	$(KUBECTL) wait --for=condition=ready pod/vault-0 -n vault --timeout=5m
-	$(KUBECTL) port-forward pod/vault-0 8200:8200 -n vault > /dev/null 2>&1 &
-	$(KUBECTL) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d > ~/.vault-token
-	$(VAULT) policy write -address=${VAULT_ADDR} -tls-skip-verify vault-admin ./config/local-development/vault-admin-policy.hcl
-	$(VAULT) auth enable -address=${VAULT_ADDR} -tls-skip-verify kubernetes
-	$(eval SA_TOKEN := "$(shell $(KUBECTL) get sa default -n vault -o jsonpath='{.secrets[*].name}' | grep -o '\b\w*\-token-\w*\b')")
-	$(KUBECTL) get secret ${SA_TOKEN} -n vault -o jsonpath='{.data.ca\.crt}' | base64 -d > /tmp/ca.crt
-	$(VAULT) write -address=${VAULT_ADDR} -tls-skip-verify auth/kubernetes/config token_reviewer_jwt="$(shell $(KUBECTL) get $(shell $(KUBECTL) get secret -n vault -o name | grep vault-token) -n vault -o jsonpath={.data.token} | base64 -d)" kubernetes_host=https://kubernetes.default.svc:443 kubernetes_ca_cert=@/tmp/ca.crt
-	$(VAULT) write -address=${VAULT_ADDR} -tls-skip-verify auth/kubernetes/role/policy-admin bound_service_account_names=default bound_service_account_namespaces=vault-admin policies=vault-admin ttl=1h
-	$(eval ACCESSOR="$(shell $(VAULT) read -address=${VAULT_ADDR} -tls-skip-verify -format json sys/auth | jq -r '.data["kubernetes/"].accessor')")
+	$(KUBECTL) apply -f ./integration/rolebinding-admin.yaml -n vault
+	$(HELM) repo add hashicorp https://helm.releases.hashicorp.com
+	$(HELM) upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f ./integration/vault-values.yaml
+	$(KUBECTL) wait --for=condition=ready pod/vault-0 -n vault --timeout=5m	
+	$(HELM) upgrade ingress-nginx ./integration/helm/ingress-nginx -i --create-namespace -n ingress-nginx --atomic
+	$(KUBECTL) wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=90s
+	export VAULT_TOKEN=$$($(KUBECTL) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
+	export VAULT_ADDR=${VAULT_ADDR} ;\
+	$(VAULT) policy write -tls-skip-verify vault-admin ./config/local-development/vault-admin-policy.hcl ;\
+	$(VAULT) auth enable -tls-skip-verify kubernetes ;\
+	export SA_SECRET=$$($(KUBECTL) get sa default -n vault -o jsonpath='{.secrets[*].name}' | grep -o '\b\w*\-token-\w*\b') ;\
+	$(KUBECTL) get secret ${SA_SECRET} -n vault -o jsonpath='{.data.ca\.crt}' | base64 -d > /tmp/ca.crt ;\
+	$(VAULT) write -tls-skip-verify auth/kubernetes/config token_reviewer_jwt="$$($(KUBECTL) get $$($(KUBECTL) get secret -n vault -o name | grep vault-token) -n vault -o jsonpath={.data.token} | base64 -d)" kubernetes_host=https://kubernetes.default.svc:443 kubernetes_ca_cert=@/tmp/ca.crt ;\
+	$(VAULT) write -tls-skip-verify auth/kubernetes/role/policy-admin bound_service_account_names=default bound_service_account_namespaces=vault-admin policies=vault-admin ttl=1h

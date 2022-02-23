@@ -26,6 +26,7 @@
     - [Test helm chart locally](#test-helm-chart-locally)
   - [Building/Pushing the operator image](#buildingpushing-the-operator-image)
   - [Deploy to OLM via bundle](#deploy-to-olm-via-bundle)
+  - [Integration Test](#integration-test)
   - [Releasing](#releasing)
     - [Cleaning up](#cleaning-up)
 
@@ -396,6 +397,12 @@ oc new-project vault-config-operator
 oc label namespace vault-config-operator openshift.io/cluster-monitoring="true"
 operator-sdk cleanup vault-config-operator -n vault-config-operator
 operator-sdk run bundle --install-mode AllNamespaces -n vault-config-operator quay.io/$repo/vault-config-operator-bundle:latest
+```
+
+## Integration Test
+
+```sh
+make integration
 ```
 
 ## Releasing

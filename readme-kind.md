@@ -7,7 +7,7 @@
 ```sh
 go install sigs.k8s.io/kind@v0.11.1
 
-kind create cluster
+kind create cluster --config=./integration/cluster-kind.yaml
 ```
 
 ## dashboard (optional)
@@ -40,14 +40,28 @@ kubectl create namespace vault
 kubectl apply -f integration/rolebinding-admin.yaml -n vault
 helm repo add hashicorp https://helm.releases.hashicorp.com
 helm upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f ./integration/vault-values.yaml
+kubectl wait --for=condition=ready pod/vault-0 -n vault --timeout=5m
 ```
+
+## nginx 
+
+```sh
+helm upgrade ingress-nginx ./integration/helm/ingress-nginx -i --create-namespace -n ingress-nginx --atomic
+
+kubectl wait --namespace ingress-nginx \
+  --for=condition=ready pod \
+  --selector=app.kubernetes.io/component=controller \
+  --timeout=90s
+
+```
+
 
 ```sh
 
 kubectl port-forward pod/vault-0 8200:8200 -n vault
 
 # kubectl create namespace vault-admin
-export VAULT_ADDR=http://localhost:8200
+export VAULT_ADDR=http://localhost
 export VAULT_TOKEN=$(kubectl get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d )
 # this policy is intentionally broad to allow to test anything in Vault. In a real life scenario this policy would be scoped down.
 vault policy write -tls-skip-verify vault-admin  ./config/local-development/vault-admin-policy.hcl
@@ -60,7 +74,7 @@ export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.da
 ```
 
 ```sh
-make integration ACCESSOR=${accessor}
+make integration ACCESSOR=${accessor} VAULT_ADDR="http://localhost"
 ```
 
 
