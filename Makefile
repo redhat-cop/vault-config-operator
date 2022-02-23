@@ -267,7 +267,7 @@ ifeq (,$(shell which vault 2>/dev/null))
 	echo "Downloading ${VAULT} cli."
 	OS=$(shell go env GOOS) ;\
 	ARCH=$(shell go env GOARCH) ;\
-	curl --create-dirs -sSLo ${VAULT}.zip https://releases.hashicorp.com/vault/1.9.3/vault_1.9.3_$${OS}_$${ARCH}.zip ;\
+	curl --create-dirs -sSLo ${VAULT}.zip https://releases.hashicorp.com/vault/1.9.3/vault_1.9.3_linux_amd64.zip ;\
 	unzip ${VAULT}.zip -d ./bin/ ;\
 	chmod +x ${VAULT}
 else
