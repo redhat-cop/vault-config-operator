@@ -8,4 +8,4 @@ on:
 jobs:
   shared-operator-workflow:
     name: shared-operator-workflow
-    uses: redhat-cop/github-workflows-operators/.github/workflows/pr-operator.yml@v1.0.0
+    uses: trevorbox/github-workflows-operators/.github/workflows/pr-operator.yml@main
