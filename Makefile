@@ -59,7 +59,7 @@ endif
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
 
-all: build integration
+all: build
 
 ##@ General
 
