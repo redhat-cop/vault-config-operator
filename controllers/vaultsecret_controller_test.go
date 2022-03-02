@@ -21,9 +21,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-//TODO: Example: https://github.com/kubernetes-sigs/kubebuilder/blob/master/docs/book/src/cronjob-tutorial/testdata/project/controllers/cronjob_controller_test.go
-// Define utility constants for object names and testing timeouts/durations and intervals.
-
 var vaultTestNamespace *corev1.Namespace
 var vaultAdminNamespace *corev1.Namespace
 

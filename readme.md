@@ -18,6 +18,7 @@
   - [Metrics](#metrics)
     - [Testing metrics](#testing-metrics)
   - [Development](#development)
+    - [Setup](#setup)
     - [Running the operator locally](#running-the-operator-locally)
       - [Deploy a Vault instance](#deploy-a-vault-instance)
       - [Configure an Kubernetes Authentication mount point](#configure-an-kubernetes-authentication-mount-point)
@@ -197,6 +198,23 @@ exit
 ```
 
 ## Development
+
+### Setup
+
+If using vscode, you may need a `./.vscode/settings.json` file in this directory to make gopls happy since build tags are used.
+
+See <https://github.com/golang/vscode-go/blob/master/docs/settings.md#buildbuildflags>
+
+```json
+{
+    "gopls": {
+        "ui.completion.usePlaceholders": true,
+        "build.buildFlags": [
+            "--tags=integration"
+        ] 
+      },
+}
+```
 
 ### Running the operator locally
 
