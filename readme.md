@@ -212,7 +212,7 @@ See <https://github.com/golang/vscode-go/blob/master/docs/settings.md#buildbuild
         "build.buildFlags": [
             "--tags=integration"
         ] 
-      },
+    },
 }
 ```
 
