@@ -6,6 +6,9 @@
   - [DatabaseSecretEngineRole](#databasesecretenginerole)
   - [GitHubSecretEngineConfig](#githubsecretengineconfig)
   - [GitHubSecretEngineRole](#githubsecretenginerole)
+  - [QuaySecretEngineConfig](#quaysecretengineconfig)
+  - [QuaySecretEngineStaticRole](#quaysecretenginestaticrole)
+  - [QuaySecretEngineRole](#quaysecretenginerole)
   - [RabbitMQSecretEngineConfig](#rabbitmqsecretengineconfig)
   - [RabbitMQSecretEngineRole](#rabbitmqsecretenginerole)
   - [PKISecretEngineConfig](#pkisecretengineconfig)
@@ -192,6 +195,130 @@ to read a new credential from this role, execute the following:
 
 ```shell
 vault read -tls-skip-verify github/raf-backstage-demo/token/one-repo-only
+```
+
+## QuaySecretEngineConfig
+
+The `QuayHubSecretEngineConfig` CRD allows a user to create a Quay Secret engine configuration. Only one configuration can exists per Quay secret engine mount point, here is an example:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: QuayHubSecretEngineConfig
+metadata:
+  name: quay-org
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  rootCredentials:
+    secret:
+      name: quay-token
+  path: quay/demo
+  url: https://quay.io
+```
+
+The `path` field specifies the path of the secret engine that will contain this configuration.
+
+The `url` field specifies the endpoint for the Quay server
+
+The token can retrieved in three different ways:
+
+1. From a Kubernetes secret, specifying the `rootCredentialsFromSecret` field. The secret must be of [basic auth type](https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret). If the secret is updated this connection will also be updated.
+2. From a Vault secret, specifying the `rootCredentialsFromVaultSecret` field.
+3. From a [RandomSecret](#RandomSecret), specifying the `rootCredentialsFromRandomSecret` field. When the RandomSecret generates a new secret, this connection will also be updated.
+
+More parameters exists for their explanation and for how to install the vault-plugin-secrets-quay engine see [here](https://github.com/redhat-cop/vault-plugin-secrets-quay)
+
+This CR is roughly equivalent to this Vault CLI command:
+
+```shell
+vault write [namespace/]quay/demo/config url=https://<QUAY_HOST> token=<token>
+```
+
+## QuayHubSecretEngineRole
+
+The `QuayHubSecretEngineRole` CRD allows a user to create a Quay secret engine role. A role allows for the creation of a narrowly scoped Quay Robot account within an organization.
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: QuayHubSecretEngineRole
+metadata:
+  name: repo-manager
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  path: quay/demo
+  namespaceName: myorg
+  createRepositories: true
+  defaultPermission: write
+  TTL: "8760h"
+  
+```
+
+The `path` field specifies the path of the secret engine that will contain this role.
+
+The `namespaceName` field specifies the type of name of the namespace the robot account should be created within.
+
+The `createRepositories` field specifies whether the robot account should be granted permission to create new repositories.
+
+The `defaultPermission` field specifies the default permission that should apply to newly created repositories.
+
+The `TTL` specifies the requested Time To Live (after which the certificate will be expired). This cannot be larger than the engine's max (or, if not set, the system max).
+
+More parameters exists for their explanation and for how to install the vault-plugin-secrets-quay engine see [here](https://github.com/redhat-cop/vault-plugin-secrets-quay)
+
+This CR is roughly equivalent to this Vault CLI command:
+
+```shell
+vault write [namespace/]quay/demo/roles/repo-manager namespaceName=myorg createRepositories=true defaultPermission=write TTL=8760h
+```
+
+to read a new credential from this role, execute the following:
+
+```shell
+vault read quay/demo/creds/repo-manager
+```
+
+## QuayHubSecretEngineRole
+
+The `QuayHubSecretEngineRole` CRD allows a user to create a Quay secret engine role. A role allows for the creation of a narrowly scoped Quay Robot account within an organization where a fixed robot account is set.
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: QuayHubSecretEngineStaticRole
+metadata:
+  name: repo-manager
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  path: quay/demo
+  namespaceName: myorg
+  createRepositories: true
+  defaultPermission: write
+```
+
+The `path` field specifies the path of the secret engine that will contain this role.
+
+The `namespaceName` field specifies the type of name of the namespace the robot account should be created within.
+
+The `createRepositories` field specifies whether the robot account should be granted permission to create new repositories.
+
+The `defaultPermission` field specifies the default permission that should apply to newly created repositories.
+
+More parameters exists for their explanation and for how to install the vault-plugin-secrets-quay engine see [here](https://github.com/redhat-cop/vault-plugin-secrets-quay)
+
+This CR is roughly equivalent to this Vault CLI command:
+
+```shell
+vault write [namespace/]quay/demo/static-roles/repo-manager namespaceName=myorg createRepositories=true defaultPermission=write TTL=8760h
+```
+
+to read a new credential from this role, execute the following:
+
+```shell
+vault read quay/demo/static-creds/repo-manager
 ```
 
 ## RabbitMQSecretEngineConfig

@@ -66,6 +66,9 @@ Currently this operator covers the following Vault APIs:
 5. [GitHubSecretEngineRole](./docs/secret-engines.md#GitHubSecretEngineRole) Configures a Github Application to produce scoped tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
 6. [PKISecretEngineConfig](./docs/secret-engines.md#pkisecretengineconfig)  Configures a [PKI Secret Engine](https://www.vaultproject.io/docs/secrets/pki)
 7. [PKISecretEngineRole](./docs/secret-engines.md#pkisecretenginerole)  Configures a [PKI Secret Engine](https://www.vaultproject.io/docs/secrets/pki) Role
+8. [QuaySecretEngineConfig](./docs/secret-engines.md#QuaySecretEngineConfig) Configures a Quay server to produce Robot accounts, see the also the [vault-plugin-secrets-quay](https://github.com/redhat-cop/vault-plugin-secrets-quay)
+9. [QuaySecretEngineRole](./docs/secret-engines.md#QuaySecretEngineRole) Configures a Quay server to produce credentials for a Robot account, see the also the [vault-plugin-secrets-quay](https://github.com/redhat-cop/vault-plugin-secrets-quay)
+10. [QuaySecretEngineStaticRole](./docs/secret-engines.md#QuaySecretEngineStaticRole) Configures a Quay server to produce credentials for a Robot account using a fixed username and generated credentials, see the also the [vault-plugin-secrets-quay](https://github.com/redhat-cop/vault-plugin-secrets-quay)
 8. [RabbitMQSecretEngineConfig](./docs/secret-engines.md#rabbitmqsecretengineconfig) Configures a [RabbitMQ Secret Engine](https://www.vaultproject.io/docs/secrets/rabbitmq#rabbitmq-secrets-engine)
 9. [RabbitMQSecretEngineRole](./docs/secret-engines.md#rabbitmqsecretenginerole) Configures a [RabbitMQ Secret Engine Role](https://www.vaultproject.io/docs/secrets/rabbitmq#rabbitmq-secrets-engine)
 
