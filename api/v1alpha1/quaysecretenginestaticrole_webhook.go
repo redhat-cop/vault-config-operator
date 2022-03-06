@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"errors"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -56,6 +58,11 @@ func (r *QuaySecretEngineStaticRole) ValidateCreate() error {
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *QuaySecretEngineStaticRole) ValidateUpdate(old runtime.Object) error {
 	quaysecretenginestaticrolelog.Info("validate update", "name", r.Name)
+
+	// the path cannot be updated
+	if r.Spec.Path != old.(*QuaySecretEngineStaticRole).Spec.Path {
+		return errors.New("spec.path cannot be updated")
+	}
 
 	return nil
 }
