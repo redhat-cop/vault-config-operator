@@ -199,11 +199,11 @@ vault read -tls-skip-verify github/raf-backstage-demo/token/one-repo-only
 
 ## QuaySecretEngineConfig
 
-The `QuayHubSecretEngineConfig` CRD allows a user to create a Quay Secret engine configuration. Only one configuration can exists per Quay secret engine mount point, here is an example:
+The `QuaySecretEngineConfig` CRD allows a user to create a Quay Secret engine configuration. Only one configuration can exists per Quay secret engine mount point, here is an example:
 
 ```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
-kind: QuayHubSecretEngineConfig
+kind: QuaySecretEngineConfig
 metadata:
   name: quay-org
 spec:
@@ -235,13 +235,13 @@ This CR is roughly equivalent to this Vault CLI command:
 vault write [namespace/]quay/demo/config url=https://<QUAY_HOST> token=<token>
 ```
 
-## QuayHubSecretEngineRole
+## QuaySecretEngineRole
 
-The `QuayHubSecretEngineRole` CRD allows a user to create a Quay secret engine role. A role allows for the creation of a narrowly scoped Quay Robot account within an organization.
+The `QuaySecretEngineRole` CRD allows a user to create a Quay secret engine role. A role allows for the creation of a narrowly scoped Quay Robot account within an organization.
 
 ```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
-kind: QuayHubSecretEngineRole
+kind: QuaySecretEngineRole
 metadata:
   name: repo-manager
 spec:
@@ -280,13 +280,13 @@ to read a new credential from this role, execute the following:
 vault read quay/demo/creds/repo-manager
 ```
 
-## QuayHubSecretEngineRole
+## QuaySecretEngineStaticRole
 
-The `QuayHubSecretEngineRole` CRD allows a user to create a Quay secret engine role. A role allows for the creation of a narrowly scoped Quay Robot account within an organization where a fixed robot account is set.
+The `QuaySecretEngineStaticRole` CRD allows a user to create a Quay secret engine role. A role allows for the creation of a narrowly scoped Quay Robot account within an organization where a fixed robot account is set.
 
 ```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
-kind: QuayHubSecretEngineStaticRole
+kind: QuaySecretEngineStaticRole
 metadata:
   name: repo-manager
 spec:
