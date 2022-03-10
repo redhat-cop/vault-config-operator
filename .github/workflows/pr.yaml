@@ -9,6 +9,6 @@ jobs:
   shared-operator-workflow:
     name: shared-operator-workflow
     uses: trevorbox/github-workflows-operators/.github/workflows/pr-operator.yml@test-boolean-input
-    with: 
+    # with: 
       # RUN_UNIT_TESTS: true
-      RUN_INTEGRATION_TESTS: true
+      # RUN_INTEGRATION_TESTS: true
