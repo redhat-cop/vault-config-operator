@@ -8,6 +8,7 @@ on:
 jobs:
   shared-operator-workflow:
     name: shared-operator-workflow
-    uses: trevorbox/github-workflows-operators/.github/workflows/pr-operator.yml@main
+    uses: trevorbox/github-workflows-operators/.github/workflows/pr-operator.yml@test-boolean-input
     with: 
-      TEST_TARGETS: "test integration"
+      RUN_UNIT_TESTS: "true"
+      RUN_INTEGRATION_TESTS: "true"
