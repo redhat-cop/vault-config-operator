@@ -10,5 +10,5 @@ jobs:
     name: shared-operator-workflow
     uses: trevorbox/github-workflows-operators/.github/workflows/pr-operator.yml@test-boolean-input
     with: 
-      RUN_UNIT_TESTS: "true"
-      RUN_INTEGRATION_TESTS: "true"
+      RUN_UNIT_TESTS: true
+      RUN_INTEGRATION_TESTS: true
