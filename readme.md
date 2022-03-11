@@ -23,6 +23,7 @@
   - [Metrics](#metrics)
     - [Testing metrics](#testing-metrics)
   - [Development](#development)
+    - [Setup](#setup)
     - [Running the operator locally](#running-the-operator-locally)
       - [Deploy a Vault instance](#deploy-a-vault-instance)
       - [Configure an Kubernetes Authentication mount point](#configure-an-kubernetes-authentication-mount-point)
@@ -31,6 +32,7 @@
     - [Test helm chart locally](#test-helm-chart-locally)
   - [Building/Pushing the operator image](#buildingpushing-the-operator-image)
   - [Deploy to OLM via bundle](#deploy-to-olm-via-bundle)
+  - [Integration Test](#integration-test)
   - [Releasing](#releasing)
     - [Cleaning up](#cleaning-up)
 
@@ -218,6 +220,23 @@ exit
 ```
 
 ## Development
+
+### Setup
+
+If using vscode, you may need a `./.vscode/settings.json` file in this directory to make gopls happy since build tags are used.
+
+See <https://github.com/golang/vscode-go/blob/master/docs/settings.md#buildbuildflags>
+
+```json
+{
+    "gopls": {
+        "ui.completion.usePlaceholders": true,
+        "build.buildFlags": [
+            "--tags=integration"
+        ] 
+    },
+}
+```
 
 ### Running the operator locally
 
@@ -418,6 +437,12 @@ oc new-project vault-config-operator
 oc label namespace vault-config-operator openshift.io/cluster-monitoring="true"
 operator-sdk cleanup vault-config-operator -n vault-config-operator
 operator-sdk run bundle --install-mode AllNamespaces -n vault-config-operator quay.io/$repo/vault-config-operator-bundle:latest
+```
+
+## Integration Test
+
+```sh
+make integration
 ```
 
 ## Releasing

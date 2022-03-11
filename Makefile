@@ -1,6 +1,10 @@
 CHART_REPO_URL ?= http://example.com
 HELM_REPO_DEST ?= /tmp/gh-pages
 OPERATOR_NAME ?=$(shell basename -z `pwd`)
+HELM_VERSION ?= v3.8.0
+KIND_VERSION ?= v0.11.1
+KUBECTL_VERSION ?= v1.21.1
+VAULT_VERSION ?= 1.9.3
 
 # VERSION defines the project version for the bundle.
 # Update this value when you upgrade the version of your project.
@@ -94,6 +98,25 @@ vet: ## Run go vet against code.
 test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
 
+.PHONY: integration
+integration: kind-setup vault manifests generate fmt vet envtest ## Run tests.
+	export VAULT_TOKEN=$$($(KUBECTL) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
+	export VAULT_ADDR="http://localhost" ;\
+	export ACCESSOR=$$($(VAULT) read -tls-skip-verify -format json sys/auth | jq -r '.data["kubernetes/"].accessor') ;\
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration
+
+.PHONY: kind-setup
+kind-setup: kind kubectl helm
+	$(KIND) delete cluster
+	$(KIND) create cluster --config=./integration/cluster-kind.yaml
+	$(KUBECTL) create namespace vault
+	$(KUBECTL) apply -f ./integration/rolebinding-admin.yaml -n vault
+	$(HELM) repo add hashicorp https://helm.releases.hashicorp.com
+	$(HELM) upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f ./integration/vault-values.yaml
+	$(KUBECTL) wait --for=condition=ready pod/vault-0 -n vault --timeout=5m	
+	$(HELM) upgrade ingress-nginx ./integration/helm/ingress-nginx -i --create-namespace -n ingress-nginx --atomic
+	$(KUBECTL) wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=90s
+
 ##@ Build
 
 build: generate fmt vet ## Build manager binary.
@@ -110,18 +133,18 @@ docker-push: ## Push docker image with the manager.
 
 ##@ Deployment
 
-install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+install: manifests kustomize kubectl ## Install CRDs into the K8s cluster specified in ~/.kube/config.
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) apply -f -
 
-uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd | kubectl delete -f -
+uninstall: manifests kustomize kubectl ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config.
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete -f -
 
-deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy: manifests kustomize kubectl ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
 
-undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/default | kubectl delete -f -
+undeploy: kustomize kubectl ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
+	$(KUSTOMIZE) build config/default | $(KUBECTL) delete -f -
 
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
@@ -207,7 +230,7 @@ catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
 
 # Generate helm chart
-helmchart: kustomize
+helmchart: kustomize helm
 	mkdir -p ./charts/${OPERATOR_NAME}/templates
 	mkdir -p ./charts/${OPERATOR_NAME}/crds
 	repo=${OPERATOR_NAME} envsubst < ./config/local-development/tilt/env-replace-image.yaml > ./config/local-development/tilt/replace-image.yaml
@@ -220,15 +243,73 @@ helmchart: kustomize
 	version=${VERSION} image_repo=$${IMG%:*} envsubst < ./config/helmchart/values.yaml.tpl  > ./charts/${OPERATOR_NAME}/values.yaml
 	sed -i '1s/^/{{ if .Values.enableMonitoring }}/' ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_vault-config-operator-controller-manager-metrics-monitor.yaml
 	echo {{ end }} >> ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_vault-config-operator-controller-manager-metrics-monitor.yaml
-	helm lint ./charts/${OPERATOR_NAME}	
+	$(HELM) lint ./charts/${OPERATOR_NAME}	
 
 helmchart-repo: helmchart
 	mkdir -p ${HELM_REPO_DEST}/${OPERATOR_NAME}
-	helm package -d ${HELM_REPO_DEST}/${OPERATOR_NAME} ./charts/${OPERATOR_NAME}
-	helm repo index --url ${CHART_REPO_URL} ${HELM_REPO_DEST}
+	$(HELM) package -d ${HELM_REPO_DEST}/${OPERATOR_NAME} ./charts/${OPERATOR_NAME}
+	$(HELM) repo index --url ${CHART_REPO_URL} ${HELM_REPO_DEST}
 
 helmchart-repo-push: helmchart-repo	
 	git -C ${HELM_REPO_DEST} add .
 	git -C ${HELM_REPO_DEST} status
 	git -C ${HELM_REPO_DEST} commit -m "Release ${VERSION}"
-	git -C ${HELM_REPO_DEST} push origin "gh-pages"	
+	git -C ${HELM_REPO_DEST} push origin "gh-pages"
+
+.PHONY: kind
+KIND = ./bin/kind
+kind: ## Download kind locally if necessary.
+ifeq (,$(wildcard $(KIND)))
+ifeq (,$(shell which kind 2>/dev/null))
+	$(call go-get-tool,$(KIND),sigs.k8s.io/kind@${KIND_VERSION})
+else
+KIND = $(shell which kind)
+endif
+endif
+
+.PHONY: kubectl
+KUBECTL = ./bin/kubectl
+kubectl: ## Download kubectl locally if necessary.
+ifeq (,$(wildcard $(KUBECTL)))
+ifeq (,$(shell which kubectl 2>/dev/null))
+	echo "Downloading ${KUBECTL} for managing k8s resources."
+	OS=$(shell go env GOOS) ;\
+	ARCH=$(shell go env GOARCH) ;\
+	curl --create-dirs -sSLo ${KUBECTL} https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/$${OS}/$${ARCH}/kubectl ;\
+	chmod +x ${KUBECTL}
+else
+KUBECTL = $(shell which kubectl)
+endif
+endif
+
+.PHONY: vault
+VAULT = ./bin/vault
+vault: ## Download vault cli locally if necessary.
+ifeq (,$(wildcard $(VAULT)))
+ifeq (,$(shell which vault 2>/dev/null))
+	echo "Downloading ${VAULT} cli."
+	OS=$(shell go env GOOS) ;\
+	ARCH=$(shell go env GOARCH) ;\
+	curl --create-dirs -sSLo ${VAULT}.zip https://releases.hashicorp.com/vault/${VAULT_VERSION}/vault_${VAULT_VERSION}_linux_amd64.zip ;\
+	unzip ${VAULT}.zip -d ./bin/ ;\
+	chmod +x ${VAULT}
+else
+VAULT = $(shell which vault)
+endif
+endif
+
+.PHONY: helm
+HELM = ./bin/helm
+helm: ## Download helm locally if necessary.
+ifeq (,$(wildcard $(HELM)))
+ifeq (,$(shell which helm 2>/dev/null))
+	echo "Downloading ${HELM}."
+	OS=$(shell go env GOOS) ;\
+	ARCH=$(shell go env GOARCH) ;\
+	curl --create-dirs -sSLo ${HELM}.tar.gz https://get.helm.sh/helm-${HELM_VERSION}-$${OS}-$${ARCH}.tar.gz ;\
+	tar -xf ${HELM}.tar.gz -C ./bin/ ;\
+	mv ./bin/$${OS}-$${ARCH}/helm ${HELM}
+else
+HELM = $(shell which helm)
+endif
+endif
