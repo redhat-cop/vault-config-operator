@@ -146,4 +146,41 @@ server:
         - name: plugins
           mountPath: /usr/local/libexec/vault
         - name: vault-root-token
-          mountPath: /vault-root-token  
+          mountPath: /vault-root-token
+    - name: vault-admin-initializer
+      image: hashicorp/vault:1.9.2
+      env: 
+      - name: VAULT_ADDR
+        value: http://vault.vault.svc:8200
+      command: 
+      - /bin/sh
+      - -c
+      - | 
+        while true; do
+          sleep 5
+          if [[ -f /vault-root-token/root_token ]]; then
+            export VAULT_TOKEN=$(cat /vault-root-token/root_token)
+            if [[ "$(vault status | grep "Sealed" | grep "false")" ]]; then
+              if [[ -z "$(vault policy list | grep "vault-admin")" ]]; then
+                vault auth enable kubernetes
+                vault write auth/kubernetes/config token_reviewer_jwt=@/var/run/secrets/kubernetes.io/serviceaccount/token kubernetes_host=https://kubernetes.default.svc:443 kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt 
+                vault write auth/kubernetes/role/policy-admin bound_service_account_names=default bound_service_account_namespaces=vault-admin policies=vault-admin ttl=1h
+                cat << EOF | vault policy write vault-admin -
+                  path "/*" {
+                    capabilities = ["create", "read", "update", "delete", "list","sudo"]
+                  }
+        EOF
+              else 
+                echo vault admin already configured
+                sleep 5
+              fi      
+            else
+              echo vault still sealed
+            fi    
+          else 
+            echo root token not initialized yet    
+          fi    
+        done      
+      volumeMounts:
+        - name: vault-root-token
+          mountPath: /vault-root-token
