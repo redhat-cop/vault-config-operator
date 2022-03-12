@@ -106,7 +106,7 @@ integration: kind-setup vault manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration
 
 .PHONY: kind-setup
-kind-setup: kind kubectl helmchart
+kind-setup: kind kubectl helm
 	$(KIND) delete cluster
 	$(KIND) create cluster --config=./integration/cluster-kind.yaml
 	$(KUBECTL) create namespace vault
@@ -116,18 +116,6 @@ kind-setup: kind kubectl helmchart
 	$(KUBECTL) wait --for=condition=ready pod/vault-0 -n vault --timeout=5m	
 	$(HELM) upgrade ingress-nginx ./integration/helm/ingress-nginx -i --create-namespace -n ingress-nginx --atomic
 	$(KUBECTL) wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=90s
-
-	$(HELM) repo add jetstack https://charts.jetstack.io
-	$(HELM) install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.7.1 --set installCRDs=true
-
-	$(HELM) repo add prometheus-community https://prometheus-community.github.io/helm-charts
-	$(HELM) install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n default
-
-	$(HELM) upgrade -i vault-config-operator-local charts/vault-config-operator -n vault-config-operator-local --create-namespace \
-	  --set enableCertManager=true \
-	  --set image.repository=quay.io/redhat-cop/vault-config-operator \
-	  --set image.tag=latest
-	$(KUBECTL) wait --namespace vault-config-operator-local --for=condition=ready pod --selector=app.kubernetes.io/name=vault-config-operator --timeout=90s
 
 ##@ Build
 
@@ -267,6 +255,18 @@ helmchart-repo-push: helmchart-repo
 	git -C ${HELM_REPO_DEST} status
 	git -C ${HELM_REPO_DEST} commit -m "Release ${VERSION}"
 	git -C ${HELM_REPO_DEST} push origin "gh-pages"
+
+.PHONY: helmchart-test
+helmchart-test: kind-setup helmchart
+	$(HELM) repo add jetstack https://charts.jetstack.io
+	$(HELM) install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.7.1 --set installCRDs=true
+	$(HELM) repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	$(HELM) install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n default
+	$(HELM) upgrade -i vault-config-operator-local charts/vault-config-operator -n vault-config-operator-local --create-namespace \
+	  --set enableCertManager=true \
+	  --set image.repository=quay.io/redhat-cop/vault-config-operator \
+	  --set image.tag=latest
+	$(KUBECTL) wait --namespace vault-config-operator-local --for=condition=ready pod --selector=app.kubernetes.io/name=vault-config-operator --timeout=90s
 
 .PHONY: kind
 KIND = ./bin/kind
