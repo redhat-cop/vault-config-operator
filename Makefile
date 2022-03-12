@@ -261,7 +261,12 @@ helmchart-test: kind-setup helmchart
 	$(HELM) repo add jetstack https://charts.jetstack.io
 	$(HELM) install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.7.1 --set installCRDs=true
 	$(HELM) repo add prometheus-community https://prometheus-community.github.io/helm-charts
-	$(HELM) install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n default
+	$(HELM) install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n default \
+	  --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false \
+	  --set prometheus.prometheusSpec.secrets={}
+	$(HELM) install prometheus-rbac integration/helm/prometheus-rbac -n default
+	$(KUBECTL) get secret vault-config-operator-certs -n vault-config-operator-local -o jsonpath={.data.ca\\.crt} > /tmp/service-ca.crt
+	$(KUBECTL) create configmap service-ca --from-file=service-ca.crt=/tmp/service-ca.crt -n default
 	$(HELM) upgrade -i vault-config-operator-local charts/vault-config-operator -n vault-config-operator-local --create-namespace \
 	  --set enableCertManager=true \
 	  --set image.repository=quay.io/redhat-cop/vault-config-operator \

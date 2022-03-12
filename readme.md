@@ -210,6 +210,8 @@ oc label namespace <namespace> openshift.io/cluster-monitoring="true"
 
 ### Testing metrics
 
+Openshift monitoring...
+
 ```sh
 export operatorNamespace=vault-config-operator
 oc label namespace ${operatorNamespace} openshift.io/cluster-monitoring="true"
@@ -218,6 +220,23 @@ export operatorNamespace=vault-config-operator
 curl -v --data-urlencode "query=controller_runtime_active_workers{namespace=\"${operatorNamespace}\"}" localhost:9090/api/v1/query
 exit
 ```
+
+	  --set prometheus.ingress.enabled=true \
+	  --set prometheus.ingress.ingressClassName=nginx \
+
+kubectl exec --stdin --tty prometheus-kube-prometheus-stack-prometheus-0 -c prometheus -- /bin/sh
+kubectl exec --stdin --tty $(kubectl get pods -n vault-config-operator-local -o name) -n vault-config-operator-local -- /bin/bash
+
+curl -k https://localhost:8443/metrics
+
+curl -v -s -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://vault-config-operator-controller-manager-metrics-service.vault-config-operator-local.svc.cluster.local:8443/metrics
+
+wget --no-check-certificate -O - --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://vault-config-operator-controller-manager-metrics-service.vault-config-operator-local.svc.cluster.local:8443/metrics
+
+wget -O - --post-data="query=controller_runtime_active_workers%7Bnamespace%3D%22vault-config-operator-local%22%7D%0A" localhost:9090/api/v1/query
+
+curl -v --data-urlencode "query=controller_runtime_active_workers{namespace=\"${operatorNamespace}\"}" localhost:9090/api/v1/query
+
 
 ## Development
 

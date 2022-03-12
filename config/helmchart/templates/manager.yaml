@@ -8,6 +8,7 @@ spec:
   selector:
     matchLabels:
       {{- include "vault-config-operator.selectorLabels" . | nindent 6 }}
+      control-plane: vault-config-operator
   replicas: {{ .Values.replicaCount }}
   template:
     metadata:
@@ -17,7 +18,7 @@ spec:
     {{- end }}
       labels:
         {{- include "vault-config-operator.selectorLabels" . | nindent 8 }}
-        operator: vault-config-operator
+        control-plane: vault-config-operator
     spec:
       serviceAccountName: controller-manager
       {{- with .Values.imagePullSecrets }}
@@ -39,7 +40,7 @@ spec:
           name: https
         volumeMounts:
         - mountPath: /etc/certs/tls
-          name: tls-cert
+          name: vault-config-operator-certs
         imagePullPolicy: {{ .Values.kube_rbac_proxy.image.pullPolicy }}
         resources:
           {{- toYaml .Values.kube_rbac_proxy.resources | nindent 10 }}
@@ -50,7 +51,7 @@ spec:
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         volumeMounts:
-        - name: cert
+        - name: webhook-server-cert
           readOnly: true
           mountPath: /tmp/k8s-webhook-server/serving-certs
         {{- with .Values.env }}
@@ -85,11 +86,11 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-      - name: tls-cert
+      - name: vault-config-operator-certs
         secret:
           defaultMode: 420
           secretName: vault-config-operator-certs  
-      - name: cert
+      - name: webhook-server-cert
         secret:
           secretName: webhook-server-cert
-          defaultMode: 420              
+          defaultMode: 420
