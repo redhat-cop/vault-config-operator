@@ -10,8 +10,8 @@ metadata:
     createdAt: 5/28/2019
     description: This operator provides primitives to declaratively configure Hashicorp
       Vault.
-    operatorframework.io/suggested-namespace: vault-config-operator
     operatorframework.io/cluster-monitoring: "true"
+    operatorframework.io/suggested-namespace: vault-config-operator
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     repository: https://github.com/redhat-cop/vault-config-operator
     support: Best Effort
@@ -91,6 +91,24 @@ spec:
       displayName: Policy
       kind: Policy
       name: policies.redhatcop.redhat.io
+      version: v1alpha1
+    - description: QuaySecretEngineConfig is the Schema for the quaysecretengineconfigs
+        API
+      displayName: Quay Secret Engine Config
+      kind: QuaySecretEngineConfig
+      name: quaysecretengineconfigs.redhatcop.redhat.io
+      version: v1alpha1
+    - description: QuaySecretEngineRole is the Schema for the quaysecretengineroles
+        API
+      displayName: Quay Secret Engine Role
+      kind: QuaySecretEngineRole
+      name: quaysecretengineroles.redhatcop.redhat.io
+      version: v1alpha1
+    - description: QuaySecretEngineStaticRole is the Schema for the quaysecretenginestaticroles
+        API
+      displayName: Quay Secret Engine Static Role
+      kind: QuaySecretEngineStaticRole
+      name: quaysecretenginestaticroles.redhatcop.redhat.io
       version: v1alpha1
     - description: RabbitMQSecretEngineConfig is the Schema for the rabbitmqsecretengineconfigs
         API
