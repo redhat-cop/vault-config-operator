@@ -35,7 +35,7 @@ func (r *QuaySecretEngineStaticRole) SetupWebhookWithManager(mgr ctrl.Manager) e
 		Complete()
 }
 
-//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-quaysecretenginestaticrole,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=quaysecretenginestaticroles,verbs=create;update,versions=v1alpha1,name=mquaysecretenginestaticrole.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-quaysecretenginestaticrole,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=quaysecretenginestaticroles,verbs=create,versions=v1alpha1,name=mquaysecretenginestaticrole.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &QuaySecretEngineStaticRole{}
 

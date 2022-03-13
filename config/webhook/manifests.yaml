@@ -240,7 +240,6 @@ webhooks:
     - v1alpha1
     operations:
     - CREATE
-    - UPDATE
     resources:
     - quaysecretengineconfigs
   sideEffects: None
@@ -260,7 +259,6 @@ webhooks:
     - v1alpha1
     operations:
     - CREATE
-    - UPDATE
     resources:
     - quaysecretengineroles
   sideEffects: None
@@ -280,7 +278,6 @@ webhooks:
     - v1alpha1
     operations:
     - CREATE
-    - UPDATE
     resources:
     - quaysecretenginestaticroles
   sideEffects: None

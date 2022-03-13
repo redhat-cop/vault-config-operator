@@ -35,7 +35,7 @@ func (r *QuaySecretEngineRole) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-quaysecretenginerole,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=quaysecretengineroles,verbs=create;update,versions=v1alpha1,name=mquaysecretenginerole.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-quaysecretenginerole,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=quaysecretengineroles,verbs=create,versions=v1alpha1,name=mquaysecretenginerole.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &QuaySecretEngineRole{}
 

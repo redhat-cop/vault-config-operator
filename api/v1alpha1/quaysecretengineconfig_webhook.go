@@ -37,7 +37,7 @@ func (r *QuaySecretEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) error
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
-//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-quaysecretengineconfig,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=quaysecretengineconfigs,verbs=create;update,versions=v1alpha1,name=mquaysecretengineconfig.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-quaysecretengineconfig,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=quaysecretengineconfigs,verbs=create,versions=v1alpha1,name=mquaysecretengineconfig.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &QuaySecretEngineConfig{}
 
