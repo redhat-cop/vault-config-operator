@@ -263,15 +263,18 @@ helmchart-test: kind-setup helmchart
 	$(HELM) repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	$(HELM) install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n default \
 	  --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false \
-	  --set prometheus.prometheusSpec.secrets={}
+	  --set prometheus.prometheusSpec.configMaps={serving-certs-ca-bundle}
 	$(HELM) install prometheus-rbac integration/helm/prometheus-rbac -n default
-	$(KUBECTL) get secret vault-config-operator-certs -n vault-config-operator-local -o jsonpath={.data.ca\\.crt} > /tmp/service-ca.crt
-	$(KUBECTL) create configmap service-ca --from-file=service-ca.crt=/tmp/service-ca.crt -n default
 	$(HELM) upgrade -i vault-config-operator-local charts/vault-config-operator -n vault-config-operator-local --create-namespace \
 	  --set enableCertManager=true \
 	  --set image.repository=quay.io/redhat-cop/vault-config-operator \
 	  --set image.tag=latest
 	$(KUBECTL) wait --namespace vault-config-operator-local --for=condition=ready pod --selector=app.kubernetes.io/name=vault-config-operator --timeout=90s
+	$(KUBECTL) get secret vault-config-operator-certs -n vault-config-operator-local -o jsonpath={.data.ca\\.crt} | base64 -d > /tmp/service-ca.crt
+	$(KUBECTL) create configmap serving-certs-ca-bundle --from-file=service-ca.crt=/tmp/service-ca.crt -n default
+	$(KUBECTL) wait --namespace default --for=condition=ready pod prometheus-kube-prometheus-stack-prometheus-0 --timeout=90s
+	sleep 30s
+	$(KUBECTL) exec prometheus-kube-prometheus-stack-prometheus-0 -c prometheus -- wget -O - --post-data="query=controller_runtime_active_workers%7Bnamespace%3D%22vault-config-operator-local%22%7D%0A" localhost:9090/api/v1/query
 
 .PHONY: kind
 KIND = ./bin/kind
