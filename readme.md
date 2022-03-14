@@ -221,6 +221,10 @@ curl -v --data-urlencode "query=controller_runtime_active_workers{namespace=\"${
 exit
 ```
 
+in Kubernetes...
+
+See the [Test helm chart locally](#test-helm-chart-locally) section to run the helmchart test which will also test that metrics work against a k8s kind cluster.
+
 ## Development
 
 ### Setup
@@ -395,6 +399,14 @@ vault read -tls-skip-verify github/raf-backstage-demo/token/one-repo-only
 ```
 
 ### Test helm chart locally
+
+Run the automated helmchart test...
+
+```sh
+make helmchart-test
+```
+
+OR manually test...
 
 Define an image and tag. For example...
 
