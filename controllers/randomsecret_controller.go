@@ -75,7 +75,7 @@ func (r *RandomSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	// how to read this if: if the secret has been initialized once and there is no refresh period or time to refresh has not arrived yet, return.
-	if instance.Status.LastVaultSecretUpdate != nil && (instance.Spec.RefreshPeriod != nil || (instance.Spec.RefreshPeriod != nil && !instance.Status.LastVaultSecretUpdate.Add(instance.Spec.RefreshPeriod.Duration).Before(time.Now()))) {
+	if instance.Status.LastVaultSecretUpdate != nil && (instance.Spec.RefreshPeriod == nil || (instance.Spec.RefreshPeriod != nil && !instance.Status.LastVaultSecretUpdate.Add(instance.Spec.RefreshPeriod.Duration).Before(time.Now()))) {
 		return reconcile.Result{}, nil
 	}
 
