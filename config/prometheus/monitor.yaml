@@ -14,7 +14,6 @@ spec:
       port: https
       scheme: https
       tlsConfig:
-        # caFile: /etc/prometheus/configmaps/serving-certs-ca-bundle/service-ca.crt
         ca: 
           secret:
             key: 'tls.crt'
