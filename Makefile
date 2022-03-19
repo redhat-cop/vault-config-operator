@@ -275,8 +275,6 @@ helmchart-test: kind-setup helmchart
 	  --set image.repository=${HELM_TEST_IMG_NAME} \
 	  --set image.tag=${HELM_TEST_IMG_TAG}
 	$(KUBECTL) wait --namespace vault-config-operator-local --for=condition=ready pod --selector=app.kubernetes.io/name=vault-config-operator --timeout=90s
-	$(KUBECTL) get secret vault-config-operator-certs -n vault-config-operator-local -o jsonpath={.data.ca\\.crt} | base64 -d > /tmp/service-ca.crt
-	$(KUBECTL) create configmap serving-certs-ca-bundle --from-file=service-ca.crt=/tmp/service-ca.crt -n default
 	$(KUBECTL) wait --namespace default --for=condition=ready pod prometheus-kube-prometheus-stack-prometheus-0 --timeout=180s
 	$(KUBECTL) exec prometheus-kube-prometheus-stack-prometheus-0 -n default -c test-metrics -- /bin/sh -c "echo 'Example metrics...' && cat /tmp/ready"
 
