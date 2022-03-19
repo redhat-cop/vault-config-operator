@@ -33,11 +33,6 @@ prometheus:
   ##
   prometheusSpec:
 
-    ## ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus object, which shall be mounted into the Prometheus Pods.
-    ## The ConfigMaps are mounted into /etc/prometheus/configmaps/.
-    ##
-    configMaps: [serving-certs-ca-bundle]
-
     ## If true, a nil or {} value for prometheus.prometheusSpec.serviceMonitorSelector will cause the
     ## prometheus resource to be created with selectors based on values in the helm deployment,
     ## which will also match the servicemonitors created

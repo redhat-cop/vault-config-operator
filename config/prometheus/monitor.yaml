@@ -14,7 +14,11 @@ spec:
       port: https
       scheme: https
       tlsConfig:
-        caFile: /etc/prometheus/configmaps/serving-certs-ca-bundle/service-ca.crt
+        ca: 
+          secret:
+            key: 'tls.crt'
+            name: vault-config-operator-certs
+            optional: false
         serverName: $(METRICS_SERVICE_NAME).$(METRICS_SERVICE_NAMESPACE).svc
   selector:
     matchLabels:
