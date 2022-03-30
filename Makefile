@@ -273,7 +273,9 @@ helmchart-test: kind-setup helmchart
 	$(HELM) upgrade -i vault-config-operator-local charts/vault-config-operator -n vault-config-operator-local --create-namespace \
 	  --set enableCertManager=true \
 	  --set image.repository=${HELM_TEST_IMG_NAME} \
-	  --set image.tag=${HELM_TEST_IMG_TAG}
+	  --set image.tag=${HELM_TEST_IMG_TAG} \
+	  --set env[0].name=VAULT_ADDR \
+	  --set env[0].value=http://vault.vault.svc:8200
 	$(KUBECTL) wait --namespace vault-config-operator-local --for=condition=ready pod --selector=app.kubernetes.io/name=vault-config-operator --timeout=90s
 	$(KUBECTL) wait --namespace default --for=condition=ready pod prometheus-kube-prometheus-stack-prometheus-0 --timeout=180s
 	$(KUBECTL) exec prometheus-kube-prometheus-stack-prometheus-0 -n default -c test-metrics -- /bin/sh -c "echo 'Example metrics...' && cat /tmp/ready"

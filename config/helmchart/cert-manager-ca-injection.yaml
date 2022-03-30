@@ -1,4 +1,4 @@
 - op: add
   path: /metadata/annotations
   value:
-    cert-manager.io/inject-ca-from: "{{ .Release.Namespace }}/webhook-server-cert"
+    cert-manager.io/inject-ca-from: "{{ .Release.Namespace }}/serving-cert"
