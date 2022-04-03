@@ -256,6 +256,30 @@ helmchart-repo-push: helmchart-repo
 	git -C ${HELM_REPO_DEST} commit -m "Release ${VERSION}"
 	git -C ${HELM_REPO_DEST} push origin "gh-pages"
 
+HELM_TEST_IMG_NAME ?= vault-config-operator
+HELM_TEST_IMG_TAG ?= helmchart-test
+
+# Deploy the helmchart to a kind cluster to test deployment.
+# If the test-metrics sidecar in the prometheus pod is ready, the metrics work and the test is successful.
+.PHONY: helmchart-test
+helmchart-test: kind-setup helmchart
+	$(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker-build
+	$(KIND) load docker-image ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
+	$(HELM) repo add jetstack https://charts.jetstack.io
+	$(HELM) install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.7.1 --set installCRDs=true
+	$(HELM) repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	$(HELM) install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n default -f integration/kube-prometheus-stack-values.yaml
+	$(HELM) install prometheus-rbac integration/helm/prometheus-rbac -n default
+	$(HELM) upgrade -i vault-config-operator-local charts/vault-config-operator -n vault-config-operator-local --create-namespace \
+	  --set enableCertManager=true \
+	  --set image.repository=${HELM_TEST_IMG_NAME} \
+	  --set image.tag=${HELM_TEST_IMG_TAG} \
+	  --set env[0].name=VAULT_ADDR \
+	  --set env[0].value=http://vault.vault.svc:8200
+	$(KUBECTL) wait --namespace vault-config-operator-local --for=condition=ready pod --selector=app.kubernetes.io/name=vault-config-operator --timeout=90s
+	$(KUBECTL) wait --namespace default --for=condition=ready pod prometheus-kube-prometheus-stack-prometheus-0 --timeout=180s
+	$(KUBECTL) exec prometheus-kube-prometheus-stack-prometheus-0 -n default -c test-metrics -- /bin/sh -c "echo 'Example metrics...' && cat /tmp/ready"
+
 .PHONY: kind
 KIND = ./bin/kind
 kind: ## Download kind locally if necessary.

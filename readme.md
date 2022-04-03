@@ -30,6 +30,8 @@
       - [Run the operator](#run-the-operator)
     - [Test Manually](#test-manually)
     - [Test helm chart locally](#test-helm-chart-locally)
+      - [Run the automated helmchart test](#run-the-automated-helmchart-test)
+      - [Manually test the helmchart](#manually-test-the-helmchart)
   - [Building/Pushing the operator image](#buildingpushing-the-operator-image)
   - [Deploy to OLM via bundle](#deploy-to-olm-via-bundle)
   - [Integration Test](#integration-test)
@@ -213,6 +215,8 @@ oc label namespace <namespace> openshift.io/cluster-monitoring="true"
 
 ### Testing metrics
 
+Openshift monitoring...
+
 ```sh
 export operatorNamespace=vault-config-operator
 oc label namespace ${operatorNamespace} openshift.io/cluster-monitoring="true"
@@ -221,6 +225,10 @@ export operatorNamespace=vault-config-operator
 curl -v --data-urlencode "query=controller_runtime_active_workers{namespace=\"${operatorNamespace}\"}" localhost:9090/api/v1/query
 exit
 ```
+
+in Kubernetes...
+
+See the [Test helm chart locally](#test-helm-chart-locally) section to run the helmchart test which will also test that metrics work against a k8s kind cluster.
 
 ## Development
 
@@ -396,6 +404,26 @@ vault read -tls-skip-verify github/raf-backstage-demo/token/one-repo-only
 ```
 
 ### Test helm chart locally
+
+#### Run the automated helmchart test
+
+```sh
+make helmchart-test
+```
+
+Since this will run a kind instance, you may then test creating CRs manually...
+
+```sh
+export VAULT_TOKEN=$(kubectl get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d)
+export VAULT_ADDR="http://localhost"
+export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.data["kubernetes/"].accessor')
+kubectl create namespace vault-admin
+kubectl create namespace test-vault-config-operator
+```
+
+Next, run through the [Test Manually](#test-manually) steps.
+
+#### Manually test the helmchart
 
 Define an image and tag. For example...
 
