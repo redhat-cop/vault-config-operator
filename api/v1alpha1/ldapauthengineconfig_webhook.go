@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	"errors"
-	"io/ioutil"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"

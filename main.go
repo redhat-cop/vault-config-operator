@@ -148,6 +148,16 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "KubernetesAuthEngineConfig")
 		os.Exit(1)
 	}
+
+	if err = (&controllers.LDAPAuthEngineConfigReconciler{
+		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("LDAPAuthEngineConfig"), mgr.GetAPIReader()),
+		Log:            ctrl.Log.WithName("controllers").WithName("LDAPAuthEngineConfig"),
+		ControllerName: "LDAPAuthEngineConfig",
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "LDAPAuthEngineConfig")
+		os.Exit(1)
+	}
+
 	if err = (&controllers.VaultSecretReconciler{
 		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("VaultSecret"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("VaultSecret"),
@@ -272,6 +282,11 @@ func main() {
 			setupLog.Error(err, "unable to create webhook", "webhook", "KubernetesAuthEngineConfig")
 			os.Exit(1)
 		}
+		if err = (&redhatcopv1alpha1.LDAPAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "LDAPAuthEngineConfig")
+			os.Exit(1)
+		}
+
 		if err = (&redhatcopv1alpha1.VaultSecret{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "VaultSecret")
 			os.Exit(1)
@@ -327,17 +342,6 @@ func main() {
 		mgr.GetWebhookServer().Register("/validate-redhatcop-redhat-io-v1alpha1-rabbitmqsecretengineconfig", &webhook.Admission{Handler: &redhatcopv1alpha1.RabbitMQSecretEngineConfigValidation{Client: mgr.GetClient()}})
 	}
 
-	if err = (&controllers.LDAPAuthEngineConfigReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "LDAPAuthEngineConfig")
-		os.Exit(1)
-	}
-	if err = (&redhatcopv1alpha1.LDAPAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "LDAPAuthEngineConfig")
-		os.Exit(1)
-	}
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
