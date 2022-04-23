@@ -12,7 +12,7 @@ spec:
   url: "ldaps://ldap-xxx-a.xxx.xxx.xxx,ldaps://ldap-xxx-b.xxx.xxx.xxx"
   caseSensitiveNames: false
   bindDN: "CN=XXXXXXXXX,OU=Service-Accounts,OU=XXXXXXXXXX,OU=Administration,DC=xxx,DC=xxx,DC=xxx"
-  bindPass: "PMNg6;=052OOgHD5"
+  bindPass: "xxxxxxxxxxxx"
   userDN: "ou=Users,ou=XXXX,ou=Company,dc=xxx,dc=xxx,dc=xxx" 
   groupDN: "ou=Administration,ou=XXXX,ou=Company,dc=xxx,dc=xxx,dc=xxx" 
   groupFilter: "(|(memberUid={{.Username}})(member={{.UserDN}})(uniqueMember={{.UserDN}}))" 
