@@ -4,6 +4,7 @@
   - [AuthEngineMount](#authenginemount)
   - [KubernetesAuthEngineConfig](#kubernetesauthengineconfig)
   - [KubernetesAuthEngineRole](#kubernetesauthenginerole)
+  - [LDAPAuthEngineConfig](#ldapauthengineconfig)
 
 ## AuthEngineMount
 
@@ -92,3 +93,104 @@ This CR is roughly equivalent to this Vault CLI command:
 ```shell
 vault write [namespace/]auth/kubernetes/role/database-engine-admin bound_service_account_names=vaultsa bound_service_account_namespaces=<dynamically generated> policies=database-engine-admin
 ```
+
+## LDAPAuthEngineConfig
+
+The `LDAPAuthEngineConfig` CRD allows a user to configure an authentication engine mount of [type LDAP](https://www.vaultproject.io/docs/auth/ldap).
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: LDAPAuthEngineConfig
+metadata:
+  name: authenginemount-sample
+spec:
+  UPNDomain:
+  anonymousGroupSearch:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+    serviceAccount:
+      name: admin-sa
+  bindDN: cn=vault,ou=Users,dc=example,dc=com
+  bindPass: xxxxxxxxxxxxx
+  caseSensitiveNames: false
+  groupDN:
+  groupFilter:
+  insecureTls: true
+  path: ldap
+  tokenReviewerServiceAccount:
+    name: vault-admin-sa
+  url: ldaps://ldap.myorg.com:636
+  userAttr: "samaccountname"
+  userDN: ou=Users,dc=example,dc=com 
+  userFilter: ({{.UserAttr}}={{.Username}})
+  usernameAsAlias: false
+  ...
+```
+  The `UPNDomain` field - userPrincipalDomain used to construct the UPN string for the authenticating user. The constructed UPN will appear as [username]@UPNDomain. Example: example.com, which will cause vault to bind as username@example.com.
+
+  The `anonymousGroupSearch` field - Use Anonymous binds when performing LDAP group searches (note: even when true, the initial credentials will still be used for the initial connection test).
+
+  The `bindDN` field - Distinguished name of object to bind when performing user search. Example: cn=vault,ou=Users,dc=example,dc=com
+
+  The `bindPass` field - Password to use along with binddn when performing user search.
+  
+  The `caseSensitiveNames` field -  If set, user and group names assigned to policies within the backend will be case sensitive. Otherwise, names will be normalized to lower case. Case will still be preserved when sending the username to the LDAP server at login time; this is only for matching local user/group definitions.
+  
+  The `certificate` field – CA certificate to use when verifying LDAP server certificate, must be x509 PEM encoded.
+  
+  The `clientTlsCert` field - Client certificate to provide to the LDAP server, must be x509 PEM encoded (optional).
+  
+  The `clientTlsKey` field - Client certificate key to provide to the LDAP server, must be x509 PEM encoded (optional).
+  
+  The `denyNullBind` field - This option prevents users from bypassing authentication when providing an empty password.
+  
+  The `discoverDN` field - Use anonymous bind to discover the bind DN of a user.
+  
+  The `groupAttr` field - LDAP attribute to follow on objects returned by groupfilter in order to enumerate user group membership. Examples: for groupfilter queries returning group objects, use: cn. For queries returning user objects, use: memberOf. The default is cn.
+  
+  The `groupDN` field – LDAP search base to use for group membership search. This can be the root containing either groups or users. Example: ou=Groups,dc=example,dc=com
+  
+  The `groupFilter` field – Go template used when constructing the group membership query. The template can access the following context variables: [UserDN, Username]. The default is (|(memberUid={{.Username}})(member={{.UserDN}})(uniqueMember={{.UserDN}})), which is compatible with several common directory schemas. To support nested group resolution for Active Directory, instead use the following query: (&(objectClass=group)(member:1.2.840.113556.1.4.1941:={{.UserDN}})).
+  
+  The `insecureTls` field - If true, skips LDAP server SSL certificate verification - insecure, use with caution!
+  
+  The `path` field - The path field specifies the path to configure. the complete path of the configuration will be: [namespace/]auth/{.spec.path}/{metadata.name}/config
+  
+  The `requestTimeout` field - Timeout, in seconds, for the connection when making requests against the server before returning back an error.
+  
+  The `startTls` field - If true, issues a StartTLS command after establishing an unencrypted connection.
+  
+  The `tlsMaxVersion` field - Minimum TLS version to use. Accepted values are tls10, tls11, tls12 or tls13.
+  
+  The `tlsMinVersion` field - Maximum TLS version to use. Accepted values are tls10, tls11, tls12 or tls13.
+  
+  The `tokenBoundCIDRs` field - List of CIDR blocks; if set, specifies blocks of IP addresses which can authenticate successfully, and ties the resulting token to these blocks as well.
+  
+  The `tokenExplicitMaxTtl` field - If set, will encode an explicit max TTL onto the token. This is a hard cap even if token_ttl and token_max_ttl would otherwise allow a renewal.
+  
+  The `tokenMaxTtl` field - The maximum lifetime for generated tokens. This current value of this will be referenced at renewal time.
+  
+  The `tokenNoDefaultPolicy` field - If set, the default policy will not be set on generated tokens; otherwise it will be added to the policies set in token_policies.
+  
+  The `tokenNumUses` field - The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited. If you require the token to have the ability to create child tokens, you will need to set this value to 0.
+  
+  The `tokenPeriod` field - The period, if any, to set on the token.
+  
+  The `tokenPolicies` field - List of policies to encode onto generated tokens. Depending on the auth method, this list may be supplemented by user/group/other values.
+  
+  The  `tokenReviewerServiceAccount.name` field - The tokenReviewerServiceAccount.name field specifies the service account to be used to perform the token review. This account must exists and must be granted the TokenReviews create permission. If not specified it will default to default.
+  
+  The `tokenTtl` field - The incremental lifetime for generated tokens. This current value of this will be referenced at renewal time.
+  
+  The `tokenType` field - The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens). For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time.
+  
+  The `url` field - The LDAP server to connect to. Examples: ldap://ldap.myorg.com, ldaps://ldap.myorg.com:636. Multiple URLs can be specified with commas, e.g. ldap://ldap.myorg.com,ldap://ldap2.myorg.com; these will be tried in-order.
+  
+  The `userAttr` field - Attribute on user attribute object matching the username passed when authenticating. Examples: sAMAccountName, cn, uid
+  
+  The `userDN` field - Base DN under which to perform user search. Example: ou=Users,dc=example,dc=com
+  
+  The `userFilter` field - An optional LDAP user search filter. The template can access the following context variables: UserAttr, Username. The default is ({{.UserAttr}}={{.Username}}), or ({{.UserAttr}}={{.Username@.upndomain}}) if upndomain is set.
+  
+  The `usernameAsAlias` field - If set to true, forces the auth method to use the username passed by the user as the alias name.

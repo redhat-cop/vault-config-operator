@@ -1,0 +1,59 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.6.1
+  creationTimestamp: null
+  name: ldapauthengineconfigs.redhatcop.redhat.io
+spec:
+  group: redhatcop.redhat.io
+  names:
+    kind: LDAPAuthEngineConfig
+    listKind: LDAPAuthEngineConfigList
+    plural: ldapauthengineconfigs
+    singular: ldapauthengineconfig
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: LDAPAuthEngineConfig is the Schema for the ldapauthengineconfigs
+          API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: LDAPAuthEngineConfigSpec defines the desired state of LDAPAuthEngineConfig
+            properties:
+              foo:
+                description: Foo is an example field of LDAPAuthEngineConfig. Edit
+                  ldapauthengineconfig_types.go to remove/update
+                type: string
+            type: object
+          status:
+            description: LDAPAuthEngineConfigStatus defines the observed state of
+              LDAPAuthEngineConfig
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

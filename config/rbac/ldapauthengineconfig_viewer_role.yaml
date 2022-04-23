@@ -1,0 +1,20 @@
+# permissions for end users to view ldapauthengineconfigs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ldapauthengineconfig-viewer-role
+rules:
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - ldapauthengineconfigs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - ldapauthengineconfigs/status
+  verbs:
+  - get

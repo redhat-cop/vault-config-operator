@@ -53,6 +53,8 @@ Currently this operator covers the following Vault APIs:
 1. [AuthEngineMount](./docs/auth-engines.md#authenginemount) Sets up a [Vault Authentication Endpoint](https://www.vaultproject.io/docs/auth)
 2. [KubernetesAuthEngineConfig](./docs/auth-engines.md#kubernetesauthengineconfig) Configures a [Vault Kubernetes Authentication Endpoint](https://www.vaultproject.io/docs/auth/kubernetes).
 3. [KubernetesAuthEngineRole](./docs/auth-engines.md#KubernetesAuthEngineRole) Configures a Vault [Kubernetes Authentication](https://www.vaultproject.io/docs/auth/kubernetes) Role
+4. [LDAPAuthEngineConfig](./docs/auth-engines.md#ldapauthengineconfig) Configures a [Vault LDAP Authentication Endpoint](https://www.vaultproject.io/docs/auth/ldap).
+
 
 ## Policy management
 
