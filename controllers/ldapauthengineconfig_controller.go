@@ -69,7 +69,7 @@ func (r *LDAPAuthEngineConfigReconciler) Reconcile(ctx context.Context, req ctrl
 		return r.ManageError(ctx, instance, err)
 	}
 	ctx = context.WithValue(ctx, "vaultClient", vaultClient)
-	vaultResource := vaultresourcecontroller.NewVaultPKIEngineResource(&r.ReconcilerBase, instance)
+	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
 
 	return vaultResource.Reconcile(ctx, instance)
 }

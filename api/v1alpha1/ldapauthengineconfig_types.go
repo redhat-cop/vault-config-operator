@@ -46,7 +46,7 @@ type LDAPAuthEngineConfigSpec struct {
 }
 
 func (d *LDAPAuthEngineConfig) GetPath() string {
-	return cleansePath("auth/" + string(d.Spec.Path) + "/" + d.ObjectMeta.Name + "/config")
+	return cleansePath("auth/" + string(d.Spec.Path) + "/config")
 }
 
 func (d *LDAPAuthEngineConfig) GetPayload() map[string]interface{} {
