@@ -18,11 +18,13 @@ package v1alpha1
 
 import (
 	"context"
+	"errors"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -204,7 +206,7 @@ type LDAPConfig struct {
 	// +kubebuilder:default=""
 	ClientTlsKey string `json:"clientTlsKey,omitempty"`
 
-	// BindDN - Username used to connect to the LDAP service on the specified LDAP Server. 
+	// BindDN - Username used to connect to the LDAP service on the specified LDAP Server.
 	// If in the form accountname@domain.com, the username is transformed into a proper LDAP bind DN, for example, CN=accountname,CN=users,DC=domain,DC=com, when accessing the LDAP server.
 	// If username is provided it takes precedence over the username retrieved from the referenced secrets
 	// +kubebuilder:validation:Optional
@@ -320,7 +322,7 @@ type LDAPConfig struct {
 
 	retrievedTokenReviewerJWT string `json:"-"`
 
-	retrievedbindDN string `json:"-"`
+	retrievedbindDN   string `json:"-"`
 	retrievedbindPass string `json:"-"`
 }
 
@@ -357,7 +359,6 @@ func (m *LDAPAuthEngineConfig) SetUsernameAndPassword(bindDN string, bindPass st
 	m.Spec.LDAPConfig.retrievedbindDN = bindDN
 	m.Spec.LDAPConfig.retrievedbindDN = bindPass
 }
-
 
 //+kubebuilder:object:root=true
 
@@ -409,7 +410,6 @@ func (i *LDAPConfig) toMap() map[string]interface{} {
 
 	return payload
 }
-
 
 func (r *LDAPAuthEngineConfig) isValid() error {
 	return r.Spec.BindCredentials.validateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
