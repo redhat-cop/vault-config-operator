@@ -43,6 +43,10 @@ type LDAPAuthEngineConfigSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default={"name": "default"}
 	TokenReviewerServiceAccount *corev1.LocalObjectReference `json:"tokenReviewerServiceAccount,omitempty"`
+
+	// BindCredentials used to connect to the LDAP service on the specified LDAP Server
+	// +kubebuilder:validation:Required
+	BindCredentials RootCredentialConfig `json:"bindCredentials,omitempty"`
 }
 
 func (d *LDAPAuthEngineConfig) GetPath() string {
@@ -80,6 +84,70 @@ func (lc *LDAPAuthEngineConfig) getJWTToken(context context.Context) (string, er
 
 func (r *LDAPAuthEngineConfig) IsValid() (bool, error) {
 	return true, nil
+}
+
+func (r *LDAPAuthEngineConfig) setInternalCredentials(context context.Context) error {
+	log := log.FromContext(context)
+	kubeClient := context.Value("kubeClient").(client.Client)
+	if r.Spec.BindCredentials.RandomSecret != nil {
+		randomSecret := &RandomSecret{}
+		err := kubeClient.Get(context, types.NamespacedName{
+			Namespace: r.Namespace,
+			Name:      r.Spec.BindCredentials.RandomSecret.Name,
+		}, randomSecret)
+		if err != nil {
+			log.Error(err, "unable to retrieve RandomSecret", "instance", r)
+			return err
+		}
+		secret, exists, err := vaultutils.ReadSecret(context, randomSecret.GetPath())
+		if err != nil {
+			return err
+		}
+		if !exists {
+			err = errors.New("secret not found")
+			log.Error(err, "unable to retrieve vault secret", "instance", r)
+			return err
+		}
+		r.SetUsernameAndPassword(r.Spec.BindDN, secret.Data[randomSecret.Spec.SecretKey].(string))
+		return nil
+	}
+	if r.Spec.BindCredentials.Secret != nil {
+		secret := &corev1.Secret{}
+		err := kubeClient.Get(context, types.NamespacedName{
+			Namespace: r.Namespace,
+			Name:      r.Spec.BindCredentials.Secret.Name,
+		}, secret)
+		if err != nil {
+			log.Error(err, "unable to retrieve Secret", "instance", r)
+			return err
+		}
+		if r.Spec.BindDN == "" {
+			r.SetUsernameAndPassword(string(secret.Data[r.Spec.BindCredentials.UsernameKey]), string(secret.Data[r.Spec.BindCredentials.PasswordKey]))
+		} else {
+			r.SetUsernameAndPassword(r.Spec.BindDN, string(secret.Data[r.Spec.BindCredentials.PasswordKey]))
+		}
+		return nil
+	}
+	if r.Spec.BindCredentials.VaultSecret != nil {
+		secret, exists, err := vaultutils.ReadSecret(context, string(r.Spec.BindCredentials.VaultSecret.Path))
+		if err != nil {
+			return err
+		}
+		if !exists {
+			err = errors.New("secret not found")
+			log.Error(err, "unable to retrieve vault secret", "instance", r)
+			return err
+		}
+		if r.Spec.BindDN == "" {
+			r.SetUsernameAndPassword(secret.Data[r.Spec.BindCredentials.UsernameKey].(string), secret.Data[r.Spec.BindCredentials.PasswordKey].(string))
+			log.V(1).Info("", "username", secret.Data[r.Spec.BindCredentials.UsernameKey].(string), "password", secret.Data[r.Spec.BindCredentials.PasswordKey].(string))
+		} else {
+			r.SetUsernameAndPassword(r.Spec.BindDN, secret.Data[r.Spec.BindCredentials.PasswordKey].(string))
+			log.V(1).Info("", "username", r.Spec.BindDN, "password", secret.Data[r.Spec.BindCredentials.PasswordKey].(string))
+		}
+		return nil
+	}
+	return errors.New("no means of retrieving a secret was specified")
 }
 
 type LDAPConfig struct {
@@ -136,15 +204,12 @@ type LDAPConfig struct {
 	// +kubebuilder:default=""
 	ClientTlsKey string `json:"clientTlsKey,omitempty"`
 
-	// BindDN Distinguished name of object to bind when performing user search. Example: cn=vault,ou=Users,dc=example,dc=com
+	// BindDN - Username used to connect to the LDAP service on the specified LDAP Server. 
+	// If in the form accountname@domain.com, the username is transformed into a proper LDAP bind DN, for example, CN=accountname,CN=users,DC=domain,DC=com, when accessing the LDAP server.
+	// If username is provided it takes precedence over the username retrieved from the referenced secrets
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=""
 	BindDN string `json:"bindDN,omitempty"`
-
-	// BindPass Password to use along with binddn when performing user search.
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
-	BindPass string `json:"bindPass,omitempty"`
 
 	// UserDN Base DN under which to perform user search. Example: ou=Users,dc=example,dc=com
 	// +kubebuilder:validation:Optional
@@ -254,6 +319,9 @@ type LDAPConfig struct {
 	TokenType string `json:"tokenType,omitempty"`
 
 	retrievedTokenReviewerJWT string `json:"-"`
+
+	retrievedbindDN string `json:"-"`
+	retrievedbindPass string `json:"-"`
 }
 
 // LDAPAuthEngineConfigStatus defines the observed state of LDAPAuthEngineConfig
@@ -285,6 +353,12 @@ func (m *LDAPAuthEngineConfig) SetConditions(conditions []metav1.Condition) {
 	m.Status.Conditions = conditions
 }
 
+func (m *LDAPAuthEngineConfig) SetUsernameAndPassword(bindDN string, bindPass string) {
+	m.Spec.LDAPConfig.retrievedbindDN = bindDN
+	m.Spec.LDAPConfig.retrievedbindDN = bindPass
+}
+
+
 //+kubebuilder:object:root=true
 
 // LDAPAuthEngineConfigList contains a list of LDAPAuthEngineConfig
@@ -310,8 +384,8 @@ func (i *LDAPConfig) toMap() map[string]interface{} {
 	payload["certificate"] = i.Certificate
 	payload["client_tls_cert"] = i.ClientTlsCert
 	payload["client_tls_key"] = i.ClientTlsKey
-	payload["binddn"] = i.BindDN
-	payload["bindpass"] = i.BindPass
+	payload["binddn"] = i.retrievedbindDN
+	payload["bindpass"] = i.retrievedbindPass
 	payload["userdn"] = i.UserDN
 	payload["userattr"] = i.UserAttr
 	payload["discoverdn"] = i.DiscoverDN
@@ -334,4 +408,9 @@ func (i *LDAPConfig) toMap() map[string]interface{} {
 	payload["token_type"] = i.TokenType
 
 	return payload
+}
+
+
+func (r *LDAPAuthEngineConfig) isValid() error {
+	return r.Spec.BindCredentials.validateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
 }

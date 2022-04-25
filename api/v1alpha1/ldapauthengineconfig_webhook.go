@@ -35,7 +35,7 @@ func (r *LDAPAuthEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-ldapauthengineconfig,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=ldapauthengineconfigs,verbs=create;update,versions=v1alpha1,name=mldapauthengineconfig.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-ldapauthengineconfig,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=ldapauthengineconfigs,verbs=create,versions=v1alpha1,name=mldapauthengineconfig.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &LDAPAuthEngineConfig{}
 
@@ -48,7 +48,7 @@ func (r *LDAPAuthEngineConfig) Default() {
 	}
 }
 
-//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-ldapauthengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=ldapauthengineconfigs,verbs=create;update,versions=v1alpha1,name=vldapauthengineconfig.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-ldapauthengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=ldapauthengineconfigs,verbs=update,versions=v1alpha1,name=vldapauthengineconfig.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Validator = &LDAPAuthEngineConfig{}
 

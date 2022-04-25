@@ -112,7 +112,8 @@ spec:
     serviceAccount:
       name: admin-sa
   bindDN: cn=vault,ou=Users,dc=example,dc=com
-  bindPass: xxxxxxxxxxxxx
+  bindPass: 
+    bindPassFromSecret: xxxxxxxxxxxxx
   caseSensitiveNames: false
   groupDN:
   groupFilter:
@@ -131,9 +132,15 @@ spec:
 
   The `anonymousGroupSearch` field - Use Anonymous binds when performing LDAP group searches (note: even when true, the initial credentials will still be used for the initial connection test).
 
-  The `bindDN` field - Distinguished name of object to bind when performing user search. Example: cn=vault,ou=Users,dc=example,dc=com
+  The `bindDN` field - Username used to connect to the LDAP service on the specified LDAP Server.
+  If in the form accountname@domain.com, the username is transformed into a proper LDAP bind DN, for example, CN=accountname,CN=users,DC=domain,DC=com, when accessing the LDAP server.
 
   The `bindPass` field - Password to use along with binddn when performing user search.
+  The bindPass and possibly the bindDN can be retrived a three different ways:
+
+  1. From a Kubernetes secret, specifying the `bindCredentialsFromSecret` field. The secret must be of [basic auth type](https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret). If the secret is updated this connection will also be updated.
+  2. From a Vault secret, specifying the `bindCredentialsFromVaultSecret` field.
+  3. From a [RandomSecret](#RandomSecret), specifying the `bindCredentialsFromRandomSecret` field. When the RandomSecret generates a new secret, this connection will also be updated.
   
   The `caseSensitiveNames` field -  If set, user and group names assigned to policies within the backend will be case sensitive. Otherwise, names will be normalized to lower case. Case will still be preserved when sending the username to the LDAP server at login time; this is only for matching local user/group definitions.
   
