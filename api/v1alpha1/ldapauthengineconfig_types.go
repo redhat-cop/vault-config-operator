@@ -47,6 +47,7 @@ type LDAPAuthEngineConfigSpec struct {
 	TokenReviewerServiceAccount *corev1.LocalObjectReference `json:"tokenReviewerServiceAccount,omitempty"`
 
 	// BindCredentials used to connect to the LDAP service on the specified LDAP Server
+	// BindCredentials consists in bindDN and bindPass, which can be created as Kubernetes Secret, VaultSecret or RandomSecret
 	// +kubebuilder:validation:Required
 	BindCredentials RootCredentialConfig `json:"bindCredentials,omitempty"`
 }
