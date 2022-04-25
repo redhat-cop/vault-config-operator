@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+
 package v1alpha1
 
 import (
@@ -358,7 +359,7 @@ func (m *LDAPAuthEngineConfig) SetConditions(conditions []metav1.Condition) {
 
 func (m *LDAPAuthEngineConfig) SetUsernameAndPassword(bindDN string, bindPass string) {
 	m.Spec.LDAPConfig.retrievedbindDN = bindDN
-	m.Spec.LDAPConfig.retrievedbindDN = bindPass
+	m.Spec.LDAPConfig.retrievedbindPass = bindPass
 }
 
 //+kubebuilder:object:root=true

@@ -80,7 +80,9 @@ spec:
                 type: object
               bindCredentials:
                 description: BindCredentials used to connect to the LDAP service on
-                  the specified LDAP Server
+                  the specified LDAP Server BindCredentials consists in bindDN and
+                  bindPass, which can be created as Kubernetes Secret, VaultSecret
+                  or RandomSecret
                 properties:
                   passwordKey:
                     description: PasswordKey key to be used when retrieving the password,

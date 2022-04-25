@@ -11,7 +11,7 @@ spec:
   path: ldap-test
   url: "ldaps://ldap-xxx-a.xxx.xxx.xxx,ldaps://ldap-xxx-b.xxx.xxx.xxx"
   caseSensitiveNames: false
-  bindDN: "bindDN: "CN=SVC_LHIND_SecMan_D,OU=Service-Accounts,OU=LHIND-Administration,OU=Administration,DC=ads,DC=dlh,DC=de""
+  bindDN: "CN=SVC_LHIND_SecMan_D,OU=Service-Accounts,OU=LHIND-Administration,OU=Administration,DC=ads,DC=dlh,DC=de"
   bindCredentials:
     secret: 
       name: bindcredentials
