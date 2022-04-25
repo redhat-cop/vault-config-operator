@@ -11,10 +11,12 @@ spec:
   path: ldap-test
   url: "ldaps://ldap-xxx-a.xxx.xxx.xxx,ldaps://ldap-xxx-b.xxx.xxx.xxx"
   caseSensitiveNames: false
-  bindDN: "CN=SVC_LHIND_SecMan_D,OU=Service-Accounts,OU=LHIND-Administration,OU=Administration,DC=ads,DC=dlh,DC=de"
+  bindDN: ""
   bindCredentials:
     secret: 
       name: bindcredentials
+    usernameKey: username
+    passwordKey: password
   userDN: "ou=Users,ou=XXXX,ou=Company,dc=xxx,dc=xxx,dc=xxx" 
   groupDN: "ou=Administration,ou=XXXX,ou=Company,dc=xxx,dc=xxx,dc=xxx" 
   groupFilter: "(|(memberUid={{.Username}})(member={{.UserDN}})(uniqueMember={{.UserDN}}))" 

@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-
 package v1alpha1
 
 import (
@@ -42,11 +41,6 @@ type LDAPAuthEngineConfigSpec struct {
 
 	LDAPConfig `json:",inline"`
 
-	// TokenReviewerServiceAccount A service account JWT used to access the TokenReview API to validate other JWTs during login. If not set, the JWT submitted in the login payload will be used to access the Kubernetes TokenReview API.
-	// +kubebuilder:validation:Required
-	// +kubebuilder:default={"name": "default"}
-	TokenReviewerServiceAccount *corev1.LocalObjectReference `json:"tokenReviewerServiceAccount,omitempty"`
-
 	// BindCredentials used to connect to the LDAP service on the specified LDAP Server
 	// BindCredentials consists in bindDN and bindPass, which can be created as Kubernetes Secret, VaultSecret or RandomSecret
 	// +kubebuilder:validation:Required
@@ -72,22 +66,12 @@ func (d *LDAPAuthEngineConfig) IsInitialized() bool {
 }
 
 func (d *LDAPAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
-	log := log.FromContext(context)
-	jwt, err := d.getJWTToken(context)
-	if err != nil {
-		log.Error(err, "unable retrieve jwt token for ", "service account", d.ObjectMeta.Namespace+"/"+d.Spec.TokenReviewerServiceAccount.Name)
-		return err
-	}
-	d.Spec.retrievedTokenReviewerJWT = jwt
-	return nil
-}
-
-func (lc *LDAPAuthEngineConfig) getJWTToken(context context.Context) (string, error) {
-	return getJWTToken(context, lc.Spec.TokenReviewerServiceAccount.Name, lc.ObjectMeta.Namespace)
+	return d.setInternalCredentials(context)
 }
 
 func (r *LDAPAuthEngineConfig) IsValid() (bool, error) {
-	return true, nil
+	err := r.isValid()
+	return err == nil, err
 }
 
 func (r *LDAPAuthEngineConfig) setInternalCredentials(context context.Context) error {
@@ -215,6 +199,11 @@ type LDAPConfig struct {
 	// +kubebuilder:default=""
 	BindDN string `json:"bindDN,omitempty"`
 
+	// BindPass Password to use along with binddn when performing user search.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default=""
+	BindPass string `json:"bindPass,omitempty"`
+
 	// UserDN Base DN under which to perform user search. Example: ou=Users,dc=example,dc=com
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=""
@@ -322,10 +311,6 @@ type LDAPConfig struct {
 	// +kubebuilder:default=""
 	TokenType string `json:"tokenType,omitempty"`
 
-	retrievedTokenReviewerJWT string `json:"-"`
-
-	retrievedbindDN   string `json:"-"`
-	retrievedbindPass string `json:"-"`
 }
 
 // LDAPAuthEngineConfigStatus defines the observed state of LDAPAuthEngineConfig
@@ -349,6 +334,7 @@ type LDAPAuthEngineConfig struct {
 	Status LDAPAuthEngineConfigStatus `json:"status,omitempty"`
 }
 
+
 func (m *LDAPAuthEngineConfig) GetConditions() []metav1.Condition {
 	return m.Status.Conditions
 }
@@ -358,8 +344,8 @@ func (m *LDAPAuthEngineConfig) SetConditions(conditions []metav1.Condition) {
 }
 
 func (m *LDAPAuthEngineConfig) SetUsernameAndPassword(bindDN string, bindPass string) {
-	m.Spec.LDAPConfig.retrievedbindDN = bindDN
-	m.Spec.LDAPConfig.retrievedbindPass = bindPass
+	m.Spec.LDAPConfig.BindDN = bindDN
+	m.Spec.LDAPConfig.BindPass = bindPass
 }
 
 //+kubebuilder:object:root=true
@@ -387,8 +373,8 @@ func (i *LDAPConfig) toMap() map[string]interface{} {
 	payload["certificate"] = i.Certificate
 	payload["client_tls_cert"] = i.ClientTlsCert
 	payload["client_tls_key"] = i.ClientTlsKey
-	payload["binddn"] = i.retrievedbindDN
-	payload["bindpass"] = i.retrievedbindPass
+	payload["binddn"] = i.BindDN
+	payload["bindpass"] = i.BindPass
 	payload["userdn"] = i.UserDN
 	payload["userattr"] = i.UserAttr
 	payload["discoverdn"] = i.DiscoverDN

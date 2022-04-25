@@ -176,6 +176,11 @@ spec:
                   server. If username is provided it takes precedence over the username
                   retrieved from the referenced secrets
                 type: string
+              bindPass:
+                default: ""
+                description: BindPass Password to use along with binddn when performing
+                  user search.
+                type: string
               caseSensitiveNames:
                 default: false
                 description: CaseSensitiveNames If set, user and group names assigned
@@ -306,19 +311,6 @@ spec:
                   tokens. Depending on the auth method, this list may be supplemented
                   by user/group/other values.
                 type: string
-              tokenReviewerServiceAccount:
-                default:
-                  name: default
-                description: TokenReviewerServiceAccount A service account JWT used
-                  to access the TokenReview API to validate other JWTs during login.
-                  If not set, the JWT submitted in the login payload will be used
-                  to access the Kubernetes TokenReview API.
-                properties:
-                  name:
-                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                      TODO: Add other useful fields. apiVersion, kind, uid?'
-                    type: string
-                type: object
               tokenTtl:
                 default: ""
                 description: TokenTtl The incremental lifetime for generated tokens.

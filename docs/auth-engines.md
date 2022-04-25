@@ -119,8 +119,6 @@ spec:
   groupFilter:
   insecureTls: true
   path: ldap
-  tokenReviewerServiceAccount:
-    name: vault-admin-sa
   url: ldaps://ldap.myorg.com:636
   userAttr: "samaccountname"
   userDN: ou=Users,dc=example,dc=com 
@@ -185,9 +183,7 @@ spec:
   The `tokenPeriod` field - The period, if any, to set on the token.
   
   The `tokenPolicies` field - List of policies to encode onto generated tokens. Depending on the auth method, this list may be supplemented by user/group/other values.
-  
-  The  `tokenReviewerServiceAccount.name` field - The tokenReviewerServiceAccount.name field specifies the service account to be used to perform the token review. This account must exists and must be granted the TokenReviews create permission. If not specified it will default to default.
-  
+
   The `tokenTtl` field - The incremental lifetime for generated tokens. This current value of this will be referenced at renewal time.
   
   The `tokenType` field - The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens). For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time.
