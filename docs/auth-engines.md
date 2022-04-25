@@ -135,7 +135,7 @@ spec:
   The `bindDN` field - Username used to connect to the LDAP service on the specified LDAP Server.
   If in the form accountname@domain.com, the username is transformed into a proper LDAP bind DN, for example, CN=accountname,CN=users,DC=domain,DC=com, when accessing the LDAP server.
 
-  The `bindPass` field - Password to use along with binddn when performing user search.
+  The `bindPass` field - Password to use along with bindDN when performing user search.
   The bindPass and possibly the bindDN can be retrived a three different ways:
 
   1. From a Kubernetes secret, specifying the `bindCredentialsFromSecret` field. The secret must be of [basic auth type](https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret). If the secret is updated this connection will also be updated.
