@@ -9,9 +9,9 @@ spec:
     serviceAccount:
       name: default
   path: ldap-test
-  url: "ldaps://ldap-xxx-a.xxx.xxx.xxx,ldaps://ldap-xxx-b.xxx.xxx.xxx"
+  url: "ldaps://ldap-xxx-a.xxx.xxx.xxx,ldaps://ldap-xxx-b.xxx.xxx.xxx,ldaps://ldap-xxx-c.xxx.xxx.xxx"
   caseSensitiveNames: false
-  bindDN: ""
+  bindDN: "supersecret"
   bindCredentials:
     secret: 
       name: bindcredentials

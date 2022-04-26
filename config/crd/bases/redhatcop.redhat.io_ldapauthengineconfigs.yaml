@@ -176,11 +176,6 @@ spec:
                   server. If username is provided it takes precedence over the username
                   retrieved from the referenced secrets
                 type: string
-              bindPass:
-                default: ""
-                description: BindPass Password to use along with binddn when performing
-                  user search.
-                type: string
               caseSensitiveNames:
                 default: false
                 description: CaseSensitiveNames If set, user and group names assigned

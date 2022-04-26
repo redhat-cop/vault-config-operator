@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"context"
 	"errors"
+	"fmt"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
@@ -56,6 +57,7 @@ func (d *LDAPAuthEngineConfig) GetPayload() map[string]interface{} {
 }
 func (d *LDAPAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.LDAPConfig.toMap()
+	delete(desiredState, "bindpass")
 	return reflect.DeepEqual(desiredState, payload)
 }
 
@@ -112,7 +114,7 @@ func (r *LDAPAuthEngineConfig) setInternalCredentials(context context.Context) e
 		if r.Spec.BindDN == "" {
 			r.SetUsernameAndPassword(string(secret.Data[r.Spec.BindCredentials.UsernameKey]), string(secret.Data[r.Spec.BindCredentials.PasswordKey]))
 		} else {
-			r.SetUsernameAndPassword(r.Spec.BindDN, string(secret.Data[r.Spec.BindCredentials.PasswordKey]))
+			r.SetUsernameAndPassword(r.Spec.LDAPConfig.BindDN, string(secret.Data[r.Spec.BindCredentials.PasswordKey]))
 		}
 		return nil
 	}
@@ -130,8 +132,8 @@ func (r *LDAPAuthEngineConfig) setInternalCredentials(context context.Context) e
 			r.SetUsernameAndPassword(secret.Data[r.Spec.BindCredentials.UsernameKey].(string), secret.Data[r.Spec.BindCredentials.PasswordKey].(string))
 			log.V(1).Info("", "username", secret.Data[r.Spec.BindCredentials.UsernameKey].(string), "password", secret.Data[r.Spec.BindCredentials.PasswordKey].(string))
 		} else {
-			r.SetUsernameAndPassword(r.Spec.BindDN, secret.Data[r.Spec.BindCredentials.PasswordKey].(string))
-			log.V(1).Info("", "username", r.Spec.BindDN, "password", secret.Data[r.Spec.BindCredentials.PasswordKey].(string))
+			r.SetUsernameAndPassword(r.Spec.LDAPConfig.BindDN, secret.Data[r.Spec.BindCredentials.PasswordKey].(string))
+			log.V(1).Info("", "username", r.Spec.LDAPConfig.BindDN, "password", secret.Data[r.Spec.BindCredentials.PasswordKey].(string))
 		}
 		return nil
 	}
@@ -198,11 +200,6 @@ type LDAPConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=""
 	BindDN string `json:"bindDN,omitempty"`
-
-	// BindPass Password to use along with binddn when performing user search.
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
-	BindPass string `json:"bindPass,omitempty"`
 
 	// UserDN Base DN under which to perform user search. Example: ou=Users,dc=example,dc=com
 	// +kubebuilder:validation:Optional
@@ -311,6 +308,9 @@ type LDAPConfig struct {
 	// +kubebuilder:default=""
 	TokenType string `json:"tokenType,omitempty"`
 
+	retrievedPassword string `json:"-"`
+
+	retrievedUsername string `json:"-"`
 }
 
 // LDAPAuthEngineConfigStatus defines the observed state of LDAPAuthEngineConfig
@@ -334,7 +334,6 @@ type LDAPAuthEngineConfig struct {
 	Status LDAPAuthEngineConfigStatus `json:"status,omitempty"`
 }
 
-
 func (m *LDAPAuthEngineConfig) GetConditions() []metav1.Condition {
 	return m.Status.Conditions
 }
@@ -344,8 +343,8 @@ func (m *LDAPAuthEngineConfig) SetConditions(conditions []metav1.Condition) {
 }
 
 func (m *LDAPAuthEngineConfig) SetUsernameAndPassword(bindDN string, bindPass string) {
-	m.Spec.LDAPConfig.BindDN = bindDN
-	m.Spec.LDAPConfig.BindPass = bindPass
+	m.Spec.LDAPConfig.retrievedUsername = bindDN
+	m.Spec.LDAPConfig.retrievedPassword = bindPass
 }
 
 //+kubebuilder:object:root=true
@@ -374,7 +373,7 @@ func (i *LDAPConfig) toMap() map[string]interface{} {
 	payload["client_tls_cert"] = i.ClientTlsCert
 	payload["client_tls_key"] = i.ClientTlsKey
 	payload["binddn"] = i.BindDN
-	payload["bindpass"] = i.BindPass
+	payload["bindpass"] = i.retrievedPassword
 	payload["userdn"] = i.UserDN
 	payload["userattr"] = i.UserAttr
 	payload["discoverdn"] = i.DiscoverDN

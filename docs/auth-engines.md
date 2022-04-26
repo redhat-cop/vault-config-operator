@@ -112,8 +112,11 @@ spec:
     serviceAccount:
       name: admin-sa
   bindDN: cn=vault,ou=Users,dc=example,dc=com
-  bindPass: 
-    bindPassFromSecret: xxxxxxxxxxxxx
+  bindCredentials:
+    secret:
+      name: bindcredentials
+    passwordKey: password
+    usernameKey: username
   caseSensitiveNames: false
   groupDN:
   groupFilter:
