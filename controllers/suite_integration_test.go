@@ -20,6 +20,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -31,6 +32,8 @@ import (
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	controllertestutils "github.com/redhat-cop/vault-config-operator/controllers/controllertestutils"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -50,6 +53,13 @@ var k8sIntegrationClient client.Client
 var testIntegrationEnv *envtest.Environment
 var ctx context.Context
 var cancel context.CancelFunc
+var vaultTestNamespace *corev1.Namespace
+var vaultAdminNamespace *corev1.Namespace
+
+const (
+	vaultTestNamespaceName  = "test-vault-config-operator"
+	vaultAdminNamespaceName = "vault-admin"
+)
 
 func TestIntegrationAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -143,6 +153,39 @@ var _ = BeforeSuite(func() {
 		ControllerName: "RandomSecret",
 	}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
+
+	err = (&PKISecretEngineConfigReconciler{
+		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("PKISecretEngineConfig"), mgr.GetAPIReader()),
+		Log:            ctrl.Log.WithName("controllers").WithName("PKISecretEngineConfig"),
+		ControllerName: "PKISecretEngineConfig",
+	}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&PKISecretEngineRoleReconciler{
+		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("PKISecretEngineRole"), mgr.GetAPIReader()),
+		Log:            ctrl.Log.WithName("controllers").WithName("PKISecretEngineRole"),
+		ControllerName: "PKISecretEngineRole",
+	}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	By(fmt.Sprintf("Creating the %v namespace", vaultAdminNamespaceName))
+	vaultAdminNamespace = &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: vaultAdminNamespaceName,
+		},
+	}
+	Expect(k8sIntegrationClient.Create(ctx, vaultAdminNamespace)).Should(Succeed())
+
+	By(fmt.Sprintf("Creating the %v namespace", vaultTestNamespaceName))
+	vaultTestNamespace = &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: vaultTestNamespaceName,
+			Labels: map[string]string{
+				"database-engine-admin": "true",
+			},
+		},
+	}
+	Expect(k8sIntegrationClient.Create(ctx, vaultTestNamespace)).Should(Succeed())
 
 	go func() {
 		defer GinkgoRecover()

@@ -99,6 +99,8 @@ func (r *VaultPKIEngineResource) manageReconcileLogic(context context.Context, i
 		log.Error(err, "unable to prepare internal values", "instance", instance)
 		return err
 	}
+
+	//Generate
 	generated := instance.(vaultutils.VaultPKIEngineObject).GetGeneratedStatus()
 	if !generated {
 		vaultSecret, err := r.vaultPKIEngineEndpoint.Generate(context)
@@ -116,12 +118,17 @@ func (r *VaultPKIEngineResource) manageReconcileLogic(context context.Context, i
 		}
 		instance.(vaultutils.VaultPKIEngineObject).SetExportedStatus(exported)
 
-		// Intermediate
+	}
+
+	// Sign Intermediate
+	signed := instance.(vaultutils.VaultPKIEngineObject).GetSignedStatus()
+	if !signed {
 		err = r.vaultPKIEngineEndpoint.CreateIntermediate(context)
 		if err != nil {
 			log.Error(err, "unable to create intermediate configuration", "instance", instance)
 			return err
 		}
+		instance.(vaultutils.VaultPKIEngineObject).SetSignedStatus(true)
 	}
 
 	// Config

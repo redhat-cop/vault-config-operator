@@ -5,7 +5,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"reflect"
 	"regexp"
@@ -17,16 +16,7 @@ import (
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-)
-
-var vaultTestNamespace *corev1.Namespace
-var vaultAdminNamespace *corev1.Namespace
-
-const (
-	vaultTestNamespaceName  = "test-vault-config-operator"
-	vaultAdminNamespaceName = "vault-admin"
 )
 
 var _ = Describe("VaultSecret controller", func() {
@@ -35,25 +25,6 @@ var _ = Describe("VaultSecret controller", func() {
 	interval := time.Second * 2
 	Context("When creating a VaultSecret from multiple secrets", func() {
 		It("Should create a Secret when created", func() {
-
-			By(fmt.Sprintf("Creating the %v namespace", vaultAdminNamespaceName))
-			vaultAdminNamespace = &corev1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: vaultAdminNamespaceName,
-				},
-			}
-			Expect(k8sIntegrationClient.Create(ctx, vaultAdminNamespace)).Should(Succeed())
-
-			By(fmt.Sprintf("Creating the %v namespace", vaultTestNamespaceName))
-			vaultTestNamespace = &corev1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: vaultTestNamespaceName,
-					Labels: map[string]string{
-						"database-engine-admin": "true",
-					},
-				},
-			}
-			Expect(k8sIntegrationClient.Create(ctx, vaultTestNamespace)).Should(Succeed())
 
 			By("By creating a new PasswordPolicy")
 			ppInstance, err := decoder.GetPasswordPolicyInstance("../test/password-policy.yaml")

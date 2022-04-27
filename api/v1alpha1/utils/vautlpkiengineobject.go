@@ -36,6 +36,8 @@ type VaultPKIEngineObject interface {
 	CreateExported(context context.Context, secret *vault.Secret) (bool, error)
 	SetExportedStatus(status bool)
 	SetIntermediate(context context.Context) error
+	GetSignedStatus() bool
+	SetSignedStatus(status bool)
 }
 
 type VaultPKIEngineEndpoint struct {

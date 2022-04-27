@@ -126,3 +126,33 @@ func (d *decoder) GetRandomSecretInstance(filename string) (*redhatcopv1alpha1.R
 
 	return nil, errDecode
 }
+
+func (d *decoder) GetPKISecretEngineConfigInstance(filename string) (*redhatcopv1alpha1.PKISecretEngineConfig, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.PKISecretEngineConfig{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.PKISecretEngineConfig)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetPKISecretEngineRoleInstance(filename string) (*redhatcopv1alpha1.PKISecretEngineRole, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.PKISecretEngineRole{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.PKISecretEngineRole)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
