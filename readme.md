@@ -1,5 +1,3 @@
-
-@@ -4,6 +4,7 @@
 ![build status](https://github.com/redhat-cop/vault-config-operator/workflows/push/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/redhat-cop/vault-config-operator)](https://goreportcard.com/report/github.com/redhat-cop/vault-config-operator)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/redhat-cop/vault-config-operator)
@@ -71,8 +69,8 @@ Currently this operator covers the following Vault APIs:
 8. [QuaySecretEngineConfig](./docs/secret-engines.md#QuaySecretEngineConfig) Configures a Quay server to produce Robot accounts, see the also the [vault-plugin-secrets-quay](https://github.com/redhat-cop/vault-plugin-secrets-quay)
 9. [QuaySecretEngineRole](./docs/secret-engines.md#QuaySecretEngineRole) Configures a Quay server to produce credentials for a Robot account, see the also the [vault-plugin-secrets-quay](https://github.com/redhat-cop/vault-plugin-secrets-quay)
 10. [QuaySecretEngineStaticRole](./docs/secret-engines.md#QuaySecretEngineStaticRole) Configures a Quay server to produce credentials for a Robot account using a fixed username and generated credentials, see the also the [vault-plugin-secrets-quay](https://github.com/redhat-cop/vault-plugin-secrets-quay)
-8. [RabbitMQSecretEngineConfig](./docs/secret-engines.md#rabbitmqsecretengineconfig) Configures a [RabbitMQ Secret Engine](https://www.vaultproject.io/docs/secrets/rabbitmq#rabbitmq-secrets-engine)
-9. [RabbitMQSecretEngineRole](./docs/secret-engines.md#rabbitmqsecretenginerole) Configures a [RabbitMQ Secret Engine Role](https://www.vaultproject.io/docs/secrets/rabbitmq#rabbitmq-secrets-engine)
+11. [RabbitMQSecretEngineConfig](./docs/secret-engines.md#rabbitmqsecretengineconfig) Configures a [RabbitMQ Secret Engine](https://www.vaultproject.io/docs/secrets/rabbitmq#rabbitmq-secrets-engine)
+12. [RabbitMQSecretEngineRole](./docs/secret-engines.md#rabbitmqsecretenginerole) Configures a [RabbitMQ Secret Engine Role](https://www.vaultproject.io/docs/secrets/rabbitmq#rabbitmq-secrets-engine)
 
 ## Secret Management
 
