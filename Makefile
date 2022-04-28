@@ -4,6 +4,7 @@ OPERATOR_NAME ?=$(shell basename -z `pwd`)
 HELM_VERSION ?= v3.8.0
 KIND_VERSION ?= v0.11.1
 KUBECTL_VERSION ?= v1.21.1
+K8S_MAJOR_VERSION ?= 1.21
 VAULT_VERSION ?= 1.9.3
 
 # VERSION defines the project version for the bundle.
@@ -99,23 +100,31 @@ test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
 
 .PHONY: integration
-integration: kind-setup vault manifests generate fmt vet envtest ## Run tests.
+integration: kind-setup deploy-vault deploy-ingress vault manifests generate fmt vet envtest ## Run tests.
 	export VAULT_TOKEN=$$($(KUBECTL) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
 	export VAULT_ADDR="http://localhost:8081" ;\
 	export ACCESSOR=$$($(VAULT) read -tls-skip-verify -format json sys/auth | jq -r '.data["kubernetes/"].accessor') ;\
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration
 
-.PHONY: kind-setup
-kind-setup: kind kubectl helm
-	$(KIND) delete cluster
-	$(KIND) create cluster --image docker.io/kindest/node:$(KUBECTL_VERSION) --config=./integration/cluster-kind.yaml
-	$(KUBECTL) create namespace vault
+.PHONY: deploy-ingress
+deploy-ingress: kubectl helm
+	$(HELM) upgrade -i ingress-nginx ./integration/helm/ingress-nginx -n vault --atomic --create-namespace
+	curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/$(K8S_MAJOR_VERSION)/deploy.yaml | $(KUBECTL) create -f - -n ingress-nginx
+	$(KUBECTL) rollout status deployment ingress-nginx-controller -n ingress-nginx --timeout=90s
+	$(KUBECTL) wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=90s
+
+.PHONY: deploy-vault
+deploy-vault: kubectl helm
+	$(KUBECTL) create namespace vault --dry-run=client -o yaml | kubectl apply -f - 
 	$(KUBECTL) apply -f ./integration/rolebinding-admin.yaml -n vault
 	$(HELM) repo add hashicorp https://helm.releases.hashicorp.com
 	$(HELM) upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f ./integration/vault-values.yaml
-	$(KUBECTL) wait --for=condition=ready pod/vault-0 -n vault --timeout=5m	
-	$(HELM) upgrade ingress-nginx ./integration/helm/ingress-nginx -i --create-namespace -n ingress-nginx --atomic
-	$(KUBECTL) wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=90s
+	$(KUBECTL) wait --for=condition=ready pod/vault-0 -n vault --timeout=5m
+
+.PHONY: kind-setup
+kind-setup: kind
+	$(KIND) delete cluster
+	$(KIND) create cluster --image docker.io/kindest/node:$(KUBECTL_VERSION) --config=./integration/cluster-kind.yaml
 
 ##@ Build
 
@@ -262,7 +271,7 @@ HELM_TEST_IMG_TAG ?= helmchart-test
 # Deploy the helmchart to a kind cluster to test deployment.
 # If the test-metrics sidecar in the prometheus pod is ready, the metrics work and the test is successful.
 .PHONY: helmchart-test
-helmchart-test: kind-setup helmchart
+helmchart-test: kind-setup deploy-vault helmchart
 	$(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker-build
 	docker tag ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
 	$(KIND) load docker-image ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
