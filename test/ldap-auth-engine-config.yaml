@@ -9,16 +9,13 @@ spec:
     serviceAccount:
       name: default
   path: ldap-test
-  url: "ldaps://ldap-xxx-a.xxx.xxx.xxx,ldaps://ldap-xxx-b.xxx.xxx.xxx,ldaps://ldap-xxx-c.xxx.xxx.xxx"
+  url: "ldap://ldap.ldap.svc.cluster.local"
   caseSensitiveNames: false
-  bindDN: "supersecret"
+  bindDN: "cn=admin,dc=example,dc=com"
+  userDN: "ou=users,dc=example,dc=com"
   bindCredentials:
     secret: 
       name: bindcredentials
     usernameKey: username
     passwordKey: password
-  userDN: "ou=Users,ou=XXXX,ou=Company,dc=xxx,dc=xxx,dc=xxx" 
-  groupDN: "ou=Administration,ou=XXXX,ou=Company,dc=xxx,dc=xxx,dc=xxx" 
-  groupFilter: "(|(memberUid={{.Username}})(member={{.UserDN}})(uniqueMember={{.UserDN}}))" 
-  userAttr: "samaccountname" 
   insecureTls: true
