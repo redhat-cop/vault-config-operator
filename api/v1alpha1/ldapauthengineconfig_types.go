@@ -19,7 +19,6 @@ package v1alpha1
 import (
 	"context"
 	"errors"
-	"fmt"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
