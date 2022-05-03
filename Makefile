@@ -122,7 +122,7 @@ kind-setup: kind kubectl helm
 ldap-setup: kind-setup vault
 	$(KUBECTL) create namespace ldap 
 	$(KUBECTL) apply -f ./integration/ldap -n ldap
-	$(KUBECTL) wait --for=condition=ready -n ldap pod $(KUBECTL) get pods -n ldap -l=app=ldap -o json | jq '.items[].metadata.name' --timeout=5m
+	$(KUBECTL) wait --for=condition=ready -n ldap pod $$($(KUBECTL) get pods -n ldap -l=app=ldap -o json | jq '.items[].metadata.name') --timeout=5m
 	$(KUBECTL) port-forward -n vault vault-0 8201:8200
 	export VAULT_ADDR=http://localhost:8201
 	export VAULT_SKIP_VERIFY=true 
