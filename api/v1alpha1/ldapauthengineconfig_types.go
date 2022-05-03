@@ -312,6 +312,9 @@ type LDAPConfig struct {
 	retrievedUsername string `json:"-"`
 }
 
+
+
+
 // LDAPAuthEngineConfigStatus defines the observed state of LDAPAuthEngineConfig
 type LDAPAuthEngineConfigStatus struct {
 	// +patchMergeKey=type
