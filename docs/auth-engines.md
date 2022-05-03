@@ -120,7 +120,7 @@ spec:
   caseSensitiveNames: false
   groupDN:
   groupFilter:
-  insecureTls: true
+  insecureTLS: true
   path: ldap
   url: ldaps://ldap.myorg.com:636
   userAttr: "samaccountname"
@@ -147,9 +147,9 @@ spec:
   
   The `certificate` field – CA certificate to use when verifying LDAP server certificate, must be x509 PEM encoded.
   
-  The `clientTlsCert` field - Client certificate to provide to the LDAP server, must be x509 PEM encoded (optional).
+  The `clientTLSCert` field - Client certificate to provide to the LDAP server, must be x509 PEM encoded (optional).
   
-  The `clientTlsKey` field - Client certificate key to provide to the LDAP server, must be x509 PEM encoded (optional).
+  The `clientTLSKey` field - Client certificate key to provide to the LDAP server, must be x509 PEM encoded (optional).
   
   The `denyNullBind` field - This option prevents users from bypassing authentication when providing an empty password.
   
@@ -161,23 +161,23 @@ spec:
   
   The `groupFilter` field – Go template used when constructing the group membership query. The template can access the following context variables: [UserDN, Username]. The default is (|(memberUid={{.Username}})(member={{.UserDN}})(uniqueMember={{.UserDN}})), which is compatible with several common directory schemas. To support nested group resolution for Active Directory, instead use the following query: (&(objectClass=group)(member:1.2.840.113556.1.4.1941:={{.UserDN}})).
   
-  The `insecureTls` field - If true, skips LDAP server SSL certificate verification - insecure, use with caution!
+  The `insecureTLS` field - If true, skips LDAP server SSL certificate verification - insecure, use with caution!
   
   The `path` field - The path field specifies the path to configure. the complete path of the configuration will be: [namespace/]auth/{.spec.path}/{metadata.name}/config
   
   The `requestTimeout` field - Timeout, in seconds, for the connection when making requests against the server before returning back an error.
   
-  The `startTls` field - If true, issues a StartTLS command after establishing an unencrypted connection.
+  The `startTLS` field - If true, issues a StartTLS command after establishing an unencrypted connection.
   
-  The `tlsMaxVersion` field - Minimum TLS version to use. Accepted values are tls10, tls11, tls12 or tls13.
+  The `TLSMaxVersion` field - Minimum TLS version to use. Accepted values are tls10, tls11, tls12 or tls13.
   
-  The `tlsMinVersion` field - Maximum TLS version to use. Accepted values are tls10, tls11, tls12 or tls13.
+  The `TLSMinVersion` field - Maximum TLS version to use. Accepted values are tls10, tls11, tls12 or tls13.
   
   The `tokenBoundCIDRs` field - List of CIDR blocks; if set, specifies blocks of IP addresses which can authenticate successfully, and ties the resulting token to these blocks as well.
   
-  The `tokenExplicitMaxTtl` field - If set, will encode an explicit max TTL onto the token. This is a hard cap even if token_ttl and token_max_ttl would otherwise allow a renewal.
+  The `tokenExplicitMaxTTL` field - If set, will encode an explicit max TTL onto the token. This is a hard cap even if token_ttl and token_max_ttl would otherwise allow a renewal.
   
-  The `tokenMaxTtl` field - The maximum lifetime for generated tokens. This current value of this will be referenced at renewal time.
+  The `tokenMaxTTL` field - The maximum lifetime for generated tokens. This current value of this will be referenced at renewal time.
   
   The `tokenNoDefaultPolicy` field - If set, the default policy will not be set on generated tokens; otherwise it will be added to the policies set in token_policies.
   
@@ -187,7 +187,7 @@ spec:
   
   The `tokenPolicies` field - List of policies to encode onto generated tokens. Depending on the auth method, this list may be supplemented by user/group/other values.
 
-  The `tokenTtl` field - The incremental lifetime for generated tokens. This current value of this will be referenced at renewal time.
+  The `tokenTTL` field - The incremental lifetime for generated tokens. This current value of this will be referenced at renewal time.
   
   The `tokenType` field - The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens). For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time.
   

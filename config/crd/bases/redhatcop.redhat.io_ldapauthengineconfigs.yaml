@@ -37,6 +37,16 @@ spec:
           spec:
             description: LDAPAuthEngineConfigSpec defines the desired state of LDAPAuthEngineConfig
             properties:
+              TLSMaxVersion:
+                default: tls12
+                description: TLSMaxVersion Maximum TLS version to use. Accepted values
+                  are tls10, tls11, tls12 or tls13
+                type: string
+              TLSMinVersion:
+                default: tls12
+                description: TLSMinVersion Minimum TLS version to use. Accepted values
+                  are tls10, tls11, tls12 or tls13
+                type: string
               UPNDomain:
                 default: ""
                 description: 'UPNDomain  The userPrincipalDomain used to construct
@@ -189,14 +199,14 @@ spec:
                 description: Certificate CA certificate to use when verifying LDAP
                   server certificate, must be x509 PEM encoded.
                 type: string
-              clientTlsCert:
+              clientTLSCert:
                 default: ""
-                description: ClientTlsCert Client certificate to provide to the LDAP
+                description: ClientTLSCert Client certificate to provide to the LDAP
                   server, must be x509 PEM encoded
                 type: string
-              clientTlsKey:
+              clientTLSKey:
                 default: ""
-                description: ClientTlsKey Client certificate key to provide to the
+                description: ClientTLSKey Client certificate key to provide to the
                   LDAP server, must be x509 PEM encoded
                 type: string
               denyNullBind:
@@ -231,9 +241,9 @@ spec:
                   nested group resolution for Active Directory, instead use the following
                   query: (&(objectClass=group)(member:1.2.840.113556.1.4.1941:={{.UserDN}}))'
                 type: string
-              insecureTls:
+              insecureTLS:
                 default: false
-                description: InsecureTls If true, skips LDAP server SSL certificate
+                description: InsecureTLS If true, skips LDAP server SSL certificate
                   verification - insecure, use with caution!
                 type: boolean
               path:
@@ -249,36 +259,26 @@ spec:
                   when making requests against the server before returning back an
                   error.
                 type: string
-              startTls:
+              startTLS:
                 default: false
-                description: StartTls If true, issues a StartTLS command after establishing
+                description: StartTLS If true, issues a StartTLS command after establishing
                   an unencrypted connection.
                 type: boolean
-              tlsMaxVersion:
-                default: tls12
-                description: TlsMaxVersion Maximum TLS version to use. Accepted values
-                  are tls10, tls11, tls12 or tls13
-                type: string
-              tlsMinVersion:
-                default: tls12
-                description: TlsMinVersion Minimum TLS version to use. Accepted values
-                  are tls10, tls11, tls12 or tls13
-                type: string
               tokenBoundCIDRs:
                 default: ""
                 description: TokenBoundCIDRs List of CIDR blocks; if set, specifies
                   blocks of IP addresses which can authenticate successfully, and
                   ties the resulting token to these blocks as well.
                 type: string
-              tokenExplicitMaxTtl:
+              tokenExplicitMaxTTL:
                 default: ""
-                description: TokenExplicitMaxTtl If set, will encode an explicit max
+                description: TonenExplicitMaxTTL If set, will encode an explicit max
                   TTL onto the token. This is a hard cap even if token_ttl and token_max_ttl
                   would otherwise allow a renewal.
                 type: string
-              tokenMaxTtl:
+              tokenMaxTTL:
                 default: ""
-                description: TokenMaxTtl The maximum lifetime for generated tokens.
+                description: TokenMaxTTL The maximum lifetime for generated tokens.
                   This current value of this will be referenced at renewal time
                 type: string
               tokenNoDefaultPolicy:
@@ -306,9 +306,9 @@ spec:
                   tokens. Depending on the auth method, this list may be supplemented
                   by user/group/other values.
                 type: string
-              tokenTtl:
+              tokenTTL:
                 default: ""
-                description: TokenTtl The incremental lifetime for generated tokens.
+                description: TokenTTL The incremental lifetime for generated tokens.
                   This current value of this will be referenced at renewal time.
                 type: string
               tokenType:

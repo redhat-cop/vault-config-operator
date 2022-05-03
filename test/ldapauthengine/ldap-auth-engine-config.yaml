@@ -18,4 +18,4 @@ spec:
       name: bindcredentials
     usernameKey: username
     passwordKey: password
-  insecureTls: true
+  insecureTLS: true

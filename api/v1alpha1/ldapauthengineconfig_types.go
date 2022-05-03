@@ -158,40 +158,40 @@ type LDAPConfig struct {
 	// +kubebuilder:default="90s"
 	RequestTimeout string `json:"requestTimeout"`
 
-	// StartTls If true, issues a StartTLS command after establishing an unencrypted connection.
+	// StartTLS If true, issues a StartTLS command after establishing an unencrypted connection.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=false
-	StartTls bool `json:"startTls"`
+	StartTLS bool `json:"startTLS"`
 
-	// TlsMinVersion Minimum TLS version to use. Accepted values are tls10, tls11, tls12 or tls13
+	// TLSMinVersion Minimum TLS version to use. Accepted values are tls10, tls11, tls12 or tls13
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="tls12"
-	TlsMinVersion string `json:"tlsMinVersion"`
+	TLSMinVersion string `json:"TLSMinVersion"`
 
-	// TlsMaxVersion Maximum TLS version to use. Accepted values are tls10, tls11, tls12 or tls13
+	// TLSMaxVersion Maximum TLS version to use. Accepted values are tls10, tls11, tls12 or tls13
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="tls12"
-	TlsMaxVersion string `json:"tlsMaxVersion"`
+	TLSMaxVersion string `json:"TLSMaxVersion"`
 
-	// InsecureTls If true, skips LDAP server SSL certificate verification - insecure, use with caution!
+	// InsecureTLS If true, skips LDAP server SSL certificate verification - insecure, use with caution!
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=false
-	InsecureTls bool `json:"insecureTls"`
+	InsecureTLS bool `json:"insecureTLS"`
 
 	// Certificate CA certificate to use when verifying LDAP server certificate, must be x509 PEM encoded.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=""
 	Certificate string `json:"certificate,omitempty"`
 
-	// ClientTlsCert Client certificate to provide to the LDAP server, must be x509 PEM encoded
+	// ClientTLSCert Client certificate to provide to the LDAP server, must be x509 PEM encoded
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=""
-	ClientTlsCert string `json:"clientTlsCert,omitempty"`
+	ClientTLSCert string `json:"clientTLSCert,omitempty"`
 
-	// ClientTlsKey Client certificate key to provide to the LDAP server, must be x509 PEM encoded
+	// ClientTLSKey Client certificate key to provide to the LDAP server, must be x509 PEM encoded
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=""
-	ClientTlsKey string `json:"clientTlsKey,omitempty"`
+	ClientTLSKey string `json:"clientTLSKey,omitempty"`
 
 	// BindDN - Username used to connect to the LDAP service on the specified LDAP Server.
 	// If in the form accountname@domain.com, the username is transformed into a proper LDAP bind DN, for example, CN=accountname,CN=users,DC=domain,DC=com, when accessing the LDAP server.
@@ -260,15 +260,15 @@ type LDAPConfig struct {
 	// +kubebuilder:default=false
 	UsernameAsAlias bool `json:"usernameAsAlias"`
 
-	// TokenTtl The incremental lifetime for generated tokens. This current value of this will be referenced at renewal time.
+	// TokenTTL The incremental lifetime for generated tokens. This current value of this will be referenced at renewal time.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=""
-	TokenTtl string `json:"tokenTtl,omitempty"`
+	TokenTTL string `json:"tokenTTL,omitempty"`
 
-	// TokenMaxTtl The maximum lifetime for generated tokens. This current value of this will be referenced at renewal time
+	// TokenMaxTTL The maximum lifetime for generated tokens. This current value of this will be referenced at renewal time
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=""
-	TokenMaxTtl string `json:"tokenMaxTtl,omitempty"`
+	TokenMaxTTL string `json:"tokenMaxTTL,omitempty"`
 
 	// TokenPolicies List of policies to encode onto generated tokens. Depending on the auth method, this list may be supplemented by user/group/other values.
 	// +kubebuilder:validation:Optional
@@ -280,10 +280,10 @@ type LDAPConfig struct {
 	// +kubebuilder:default=""
 	TokenBoundCIDRs string `json:"tokenBoundCIDRs,omitempty"`
 
-	// TokenExplicitMaxTtl If set, will encode an explicit max TTL onto the token. This is a hard cap even if token_ttl and token_max_ttl would otherwise allow a renewal.
+	// TonenExplicitMaxTTL If set, will encode an explicit max TTL onto the token. This is a hard cap even if token_ttl and token_max_ttl would otherwise allow a renewal.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=""
-	TokenExplicitMaxTtl string `json:"tokenExplicitMaxTtl,omitempty"`
+	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty"`
 
 	// TokenNoDefaultPolicy If set, the default policy will not be set on generated tokens; otherwise it will be added to the policies set in token_policies.
 	// +kubebuilder:validation:Optional
@@ -364,13 +364,13 @@ func (i *LDAPConfig) toMap() map[string]interface{} {
 	payload["url"] = i.URL
 	payload["case_sensitive_names"] = i.CaseSensitiveNames
 	payload["request_timeout"] = i.RequestTimeout
-	payload["starttls"] = i.StartTls
-	payload["tls_min_version"] = i.TlsMinVersion
-	payload["tls_max_version"] = i.TlsMaxVersion
-	payload["insecure_tls"] = i.InsecureTls
+	payload["starttls"] = i.StartTLS
+	payload["tls_min_version"] = i.TLSMinVersion
+	payload["tls_max_version"] = i.TLSMaxVersion
+	payload["insecure_tls"] = i.InsecureTLS
 	payload["certificate"] = i.Certificate
-	payload["client_tls_cert"] = i.ClientTlsCert
-	payload["client_tls_key"] = i.ClientTlsKey
+	payload["client_tls_cert"] = i.ClientTLSCert
+	payload["client_tls_key"] = i.ClientTLSKey
 	payload["binddn"] = i.BindDN
 	payload["bindpass"] = i.retrievedPassword
 	payload["userdn"] = i.UserDN
@@ -384,11 +384,11 @@ func (i *LDAPConfig) toMap() map[string]interface{} {
 	payload["groupdn"] = i.GroupDN
 	payload["groupattr"] = i.GroupAttr
 	payload["username_as_alias"] = i.UsernameAsAlias
-	payload["token_ttl"] = i.TokenTtl
-	payload["token_max_ttl"] = i.TokenMaxTtl
+	payload["token_ttl"] = i.TokenTTL
+	payload["token_max_ttl"] = i.TokenMaxTTL
 	payload["token_policies"] = i.TokenPolicies
 	payload["token_bound_cidrs"] = i.TokenBoundCIDRs
-	payload["token_explicit_max_ttl"] = i.TokenExplicitMaxTtl
+	payload["token_explicit_max_ttl"] = i.TokenExplicitMaxTTL
 	payload["token_no_default_policy"] = i.TokenNoDefaultPolicy
 	payload["token_num_uses"] = i.TokenNumUses
 	payload["token_period"] = i.TokenPeriod
