@@ -117,6 +117,20 @@ kind-setup: kind kubectl helm
 	$(HELM) upgrade ingress-nginx ./integration/helm/ingress-nginx -i --create-namespace -n ingress-nginx --atomic
 	$(KUBECTL) wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=90s
 
+
+.PHONY: ldap-setup 
+ldap-setup: kind-setup vault
+	$(KUBECTL) create namespace ldap 
+	$(KUBECTL) apply -f ./integration/ldap -n ldap
+	$(KUBECTL) wait --for=condition=ready -n ldap pod $(KUBECTL) get pods -n ldap -l=app=ldap -o json | jq '.items[].metadata.name' --timeout=5m
+	$(KUBECTL) port-forward -n vault vault-0 8201:8200
+	export VAULT_ADDR=http://localhost:8201
+	export VAULT_SKIP_VERIFY=true 
+	$(KUBECTL) apply -f ./test/ldapauthengine/ldap-auth-engine-mount.yaml
+	$(KUBECTL) apply -f ./test/ldapauthengine/ldap-auth-engine-config.yaml
+	$(VAULT) login -method=ldap -path=ldap/test/ username=trevor password=admin
+
+
 ##@ Build
 
 build: generate fmt vet ## Build manager binary.
