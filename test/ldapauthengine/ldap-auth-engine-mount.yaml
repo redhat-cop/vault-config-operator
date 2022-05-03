@@ -1,0 +1,12 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AuthEngineMount
+metadata:
+  name: test
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+    serviceAccount:
+      name: default
+  type: ldap
+  path: ldap
