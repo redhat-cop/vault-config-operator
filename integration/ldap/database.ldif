@@ -1,0 +1,96 @@
+version: 1
+
+dn: cn=Online Retail Banking,ou=Groups,dc=example,dc=com
+objectClass: groupOfNames
+objectClass: top
+cn: Online Retail Banking
+member: uid=alice,ou=Users,dc=example,dc=com
+
+dn: cn=Lending,ou=Groups,dc=example,dc=com
+objectClass: groupOfNames
+objectClass: top
+cn: Lending
+member: uid=alice,ou=Users,dc=example,dc=com
+
+dn: dc=example,dc=com
+objectclass: top
+objectclass: domain
+dc: example
+
+dn: cn=Retail Banking,ou=Groups,dc=example,dc=com
+objectClass: groupOfNames
+objectClass: top
+cn: Retail Banking
+member: cn=Mobile Banking,cn=Retail Banking,ou=Groups,dc=example,dc=com
+member: cn=Online Retail Banking,ou=Groups,dc=example,dc=com
+
+dn: ou=Users,dc=example,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: Users
+
+dn: ou=Groups,dc=example,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: Groups
+
+dn: cn=Backoffice,ou=Groups,dc=example,dc=com
+objectClass: groupOfNames
+objectClass: top
+cn: Backoffice
+member: uid=alice,ou=Users,dc=example,dc=com
+
+dn: cn=Investing,ou=Groups,dc=example,dc=com
+objectClass: groupOfNames
+objectClass: top
+cn: Investing
+member: uid=alice,ou=Users,dc=example,dc=com
+
+dn: cn=Core Banking,ou=Groups,dc=example,dc=com
+objectClass: groupOfNames
+objectClass: top
+cn: Core Banking
+member: cn=Checking Accounts,cn=Core Banking,ou=Groups,dc=example,dc=com
+member: cn=Investing,cn=Core Banking,ou=Groups,dc=example,dc=com
+member: cn=Lending,cn=Core Banking,ou=Groups,dc=example,dc=com
+member: cn=Mortgages,cn=Core Banking,ou=Groups,dc=example,dc=com
+
+dn: cn=Corporate Baking,ou=Groups,dc=example,dc=com
+objectClass: groupOfNames
+objectClass: top
+cn: Corporate Baking
+member: cn=Backoffice,cn=Corporate Baking,ou=Groups,dc=example,dc=com
+member: cn=Online Corporate Banking,ou=Groups,dc=example,dc=com
+
+dn: cn=Checking Accounts,ou=Groups,dc=example,dc=com
+objectClass: groupOfNames
+objectClass: top
+cn: Checking Accounts
+member: uid=alice,ou=Users,dc=example,dc=com
+
+dn: cn=Online Corporate Banking,ou=Groups,dc=example,dc=com
+objectClass: groupOfNames
+objectClass: top
+cn: Online Corporate Banking
+member: uid=alice,ou=Users,dc=example,dc=com
+
+dn: cn=Mortgages,ou=Groups,dc=example,dc=com
+objectClass: groupOfNames
+objectClass: top
+cn: Mortgages
+member: uid=alice,ou=Users,dc=example,dc=com
+
+dn: uid=alice,ou=Users,dc=example,dc=com
+objectClass: organizationalPerson
+objectClass: person
+objectClass: inetOrgPerson
+objectClass: top
+cn: Alice
+sn: In Chains
+uid: alice
+
+dn: cn=Mobile Banking,ou=Groups,dc=example,dc=com
+objectClass: groupOfNames
+objectClass: top
+cn: Mobile Banking
+member: uid=alice,ou=Users,dc=example,dc=com

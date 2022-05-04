@@ -1,0 +1,21 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: LDAPAuthEngineConfig
+metadata:
+  name: ldap-config
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+    serviceAccount:
+      name: default
+  path: ldap/test
+  url: "ldap://ldap.ldap.svc.cluster.local"
+  caseSensitiveNames: false
+  bindDN: "cn=admin,dc=example,dc=com"
+  userDN: "ou=users,dc=example,dc=com"
+  bindCredentials:
+    secret: 
+      name: bindcredentials
+    usernameKey: username
+    passwordKey: password
+  insecureTLS: true

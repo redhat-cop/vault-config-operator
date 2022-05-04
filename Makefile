@@ -126,6 +126,20 @@ kind-setup: kind
 	$(KIND) delete cluster
 	$(KIND) create cluster --image docker.io/kindest/node:$(KUBECTL_VERSION) --config=./integration/cluster-kind.yaml
 
+
+.PHONY: ldap-setup 
+ldap-setup: kind-setup vault
+	$(KUBECTL) create namespace ldap 
+	$(KUBECTL) apply -f ./integration/ldap -n ldap
+	$(KUBECTL) wait --for=condition=ready -n ldap pod $$($(KUBECTL) get pods -n ldap -l=app=ldap -o json | jq '.items[].metadata.name') --timeout=5m
+	$(KUBECTL) port-forward -n vault vault-0 8201:8200
+	export VAULT_ADDR=http://localhost:8201
+	export VAULT_SKIP_VERIFY=true 
+	$(KUBECTL) apply -f ./test/ldapauthengine/ldap-auth-engine-mount.yaml
+	$(KUBECTL) apply -f ./test/ldapauthengine/ldap-auth-engine-config.yaml
+	$(VAULT) login -method=ldap -path=ldap/test/ username=trevor password=admin
+
+
 ##@ Build
 
 build: generate fmt vet ## Build manager binary.

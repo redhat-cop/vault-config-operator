@@ -1,0 +1,441 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ldif-config
+
+data:
+  database.ldif: |
+    version: 1
+
+    dn: ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalUnit
+    objectClass: top
+    ou: Users
+
+    dn: ou=Groups,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalUnit
+    objectClass: top
+    ou: Groups
+
+    dn: uid=john,ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalPerson
+    objectClass: person
+    objectClass: inetOrgPerson
+    objectClass: top
+    cn: john
+    sn: admin
+    uid: john
+    mail: jhon.admin@example.com
+
+
+    dn: uid=john,ou=Users,dc=example,dc=com
+    changetype: modify
+    add: userPassword
+    userPassword: admin
+
+    dn: uid=trevor,ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalPerson
+    objectClass: person
+    objectClass: inetOrgPerson
+    objectClass: top
+    cn: trevor
+    sn: admin
+    uid: trevor
+    mail: trevor.admin@example.com
+
+    dn: uid=trevor,ou=Users,dc=example,dc=com
+    changetype: modify
+    add: userPassword
+    userPassword: admin
+
+    dn: uid=dev1,ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalPerson
+    objectClass: person
+    objectClass: inetOrgPerson
+    objectClass: top
+    cn: dev1
+    sn: dev
+    uid: dev1
+    mail: dev1.admin@example.com
+
+    dn: uid=dev1,ou=Users,dc=example,dc=com
+    changetype: modify
+    add: userPassword
+    userPassword: dev
+
+    dn: uid=dev2,ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalPerson
+    objectClass: person
+    objectClass: inetOrgPerson
+    objectClass: top
+    cn: dev2
+    sn: dev
+    uid: dev2
+    mail: dev2.admin@example.com
+
+    dn: uid=dev2,ou=Users,dc=example,dc=com
+    changetype: modify
+    add: userPassword
+    userPassword: dev
+    
+    dn: uid=dev3,ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalPerson
+    objectClass: person
+    objectClass: inetOrgPerson
+    objectClass: top
+    cn: dev3
+    sn: dev
+    uid: dev3
+    mail: dev3.admin@example.com
+
+    dn: uid=dev3,ou=Users,dc=example,dc=com
+    changetype: modify
+    add: userPassword
+    userPassword: dev
+    
+    dn: uid=dev4,ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalPerson
+    objectClass: person
+    objectClass: inetOrgPerson
+    objectClass: top
+    cn: dev4
+    sn: dev
+    uid: dev4
+    mail: dev4.admin@example.com
+
+    dn: uid=dev4,ou=Users,dc=example,dc=com
+    changetype: modify
+    add: userPassword
+    userPassword: dev
+
+    dn: uid=dev5,ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalPerson
+    objectClass: person
+    objectClass: inetOrgPerson
+    objectClass: top
+    cn: dev5
+    sn: dev
+    uid: dev5
+    mail: dev5.admin@example.com
+
+    dn: uid=dev5,ou=Users,dc=example,dc=com
+    changetype: modify
+    add: userPassword
+    userPassword: dev
+
+    dn: uid=dev6,ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalPerson
+    objectClass: person
+    objectClass: inetOrgPerson
+    objectClass: top
+    cn: dev6
+    sn: dev
+    uid: dev6
+    mail: dev6.admin@example.com
+
+    dn: uid=dev6,ou=Users,dc=example,dc=com
+    changetype: modify
+    add: userPassword
+    userPassword: dev
+    
+    dn: uid=dev7,ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalPerson
+    objectClass: person
+    objectClass: inetOrgPerson
+    objectClass: top
+    cn: dev7
+    sn: dev
+    uid: dev7
+    mail: dev7.admin@example.com
+
+    dn: uid=dev7,ou=Users,dc=example,dc=com
+    changetype: modify
+    add: userPassword
+    userPassword: dev  
+    
+    dn: uid=dev8,ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalPerson
+    objectClass: person
+    objectClass: inetOrgPerson
+    objectClass: top
+    cn: dev8
+    sn: dev
+    uid: dev8
+    mail: dev8.admin@example.com
+
+    dn: uid=dev8,ou=Users,dc=example,dc=com
+    changetype: modify
+    add: userPassword
+    userPassword: dev 
+    
+    dn: uid=dev9,ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalPerson
+    objectClass: person
+    objectClass: inetOrgPerson
+    objectClass: top
+    cn: dev9
+    sn: dev
+    uid: dev9
+    mail: dev9.admin@example.com
+
+    dn: uid=dev9,ou=Users,dc=example,dc=com
+    changetype: modify
+    add: userPassword
+    userPassword: dev 
+    
+    dn: uid=dev10,ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalPerson
+    objectClass: person
+    objectClass: inetOrgPerson
+    objectClass: top
+    cn: dev10
+    sn: dev
+    uid: dev10
+    mail: dev10.admin@example.com
+
+    dn: uid=dev10,ou=Users,dc=example,dc=com
+    changetype: modify
+    add: userPassword
+    userPassword: dev   
+    
+    dn: uid=dev11,ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalPerson
+    objectClass: person
+    objectClass: inetOrgPerson
+    objectClass: top
+    cn: dev11
+    sn: dev
+    uid: dev11
+    mail: dev11.admin@example.com
+
+    dn: uid=dev11,ou=Users,dc=example,dc=com
+    changetype: modify
+    add: userPassword
+    userPassword: dev
+    
+    dn: uid=dev12,ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalPerson
+    objectClass: person
+    objectClass: inetOrgPerson
+    objectClass: top
+    cn: dev12
+    sn: dev
+    uid: dev12
+    mail: dev12.admin@example.com
+
+    dn: uid=dev12,ou=Users,dc=example,dc=com
+    changetype: modify
+    add: userPassword
+    userPassword: dev    
+
+    dn: uid=eric,ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalPerson
+    objectClass: person
+    objectClass: inetOrgPerson
+    objectClass: top
+    cn: eric
+    sn: admin
+    uid: eric
+    mail: eric.admin@example.com
+
+    dn: uid=eric,ou=Users,dc=example,dc=com
+    changetype: modify
+    add: userPassword
+    userPassword: admin    
+
+    dn: uid=erin,ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalPerson
+    objectClass: person
+    objectClass: inetOrgPerson
+    objectClass: top
+    cn: erin
+    sn: admin
+    uid: erin
+    mail: erin.admin@example.com
+
+    dn: uid=erin,ou=Users,dc=example,dc=com
+    changetype: modify
+    add: userPassword
+    userPassword: admin    
+
+    dn: uid=vanessa,ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalPerson
+    objectClass: person
+    objectClass: inetOrgPerson
+    objectClass: top
+    cn: vanessa
+    sn: admin
+    uid: vanessa
+    mail: vanessa.admin@example.com
+
+    dn: uid=vanessa,ou=Users,dc=example,dc=com
+    changetype: modify
+    add: userPassword
+    userPassword: admin    
+
+    dn: uid=mary,ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalPerson
+    objectClass: person
+    objectClass: inetOrgPerson
+    objectClass: top
+    cn: mary
+    sn: admin
+    uid: mary
+    mail: mary.admin@example.com 
+
+    dn: uid=mary,ou=Users,dc=example,dc=com
+    changetype: modify
+    add: userPassword
+    userPassword: admin    
+
+    dn: uid=julia,ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalPerson
+    objectClass: person
+    objectClass: inetOrgPerson
+    objectClass: top
+    cn: julia
+    sn: admin
+    uid: julia
+    mail: julia.admin@example.com 
+
+    dn: uid=julia,ou=Users,dc=example,dc=com
+    changetype: modify
+    add: userPassword
+    userPassword: admin    
+
+    dn: uid=matt,ou=Users,dc=example,dc=com
+    changetype: add
+    objectClass: organizationalPerson
+    objectClass: person
+    objectClass: inetOrgPerson
+    objectClass: top
+    cn: matt
+    sn: admin
+    uid: matt
+    mail: matt.admin@example.com 
+
+    dn: uid=matt,ou=Users,dc=example,dc=com
+    changetype: modify
+    add: userPassword
+    userPassword: admin    
+
+    # retail banking
+
+    dn: cn=Online Retail Banking,ou=Groups,dc=example,dc=com
+    changetype: add
+    objectClass: groupOfNames
+    objectClass: top
+    cn: Online Retail Banking
+    member: uid=trevor,ou=Users,dc=example,dc=com
+    member: uid=dev1,ou=Users,dc=example,dc=com
+    member: uid=dev2,ou=Users,dc=example,dc=com
+    member: uid=dev3,ou=Users,dc=example,dc=com
+    member: uid=dev4,ou=Users,dc=example,dc=com
+    member: uid=dev5,ou=Users,dc=example,dc=com
+    member: uid=dev6,ou=Users,dc=example,dc=com
+    member: uid=dev7,ou=Users,dc=example,dc=com
+    member: uid=dev8,ou=Users,dc=example,dc=com
+    member: uid=dev9,ou=Users,dc=example,dc=com
+    member: uid=dev10,ou=Users,dc=example,dc=com
+    member: uid=dev11,ou=Users,dc=example,dc=com
+    member: uid=dev12,ou=Users,dc=example,dc=com        
+
+    dn: cn=Mobile Banking,ou=Groups,dc=example,dc=com
+    changetype: add
+    objectClass: groupOfNames
+    objectClass: top
+    cn: Mobile Banking
+    member: uid=john,ou=Users,dc=example,dc=com
+
+    dn: cn=Retail Banking,ou=Groups,dc=example,dc=com
+    changetype: add
+    objectClass: groupOfNames
+    objectClass: top
+    cn: Retail Banking
+    member: cn=Mobile Banking,cn=Retail Banking,ou=Groups,dc=example,dc=com
+    member: cn=Online Retail Banking,ou=Groups,dc=example,dc=com    
+
+    # corporate baking
+
+    dn: cn=Online Corporate Banking,ou=Groups,dc=example,dc=com
+    changetype: add
+    objectClass: groupOfNames
+    objectClass: top
+    cn: Online Corporate Banking
+    member: uid=eric,ou=Users,dc=example,dc=com
+
+    dn: cn=Backoffice,ou=Groups,dc=example,dc=com
+    changetype: add
+    objectClass: groupOfNames
+    objectClass: top
+    cn: Backoffice
+    member: uid=erin,ou=Users,dc=example,dc=com
+
+    dn: cn=Corporate Baking,ou=Groups,dc=example,dc=com
+    changetype: add
+    objectClass: groupOfNames
+    objectClass: top
+    cn: Corporate Baking
+    member: cn=Backoffice,cn=Corporate Baking,ou=Groups,dc=example,dc=com
+    member: cn=Online Corporate Banking,ou=Groups,dc=example,dc=com    
+
+    # core banking
+
+    dn: cn=Lending,ou=Groups,dc=example,dc=com
+    changetype: add
+    objectClass: groupOfNames
+    objectClass: top
+    cn: Lending
+    member: uid=mary,ou=Users,dc=example,dc=com
+
+    dn: cn=Investing,ou=Groups,dc=example,dc=com
+    changetype: add
+    objectClass: groupOfNames
+    objectClass: top
+    cn: Investing
+    member: uid=matt,ou=Users,dc=example,dc=com
+
+    dn: cn=Checking Accounts,ou=Groups,dc=example,dc=com
+    changetype: add
+    objectClass: groupOfNames
+    objectClass: top
+    cn: Checking Accounts
+    member: uid=vanessa,ou=Users,dc=example,dc=com
+
+    dn: cn=Mortgages,ou=Groups,dc=example,dc=com
+    changetype: add
+    objectClass: groupOfNames
+    objectClass: top
+    cn: Mortgages
+    member: uid=julia,ou=Users,dc=example,dc=com
+
+    dn: cn=Core Banking,ou=Groups,dc=example,dc=com
+    changetype: add
+    objectClass: groupOfNames
+    objectClass: top
+    cn: Core Banking
+    member: cn=Checking Accounts,ou=Groups,dc=example,dc=com
+    member: cn=Investing,ou=Groups,dc=example,dc=com
+    member: cn=Lending,ou=Groups,dc=example,dc=com
+    member: cn=Mortgages,ou=Groups,dc=example,dc=com
