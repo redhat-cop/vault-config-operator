@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"reflect"
 
 	vault "github.com/hashicorp/vault/api"
@@ -203,9 +204,9 @@ type PKIConfigCRL struct {
 }
 
 type PKIIntermediate struct {
-	// Secret retrieves the signed intermediate certificate from a Kubernetes secret. Allows submitting the signed CA certificate corresponding to a private key generated.
+	// ExternalSignSecret retrieves the signed intermediate certificate from a Kubernetes secret. Allows submitting the signed CA certificate corresponding to a private key generated.
 	// +kubebuilder:validation:Optional
-	Secret *corev1.LocalObjectReference `json:"secret,omitempty"`
+	ExternalSignSecret *corev1.LocalObjectReference `json:"externalSignSecret,omitempty"`
 
 	// CertificateKey key to be used when retrieving the signed certificate
 	// +kubebuilder:validation:Optional
@@ -300,17 +301,61 @@ func (p *PKISecretEngineConfig) SetExportedStatus(status bool) {
 }
 
 func (p *PKISecretEngineConfig) SetIntermediate(context context.Context) error {
+
 	if p.Spec.Type == "intermediate" {
+
 		log := log.FromContext(context)
 		vaultClient := context.Value("vaultClient").(*vault.Client)
 
 		if p.Spec.InternalSign != nil && p.Spec.InternalSign.Name != "" {
+
+			if p.Spec.PKIIntermediate.cSR == "" {
+				kubeClient := context.Value("kubeClient").(client.Client)
+				secret := &corev1.Secret{}
+
+				err := kubeClient.Get(context, types.NamespacedName{
+					Name:      p.Name,
+					Namespace: p.Namespace,
+				}, secret)
+
+				if err != nil {
+					log.Error(err, "unable to retrieve Exported CSR Secret", "instance", p)
+					return err
+				}
+				p.Spec.PKIIntermediate.cSR = (string(secret.Data["csr"]))
+			}
+
 			secret, err := vaultClient.Logical().Write(p.GetSignIntermediatePath(), p.GetSignIntermediatePayload())
 			if err != nil {
 				log.Error(err, "unable to write object at", "path", p.GetIntermediateSetSignedPayload())
 				return err
 			}
+
 			p.setSignedIntermediate(secret.Data["certificate"].(string))
+
+		} else {
+
+			if p.Spec.ExternalSignSecret == nil {
+				err := errors.New("Waiting spec.externalSignSecret with signed intermediate certificate.")
+				log.Error(err, "missing spec.externalSignSecret", "instance", p)
+				return err
+			}
+
+			kubeClient := context.Value("kubeClient").(client.Client)
+			secret := &corev1.Secret{}
+
+			err := kubeClient.Get(context, types.NamespacedName{
+				Namespace: p.Namespace,
+				Name:      p.Spec.ExternalSignSecret.Name,
+			}, secret)
+
+			if err != nil {
+				log.Error(err, "unable to retrieve Intermediate Secret for sign in", "instance", p)
+				return err
+			}
+
+			p.setSignedIntermediate(string(secret.Data[p.Spec.CertificateKey]))
+
 		}
 
 		_, err := vaultClient.Logical().Write(p.GetIntermediateSetSignedPath(), p.GetIntermediateSetSignedPayload())
@@ -318,8 +363,20 @@ func (p *PKISecretEngineConfig) SetIntermediate(context context.Context) error {
 			log.Error(err, "unable to write object at", "path", p.GetIntermediateSetSignedPayload())
 			return err
 		}
+
 	}
 	return nil
+}
+
+func (p *PKISecretEngineConfig) GetSignedStatus() bool {
+	if p.Spec.Type == "root" {
+		return true
+	}
+	return p.Status.Signed
+}
+
+func (p *PKISecretEngineConfig) SetSignedStatus(status bool) {
+	p.Status.Signed = status
 }
 
 func (p *PKISecretEngineConfig) GetExportedPayload(data map[string]interface{}) map[string]string {
@@ -344,7 +401,6 @@ func (p *PKISecretEngineConfig) GetSignIntermediatePayload() map[string]interfac
 	payload := p.GetPayload()
 
 	payload["csr"] = p.Spec.PKIIntermediate.cSR
-
 	return payload
 }
 
@@ -385,27 +441,9 @@ func (p *PKISecretEngineConfig) IsValid() (bool, error) {
 func (p *PKISecretEngineConfig) isValid() error {
 	return nil
 }
-
 func (p *PKISecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
-	log := log.FromContext(context)
-	if p.Spec.Type == "intermediate" && p.Spec.Secret != nil {
-		kubeClient := context.Value("kubeClient").(client.Client)
-		secret := &corev1.Secret{}
-
-		err := kubeClient.Get(context, types.NamespacedName{
-			Namespace: p.Namespace,
-			Name:      p.Spec.Secret.Name,
-		}, secret)
-
-		if err != nil {
-			log.Error(err, "unable to retrieve Intermediate Secret for sign in", "instance", p)
-			return err
-		}
-		p.setSignedIntermediate(string(secret.Data[p.Spec.CertificateKey]))
-	}
 	return nil
 }
-
 func (p *PKISecretEngineConfig) setSignedIntermediate(signed string) {
 	p.Spec.signedIntermediate = signed
 }
@@ -425,6 +463,9 @@ type PKISecretEngineConfigStatus struct {
 
 	// +kubebuilder:validation:Optional
 	Exported bool `json:"exported,omitempty"`
+
+	// +kubebuilder:validation:Optional
+	Signed bool `json:"signed,omitempty"`
 }
 
 var _ apis.ConditionsAware = &PKISecretEngineConfig{}

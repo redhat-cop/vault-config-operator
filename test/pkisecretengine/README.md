@@ -6,25 +6,26 @@
 
 ## Configure Vault
 
-1. Create a PKI Secret Engine
+1. Create a Policy Admin to manage PKI Secret Engine.
 
-    `oc create -f pki-secret-engine.yaml`
+    `oc create -f pki-secret-engine-admin-policy.yaml -n vault-admin`
 
-2. Generate Root Certificate
+2. Create and Authorize the default SA to create a PKI Engine and request certificates.
 
-    `oc create -f pki-secret-engine-config.yaml`
+    `oc create -f pki-secret-engine-kube-auth-role.yaml -n vault-admin`
 
-3. Configure the PKI Role
+3. Create a PKI Secret Engine
 
-    `oc create -f pki-secret-engine-role.yaml`
+    `oc create -f pki-secret-engine.yaml -n test-vault-config-operator`
 
-4. Define a Vault Policy
+4. Generate Root Certificate
 
-    `oc create -f pki-secret-engine-policy.yaml`
+    `oc create -f pki-secret-engine-config.yaml -n test-vault-config-operator`
 
-5. Authorize the default SA to request certificates.
+5. Configure the PKI Role
 
-    `oc create -f pki-secret-engine-kube-auth-role.yaml`
+    `oc create -f pki-secret-engine-role.yaml -n test-vault-config-operator`
+
 
 ## Configure Cert Manager
 
