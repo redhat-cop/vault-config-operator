@@ -20,4 +20,5 @@ resources:
 - redhatcop_v1alpha1_quaysecretenginerole.yaml
 - redhatcop_v1alpha1_quaysecretenginestaticrole.yaml
 - redhatcop_v1alpha1_ldapauthengineconfig.yaml
+- redhatcop_v1alpha1_ldapauthenginegroup.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

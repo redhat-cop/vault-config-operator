@@ -137,6 +137,7 @@ ldap-setup: kind-setup vault
 	export VAULT_SKIP_VERIFY=true 
 	$(KUBECTL) apply -f ./test/ldapauthengine/ldap-auth-engine-mount.yaml
 	$(KUBECTL) apply -f ./test/ldapauthengine/ldap-auth-engine-config.yaml
+	$(KUBECTL) apply -f ./test/ldapauthengine/ldap-auth-engine-group.yaml
 	$(VAULT) login -method=ldap -path=ldap/test/ username=trevor password=admin
 
 

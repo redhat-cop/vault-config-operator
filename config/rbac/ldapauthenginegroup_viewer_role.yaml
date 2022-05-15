@@ -1,0 +1,20 @@
+# permissions for end users to view ldapauthenginegroups.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ldapauthenginegroup-viewer-role
+rules:
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - ldapauthenginegroups
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - ldapauthenginegroups/status
+  verbs:
+  - get
