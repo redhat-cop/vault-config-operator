@@ -5,6 +5,7 @@
   - [KubernetesAuthEngineConfig](#kubernetesauthengineconfig)
   - [KubernetesAuthEngineRole](#kubernetesauthenginerole)
   - [LDAPAuthEngineConfig](#ldapauthengineconfig)
+    - [LDAPAuthEngineGroup](#ldapauthenginegroup)
 
 ## AuthEngineMount
 
