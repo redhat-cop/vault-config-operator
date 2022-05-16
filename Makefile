@@ -134,6 +134,7 @@ ldap-setup: kind-setup vault
 	$(KUBECTL) apply -f ./integration/ldap -n ldap
 	$(KUBECTL) wait --for=condition=ready -n ldap pod $$($(KUBECTL) get pods -n ldap -l=app=ldap -o json | jq '.items[].metadata.name') --timeout=5m
 	$(KUBECTL) port-forward -n vault vault-0 8201:8200
+	$(KUBECTL) port-forward $$($(KUBECTL) get pods -n ldap -l=app=ldap -o json | jq '.items[].metadata.name') 8555:389 -n ldap
 	export VAULT_ADDR=http://localhost:8201
 	export VAULT_SKIP_VERIFY=true 
 	$(KUBECTL) apply -f ./test/ldapauthengine/ldap-auth-engine-mount.yaml
