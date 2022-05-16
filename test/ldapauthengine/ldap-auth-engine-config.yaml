@@ -19,3 +19,7 @@ spec:
     usernameKey: username
     passwordKey: password
   insecureTLS: true
+  groupFilter: (|(memberUid={{.Username}})(member={{.UserDN}})(uniqueMember={{.UserDN}}))
+  userFilter: "({{.UserAttr}}={{.Username}})"
+  groupDN: 'ou=Groups,dc=example,dc=com'
+  

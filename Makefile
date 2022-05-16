@@ -129,6 +129,7 @@ kind-setup: kind
 
 .PHONY: ldap-setup 
 ldap-setup: kind-setup vault
+## Deploy LDAP Instance in ldap namespace
 	$(KUBECTL) create namespace ldap 
 	$(KUBECTL) apply -f ./integration/ldap -n ldap
 	$(KUBECTL) wait --for=condition=ready -n ldap pod $$($(KUBECTL) get pods -n ldap -l=app=ldap -o json | jq '.items[].metadata.name') --timeout=5m
@@ -137,7 +138,11 @@ ldap-setup: kind-setup vault
 	export VAULT_SKIP_VERIFY=true 
 	$(KUBECTL) apply -f ./test/ldapauthengine/ldap-auth-engine-mount.yaml
 	$(KUBECTL) apply -f ./test/ldapauthengine/ldap-auth-engine-config.yaml
+## Create new Group in LDAP
+	ldapadd -x -H ldap://localhost:8555 -D "cn=admin,dc=example,dc=com" -w admin -f ./integration/ldap/group.ldif
+## Create new Group in Vault LDAP Auth Engine
 	$(KUBECTL) apply -f ./test/ldapauthengine/ldap-auth-engine-group.yaml
+## Login with LDAP user (check database.ldiff for its membership)
 	$(VAULT) login -method=ldap -path=ldap/test/ username=trevor password=admin
 
 

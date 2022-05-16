@@ -8,6 +8,6 @@ spec:
     role: policy-admin
     serviceAccount:
       name: default
-  name: "test-3"
+  name: "admins-group"
   path: "ldap/test"
-  policies: "admin, audit, users"
+  policies: "kv-engine-admin,vault-admin"
