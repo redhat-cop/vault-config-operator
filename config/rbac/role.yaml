@@ -267,6 +267,32 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
+  - ldapauthenginegroups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - ldapauthenginegroups/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - ldapauthenginegroups/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
   - passwordpolicies
   verbs:
   - create

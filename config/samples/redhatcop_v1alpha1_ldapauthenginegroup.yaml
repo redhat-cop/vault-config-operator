@@ -1,0 +1,12 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: LDAPAuthEngineGroup
+metadata:
+  name: ldapauthenginegroup-sample
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+    serviceAccount:
+      name: default
+  name: "test-group"
+  path: "ldap/test"

@@ -18,7 +18,7 @@ data:
     objectClass: organizationalUnit
     objectClass: top
     ou: Groups
-
+    
     dn: uid=john,ou=Users,dc=example,dc=com
     changetype: add
     objectClass: organizationalPerson

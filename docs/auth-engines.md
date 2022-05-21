@@ -5,6 +5,7 @@
   - [KubernetesAuthEngineConfig](#kubernetesauthengineconfig)
   - [KubernetesAuthEngineRole](#kubernetesauthenginerole)
   - [LDAPAuthEngineConfig](#ldapauthengineconfig)
+    - [LDAPAuthEngineGroup](#ldapauthenginegroup)
 
 ## AuthEngineMount
 
@@ -200,3 +201,29 @@ spec:
   The `userFilter` field - An optional LDAP user search filter. The template can access the following context variables: UserAttr, Username. The default is ({{.UserAttr}}={{.Username}}), or ({{.UserAttr}}={{.Username@.upndomain}}) if upndomain is set.
   
   The `usernameAsAlias` field - If set to true, forces the auth method to use the username passed by the user as the alias name.
+
+
+## LDAPAuthEngineGroup
+
+The `LDAPAuthEngineGroup` CRD allows a user to create or update [LDAP group policies](https://www.vaultproject.io/api-docs/auth/ldap#create-update-ldap-group)
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: LDAPAuthEngineGroup
+metadata:
+  name: ldapauthenginegroup-sample3
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+    serviceAccount:
+      name: default
+  name: "test-3"
+  path: "ldap/test"
+  policies: "admin, audit, users"
+```
+  The `name` field - The name of the LDAP group
+
+  The `path` field - The path field specifies the LDAP auth path where to create the Group. The complete path of the configuration will be: [namespace/]auth/{.spec.path}/groups/name
+
+  The `policies` field - Comma-separated list of policies associated to the group

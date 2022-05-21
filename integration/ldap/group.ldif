@@ -1,0 +1,4 @@
+dn: cn=admins-group,ou=Groups,dc=example,dc=com
+objectClass: groupOfNames
+cn: admins-group
+member: uid=trevor,ou=Users,dc=example,dc=com
