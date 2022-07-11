@@ -20,6 +20,7 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -47,6 +48,8 @@ type DatabaseSecretEngineRoleSpec struct {
 }
 
 var _ vaultutils.VaultObject = &DatabaseSecretEngineRole{}
+
+var _ apis.ConditionsAware = &DatabaseSecretEngineRole{}
 
 func (d *DatabaseSecretEngineRole) GetPath() string {
 	return string(d.Spec.Path) + "/" + "roles" + "/" + d.Name
@@ -160,7 +163,7 @@ func (i *DBSERole) toMap() map[string]interface{} {
 	payload["default_ttl"] = i.DefaultTTL
 	payload["max_ttl"] = i.MaxTTL
 	payload["creation_statements"] = i.CreationStatements
-	payload["trevocation_statetments"] = i.RevocationStatements
+	payload["revocation_statetments"] = i.RevocationStatements
 	payload["rollback_statements"] = i.RollbackStatements
 	payload["renew_statements"] = i.RenewStatements
 	return payload

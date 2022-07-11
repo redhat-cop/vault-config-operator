@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"strings"
-	"time"
 
 	vault "github.com/hashicorp/vault/api"
 	corev1 "k8s.io/api/core/v1"
@@ -166,15 +165,15 @@ func toString(name interface{}) string {
 	return ""
 }
 
-func parseOrDie(val string) metav1.Duration {
-	d, err := time.ParseDuration(val)
-	if err != nil {
-		panic(err)
-	}
-	return metav1.Duration{
-		Duration: d,
-	}
-}
+// func parseOrDie(val string) metav1.Duration {
+// 	d, err := time.ParseDuration(val)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	return metav1.Duration{
+// 		Duration: d,
+// 	}
+// }
 
 type VaultSecretReference struct {
 	// Path is the path to the secret
@@ -212,6 +211,20 @@ type RootCredentialConfig struct {
 	UsernameKey string `json:"usernameKey,omitempty"`
 }
 
+func (credentials *RootCredentialConfig) validateEitherFromVaultSecretOrFromSecret() error {
+	count := 0
+	if credentials.Secret != nil {
+		count++
+	}
+	if credentials.VaultSecret != nil {
+		count++
+	}
+	if count != 1 {
+		return errors.New("only one of spec.rootCredentials.vaultSecret or spec.rootCredentials.secret or spec.rootCredentials.randomSecret can be specified")
+	}
+	return nil
+}
+
 func (credentials *RootCredentialConfig) validateEitherFromVaultSecretOrFromSecretOrFromRandomSecret() error {
 	count := 0
 	if credentials.RandomSecret != nil {
@@ -231,4 +244,17 @@ func (credentials *RootCredentialConfig) validateEitherFromVaultSecretOrFromSecr
 
 func GetFinalizer(instance client.Object) string {
 	return "controller-" + strings.ToLower(instance.GetObjectKind().GroupVersionKind().Kind)
+}
+
+type TargetNamespaceConfig struct {
+	// TargetNamespaceSelector is a selector of namespaces from which service accounts will receove this role. Either TargetNamespaceSelector or TargetNamespaces can be specified
+	// +kubebuilder:validation:Optional
+	TargetNamespaceSelector *metav1.LabelSelector `json:"targetNamespaceSelector,omitempty"`
+
+	// TargetNamespaces is a list of namespace from which service accounts will receive this role. Either TargetNamespaceSelector or TargetNamespaces can be specified.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:MinItems=1
+	// kubebuilder:validation:UniqueItems=true
+	// +listType=set
+	TargetNamespaces []string `json:"targetNamespaces,omitempty"`
 }

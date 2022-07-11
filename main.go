@@ -245,7 +245,7 @@ func main() {
 	}
 
 	if err = (&controllers.QuaySecretEngineRoleReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("QuaySecretEngineConfig"), mgr.GetAPIReader()),
+		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("QuaySecretEngineRole"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("QuaySecretEngineRole"),
 		ControllerName: "QuaySecretEngineRole",
 	}).SetupWithManager(mgr); err != nil {
@@ -254,11 +254,29 @@ func main() {
 	}
 
 	if err = (&controllers.QuaySecretEngineStaticRoleReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("QuaySecretEngineConfig"), mgr.GetAPIReader()),
+		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("QuaySecretEngineStaticRole"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("QuaySecretEngineStaticRole"),
 		ControllerName: "QuaySecretEngineStaticRole",
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "QuaySecretEngineStaticRole")
+		os.Exit(1)
+	}
+
+	if err = (&controllers.KubernetesSecretEngineConfigReconciler{
+		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("KubernetesSecretEngineConfig"), mgr.GetAPIReader()),
+		Log:            ctrl.Log.WithName("controllers").WithName("KubernetesSecretEngineConfig"),
+		ControllerName: "KubernetesSecretEngineConfig",
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "KubernetesSecretEngineConfig")
+		os.Exit(1)
+	}
+
+	if err = (&controllers.KubernetesSecretEngineRoleReconciler{
+		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("KubernetesSecretEngineRole"), mgr.GetAPIReader()),
+		Log:            ctrl.Log.WithName("controllers").WithName("KubernetesSecretEngineRole"),
+		ControllerName: "KubernetesSecretEngineRole",
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "KubernetesSecretEngineRole")
 		os.Exit(1)
 	}
 
@@ -348,6 +366,16 @@ func main() {
 
 		if err = (&redhatcopv1alpha1.QuaySecretEngineStaticRole{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "QuaySecretEngineStaticRole")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.KubernetesSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "KubernetesSecretEngineConfig")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.KubernetesSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "KubernetesSecretEngineRole")
 			os.Exit(1)
 		}
 

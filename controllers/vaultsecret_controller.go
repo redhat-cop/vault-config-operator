@@ -289,8 +289,8 @@ func (r *VaultSecretReconciler) manageSyncLogic(ctx context.Context, instance *r
 		}
 
 		ctx = context.WithValue(ctx, "vaultClient", vaultClient)
-		vaultEndpoint := vaultutils.NewVaultEndpointObj(&vaultSecretDefinition)
-		vaultSecret, ok, _ := vaultEndpoint.GetSecret(ctx)
+		vaultSecretEndpoint := vaultutils.NewVaultSecretEndpoint(&vaultSecretDefinition)
+		vaultSecret, ok, _ := vaultSecretEndpoint.GetSecret(ctx)
 		if !ok {
 			return errors.New("unable to read vault secret for " + vaultSecretDefinition.GetPath())
 		}

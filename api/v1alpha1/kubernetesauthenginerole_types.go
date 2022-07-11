@@ -51,19 +51,6 @@ type KubernetesAuthEngineRoleSpec struct {
 	TargetNamespaces TargetNamespaceConfig `json:"targetNamespaces,omitempty"`
 }
 
-type TargetNamespaceConfig struct {
-	// TargetNamespaceSelector is a selector of namespaces from which service accounts will receove this role. Either TargetNamespaceSelector or TargetNamespaces can be specified
-	// +kubebuilder:validation:Optional
-	TargetNamespaceSelector *metav1.LabelSelector `json:"targetNamespaceSelector,omitempty"`
-
-	// TargetNamespaces is a list of namespace from which service accounts will receive this role. Either TargetNamespaceSelector or TargetNamespaces can be specified.
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:MinItems=1
-	// kubebuilder:validation:UniqueItems=true
-	// +listType=set
-	TargetNamespaces []string `json:"targetNamespaces,omitempty"`
-}
-
 var _ vaultutils.VaultObject = &KubernetesAuthEngineRole{}
 
 func (d *KubernetesAuthEngineRole) GetPath() string {

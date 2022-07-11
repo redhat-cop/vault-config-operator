@@ -6,6 +6,9 @@ ui:
   enabled: true
 
 server:
+  image:
+    tag: latest
+
   extraEnvironmentVars:
     VAULT_CACERT: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
 

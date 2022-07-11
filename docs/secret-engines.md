@@ -7,12 +7,15 @@
   - [GitHubSecretEngineConfig](#githubsecretengineconfig)
   - [GitHubSecretEngineRole](#githubsecretenginerole)
   - [QuaySecretEngineConfig](#quaysecretengineconfig)
-  - [QuaySecretEngineStaticRole](#quaysecretenginestaticrole)
   - [QuaySecretEngineRole](#quaysecretenginerole)
+  - [QuaySecretEngineStaticRole](#quaysecretenginestaticrole)
   - [RabbitMQSecretEngineConfig](#rabbitmqsecretengineconfig)
   - [RabbitMQSecretEngineRole](#rabbitmqsecretenginerole)
   - [PKISecretEngineConfig](#pkisecretengineconfig)
   - [PKISecretEngineRole](#pkisecretenginerole)
+  - [KubernetesSecretEngineConfig](#kubernetessecretengineconfig)
+  - [KubernetesSecretEngineRole](#kubernetessecretenginerole)
+
 
 ## SecretEngineMount
 
@@ -469,4 +472,77 @@ This CR is roughly equivalent to this Vault CLI command:
 vault write pki-vault-demo/pki/roles/my-role \
     allowed_domains=internal.io,pki-vault-demo.svc \
     max_ttl="8760h"
+```
+
+## KubernetesSecretEngineConfig
+
+`KubernetesSecretEngineConfig` CRD allows a user to create a [Kubernetes Secret Engine configuration](https://www.vaultproject.io/api-docs/secret/kubernetes#write-configuration). Here is an example:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KubernetesSecretEngineConfig
+metadata:
+  name: kubese-test
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  path: kubese-test 
+  kubernetesHost: https://kubernetes.default.svc:443
+  jwtReference: 
+    secret:
+      name: default-token-lbnfc
+```
+
+The `kubernetesHost` specifies URL of the API server to connect to.
+
+The `path` field specifies the path of the secret engine to which this connection will be added.
+
+The `jwtReference` specifies a reference to service account token to be used as credentials when connecting to the API server.
+
+This CR is roughly equivalent to this Vault CLI command:
+
+```shell
+vault write -f kube-setest/config \
+    kubernetes_host=https://kubernetes.default.svc:443 \
+    service_account_jwt=xxxx
+```
+
+## KubernetesSecretEngineRole
+
+The `KubernetesSecretEngineRole` CRD allows a user to create a [Kubernetes Secret Engine Role](https://www.vaultproject.io/api-docs/secret/kubernetes#create-role), here is an example:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KubernetesSecretEngineRole
+metadata:
+  name: kubese-default-edit
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  path: kubese-test
+  allowedKubernetesNamespaces:
+  - default
+  kubernetesRoleName: "edit"
+  kubernetesRoleType: "ClusterRole"
+  nameTemplate: vault-sa-{{random 10 | lowercase}}
+```
+
+The `allowedKubernetesNamespaces` field specifies on which namespaces it is possible to request this role.
+
+The `kubernetesRoleName` field specifies which role should the service account receive.
+
+The `kubernetesRoleType` field specifies whether the role is a namespaced role or a cluster role.
+
+The `nameTemplate` field specifies the name template to be sued to create the service account. There are other ways of handling the service accounts, see all the options in the API documentation.
+
+This CR is roughly equivalent to this Vault CLI command:
+
+```shell
+vault write kubese-test/roles/kubese-default-edit \
+    allowed_kubernetes_namespaces="default" \
+    kubernetes_role_name="edit" \
+    kubernetes_role_name="ClusterRole" \
+    nameTemplate="vault-sa-{{random 10 | lowercase}}" \
 ```

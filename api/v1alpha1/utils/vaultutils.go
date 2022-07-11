@@ -80,3 +80,27 @@ func ReadSecret(context context.Context, path string) (*vault.Secret, bool, erro
 	}
 	return secret, true, nil
 }
+
+func ReadSecretWithPayload(context context.Context, path string, payload map[string]string) (*vault.Secret, bool, error) {
+	log := log.FromContext(context)
+	vaultClient := context.Value("vaultClient").(*vault.Client)
+	payloadi := map[string]interface{}{}
+	for key, value := range payload {
+		payloadi[key] = value
+	}
+	secret, err := vaultClient.Logical().Write(path, payloadi)
+	if err != nil {
+		if respErr, ok := err.(*vault.ResponseError); ok {
+			if respErr.StatusCode == 404 {
+				return nil, false, nil
+			}
+		}
+		log.Error(err, "unable to read object at", "path", path)
+		return nil, false, err
+	}
+	// Add Data interface nil check to cover cases when kv2 secret latest version is deleted, but secret is still available
+	if secret == nil || secret.Data == nil {
+		return nil, false, nil
+	}
+	return secret, true, nil
+}
