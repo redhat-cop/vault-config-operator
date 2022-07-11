@@ -1,0 +1,15 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KubernetesSecretEngineRole
+metadata:
+  name: kubese-default-edit
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  path: kubese-test
+  allowedKubernetesNamespaces:
+  - default
+  kubernetesRoleName: "edit"
+  kubernetesRoleType: "ClusterRole"
+  nameTemplate: vault-sa-{{random 10 | lowercase}}
+  

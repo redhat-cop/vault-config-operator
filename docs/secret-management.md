@@ -58,6 +58,8 @@ Any manual data change or deletion of the K8s Secret owned by a VaultSecret CR w
   - [authentication](#the-authentication-section) section.
   - `name` a unique name for the Vault secret to reference when templating, since many Vault secrets may have the same name.
   - `path` field specifies the path at which the secret will be read from.
+  - `requestType` specifies whether the secret should be retrieved via GET (default) or POST. Some secret engines requires POST.
+  - `requestPayload` species a map to be used as the POST request payload. Not sued for GET requests.
 - `output` is the K8s Secret to output to after go template processing.
   - `name` the final K8s Secret Name to output to.
   - `stringData` stringData allows specifying non-binary secret data in string form. It is provided as a write-only input field for convenience. All keys and values are merged into the data field on write, overwriting any existing values. The stringData field is never output when reading from the API. You specify variables from `vaultSecretDefinitions` in the form of *'{{ .name.key }}'* using go templating where name is the arbitrary name in the vaultSecretDefinition and key matches the Vault secret key. The go text and most [sprig](http://masterminds.github.io/sprig/) library functions are also available when templating.

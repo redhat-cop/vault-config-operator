@@ -1,0 +1,13 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KubernetesSecretEngineConfig
+metadata:
+  name: kubese-test
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  path: kubese-test 
+  kubernetesHost: https://kubernetes.default.svc:443
+  jwtReference: 
+    secret:
+      name: default-token-lbnfc

@@ -30,43 +30,34 @@ import (
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 )
 
-// KubernetesAuthEngineConfigReconciler reconciles a KubernetesAuthEngineConfig object
-type KubernetesAuthEngineConfigReconciler struct {
+// KubernetesSecretEngineRoleReconciler reconciles a KubernetesSecretEngineRole object
+type KubernetesSecretEngineRoleReconciler struct {
 	util.ReconcilerBase
 	Log            logr.Logger
 	ControllerName string
 }
 
-//+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=kubernetesauthengineconfigs,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=kubernetesauthengineconfigs/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=kubernetesauthengineconfigs/finalizers,verbs=update
-//+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
+//+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=kubernetessecretengineroles,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=kubernetessecretengineroles/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=kubernetessecretengineroles/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
-// the KubernetesAuthEngineConfig object against the actual cluster state, and then
+// the KubernetesSecretEngineRole object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 //
 // For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
-func (r *KubernetesAuthEngineConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.10.0/pkg/reconcile
+func (r *KubernetesSecretEngineRoleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
-
-	// your logic here
-
-	// Fetch the instance
-	instance := &redhatcopv1alpha1.KubernetesAuthEngineConfig{}
+	instance := &redhatcopv1alpha1.KubernetesSecretEngineRole{}
 	err := r.GetClient().Get(ctx, req.NamespacedName, instance)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
 			return reconcile.Result{}, nil
 		}
-		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
 
@@ -83,9 +74,8 @@ func (r *KubernetesAuthEngineConfigReconciler) Reconcile(ctx context.Context, re
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *KubernetesAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
-
+func (r *KubernetesSecretEngineRoleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.KubernetesAuthEngineConfig{}).
+		For(&redhatcopv1alpha1.KubernetesSecretEngineRole{}).
 		Complete(r)
 }
