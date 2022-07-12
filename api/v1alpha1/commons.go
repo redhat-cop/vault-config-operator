@@ -84,8 +84,31 @@ func (kc *KubeAuthConfiguration) GetVaultClient(context context.Context, kubeNam
 func getJWTToken(context context.Context, serviceAccountName string, kubeNamespace string) (string, error) {
 	log := log.FromContext(context)
 	kubeClient := context.Value("kubeClient").(client.Client)
+	secretList := &corev1.SecretList{}
+	err := kubeClient.List(context, secretList, &client.ListOptions{
+		Namespace: kubeNamespace,
+	})
+	if err != nil {
+		log.Error(err, "unable to retrieve secrets", "in namespace", kubeNamespace)
+		return "", err
+	}
+	for _, secret := range secretList.Items {
+		if saname, ok := secret.Annotations["kubernetes.io/service-account.name"]; ok {
+			if saname == serviceAccountName {
+				if jwt, ok := secret.Data["token"]; ok {
+					return string(jwt), nil
+				} else {
+					return "", errors.New("unable to find \"token\" key in secret" + kubeNamespace + "/" + secret.Name)
+				}
+			}
+		}
+	}
+
+	//if we get here, we were not able to find the secret with teh new method mandatory in kube 1.24 and supported in a few previous version.
+	//so we try the otgher approach by looking at the service account
+
 	serviceAccount := &corev1.ServiceAccount{}
-	err := kubeClient.Get(context, client.ObjectKey{
+	err = kubeClient.Get(context, client.ObjectKey{
 		Namespace: kubeNamespace,
 		Name:      serviceAccountName,
 	}, serviceAccount)
@@ -96,6 +119,7 @@ func getJWTToken(context context.Context, serviceAccountName string, kubeNamespa
 		})
 		return "", err
 	}
+
 	var tokenSecretName string
 	for _, secretName := range serviceAccount.Secrets {
 		if strings.Contains(secretName.Name, "token") {
