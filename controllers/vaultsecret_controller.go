@@ -290,9 +290,10 @@ func (r *VaultSecretReconciler) manageSyncLogic(ctx context.Context, instance *r
 
 		ctx = context.WithValue(ctx, "vaultClient", vaultClient)
 		vaultEndpoint := vaultutils.NewVaultEndpointObj(&vaultSecretDefinition)
-		vaultSecret, ok, _ := vaultEndpoint.GetSecret(ctx)
+		vaultSecret, ok, err := vaultEndpoint.GetSecret(ctx)
 		if !ok {
-			return errors.New("unable to read vault secret for " + vaultSecretDefinition.GetPath())
+			r.Log.Error(err, "unable to read vault secret for ", "path", vaultSecretDefinition.GetPath())
+			return err
 		}
 
 		definitionsStatus[idx] = redhatcopv1alpha1.VaultSecretDefinitionStatus{
