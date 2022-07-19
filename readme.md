@@ -364,16 +364,18 @@ oc apply -f ./test/vaultsecret/vaultsecret-pullsecret.yaml -n test-vault-config-
 
 VaultSecret & RandomSecret using KV Secret Engine V2
 
-> Note: you must run the previous tests
-
 ```sh
 #Random Secret using v2 steps
-envsubst < ./test/randomsecret/v2/01-policy-kv-engine-admin-v2.yaml | oc apply -f - -n vault-admin 
-oc apply -f ./test/randomsecret/v2/02-kubernetesauthenginerole-kv-engine-admin-v2.yaml -n vault-admin 
-oc apply -f test/randomsecret/v2/03-secretenginemount-kv-v2.yaml -n test-vault-config-operator
+oc apply -f ./test/randomsecret/v2/00-passwordpolicy-simple-password-policy-v2.yaml -n vault-admin 
+envsubst < ./test/randomsecret/v2/01-policy-kv-engine-admin-v2.yaml | oc apply -f - -n vault-admin
 envsubst < ./test/randomsecret/v2/04-policy-secret-writer-v2.yaml | oc apply -f - -n vault-admin
+envsubst < ./test/vaultsecret/v2/00-policy-secret-reader-v2.yaml | oc apply -f - -n vault-admin
+oc apply -f ./test/randomsecret/v2/02-kubernetesauthenginerole-kv-engine-admin-v2.yaml -n vault-admin
 oc apply -f ./test/randomsecret/v2/05-kubernetesauthenginerole-secret-writer-v2.yaml -n vault-admin
+oc apply -f ./test/vaultsecret/v2/00-kubernetesauthenginerole-secret-reader-v2.yaml -n vault-admin
+oc apply -f test/randomsecret/v2/03-secretenginemount-kv-v2.yaml -n test-vault-config-operator
 oc apply -f ./test/randomsecret/v2/06-randomsecret-randomsecret-password-v2.yaml -n test-vault-config-operator
+oc apply -f ./test/randomsecret/v2/07-randomsecret-randomsecret-another-password-v2.yaml -n test-vault-config-operator
 
 #VaultSecret reading RandomSecret v2 steps
 oc apply -f ./test/vaultsecret/v2/07-vaultsecret-randomsecret-v2.yaml -n test-vault-config-operator
