@@ -17,12 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-
 	"github.com/hashicorp/go-multierror"
+	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -69,6 +67,8 @@ type VaultSecretStatus struct {
 	VaultSecretDefinitionsStatus []VaultSecretDefinitionStatus `json:"vaultSecretDefinitionsStatus,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
+var _ apis.ConditionsAware = &VaultSecret{}
+
 func (vs *VaultSecret) GetConditions() []metav1.Condition {
 	return vs.Status.Conditions
 }
@@ -113,6 +113,16 @@ type VaultSecretDefinition struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=kubernetes
 	Path Path `json:"path,omitempty"`
+
+	// RequestType the type of request needed to retrieve a secret. Normally a GET, but some secret engnes require a POST.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default=GET
+	// +kubebuilder:validation:Enum={"GET","POST"}
+	RequestType string `json:"requestType,omitempty"`
+
+	// RequestPayload for POST type of requests, this field contains the payload of the request. Not used for GET requests.
+	// +kubebuilder:validation:Optional
+	RequestPayload map[string]string `json:"requestPayload,omitempty"`
 }
 
 type VaultSecretDefinitionStatus struct {
@@ -160,25 +170,15 @@ func (vs *VaultSecret) isValid() error {
 	return result.ErrorOrNil()
 }
 
-var _ vaultutils.VaultObject = &VaultSecretDefinition{}
+var _ vaultutils.VaultSecretObject = &VaultSecretDefinition{}
 
 func (d *VaultSecretDefinition) GetPath() string {
 	return string(d.Path)
 }
-func (d *VaultSecretDefinition) GetPayload() map[string]interface{} {
-	return nil
-}
-func (d *VaultSecretDefinition) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
-	return false
+func (d *VaultSecretDefinition) GetPostRequestPayload() map[string]string {
+	return d.RequestPayload
 }
 
-func (d *VaultSecretDefinition) IsInitialized() bool {
-	return true
-}
-
-func (r *VaultSecretDefinition) IsValid() (bool, error) {
-	return true, nil
-}
-func (d *VaultSecretDefinition) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
+func (d *VaultSecretDefinition) GetRequestMethod() string {
+	return d.RequestType
 }

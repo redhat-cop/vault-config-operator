@@ -150,6 +150,44 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-kubernetessecretengineconfig
+  failurePolicy: Fail
+  name: mkubernetessecretengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - kubernetessecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-kubernetessecretenginerole
+  failurePolicy: Fail
+  name: mkubernetessecretenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - kubernetessecretengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /mutate-redhatcop-redhat-io-v1alpha1-ldapauthengineconfig
   failurePolicy: Fail
   name: mldapauthengineconfig.kb.io
@@ -548,6 +586,44 @@ webhooks:
     - UPDATE
     resources:
     - kubernetesauthengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-kubernetessecretengineconfig
+  failurePolicy: Fail
+  name: vkubernetessecretengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - UPDATE
+    resources:
+    - kubernetessecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-kubernetessecretenginerole
+  failurePolicy: Fail
+  name: vkubernetessecretenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - UPDATE
+    resources:
+    - kubernetessecretengineroles
   sideEffects: None
 - admissionReviewVersions:
   - v1
