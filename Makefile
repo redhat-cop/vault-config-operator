@@ -6,6 +6,10 @@ KIND_VERSION ?= v0.11.1
 KUBECTL_VERSION ?= v1.21.1
 K8S_MAJOR_VERSION ?= 1.21
 VAULT_VERSION ?= 1.9.3
+OPM_VERSION ?= v1.15.1
+
+# KIND_IMG_LOCATION defines the location of the kind.sigs.k8s.io image.
+KIND_IMG_LOCATION ?= docker.io/kindest/node:$(KUBECTL_VERSION)
 
 # VERSION defines the project version for the bundle.
 # Update this value when you upgrade the version of your project.
@@ -33,7 +37,7 @@ BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
 endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
-# IMAGE_TAG_BASE defines the docker.io namespace and part of the image name for remote images.
+# IMAGE_TAG_BASE defines the container image registry namespace and part of the image name for remote images.
 # This variable is used to construct full image tags for bundle and catalog images.
 #
 # For example, running 'make bundle-build bundle-push catalog-build catalog-push' will build and push both
@@ -124,7 +128,7 @@ deploy-vault: kubectl helm
 .PHONY: kind-setup
 kind-setup: kind
 	$(KIND) delete cluster
-	$(KIND) create cluster --image docker.io/kindest/node:$(KUBECTL_VERSION) --config=./integration/cluster-kind.yaml
+	$(KIND) create cluster --image $(KIND_IMG_LOCATION) --config=./integration/cluster-kind.yaml
 
 
 .PHONY: ldap-setup 
@@ -227,7 +231,7 @@ ifeq (,$(shell which opm 2>/dev/null))
 	set -e ;\
 	mkdir -p $(dir $(OPM)) ;\
 	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
-	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v1.15.1/$${OS}-$${ARCH}-opm ;\
+	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/${OPM_VERSION}/$${OS}-$${ARCH}-opm ;\
 	chmod +x $(OPM) ;\
 	}
 else
@@ -289,13 +293,15 @@ helmchart-repo-push: helmchart-repo
 HELM_TEST_IMG_NAME ?= ${OPERATOR_NAME}
 HELM_TEST_IMG_TAG ?= helmchart-test
 
+# HELM_TEST_IMG_TAG_BASE defines the container image registry namespace and image name for the helm test image.
+HELM_TEST_IMG_TAG_BASE ?= docker.io/library/$(HELM_TEST_IMG_NAME)
 # Deploy the helmchart to a kind cluster to test deployment.
 # If the test-metrics sidecar in the prometheus pod is ready, the metrics work and the test is successful.
 .PHONY: helmchart-test
 helmchart-test: kind-setup deploy-vault helmchart
 	$(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker-build
-	docker tag ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
-	$(KIND) load docker-image ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
+	docker tag ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} ${HELM_TEST_IMG_TAG_BASE}:${HELM_TEST_IMG_TAG}
+	$(KIND) load docker-image ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} ${HELM_TEST_IMG_TAG_BASE}:${HELM_TEST_IMG_TAG}
 	$(HELM) repo add jetstack https://charts.jetstack.io
 	$(HELM) install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.7.1 --set installCRDs=true
 	$(HELM) repo add prometheus-community https://prometheus-community.github.io/helm-charts
