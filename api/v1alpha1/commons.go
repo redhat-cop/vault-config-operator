@@ -93,7 +93,7 @@ func getJWTToken(context context.Context, serviceAccountName string, kubeNamespa
 	}
 	for _, secret := range secretList.Items {
 		if saname, ok := secret.Annotations["kubernetes.io/service-account.name"]; ok {
-			if saname == serviceAccountName {
+			if secret.Type == corev1.SecretTypeServiceAccountToken && saname == serviceAccountName {
 				if jwt, ok := secret.Data["token"]; ok {
 					return string(jwt), nil
 				} else {
