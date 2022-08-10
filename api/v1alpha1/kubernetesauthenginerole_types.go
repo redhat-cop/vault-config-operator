@@ -76,7 +76,12 @@ func (d *KubernetesAuthEngineRole) PrepareInternalValues(context context.Context
 			log.Error(err, "unable to retrieve selected namespaces", "instance", object)
 			return err
 		}
-		d.SetInternalNamespaces(namespaces)
+		if len(namespaces) < 1 {
+			// workaround for when there are no namespace, as we don't want this call to error out
+			d.SetInternalNamespaces([]string{"__no_namespace__"})
+		} else {
+			d.SetInternalNamespaces(namespaces)
+		}
 	} else {
 		d.SetInternalNamespaces(d.Spec.TargetNamespaces.TargetNamespaces)
 	}
