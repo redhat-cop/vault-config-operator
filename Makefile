@@ -109,7 +109,7 @@ integration: kind-setup deploy-vault deploy-ingress vault manifests generate fmt
 .PHONY: deploy-ingress
 deploy-ingress: kubectl helm
 	$(HELM) upgrade -i ingress-nginx ./integration/helm/ingress-nginx -n vault --atomic --create-namespace
-	curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/$(K8S_MAJOR_VERSION)/deploy.yaml | $(KUBECTL) create -f - -n ingress-nginx
+	curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml | $(KUBECTL) create -f - -n ingress-nginx
 	$(KUBECTL) rollout status deployment ingress-nginx-controller -n ingress-nginx --timeout=90s
 	$(KUBECTL) wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=90s
 
