@@ -21,7 +21,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
@@ -44,9 +43,6 @@ var _ webhook.Defaulter = &QuaySecretEngineConfig{}
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *QuaySecretEngineConfig) Default() {
 	quaysecretengineconfiglog.Info("default", "name", r.Name)
-	if !controllerutil.ContainsFinalizer(r, GetFinalizer(r)) {
-		controllerutil.AddFinalizer(r, GetFinalizer(r))
-	}
 }
 
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-quaysecretengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=quaysecretengineconfigs,verbs=create;update,versions=v1alpha1,name=vquaysecretengineconfig.kb.io,admissionReviewVersions=v1
