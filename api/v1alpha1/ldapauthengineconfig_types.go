@@ -31,24 +31,24 @@ import (
 
 // LDAPAuthEngineConfigSpec defines the desired state of LDAPAuthEngineConfig
 type LDAPAuthEngineConfigSpec struct {
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
 	// The final path will be {[spec.authentication.namespace]}/auth/{spec.path}/config/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 
 	LDAPConfig `json:",inline"`
 
 	// BindCredentials used to connect to the LDAP service on the specified LDAP Server
 	// BindCredentials consists in bindDN and bindPass, which can be created as Kubernetes Secret, VaultSecret or RandomSecret
 	// +kubebuilder:validation:Required
-	BindCredentials RootCredentialConfig `json:"bindCredentials,omitempty"`
+	BindCredentials vaultutils.RootCredentialConfig `json:"bindCredentials,omitempty"`
 }
 
 func (d *LDAPAuthEngineConfig) GetPath() string {
-	return cleansePath("auth/" + string(d.Spec.Path) + "/config")
+	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/config")
 }
 
 func (d *LDAPAuthEngineConfig) GetPayload() map[string]interface{} {
@@ -398,5 +398,9 @@ func (i *LDAPConfig) toMap() map[string]interface{} {
 }
 
 func (r *LDAPAuthEngineConfig) isValid() error {
-	return r.Spec.BindCredentials.validateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+	return r.Spec.BindCredentials.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+}
+
+func (d *LDAPAuthEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
 }

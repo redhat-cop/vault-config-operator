@@ -30,13 +30,13 @@ type LDAPAuthEngineGroupSpec struct {
 
 	// Authentication is the kube auth configuraiton to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
 	// The final path will be {[spec.authentication.namespace]}/auth/{spec.path}/groups/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 
 	// The name of the LDAP group
 	// +kubebuilder:validation:Required
@@ -51,7 +51,7 @@ type LDAPAuthEngineGroupSpec struct {
 var _ vaultutils.VaultObject = &LDAPAuthEngineGroup{}
 
 func (d *LDAPAuthEngineGroup) GetPath() string {
-	return cleansePath("auth/" + string(d.Spec.Path) + "/groups/" + string(d.Spec.Name))
+	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/groups/" + string(d.Spec.Name))
 }
 
 func (d *LDAPAuthEngineGroup) GetPayload() map[string]interface{} {
@@ -122,4 +122,8 @@ func (i *LDAPAuthEngineGroup) toMap() map[string]interface{} {
 	payload["policies"] = i.Spec.Policies
 
 	return payload
+}
+
+func (d *LDAPAuthEngineGroup) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
 }

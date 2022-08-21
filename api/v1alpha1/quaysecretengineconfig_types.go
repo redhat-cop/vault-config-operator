@@ -35,19 +35,19 @@ type QuaySecretEngineConfigSpec struct {
 
 	// Authentication is the kube auth configuration to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
 	// The final path will be {[spec.authentication.namespace]}/{spec.path}/config.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 
 	QuayConfig `json:",inline"`
 
 	// RootCredentials specifies how to retrieve the credentials for this Quay connection.
 	// +kubebuilder:validation:Required
-	RootCredentials RootCredentialConfig `json:"rootCredentials,omitempty"`
+	RootCredentials vaultutils.RootCredentialConfig `json:"rootCredentials,omitempty"`
 }
 
 var _ vaultutils.VaultObject = &QuaySecretEngineConfig{}
@@ -210,5 +210,9 @@ func init() {
 }
 
 func (r *QuaySecretEngineConfig) isValid() error {
-	return r.Spec.RootCredentials.validateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+	return r.Spec.RootCredentials.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+}
+
+func (d *QuaySecretEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
 }

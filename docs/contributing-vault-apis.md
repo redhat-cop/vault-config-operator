@@ -91,6 +91,7 @@ Here are the steps:
       }
 
       ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
+	    ctx = context.WithValue(ctx, "restConfig", r.GetRestConfig())      
       vaultClient, err := instance.Spec.Authentication.GetVaultClient(ctx, instance.Namespace)
       if err != nil {
         r.Log.Error(err, "unable to create vault client", "instance", instance)

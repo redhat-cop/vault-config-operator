@@ -33,7 +33,7 @@ type AuthEngineMountSpec struct {
 
 	// Authentication is the kube aoth configuraiton to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	AuthMount `json:",inline"`
 
@@ -41,7 +41,7 @@ type AuthEngineMountSpec struct {
 	// The final path will be {[spec.authentication.namespace]}/auth/{spec.path}/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path /sys/auth/{[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 }
 
 type AuthMount struct {
@@ -150,8 +150,12 @@ func (m *AuthMount) toMap() map[string]interface{} {
 	}
 }
 
+func (d *AuthEngineMount) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
+}
+
 func (d *AuthEngineMount) GetPath() string {
-	return cleansePath(d.GetEngineListPath() + "/" + string(d.Spec.Path) + "/" + d.Name)
+	return vaultutils.CleansePath(d.GetEngineListPath() + "/" + string(d.Spec.Path) + "/" + d.Name)
 }
 
 func (d *AuthEngineMount) GetPayload() map[string]interface{} {

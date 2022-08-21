@@ -34,13 +34,13 @@ import (
 type KubernetesAuthEngineConfigSpec struct {
 	// Authentication is the kube aoth configuraiton to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
 	// The final path will be {[spec.authentication.namespace]}/auth/{spec.path}/config/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 
 	KAECConfig `json:",inline"`
 
@@ -51,7 +51,7 @@ type KubernetesAuthEngineConfigSpec struct {
 }
 
 func (d *KubernetesAuthEngineConfig) GetPath() string {
-	return cleansePath("auth/" + string(d.Spec.Path) + "/" + d.Name + "/config")
+	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/" + d.Name + "/config")
 }
 
 func (d *KubernetesAuthEngineConfig) GetPayload() map[string]interface{} {
@@ -80,7 +80,7 @@ func (d *KubernetesAuthEngineConfig) PrepareInternalValues(context context.Conte
 }
 
 func (kc *KubernetesAuthEngineConfig) getJWTToken(context context.Context) (string, error) {
-	return getJWTToken(context, kc.Spec.TokenReviewerServiceAccount.Name, kc.Namespace)
+	return vaultutils.GetJWTToken(context, kc.Spec.TokenReviewerServiceAccount.Name, kc.Namespace)
 }
 
 func (r *KubernetesAuthEngineConfig) IsValid() (bool, error) {
@@ -173,4 +173,8 @@ func (i *KAECConfig) toMap() map[string]interface{} {
 	payload["disable_iss_validation"] = i.DisableISSValidation
 	payload["disable_local_ca_jwt"] = i.DisableLocalCAJWT
 	return payload
+}
+
+func (d *KubernetesAuthEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
 }

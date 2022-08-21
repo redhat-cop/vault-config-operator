@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package utils
 
 import (
 	"context"
@@ -22,15 +22,20 @@ import (
 	"strings"
 
 	vault "github.com/hashicorp/vault/api"
+	authv1 "k8s.io/api/authentication/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
+// +kubebuilder:object:generate=true
 // +kubebuilder:validation:Pattern:=`^(?:/?[\w;:@&=\$-\.\+]*)+/?`
 type Path string
 
+// +kubebuilder:object:generate=true
 type KubeAuthConfiguration struct {
 	// ServiceAccount is the service account used for the kube auth authentication
 	// +kubebuilder:validation:Required
@@ -58,7 +63,7 @@ func (kc *KubeAuthConfiguration) GetRole() string {
 	return kc.Role
 }
 func (kc *KubeAuthConfiguration) GetKubeAuthPath() string {
-	return cleansePath("auth/" + string(kc.Path) + "/login")
+	return CleansePath("auth/" + string(kc.Path) + "/login")
 }
 
 func (kc *KubeAuthConfiguration) GetServiceAccountName() string {
@@ -80,76 +85,36 @@ func (kc *KubeAuthConfiguration) GetVaultClient(context context.Context, kubeNam
 	return vaultClient, nil
 }
 
-func getJWTToken(context context.Context, serviceAccountName string, kubeNamespace string) (string, error) {
+func GetJWTToken(context context.Context, serviceAccountName string, kubeNamespace string) (string, error) {
 	log := log.FromContext(context)
-	kubeClient := context.Value("kubeClient").(client.Client)
-	secretList := &corev1.SecretList{}
-	err := kubeClient.List(context, secretList, &client.ListOptions{
-		Namespace: kubeNamespace,
-	})
-	if err != nil {
-		log.Error(err, "unable to retrieve secrets", "in namespace", kubeNamespace)
-		return "", err
-	}
-	for _, secret := range secretList.Items {
-		if saname, ok := secret.Annotations["kubernetes.io/service-account.name"]; ok {
-			if secret.Type == corev1.SecretTypeServiceAccountToken && saname == serviceAccountName {
-				if jwt, ok := secret.Data["token"]; ok {
-					return string(jwt), nil
-				} else {
-					return "", errors.New("unable to find \"token\" key in secret" + kubeNamespace + "/" + secret.Name)
-				}
-			}
-		}
+
+	restConfig := context.Value("restConfig").(*rest.Config)
+	expiration := int64(600)
+
+	treq := &authv1.TokenRequest{
+		Spec: authv1.TokenRequestSpec{
+			ExpirationSeconds: &expiration,
+		},
 	}
 
-	//if we get here, we were not able to find the secret with teh new method mandatory in kube 1.24 and supported in a few previous version.
-	//so we try the otgher approach by looking at the service account
+	clientset, err := kubernetes.NewForConfig(restConfig)
 
-	serviceAccount := &corev1.ServiceAccount{}
-	err = kubeClient.Get(context, client.ObjectKey{
-		Namespace: kubeNamespace,
-		Name:      serviceAccountName,
-	}, serviceAccount)
 	if err != nil {
-		log.Error(err, "unable to retrieve", "service account", client.ObjectKey{
-			Namespace: kubeNamespace,
-			Name:      serviceAccountName,
-		})
+		log.Error(err, "unable to create kubernetes clientset")
 		return "", err
 	}
 
-	var tokenSecretName string
-	for _, secretName := range serviceAccount.Secrets {
-		if strings.Contains(secretName.Name, "token") {
-			tokenSecretName = secretName.Name
-			break
-		}
-	}
-	if tokenSecretName == "" {
-		return "", errors.New("unable to find token secret name for service account" + kubeNamespace + "/" + serviceAccountName)
-	}
-	secret := &corev1.Secret{}
-	err = kubeClient.Get(context, client.ObjectKey{
-		Namespace: kubeNamespace,
-		Name:      tokenSecretName,
-	}, secret)
+	treq, err = clientset.CoreV1().ServiceAccounts(kubeNamespace).CreateToken(context, serviceAccountName, treq, metav1.CreateOptions{})
 	if err != nil {
-		log.Error(err, "unable to retrieve", "secret", client.ObjectKey{
-			Namespace: kubeNamespace,
-			Name:      tokenSecretName,
-		})
+		log.Error(err, "unable to create service account token request", "in namespace", kubeNamespace, "for service account", serviceAccountName)
 		return "", err
 	}
-	if jwt, ok := secret.Data["token"]; ok {
-		return string(jwt), nil
-	} else {
-		return "", errors.New("unable to find \"token\" key in secret" + kubeNamespace + "/" + tokenSecretName)
-	}
+
+	return treq.Status.Token, nil
 }
 
 func (kc *KubeAuthConfiguration) getJWTToken(context context.Context, kubeNamespace string) (string, error) {
-	return getJWTToken(context, kc.GetServiceAccountName(), kubeNamespace)
+	return GetJWTToken(context, kc.GetServiceAccountName(), kubeNamespace)
 }
 
 func (kc *KubeAuthConfiguration) createVaultClient(context context.Context, jwt string) (*vault.Client, error) {
@@ -178,33 +143,25 @@ func (kc *KubeAuthConfiguration) createVaultClient(context context.Context, jwt 
 	return client, nil
 }
 
-func cleansePath(path string) string {
+func CleansePath(path string) string {
 	return strings.Trim(strings.ReplaceAll(path, "//", "/"), "/")
 }
 
-func toString(name interface{}) string {
+func ToString(name interface{}) string {
 	if name != nil {
 		return name.(string)
 	}
 	return ""
 }
 
-// func parseOrDie(val string) metav1.Duration {
-// 	d, err := time.ParseDuration(val)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return metav1.Duration{
-// 		Duration: d,
-// 	}
-// }
-
+// +kubebuilder:object:generate=true
 type VaultSecretReference struct {
 	// Path is the path to the secret
 	// +kubebuilder:validation:Required
 	Path string `json:"path,omitempty"`
 }
 
+// +kubebuilder:object:generate=true
 type RootCredentialConfig struct {
 	// VaultSecret retrieves the credentials from a Vault secret. This will map the "username" and "password" keys of the secret to the username and password of this config. All other keys will be ignored. Only one of RootCredentialsFromVaultSecret or RootCredentialsFromSecret or RootCredentialsFromRandomSecret can be specified.
 	// username: Specifies the name of the user to use as the "root" user when connecting to the database. This "root" user is used to create/update/delete users managed by these plugins, so you will need to ensure that this user has permissions to manipulate users appropriate to the database. This is typically used in the connection_url field via the templating directive "{{"username"}}" or "{{"name"}}".
@@ -235,7 +192,7 @@ type RootCredentialConfig struct {
 	UsernameKey string `json:"usernameKey,omitempty"`
 }
 
-func (credentials *RootCredentialConfig) validateEitherFromVaultSecretOrFromSecret() error {
+func (credentials *RootCredentialConfig) ValidateEitherFromVaultSecretOrFromSecret() error {
 	count := 0
 	if credentials.Secret != nil {
 		count++
@@ -249,7 +206,7 @@ func (credentials *RootCredentialConfig) validateEitherFromVaultSecretOrFromSecr
 	return nil
 }
 
-func (credentials *RootCredentialConfig) validateEitherFromVaultSecretOrFromSecretOrFromRandomSecret() error {
+func (credentials *RootCredentialConfig) ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret() error {
 	count := 0
 	if credentials.RandomSecret != nil {
 		count++
@@ -270,6 +227,7 @@ func GetFinalizer(instance client.Object) string {
 	return "controller-" + strings.ToLower(instance.GetObjectKind().GroupVersionKind().Kind)
 }
 
+// +kubebuilder:object:generate=true
 type TargetNamespaceConfig struct {
 	// TargetNamespaceSelector is a selector of namespaces from which service accounts will receove this role. Either TargetNamespaceSelector or TargetNamespaces can be specified
 	// +kubebuilder:validation:Optional

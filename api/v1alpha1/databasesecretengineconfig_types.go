@@ -37,19 +37,19 @@ import (
 type DatabaseSecretEngineConfigSpec struct {
 	// Authentication is the kube aoth configuraiton to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
 	// The final path will be {[spec.authentication.namespace]}/{spec.path}/config/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 
 	DBSEConfig `json:",inline"`
 
 	// RootCredentials specifies how to retrieve the credentials for this DatabaseEngine connection.
 	// +kubebuilder:validation:Required
-	RootCredentials RootCredentialConfig `json:"rootCredentials,omitempty"`
+	RootCredentials vaultutils.RootCredentialConfig `json:"rootCredentials,omitempty"`
 }
 
 var _ vaultutils.VaultObject = &DatabaseSecretEngineConfig{}
@@ -257,5 +257,9 @@ func (i *DBSEConfig) toMap() map[string]interface{} {
 }
 
 func (r *DatabaseSecretEngineConfig) isValid() error {
-	return r.Spec.RootCredentials.validateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+	return r.Spec.RootCredentials.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+}
+
+func (d *DatabaseSecretEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
 }
