@@ -33,9 +33,12 @@ kube_rbac_proxy:
     pullPolicy: IfNotPresent
     tag: v0.11.0
   resources:
+    limits:
+      cpu: 500m
+      memory: 128Mi
     requests:
-      cpu: 100m
-      memory: 20Mi
+      cpu: 5m
+      memory: 64Mii
 
 enableMonitoring: true
 enableCertManager: false
