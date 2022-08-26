@@ -65,7 +65,7 @@ type PasswordPolicySpec struct {
 
 	// Authentication is the kube aoth configuraiton to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 }
 
 // PolicyStatus defines the observed state of Policy
@@ -109,4 +109,8 @@ type PasswordPolicyList struct {
 
 func init() {
 	SchemeBuilder.Register(&PasswordPolicy{}, &PasswordPolicyList{})
+}
+
+func (d *PasswordPolicy) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
 }

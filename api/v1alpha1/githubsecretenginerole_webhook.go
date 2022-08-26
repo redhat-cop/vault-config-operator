@@ -43,9 +43,7 @@ var _ webhook.Defaulter = &GitHubSecretEngineRole{}
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *GitHubSecretEngineRole) Default() {
 	githubsecretenginerolelog.Info("default", "name", r.Name)
-	// if !controllerutil.ContainsFinalizer(r, GetFinalizer(r)) {
-	// 	controllerutil.AddFinalizer(r, GetFinalizer(r))
-	// }
+
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.

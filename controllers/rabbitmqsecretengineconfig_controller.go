@@ -42,8 +42,9 @@ type RabbitMQSecretEngineConfigReconciler struct {
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=rabbitmqsecretengineconfigs,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=rabbitmqsecretengineconfigs/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=core,resources=serviceaccounts;secrets,verbs=get;list;watch
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=randomsecrets,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=serviceaccounts/token,verbs=create
 //+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -72,13 +73,11 @@ func (r *RabbitMQSecretEngineConfigReconciler) Reconcile(ctx context.Context, re
 		return reconcile.Result{}, err
 	}
 
-	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
-	vaultClient, err := instance.Spec.Authentication.GetVaultClient(ctx, instance.Namespace)
+	ctx, err = prepareContext(ctx, r.ReconcilerBase, instance)
 	if err != nil {
-		r.Log.Error(err, "unable to create vault client", "instance", instance)
+		r.Log.Error(err, "unable to prepare context", "instance", instance)
 		return r.ManageError(ctx, instance, err)
 	}
-	ctx = context.WithValue(ctx, "vaultClient", vaultClient)
 	if util.IsBeingDeleted(instance) {
 		// No resources supported for deletion.
 		return reconcile.Result{}, nil

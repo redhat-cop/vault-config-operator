@@ -15,12 +15,19 @@ spec:
         - "--secure-listen-address=0.0.0.0:8443"
         - "--upstream=http://127.0.0.1:8080/"
         - "--logtostderr=true"
-        - "--v=10"
+        - "--v=0"
         - "--tls-cert-file=/etc/certs/tls/tls.crt"
         - "--tls-private-key-file=/etc/certs/tls/tls.key"
         volumeMounts:
           - mountPath: /etc/certs/tls
-            name: tls-cert              
+            name: tls-cert
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 5m
+            memory: 64Mi            
         ports:
         - containerPort: 8443
           name: https

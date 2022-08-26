@@ -33,17 +33,17 @@ import (
 type KubernetesSecretEngineRoleSpec struct {
 	// Authentication is the kube aoth configuraiton to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to create the role.
 	// The final path will be {[spec.authentication.namespace]}/{spec.path}/roles/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 
 	// TargetNamespaces specifies how to retrieve the list of Kubernetes namespaces this role can generate credentials for.
 	// +kubebuilder:validation:Required
-	TargetNamespaces TargetNamespaceConfig `json:"targetNamespaces,omitempty"`
+	TargetNamespaces vaultutils.TargetNamespaceConfig `json:"targetNamespaces,omitempty"`
 
 	KubeSERole `json:",inline"`
 }
@@ -181,4 +181,8 @@ type KubernetesSecretEngineRoleList struct {
 
 func init() {
 	SchemeBuilder.Register(&KubernetesSecretEngineRole{}, &KubernetesSecretEngineRoleList{})
+}
+
+func (d *KubernetesSecretEngineRole) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
 }

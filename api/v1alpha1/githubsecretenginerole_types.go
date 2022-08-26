@@ -36,13 +36,13 @@ type GitHubSecretEngineRoleSpec struct {
 
 	// Authentication is the kube aoth configuraiton to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to create the role.
 	// The final path will be {[spec.authentication.namespace]}/{spec.path}/permissionset/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 
 	// PermissionsSet All parameters are optional. Omitting them results in a token that has access to all of the repositories and permissions that the GitHub App has.
 	// When crafting Vault policy, hyper security sensitive organisations may wish to favour repository_ids (GitHub repository IDs are immutable) instead of repositories (GitHub repository names are mutable).
@@ -143,4 +143,8 @@ type GitHubSecretEngineRoleList struct {
 
 func init() {
 	SchemeBuilder.Register(&GitHubSecretEngineRole{}, &GitHubSecretEngineRoleList{})
+}
+
+func (d *GitHubSecretEngineRole) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
 }

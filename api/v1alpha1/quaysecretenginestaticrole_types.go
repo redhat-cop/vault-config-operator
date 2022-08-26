@@ -30,13 +30,13 @@ import (
 type QuaySecretEngineStaticRoleSpec struct {
 	// Authentication is the kube auth configuration to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
 	// The final path will be {[spec.authentication.namespace]}/{spec.path}/static-roles/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 
 	QuayBaseRole `json:",inline"`
 }
@@ -126,4 +126,8 @@ type QuaySecretEngineStaticRoleList struct {
 
 func init() {
 	SchemeBuilder.Register(&QuaySecretEngineStaticRole{}, &QuaySecretEngineStaticRoleList{})
+}
+
+func (d *QuaySecretEngineStaticRole) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
 }

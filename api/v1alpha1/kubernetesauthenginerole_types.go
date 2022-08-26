@@ -36,25 +36,25 @@ type KubernetesAuthEngineRoleSpec struct {
 
 	// Authentication is the kube aoth configuraiton to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
 	// The final path will be {[spec.authentication.namespace]}/auth/{spec.path}/role/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 
 	VRole `json:",inline"`
 
 	// TargetNamespaces specifies how to retrieve the namespaces bound to this Vault role.
 	// +kubebuilder:validation:Required
-	TargetNamespaces TargetNamespaceConfig `json:"targetNamespaces,omitempty"`
+	TargetNamespaces vaultutils.TargetNamespaceConfig `json:"targetNamespaces,omitempty"`
 }
 
 var _ vaultutils.VaultObject = &KubernetesAuthEngineRole{}
 
 func (d *KubernetesAuthEngineRole) GetPath() string {
-	return cleansePath("auth/" + string(d.Spec.Path) + "/role/" + d.Name)
+	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/role/" + d.Name)
 }
 func (d *KubernetesAuthEngineRole) GetPayload() map[string]interface{} {
 	return d.Spec.VRole.toMap()
@@ -259,4 +259,8 @@ func (r *KubernetesAuthEngineRole) validateEitherTargetNamespaceSelectorOrTarget
 		return errors.New("Only one of TargetNamespaceSelector or TargetNamespaces can be specified.")
 	}
 	return nil
+}
+
+func (d *KubernetesAuthEngineRole) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
 }

@@ -108,11 +108,11 @@ type VaultSecretDefinition struct {
 	Name string `json:"name,omitempty"`
 	// Authentication is the kube auth configuraiton to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 	// Path is the path of the secret.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=kubernetes
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 
 	// RequestType the type of request needed to retrieve a secret. Normally a GET, but some secret engnes require a POST.
 	// +kubebuilder:validation:Optional
@@ -181,4 +181,8 @@ func (d *VaultSecretDefinition) GetPostRequestPayload() map[string]string {
 
 func (d *VaultSecretDefinition) GetRequestMethod() string {
 	return d.RequestType
+}
+
+func (d *VaultSecretDefinition) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Authentication
 }

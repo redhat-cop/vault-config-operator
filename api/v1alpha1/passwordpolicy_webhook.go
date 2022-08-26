@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -42,8 +43,8 @@ var _ webhook.Defaulter = &PasswordPolicy{}
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *PasswordPolicy) Default() {
 	passwordpolicylog.Info("default", "name", r.Name)
-	if !controllerutil.ContainsFinalizer(r, GetFinalizer(r)) {
-		controllerutil.AddFinalizer(r, GetFinalizer(r))
+	if !controllerutil.ContainsFinalizer(r, vaultutils.GetFinalizer(r)) {
+		controllerutil.AddFinalizer(r, vaultutils.GetFinalizer(r))
 	}
 }
 

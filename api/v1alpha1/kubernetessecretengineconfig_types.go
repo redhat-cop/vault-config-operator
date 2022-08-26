@@ -41,17 +41,17 @@ var _ apis.ConditionsAware = &KubernetesSecretEngineConfig{}
 type KubernetesSecretEngineConfigSpec struct {
 	// Authentication is the kube aoth configuraiton to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to create the role.
 	// The final path will be {[spec.authentication.namespace]}/{spec.path}/config.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 
 	// JWTReference specifies how to retrieve the JWT token for this Kubernetes Engine connection. Only VaultSecretReference or LocalObjectRefence can be used, random secret is not allowed.
 	// +kubebuilder:validation:Required
-	JWTReference RootCredentialConfig `json:"jwtReference,omitempty"`
+	JWTReference vaultutils.RootCredentialConfig `json:"jwtReference,omitempty"`
 
 	KubeSEConfig `json:",inline"`
 }
@@ -124,7 +124,7 @@ func (r *KubernetesSecretEngineConfig) IsValid() (bool, error) {
 }
 
 func (r *KubernetesSecretEngineConfig) isValid() error {
-	return r.Spec.JWTReference.validateEitherFromVaultSecretOrFromSecret()
+	return r.Spec.JWTReference.ValidateEitherFromVaultSecretOrFromSecret()
 }
 
 func (r *KubernetesSecretEngineConfig) setInternalCredentials(context context.Context) error {
@@ -185,4 +185,8 @@ func (i *KubeSEConfig) toMap() map[string]interface{} {
 	payload["service_account_jwt"] = i.retrievedServiceAccountJWT
 	payload["disable_local_ca_jwt"] = i.DisableLocalCAJWT
 	return payload
+}
+
+func (d *KubernetesSecretEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
 }

@@ -41,13 +41,13 @@ type GitHubSecretEngineConfigSpec struct {
 
 	// Authentication is the kube aoth configuraiton to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
 	// The final path will be {[spec.authentication.namespace]}/{spec.path}/config.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 
 	GHConfig `json:",inline"`
 
@@ -90,7 +90,7 @@ func (i *GHConfig) toMap() map[string]interface{} {
 type SSHKeyConfig struct {
 	// VaultSecret retrieves the sshkey from a Vault secret. The sshkey will be retrieve at the key "key" (pun intented).
 	// +kubebuilder:validation:Optional
-	VaultSecret *VaultSecretReference `json:"vaultSecret,omitempty"`
+	VaultSecret *vaultutils.VaultSecretReference `json:"vaultSecret,omitempty"`
 
 	// Secret retrieves the ssh key from a Kubernetes secret. The secret must be of ssh type (https://kubernetes.io/docs/concepts/configuration/secret/#ssh-authentication-secrets).
 	// +kubebuilder:validation:Optional
@@ -220,4 +220,8 @@ func (r *GitHubSecretEngineConfig) validateEitherFromVaultSecretOrFromSecret() e
 		return errors.New("Only one of spec.sSHKeyReference.vaultSecret or spec.sSHKeyReference.secret can be specified.")
 	}
 	return nil
+}
+
+func (d *GitHubSecretEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
 }

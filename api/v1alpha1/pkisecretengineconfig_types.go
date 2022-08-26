@@ -39,13 +39,13 @@ import (
 type PKISecretEngineConfigSpec struct {
 	// Authentication is the kube aoth configuraiton to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to create the role.
 	// The final path will be {[spec.authentication.namespace]}/{spec.path}/config/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 
 	PKIType `json:",inline"`
 
@@ -384,15 +384,15 @@ func (p *PKISecretEngineConfig) GetExportedPayload(data map[string]interface{}) 
 	payload := map[string]string{}
 
 	if p.Spec.Type == "root" {
-		payload["issuing_ca"] = toString(data["issuing_ca"])
+		payload["issuing_ca"] = vaultutils.ToString(data["issuing_ca"])
 		payload["expiration"] = data["expiration"].(json.Number).String()
-		payload["certificate"] = toString(data["certificate"])
-		payload["serial_number"] = toString(data["serial_number"])
+		payload["certificate"] = vaultutils.ToString(data["certificate"])
+		payload["serial_number"] = vaultutils.ToString(data["serial_number"])
 	} else {
-		payload["csr"] = toString(data["csr"])
+		payload["csr"] = vaultutils.ToString(data["csr"])
 	}
-	payload["private_key"] = toString(data["private_key"])
-	payload["private_key_type"] = toString(data["private_key_type"])
+	payload["private_key"] = vaultutils.ToString(data["private_key"])
+	payload["private_key_type"] = vaultutils.ToString(data["private_key_type"])
 
 	return payload
 }
@@ -551,10 +551,6 @@ func (i *PKIConfigCRL) toMap() map[string]interface{} {
 	return payload
 }
 
-// func (i *PKIConfigCA) toMap() map[string]interface{} {
-// 	payload := map[string]interface{}{}
-
-// 	payload["pem_bundle"] = i.PemBundle
-
-// 	return payload
-// }
+func (d *PKISecretEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
+}

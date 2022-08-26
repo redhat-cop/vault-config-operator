@@ -35,13 +35,13 @@ type PKISecretEngineRoleSpec struct {
 
 	// Authentication is the kube aoth configuraiton to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to create the role.
 	// The final path will be {[spec.authentication.namespace]}/{spec.path}/roles/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 
 	PKIRole `json:",inline"`
 }
@@ -332,4 +332,8 @@ func (i *PKIRole) toMap() map[string]interface{} {
 	payload["basic_constraints_valid_for_non_ca"] = i.BasicConstraintsValidForNonCa
 	payload["not_before_duration"] = i.NotBeforeDuration
 	return payload
+}
+
+func (d *PKISecretEngineRole) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
 }

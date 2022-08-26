@@ -32,13 +32,13 @@ import (
 type RabbitMQSecretEngineRoleSpec struct {
 	// Authentication is the k8s auth configuration to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication"`
 
 	// Path at which to make the configuration.
 	// The final path will be {[spec.authentication.namespace]}/{spec.path}/config/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path"`
+	Path vaultutils.Path `json:"path"`
 
 	// +kubebuilder:validation:Required
 	RMQSERole `json:",inline"`
@@ -212,4 +212,8 @@ func (fields *RMQSERole) rabbitMQToMap() map[string]interface{} {
 	payload["vhosts"] = convertVhostsToJson(fields.Vhosts)
 	payload["vhost_topics"] = convertTopicsToJson(fields.VhostTopics)
 	return payload
+}
+
+func (d *RabbitMQSecretEngineRole) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
 }

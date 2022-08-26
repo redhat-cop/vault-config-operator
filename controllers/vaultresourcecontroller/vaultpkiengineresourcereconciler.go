@@ -21,7 +21,6 @@ import (
 
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	"github.com/redhat-cop/operator-utils/pkg/util/apis"
-	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -65,7 +64,7 @@ func (r *VaultPKIEngineResource) Reconcile(ctx context.Context, instance client.
 	if util.IsBeingDeleted(instance) {
 		log.Info("Delete", "Try to: ", instance)
 
-		if !util.HasFinalizer(instance, redhatcopv1alpha1.GetFinalizer(instance)) {
+		if !util.HasFinalizer(instance, vaultutils.GetFinalizer(instance)) {
 			log.Info("Finaliter?", "Try to: ", instance)
 			return reconcile.Result{}, nil
 		}
@@ -75,7 +74,7 @@ func (r *VaultPKIEngineResource) Reconcile(ctx context.Context, instance client.
 			return r.reconcilerBase.ManageError(ctx, instance, err)
 		}
 		log.Info("RemoveFinalizer", "Try to: ", instance)
-		util.RemoveFinalizer(instance, redhatcopv1alpha1.GetFinalizer(instance))
+		util.RemoveFinalizer(instance, vaultutils.GetFinalizer(instance))
 		err = r.reconcilerBase.GetClient().Update(ctx, instance)
 		if err != nil {
 			log.Error(err, "unable to update instance", "instance", instance)

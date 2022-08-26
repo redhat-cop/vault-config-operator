@@ -63,8 +63,9 @@ type VaultSecretReconciler struct {
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=vaultsecrets,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=vaultsecrets/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=vaultsecrets/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=serviceaccounts/token,verbs=create
 //+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
-// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -89,6 +90,7 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	}
 
 	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
+	ctx = context.WithValue(ctx, "restConfig", r.GetRestConfig())
 
 	shouldSync, err := r.shouldSync(ctx, instance)
 	if err != nil {

@@ -1,4 +1,3 @@
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -20,8 +19,6 @@ rules:
   - ""
   resources:
   - namespaces
-  - secrets
-  - serviceaccounts
   verbs:
   - get
   - list
@@ -30,20 +27,16 @@ rules:
   - ""
   resources:
   - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts/token
   verbs:
   - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - secrets
-  - serviceaccounts
-  verbs:
   - get
   - list
   - watch
