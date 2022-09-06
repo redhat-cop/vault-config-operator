@@ -73,7 +73,7 @@ func (r *RabbitMQSecretEngineConfigReconciler) Reconcile(ctx context.Context, re
 		return reconcile.Result{}, err
 	}
 
-	ctx, err = prepareContext(ctx, r.ReconcilerBase, instance)
+	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
 	if err != nil {
 		r.Log.Error(err, "unable to prepare context", "instance", instance)
 		return r.ManageError(ctx, instance, err)
@@ -83,13 +83,13 @@ func (r *RabbitMQSecretEngineConfigReconciler) Reconcile(ctx context.Context, re
 		return reconcile.Result{}, nil
 	}
 
-	err = r.manageReconcileLogic(ctx, instance)
+	err = r.manageReconcileLogic(ctx1, instance)
 	if err != nil {
 		r.Log.Error(err, "unable to complete reconcile logic", "instance", instance)
 		return r.ManageError(ctx, instance, err)
 	}
 
-	return r.ManageSuccess(ctx, instance)
+	return r.ManageSuccess(ctx1, instance)
 }
 
 func (r *RabbitMQSecretEngineConfigReconciler) manageReconcileLogic(context context.Context, instance client.Object) error {

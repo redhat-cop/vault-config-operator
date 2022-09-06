@@ -278,11 +278,16 @@ export VAULT_TOKEN=$(oc get secret vault-init -n vault -o jsonpath='{.data.root_
 # this policy is intentionally broad to allow to test anything in Vault. In a real life scenario this policy would be scoped down.
 vault policy write -tls-skip-verify vault-admin  ./config/local-development/vault-admin-policy.hcl
 vault auth enable -tls-skip-verify kubernetes
-export sa_secret_name=$(oc get sa default -n vault -o jsonpath='{.secrets[*].name}' | grep -o '\b\w*\-token-\w*\b')
-oc get secret ${sa_secret_name} -n vault -o jsonpath='{.data.ca\.crt}' | base64 -d > /tmp/ca.crt
-vault write -tls-skip-verify auth/kubernetes/config token_reviewer_jwt="$(oc serviceaccounts get-token vault -n vault)" kubernetes_host=https://kubernetes.default.svc:443 kubernetes_ca_cert=@/tmp/ca.crt
+vault write -tls-skip-verify auth/kubernetes/config kubernetes_host=https://kubernetes.default.svc:443
 vault write -tls-skip-verify auth/kubernetes/role/policy-admin bound_service_account_names=default bound_service_account_namespaces=vault-admin policies=vault-admin ttl=1h
 export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.data["kubernetes/"].accessor')
+```
+
+verify that kube authentication works:
+
+```shell
+export token=$(oc serviceaccounts new-token default -n vault-admin)
+vault write -tls-skip-verify auth/kubernetes/login role=policy-admin jwt=${token}
 ```
 
 #### Run the operator

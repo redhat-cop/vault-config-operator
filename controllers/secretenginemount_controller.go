@@ -68,14 +68,14 @@ func (r *SecretEngineMountReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
-	ctx, err = prepareContext(ctx, r.ReconcilerBase, instance)
+	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
 	if err != nil {
 		r.Log.Error(err, "unable to prepare context", "instance", instance)
 		return r.ManageError(ctx, instance, err)
 	}
 	vaultEngineResource := vaultresourcecontroller.NewVaultEngineResource(&r.ReconcilerBase, instance)
 
-	return vaultEngineResource.Reconcile(ctx, instance)
+	return vaultEngineResource.Reconcile(ctx1, instance)
 }
 
 // SetupWithManager sets up the controller with the Manager.

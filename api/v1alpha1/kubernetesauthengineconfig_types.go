@@ -80,7 +80,8 @@ func (d *KubernetesAuthEngineConfig) PrepareInternalValues(context context.Conte
 }
 
 func (kc *KubernetesAuthEngineConfig) getJWTToken(context context.Context) (string, error) {
-	return vaultutils.GetJWTToken(context, kc.Spec.TokenReviewerServiceAccount.Name, kc.Namespace)
+	expiration := int64(60 * 60 * 24 * 365)
+	return vaultutils.GetJWTTokenWithDuration(context, kc.Spec.TokenReviewerServiceAccount.Name, kc.Namespace, expiration)
 }
 
 func (r *KubernetesAuthEngineConfig) IsValid() (bool, error) {
