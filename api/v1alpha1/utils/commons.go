@@ -85,15 +85,14 @@ func (kc *KubeAuthConfiguration) GetVaultClient(context context.Context, kubeNam
 	return vaultClient, nil
 }
 
-func GetJWTToken(context context.Context, serviceAccountName string, kubeNamespace string) (string, error) {
+func GetJWTTokenWithDuration(context context.Context, serviceAccountName string, kubeNamespace string, duration int64) (string, error) {
 	log := log.FromContext(context)
 
 	restConfig := context.Value("restConfig").(*rest.Config)
-	expiration := int64(600)
 
 	treq := &authv1.TokenRequest{
 		Spec: authv1.TokenRequestSpec{
-			ExpirationSeconds: &expiration,
+			ExpirationSeconds: &duration,
 		},
 	}
 
@@ -111,6 +110,12 @@ func GetJWTToken(context context.Context, serviceAccountName string, kubeNamespa
 	}
 
 	return treq.Status.Token, nil
+}
+
+func GetJWTToken(context context.Context, serviceAccountName string, kubeNamespace string) (string, error) {
+	expiration := int64(600)
+
+	return GetJWTTokenWithDuration(context, serviceAccountName, kubeNamespace, expiration)
 }
 
 func (kc *KubeAuthConfiguration) getJWTToken(context context.Context, kubeNamespace string) (string, error) {

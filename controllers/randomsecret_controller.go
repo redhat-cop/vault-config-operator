@@ -80,7 +80,7 @@ func (r *RandomSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return reconcile.Result{}, nil
 	}
 
-	ctx, err = prepareContext(ctx, r.ReconcilerBase, instance)
+	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
 	if err != nil {
 		r.Log.Error(err, "unable to prepare context", "instance", instance)
 		return r.ManageError(ctx, instance, err)
@@ -90,37 +90,37 @@ func (r *RandomSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		if !util.HasFinalizer(instance, vaultutils.GetFinalizer(instance)) {
 			return reconcile.Result{}, nil
 		}
-		err := r.manageCleanUpLogic(ctx, instance)
+		err := r.manageCleanUpLogic(ctx1, instance)
 		if err != nil {
 			r.Log.Error(err, "unable to delete instance", "instance", instance)
-			return r.ManageError(ctx, instance, err)
+			return r.ManageError(ctx1, instance, err)
 		}
 		util.RemoveFinalizer(instance, vaultutils.GetFinalizer(instance))
-		err = r.GetClient().Update(ctx, instance)
+		err = r.GetClient().Update(ctx1, instance)
 		if err != nil {
 			r.Log.Error(err, "unable to update instance", "instance", instance)
-			return r.ManageError(ctx, instance, err)
+			return r.ManageError(ctx1, instance, err)
 		}
 		return reconcile.Result{}, nil
 	}
 
-	err = r.manageReconcileLogic(ctx, instance)
+	err = r.manageReconcileLogic(ctx1, instance)
 	if err != nil {
 		r.Log.Error(err, "unable to complete reconcile logic", "instance", instance)
-		return r.ManageError(ctx, instance, err)
+		return r.ManageError(ctx1, instance, err)
 	}
 
 	if instance.Spec.RefreshPeriod.Size() > 0 {
 		//we reschedule the next reconcile at the time in the future corresponding to
 		nextSchedule := time.Until(instance.Status.LastVaultSecretUpdate.Add(instance.Spec.RefreshPeriod.Duration))
 		if nextSchedule > 0 {
-			return r.ManageSuccessWithRequeue(ctx, instance, nextSchedule)
+			return r.ManageSuccessWithRequeue(ctx1, instance, nextSchedule)
 		} else {
-			return r.ManageSuccessWithRequeue(ctx, instance, time.Second)
+			return r.ManageSuccessWithRequeue(ctx1, instance, time.Second)
 		}
 
 	}
-	return r.ManageSuccess(ctx, instance)
+	return r.ManageSuccess(ctx1, instance)
 }
 
 func (r *RandomSecretReconciler) manageCleanUpLogic(context context.Context, instance *redhatcopv1alpha1.RandomSecret) error {
