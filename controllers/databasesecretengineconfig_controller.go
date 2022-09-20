@@ -80,13 +80,12 @@ func (r *DatabaseSecretEngineConfigReconciler) Reconcile(ctx context.Context, re
 		return reconcile.Result{}, err
 	}
 
-	ctx1 := context.WithValue(ctx, "kubeClient", r.GetClient())
-	vaultClient, err := instance.Spec.Authentication.GetVaultClient(ctx, instance.Namespace)
+	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
 	if err != nil {
-		r.Log.Error(err, "unable to create vault client", "instance", instance)
+		r.Log.Error(err, "unable to prepare context", "instance", instance)
 		return r.ManageError(ctx, instance, err)
 	}
-	ctx1 = context.WithValue(ctx1, "vaultClient", vaultClient)
+
 	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
 
 	return vaultResource.Reconcile(ctx1, instance)
