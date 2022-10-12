@@ -119,7 +119,6 @@ webhooks:
     - v1alpha1
     operations:
     - CREATE
-    - UPDATE
     resources:
     - jwtoidcauthengineconfigs
   sideEffects: None
@@ -579,7 +578,6 @@ webhooks:
     apiVersions:
     - v1alpha1
     operations:
-    - CREATE
     - UPDATE
     resources:
     - jwtoidcauthengineconfigs

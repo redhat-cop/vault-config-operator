@@ -94,11 +94,6 @@ type JWTOIDCConfig struct {
 	// +kubebuilder:default=""
 	OIDCClientID string `json:"OIDCClientID,omitempty"`
 
-	// The OAuth Client Secret from the provider for OIDC roles.
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
-	OIDCClientSecret string `json:"OIDCClientSecret,omitempty"`
-
 	// The response mode to be used in the OAuth2 request.
 	// Allowed values are "query" and "form_post". Defaults to "query".
 	// If using Vault namespaces, and oidc_response_mode is "form_post", then "namespace_in_state" should be set to false
@@ -163,6 +158,8 @@ type JWTOIDCConfig struct {
 	retrievedClientPassword string `json:"-"`
 }
 
+var _ vaultutils.VaultObject = &JWTOIDCAuthEngineConfig{}
+
 func (r *JWTOIDCAuthEngineConfig) GetConditions() []metav1.Condition {
 	return r.Status.Conditions
 }
@@ -189,7 +186,6 @@ func (r *JWTOIDCAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]
 	return reflect.DeepEqual(desiredState, payload)
 }
 
-var _ vaultutils.VaultObject = &JWTOIDCAuthEngineConfig{}
 
 func (r *JWTOIDCAuthEngineConfig) IsInitialized() bool {
 	return true
@@ -280,7 +276,7 @@ func (i *JWTOIDCConfig) toMap() map[string]interface{} {
 	payload["oidc_discovery_url"] = i.OIDCDiscoveryURL
 	payload["oidc_discovery_ca_pem"] = i.OIDCDiscoveryCAPEM
 	payload["oidc_client_id"] = i.OIDCClientID
-	payload["oidc_client_secret"] = i.OIDCClientSecret
+	payload["oidc_client_secret"] = i.retrievedClientPassword
 	payload["oidc_response_mode"] = i.OIDCResponseMode
 	payload["oidc_response_types"] = i.OIDCResponseTypes
 	payload["jwks_url"] = i.JWKSURL
