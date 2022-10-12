@@ -182,6 +182,32 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
+  - jwtoidcauthengineconfigs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - jwtoidcauthengineconfigs/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - jwtoidcauthengineconfigs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
   - kubernetesauthengineconfigs
   verbs:
   - create

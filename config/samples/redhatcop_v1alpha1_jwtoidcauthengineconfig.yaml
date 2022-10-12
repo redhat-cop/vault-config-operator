@@ -1,0 +1,13 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: JWTOIDCAuthEngineConfig
+metadata:
+  name: azure-oidc
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  path: oidc-aad
+  OIDCClientID: "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxx"
+  OIDCClientSecret: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  OIDCDiscoveryURL: "https://login.microsoftonline.com/xxxxxx-xxxx-xxxx-xxxxx-xxxxxxxxxx/v2.0"
+  providerConfig: "azure"

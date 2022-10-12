@@ -23,4 +23,5 @@ resources:
 - redhatcop_v1alpha1_ldapauthenginegroup.yaml
 - redhatcop_v1alpha1_kubernetessecretengineconfig.yaml
 - redhatcop_v1alpha1_kubernetessecretenginerole.yaml
+- redhatcop_v1alpha1_jwtoidcauthengineconfig.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

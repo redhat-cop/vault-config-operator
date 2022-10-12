@@ -215,6 +215,9 @@ var _ = BeforeSuite(func() {
 	err = (&KubernetesSecretEngineRole{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
+	err = (&JWTOIDCAuthEngineConfig{}).SetupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
 	//+kubebuilder:scaffold:webhook
 
 	go func() {
