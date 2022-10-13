@@ -227,3 +227,87 @@ spec:
   The `path` field - The path field specifies the LDAP auth path where to create the Group. The complete path of the configuration will be: [namespace/]auth/{.spec.path}/groups/name
 
   The `policies` field - Comma-separated list of policies associated to the group
+
+
+## JWTOIDCAuthEngineConfig
+
+The `JWTOIDCAuthEngineConfig` CRD allows a user to configure an authentication engine mount of type [JWT/OIDC](https://developer.hashicorp.com/vault/api-docs/auth/jwt).
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: JWTOIDCAuthEngineConfig
+metadata:
+  name: azure-oidc
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  path: oidc-aad
+  OIDCClientID: "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxx"
+  OIDCCredentials:
+    secret: 
+      name: oidccredentials
+    usernameKey: client_id
+    passwordKey: client_secret
+  OIDCDiscoveryURL: "https://login.microsoftonline.com/xxxxxx-xxxx-xxxx-xxxxx-xxxxxxxxxx/v2.0"
+  providerConfig: "azure"
+  ...
+```
+ The `OIDCDiscoveryURL` field - The OIDC Discovery URL, without any .well-known component (base path). Cannot be used with "jwks_url" or "jwt_validation_pubkeys"
+
+ The `OIDCDiscoveryCAPEM` field - The CA certificate or chain of certificates, in PEM format, to use to validate connections to the OIDC Discovery URL. If not set, system certificates are used.
+
+ The `OIDCClientID` field - The OAuth Client ID from the provider for OIDC roles.
+
+ The `OIDCClientSecret` field - The OAuth Client Secret from the provider for OIDC roles.
+ The OIDCClientSecret and possibly the OIDCClientID can be retrived a three different ways :
+
+1. From a Kubernetes secret, specifying the `OIDCCredentials` field as follows:
+```yaml
+  OIDCCredentials:
+    secret: 
+      name: oidccredentials
+    usernameKey: client_id
+    passwordKey: client_secret
+```
+The secret must be of [basic auth type](https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret). 
+If the secret is updated this connection will also be updated.
+
+2. From a [Vault secret](https://developer.hashicorp.com/vault/docs/secrets/kv), specifying the `OIDCCredentials` field as follows :
+```yaml
+  OIDCCredentials:
+    vaultSecret: 
+      path: secret/foo
+    usernameKey: client_id
+    passwordKey: client_secret
+```
+3. From a [RandomSecret](secret-management.md#RandomSecret), specifying the `OIDCCredentials` field as follows : 
+```yaml
+  OIDCCredentials:
+    randomSecret: 
+      name: oidccredentials
+    usernameKey: client_id
+    passwordKey: client_secret
+```
+When the RandomSecret generates a new secret, this connection will also be updated.
+
+ The `OIDCResponseMode` field - The response mode to be used in the OAuth2 request. Allowed values are "query" and "form_post". Defaults to "query". If using Vault namespaces, and oidc_response_mode is "form_post", then "namespace_in_state" should be set to false.
+
+ The `OIDCResponseTypes` field - The response types to request. Allowed values are "code" and "id_token". Defaults to "code". Note: "id_token" may only be used if "oidc_response_mode" is set to "form_post".
+
+ The `JWKSURL` field - JWKS URL to use to authenticate signatures. Cannot be used with "oidc_discovery_url" or "jwt_validation_pubkeys".
+
+ The `JWKSCAPEM` field - The CA certificate or chain of certificates, in PEM format, to use to validate connections to the JWKS URL. If not set, system certificates are used.
+
+ The `JWTValidationPubKeys` field - A list of PEM-encoded public keys to use to authenticate signatures locally. Cannot be used with "jwks_url" or "oidc_discovery_url".
+
+ The `boundIssuer` field - The value against which to match the iss claim in a JWT.
+
+ The `JWTSupportedAlgs` field - A list of supported signing algorithms. Defaults to [RS256] for OIDC roles. Defaults to all available algorithms for JWT roles.
+
+ The `defaultRole` field - The default role to use if none is provided during login. 
+
+ The `providerConfig` field - Configuration options for provider-specific handling. Providers with specific handling include: Azure, Google. The options are described in each provider's section in OIDC Provider Setup. 
+
+ The `namespaceInState` field - Pass namespace in the OIDC state parameter instead of as a separate query parameter. With this setting, the allowed redirect URL(s) in Vault and on the provider side should not contain a namespace query parameter. This means only one redirect URL entry needs to be maintained on the provider side for all vault namespaces that will be authenticating against it. Defaults to true for new configs. 
+
