@@ -251,7 +251,10 @@ spec:
     usernameKey: client_id
     passwordKey: client_secret
   OIDCDiscoveryURL: "https://login.microsoftonline.com/xxxxxx-xxxx-xxxx-xxxxx-xxxxxxxxxx/v2.0"
-  providerConfig: "azure"
+  providerConfig: 
+      {
+      "provider": "azure"
+      }
   ...
 ```
  The `OIDCDiscoveryURL` field - The OIDC Discovery URL, without any .well-known component (base path). Cannot be used with "jwks_url" or "jwt_validation_pubkeys"
@@ -272,6 +275,11 @@ spec:
     passwordKey: client_secret
 ```
 The secret must be of [basic auth type](https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret). 
+
+Example Secret : 
+```bash
+kubectl create secret generic oidccredentials --from-literal=oidc_client_id="123456-1234-1234-1234-123456789" --from-literal=oidc_client_secret="saffsfsdfsfsdgsdgsdgsdgghdfhdhdgsjgjgjfj" -n vault-admin
+```
 If the secret is updated this connection will also be updated.
 
 2. From a [Vault secret](https://developer.hashicorp.com/vault/docs/secrets/kv), specifying the `OIDCCredentials` field as follows :
