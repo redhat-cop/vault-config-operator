@@ -49,19 +49,21 @@ spec:
                   used with "oidc_discovery_url" or "jwt_validation_pubkeys"
                 type: string
               JWTSupportedAlgs:
-                default: ""
                 description: A list of supported signing algorithms. Defaults to [RS256]
                   for OIDC roles. Defaults to all available algorithms for JWT roles
+                  kubebuilder:validation:UniqueItems=true
                 items:
                   type: string
                 type: array
+                x-kubernetes-list-type: set
               JWTValidationPubKeys:
-                default: ""
                 description: A list of PEM-encoded public keys to use to authenticate
                   signatures locally. Cannot be used with "jwks_url" or "oidc_discovery_url"
+                  kubebuilder:validation:UniqueItems=true
                 items:
                   type: string
                 type: array
+                x-kubernetes-list-type: set
               OIDCClientID:
                 default: ""
                 description: The OAuth Client ID from the provider for OIDC roles.
@@ -173,13 +175,13 @@ spec:
                   should be set to false
                 type: string
               OIDCResponseTypes:
-                default: ""
                 description: 'The response types to request. Allowed values are "code"
                   and "id_token". Defaults to "code". Note: "id_token" may only be
-                  used if "oidc_response_mode" is set to "form_post"'
+                  used if "oidc_response_mode" is set to "form_post" kubebuilder:validation:UniqueItems=true'
                 items:
                   type: string
                 type: array
+                x-kubernetes-list-type: set
               authentication:
                 properties:
                   namespace:
@@ -217,7 +219,7 @@ spec:
                 description: The default role to use if none is provided during login
                 type: string
               namespaceInState:
-                default: ""
+                default: true
                 description: Pass namespace in the OIDC state parameter instead of
                   as a separate query parameter. With this setting, the allowed redirect
                   URL(s) in Vault and on the provider side should not contain a namespace
@@ -235,7 +237,6 @@ spec:
               providerConfig:
                 additionalProperties:
                   type: string
-                default: ""
                 description: 'Configuration options for provider-specific handling.
                   Providers with specific handling include: Azure, Google. The options
                   are described in each provider''s section in OIDC Provider Setup'

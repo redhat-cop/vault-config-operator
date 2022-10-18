@@ -104,7 +104,8 @@ type JWTOIDCConfig struct {
 	// The response types to request. Allowed values are "code" and "id_token". Defaults to "code".
 	// Note: "id_token" may only be used if "oidc_response_mode" is set to "form_post"
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
+	// +listType=set
+	// kubebuilder:validation:UniqueItems=true
 	OIDCResponseTypes []string `json:"OIDCResponseTypes,omitempty"`
 
 	// JWKS URL to use to authenticate signatures.
@@ -121,7 +122,8 @@ type JWTOIDCConfig struct {
 
 	// A list of PEM-encoded public keys to use to authenticate signatures locally. Cannot be used with "jwks_url" or "oidc_discovery_url"
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
+	// +listType=set
+	// kubebuilder:validation:UniqueItems=true
 	JWTValidationPubKeys []string `json:"JWTValidationPubKeys,omitempty"`
 
 	// The value against which to match the iss claim in a JWT
@@ -131,7 +133,8 @@ type JWTOIDCConfig struct {
 
 	// A list of supported signing algorithms. Defaults to [RS256] for OIDC roles. Defaults to all available algorithms for JWT roles
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
+	// +listType=set
+	// kubebuilder:validation:UniqueItems=true
 	JWTSupportedAlgs []string `json:"JWTSupportedAlgs,omitempty"`
 
 	// The default role to use if none is provided during login
@@ -142,7 +145,7 @@ type JWTOIDCConfig struct {
 	// Configuration options for provider-specific handling. Providers with specific handling include: Azure, Google.
 	// The options are described in each provider's section in OIDC Provider Setup
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
+	// +kubebuilder:default={}
 	ProviderConfig map[string]string `json:"providerConfig,omitempty"`
 
 	// Pass namespace in the OIDC state parameter instead of as a separate query parameter.
@@ -150,7 +153,7 @@ type JWTOIDCConfig struct {
 	// This means only one redirect URL entry needs to be maintained on the provider side for all vault namespaces that will be authenticating against it.
 	// Defaults to true for new configs
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
+	// +kubebuilder:default=true
 	NamespaceInState bool `json:"namespaceInState,omitempty"`
 
 	retrievedClientID string `json:"-"`
