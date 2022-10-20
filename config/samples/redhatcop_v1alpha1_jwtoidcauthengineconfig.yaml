@@ -7,7 +7,7 @@ spec:
     path: kubernetes
     role: policy-admin
   path: oidc/azuread-oidc/
-  OIDCClientID: "123456-1234-1234-1234-123456789"
+  OIDCClientID: "000000000-0000-0000-0000-000000000"
   OIDCCredentials:
     secret: 
       name: oidccredentials
