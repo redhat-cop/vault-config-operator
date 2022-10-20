@@ -105,6 +105,25 @@ webhooks:
   sideEffects: None
 - admissionReviewVersions:
   - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-jwtoidcauthengineconfig
+  failurePolicy: Fail
+  name: mjwtoidcauthengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - jwtoidcauthengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
@@ -543,6 +562,25 @@ webhooks:
     - UPDATE
     resources:
     - githubsecretengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-jwtoidcauthengineconfig
+  failurePolicy: Fail
+  name: vjwtoidcauthengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - UPDATE
+    resources:
+    - jwtoidcauthengineconfigs
   sideEffects: None
 - admissionReviewVersions:
   - v1

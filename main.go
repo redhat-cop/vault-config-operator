@@ -167,6 +167,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controllers.JWTOIDCAuthEngineConfigReconciler{
+		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("JWTOIDCAuthEngineConfig"), mgr.GetAPIReader()),
+		Log:            ctrl.Log.WithName("controllers").WithName("JWTOIDCAuthEngineConfig"),
+		ControllerName: "JWTOIDCAuthEngineConfig",
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "JWTOIDCAuthEngineConfig")
+		os.Exit(1)
+	}
+
 	if err = (&controllers.VaultSecretReconciler{
 		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("VaultSecret"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("VaultSecret"),
@@ -315,6 +324,10 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.LDAPAuthEngineGroup{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "LDAPAuthEngineGroup")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.JWTOIDCAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "JWTOIDCAuthEngineConfig")
 			os.Exit(1)
 		}
 		if err = (&redhatcopv1alpha1.VaultSecret{}).SetupWebhookWithManager(mgr); err != nil {

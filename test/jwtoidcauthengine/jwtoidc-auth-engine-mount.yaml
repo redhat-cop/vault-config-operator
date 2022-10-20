@@ -1,0 +1,10 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AuthEngineMount
+metadata:
+  name: azuread-oidc
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  type: oidc
+  path: oidc
