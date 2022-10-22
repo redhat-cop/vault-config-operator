@@ -1,0 +1,6 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: JWTOIDCAuthEngineRole
+metadata:
+  name: jwtoidcauthenginerole-sample
+spec:
+  # TODO(user): Add fields here
