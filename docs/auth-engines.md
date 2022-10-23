@@ -348,7 +348,7 @@ spec:
   roleType: "oidc"
   OIDCScopes: 
     - "https://graph.microsoft.com/.default"
-
+  ...
 ```
  The `name` field - Name of the role
 
