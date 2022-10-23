@@ -344,7 +344,6 @@ spec:
   groupsClaim: "groups"
   tokenPolicies: 
     - "dev"
-    - "prod"
   roleType: "oidc"
   OIDCScopes: 
     - "https://graph.microsoft.com/.default"
