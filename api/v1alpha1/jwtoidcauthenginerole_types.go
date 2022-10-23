@@ -55,8 +55,7 @@ type JWTOIDCRole struct {
 	// List of aud claims to match against. Any match is sufficient. Required for "jwt" roles, optional for "oidc" roles
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	// +kubebuilder:validation:UniqueItems=true
-	// +kubebuilder:validation:MinItems=1
+	// kubebuilder:validation:UniqueItems=true
 	BoundAudiences []string `json:"boundAudiences,omitempty"`
 
 	// The claim to use to uniquely identify the user; this will be used as the name for the Identity entity alias created due to a successful login.
@@ -127,15 +126,13 @@ type JWTOIDCRole struct {
 	// The standard scope "openid" is automatically included and need not be specified
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	// +kubebuilder:validation:UniqueItems=true
-	// +kubebuilder:validation:MinItems=1
+	// kubebuilder:validation:UniqueItems=true
 	OIDCScopes []string `json:"OIDCScopes,omitempty"`
 
 	// The list of allowed values for redirect_uri during OIDC logins
 	// +kubebuilder:validation:Required
 	// +listType=set
-	// +kubebuilder:validation:UniqueItems=true
-	// +kubebuilder:validation:MinItems=1
+	// kubebuilder:validation:UniqueItems=true
 	AllowedRedirectURIs []string `json:"allowedRedirectURIs,omitempty"`
 
 	// Log received OIDC tokens and claims when debug-level logging is active
@@ -168,15 +165,13 @@ type JWTOIDCRole struct {
 	// Depending on the auth method, this list may be supplemented by user/group/other values
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	// +kubebuilder:validation:UniqueItems=true
-	// +kubebuilder:validation:MinItems=1
+	// kubebuilder:validation:UniqueItems=true
 	TokenPolicies []string `json:"tokenPolicies,omitempty"`
 
 	// List of CIDR blocks; if set, specifies blocks of IP addresses which can authenticate successfully, and ties the resulting token to these blocks as well.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	// +kubebuilder:validation:UniqueItems=true
-	// +kubebuilder:validation:MinItems=1
+	// kubebuilder:validation:UniqueItems=true
 	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty"`
 
 	// If set, will encode an explicit max TTL onto the token.

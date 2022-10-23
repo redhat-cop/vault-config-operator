@@ -39,19 +39,17 @@ spec:
               OIDCScopes:
                 description: If set, a list of OIDC scopes to be used with an OIDC
                   role The standard scope "openid" is automatically included and need
-                  not be specified
+                  not be specified kubebuilder:validation:UniqueItems=true
                 items:
                   type: string
                 type: array
-                uniqueItems: true
                 x-kubernetes-list-type: set
               allowedRedirectURIs:
                 description: The list of allowed values for redirect_uri during OIDC
-                  logins
+                  logins kubebuilder:validation:UniqueItems=true
                 items:
                   type: string
                 type: array
-                uniqueItems: true
                 x-kubernetes-list-type: set
               authentication:
                 description: Authentication is the kube auth configuraiton to be used
@@ -85,11 +83,10 @@ spec:
                 type: object
               boundAudiences:
                 description: List of aud claims to match against. Any match is sufficient.
-                  Required for "jwt" roles, optional for "oidc" roles
+                  Required for "jwt" roles, optional for "oidc" roles kubebuilder:validation:UniqueItems=true
                 items:
                   type: string
                 type: array
-                uniqueItems: true
                 x-kubernetes-list-type: set
               boundClaims:
                 additionalProperties:
@@ -178,11 +175,10 @@ spec:
               tokenBoundCIDRs:
                 description: List of CIDR blocks; if set, specifies blocks of IP addresses
                   which can authenticate successfully, and ties the resulting token
-                  to these blocks as well.
+                  to these blocks as well. kubebuilder:validation:UniqueItems=true
                 items:
                   type: string
                 type: array
-                uniqueItems: true
                 x-kubernetes-list-type: set
               tokenExplicitMaxTTL:
                 default: ""
@@ -216,11 +212,10 @@ spec:
               tokenPolicies:
                 description: List of policies to encode onto generated tokens Depending
                   on the auth method, this list may be supplemented by user/group/other
-                  values
+                  values kubebuilder:validation:UniqueItems=true
                 items:
                   type: string
                 type: array
-                uniqueItems: true
                 x-kubernetes-list-type: set
               tokenTTL:
                 default: ""

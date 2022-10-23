@@ -6,7 +6,7 @@ spec:
   authentication: 
     path: kubernetes
     role: policy-admin
-  path: oidc-aad/azuread-oidc
+  path: oidc/azuread-oidc
   name: dev-role
   userClaim: "email"
   allowedRedirectURIs: 
@@ -15,7 +15,6 @@ spec:
   groupsClaim: "groups"
   tokenPolicies: 
     - "dev"
-    - "prod"
   roleType: "oidc"
   OIDCScopes: 
     - "https://graph.microsoft.com/.default"
