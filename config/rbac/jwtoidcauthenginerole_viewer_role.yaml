@@ -1,0 +1,20 @@
+# permissions for end users to view jwtoidcauthengineroles.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jwtoidcauthenginerole-viewer-role
+rules:
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - jwtoidcauthengineroles
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - jwtoidcauthengineroles/status
+  verbs:
+  - get

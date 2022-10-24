@@ -1,0 +1,21 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: JWTOIDCAuthEngineRole
+metadata:
+  name: azure-oidc-dev-role
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  path: oidc-aad/azuread-oidc
+  name: dev-role
+  userClaim: "email"
+  allowedRedirectURIs: 
+    - "http://localhost:8250/oidc/callback"
+    - "http://localhost:8200/ui/vault/auth/oidc/azuread-oidc/oidc/callback"
+  groupsClaim: "groups"
+  tokenPolicies: 
+    - "dev"
+    - "prod"
+  roleType: "oidc"
+  OIDCScopes: 
+    - "https://graph.microsoft.com/.default"

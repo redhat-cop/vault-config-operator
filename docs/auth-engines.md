@@ -7,6 +7,7 @@
   - [LDAPAuthEngineConfig](#ldapauthengineconfig)
     - [LDAPAuthEngineGroup](#ldapauthenginegroup)
   - [JWTOIDCAuthEngineConfig](#jwtoidcauthengineconfig)
+    - [JWTOIDCAuthEngineRole](#jwtoidcauthenginerole)
 
 ## AuthEngineMount
 
@@ -320,3 +321,81 @@ When the RandomSecret generates a new secret, this connection will also be updat
 
  The `namespaceInState` field - Pass namespace in the OIDC state parameter instead of as a separate query parameter. With this setting, the allowed redirect URL(s) in Vault and on the provider side should not contain a namespace query parameter. This means only one redirect URL entry needs to be maintained on the provider side for all vault namespaces that will be authenticating against it. Defaults to true for new configs. 
 
+
+## JWTOIDCAuthEngineRole
+
+The `JWTOIDCAuthEngineRole` CRD allows a user to register a role in an authentication engine mount of type [JWT/OIDC](https://developer.hashicorp.com/vault/api-docs/auth/jwt#create-role).
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: JWTOIDCAuthEngineRole
+metadata:
+  name: azure-oidc-dev-role
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  path: oidc-aad/azuread-oidc
+  name: dev-role
+  userClaim: "email"
+  allowedRedirectURIs: 
+    - "http://localhost:8250/oidc/callback"
+    - "http://localhost:8200/ui/vault/auth/oidc/azuread-oidc/oidc/callback"
+  groupsClaim: "groups"
+  tokenPolicies: 
+    - "dev"
+  roleType: "oidc"
+  OIDCScopes: 
+    - "https://graph.microsoft.com/.default"
+  ...
+```
+ The `name` field - Name of the role
+
+ The `roleType` field - Type of role, either "oidc" (default) or "jwt"
+
+ The `boundAudiences` field - List of aud claims to match against. Any match is sufficient. Required for "jwt" roles, optional for "oidc" roles
+
+ The `userClaim` field - The claim to use to uniquely identify the user; this will be used as the name for the Identity entity alias created due to a successful login. The claim value must be a string
+
+ The `userClaimJSONPointer` field - Specifies if the user_claim value uses JSON pointer syntax for referencing claims. By default, the user_claim value will not use JSON pointer
+
+ The `clockSkewLeeway` field - The amount of leeway to add to all claims to account for clock skew, in seconds. Defaults to 60 seconds if set to 0 and can be disabled if set to -1. Accepts an integer number of seconds, or a Go duration format string. Only applicable with "jwt" roles
+
+ The `expirationLeeway` field - The amount of leeway to add to expiration (exp) claims to account for clock skew, in seconds. Defaults to 150 seconds if set to 0 and can be disabled if set to -1. Accepts an integer number of seconds, or a Go duration format string. Only applicable with "jwt" roles
+
+ The `notBeforeLeeway` field - The amount of leeway to add to not before (nbf) claims to account for clock skew, in seconds. Defaults to 150 seconds if set to 0 and can be disabled if set to -1. Accepts an integer number of seconds, or a Go duration format string. Only applicable with "jwt" roles
+
+ The `boundSubject` field - If set, requires that the sub claim matches this value
+
+ The `boundClaims` field - If set, a map of claims (keys) to match against respective claim values (values). The expected value may be a single string or a list of strings. The interpretation of the bound claim values is configured with bound_claims_type. Keys support JSON pointer syntax for referencing claims
+
+ The `boundClaimsType` field - Configures the interpretation of the bound_claims values. If "string" (the default), the values will treated as string literals and must match exactly. If set to "glob", the values will be interpreted as globs, with * matching any number of characters
+
+ The `groupsClaim` field - The claim to use to uniquely identify the set of groups to which the user belongs; this will be used as the names for the Identity group aliases created due to a successful login. The claim value must be a list of strings. Supports JSON pointer syntax for referencing claims
+
+ The `claimMappings` field - If set, a map of claims (keys) to be copied to specified metadata fields (values). Keys support JSON pointer syntax for referencing claims
+
+ The `OIDCScopes` field - If set, a list of OIDC scopes to be used with an OIDC role. The standard scope "openid" is automatically included and need not be specified
+
+ The `allowedRedirectURIs` field - The list of allowed values for redirect_uri during OIDC logins
+
+ The `verboseOIDCLogging` field - Log received OIDC tokens and claims when debug-level logging is active. Not recommended in production since sensitive information may be present in OIDC responses
+
+ The `maxage` field - Specifies the allowable elapsed time in seconds since the last time the user was actively authenticated with the OIDC provider. If set, the max_age request parameter will be included in the authentication request. See AuthRequest for additional details. Accepts an integer number of seconds, or a Go duration format string
+
+ The `tokenTTL` field - Specifies the allowable elapsed time in seconds since the last time the user was actively authenticated with the OIDC provider. If set, the max_age request parameter will be included in the authentication request. See AuthRequest for additional details. Accepts an integer number of seconds, or a Go duration format string
+
+ The `tokenMaxTTL` field - The maximum lifetime for generated tokens. This current value of this will be referenced at renewal time
+ The `tokenPolicies` field - List of policies to encode onto generated tokens. Depending on the auth method, this list may be supplemented by user/group/other values
+
+ The `tokenBoundCIDRs` field - List of CIDR blocks; if set, specifies blocks of IP addresses which can authenticate successfully, and ties the resulting token to these blocks as well
+
+ The `tokenExplicitMaxTTL` field - If set, will encode an explicit max TTL onto the token. This is a hard cap even if token_ttl and token_max_ttl would otherwise allow a renewal
+
+ The `tokenNoDefaultPolicy` field - If set, the default policy will not be set on generated tokens; otherwise it will be added to the policies set in token_policies
+
+ The `tokenNumUses` field - The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited. If you require the token to have the ability to create child tokens, you will need to set this value to 0
+
+ The `tokenPeriod` field - The period, if any, to set on the token
+
+ The `tokenType` field - The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens). For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time
