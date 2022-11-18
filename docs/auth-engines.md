@@ -245,13 +245,13 @@ spec:
     path: kubernetes
     role: policy-admin
   path: oidc-aad
-  OIDCClientID: "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxx"
+  OIDCClientID: "12345-1234-1234-1234-1234567"
   OIDCCredentials:
     secret: 
       name: oidccredentials
     usernameKey: client_id
     passwordKey: client_secret
-  OIDCDiscoveryURL: "https://login.microsoftonline.com/xxxxxx-xxxx-xxxx-xxxxx-xxxxxxxxxx/v2.0"
+  OIDCDiscoveryURL: "https://login.microsoftonline.com/12345-1234-1234-1234-1234567/v2.0"
   providerConfig: 
       {
       "provider": "azure"
