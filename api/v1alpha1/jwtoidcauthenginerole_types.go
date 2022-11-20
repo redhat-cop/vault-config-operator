@@ -212,6 +212,14 @@ type JWTOIDCAuthEngineRoleStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
+func (r *JWTOIDCAuthEngineRole) GetConditions() []metav1.Condition {
+	return r.Status.Conditions
+}
+
+func (r *JWTOIDCAuthEngineRole) SetConditions(conditions []metav1.Condition) {
+	r.Status.Conditions = conditions
+}
+
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
