@@ -9,10 +9,11 @@ spec:
   pluginName: postgresql-database-plugin
   allowedRoles:
     - read-only
+    - read-only-static
   connectionURL: postgresql://{{username}}:{{password}}@my-postgresql-database.test-vault-config-operator.svc:5432
   rootCredentials:
     secret:
       name: postgresql-admin-password
-    passwordKey: postgresql-password
+    passwordKey: postgres-password
   path: test-vault-config-operator/database
   username: postgres

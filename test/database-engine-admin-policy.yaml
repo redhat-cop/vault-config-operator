@@ -40,4 +40,9 @@ spec:
     path "/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/database/roles/+" {
       capabilities = [ "create", "read", "update", "delete"]
     }
+
+    # Configure database static roles
+    path "/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/database/static-roles/+" {
+      capabilities = [ "create", "read", "update", "delete"]
+    }    
     

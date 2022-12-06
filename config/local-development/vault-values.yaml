@@ -7,7 +7,7 @@ ui:
 
 server:
   image:
-    tag: latest
+    tag: "1.12.0"
 
   extraEnvironmentVars:
     VAULT_CACERT: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
@@ -91,7 +91,7 @@ server:
   extraContainers:
     # you should not do this in production
     - name: auto-initializer
-      image: registry.connect.redhat.com/hashicorp/vault:1.9.2-ubi
+      image: registry.connect.redhat.com/hashicorp/vault:1.12.0-ubi
       env: 
       - name: VAULT_ADDR
         value: https://vault.vault.svc:8200
@@ -121,7 +121,7 @@ server:
           mountPath: /usr/local/libexec/vault          
     # you should not do this in production      
     - name: auto-unsealer
-      image: registry.connect.redhat.com/hashicorp/vault:1.9.2-ubi
+      image: registry.connect.redhat.com/hashicorp/vault:1.12.0-ubi
       env: 
       - name: VAULT_ADDR
         value: https://vault.vault.svc:8200
@@ -152,7 +152,7 @@ server:
         - name: vault-root-token
           mountPath: /vault-root-token  
     - name: github-module-loader
-      image: registry.connect.redhat.com/hashicorp/vault:1.9.2-ubi
+      image: registry.connect.redhat.com/hashicorp/vault:1.12.0-ubi
       env: 
       - name: VAULT_ADDR
         value: https://vault.vault.svc:8200

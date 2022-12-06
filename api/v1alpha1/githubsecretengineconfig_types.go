@@ -217,7 +217,7 @@ func (r *GitHubSecretEngineConfig) validateEitherFromVaultSecretOrFromSecret() e
 		count++
 	}
 	if count != 1 {
-		return errors.New("Only one of spec.sSHKeyReference.vaultSecret or spec.sSHKeyReference.secret can be specified.")
+		return errors.New("only one of spec.sSHKeyReference.vaultSecret or spec.sSHKeyReference.secret can be specified")
 	}
 	return nil
 }
