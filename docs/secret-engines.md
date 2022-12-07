@@ -4,6 +4,7 @@
   - [SecretEngineMount](#secretenginemount)
   - [DatabaseSecretEngineConfig](#databasesecretengineconfig)
   - [DatabaseSecretEngineRole](#databasesecretenginerole)
+  - [DatabaseSecretEngineStaticRole](#databasesecretenginestaticrole)
   - [GitHubSecretEngineConfig](#githubsecretengineconfig)
   - [GitHubSecretEngineRole](#githubsecretenginerole)
   - [QuaySecretEngineConfig](#quaysecretengineconfig)
@@ -125,6 +126,45 @@ This CR is roughly equivalent to this Vault CLI command:
 
 ```shell
 vault write [namespace/]postgresql-vault-demo/database/roles/read-only db_name=my-postgresql-database creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{name}}\";"
+```
+
+## DatabaseSecretEngineStaticRole
+
+The `DatabaseSecretEngineStaticRole` CRD allows a user to create a Database Secret Engine Static Role, here is an example:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: DatabaseSecretEngineStaticRole
+metadata:
+  name: read-only-static
+spec:
+  authentication: 
+    path: kubernetes
+    role: database-engine-admin
+  path: test-vault-config-operator/database
+  dBName: my-postgresql-database
+  username: helloworld
+  rotationPeriod: 3600
+  rotationStatements:
+    - ALTER USER "{{name}}" WITH PASSWORD '{{password}}'; 
+  credentialType: password
+  passwordCredentialConfig: {}
+```  
+
+The `path` field specifies the path of the secret engine that will contain this role.
+
+The `dBname` field specifies the name of the connection to be used with this role.
+
+The `username` field specifies a username/role pre-existing in the database. 
+
+The `rotationStatements` field specifies the statements to run to rotate the user credentials.
+
+Other standard Database Secret Static Engine Role fields are available for fine tuning, see the [Vault Documentation](https://developer.hashicorp.com/vault/api-docs/secret/databases#create-static-role)
+
+This CR is roughly equivalent to this Vault CLI command:
+
+```shell
+vault write [namespace/]test-vault-config-operator/database/static-roles/read-only-static db_name=my-postgresql-database username=helloworld rotation_statements="ALTER USER \"{{name}}\" WITH PASSWORD \"{{password}}\";" rotationPeriod=3600 credentialType=password
 ```
 
 ## GitHubSecretEngineConfig

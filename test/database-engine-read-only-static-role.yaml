@@ -1,0 +1,16 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: DatabaseSecretEngineStaticRole
+metadata:
+  name: read-only-static
+spec:
+  authentication: 
+    path: kubernetes
+    role: database-engine-admin
+  path: test-vault-config-operator/database
+  dBName: my-postgresql-database
+  username: helloworld
+  rotationPeriod: 3600
+  rotationStatements:
+    - ALTER USER "{{name}}" WITH PASSWORD '{{password}}'; 
+  credentialType: password
+  passwordCredentialConfig: {}
