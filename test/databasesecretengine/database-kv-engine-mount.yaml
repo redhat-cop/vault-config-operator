@@ -1,0 +1,12 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: SecretEngineMount
+metadata:
+  name: kv-db
+spec:
+  authentication:
+    path: kubernetes
+    role: database-engine-admin
+  type: kv
+  path: test-vault-config-operator
+  options:
+    version: "2"

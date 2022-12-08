@@ -1,0 +1,71 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Policy
+metadata:
+  name: database-engine-admin
+spec:
+  # Add fields here
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  policy: |
+    # mount kv secrets engines
+    path "/sys/mounts/test-vault-config-operator/kv-db" {
+      capabilities = [ "create", "read", "update", "delete", "list" ]
+      allowed_parameters = {
+        "type" = ["kv"]
+        "*"   = []
+      }
+    }
+
+    # mount database secrets engines
+    path "/sys/mounts/test-vault-config-operator/database" {
+      capabilities = [ "create", "read", "update", "delete"]
+      allowed_parameters = {
+        "type" = ["database"]
+        "*"   = []
+      }
+    }
+
+    # tune database secrets engines
+    path "/sys/mounts/test-vault-config-operator/database/tune" {
+      capabilities = [ "create", "read", "update", "delete"]
+    }
+
+    # tune kv secrets engines
+    path "/sys/mounts/test-vault-config-operator/kv-db/tune" {
+      capabilities = [ "create", "read", "update", "delete"]
+    }
+
+    # create secrets
+    path "/test-vault-config-operator/kv-db/*" {
+      capabilities = [ "create", "update", "delete", "read" ]
+    }
+
+    # generate new password from password policy
+    path "/sys/policies/password/+/generate" {
+      capabilities = [ "read" ]
+    }
+
+    # query existing mounts
+    path "/sys/mounts" {
+      capabilities = [ "list", "read"]
+      allowed_parameters = {
+        "type" = ["database"]
+        "*"   = []
+      }
+    }
+
+    # Configure database secrets engines
+    path "/test-vault-config-operator/database/config/+" {
+      capabilities = [ "create", "read", "update", "delete"]
+    }
+
+    # Configure database roles
+    path "/test-vault-config-operator/database/roles/+" {
+      capabilities = [ "create", "read", "update", "delete"]
+    }
+
+    path "/test-vault-config-operator/database/static-roles/+" {
+      capabilities = [ "create", "read", "update", "delete"]
+    }
+
