@@ -44,7 +44,6 @@ type DatabaseSecretEngineRoleSpec struct {
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
 
-	// +kubebuilder:validation:Required
 	DBSERole `json:",inline"`
 }
 
