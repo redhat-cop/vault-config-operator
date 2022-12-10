@@ -409,9 +409,9 @@ func main() {
 	}
 
 	if err = (&controllers.DatabaseSecretEngineStaticRoleReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("MyVaultType"), mgr.GetAPIReader()),
+		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("DatabaseSecretEngineStaticRole"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("DatabaseSecretEngineStaticRole"),
-		ControllerName: "MyVaultType",
+		ControllerName: "DatabaseSecretEngineStaticRole",
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DatabaseSecretEngineStaticRole")
 		os.Exit(1)

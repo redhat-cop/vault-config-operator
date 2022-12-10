@@ -45,6 +45,7 @@ type DatabaseSecretEngineConfigSpec struct {
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
 
+	// +kubebuilder:validation:Required
 	DBSEConfig `json:",inline"`
 
 	// RootCredentials specifies how to retrieve the credentials for this DatabaseEngine connection.
@@ -101,7 +102,14 @@ func (r *DatabaseSecretEngineConfig) setInternalCredentials(context context.Cont
 			log.Error(err, "unable to retrieve vault secret", "instance", r)
 			return err
 		}
-		r.SetUsernameAndPassword(r.Spec.Username, secret.Data[randomSecret.Spec.SecretKey].(string))
+
+		if randomSecret.Spec.IsKVSecretsEngineV2 {
+			var actualData map[string]interface{} = secret.Data["data"].(map[string]interface{})
+			r.SetUsernameAndPassword(r.Spec.Username, (actualData[randomSecret.Spec.SecretKey]).(string))
+		} else {
+			r.SetUsernameAndPassword(r.Spec.Username, secret.Data[randomSecret.Spec.SecretKey].(string))
+		}
+
 		return nil
 	}
 	if r.Spec.RootCredentials.Secret != nil {
@@ -151,7 +159,6 @@ type DBSEConfig struct {
 
 	// VerifyConnection Specifies if the connection is verified during initial configuration. Defaults to true.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=true
 	VerifyConnection bool `json:"verifyConnection,omitempty"`
 
 	// AllowedRoles List of the roles allowed to use this connection. Defaults to empty (no roles), if contains a "*" any role can use this connection.
