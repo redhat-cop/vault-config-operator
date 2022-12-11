@@ -19,6 +19,7 @@ package controllers
 import (
 	"bytes"
 	"context"
+	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/redhat-cop/operator-utils/pkg/util"
@@ -88,7 +89,58 @@ func (r *DatabaseSecretEngineConfigReconciler) Reconcile(ctx context.Context, re
 
 	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
 
-	return vaultResource.Reconcile(ctx1, instance)
+	_, err = vaultResource.Reconcile(ctx1, instance)
+
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// if we get here the database secret engine is successfully reconciled, we can think about the root password rotation
+	// if rotation is requested and no rotation timestamp exist, rotate and update the status
+	//    if rotation period is define rescheduled for the period.
+	// if rotation is requested and rotation period is defined and we are at more than 95% of the rotation period being passed, rotate and update status
+	//    and reschedule for the period
+	// if rotation is requested and rotation period is defined and we are at more than 95% reschedule for the remainder of the period
+
+	if instance.Spec.RootPasswordRotation.Enabled {
+		if instance.Status.LastRootPasswordRotation.IsZero() {
+			err = r.rotateRootPassword(ctx1, instance)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+			if instance.Spec.RootPasswordRotation.RotationPeriod.Duration != time.Duration(0) {
+				return reconcile.Result{RequeueAfter: instance.Spec.RootPasswordRotation.RotationPeriod.Duration}, nil
+			}
+			return reconcile.Result{}, nil
+		} else {
+			if instance.Spec.RootPasswordRotation.RotationPeriod.Duration != time.Duration(0) {
+				//(now-lastRotation)/duration > .95
+				if (float64(time.Since(instance.Status.LastRootPasswordRotation.Time)) / float64(instance.Spec.RootPasswordRotation.RotationPeriod.Duration)) > 0.95 {
+					err = r.rotateRootPassword(ctx1, instance)
+					if err != nil {
+						return reconcile.Result{}, err
+					}
+					return reconcile.Result{RequeueAfter: instance.Spec.RootPasswordRotation.RotationPeriod.Duration}, nil
+				} else {
+					return reconcile.Result{RequeueAfter: time.Until(instance.Status.LastRootPasswordRotation.Time.Add(instance.Spec.RootPasswordRotation.RotationPeriod.Duration))}, nil
+				}
+			}
+		}
+	}
+	return reconcile.Result{}, nil
+}
+
+func (r *DatabaseSecretEngineConfigReconciler) rotateRootPassword(ctx context.Context, instance *redhatcopv1alpha1.DatabaseSecretEngineConfig) error {
+	err := instance.RotateRootPassword(ctx)
+	if err != nil {
+		return err
+	}
+	instance.Status.LastRootPasswordRotation = metav1.Now()
+	err = r.GetClient().Status().Update(ctx, instance)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
