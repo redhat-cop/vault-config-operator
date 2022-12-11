@@ -46,6 +46,12 @@ spec:
       kind: DatabaseSecretEngineRole
       name: databasesecretengineroles.redhatcop.redhat.io
       version: v1alpha1
+    - description: DatabaseSecretEngineStaticRole is the Schema for the databasesecretenginestaticroles
+        API
+      displayName: Database Secret Engine Static Role
+      kind: DatabaseSecretEngineStaticRole
+      name: databasesecretenginestaticroles.redhatcop.redhat.io
+      version: v1alpha1
     - description: GitHubSecretEngineConfig is the Schema for the githubsecretengineconfigs
         API
       displayName: Git Hub Secret Engine Config
@@ -58,6 +64,18 @@ spec:
       kind: GitHubSecretEngineRole
       name: githubsecretengineroles.redhatcop.redhat.io
       version: v1alpha1
+    - description: JWTOIDCAuthEngineConfig is the Schema for the jwtoidcauthengineconfigs
+        API
+      displayName: JWTOIDCAuth Engine Config
+      kind: JWTOIDCAuthEngineConfig
+      name: jwtoidcauthengineconfigs.redhatcop.redhat.io
+      version: v1alpha1
+    - description: JWTOIDCAuthEngineRole is the Schema for the jwtoidcauthengineroles
+        API
+      displayName: JWTOIDCAuth Engine Role
+      kind: JWTOIDCAuthEngineRole
+      name: jwtoidcauthengineroles.redhatcop.redhat.io
+      version: v1alpha1
     - description: KubernetesAuthEngineConfig is the Schema for the kubernetesauthengineconfigs
         API
       displayName: Kubernetes Auth Engine Config
@@ -69,6 +87,30 @@ spec:
       displayName: Kubernetes Auth Engine Role
       kind: KubernetesAuthEngineRole
       name: kubernetesauthengineroles.redhatcop.redhat.io
+      version: v1alpha1
+    - description: KubernetesSecretEngineConfig is the Schema for the kubernetessecretengineconfigs
+        API
+      displayName: Kubernetes Secret Engine Config
+      kind: KubernetesSecretEngineConfig
+      name: kubernetessecretengineconfigs.redhatcop.redhat.io
+      version: v1alpha1
+    - description: KubernetesSecretEngineRole is the Schema for the kubernetessecretengineroles
+        API
+      displayName: Kubernetes Secret Engine Role
+      kind: KubernetesSecretEngineRole
+      name: kubernetessecretengineroles.redhatcop.redhat.io
+      version: v1alpha1
+    - description: LDAPAuthEngineConfig is the Schema for the ldapauthengineconfigs
+        API
+      displayName: LDAPAuth Engine Config
+      kind: LDAPAuthEngineConfig
+      name: ldapauthengineconfigs.redhatcop.redhat.io
+      version: v1alpha1
+    - description: LDAPAuthEngineGroup is the Schema for the ldapauthenginegroups
+        API
+      displayName: LDAPAuth Engine Group
+      kind: LDAPAuthEngineGroup
+      name: ldapauthenginegroups.redhatcop.redhat.io
       version: v1alpha1
     - description: PasswordPolicy is the Schema for the passowordpolicies API
       displayName: Password Policy

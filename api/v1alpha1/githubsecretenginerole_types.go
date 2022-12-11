@@ -52,6 +52,14 @@ type GitHubSecretEngineRoleSpec struct {
 
 type PermissionSet struct {
 
+	//  InstallationID the ID of the app installation. Note the Installation ID from the URL of this page (usually: https://github.com/settings/installations/<installation id>) if you wish to configure using the installation ID directly. Only one of installationID or organizationName is required. If both are provided, installationID takes precedence.
+	// +kubebuilder:validation:Optional
+	InstallationID int64 `json:"installationID,omitempty"`
+
+	// OrganizationName the name of the organization with the GitHub App installation. Only one of installationID or organizationName is required. If both are provided, installationID takes precedence.
+	// +kubebuilder:validation:Optional
+	OrganizationName string `json:"organizationName,omitempty"`
+
 	// Repositories a list of the names of the repositories within the organisation that the installation token can access
 	// +kubebuilder:validation:Optional
 	Repositories []string `json:"repositories,omitempty"`
@@ -67,6 +75,8 @@ type PermissionSet struct {
 
 func (i *PermissionSet) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
+	payload["installation_id"] = i.InstallationID
+	payload["org_name"] = i.OrganizationName
 	payload["repositories"] = i.Repositories
 	payload["repository_ids"] = i.RepositoriesIDs
 	payload["permissions"] = i.Permissions
