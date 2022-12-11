@@ -61,14 +61,6 @@ type GHConfig struct {
 	// +kubebuilder:validation:Required
 	ApplicationID int64 `json:"applicationID,omitempty"`
 
-	// InstanceID the Installation ID of the GitHub App installation.
-	// +kubebuilder:validation:Optional
-	InstanceID int64 `json:"instanceID,omitempty"`
-
-	// OrganizationName the name of the organisation with the GitHub App installation.
-	// +kubebuilder:validation:Required
-	OrganizationName string `json:"organizationName,omitempty"`
-
 	// GitHubAPIBaseURL the base URL for API requests (defaults to the public GitHub API).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="https://api.github.com"
@@ -80,8 +72,6 @@ type GHConfig struct {
 func (i *GHConfig) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["app_id"] = i.ApplicationID
-	payload["ins_id"] = i.InstanceID
-	payload["org_name"] = i.OrganizationName
 	payload["prv_key"] = i.retrievedSSHKey
 	payload["base_url"] = i.GitHubAPIBaseURL
 	return payload

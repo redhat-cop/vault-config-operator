@@ -418,12 +418,14 @@ save the ssh key in a file called: ./test/vault-secret-engine.private-key.pem an
 
 ```sh
 export application_id=163698 #replace with your own
+export org_name=raf-backstage-demo
 export ssh_key=$(cat ./test/vault-secret-engine.private-key.pem | base64 -w 0)
 envsubst < ./test/github-secret-engine-config-secret-template.yaml | oc apply -f - -n vault-admin
 oc apply -f ./test/github-secret-engine-mount.yaml -n vault-admin
 envsubst < ./test/github-secret-engine-config.yaml | oc apply -f - -n vault-admin
-vault read -tls-skip-verify github/raf-backstage-demo/token
-oc apply -f ./test/github-secret-engine-role.yaml -n vault-admin
+#vault read -tls-skip-verify github/raf-backstage-demo/token
+vault write -tls-skip-verify github/raf-backstage-demo/token org_name=${org_name}
+envsubst < ./test/github-secret-engine-role.yaml | oc apply -f - -n vault-admin
 vault read -tls-skip-verify github/raf-backstage-demo/token/one-repo-only
 ```
 
@@ -484,10 +486,10 @@ make docker-push IMG=quay.io/$repo/vault-config-operator:latest
 ```sh
 make manifests
 make bundle IMG=quay.io/$repo/vault-config-operator:latest
-operator-sdk bundle validate ./bundle --select-optional name=operatorhub
+operator-sdk bundle validate ./bundle --select-optional suite=operatorframework --optional-values=k8s-version=1.25
 make bundle-build BUNDLE_IMG=quay.io/$repo/vault-config-operator-bundle:latest
 docker push quay.io/$repo/vault-config-operator-bundle:latest
-operator-sdk bundle validate quay.io/$repo/vault-config-operator-bundle:latest --select-optional name=operatorhub
+operator-sdk bundle validate quay.io/$repo/vault-config-operator-bundle:latest suite=operatorframework --optional-values=k8s-version=1.25
 oc new-project vault-config-operator
 oc label namespace vault-config-operator openshift.io/cluster-monitoring="true"
 operator-sdk cleanup vault-config-operator -n vault-config-operator

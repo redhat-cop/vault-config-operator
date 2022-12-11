@@ -189,7 +189,6 @@ func (r *JWTOIDCAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]
 	return reflect.DeepEqual(desiredState, payload)
 }
 
-
 func (r *JWTOIDCAuthEngineConfig) IsInitialized() bool {
 	return true
 }

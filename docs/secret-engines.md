@@ -169,7 +169,9 @@ vault write [namespace/]test-vault-config-operator/database/static-roles/read-on
 
 ## GitHubSecretEngineConfig
 
-The `GitHubSecretEngineConfig` CRD allows a user to create a GitHub Secret engine configuration. Only one configuration can exists per GitHub secret engine mount point, here is an example:
+The `GitHubSecretEngineConfig` CRD allows a user to create a GitHub Secret engine configuration. 
+Note: this secret engine requires the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github) `v2.0.0` to be installed. 
+Only one configuration can exists per GitHub secret engine mount point, here is an example:
 
 ```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
@@ -185,7 +187,6 @@ spec:
       name: vault-github-app-key
   path: github/raf-backstage-demo
   applicationID: 123456
-  organizationName: raf-backstage-demo
 ```
 
 The `path` field specifies the path of the secret engine that will contain this configuration.
@@ -193,8 +194,6 @@ The `path` field specifies the path of the secret engine that will contain this 
 The `sSHKeyReference` field specifies how to retrieve the ssh key to the GitHub application.
 
 The `applicationID` field specifies application id of the GitHub application.
-
-The `organizationName` field specifies organization in which the application is installed.
 
 More parameters exists for their explanation and for how to install the vault-plugin-secret-github engine see [here](https://github.com/martinbaillie/vault-plugin-secrets-github#config)
 
@@ -220,13 +219,18 @@ spec:
   path: github/raf-backstage-demo
   repositories:
   - hello-world
+  organizationName: raf-backstage-demo
 ```
 
 The `path` field specifies the path of the secret engine that will contain this role.
 
 The `repositories` field specifies on which repositories the generated credential can act.
 
+The `organizationName` field specifies organization in which the application is installed.
+
 More parameters exists for their explanation and for how to install the vault-plugin-secret-github engine see [here](https://github.com/martinbaillie/vault-plugin-secrets-github#permission-sets)
+
+Available permissions are listed [here](https://docs.github.com/en/rest/apps/apps?apiVersion=2022-11-28#create-an-installation-access-token-for-an-app)
 
 This CR is roughly equivalent to this Vault CLI command:
 

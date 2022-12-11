@@ -276,7 +276,6 @@ func (d *JWTOIDCAuthEngineRole) PrepareInternalValues(context context.Context, o
 	return nil
 }
 
-
 func (r *JWTOIDCRole) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["name"] = r.Name
