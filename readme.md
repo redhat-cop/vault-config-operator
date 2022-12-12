@@ -351,11 +351,29 @@ export POSTGRES_PASSWORD=$(kubectl get secret --namespace test-vault-config-oper
 oc rsh -c postgresql -n test-vault-config-operator my-postgresql-database-0
 /opt/bitnami/scripts/postgresql/entrypoint.sh /bin/bash
 psql --host 127.0.0.1 -U postgres -d postgres -p 5432
+type $POSTGRES_PASSWORD here
 CREATE ROLE helloworld;
 exit
 exit
 exit
 oc apply -f ./test/database-engine-read-only-static-role.yaml -n test-vault-config-operator
+```
+
+Database root password rotation. Note we are going to overwrite the previous definition
+
+```sh
+oc apply -f ./test/database-engine-config-password-rotation.yaml -n test-vault-config-operator
+export POSTGRES_PASSWORD=$(kubectl get secret --namespace test-vault-config-operator postgresql-admin-password -o jsonpath="{.data.postgres-password}" | base64 -d)
+oc rsh -c postgresql -n test-vault-config-operator my-postgresql-database-0
+/opt/bitnami/scripts/postgresql/entrypoint.sh /bin/bash
+psql --host 127.0.0.1 -U postgres -d postgres -p 5432
+type $POSTGRES_PASSWORD here
+
+this should fail now
+exit
+exit
+exit
+
 ```
 
 RandomSecret

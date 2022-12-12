@@ -69,6 +69,9 @@ spec:
   rootCredentialsFromSecret:
     name: postgresql-admin-password
   path: postgresql-vault-demo/database
+  rootPasswordRotation:
+    enable: true
+    rotationPeriod: 2m  
 ```
 
 The `pluginName` field specifies what type of database this connection is for.
@@ -80,6 +83,10 @@ The `connectionURL` field specifies how to connect to the database.
 The `username` field specific the username to be used to connect to the database. This field is optional, if not specified the username will be retrieved from teh credential secret.
 
 The `path` field specifies the path of the secret engine to which this connection will be added.
+
+The `rootPasswordRotation.enable` field activates the root password rotation. The root password wil be rotated immediately. It is recommended to use this feature with care as there is no way to recover the root password. 
+
+The `rootPasswordRotation.rotationPeriod` field tells the operator to periodically rotate the root password. If only enable is specified the password will be rotated only once.
 
 The password and possibly the username can be retrived a three different ways:
 

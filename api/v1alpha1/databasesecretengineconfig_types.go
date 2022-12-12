@@ -21,6 +21,7 @@ import (
 	"errors"
 	"reflect"
 
+	vault "github.com/hashicorp/vault/api"
 	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -58,13 +59,31 @@ var _ vaultutils.VaultObject = &DatabaseSecretEngineConfig{}
 func (d *DatabaseSecretEngineConfig) GetPath() string {
 	return string(d.Spec.Path) + "/" + "config" + "/" + d.Name
 }
+func (d *DatabaseSecretEngineConfig) GetRootPasswordRotationPath() string {
+	return string(d.Spec.Path) + "/" + "rotate-root" + "/" + d.Name
+}
 func (d *DatabaseSecretEngineConfig) GetPayload() map[string]interface{} {
 	return d.Spec.toMap()
 }
 func (d *DatabaseSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.DBSEConfig.toMap()
 	delete(desiredState, "password")
+	delete(desiredState, "connection_url")
+	delete(desiredState, "username")
+	delete(desiredState, "verify_connection")
+
+	delete(payload, "plugin_version")
+	delete(payload, "connection_details")
+
 	return reflect.DeepEqual(desiredState, payload)
+}
+
+func toInterfaceArray(values []string) []interface{} {
+	result := []interface{}{}
+	for _, value := range values {
+		result = append(result, value)
+	}
+	return result
 }
 
 func (d *DatabaseSecretEngineConfig) IsInitialized() bool {
@@ -195,6 +214,18 @@ type DBSEConfig struct {
 	retrievedPassword string `json:"-"`
 
 	retrievedUsername string `json:"-"`
+
+	// +kubebuilder:validation:Optional
+	RootPasswordRotation *RootPasswordRotation `json:"rootPasswordRotation,omitempty"`
+}
+
+type RootPasswordRotation struct {
+	// Enabled whether the toot password should be rotated with the rotation statement. If set to true the root password will be rotated immediately.
+	// +kubebuilder:validation:Optional
+	Enable bool `json:"enable,omitempty"`
+	// RotationPeriod if this value is set, the root password will be rotated approximately with teh requested frequency.
+	// +kubebuilder:validation:Optional
+	RotationPeriod metav1.Duration `json:"rotationPeriod,omitempty"`
 }
 
 // DatabaseSecretEngineConfigStatus defines the observed state of DatabaseSecretEngineConfig
@@ -205,6 +236,9 @@ type DatabaseSecretEngineConfigStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+
+	// +kubebuilder:validation:Optional
+	LastRootPasswordRotation metav1.Time `json:"lastRootPasswordRotation,omitempty"`
 }
 
 var _ apis.ConditionsAware = &DatabaseSecretEngineConfig{}
@@ -251,8 +285,8 @@ func (i *DBSEConfig) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["plugin_name"] = i.PluginName
 	payload["verify_connection"] = i.VerifyConnection
-	payload["allowed_roles"] = i.AllowedRoles
-	payload["root_rotation_statements"] = i.RootRotationStatements
+	payload["allowed_roles"] = toInterfaceArray(i.AllowedRoles)
+	payload["root_credentials_rotate_statements"] = toInterfaceArray(i.RootRotationStatements)
 	payload["password_policy"] = i.PasswordPolicy
 	payload["connection_url"] = i.ConnectionURL
 	for key, value := range i.DatabaseSpecificConfig {
@@ -269,4 +303,15 @@ func (r *DatabaseSecretEngineConfig) isValid() error {
 
 func (d *DatabaseSecretEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
+}
+
+func (d *DatabaseSecretEngineConfig) RotateRootPassword(ctx context.Context) error {
+	log := log.FromContext(ctx)
+	vaultClient := ctx.Value("vaultClient").(*vault.Client)
+	_, err := vaultClient.Logical().WriteWithContext(ctx, d.GetRootPasswordRotationPath(), nil)
+	if err != nil {
+		log.Error(err, "unable to rotate root password", "instance", d)
+		return err
+	}
+	return nil
 }
