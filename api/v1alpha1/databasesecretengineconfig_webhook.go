@@ -71,6 +71,16 @@ func (r *DatabaseSecretEngineConfig) ValidateUpdate(old runtime.Object) error {
 	if r.Spec.Path != old.(*DatabaseSecretEngineConfig).Spec.Path {
 		return errors.New("spec.path cannot be updated")
 	}
+	//connection_url, username and verify_connection cannot be changed because they cannot be compare with the actual.
+	if r.Spec.ConnectionURL != old.(*DatabaseSecretEngineConfig).Spec.ConnectionURL {
+		return errors.New("spec.connectionURL cannot be updated")
+	}
+	if r.Spec.Username != old.(*DatabaseSecretEngineConfig).Spec.Username {
+		return errors.New("spec.username cannot be updated")
+	}
+	if r.Spec.VerifyConnection != old.(*DatabaseSecretEngineConfig).Spec.VerifyConnection {
+		return errors.New("spec.verifyConnection cannot be updated")
+	}
 	return r.isValid()
 }
 

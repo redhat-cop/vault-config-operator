@@ -65,7 +65,7 @@ type DatabaseSecretEngineConfigReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
 func (r *DatabaseSecretEngineConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log := log.FromContext(ctx)
 
 	// Fetch the instance
 	instance := &redhatcopv1alpha1.DatabaseSecretEngineConfig{}
@@ -102,31 +102,39 @@ func (r *DatabaseSecretEngineConfigReconciler) Reconcile(ctx context.Context, re
 	//    and reschedule for the period
 	// if rotation is requested and rotation period is defined and we are at more than 95% reschedule for the remainder of the period
 
-	if instance.Spec.RootPasswordRotation.Enabled {
+	if instance.Spec.RootPasswordRotation != nil && instance.Spec.RootPasswordRotation.Enable {
+		log.V(1).Info("we need to rotate the password")
 		if instance.Status.LastRootPasswordRotation.IsZero() {
+			log.V(1).Info("first password rotation")
 			err = r.rotateRootPassword(ctx1, instance)
 			if err != nil {
-				return reconcile.Result{}, err
+				return r.ManageError(ctx, instance, err)
 			}
 			if instance.Spec.RootPasswordRotation.RotationPeriod.Duration != time.Duration(0) {
 				return reconcile.Result{RequeueAfter: instance.Spec.RootPasswordRotation.RotationPeriod.Duration}, nil
 			}
 			return reconcile.Result{}, nil
 		} else {
+
 			if instance.Spec.RootPasswordRotation.RotationPeriod.Duration != time.Duration(0) {
+				log.V(1).Info("recurring password rotation")
 				//(now-lastRotation)/duration > .95
 				if (float64(time.Since(instance.Status.LastRootPasswordRotation.Time)) / float64(instance.Spec.RootPasswordRotation.RotationPeriod.Duration)) > 0.95 {
+					log.V(1).Info("time to rotate")
 					err = r.rotateRootPassword(ctx1, instance)
 					if err != nil {
-						return reconcile.Result{}, err
+						return r.ManageError(ctx, instance, err)
 					}
 					return reconcile.Result{RequeueAfter: instance.Spec.RootPasswordRotation.RotationPeriod.Duration}, nil
 				} else {
+					log.V(1).Info("not yet time to rotate")
 					return reconcile.Result{RequeueAfter: time.Until(instance.Status.LastRootPasswordRotation.Time.Add(instance.Spec.RootPasswordRotation.RotationPeriod.Duration))}, nil
 				}
 			}
+			log.V(1).Info("no need to rotate anymore")
 		}
 	}
+	log.V(1).Info("password rotation not requested")
 	return reconcile.Result{}, nil
 }
 

@@ -44,5 +44,10 @@ spec:
     # Configure database static roles
     path "/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/database/static-roles/+" {
       capabilities = [ "create", "read", "update", "delete"]
-    }    
+    }
+
+    # Rotate root credentials
+    path "/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/database/rotate-root/+" {
+      capabilities = [ "create", "read", "update", "delete"]
+    }        
     

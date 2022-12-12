@@ -68,7 +68,22 @@ func (d *DatabaseSecretEngineConfig) GetPayload() map[string]interface{} {
 func (d *DatabaseSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.DBSEConfig.toMap()
 	delete(desiredState, "password")
+	delete(desiredState, "connection_url")
+	delete(desiredState, "username")
+	delete(desiredState, "verify_connection")
+
+	delete(payload, "plugin_version")
+	delete(payload, "connection_details")
+
 	return reflect.DeepEqual(desiredState, payload)
+}
+
+func toInterfaceArray(values []string) []interface{} {
+	result := []interface{}{}
+	for _, value := range values {
+		result = append(result, value)
+	}
+	return result
 }
 
 func (d *DatabaseSecretEngineConfig) IsInitialized() bool {
@@ -201,13 +216,13 @@ type DBSEConfig struct {
 	retrievedUsername string `json:"-"`
 
 	// +kubebuilder:validation:Optional
-	RootPasswordRotation `json:"rootPasswordRotation,omitempty"`
+	RootPasswordRotation *RootPasswordRotation `json:"rootPasswordRotation,omitempty"`
 }
 
 type RootPasswordRotation struct {
 	// Enabled whether the toot password should be rotated with the rotation statement. If set to true the root password will be rotated immediately.
 	// +kubebuilder:validation:Optional
-	Enabled bool `json:"enabled,omitempty"`
+	Enable bool `json:"enable,omitempty"`
 	// RotationPeriod if this value is set, the root password will be rotated approximately with teh requested frequency.
 	// +kubebuilder:validation:Optional
 	RotationPeriod metav1.Duration `json:"rotationPeriod,omitempty"`
@@ -270,8 +285,8 @@ func (i *DBSEConfig) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["plugin_name"] = i.PluginName
 	payload["verify_connection"] = i.VerifyConnection
-	payload["allowed_roles"] = i.AllowedRoles
-	payload["root_rotation_statements"] = i.RootRotationStatements
+	payload["allowed_roles"] = toInterfaceArray(i.AllowedRoles)
+	payload["root_credentials_rotate_statements"] = toInterfaceArray(i.RootRotationStatements)
 	payload["password_policy"] = i.PasswordPolicy
 	payload["connection_url"] = i.ConnectionURL
 	for key, value := range i.DatabaseSpecificConfig {
