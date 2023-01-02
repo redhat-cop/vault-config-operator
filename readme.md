@@ -207,7 +207,9 @@ helm repo update
 helm upgrade vault-config-operator vault-config-operator/vault-config-operator
 ```
 
-If you want the installation to create self-signed certificates for the webhook and the metrics server, set `enableCertManager` to `true`. If you want to provide your own `cert-manager` certificates, please create the following two certificates:
+If you want the installation to create self-signed certificates for the webhook and the metrics server, set `enableCertManager` to `true`. The installation will create a self-signed issuer and the required certificates.
+
+If you want to provide your own `cert-manager` certificates instead, please create the following two certificates:
 - A certificate named `serving-cert` in the operator's target namespace, with secret name `webhook-server-cert`, for the following domain names:
   - `vault-config-operator-webhook-service.<target namespace>.svc`
   - `vault-config-operator-webhook-service.<target namespace>.svc.cluster.local`
