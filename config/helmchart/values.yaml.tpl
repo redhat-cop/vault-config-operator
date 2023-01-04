@@ -14,6 +14,7 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 env: []
+args: []
 podAnnotations: {}
 
 resources:

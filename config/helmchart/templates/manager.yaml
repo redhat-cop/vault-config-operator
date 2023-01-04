@@ -24,7 +24,7 @@ spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
-      {{- end }}   
+      {{- end }}
       containers:
       - args:
         - --secure-listen-address=0.0.0.0:8443
@@ -48,6 +48,9 @@ spec:
         - /manager
         args:
         - --leader-elect
+        {{- with .Values.args }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         volumeMounts:
@@ -57,7 +60,7 @@ spec:
         {{- with .Values.env }}
         env:
          {{- toYaml . | nindent 8 }}
-        {{- end }}        
+        {{- end }}
         name: {{ .Chart.Name }}
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
@@ -89,7 +92,7 @@ spec:
       - name: vault-config-operator-certs
         secret:
           defaultMode: 420
-          secretName: vault-config-operator-certs  
+          secretName: vault-config-operator-certs
       - name: webhook-server-cert
         secret:
           secretName: webhook-server-cert
