@@ -57,9 +57,12 @@ spec:
         - name: webhook-server-cert
           readOnly: true
           mountPath: /tmp/k8s-webhook-server/serving-certs
+        {{- with .Values.volumeMounts }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
         {{- with .Values.env }}
         env:
-         {{- toYaml . | nindent 8 }}
+          {{- toYaml . | nindent 8 }}
         {{- end }}
         name: {{ .Chart.Name }}
         resources:
@@ -97,3 +100,7 @@ spec:
         secret:
           secretName: webhook-server-cert
           defaultMode: 420
+      {{- with .Values.volumes }}
+        {{- toYaml . | nindent 6 }}
+      {{- end }}
+
