@@ -190,10 +190,12 @@ type RootCredentialConfig struct {
 
 	// PasswordKey key to be used when retrieving the password, required with VaultSecrets and Kubernetes secrets, ignored with RandomSecret
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default="password"
 	PasswordKey string `json:"passwordKey,omitempty"`
 
 	// UsernameKey key to be used when retrieving the username, optional with VaultSecrets and Kubernetes secrets, ignored with RandomSecret
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default="username"
 	UsernameKey string `json:"usernameKey,omitempty"`
 }
 
