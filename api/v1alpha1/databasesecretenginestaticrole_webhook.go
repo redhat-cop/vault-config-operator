@@ -19,10 +19,8 @@ package v1alpha1
 import (
 	"errors"
 
-	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
@@ -45,9 +43,6 @@ var _ webhook.Defaulter = &DatabaseSecretEngineStaticRole{}
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *DatabaseSecretEngineStaticRole) Default() {
 	databasesecretenginestaticrolelog.Info("default", "name", r.Name)
-	if !controllerutil.ContainsFinalizer(r, vaultutils.GetFinalizer(r)) {
-		controllerutil.AddFinalizer(r, vaultutils.GetFinalizer(r))
-	}
 	// TODO(user): fill in your defaulting logic.
 }
 
