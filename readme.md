@@ -84,6 +84,7 @@ Currently this operator covers the following Vault APIs:
 ## The common authentication section
 
 All APIs share a common authentication section, details can be found [here](./docs/auth-section.md)
+Every time a resource is reconciled a new authentication is performed and a new token is requeued from Vault. For the token will be used for reconcile cycle possible for a few calls and then forgotten. The whole process should normally take a fraction of a second, maybe a few seconds on a very busy pod. It is recommended to dedicate an authentication engine just for the vault-configuration-operator controller and keep the token TTL so 10-20s. This will prevent a proliferation of tokens on the Vault side.
 
 ## End to end example
 
@@ -281,7 +282,8 @@ export VAULT_TOKEN=$(oc get secret vault-init -n vault -o jsonpath='{.data.root_
 vault policy write -tls-skip-verify vault-admin  ./config/local-development/vault-admin-policy.hcl
 vault auth enable -tls-skip-verify kubernetes
 vault write -tls-skip-verify auth/kubernetes/config kubernetes_host=https://kubernetes.default.svc:443
-vault write -tls-skip-verify auth/kubernetes/role/policy-admin bound_service_account_names=default bound_service_account_namespaces=vault-admin policies=vault-admin ttl=1h
+vault write -tls-skip-verify auth/kubernetes/role/policy-admin bound_service_account_names=default bound_service_account_namespaces=vault-admin policies=vault-admin ttl=10s
+# noticed how we created a 10s TTL for the tokens created by this authentication engine
 export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.data["kubernetes/"].accessor')
 ```
 
