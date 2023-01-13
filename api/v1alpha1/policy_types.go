@@ -39,6 +39,7 @@ func (d *Policy) GetPayload() map[string]interface{} {
 	}
 }
 func (d *Policy) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+	delete(payload, "name")
 	return reflect.DeepEqual(d.GetPayload(), payload)
 }
 
