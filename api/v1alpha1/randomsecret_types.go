@@ -201,7 +201,11 @@ func (d *RandomSecret) GenerateNewPassword(context context.Context) error {
 		if err != nil {
 			return err
 		} else {
-			d.Spec.calculatedSecret = response.Data["password"].(string)
+			if response.Data != nil {
+				d.Spec.calculatedSecret = response.Data["password"].(string)
+			} else {
+				return errors.New("no data returned by password policy")
+			}
 			return nil
 		}
 	}
