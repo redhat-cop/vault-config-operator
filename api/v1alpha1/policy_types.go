@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
@@ -31,7 +32,7 @@ import (
 var _ vaultutils.VaultObject = &Policy{}
 
 func (d *Policy) GetPath() string {
-	return "sys/policy/" + d.Name
+	return "sys/policy/acl/" + d.Name
 }
 func (d *Policy) GetPayload() map[string]interface{} {
 	return map[string]interface{}{
@@ -40,6 +41,9 @@ func (d *Policy) GetPayload() map[string]interface{} {
 }
 func (d *Policy) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	delete(payload, "name")
+	fmt.Printf("Reconciling...")
+	fmt.Printf("current state...%#v \n", payload)
+	fmt.Printf("desired state...%#v \n", payload)
 	return reflect.DeepEqual(d.GetPayload(), payload)
 }
 
