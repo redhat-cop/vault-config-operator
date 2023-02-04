@@ -131,7 +131,7 @@ type VRole struct {
 	// AliasNameSource Configures how identity aliases are generated. Valid choices are: serviceaccount_uid, serviceaccount_name When serviceaccount_uid is specified, the machine generated UID from the service account will be used as the identity alias name. When serviceaccount_name is specified, the service account's namespace and name will be used as the identity alias name e.g vault/vault-auth. While it is strongly advised that you use serviceaccount_uid, you may also use serviceaccount_name in cases where you want to set the alias ahead of time, and the risks are mitigated or otherwise acceptable given your use case. It is very important to limit who is able to delete/create service accounts within a given cluster. See the Create an Entity Alias document which further expands on the potential security implications mentioned above.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"serviceaccount_uid", "serviceaccount_name"}
-	// +kubebuilder:default={"serviceaccount_uid"}
+	// +kubebuilder:default="serviceaccount_uid"
 	AliasNameSource string `json:"aliasNameSource,omitempty"`
 
 	// TokenTTL The incremental lifetime for generated tokens. This current value of this will be referenced at renewal time.
@@ -179,7 +179,7 @@ type VRole struct {
 	// TokenType The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens). For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"service","batch","default","default-service","default-batch"}
-	// +kubebuilder:default={"default"}
+	// +kubebuilder:default="default"
 	TokenType string `json:"tokenType,omitempty"`
 
 	// this field is for internal use and will not be serialized
