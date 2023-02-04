@@ -66,7 +66,7 @@ func (r *DatabaseSecretEngineStaticRoleReconciler) Reconcile(ctx context.Context
 	vaultClient, err := instance.Spec.Authentication.GetVaultClient(ctx, instance.Namespace)
 	if err != nil {
 		r.Log.Error(err, "unable to create vault client", "instance", instance)
-		return r.ManageError(ctx, instance, err)
+		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 	}
 	ctx = context.WithValue(ctx, "vaultClient", vaultClient)
 	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)

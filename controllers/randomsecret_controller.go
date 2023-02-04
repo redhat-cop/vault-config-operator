@@ -25,6 +25,7 @@ import (
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -83,7 +84,7 @@ func (r *RandomSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
 	if err != nil {
 		r.Log.Error(err, "unable to prepare context", "instance", instance)
-		return r.ManageError(ctx, instance, err)
+		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 	}
 
 	if util.IsBeingDeleted(instance) {

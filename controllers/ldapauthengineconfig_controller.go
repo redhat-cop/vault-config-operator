@@ -78,7 +78,7 @@ func (r *LDAPAuthEngineConfigReconciler) Reconcile(ctx context.Context, req ctrl
 	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
 	if err != nil {
 		r.Log.Error(err, "unable to prepare context", "instance", instance)
-		return r.ManageError(ctx, instance, err)
+		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 	}
 	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
 

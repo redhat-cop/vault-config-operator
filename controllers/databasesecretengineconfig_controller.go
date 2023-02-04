@@ -84,7 +84,7 @@ func (r *DatabaseSecretEngineConfigReconciler) Reconcile(ctx context.Context, re
 	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
 	if err != nil {
 		r.Log.Error(err, "unable to prepare context", "instance", instance)
-		return r.ManageError(ctx, instance, err)
+		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 	}
 
 	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
@@ -108,7 +108,7 @@ func (r *DatabaseSecretEngineConfigReconciler) Reconcile(ctx context.Context, re
 			log.V(1).Info("first password rotation")
 			err = r.rotateRootPassword(ctx1, instance)
 			if err != nil {
-				return r.ManageError(ctx, instance, err)
+				return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 			}
 			if instance.Spec.RootPasswordRotation.RotationPeriod.Duration != time.Duration(0) {
 				return reconcile.Result{RequeueAfter: instance.Spec.RootPasswordRotation.RotationPeriod.Duration}, nil
@@ -123,7 +123,7 @@ func (r *DatabaseSecretEngineConfigReconciler) Reconcile(ctx context.Context, re
 					log.V(1).Info("time to rotate")
 					err = r.rotateRootPassword(ctx1, instance)
 					if err != nil {
-						return r.ManageError(ctx, instance, err)
+						return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 					}
 					return reconcile.Result{RequeueAfter: instance.Spec.RootPasswordRotation.RotationPeriod.Duration}, nil
 				} else {

@@ -18,7 +18,6 @@ package vaultresourcecontroller
 
 import (
 	"context"
-	"time"
 
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	"github.com/redhat-cop/operator-utils/pkg/util/apis"
@@ -26,7 +25,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -60,43 +58,6 @@ func (r *VaultEngineResource) manageCleanUpLogic(context context.Context, instan
 	return nil
 }
 
-// ManageSuccessWithRequeue will update the status of the CR and return a successful reconcile result with requeueAfter set
-func (r *VaultEngineResource) ManageSuccessWithRequeue(context context.Context, obj client.Object, requeueAfter time.Duration) (reconcile.Result, error) {
-	log := log.FromContext(context)
-	if !controllerutil.ContainsFinalizer(obj, vaultutils.GetFinalizer(obj)) {
-		controllerutil.AddFinalizer(obj, vaultutils.GetFinalizer(obj))
-		err := r.reconcilerBase.GetClient().Update(context, obj)
-		if err != nil {
-			log.Error(err, "unable to add reconciler")
-			return reconcile.Result{RequeueAfter: requeueAfter}, err
-		}
-	}
-	if conditionsAware, updateStatus := (obj).(apis.ConditionsAware); updateStatus {
-		condition := metav1.Condition{
-			Type:               apis.ReconcileSuccess,
-			LastTransitionTime: metav1.Now(),
-			ObservedGeneration: obj.GetGeneration(),
-			Reason:             apis.ReconcileSuccessReason,
-			Status:             metav1.ConditionTrue,
-		}
-
-		conditionsAware.SetConditions(apis.AddOrReplaceCondition(condition, conditionsAware.GetConditions()))
-		err := r.reconcilerBase.GetClient().Status().Update(context, obj)
-		if err != nil {
-			log.Error(err, "unable to update status")
-			return reconcile.Result{RequeueAfter: requeueAfter}, err
-		}
-	} else {
-		log.V(1).Info("object is not ConditionsAware, not setting status")
-	}
-	return reconcile.Result{RequeueAfter: requeueAfter}, nil
-}
-
-// ManageSuccess will update the status of the CR and return a successful reconcile result
-func (r *VaultEngineResource) ManageSuccess(context context.Context, obj client.Object) (reconcile.Result, error) {
-	return r.ManageSuccessWithRequeue(context, obj, 0)
-}
-
 func (r *VaultEngineResource) Reconcile(ctx context.Context, instance client.Object) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 
@@ -107,22 +68,22 @@ func (r *VaultEngineResource) Reconcile(ctx context.Context, instance client.Obj
 		err := r.manageCleanUpLogic(ctx, instance)
 		if err != nil {
 			log.Error(err, "unable to delete instance", "instance", instance)
-			return r.reconcilerBase.ManageError(ctx, instance, err)
+			return ManageOutcome(ctx, *r.reconcilerBase, instance, err)
 		}
 		util.RemoveFinalizer(instance, vaultutils.GetFinalizer(instance))
 		err = r.reconcilerBase.GetClient().Update(ctx, instance)
 		if err != nil {
 			log.Error(err, "unable to update instance", "instance", instance)
-			return r.reconcilerBase.ManageError(ctx, instance, err)
+			return ManageOutcome(ctx, *r.reconcilerBase, instance, err)
 		}
 		return reconcile.Result{}, nil
 	}
 	err := r.manageReconcileLogic(ctx, instance)
 	if err != nil {
 		log.Error(err, "unable to complete reconcile logic", "instance", instance)
-		return r.reconcilerBase.ManageError(ctx, instance, err)
+		return ManageOutcome(ctx, *r.reconcilerBase, instance, err)
 	}
-	return r.ManageSuccess(ctx, instance)
+	return ManageOutcome(ctx, *r.reconcilerBase, instance, err)
 }
 
 func (r *VaultEngineResource) manageReconcileLogic(context context.Context, instance client.Object) error {

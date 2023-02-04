@@ -71,7 +71,7 @@ func (r *SecretEngineMountReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
 	if err != nil {
 		r.Log.Error(err, "unable to prepare context", "instance", instance)
-		return r.ManageError(ctx, instance, err)
+		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 	}
 	vaultEngineResource := vaultresourcecontroller.NewVaultEngineResource(&r.ReconcilerBase, instance)
 
