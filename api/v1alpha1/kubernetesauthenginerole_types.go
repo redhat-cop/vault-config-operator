@@ -124,20 +124,26 @@ type VRole struct {
 	// +kubebuilder:default={"default"}
 	TargetServiceAccounts []string `json:"targetServiceAccounts"`
 
-	// Policies is a list of policy names to be bound to this role.
-	// +kubebuilder:validation:MinItems=1
-	// kubebuilder:validation:UniqueItems=true
-	// +kubebuilder:validation:Required
-	Policies []string `json:"policies"`
-
 	// Audience Audience claim to verify in the JWT.
 	// +kubebuilder:validation:Optional
-	Audience string `json:"audience,omitempty"`
+	Audience *string `json:"audience,omitempty"`
+
+	// AliasNameSource Configures how identity aliases are generated. Valid choices are: serviceaccount_uid, serviceaccount_name When serviceaccount_uid is specified, the machine generated UID from the service account will be used as the identity alias name. When serviceaccount_name is specified, the service account's namespace and name will be used as the identity alias name e.g vault/vault-auth. While it is strongly advised that you use serviceaccount_uid, you may also use serviceaccount_name in cases where you want to set the alias ahead of time, and the risks are mitigated or otherwise acceptable given your use case. It is very important to limit who is able to delete/create service accounts within a given cluster. See the Create an Entity Alias document which further expands on the potential security implications mentioned above.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum:={"serviceaccount_uid", "serviceaccount_name"}
+	// +kubebuilder:default={"serviceaccount_uid"}
+	AliasNameSource string `json:"aliasNameSource,omitempty"`
 
 	// TokenTTL The incremental lifetime for generated tokens. This current value of this will be referenced at renewal time.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=0
 	TokenTTL int `json:"tokenTTL,omitempty"`
+
+	// Policies is a list of policy names to be bound to this role.
+	// +kubebuilder:validation:MinItems=1
+	// kubebuilder:validation:UniqueItems=true
+	// +kubebuilder:validation:Required
+	Policies []string `json:"policies"`
 
 	// TokenMaxTTL The maximum lifetime for generated tokens. This current value of this will be referenced at renewal time.
 	// +kubebuilder:validation:Optional
@@ -173,6 +179,7 @@ type VRole struct {
 	// TokenType The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens). For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"service","batch","default","default-service","default-batch"}
+	// +kubebuilder:default={"default"}
 	TokenType string `json:"tokenType,omitempty"`
 
 	// this field is for internal use and will not be serialized
@@ -230,7 +237,10 @@ func (i *VRole) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["bound_service_account_names"] = i.TargetServiceAccounts
 	payload["bound_service_account_namespaces"] = i.namespaces
-	payload["audience"] = i.Audience
+	payload["alias_name_source"] = i.AliasNameSource
+	if i.Audience != nil {
+		payload["audience"] = i.Audience
+	}
 	payload["token_ttl"] = i.TokenTTL
 	payload["token_max_ttl"] = i.TokenMaxTTL
 	payload["token_policies"] = i.Policies
@@ -238,7 +248,7 @@ func (i *VRole) toMap() map[string]interface{} {
 	payload["token_explicit_max_ttl"] = i.TokenExplicitMaxTTL
 	payload["token_no_default_policy"] = i.TokenNoDefaultPolicy
 	payload["token_num_uses"] = i.TokenNumUses
-	payload["tokenPeriod"] = i.TokenPeriod
+	payload["token_period"] = i.TokenPeriod
 	payload["token_type"] = i.TokenType
 	return payload
 }
