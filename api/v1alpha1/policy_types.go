@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
@@ -49,10 +48,6 @@ func (d *Policy) IsEquivalentToDesiredState(payload map[string]interface{}) bool
 		desiredState["rules"] = desiredState["policy"]
 		delete(desiredState, "policy")
 	}
-	fmt.Printf("Reconciling...")
-	fmt.Printf("current state...%#v \n", payload)
-	fmt.Printf("desired state...%#v \n", desiredState)
-	fmt.Printf("are the same: %s \n", reflect.DeepEqual(desiredState, payload))
 	return reflect.DeepEqual(desiredState, payload)
 }
 
