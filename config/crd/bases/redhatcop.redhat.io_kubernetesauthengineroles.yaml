@@ -37,6 +37,25 @@ spec:
             description: KubernetesAuthEngineRoleSpec defines the desired state of
               KubernetesAuthEngineRole
             properties:
+              aliasNameSource:
+                default: serviceaccount_uid
+                description: 'AliasNameSource Configures how identity aliases are
+                  generated. Valid choices are: serviceaccount_uid, serviceaccount_name
+                  When serviceaccount_uid is specified, the machine generated UID
+                  from the service account will be used as the identity alias name.
+                  When serviceaccount_name is specified, the service account''s namespace
+                  and name will be used as the identity alias name e.g vault/vault-auth.
+                  While it is strongly advised that you use serviceaccount_uid, you
+                  may also use serviceaccount_name in cases where you want to set
+                  the alias ahead of time, and the risks are mitigated or otherwise
+                  acceptable given your use case. It is very important to limit who
+                  is able to delete/create service accounts within a given cluster.
+                  See the Create an Entity Alias document which further expands on
+                  the potential security implications mentioned above.'
+                enum:
+                - serviceaccount_uid
+                - serviceaccount_name
+                type: string
               audience:
                 description: Audience Audience claim to verify in the JWT.
                 type: string
@@ -195,6 +214,7 @@ spec:
                   This current value of this will be referenced at renewal time.
                 type: integer
               tokenType:
+                default: default
                 description: 'TokenType The type of token that should be generated.
                   Can be service, batch, or default to use the mount''s tuned default
                   (which unless changed will be service tokens). For token store roles,

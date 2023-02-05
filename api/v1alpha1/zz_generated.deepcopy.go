@@ -3419,6 +3419,11 @@ func (in *VRole) DeepCopyInto(out *VRole) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.Audience != nil {
+		in, out := &in.Audience, &out.Audience
+		*out = new(string)
+		**out = **in
+	}
 	if in.Policies != nil {
 		in, out := &in.Policies, &out.Policies
 		*out = make([]string, len(*in))
