@@ -1,11 +1,11 @@
 CHART_REPO_URL ?= http://example.com
 HELM_REPO_DEST ?= /tmp/gh-pages
 OPERATOR_NAME ?=$(shell basename -z `pwd`)
-HELM_VERSION ?= v3.8.0
-KIND_VERSION ?= v0.11.1
-KUBECTL_VERSION ?= v1.21.1
-K8S_MAJOR_VERSION ?= 1.21
-VAULT_VERSION ?= 1.9.3
+HELM_VERSION ?= v3.11.0
+KIND_VERSION ?= v0.17.0
+KUBECTL_VERSION ?= v1.25.3
+K8S_MAJOR_VERSION ?= 1.25
+VAULT_VERSION ?= 1.12.2
 
 # VERSION defines the project version for the bundle.
 # Update this value when you upgrade the version of your project.
@@ -128,12 +128,12 @@ integration: kind-setup deploy-vault deploy-ingress vault manifests generate fmt
 deploy-ingress: kubectl helm
 	$(HELM) upgrade -i ingress-nginx ./integration/helm/ingress-nginx -n vault --atomic --create-namespace
 	curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml | $(KUBECTL) create -f - -n ingress-nginx
-	$(KUBECTL) rollout status deployment ingress-nginx-controller -n ingress-nginx --timeout=90s
+	$(KUBECTL) rollout status deployment ingress-nginx-controller -n ingress-nginx -w
 	$(KUBECTL) wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=90s
 
 .PHONY: deploy-vault
 deploy-vault: kubectl helm
-	$(KUBECTL) create namespace vault --dry-run=client -o yaml | kubectl apply -f - 
+	$(KUBECTL) create namespace vault --dry-run=true -o yaml | kubectl apply -f - 
 	$(KUBECTL) apply -f ./integration/rolebinding-admin.yaml -n vault
 	$(HELM) repo add hashicorp https://helm.releases.hashicorp.com
 	$(HELM) upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f ./integration/vault-values.yaml
