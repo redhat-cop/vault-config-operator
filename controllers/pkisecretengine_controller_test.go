@@ -36,7 +36,7 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 				}
 
 				for _, condition := range pCreated.Status.Conditions {
-					if condition.Type == "ReconcileSuccessful" && condition.Status == true {
+					if condition.Type == "ReconcileSuccessful" && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -59,7 +59,7 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 				}
 
 				for _, condition := range kaerCreated.Status.Conditions {
-					if condition.Type == "ReconcileSuccessful" && condition.Status == true {
+					if condition.Type == "ReconcileSuccessful" && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -84,7 +84,7 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 				}
 
 				for _, condition := range semCreated.Status.Conditions {
-					if condition.Type == "ReconcileSuccessful" && condition.Status == true {
+					if condition.Type == "ReconcileSuccessful" && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -112,7 +112,7 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 				}
 
 				for _, condition := range rsCreated.Status.Conditions {
-					if condition.Type == "ReconcileSuccessful" && condition.Status == true {
+					if condition.Type == "ReconcileSuccessful" && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -140,7 +140,7 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 				}
 
 				for _, condition := range rsCreated.Status.Conditions {
-					if condition.Type == "ReconcileSuccessful" && condition.Status == true {
+					if condition.Type == "ReconcileSuccessful" && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
