@@ -67,13 +67,21 @@ func (d *DatabaseSecretEngineConfig) GetPayload() map[string]interface{} {
 }
 func (d *DatabaseSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.DBSEConfig.toMap()
+	connectionDetails := map[string]interface{}{}
+	connectionDetails["connection_url"] = desiredState["connection_url"]
+	connectionDetails["disable_escaping"] = desiredState["disable_escaping"]
+	connectionDetails["root_credentials_rotate_statements"] = desiredState["root_credentials_rotate_statements"]
+	connectionDetails["username"] = desiredState["username"]
+	if desiredState["verify_connection"] == true {
+		connectionDetails["verify_connection"] = desiredState["verify_connection"]
+	}
+	desiredState["connection_details"] = connectionDetails
+	//delete fields that have been moved to connection_details
 	delete(desiredState, "password")
 	delete(desiredState, "connection_url")
 	delete(desiredState, "username")
 	delete(desiredState, "verify_connection")
-
-	delete(payload, "plugin_version")
-	delete(payload, "connection_details")
+	delete(desiredState, "disable_escaping")
 
 	return reflect.DeepEqual(desiredState, payload)
 }
@@ -176,6 +184,10 @@ type DBSEConfig struct {
 	// +kubebuilder:validation:Required
 	PluginName string `json:"pluginName,omitempty"`
 
+	// PluginVersion Specifies the semantic version of the plugin to use for this connection.
+	// +kubebuilder:validation:Optional
+	PluginVersion string `json:"pluginVersion,omitempty"`
+
 	// VerifyConnection Specifies if the connection is verified during initial configuration. Defaults to true.
 	// +kubebuilder:validation:Optional
 	VerifyConnection bool `json:"verifyConnection,omitempty"`
@@ -206,7 +218,11 @@ type DBSEConfig struct {
 	// +kubebuilder:validation:Optional
 	Username string `json:"username,omitempty"`
 
-	// DatabaseSpecificConfig this are the configuraiton specific to each database type
+	// DisableEscaping Determines whether special characters in the username and password fields will be escaped. Useful for alternate connection string formats like ADO. More information regarding this parameter can be found on the databases secrets engine docs. Defaults to false
+	// +kubebuilder:validation:Optional
+	DisableEscaping bool `json:"disableEscaping,omitempty"`
+
+	// DatabaseSpecificConfig this are the configuration specific to each database type
 	// +kubebuilder:validation:Optional
 	// +mapType=granular
 	DatabaseSpecificConfig map[string]string `json:"databaseSpecificConfig,omitempty"`
@@ -284,7 +300,9 @@ func init() {
 func (i *DBSEConfig) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["plugin_name"] = i.PluginName
+	payload["plugin_version"] = i.PluginVersion
 	payload["verify_connection"] = i.VerifyConnection
+
 	payload["allowed_roles"] = toInterfaceArray(i.AllowedRoles)
 	payload["root_credentials_rotate_statements"] = toInterfaceArray(i.RootRotationStatements)
 	payload["password_policy"] = i.PasswordPolicy
@@ -292,8 +310,14 @@ func (i *DBSEConfig) toMap() map[string]interface{} {
 	for key, value := range i.DatabaseSpecificConfig {
 		payload[key] = value
 	}
-	payload["username"] = i.retrievedUsername
+	if i.Username != "" {
+		payload["username"] = i.Username
+	} else {
+		payload["username"] = i.retrievedUsername
+	}
+	payload["disable_escaping"] = i.DisableEscaping
 	payload["password"] = i.retrievedPassword
+
 	return payload
 }
 
