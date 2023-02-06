@@ -28,8 +28,6 @@ import (
 
 // VaultSecretSpec defines the desired state of VaultSecret
 type VaultSecretSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 
 	// RefreshPeriod if specified, the operator will refresh the secret with the given frequency.
 	// This takes precedence over any vault secret lease duration and can be used to force a refresh.
