@@ -123,7 +123,7 @@ Here is the subscription using that configmap:
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: vault-config-operator 
+  name: vault-config-operator
 spec:
   channel: alpha
   installPlanApproval: Automatic
@@ -140,7 +140,7 @@ spec:
         name: ocp-service-ca
     volumeMounts:
     - mountPath: /vault-ca
-      name: vault-ca  
+      name: vault-ca
 ```
 
 ## Deploying the Operator
@@ -208,6 +208,16 @@ helm repo update
 helm upgrade vault-config-operator vault-config-operator/vault-config-operator
 ```
 
+If you want the installation to create self-signed certificates for the webhook and the metrics server, set `enableCertManager` to `true`. The installation will create a self-signed issuer and the required certificates.
+
+If you want to provide your own `cert-manager` certificates instead, please create the following two certificates:
+- A certificate named `serving-cert` in the operator's target namespace, with secret name `webhook-server-cert`, for the following domain names:
+  - `vault-config-operator-webhook-service.<target namespace>.svc`
+  - `vault-config-operator-webhook-service.<target namespace>.svc.cluster.local`
+- A certificate with a name of your choice in the operator's target namespace, with secret name `vault-config-operator-certs`, for the following domain names:
+  - `vault-config-operator-controller-manager-metrics-service.<target namespace>.svc`
+  - `vault-config-operator-controller-manager-metrics-service.<target namespace>.svc.cluster.local`
+
 ## Metrics
 
 Prometheus compatible metrics are exposed by the Operator and can be integrated into OpenShift's default cluster monitoring. To enable OpenShift cluster monitoring, label the namespace the operator is deployed in with the label `openshift.io/cluster-monitoring="true"`.
@@ -247,7 +257,7 @@ See <https://github.com/golang/vscode-go/blob/master/docs/settings.md#buildbuild
         "ui.completion.usePlaceholders": true,
         "build.buildFlags": [
             "--tags=integration"
-        ] 
+        ]
     },
 }
 ```
@@ -336,7 +346,7 @@ export uid=$(oc get project test-vault-config-operator -o jsonpath='{.metadata.a
 export guid=$(oc get project test-vault-config-operator -o jsonpath='{.metadata.annotations.openshift\.io/sa\.scc\.supplemental-groups}'|sed 's/\/.*//')
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm upgrade my-postgresql-database bitnami/postgresql -i --create-namespace -n test-vault-config-operator -f ./docs/examples/postgresql/postgresql-values.yaml --set securityContext.fsGroup=${guid} --set containerSecurityContext.runAsUser=${uid} --set volumePermissions.securityContext.runAsUser=${uid} --set metrics.securityContext.runAsUser=${uid}
-oc adm policy add-scc-to-user anyuid -z default -n test-vault-config-operator 
+oc adm policy add-scc-to-user anyuid -z default -n test-vault-config-operator
 oc apply -f ./test/database-engine-config.yaml -n test-vault-config-operator
 ```
 
@@ -408,7 +418,7 @@ VaultSecret & RandomSecret using KV Secret Engine V2
 
 ```sh
 #Random Secret using v2 steps
-oc apply -f ./test/randomsecret/v2/00-passwordpolicy-simple-password-policy-v2.yaml -n vault-admin 
+oc apply -f ./test/randomsecret/v2/00-passwordpolicy-simple-password-policy-v2.yaml -n vault-admin
 envsubst < ./test/randomsecret/v2/01-policy-kv-engine-admin-v2.yaml | oc apply -f - -n vault-admin
 envsubst < ./test/randomsecret/v2/04-policy-secret-writer-v2.yaml | oc apply -f - -n vault-admin
 envsubst < ./test/vaultsecret/v2/00-policy-secret-reader-v2.yaml | oc apply -f - -n vault-admin
