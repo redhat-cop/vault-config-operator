@@ -30,6 +30,10 @@ import (
 
 var _ vaultutils.VaultObject = &PasswordPolicy{}
 
+func (d *PasswordPolicy) GetVaultConnection() *vaultutils.VaultConnection {
+	return d.Spec.Connection
+}
+
 func (d *PasswordPolicy) GetPath() string {
 	return "sys/policies/password/" + d.Name
 }
@@ -59,11 +63,15 @@ type PasswordPolicySpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
+	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
+	// +kubebuilder:validation:Optional
+	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
+
 	// PasswordPolicy  is a Vault password policy (https://www.vaultproject.io/docs/concepts/password-policies) expressed in HCL language.
 	// +kubebuilder:validation:Required
 	PasswordPolicy string `json:"passwordPolicy,omitempty"`
 
-	// Authentication is the kube aoth configuraiton to be used to execute this request
+	// Authentication is the kube auth configuration to be used to execute this request
 	// +kubebuilder:validation:Required
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 }

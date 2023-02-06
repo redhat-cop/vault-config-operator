@@ -18,6 +18,7 @@ func prepareContext(ctx context.Context, r util.ReconcilerBase, VAR VaultAuthent
 	rlog := log.FromContext(ctx)
 	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
 	ctx = context.WithValue(ctx, "restConfig", r.GetRestConfig())
+	ctx = context.WithValue(ctx, "vaultConnection", VAR.GetVaultConnection())
 	vaultClient, err := VAR.GetKubeAuthConfiguration().GetVaultClient(ctx, VAR.GetNamespace())
 	if err != nil {
 		rlog.Error(err, "unable to create vault client", "KubeAuthConfiguration", VAR.GetKubeAuthConfiguration(), "namespace", VAR.GetNamespace())

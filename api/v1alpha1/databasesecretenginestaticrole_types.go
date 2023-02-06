@@ -33,7 +33,12 @@ import (
 
 // DatabaseSecretEngineStaticRoleSpec defines the desired state of DatabaseSecretEngineStaticRole
 type DatabaseSecretEngineStaticRoleSpec struct {
-	// Authentication is the kube aoth configuraiton to be used to execute this request
+
+	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
+	// +kubebuilder:validation:Optional
+	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
+
+	// Authentication is the kube auth configuration to be used to execute this request
 	// +kubebuilder:validation:Required
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
@@ -130,6 +135,10 @@ func (i *DBSEStaticRole) toMap() map[string]interface{} {
 var _ vaultutils.VaultObject = &DatabaseSecretEngineStaticRole{}
 
 var _ apis.ConditionsAware = &DatabaseSecretEngineStaticRole{}
+
+func (d *DatabaseSecretEngineStaticRole) GetVaultConnection() *vaultutils.VaultConnection {
+	return d.Spec.Connection
+}
 
 func (d *DatabaseSecretEngineStaticRole) GetPath() string {
 	return string(d.Spec.Path) + "/" + "static-roles" + "/" + d.Name

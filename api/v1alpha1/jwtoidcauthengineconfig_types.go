@@ -31,6 +31,11 @@ import (
 
 // JWTOIDCAuthEngineConfigSpec defines the desired state of JWTOIDCAuthEngineConfig
 type JWTOIDCAuthEngineConfigSpec struct {
+
+	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
+	// +kubebuilder:validation:Optional
+	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
+
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
@@ -162,6 +167,10 @@ type JWTOIDCConfig struct {
 }
 
 var _ vaultutils.VaultObject = &JWTOIDCAuthEngineConfig{}
+
+func (d *JWTOIDCAuthEngineConfig) GetVaultConnection() *vaultutils.VaultConnection {
+	return d.Spec.Connection
+}
 
 func (r *JWTOIDCAuthEngineConfig) GetConditions() []metav1.Condition {
 	return r.Status.Conditions

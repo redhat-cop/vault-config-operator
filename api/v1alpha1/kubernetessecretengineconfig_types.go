@@ -39,7 +39,12 @@ var _ apis.ConditionsAware = &KubernetesSecretEngineConfig{}
 
 // KubernetesSecretEngineConfigSpec defines the desired state of KubernetesSecretEngineConfig
 type KubernetesSecretEngineConfigSpec struct {
-	// Authentication is the kube aoth configuraiton to be used to execute this request
+
+	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
+	// +kubebuilder:validation:Optional
+	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
+
+	// Authentication is the kube auth configuration to be used to execute this request
 	// +kubebuilder:validation:Required
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
@@ -96,6 +101,10 @@ type KubernetesSecretEngineConfigList struct {
 
 func init() {
 	SchemeBuilder.Register(&KubernetesSecretEngineConfig{}, &KubernetesSecretEngineConfigList{})
+}
+
+func (d *KubernetesSecretEngineConfig) GetVaultConnection() *vaultutils.VaultConnection {
+	return d.Spec.Connection
 }
 
 func (d *KubernetesSecretEngineConfig) GetPath() string {

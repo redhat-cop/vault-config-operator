@@ -33,6 +33,7 @@ type VaultObject interface {
 	IsValid() (bool, error)
 	PrepareInternalValues(context context.Context, object client.Object) error
 	GetKubeAuthConfiguration() *KubeAuthConfiguration
+	GetVaultConnection() *VaultConnection
 }
 
 type VaultEndpoint struct {

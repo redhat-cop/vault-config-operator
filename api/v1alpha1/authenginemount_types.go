@@ -31,7 +31,11 @@ import (
 // AuthEngineMountSpec defines the desired state of AuthEngineMount
 type AuthEngineMountSpec struct {
 
-	// Authentication is the kube aoth configuraiton to be used to execute this request
+	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
+	// +kubebuilder:validation:Optional
+	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
+
+	// Authentication is the kube auth configuration to be used to execute this request
 	// +kubebuilder:validation:Required
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
@@ -148,6 +152,10 @@ func (m *AuthMount) toMap() map[string]interface{} {
 		"local":       m.Local,
 		"seal_wrap":   m.SealWrap,
 	}
+}
+
+func (d *AuthEngineMount) GetVaultConnection() *vaultutils.VaultConnection {
+	return d.Spec.Connection
 }
 
 func (d *AuthEngineMount) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
