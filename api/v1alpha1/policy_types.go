@@ -31,6 +31,9 @@ import (
 var _ vaultutils.VaultObject = &Policy{}
 
 func (d *Policy) GetPath() string {
+	if d.Spec.Type != "" {
+		return "sys/policies/" + d.Spec.Type + "/" + d.Name
+	}
 	return "sys/policy/" + d.Name
 }
 func (d *Policy) GetPayload() map[string]interface{} {
@@ -39,7 +42,13 @@ func (d *Policy) GetPayload() map[string]interface{} {
 	}
 }
 func (d *Policy) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
-	return reflect.DeepEqual(d.GetPayload(), payload)
+	desiredState := d.GetPayload()
+	desiredState["name"] = d.Name
+	if d.Spec.Type == "" {
+		desiredState["rules"] = desiredState["policy"]
+		delete(desiredState, "policy")
+	}
+	return reflect.DeepEqual(desiredState, payload)
 }
 
 func (d *Policy) IsInitialized() bool {
@@ -62,6 +71,11 @@ type PolicySpec struct {
 	// Policy is a Vault policy expressed in HCL language.
 	// +kubebuilder:validation:Required
 	Policy string `json:"policy,omitempty"`
+
+	// Type represents the policy type, currently the only supported policy type is "acl", but in the future rgp and egp  might be supported. If not specified a policy will be created at /sys/policies/<name>, if specified (the recommended approach) a policy will be created at /sys/policies/acl/<name>
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum={"acl"}
+	Type string `json:"type,omitempty"`
 
 	// Authentication is the kube aoth configuraiton to be used to execute this request
 	// +kubebuilder:validation:Required

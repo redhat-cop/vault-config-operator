@@ -68,6 +68,15 @@ spec:
               policy:
                 description: Policy is a Vault policy expressed in HCL language.
                 type: string
+              type:
+                description: Type represents the policy type, currently the only supported
+                  policy type is "acl", but in the future rgp and egp  might be supported.
+                  If not specified a policy will be created at /sys/policies/<name>,
+                  if specified (the recommended approach) a policy will be created
+                  at /sys/policies/acl/<name>
+                enum:
+                - acl
+                type: string
             type: object
           status:
             description: PolicyStatus defines the observed state of Policy

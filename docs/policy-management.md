@@ -22,9 +22,11 @@ spec:
     path "/{{identity.entity.aliases.auth_kubernetes_804f1655.metadata.service_account_namespace}}/database/creds/+" {
       capabilities = ["read"]
     }
+  type: acl  
 ```
 
 Notice that in this policy we have parametrized the path based on the namespace of the connecting service account.
+This creates a policy at this path `/sys/policies/acl/<name>`
 
 ## PasswordPolicy
 
