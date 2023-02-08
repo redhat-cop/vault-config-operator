@@ -18,6 +18,7 @@ package vaultresourcecontroller
 
 import (
 	"context"
+	"time"
 
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	"github.com/redhat-cop/operator-utils/pkg/util/apis"
@@ -31,7 +32,7 @@ import (
 
 const ReconcileSuccessful = "ReconcileSuccessful"
 
-func ManageOutcome(context context.Context, r util.ReconcilerBase, obj client.Object, issue error) (reconcile.Result, error) {
+func ManageOutcomeWithRequeue(context context.Context, r util.ReconcilerBase, obj client.Object, issue error, requeueAfter time.Duration) (reconcile.Result, error) {
 	log := log.FromContext(context)
 	conditionsAware := (obj).(apis.ConditionsAware)
 	var condition metav1.Condition
@@ -68,7 +69,11 @@ func ManageOutcome(context context.Context, r util.ReconcilerBase, obj client.Ob
 		log.Error(err, "unable to update status")
 		return reconcile.Result{}, err
 	}
-	return reconcile.Result{}, issue
+	return reconcile.Result{RequeueAfter: requeueAfter}, issue
+}
+
+func ManageOutcome(context context.Context, r util.ReconcilerBase, obj client.Object, issue error) (reconcile.Result, error) {
+	return ManageOutcomeWithRequeue(context, r, obj, issue, 0)
 }
 
 func isValid(obj client.Object) (bool, error) {
