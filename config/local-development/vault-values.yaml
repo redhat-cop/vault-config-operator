@@ -7,11 +7,12 @@ ui:
 
 injector:
   image:
-    tag: "1.1.0"
-    repository: docker.io/hashicorp/vault-k8s
+    repository: "registry.connect.redhat.com/hashicorp/vault-k8s"
+    tag: "1.2.0-ubi"
+
   agentImage:
-    repository: "docker.io/hashicorp/vault"
-    tag: "1.12.2"    
+    repository: "registry.connect.redhat.com/hashicorp/vault"
+    tag: "1.12.3-ubi"    
 
 csi:
   image:
@@ -21,8 +22,8 @@ csi:
 
 server:
   image:
-    tag: "1.12.2"
-    repository: docker.io/hashicorp/vault
+    tag: "1.12.3-ubi"
+    repository: registry.connect.redhat.com/hashicorp/vault
 
   extraEnvironmentVars:
     VAULT_CACERT: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
@@ -106,7 +107,7 @@ server:
   extraContainers:
     # you should not do this in production
     - name: auto-initializer
-      image: registry.connect.redhat.com/hashicorp/vault:1.12.0-ubi
+      image: registry.connect.redhat.com/hashicorp/vault:1.12.3-ubi
       env: 
       - name: NAMESPACE
         valueFrom:
@@ -143,7 +144,7 @@ server:
           mountPath: /usr/local/libexec/vault          
     # you should not do this in production      
     - name: auto-unsealer
-      image: registry.connect.redhat.com/hashicorp/vault:1.12.0-ubi
+      image: registry.connect.redhat.com/hashicorp/vault:1.12.3-ubi
       env: 
       - name: VAULT_SKIP_VERIFY
         value: "true"        
@@ -176,7 +177,7 @@ server:
         - name: vault-root-token
           mountPath: /vault-root-token  
     - name: github-module-loader
-      image: registry.connect.redhat.com/hashicorp/vault:1.12.0-ubi
+      image: registry.connect.redhat.com/hashicorp/vault:1.12.3-ubi
       env: 
       - name: VAULT_SKIP_VERIFY
         value: "true"        
