@@ -123,9 +123,9 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	//we reschedule the next reconcile at the time in the future corresponding to
 	nextSchedule := time.Until(nextUpdateTime)
 	if nextSchedule > 0 {
-		return r.ManageSuccessWithRequeue(ctx, instance, nextSchedule)
+		return vaultresourcecontroller.ManageOutcomeWithRequeue(ctx, r.ReconcilerBase, instance, err, nextSchedule)
 	} else {
-		return r.ManageSuccessWithRequeue(ctx, instance, time.Second)
+		return vaultresourcecontroller.ManageOutcomeWithRequeue(ctx, r.ReconcilerBase, instance, err, time.Second)
 	}
 
 }
