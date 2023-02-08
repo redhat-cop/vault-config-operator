@@ -284,6 +284,7 @@ func (r *VaultSecretReconciler) manageSyncLogic(ctx context.Context, instance *r
 	definitionsStatus := make([]redhatcopv1alpha1.VaultSecretDefinitionStatus, len(instance.Spec.VaultSecretDefinitions))
 
 	for idx, vaultSecretDefinition := range instance.Spec.VaultSecretDefinitions {
+		ctx = context.WithValue(ctx, "vaultConnection", vaultSecretDefinition.GetVaultConnection())
 		vaultClient, err := vaultSecretDefinition.Authentication.GetVaultClient(ctx, instance.Namespace)
 		if err != nil {
 			r.Log.Error(err, "unable to create vault client", "instance", instance)
