@@ -133,7 +133,7 @@ deploy-ingress: kubectl helm
 
 .PHONY: deploy-vault
 deploy-vault: kubectl helm
-	$(KUBECTL) create namespace vault --dry-run=true -o yaml | kubectl apply -f - 
+	$(KUBECTL) create namespace vault --dry-run=client -o yaml | kubectl apply -f - 
 	$(KUBECTL) apply -f ./integration/rolebinding-admin.yaml -n vault
 	$(HELM) repo add hashicorp https://helm.releases.hashicorp.com
 	$(HELM) upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f ./integration/vault-values.yaml

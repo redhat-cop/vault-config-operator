@@ -14,6 +14,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,7 +44,7 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				}
 
 				for _, condition := range ppCreated.Status.Conditions {
-					if condition.Type == "ReconcileSuccessful" && condition.Status == metav1.ConditionTrue {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -69,7 +70,7 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				}
 
 				for _, condition := range pCreated.Status.Conditions {
-					if condition.Type == "ReconcileSuccessful" && condition.Status == metav1.ConditionTrue {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -94,7 +95,7 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				}
 
 				for _, condition := range pCreated.Status.Conditions {
-					if condition.Type == "ReconcileSuccessful" && condition.Status == metav1.ConditionTrue {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -119,7 +120,7 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				}
 
 				for _, condition := range pCreated.Status.Conditions {
-					if condition.Type == "ReconcileSuccessful" && condition.Status == metav1.ConditionTrue {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -144,7 +145,7 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				}
 
 				for _, condition := range kaerCreated.Status.Conditions {
-					if condition.Type == "ReconcileSuccessful" && condition.Status == metav1.ConditionTrue {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -167,7 +168,7 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				}
 
 				for _, condition := range kaerCreated.Status.Conditions {
-					if condition.Type == "ReconcileSuccessful" && condition.Status == metav1.ConditionTrue {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -190,7 +191,7 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				}
 
 				for _, condition := range kaerCreated.Status.Conditions {
-					if condition.Type == "ReconcileSuccessful" && condition.Status == metav1.ConditionTrue {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -215,7 +216,7 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				}
 
 				for _, condition := range semCreated.Status.Conditions {
-					if condition.Type == "ReconcileSuccessful" && condition.Status == metav1.ConditionTrue {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -240,7 +241,7 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				}
 
 				for _, condition := range rsCreated.Status.Conditions {
-					if condition.Type == "ReconcileSuccessful" && condition.Status == metav1.ConditionTrue {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -263,7 +264,7 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				}
 
 				for _, condition := range rsCreated.Status.Conditions {
-					if condition.Type == "ReconcileSuccessful" && condition.Status == metav1.ConditionTrue {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -291,7 +292,7 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				}
 
 				for _, condition := range created.Status.Conditions {
-					if condition.Type == "ReconcileSuccessful" && condition.Status == metav1.ConditionTrue {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
