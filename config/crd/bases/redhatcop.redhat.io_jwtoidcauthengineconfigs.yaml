@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.9.0
+    controller-gen.kubebuilder.io/version: v0.10.0
   creationTimestamp: null
   name: jwtoidcauthengineconfigs.redhatcop.redhat.io
 spec:
@@ -100,6 +100,7 @@ spec:
                           TODO: Add other useful fields. apiVersion, kind, uid?'
                         type: string
                     type: object
+                    x-kubernetes-map-type: atomic
                   secret:
                     description: 'Secret retrieves the credentials from a Kubernetes
                       secret. The secret must be of basicauth type (https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret).
@@ -127,6 +128,7 @@ spec:
                           TODO: Add other useful fields. apiVersion, kind, uid?'
                         type: string
                     type: object
+                    x-kubernetes-map-type: atomic
                   usernameKey:
                     default: username
                     description: UsernameKey key to be used when retrieving the username,
@@ -211,6 +213,7 @@ spec:
                           TODO: Add other useful fields. apiVersion, kind, uid?'
                         type: string
                     type: object
+                    x-kubernetes-map-type: atomic
                 type: object
               boundIssuer:
                 default: ""
