@@ -43,6 +43,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	vaultsecretutils "github.com/redhat-cop/vault-config-operator/controllers/vaultsecretutils"
 )
 
@@ -95,14 +96,14 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	shouldSync, err := r.shouldSync(ctx, instance)
 	if err != nil {
 		// There was a problem determining if the event should cause a sync.
-		return r.ManageError(ctx, instance, err)
+		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 	}
 
 	if shouldSync {
 		err = r.manageSyncLogic(ctx, instance)
 		if err != nil {
 			r.Log.Error(err, "unable to complete sync logic", "instance", instance)
-			return r.ManageError(ctx, instance, err)
+			return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 		}
 	}
 
@@ -122,9 +123,9 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	//we reschedule the next reconcile at the time in the future corresponding to
 	nextSchedule := time.Until(nextUpdateTime)
 	if nextSchedule > 0 {
-		return r.ManageSuccessWithRequeue(ctx, instance, nextSchedule)
+		return vaultresourcecontroller.ManageOutcomeWithRequeue(ctx, r.ReconcilerBase, instance, err, nextSchedule)
 	} else {
-		return r.ManageSuccessWithRequeue(ctx, instance, time.Second)
+		return vaultresourcecontroller.ManageOutcomeWithRequeue(ctx, r.ReconcilerBase, instance, err, time.Second)
 	}
 
 }

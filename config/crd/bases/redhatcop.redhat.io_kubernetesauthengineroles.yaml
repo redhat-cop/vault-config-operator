@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.9.0
+    controller-gen.kubebuilder.io/version: v0.10.0
   creationTimestamp: null
   name: kubernetesauthengineroles.redhatcop.redhat.io
 spec:
@@ -88,6 +88,7 @@ spec:
                           TODO: Add other useful fields. apiVersion, kind, uid?'
                         type: string
                     type: object
+                    x-kubernetes-map-type: atomic
                 type: object
               path:
                 description: Path at which to make the configuration. The final path
@@ -153,6 +154,7 @@ spec:
                           "value". The requirements are ANDed.
                         type: object
                     type: object
+                    x-kubernetes-map-type: atomic
                   targetNamespaces:
                     description: TargetNamespaces is a list of namespace from which
                       service accounts will receive this role. Either TargetNamespaceSelector
