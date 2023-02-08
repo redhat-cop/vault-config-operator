@@ -28,6 +28,10 @@ import (
 // LDAPAuthEngineGroupSpec defines the desired state of LDAPAuthEngineGroup
 type LDAPAuthEngineGroupSpec struct {
 
+	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
+	// +kubebuilder:validation:Optional
+	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
+
 	// Authentication is the kube auth configuraiton to be used to execute this request
 	// +kubebuilder:validation:Required
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
@@ -49,6 +53,10 @@ type LDAPAuthEngineGroupSpec struct {
 }
 
 var _ vaultutils.VaultObject = &LDAPAuthEngineGroup{}
+
+func (d *LDAPAuthEngineGroup) GetVaultConnection() *vaultutils.VaultConnection {
+	return d.Spec.Connection
+}
 
 func (d *LDAPAuthEngineGroup) GetPath() string {
 	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/groups/" + string(d.Spec.Name))

@@ -28,8 +28,6 @@ import (
 
 // VaultSecretSpec defines the desired state of VaultSecret
 type VaultSecretSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 
 	// RefreshPeriod if specified, the operator will refresh the secret with the given frequency.
 	// This takes precedence over any vault secret lease duration and can be used to force a refresh.
@@ -106,6 +104,11 @@ type VaultSecretDefinition struct {
 	// Name is an arbitrary, but unique, name for this KV Vault secret and referenced when templating.
 	// +kubebuilder:validation:Required
 	Name string `json:"name,omitempty"`
+
+	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
+	// +kubebuilder:validation:Optional
+	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
+
 	// Authentication is the kube auth configuraiton to be used to execute this request
 	// +kubebuilder:validation:Required
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
@@ -171,6 +174,10 @@ func (vs *VaultSecret) isValid() error {
 }
 
 var _ vaultutils.VaultSecretObject = &VaultSecretDefinition{}
+
+func (d *VaultSecretDefinition) GetVaultConnection() *vaultutils.VaultConnection {
+	return d.Connection
+}
 
 func (d *VaultSecretDefinition) GetPath() string {
 	return string(d.Path)

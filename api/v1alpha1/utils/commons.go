@@ -56,6 +56,89 @@ type KubeAuthConfiguration struct {
 	Namespace string `json:"namespace,omitempty"`
 }
 
+// +kubebuilder:object:generate=true
+type VaultConnection struct {
+	// +kubebuilder:validation:Optional
+	TLSConfig *TLSConfig `json:"tLSConfig,omitempty"`
+
+	// Address Address of the Vault server expressed as a URL and port, for example: https://127.0.0.1:8200/
+	// +kubebuilder:validation:Required
+	Address string `json:"address,omitempty"`
+
+	// Timeout Timeout variable. The default value is 60s.
+	// +kubebuilder:validation:Optional
+	TimeOut *metav1.Duration `json:"timeOut,omitempty"`
+
+	// MaxRetries Maximum number of retries when certain error codes are encountered. The default is 2, for three total attempts. Set this to 0 or less to disable retrying. Error codes that are retried are 412 (client consistency requirement not satisfied) and all 5xx except for 501 (not implemented).
+	// +kubebuilder:validation:Optional
+	MaxRetries *int `json:"maxRetries,omitempty"`
+}
+
+// +kubebuilder:object:generate=true
+type TLSConfig struct {
+	// Cacert Path to a PEM-encoded CA certificate file on the local disk. This file is used to verify the Vault server's SSL certificate. This environment variable takes precedence over a cert passed via the secret.
+	// +kubebuilder:validation:Optional
+	Cacert *string `json:"cacert,omitempty"`
+
+	// TLSSecret namespace-local secret containing the tls material for the connection. the expected keys for the secret are: ca bundle -> "ca.crt", certificate -> "tls.crt", key -> "tls.key"
+	// +kubebuilder:validation:Optional
+	TLSSecret *corev1.LocalObjectReference `json:"tlsSecret,omitempty"`
+
+	// SkipVerify Do not verify Vault's presented certificate before communicating with it. Setting this variable is not recommended and voids Vault's security model.
+	// +kubebuilder:validation:Optional
+	SkipVerify bool `json:"skipVerify,omitempty"`
+
+	// TLSServerName Name to use as the SNI host when connecting via TLS.
+	// +kubebuilder:validation:Optional
+	TLSServerName *string `json:"tlsServerName,omitempty"`
+}
+
+func (vc *VaultConnection) getConnectionConfig(context context.Context, kubeNamespace string) (*vault.Config, error) {
+	log := log.FromContext(context)
+	restConfig := context.Value("restConfig").(*rest.Config)
+	clientset, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		log.Error(err, "unable to create kubernetes clientset")
+		return nil, err
+	}
+	config := vault.DefaultConfig()
+	config.Address = vc.Address
+	if vc.TimeOut != nil {
+		config.Timeout = vc.TimeOut.Duration
+	}
+	if vc.MaxRetries != nil {
+		config.MaxRetries = *vc.MaxRetries
+	}
+	if vc.TLSConfig != nil {
+		tlsConfig := vault.TLSConfig{}
+		if vc.TLSConfig.TLSSecret != nil {
+			tlsSecret, err := clientset.CoreV1().Secrets(kubeNamespace).Get(context, vc.TLSConfig.TLSSecret.Name, metav1.GetOptions{})
+			if err != nil {
+				log.Error(err, "unable to retrieve", "secret", vc.TLSConfig.TLSSecret.Name)
+				return nil, err
+			}
+			if ca, ok := tlsSecret.Data["ca.crt"]; ok {
+				tlsConfig.CACertBytes = ca
+			}
+			if key, ok := tlsSecret.Data["tls.key"]; ok {
+				tlsConfig.ClientKey = string(key)
+			}
+			if crt, ok := tlsSecret.Data["tls.crt"]; ok {
+				tlsConfig.ClientCert = string(crt)
+			}
+		}
+		if vc.TLSConfig.Cacert != nil {
+			tlsConfig.CACert = *vc.TLSConfig.Cacert
+		}
+		if vc.TLSConfig.TLSServerName != nil {
+			tlsConfig.TLSServerName = *vc.TLSConfig.TLSServerName
+		}
+		tlsConfig.Insecure = !vc.TLSConfig.SkipVerify
+		config.ConfigureTLS(&tlsConfig)
+	}
+	return config, nil
+}
+
 func (kc *KubeAuthConfiguration) GetNamespace() string {
 	return kc.Namespace
 }
@@ -77,7 +160,7 @@ func (kc *KubeAuthConfiguration) GetVaultClient(context context.Context, kubeNam
 		log.Error(err, "unable to retrieve jwt token for", "namespace", kubeNamespace, "serviceaccount", kc.GetServiceAccountName())
 		return nil, err
 	}
-	vaultClient, err := kc.createVaultClient(context, jwt)
+	vaultClient, err := kc.createVaultClient(context, jwt, kubeNamespace)
 	if err != nil {
 		log.Error(err, "unable to create vault client")
 		return nil, err
@@ -122,9 +205,21 @@ func (kc *KubeAuthConfiguration) getJWTToken(context context.Context, kubeNamesp
 	return GetJWTToken(context, kc.GetServiceAccountName(), kubeNamespace)
 }
 
-func (kc *KubeAuthConfiguration) createVaultClient(context context.Context, jwt string) (*vault.Client, error) {
+func (kc *KubeAuthConfiguration) createVaultClient(context context.Context, jwt string, namespace string) (*vault.Client, error) {
 	log := log.FromContext(context)
-	config := vault.DefaultConfig()
+	vaultConnection := context.Value("vaultConnection").(*VaultConnection)
+	var config *vault.Config
+	if vaultConnection != nil {
+		var err error
+		config, err = vaultConnection.getConnectionConfig(context, namespace)
+		if err != nil {
+			log.Error(err, "unable initialize vault connection configuration")
+			return nil, err
+		}
+	} else {
+		config = vault.DefaultConfig()
+	}
+
 	client, err := vault.NewClient(config)
 	if err != nil {
 		log.Error(err, "unable initialize vault client")

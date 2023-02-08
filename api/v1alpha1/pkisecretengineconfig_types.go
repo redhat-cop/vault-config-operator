@@ -37,7 +37,12 @@ import (
 
 // PKISecretEngineConfigSpec defines the desired state of PKISecretEngineConfig
 type PKISecretEngineConfigSpec struct {
-	// Authentication is the kube aoth configuraiton to be used to execute this request
+
+	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
+	// +kubebuilder:validation:Optional
+	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
+
+	// Authentication is the kube auth configuration to be used to execute this request
 	// +kubebuilder:validation:Required
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
@@ -225,6 +230,10 @@ type PKIIntermediate struct {
 var _ vaultutils.VaultObject = &PKISecretEngineConfig{}
 var _ vaultutils.VaultPKIEngineObject = &PKISecretEngineConfig{}
 
+func (d *PKISecretEngineConfig) GetVaultConnection() *vaultutils.VaultConnection {
+	return d.Spec.Connection
+}
+
 func (p *PKISecretEngineConfig) GetPath() string {
 	return string(p.Spec.Path)
 }
@@ -336,7 +345,7 @@ func (p *PKISecretEngineConfig) SetIntermediate(context context.Context) error {
 		} else {
 
 			if p.Spec.ExternalSignSecret == nil {
-				err := errors.New("Waiting spec.externalSignSecret with signed intermediate certificate.")
+				err := errors.New("waiting spec.externalSignSecret with signed intermediate certificate")
 				log.Error(err, "missing spec.externalSignSecret", "instance", p)
 				return err
 			}

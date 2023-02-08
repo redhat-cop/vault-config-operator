@@ -34,7 +34,11 @@ import (
 // KubernetesAuthEngineRoleSpec defines the desired state of KubernetesAuthEngineRole
 type KubernetesAuthEngineRoleSpec struct {
 
-	// Authentication is the kube aoth configuraiton to be used to execute this request
+	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
+	// +kubebuilder:validation:Optional
+	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
+
+	// Authentication is the kube auth configuration to be used to execute this request
 	// +kubebuilder:validation:Required
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
@@ -52,6 +56,10 @@ type KubernetesAuthEngineRoleSpec struct {
 }
 
 var _ vaultutils.VaultObject = &KubernetesAuthEngineRole{}
+
+func (d *KubernetesAuthEngineRole) GetVaultConnection() *vaultutils.VaultConnection {
+	return d.Spec.Connection
+}
 
 func (d *KubernetesAuthEngineRole) GetPath() string {
 	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/role/" + d.Name)

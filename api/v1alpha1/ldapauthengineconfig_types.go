@@ -31,6 +31,11 @@ import (
 
 // LDAPAuthEngineConfigSpec defines the desired state of LDAPAuthEngineConfig
 type LDAPAuthEngineConfigSpec struct {
+
+	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
+	// +kubebuilder:validation:Optional
+	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
+
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
@@ -45,6 +50,10 @@ type LDAPAuthEngineConfigSpec struct {
 	// BindCredentials consists in bindDN and bindPass, which can be created as Kubernetes Secret, VaultSecret or RandomSecret
 	// +kubebuilder:validation:Required
 	BindCredentials vaultutils.RootCredentialConfig `json:"bindCredentials,omitempty"`
+}
+
+func (d *LDAPAuthEngineConfig) GetVaultConnection() *vaultutils.VaultConnection {
+	return d.Spec.Connection
 }
 
 func (d *LDAPAuthEngineConfig) GetPath() string {

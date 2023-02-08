@@ -11,6 +11,7 @@ type VaultSecretObject interface {
 	GetPath() string
 	GetRequestMethod() string
 	GetPostRequestPayload() map[string]string
+	GetVaultConnection() *VaultConnection
 }
 
 func NewVaultSecretEndpoint(obj VaultSecretObject) *VaultSecretEndpoint {

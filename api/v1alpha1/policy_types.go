@@ -30,6 +30,10 @@ import (
 
 var _ vaultutils.VaultObject = &Policy{}
 
+func (d *Policy) GetVaultConnection() *vaultutils.VaultConnection {
+	return d.Spec.Connection
+}
+
 func (d *Policy) GetPath() string {
 	if d.Spec.Type != "" {
 		return "sys/policies/" + d.Spec.Type + "/" + d.Name
@@ -68,6 +72,10 @@ type PolicySpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
+	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
+	// +kubebuilder:validation:Optional
+	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
+
 	// Policy is a Vault policy expressed in HCL language.
 	// +kubebuilder:validation:Required
 	Policy string `json:"policy,omitempty"`
@@ -77,7 +85,7 @@ type PolicySpec struct {
 	// +kubebuilder:validation:Enum={"acl"}
 	Type string `json:"type,omitempty"`
 
-	// Authentication is the kube aoth configuraiton to be used to execute this request
+	// Authentication is the kube auth configuration to be used to execute this request
 	// +kubebuilder:validation:Required
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 }

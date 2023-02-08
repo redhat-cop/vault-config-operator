@@ -18,7 +18,7 @@ package v1alpha1
 
 import (
 	"errors"
-	"io/ioutil"
+	"os"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -45,7 +45,7 @@ var _ webhook.Defaulter = &KubernetesAuthEngineConfig{}
 func (r *KubernetesAuthEngineConfig) Default() {
 	kubernetesauthengineconfiglog.Info("default", "name", r.Name)
 	if r.Spec.KubernetesCACert == "" {
-		b, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
+		b, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
 		if err != nil {
 			kubernetesauthengineconfiglog.Error(err, "unable to read file /var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
 			return

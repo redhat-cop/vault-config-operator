@@ -9,6 +9,7 @@
   - [Secret Engines](#secret-engines)
   - [Secret Management](#secret-management)
   - [The common authentication section](#the-common-authentication-section)
+  - [The common connection section](#the-common-connection-section)
   - [End to end example](#end-to-end-example)
   - [Contributing a new Vault type](#contributing-a-new-vault-type)
   - [Initializing the connection to Vault](#initializing-the-connection-to-vault)
@@ -86,6 +87,8 @@ Currently this operator covers the following Vault APIs:
 All APIs share a common authentication section, details can be found [here](./docs/auth-section.md)
 Every time a resource is reconciled a new authentication is performed and a new token is requeued from Vault. For the token will be used for reconcile cycle possible for a few calls and then forgotten. The whole process should normally take a fraction of a second, maybe a few seconds on a very busy pod. It is recommended to dedicate an authentication engine just for the vault-configuration-operator controller and keep the token TTL so 10-20s. This will prevent a proliferation of tokens on the Vault side.
 
+
+
 ## End to end example
 
 See [this section](./docs/end-to-end-example.md) for an example scenario in which this operator could be used.
@@ -142,6 +145,41 @@ spec:
     - mountPath: /vault-ca
       name: vault-ca
 ```
+
+## The Common connection section
+
+All APIs share a common connection section. This section can be used to override how connections to Vault are established, essentially changing the above explained behavior. With feature it is potentially possible to connect to multiple vault instance from a single cluster.
+
+Here is an example:
+
+```yaml
+  connection:
+    address: 'https://vault.vault2.svc:8200'
+    tLSConfig:
+      cacert: |
+        -----BEGIN CERTIFICATE-----
+        MIIDUTCCAjmgAwIBAgIIW+spyyCjRaIwDQYJKoZIhvcNAQELBQAwNjE0MDIGA1UE
+        Awwrb3BlbnNoaWZ0LXNlcnZpY2Utc2VydmluZy1zaWduZXJAMTY3NDc3NDQ3MzAe
+        Fw0yMzAxMjYyMzA3NTNaFw0yNTAzMjYyMzA3NTRaMDYxNDAyBgNVBAMMK29wZW5z
+        aGlmdC1zZXJ2aWNlLXNlcnZpbmctc2lnbmVyQDE2NzQ3NzQ0NzMwggEiMA0GCSqG
+        SIb3DQEBAQUAA4IBDwAwggEKAoIBAQC8+qF40DBauBGBgk14iCwzDZ5s9J/0rzRi
+        x/aLm9DYabtrar1mz6T41UstX4ulgxnU+QrQYN8X1NROzlksC4fFPI3lmmjI95PU
+        xshv5z3wjKlEq5sI4RqyzAqgww5EMnBz5aaaElFBRZhgFymylc347kR7ZMpx8H9b
+        LuyAf4zOuherbUO6xYREPKyZwFC1HHZpjnXtrTYNsFvB2GQjnTNWHZdCfdZVHtZx
+        /vmTlPQGXMnoYBvKH74jxbQVYcu/UGtifj/Q4LpPn05YYvq6xQcYq+H6dLC4gD/W
+        Z1bFgLZUH5+Xx/mPldrvZBhqINvVo3qR+7U8TiGnoyGUYCdv8k2RAgMBAAGjYzBh
+        MA4GA1UdDwEB/wQEAwICpDAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBSaW5QB
+        6lFBObTYaebBNKMlOXp8VDAfBgNVHSMEGDAWgBSaW5QB6lFBObTYaebBNKMlOXp8
+        VDANBgkqhkiG9w0BAQsFAAOCAQEAmVnCbvFRs0Z13tgWE3J51dcrzhyuBEbdAWfU
+        5MHrDKw7Sm3N67UC/Av01G6XDIZh8lW6s+foOES3IXWv/ayH4Sc91U92/K17Cls6
+        s6ZuC6KDd/X0ez6G8URbvB9gwlrst3WVnD0Qefb36K4YqfRF9j4KTAbDXLZuGpZK
+        lMk0STHHRm7IeVBnSEqrs8AxLdn+wgnPEdag7Z89BvRhhscQivZwsSBwSegalmdb
+        UIfKX64wKllQs2sd6eSvDZxDheB1YGM2nYQDYZeWb0gskPsakYUcTfouvXBYrXMf
+        mHyYxYdDK+drEiV6RB1s8swFPdVaLMe2U0KedY486JFk1aKHqA==
+        -----END CERTIFICATE-----
+```
+
+This section features the same options that are available via environment variables when using the `vault` client. Keep in mind that this configuration override the default explained above, so you need to specify only the field that need to be different.
 
 ## Deploying the Operator
 
