@@ -80,17 +80,17 @@ func (ve *VaultPKIEngineEndpoint) CreateOrUpdateConfigUrls(context context.Conte
 	return ve.CreateOrUpdateConfig(context, ve.vaultPKIEngineObject.GetConfigUrlsPath(), ve.vaultPKIEngineObject.GetConfigUrlsPayload())
 }
 
-func (ve *VaultPKIEngineEndpoint) readConfigUrls(context context.Context) (map[string]interface{}, error) {
-	return ve.readConfig(context, ve.vaultPKIEngineObject.GetConfigUrlsPath())
-}
+// func (ve *VaultPKIEngineEndpoint) readConfigUrls(context context.Context) (map[string]interface{}, error) {
+// 	return ve.readConfig(context, ve.vaultPKIEngineObject.GetConfigUrlsPath())
+// }
 
 func (ve *VaultPKIEngineEndpoint) CreateOrUpdateConfigCrl(context context.Context) error {
 	return ve.CreateOrUpdateConfig(context, ve.vaultPKIEngineObject.GetConfigCrlPath(), ve.vaultPKIEngineObject.GetConfigCrlPayload())
 }
 
-func (ve *VaultPKIEngineEndpoint) readConfigCrl(context context.Context) (map[string]interface{}, error) {
-	return ve.readConfig(context, ve.vaultPKIEngineObject.GetConfigCrlPath())
-}
+// func (ve *VaultPKIEngineEndpoint) readConfigCrl(context context.Context) (map[string]interface{}, error) {
+// 	return ve.readConfig(context, ve.vaultPKIEngineObject.GetConfigCrlPath())
+// }
 
 func (ve *VaultPKIEngineEndpoint) readConfig(context context.Context, configPath string) (map[string]interface{}, error) {
 	log := log.FromContext(context)

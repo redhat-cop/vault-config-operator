@@ -9,6 +9,7 @@
   - [Secret Engines](#secret-engines)
   - [Secret Management](#secret-management)
   - [The common authentication section](#the-common-authentication-section)
+  - [The common connection section](#the-common-connection-section)
   - [End to end example](#end-to-end-example)
   - [Contributing a new Vault type](#contributing-a-new-vault-type)
   - [Initializing the connection to Vault](#initializing-the-connection-to-vault)
@@ -53,7 +54,8 @@ Currently this operator covers the following Vault APIs:
 3. [KubernetesAuthEngineRole](./docs/auth-engines.md#KubernetesAuthEngineRole) Configures a Vault [Kubernetes Authentication](https://www.vaultproject.io/docs/auth/kubernetes) Role
 4. [LDAPAuthEngineConfig](./docs/auth-engines.md#ldapauthengineconfig) Configures a [Vault LDAP Authentication Endpoint](https://www.vaultproject.io/docs/auth/ldap).
    - [LDAPAuthEngineGroup](./docs/auth-engines.md#ldapauthenginegroup) Creates or updates [Vault LDAP Authentication Engine Group](https://www.vaultproject.io/api-docs/auth/ldap#create-update-ldap-group) policies.
-
+5. [JWTOIDCAuthEngineConfig](./docs/auth-engines.md#jwtoidcauthengineconfig) Configures a [Vault JWT/OIDC Authentication Endpoint](https://developer.hashicorp.com/vault/api-docs/auth/jwt)
+   - [JWTOIDCAuthEngineRole](./docs/auth-engines.md#jwtoidcauthenginerole) Register a role in an Authentication Engine Mount of type [JWT/OIDC](https://developer.hashicorp.com/vault/api-docs/auth/jwt#create-role)
 
 ## Policy management
 
@@ -83,6 +85,9 @@ Currently this operator covers the following Vault APIs:
 ## The common authentication section
 
 All APIs share a common authentication section, details can be found [here](./docs/auth-section.md)
+Every time a resource is reconciled a new authentication is performed and a new token is requeued from Vault. For the token will be used for reconcile cycle possible for a few calls and then forgotten. The whole process should normally take a fraction of a second, maybe a few seconds on a very busy pod. It is recommended to dedicate an authentication engine just for the vault-configuration-operator controller and keep the token TTL so 10-20s. This will prevent a proliferation of tokens on the Vault side.
+
+
 
 ## End to end example
 
@@ -121,7 +126,7 @@ Here is the subscription using that configmap:
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: vault-config-operator 
+  name: vault-config-operator
 spec:
   channel: alpha
   installPlanApproval: Automatic
@@ -138,8 +143,43 @@ spec:
         name: ocp-service-ca
     volumeMounts:
     - mountPath: /vault-ca
-      name: vault-ca  
+      name: vault-ca
 ```
+
+## The Common connection section
+
+All APIs share a common connection section. This section can be used to override how connections to Vault are established, essentially changing the above explained behavior. With feature it is potentially possible to connect to multiple vault instance from a single cluster.
+
+Here is an example:
+
+```yaml
+  connection:
+    address: 'https://vault.vault2.svc:8200'
+    tLSConfig:
+      cacert: |
+        -----BEGIN CERTIFICATE-----
+        MIIDUTCCAjmgAwIBAgIIW+spyyCjRaIwDQYJKoZIhvcNAQELBQAwNjE0MDIGA1UE
+        Awwrb3BlbnNoaWZ0LXNlcnZpY2Utc2VydmluZy1zaWduZXJAMTY3NDc3NDQ3MzAe
+        Fw0yMzAxMjYyMzA3NTNaFw0yNTAzMjYyMzA3NTRaMDYxNDAyBgNVBAMMK29wZW5z
+        aGlmdC1zZXJ2aWNlLXNlcnZpbmctc2lnbmVyQDE2NzQ3NzQ0NzMwggEiMA0GCSqG
+        SIb3DQEBAQUAA4IBDwAwggEKAoIBAQC8+qF40DBauBGBgk14iCwzDZ5s9J/0rzRi
+        x/aLm9DYabtrar1mz6T41UstX4ulgxnU+QrQYN8X1NROzlksC4fFPI3lmmjI95PU
+        xshv5z3wjKlEq5sI4RqyzAqgww5EMnBz5aaaElFBRZhgFymylc347kR7ZMpx8H9b
+        LuyAf4zOuherbUO6xYREPKyZwFC1HHZpjnXtrTYNsFvB2GQjnTNWHZdCfdZVHtZx
+        /vmTlPQGXMnoYBvKH74jxbQVYcu/UGtifj/Q4LpPn05YYvq6xQcYq+H6dLC4gD/W
+        Z1bFgLZUH5+Xx/mPldrvZBhqINvVo3qR+7U8TiGnoyGUYCdv8k2RAgMBAAGjYzBh
+        MA4GA1UdDwEB/wQEAwICpDAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBSaW5QB
+        6lFBObTYaebBNKMlOXp8VDAfBgNVHSMEGDAWgBSaW5QB6lFBObTYaebBNKMlOXp8
+        VDANBgkqhkiG9w0BAQsFAAOCAQEAmVnCbvFRs0Z13tgWE3J51dcrzhyuBEbdAWfU
+        5MHrDKw7Sm3N67UC/Av01G6XDIZh8lW6s+foOES3IXWv/ayH4Sc91U92/K17Cls6
+        s6ZuC6KDd/X0ez6G8URbvB9gwlrst3WVnD0Qefb36K4YqfRF9j4KTAbDXLZuGpZK
+        lMk0STHHRm7IeVBnSEqrs8AxLdn+wgnPEdag7Z89BvRhhscQivZwsSBwSegalmdb
+        UIfKX64wKllQs2sd6eSvDZxDheB1YGM2nYQDYZeWb0gskPsakYUcTfouvXBYrXMf
+        mHyYxYdDK+drEiV6RB1s8swFPdVaLMe2U0KedY486JFk1aKHqA==
+        -----END CERTIFICATE-----
+```
+
+This section features the same options that are available via environment variables when using the `vault` client. Keep in mind that this configuration override the default explained above, so you need to specify only the field that need to be different.
 
 ## Deploying the Operator
 
@@ -166,7 +206,7 @@ If you want to utilize the Operator Lifecycle Manager (OLM) to install this oper
 
 - If you would like to launch this operator from the UI, you'll need to navigate to the OperatorHub tab in the console. Before starting, make sure you've created the namespace that you want to install this operator to with the following:
 
-```shell
+```sh
 oc new-project vault-config-operator
 ```
 
@@ -182,7 +222,7 @@ If you'd like to launch this operator from the command line, you can use the man
 
 oc new-project vault-config-operator
 
-```shell
+```sh
 oc apply -f config/operatorhub -n vault-config-operator
 ```
 
@@ -192,7 +232,7 @@ This will create the appropriate OperatorGroup and Subscription and will trigger
 
 Here are the instructions to install the latest release with Helm.
 
-```shell
+```sh
 oc new-project vault-config-operator
 helm repo add vault-config-operator https://redhat-cop.github.io/vault-config-operator
 helm repo update
@@ -201,16 +241,26 @@ helm install vault-config-operator vault-config-operator/vault-config-operator
 
 This can later be updated with the following commands:
 
-```shell
+```sh
 helm repo update
 helm upgrade vault-config-operator vault-config-operator/vault-config-operator
 ```
+
+If you want the installation to create self-signed certificates for the webhook and the metrics server, set `enableCertManager` to `true`. The installation will create a self-signed issuer and the required certificates.
+
+If you want to provide your own `cert-manager` certificates instead, please create the following two certificates:
+- A certificate named `serving-cert` in the operator's target namespace, with secret name `webhook-server-cert`, for the following domain names:
+  - `vault-config-operator-webhook-service.<target namespace>.svc`
+  - `vault-config-operator-webhook-service.<target namespace>.svc.cluster.local`
+- A certificate with a name of your choice in the operator's target namespace, with secret name `vault-config-operator-certs`, for the following domain names:
+  - `vault-config-operator-controller-manager-metrics-service.<target namespace>.svc`
+  - `vault-config-operator-controller-manager-metrics-service.<target namespace>.svc.cluster.local`
 
 ## Metrics
 
 Prometheus compatible metrics are exposed by the Operator and can be integrated into OpenShift's default cluster monitoring. To enable OpenShift cluster monitoring, label the namespace the operator is deployed in with the label `openshift.io/cluster-monitoring="true"`.
 
-```shell
+```sh
 oc label namespace <namespace> openshift.io/cluster-monitoring="true"
 ```
 
@@ -245,7 +295,7 @@ See <https://github.com/golang/vscode-go/blob/master/docs/settings.md#buildbuild
         "ui.completion.usePlaceholders": true,
         "build.buildFlags": [
             "--tags=integration"
-        ] 
+        ]
     },
 }
 ```
@@ -256,7 +306,7 @@ See <https://github.com/golang/vscode-go/blob/master/docs/settings.md#buildbuild
 
 If you don't have a Vault instance available for testing, deploy one with these steps:
 
-```shell
+```sh
 helm repo add hashicorp https://helm.releases.hashicorp.com
 oc new-project vault
 oc adm policy add-role-to-user admin -z vault -n vault
@@ -271,7 +321,7 @@ helm upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f ./
 All the configuration made by the operator need to authenticate via a Kubernetes Authentication. So you need a root Kubernetes Authentication mount point and role. The you can create more roles via the operator.
 If you don't have a root mount point and role, you can create them as follows:
 
-```shell
+```sh
 oc new-project vault-admin
 export cluster_base_domain=$(oc get dns cluster -o jsonpath='{.spec.baseDomain}')
 export VAULT_ADDR=https://vault-vault.apps.${cluster_base_domain}
@@ -279,18 +329,24 @@ export VAULT_TOKEN=$(oc get secret vault-init -n vault -o jsonpath='{.data.root_
 # this policy is intentionally broad to allow to test anything in Vault. In a real life scenario this policy would be scoped down.
 vault policy write -tls-skip-verify vault-admin  ./config/local-development/vault-admin-policy.hcl
 vault auth enable -tls-skip-verify kubernetes
-export sa_secret_name=$(oc get sa default -n vault -o jsonpath='{.secrets[*].name}' | grep -o '\b\w*\-token-\w*\b')
-oc get secret ${sa_secret_name} -n vault -o jsonpath='{.data.ca\.crt}' | base64 -d > /tmp/ca.crt
-vault write -tls-skip-verify auth/kubernetes/config token_reviewer_jwt="$(oc serviceaccounts get-token vault -n vault)" kubernetes_host=https://kubernetes.default.svc:443 kubernetes_ca_cert=@/tmp/ca.crt
-vault write -tls-skip-verify auth/kubernetes/role/policy-admin bound_service_account_names=default bound_service_account_namespaces=vault-admin policies=vault-admin ttl=1h
+vault write -tls-skip-verify auth/kubernetes/config kubernetes_host=https://kubernetes.default.svc:443
+vault write -tls-skip-verify auth/kubernetes/role/policy-admin bound_service_account_names=default bound_service_account_namespaces=vault-admin policies=vault-admin ttl=10s
+# noticed how we created a 10s TTL for the tokens created by this authentication engine
 export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.data["kubernetes/"].accessor')
+```
+
+verify that kube authentication works:
+
+```sh
+export token=$(oc create token default -n vault-admin)
+vault write -tls-skip-verify auth/kubernetes/login role=policy-admin jwt=${token}
 ```
 
 #### Run the operator
 
 > Note: this operator build process is tested with [podman](https://podman.io/), but some of the build files (Makefile specifically) use docker because they are generated automatically by operator-sdk. It is recommended [remap the docker command to the podman command](https://developers.redhat.com/blog/2020/11/19/transitioning-from-docker-to-podman#transition_to_the_podman_cli).
 
-```shell
+```sh
 export repo=raffaelespazzoli
 docker login quay.io/$repo
 oc new-project vault-config-operator
@@ -302,13 +358,13 @@ tilt up
 
 Policy
 
-```shell
+```sh
 envsubst < ./test/database-engine-admin-policy.yaml | oc apply -f - -n vault-admin
 ```
 
 Vault Role
 
-```shell
+```sh
 oc new-project test-vault-config-operator
 oc label namespace test-vault-config-operator database-engine-admin=true
 oc apply -f ./test/database-engine-admin-role.yaml -n vault-admin
@@ -316,30 +372,63 @@ oc apply -f ./test/database-engine-admin-role.yaml -n vault-admin
 
 Secret Engine Mount
 
-```shell
+```sh
 oc apply -f ./test/database-secret-engine.yaml -n test-vault-config-operator
 ```
 
 Database secret engine connection. This will deploy a postgresql database to connect to
 
-```shell
-oc create secret generic postgresql-admin-password --from-literal=postgresql-password=changeit -n test-vault-config-operator
+```sh
+oc create secret generic postgresql-admin-password --from-literal=postgres-password=changeit -n test-vault-config-operator
 export uid=$(oc get project test-vault-config-operator -o jsonpath='{.metadata.annotations.openshift\.io/sa\.scc\.uid-range}'|sed 's/\/.*//')
 export guid=$(oc get project test-vault-config-operator -o jsonpath='{.metadata.annotations.openshift\.io/sa\.scc\.supplemental-groups}'|sed 's/\/.*//')
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm upgrade my-postgresql-database bitnami/postgresql -i --create-namespace -n test-vault-config-operator -f ./docs/examples/postgresql/postgresql-values.yaml --set securityContext.fsGroup=${guid} --set containerSecurityContext.runAsUser=${uid} --set volumePermissions.securityContext.runAsUser=${uid} --set metrics.securityContext.runAsUser=${uid}
+oc adm policy add-scc-to-user anyuid -z default -n test-vault-config-operator
 oc apply -f ./test/database-engine-config.yaml -n test-vault-config-operator
 ```
 
 Database Secret engine role
 
-```shell
+```sh
 oc apply -f ./test/database-engine-read-only-role.yaml -n test-vault-config-operator
+```
+
+Database Secret engine static role
+
+```sh
+export POSTGRES_PASSWORD=$(kubectl get secret --namespace test-vault-config-operator postgresql-admin-password -o jsonpath="{.data.postgres-password}" | base64 -d)
+oc rsh -c postgresql -n test-vault-config-operator my-postgresql-database-0
+/opt/bitnami/scripts/postgresql/entrypoint.sh /bin/bash
+psql --host 127.0.0.1 -U postgres -d postgres -p 5432
+type $POSTGRES_PASSWORD here
+CREATE ROLE helloworld;
+exit
+exit
+exit
+oc apply -f ./test/database-engine-read-only-static-role.yaml -n test-vault-config-operator
+```
+
+Database root password rotation. Note we are going to overwrite the previous definition
+
+```sh
+oc apply -f ./test/database-engine-config-password-rotation.yaml -n test-vault-config-operator
+export POSTGRES_PASSWORD=$(kubectl get secret --namespace test-vault-config-operator postgresql-admin-password -o jsonpath="{.data.postgres-password}" | base64 -d)
+oc rsh -c postgresql -n test-vault-config-operator my-postgresql-database-0
+/opt/bitnami/scripts/postgresql/entrypoint.sh /bin/bash
+psql --host 127.0.0.1 -U postgres -d postgres -p 5432
+type $POSTGRES_PASSWORD here
+
+this should fail now
+exit
+exit
+exit
+
 ```
 
 RandomSecret
 
-```shell
+```sh
 oc apply -f ./test/password-policy.yaml -n vault-admin
 envsubst < ./test/kv-engine-admin-policy.yaml | oc apply -f - -n vault-admin
 envsubst < ./test/secret-writer-policy.yaml | oc apply -f - -n vault-admin
@@ -353,7 +442,7 @@ VaultSecret
 
 > Note: you must run the previous tests
 
-```shell
+```sh
 oc apply -f ./test/vaultsecret/kubernetesauthenginerole-secret-reader.yaml -n vault-admin
 envsubst < ./test/vaultsecret/policy-secret-reader.yaml | oc apply -f - -n vault-admin
 oc apply -f ./test/vaultsecret/randomsecret-another-password.yaml -n test-vault-config-operator
@@ -365,16 +454,18 @@ oc apply -f ./test/vaultsecret/vaultsecret-pullsecret.yaml -n test-vault-config-
 
 VaultSecret & RandomSecret using KV Secret Engine V2
 
-> Note: you must run the previous tests
-
 ```sh
 #Random Secret using v2 steps
-envsubst < ./test/randomsecret/v2/01-policy-kv-engine-admin-v2.yaml | oc apply -f - -n vault-admin 
-oc apply -f ./test/randomsecret/v2/02-kubernetesauthenginerole-kv-engine-admin-v2.yaml -n vault-admin 
-oc apply -f test/randomsecret/v2/03-secretenginemount-kv-v2.yaml -n test-vault-config-operator
+oc apply -f ./test/randomsecret/v2/00-passwordpolicy-simple-password-policy-v2.yaml -n vault-admin
+envsubst < ./test/randomsecret/v2/01-policy-kv-engine-admin-v2.yaml | oc apply -f - -n vault-admin
 envsubst < ./test/randomsecret/v2/04-policy-secret-writer-v2.yaml | oc apply -f - -n vault-admin
+envsubst < ./test/vaultsecret/v2/00-policy-secret-reader-v2.yaml | oc apply -f - -n vault-admin
+oc apply -f ./test/randomsecret/v2/02-kubernetesauthenginerole-kv-engine-admin-v2.yaml -n vault-admin
 oc apply -f ./test/randomsecret/v2/05-kubernetesauthenginerole-secret-writer-v2.yaml -n vault-admin
+oc apply -f ./test/vaultsecret/v2/00-kubernetesauthenginerole-secret-reader-v2.yaml -n vault-admin
+oc apply -f test/randomsecret/v2/03-secretenginemount-kv-v2.yaml -n test-vault-config-operator
 oc apply -f ./test/randomsecret/v2/06-randomsecret-randomsecret-password-v2.yaml -n test-vault-config-operator
+oc apply -f ./test/randomsecret/v2/07-randomsecret-randomsecret-another-password-v2.yaml -n test-vault-config-operator
 
 #VaultSecret reading RandomSecret v2 steps
 oc apply -f ./test/vaultsecret/v2/07-vaultsecret-randomsecret-v2.yaml -n test-vault-config-operator
@@ -382,7 +473,7 @@ oc apply -f ./test/vaultsecret/v2/07-vaultsecret-randomsecret-v2.yaml -n test-va
 
 Kube auth engine mount and config and role
 
-```shell
+```sh
 oc apply -f ./test/kube-auth-engine-mount.yaml -n vault-admin
 oc apply -f ./test/kube-auth-engine-config.yaml -n vault-admin
 oc apply -f ./test/kube-auth-engine-role.yaml -n vault-admin
@@ -393,14 +484,16 @@ Github secret engine
 create a github application following the instructions [here](https://github.com/martinbaillie/vault-plugin-secrets-github#setup-github).
 save the ssh key in a file called: ./test/vault-secret-engine.private-key.pem and the application id
 
-```shell
+```sh
 export application_id=163698 #replace with your own
+export org_name=raf-backstage-demo
 export ssh_key=$(cat ./test/vault-secret-engine.private-key.pem | base64 -w 0)
 envsubst < ./test/github-secret-engine-config-secret-template.yaml | oc apply -f - -n vault-admin
 oc apply -f ./test/github-secret-engine-mount.yaml -n vault-admin
 envsubst < ./test/github-secret-engine-config.yaml | oc apply -f - -n vault-admin
-vault read -tls-skip-verify github/raf-backstage-demo/token
-oc apply -f ./test/github-secret-engine-role.yaml -n vault-admin
+#vault read -tls-skip-verify github/raf-backstage-demo/token
+vault write -tls-skip-verify github/raf-backstage-demo/token org_name=${org_name}
+envsubst < ./test/github-secret-engine-role.yaml | oc apply -f - -n vault-admin
 vault read -tls-skip-verify github/raf-backstage-demo/token/one-repo-only
 ```
 
@@ -428,28 +521,28 @@ Next, run through the [Test Manually](#test-manually) steps.
 
 Define an image and tag. For example...
 
-```shell
+```sh
 export imageRepository="quay.io/redhat-cop/vault-config-operator"
 export imageTag="$(git -c 'versionsort.suffix=-' ls-remote --exit-code --refs --sort='version:refname' --tags https://github.com/redhat-cop/vault-config-operator.git '*.*.*' | tail --lines=1 | cut --delimiter='/' --fields=3)"
 ```
 
 Deploy chart...
 
-```shell
+```sh
 make helmchart IMG=${imageRepository} VERSION=${imageTag}
 helm upgrade -i vault-config-operator-local charts/vault-config-operator -n vault-config-operator-local --create-namespace
 ```
 
 Delete...
 
-```shell
+```sh
 helm delete vault-config-operator-local -n vault-config-operator-local
 kubectl delete -f charts/vault-config-operator/crds/crds.yaml
 ```
 
 ## Building/Pushing the operator image
 
-```shell
+```sh
 export repo=raffaelespazzoli #replace with yours
 docker login quay.io/$repo
 make docker-build IMG=quay.io/$repo/vault-config-operator:latest
@@ -458,13 +551,13 @@ make docker-push IMG=quay.io/$repo/vault-config-operator:latest
 
 ## Deploy to OLM via bundle
 
-```shell
+```sh
 make manifests
 make bundle IMG=quay.io/$repo/vault-config-operator:latest
-operator-sdk bundle validate ./bundle --select-optional name=operatorhub
+operator-sdk bundle validate ./bundle --select-optional suite=operatorframework --optional-values=k8s-version=1.25
 make bundle-build BUNDLE_IMG=quay.io/$repo/vault-config-operator-bundle:latest
 docker push quay.io/$repo/vault-config-operator-bundle:latest
-operator-sdk bundle validate quay.io/$repo/vault-config-operator-bundle:latest --select-optional name=operatorhub
+operator-sdk bundle validate quay.io/$repo/vault-config-operator-bundle:latest suite=operatorframework --optional-values=k8s-version=1.25
 oc new-project vault-config-operator
 oc label namespace vault-config-operator openshift.io/cluster-monitoring="true"
 operator-sdk cleanup vault-config-operator -n vault-config-operator
@@ -479,28 +572,28 @@ make integration
 
 ## Releasing
 
-```shell
+```sh
 git tag -a "<tagname>" -m "<commit message>"
 git push upstream <tagname>
 ```
 
 If you need to remove a release:
 
-```shell
+```sh
 git tag -d <tagname>
 git push upstream --delete <tagname>
 ```
 
 If you need to "move" a release to the current main
 
-```shell
+```sh
 git tag -f <tagname>
 git push upstream -f <tagname>
 ```
 
 ### Cleaning up
 
-```shell
+```sh
 operator-sdk cleanup vault-config-operator -n vault-config-operator
 oc delete operatorgroup operator-sdk-og
 oc delete catalogsource vault-config-operator-catalog

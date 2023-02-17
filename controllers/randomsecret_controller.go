@@ -25,6 +25,7 @@ import (
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -45,7 +46,8 @@ type RandomSecretReconciler struct {
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=randomsecrets,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=randomsecrets/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=randomsecrets/finalizers,verbs=update
-//+kubebuilder:rbac:groups=core,resources=serviceaccounts;secrets,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=serviceaccounts/token,verbs=create
 //+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -79,49 +81,48 @@ func (r *RandomSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return reconcile.Result{}, nil
 	}
 
-	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
-	vaultClient, err := instance.Spec.Authentication.GetVaultClient(ctx, instance.Namespace)
+	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
 	if err != nil {
-		r.Log.Error(err, "unable to create vault client", "instance", instance)
-		return r.ManageError(ctx, instance, err)
+		r.Log.Error(err, "unable to prepare context", "instance", instance)
+		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 	}
-	ctx = context.WithValue(ctx, "vaultClient", vaultClient)
 
 	if util.IsBeingDeleted(instance) {
-		if !util.HasFinalizer(instance, redhatcopv1alpha1.GetFinalizer(instance)) {
+		if !util.HasFinalizer(instance, vaultutils.GetFinalizer(instance)) {
 			return reconcile.Result{}, nil
 		}
-		err := r.manageCleanUpLogic(ctx, instance)
+		err := r.manageCleanUpLogic(ctx1, instance)
 		if err != nil {
 			r.Log.Error(err, "unable to delete instance", "instance", instance)
-			return r.ManageError(ctx, instance, err)
+			return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 		}
-		util.RemoveFinalizer(instance, redhatcopv1alpha1.GetFinalizer(instance))
-		err = r.GetClient().Update(ctx, instance)
+		util.RemoveFinalizer(instance, vaultutils.GetFinalizer(instance))
+		err = r.GetClient().Update(ctx1, instance)
 		if err != nil {
 			r.Log.Error(err, "unable to update instance", "instance", instance)
-			return r.ManageError(ctx, instance, err)
+			return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 		}
 		return reconcile.Result{}, nil
 	}
 
-	err = r.manageReconcileLogic(ctx, instance)
+	err = r.manageReconcileLogic(ctx1, instance)
 	if err != nil {
 		r.Log.Error(err, "unable to complete reconcile logic", "instance", instance)
-		return r.ManageError(ctx, instance, err)
+		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 	}
 
 	if instance.Spec.RefreshPeriod.Size() > 0 {
 		//we reschedule the next reconcile at the time in the future corresponding to
 		nextSchedule := time.Until(instance.Status.LastVaultSecretUpdate.Add(instance.Spec.RefreshPeriod.Duration))
 		if nextSchedule > 0 {
-			return r.ManageSuccessWithRequeue(ctx, instance, nextSchedule)
+			vaultresourcecontroller.ManageOutcomeWithRequeue(ctx, r.ReconcilerBase, instance, err, nextSchedule)
+			return vaultresourcecontroller.ManageOutcomeWithRequeue(ctx, r.ReconcilerBase, instance, err, nextSchedule)
 		} else {
-			return r.ManageSuccessWithRequeue(ctx, instance, time.Second)
+			return vaultresourcecontroller.ManageOutcomeWithRequeue(ctx, r.ReconcilerBase, instance, err, time.Second)
 		}
 
 	}
-	return r.ManageSuccess(ctx, instance)
+	return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 }
 
 func (r *RandomSecretReconciler) manageCleanUpLogic(context context.Context, instance *redhatcopv1alpha1.RandomSecret) error {

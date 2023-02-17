@@ -19,7 +19,6 @@ package v1alpha1
 import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
@@ -40,10 +39,6 @@ var _ webhook.Defaulter = &LDAPAuthEngineGroup{}
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *LDAPAuthEngineGroup) Default() {
 	ldapauthenginegrouplog.Info("default", "name", r.Name)
-
-	if !controllerutil.ContainsFinalizer(r, GetFinalizer(r)) {
-		controllerutil.AddFinalizer(r, GetFinalizer(r))
-	}
 }
 
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-ldapauthenginegroup,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=ldapauthenginegroups,verbs=update,versions=v1alpha1,name=vldapauthenginegroup.kb.io,admissionReviewVersions=v1

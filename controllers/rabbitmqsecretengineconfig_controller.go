@@ -23,6 +23,7 @@ import (
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -42,8 +43,9 @@ type RabbitMQSecretEngineConfigReconciler struct {
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=rabbitmqsecretengineconfigs,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=rabbitmqsecretengineconfigs/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=core,resources=serviceaccounts;secrets,verbs=get;list;watch
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=randomsecrets,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=serviceaccounts/token,verbs=create
 //+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -72,25 +74,23 @@ func (r *RabbitMQSecretEngineConfigReconciler) Reconcile(ctx context.Context, re
 		return reconcile.Result{}, err
 	}
 
-	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
-	vaultClient, err := instance.Spec.Authentication.GetVaultClient(ctx, instance.Namespace)
+	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
 	if err != nil {
-		r.Log.Error(err, "unable to create vault client", "instance", instance)
-		return r.ManageError(ctx, instance, err)
+		r.Log.Error(err, "unable to prepare context", "instance", instance)
+		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 	}
-	ctx = context.WithValue(ctx, "vaultClient", vaultClient)
 	if util.IsBeingDeleted(instance) {
 		// No resources supported for deletion.
 		return reconcile.Result{}, nil
 	}
 
-	err = r.manageReconcileLogic(ctx, instance)
+	err = r.manageReconcileLogic(ctx1, instance)
 	if err != nil {
 		r.Log.Error(err, "unable to complete reconcile logic", "instance", instance)
-		return r.ManageError(ctx, instance, err)
+		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 	}
 
-	return r.ManageSuccess(ctx, instance)
+	return r.ManageSuccess(ctx1, instance)
 }
 
 func (r *RabbitMQSecretEngineConfigReconciler) manageReconcileLogic(context context.Context, instance client.Object) error {

@@ -21,7 +21,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
@@ -42,9 +41,6 @@ var _ webhook.Defaulter = &DatabaseSecretEngineConfig{}
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *DatabaseSecretEngineConfig) Default() {
 	authenginemountlog.Info("default", "name", r.Name)
-	if !controllerutil.ContainsFinalizer(r, GetFinalizer(r)) {
-		controllerutil.AddFinalizer(r, GetFinalizer(r))
-	}
 }
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -70,6 +66,16 @@ func (r *DatabaseSecretEngineConfig) ValidateUpdate(old runtime.Object) error {
 	if r.Spec.Path != old.(*DatabaseSecretEngineConfig).Spec.Path {
 		return errors.New("spec.path cannot be updated")
 	}
+	//connection_url, username and verify_connection cannot be changed because they cannot be compare with the actual.
+	// if r.Spec.ConnectionURL != old.(*DatabaseSecretEngineConfig).Spec.ConnectionURL {
+	// 	return errors.New("spec.connectionURL cannot be updated")
+	// }
+	// if r.Spec.Username != old.(*DatabaseSecretEngineConfig).Spec.Username {
+	// 	return errors.New("spec.username cannot be updated")
+	// }
+	// if r.Spec.VerifyConnection != old.(*DatabaseSecretEngineConfig).Spec.VerifyConnection {
+	// 	return errors.New("spec.verifyConnection cannot be updated")
+	// }
 	return r.isValid()
 }
 

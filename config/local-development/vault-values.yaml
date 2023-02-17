@@ -5,7 +5,26 @@ global:
 ui:
   enabled: true
 
+injector:
+  image:
+    repository: "registry.connect.redhat.com/hashicorp/vault-k8s"
+    tag: "1.2.0-ubi"
+
+  agentImage:
+    repository: "registry.connect.redhat.com/hashicorp/vault"
+    tag: "1.12.3-ubi"    
+
+csi:
+  image:
+    repository: "docker.io/hashicorp/vault-csi-provider"
+    tag: "1.2.1"
+    pullPolicy: IfNotPresent     
+
 server:
+  image:
+    tag: "1.12.3-ubi"
+    repository: registry.connect.redhat.com/hashicorp/vault
+
   extraEnvironmentVars:
     VAULT_CACERT: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
 
@@ -63,9 +82,9 @@ server:
       - -c
       - | 
           cd /usr/local/libexec/vault
-          curl -L -o vault-plugin-secrets-github-linux-amd64 https://github.com/martinbaillie/vault-plugin-secrets-github/releases/download/v1.3.0/vault-plugin-secrets-github-linux-amd64 
+          curl -L -o vault-plugin-secrets-github-linux-amd64 https://github.com/martinbaillie/vault-plugin-secrets-github/releases/download/v2.0.0/vault-plugin-secrets-github-linux-amd64 
           chmod +x vault-plugin-secrets-github-linux-amd64
-          curl -L -o SHA256SUMS https://github.com/martinbaillie/vault-plugin-secrets-github/releases/download/v1.3.0/SHA256SUMS
+          curl -L -o SHA256SUMS https://github.com/martinbaillie/vault-plugin-secrets-github/releases/download/v2.0.0/SHA256SUMS
       volumeMounts:
         - name: plugins
           mountPath: /usr/local/libexec/vault
@@ -88,10 +107,16 @@ server:
   extraContainers:
     # you should not do this in production
     - name: auto-initializer
-      image: registry.connect.redhat.com/hashicorp/vault:1.9.2-ubi
+      image: registry.connect.redhat.com/hashicorp/vault:1.12.3-ubi
       env: 
+      - name: NAMESPACE
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace      
+      - name: VAULT_SKIP_VERIFY
+        value: "true"      
       - name: VAULT_ADDR
-        value: https://vault.vault.svc:8200
+        value: https://localhost:8200
       - name: VAULT_CACERT
         value: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt  
       command: 
@@ -107,9 +132,10 @@ server:
               export ROOT_TOKEN=$(echo "$INIT_RESPONSE" | /usr/local/libexec/vault/jq -r .root_token)
               echo "$UNSEAL_KEY"
               echo "$ROOT_TOKEN"
-              /usr/local/libexec/vault/kubectl delete secret vault-init -n vault
-              /usr/local/libexec/vault/kubectl create secret generic vault-init -n vault --from-literal=unseal_key=${UNSEAL_KEY} --from-literal=root_token=${ROOT_TOKEN} 
+              /usr/local/libexec/vault/kubectl delete secret vault-init -n ${NAMESPACE}
+              /usr/local/libexec/vault/kubectl create secret generic vault-init -n ${NAMESPACE} --from-literal=unseal_key=${UNSEAL_KEY} --from-literal=root_token=${ROOT_TOKEN} 
             else
+              echo vault already initialized
               sleep 5
             fi    
           done
@@ -118,10 +144,12 @@ server:
           mountPath: /usr/local/libexec/vault          
     # you should not do this in production      
     - name: auto-unsealer
-      image: registry.connect.redhat.com/hashicorp/vault:1.9.2-ubi
+      image: registry.connect.redhat.com/hashicorp/vault:1.12.3-ubi
       env: 
+      - name: VAULT_SKIP_VERIFY
+        value: "true"        
       - name: VAULT_ADDR
-        value: https://vault.vault.svc:8200
+        value: https://localhost:8200
       - name: VAULT_CACERT
         value: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt  
       command: 
@@ -149,10 +177,12 @@ server:
         - name: vault-root-token
           mountPath: /vault-root-token  
     - name: github-module-loader
-      image: registry.connect.redhat.com/hashicorp/vault:1.9.2-ubi
+      image: registry.connect.redhat.com/hashicorp/vault:1.12.3-ubi
       env: 
+      - name: VAULT_SKIP_VERIFY
+        value: "true"        
       - name: VAULT_ADDR
-        value: https://vault.vault.svc:8200
+        value: https://localhost:8200
       - name: VAULT_CACERT
         value: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt  
       command: 

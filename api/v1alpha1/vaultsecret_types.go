@@ -17,12 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-
 	"github.com/hashicorp/go-multierror"
+	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -30,8 +28,6 @@ import (
 
 // VaultSecretSpec defines the desired state of VaultSecret
 type VaultSecretSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 
 	// RefreshPeriod if specified, the operator will refresh the secret with the given frequency.
 	// This takes precedence over any vault secret lease duration and can be used to force a refresh.
@@ -68,6 +64,8 @@ type VaultSecretStatus struct {
 	//VaultSecretDefinitionsStatus information used to determine if the secret should be rereconciled
 	VaultSecretDefinitionsStatus []VaultSecretDefinitionStatus `json:"vaultSecretDefinitionsStatus,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
+
+var _ apis.ConditionsAware = &VaultSecret{}
 
 func (vs *VaultSecret) GetConditions() []metav1.Condition {
 	return vs.Status.Conditions
@@ -106,13 +104,28 @@ type VaultSecretDefinition struct {
 	// Name is an arbitrary, but unique, name for this KV Vault secret and referenced when templating.
 	// +kubebuilder:validation:Required
 	Name string `json:"name,omitempty"`
+
+	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
+	// +kubebuilder:validation:Optional
+	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
+
 	// Authentication is the kube auth configuraiton to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 	// Path is the path of the secret.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=kubernetes
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
+
+	// RequestType the type of request needed to retrieve a secret. Normally a GET, but some secret engnes require a POST.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default=GET
+	// +kubebuilder:validation:Enum={"GET","POST"}
+	RequestType string `json:"requestType,omitempty"`
+
+	// RequestPayload for POST type of requests, this field contains the payload of the request. Not used for GET requests.
+	// +kubebuilder:validation:Optional
+	RequestPayload map[string]string `json:"requestPayload,omitempty"`
 }
 
 type VaultSecretDefinitionStatus struct {
@@ -160,25 +173,23 @@ func (vs *VaultSecret) isValid() error {
 	return result.ErrorOrNil()
 }
 
-var _ vaultutils.VaultObject = &VaultSecretDefinition{}
+var _ vaultutils.VaultSecretObject = &VaultSecretDefinition{}
+
+func (d *VaultSecretDefinition) GetVaultConnection() *vaultutils.VaultConnection {
+	return d.Connection
+}
 
 func (d *VaultSecretDefinition) GetPath() string {
 	return string(d.Path)
 }
-func (d *VaultSecretDefinition) GetPayload() map[string]interface{} {
-	return nil
-}
-func (d *VaultSecretDefinition) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
-	return false
+func (d *VaultSecretDefinition) GetPostRequestPayload() map[string]string {
+	return d.RequestPayload
 }
 
-func (d *VaultSecretDefinition) IsInitialized() bool {
-	return true
+func (d *VaultSecretDefinition) GetRequestMethod() string {
+	return d.RequestType
 }
 
-func (r *VaultSecretDefinition) IsValid() (bool, error) {
-	return true, nil
-}
-func (d *VaultSecretDefinition) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
+func (d *VaultSecretDefinition) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Authentication
 }

@@ -40,15 +40,19 @@ type RandomSecretSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Authentication is the kube aoth configuraiton to be used to execute this request
+	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
+	// +kubebuilder:validation:Optional
+	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
+
+	// Authentication is the kube auth configuration to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to create the secret.
 	// The final path will be {[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 
 	// SecretFormat specifies a map of key and password policies used to generate random values
 	// +kubebuilder:validation:Required
@@ -73,6 +77,10 @@ type RandomSecretSpec struct {
 const ttlKey string = "ttl"
 
 var _ vaultutils.VaultObject = &RandomSecret{}
+
+func (d *RandomSecret) GetVaultConnection() *vaultutils.VaultConnection {
+	return d.Spec.Connection
+}
 
 func (d *RandomSecret) GetPath() string {
 	return string(d.Spec.Path) + "/" + d.Name
@@ -190,7 +198,7 @@ func (d *RandomSecret) GenerateNewPassword(context context.Context) error {
 		}
 		found := d.calculateSecret(policy, 10000)
 		if !found {
-			return errors.New("passowrd could not be generated, will retry...")
+			return errors.New("password could not be generated, will retry")
 		} else {
 			return nil
 		}
@@ -201,7 +209,11 @@ func (d *RandomSecret) GenerateNewPassword(context context.Context) error {
 		if err != nil {
 			return err
 		} else {
-			d.Spec.calculatedSecret = response.Data["password"].(string)
+			if response.Data != nil {
+				d.Spec.calculatedSecret = response.Data["password"].(string)
+			} else {
+				return errors.New("no data returned by password policy")
+			}
 			return nil
 		}
 	}
@@ -304,4 +316,8 @@ func (r *RandomSecret) validateSecretKey() error {
 		return fmt.Errorf("secretKey must not be %v since this is a protected key when RefreshPeriod is set", ttlKey)
 	}
 	return nil
+}
+
+func (d *RandomSecret) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
 }

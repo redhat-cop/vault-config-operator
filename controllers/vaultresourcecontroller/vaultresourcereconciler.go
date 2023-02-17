@@ -21,7 +21,6 @@ import (
 
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	"github.com/redhat-cop/operator-utils/pkg/util/apis"
-	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -46,19 +45,19 @@ func (r *VaultResource) Reconcile(ctx context.Context, instance client.Object) (
 	log := log.FromContext(ctx)
 
 	if util.IsBeingDeleted(instance) {
-		if !util.HasFinalizer(instance, redhatcopv1alpha1.GetFinalizer(instance)) {
+		if !util.HasFinalizer(instance, vaultutils.GetFinalizer(instance)) {
 			return reconcile.Result{}, nil
 		}
 		err := r.manageCleanUpLogic(ctx, instance)
 		if err != nil {
 			log.Error(err, "unable to delete instance", "instance", instance)
-			return r.reconcilerBase.ManageError(ctx, instance, err)
+			return ManageOutcome(ctx, *r.reconcilerBase, instance, err)
 		}
-		util.RemoveFinalizer(instance, redhatcopv1alpha1.GetFinalizer(instance))
+		util.RemoveFinalizer(instance, vaultutils.GetFinalizer(instance))
 		err = r.reconcilerBase.GetClient().Update(ctx, instance)
 		if err != nil {
 			log.Error(err, "unable to update instance", "instance", instance)
-			return r.reconcilerBase.ManageError(ctx, instance, err)
+			return ManageOutcome(ctx, *r.reconcilerBase, instance, err)
 		}
 		return reconcile.Result{}, nil
 	}
@@ -66,10 +65,10 @@ func (r *VaultResource) Reconcile(ctx context.Context, instance client.Object) (
 	err := r.manageReconcileLogic(ctx, instance)
 	if err != nil {
 		log.Error(err, "unable to complete reconcile logic", "instance", instance)
-		return r.reconcilerBase.ManageError(ctx, instance, err)
+		return ManageOutcome(ctx, *r.reconcilerBase, instance, err)
 	}
 
-	return r.reconcilerBase.ManageSuccess(ctx, instance)
+	return ManageOutcome(ctx, *r.reconcilerBase, instance, err)
 }
 
 func (r *VaultResource) manageCleanUpLogic(context context.Context, instance client.Object) error {

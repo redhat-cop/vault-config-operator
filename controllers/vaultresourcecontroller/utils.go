@@ -17,9 +17,64 @@ limitations under the License.
 package vaultresourcecontroller
 
 import (
+	"context"
+	"time"
+
+	"github.com/redhat-cop/operator-utils/pkg/util"
+	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
+
+const ReconcileSuccessful = "ReconcileSuccessful"
+
+func ManageOutcomeWithRequeue(context context.Context, r util.ReconcilerBase, obj client.Object, issue error, requeueAfter time.Duration) (reconcile.Result, error) {
+	log := log.FromContext(context)
+	conditionsAware := (obj).(apis.ConditionsAware)
+	var condition metav1.Condition
+	if issue == nil {
+		if !controllerutil.ContainsFinalizer(obj, vaultutils.GetFinalizer(obj)) {
+			controllerutil.AddFinalizer(obj, vaultutils.GetFinalizer(obj))
+			err := r.GetClient().Update(context, obj)
+			if err != nil {
+				log.Error(err, "unable to add reconciler")
+				return reconcile.Result{}, err
+			}
+		}
+		condition = metav1.Condition{
+			Type:               ReconcileSuccessful,
+			LastTransitionTime: metav1.Now(),
+			ObservedGeneration: obj.GetGeneration(),
+			Reason:             apis.ReconcileSuccessReason,
+			Status:             metav1.ConditionTrue,
+		}
+	} else {
+		r.GetRecorder().Event(obj, "Warning", "ProcessingError", issue.Error())
+		condition = metav1.Condition{
+			Type:               ReconcileSuccessful,
+			LastTransitionTime: metav1.Now(),
+			ObservedGeneration: obj.GetGeneration(),
+			Message:            issue.Error(),
+			Reason:             apis.ReconcileErrorReason,
+			Status:             metav1.ConditionFalse,
+		}
+	}
+	conditionsAware.SetConditions(apis.AddOrReplaceCondition(condition, conditionsAware.GetConditions()))
+	err := r.GetClient().Status().Update(context, obj)
+	if err != nil {
+		log.Error(err, "unable to update status")
+		return reconcile.Result{}, err
+	}
+	return reconcile.Result{RequeueAfter: requeueAfter}, issue
+}
+
+func ManageOutcome(context context.Context, r util.ReconcilerBase, obj client.Object, issue error) (reconcile.Result, error) {
+	return ManageOutcomeWithRequeue(context, r, obj, issue, 0)
+}
 
 func isValid(obj client.Object) (bool, error) {
 	return obj.(vaultutils.VaultObject).IsValid()

@@ -1,0 +1,19 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: DatabaseSecretEngineConfig
+metadata:
+  name: my-postgresql-database
+spec:
+  authentication:
+    path: kubernetes
+    role: database-engine-admin
+  pluginName: postgresql-database-plugin
+  allowedRoles:
+    - read-only
+  connectionURL: postgresql://{{username}}:{{password}}@my-postgresql-database.test-vault-config-operator.svc:5432
+  rootCredentials:
+    randomSecret:
+      name: my-postgresql-password
+    passwordKey: password
+  username: postgres
+  path: test-vault-config-operator/database
+  verifyConnection: false

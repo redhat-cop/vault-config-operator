@@ -28,20 +28,29 @@ import (
 
 // QuaySecretEngineStaticRoleSpec defines the desired state of QuaySecretEngineStaticRole
 type QuaySecretEngineStaticRoleSpec struct {
+
+	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
+	// +kubebuilder:validation:Optional
+	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
+
 	// Authentication is the kube auth configuration to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
 	// The final path will be {[spec.authentication.namespace]}/{spec.path}/static-roles/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 
 	QuayBaseRole `json:",inline"`
 }
 
 var _ vaultutils.VaultObject = &QuaySecretEngineStaticRole{}
+
+func (d *QuaySecretEngineStaticRole) GetVaultConnection() *vaultutils.VaultConnection {
+	return d.Spec.Connection
+}
 
 func (q *QuaySecretEngineStaticRole) GetPath() string {
 	return string(q.Spec.Path) + "/" + "static-roles" + "/" + q.Name
@@ -126,4 +135,8 @@ type QuaySecretEngineStaticRoleList struct {
 
 func init() {
 	SchemeBuilder.Register(&QuaySecretEngineStaticRole{}, &QuaySecretEngineStaticRoleList{})
+}
+
+func (d *QuaySecretEngineStaticRole) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
 }

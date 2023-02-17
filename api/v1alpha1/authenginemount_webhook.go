@@ -22,7 +22,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
@@ -45,9 +44,6 @@ var _ webhook.Defaulter = &AuthEngineMount{}
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *AuthEngineMount) Default() {
 	authenginemountlog.Info("default", "name", r.Name)
-	if !controllerutil.ContainsFinalizer(r, GetFinalizer(r)) {
-		controllerutil.AddFinalizer(r, GetFinalizer(r))
-	}
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.

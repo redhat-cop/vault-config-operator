@@ -1,4 +1,3 @@
-
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
@@ -72,6 +71,25 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-databasesecretenginestaticrole
+  failurePolicy: Fail
+  name: mdatabasesecretenginestaticrole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - databasesecretenginestaticroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /mutate-redhatcop-redhat-io-v1alpha1-githubsecretengineconfig
   failurePolicy: Fail
   name: mgithubsecretengineconfig.kb.io
@@ -103,6 +121,44 @@ webhooks:
     - CREATE
     resources:
     - githubsecretengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-jwtoidcauthengineconfig
+  failurePolicy: Fail
+  name: mjwtoidcauthengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - jwtoidcauthengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-jwtoidcauthenginerole
+  failurePolicy: Fail
+  name: mjwtoidcauthenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - jwtoidcauthengineroles
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -143,6 +199,44 @@ webhooks:
     - CREATE
     resources:
     - kubernetesauthengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-kubernetessecretengineconfig
+  failurePolicy: Fail
+  name: mkubernetessecretengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - kubernetessecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-kubernetessecretenginerole
+  failurePolicy: Fail
+  name: mkubernetessecretenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - kubernetessecretengineroles
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -400,7 +494,6 @@ webhooks:
     resources:
     - vaultsecrets
   sideEffects: None
-
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
@@ -475,6 +568,26 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-databasesecretenginestaticrole
+  failurePolicy: Fail
+  name: vdatabasesecretenginestaticrole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - databasesecretenginestaticroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /validate-redhatcop-redhat-io-v1alpha1-githubsecretengineconfig
   failurePolicy: Fail
   name: vgithubsecretengineconfig.kb.io
@@ -507,6 +620,44 @@ webhooks:
     - UPDATE
     resources:
     - githubsecretengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-jwtoidcauthengineconfig
+  failurePolicy: Fail
+  name: vjwtoidcauthengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - UPDATE
+    resources:
+    - jwtoidcauthengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-jwtoidcauthenginerole
+  failurePolicy: Fail
+  name: vjwtoidcauthenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - UPDATE
+    resources:
+    - jwtoidcauthengineroles
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -548,6 +699,44 @@ webhooks:
     - UPDATE
     resources:
     - kubernetesauthengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-kubernetessecretengineconfig
+  failurePolicy: Fail
+  name: vkubernetessecretengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - UPDATE
+    resources:
+    - kubernetessecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-kubernetessecretenginerole
+  failurePolicy: Fail
+  name: vkubernetessecretenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - UPDATE
+    resources:
+    - kubernetessecretengineroles
   sideEffects: None
 - admissionReviewVersions:
   - v1

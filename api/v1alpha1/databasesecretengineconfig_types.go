@@ -21,6 +21,7 @@ import (
 	"errors"
 	"reflect"
 
+	vault "github.com/hashicorp/vault/api"
 	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -35,35 +36,71 @@ import (
 
 // DatabaseSecretEngineConfigSpec defines the desired state of DatabaseSecretEngineConfig
 type DatabaseSecretEngineConfigSpec struct {
-	// Authentication is the kube aoth configuraiton to be used to execute this request
+
+	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
+	// +kubebuilder:validation:Optional
+	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
+
+	// Authentication is the kube auth configuration to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
 	// The final path will be {[spec.authentication.namespace]}/{spec.path}/config/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 
+	// +kubebuilder:validation:Required
 	DBSEConfig `json:",inline"`
 
 	// RootCredentials specifies how to retrieve the credentials for this DatabaseEngine connection.
 	// +kubebuilder:validation:Required
-	RootCredentials RootCredentialConfig `json:"rootCredentials,omitempty"`
+	RootCredentials vaultutils.RootCredentialConfig `json:"rootCredentials,omitempty"`
 }
 
 var _ vaultutils.VaultObject = &DatabaseSecretEngineConfig{}
 
+func (d *DatabaseSecretEngineConfig) GetVaultConnection() *vaultutils.VaultConnection {
+	return d.Spec.Connection
+}
+
 func (d *DatabaseSecretEngineConfig) GetPath() string {
 	return string(d.Spec.Path) + "/" + "config" + "/" + d.Name
+}
+func (d *DatabaseSecretEngineConfig) GetRootPasswordRotationPath() string {
+	return string(d.Spec.Path) + "/" + "rotate-root" + "/" + d.Name
 }
 func (d *DatabaseSecretEngineConfig) GetPayload() map[string]interface{} {
 	return d.Spec.toMap()
 }
 func (d *DatabaseSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.DBSEConfig.toMap()
+	connectionDetails := map[string]interface{}{}
+	connectionDetails["connection_url"] = desiredState["connection_url"]
+	connectionDetails["disable_escaping"] = desiredState["disable_escaping"]
+	connectionDetails["root_credentials_rotate_statements"] = desiredState["root_credentials_rotate_statements"]
+	connectionDetails["username"] = desiredState["username"]
+	if desiredState["verify_connection"] == true {
+		connectionDetails["verify_connection"] = desiredState["verify_connection"]
+	}
+	desiredState["connection_details"] = connectionDetails
+	//delete fields that have been moved to connection_details
 	delete(desiredState, "password")
+	delete(desiredState, "connection_url")
+	delete(desiredState, "username")
+	delete(desiredState, "verify_connection")
+	delete(desiredState, "disable_escaping")
+
 	return reflect.DeepEqual(desiredState, payload)
+}
+
+func toInterfaceArray(values []string) []interface{} {
+	result := []interface{}{}
+	for _, value := range values {
+		result = append(result, value)
+	}
+	return result
 }
 
 func (d *DatabaseSecretEngineConfig) IsInitialized() bool {
@@ -101,7 +138,14 @@ func (r *DatabaseSecretEngineConfig) setInternalCredentials(context context.Cont
 			log.Error(err, "unable to retrieve vault secret", "instance", r)
 			return err
 		}
-		r.SetUsernameAndPassword(r.Spec.Username, secret.Data[randomSecret.Spec.SecretKey].(string))
+
+		if randomSecret.Spec.IsKVSecretsEngineV2 {
+			var actualData map[string]interface{} = secret.Data["data"].(map[string]interface{})
+			r.SetUsernameAndPassword(r.Spec.Username, (actualData[randomSecret.Spec.SecretKey]).(string))
+		} else {
+			r.SetUsernameAndPassword(r.Spec.Username, secret.Data[randomSecret.Spec.SecretKey].(string))
+		}
+
 		return nil
 	}
 	if r.Spec.RootCredentials.Secret != nil {
@@ -149,9 +193,12 @@ type DBSEConfig struct {
 	// +kubebuilder:validation:Required
 	PluginName string `json:"pluginName,omitempty"`
 
+	// PluginVersion Specifies the semantic version of the plugin to use for this connection.
+	// +kubebuilder:validation:Optional
+	PluginVersion string `json:"pluginVersion,omitempty"`
+
 	// VerifyConnection Specifies if the connection is verified during initial configuration. Defaults to true.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=true
 	VerifyConnection bool `json:"verifyConnection,omitempty"`
 
 	// AllowedRoles List of the roles allowed to use this connection. Defaults to empty (no roles), if contains a "*" any role can use this connection.
@@ -180,7 +227,11 @@ type DBSEConfig struct {
 	// +kubebuilder:validation:Optional
 	Username string `json:"username,omitempty"`
 
-	// DatabaseSpecificConfig this are the configuraiton specific to each database type
+	// DisableEscaping Determines whether special characters in the username and password fields will be escaped. Useful for alternate connection string formats like ADO. More information regarding this parameter can be found on the databases secrets engine docs. Defaults to false
+	// +kubebuilder:validation:Optional
+	DisableEscaping bool `json:"disableEscaping,omitempty"`
+
+	// DatabaseSpecificConfig this are the configuration specific to each database type
 	// +kubebuilder:validation:Optional
 	// +mapType=granular
 	DatabaseSpecificConfig map[string]string `json:"databaseSpecificConfig,omitempty"`
@@ -188,6 +239,18 @@ type DBSEConfig struct {
 	retrievedPassword string `json:"-"`
 
 	retrievedUsername string `json:"-"`
+
+	// +kubebuilder:validation:Optional
+	RootPasswordRotation *RootPasswordRotation `json:"rootPasswordRotation,omitempty"`
+}
+
+type RootPasswordRotation struct {
+	// Enabled whether the toot password should be rotated with the rotation statement. If set to true the root password will be rotated immediately.
+	// +kubebuilder:validation:Optional
+	Enable bool `json:"enable,omitempty"`
+	// RotationPeriod if this value is set, the root password will be rotated approximately with teh requested frequency.
+	// +kubebuilder:validation:Optional
+	RotationPeriod metav1.Duration `json:"rotationPeriod,omitempty"`
 }
 
 // DatabaseSecretEngineConfigStatus defines the observed state of DatabaseSecretEngineConfig
@@ -198,6 +261,9 @@ type DatabaseSecretEngineConfigStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+
+	// +kubebuilder:validation:Optional
+	LastRootPasswordRotation metav1.Time `json:"lastRootPasswordRotation,omitempty"`
 }
 
 var _ apis.ConditionsAware = &DatabaseSecretEngineConfig{}
@@ -243,19 +309,42 @@ func init() {
 func (i *DBSEConfig) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["plugin_name"] = i.PluginName
+	payload["plugin_version"] = i.PluginVersion
 	payload["verify_connection"] = i.VerifyConnection
-	payload["allowed_roles"] = i.AllowedRoles
-	payload["root_rotation_statements"] = i.RootRotationStatements
+
+	payload["allowed_roles"] = toInterfaceArray(i.AllowedRoles)
+	payload["root_credentials_rotate_statements"] = toInterfaceArray(i.RootRotationStatements)
 	payload["password_policy"] = i.PasswordPolicy
 	payload["connection_url"] = i.ConnectionURL
 	for key, value := range i.DatabaseSpecificConfig {
 		payload[key] = value
 	}
-	payload["username"] = i.retrievedUsername
+	if i.Username != "" {
+		payload["username"] = i.Username
+	} else {
+		payload["username"] = i.retrievedUsername
+	}
+	payload["disable_escaping"] = i.DisableEscaping
 	payload["password"] = i.retrievedPassword
+
 	return payload
 }
 
 func (r *DatabaseSecretEngineConfig) isValid() error {
-	return r.Spec.RootCredentials.validateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+	return r.Spec.RootCredentials.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+}
+
+func (d *DatabaseSecretEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
+}
+
+func (d *DatabaseSecretEngineConfig) RotateRootPassword(ctx context.Context) error {
+	log := log.FromContext(ctx)
+	vaultClient := ctx.Value("vaultClient").(*vault.Client)
+	_, err := vaultClient.Logical().WriteWithContext(ctx, d.GetRootPasswordRotationPath(), nil)
+	if err != nil {
+		log.Error(err, "unable to rotate root password", "instance", d)
+		return err
+	}
+	return nil
 }

@@ -40,8 +40,9 @@ type AuthEngineMountReconciler struct {
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=authenginemounts,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=authenginemounts/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=authenginemounts/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 //+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
-//+kubebuilder:rbac:groups=core,resources=serviceaccounts;secrets,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=serviceaccounts/token,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -70,16 +71,13 @@ func (r *AuthEngineMountReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
-
-	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
-	vaultClient, err := instance.Spec.Authentication.GetVaultClient(ctx, instance.Namespace)
+	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
 	if err != nil {
-		r.Log.Error(err, "unable to create vault client", "instance", instance)
-		return r.ManageError(ctx, instance, err)
+		r.Log.Error(err, "unable to prepare context", "instance", instance)
+		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 	}
-	ctx = context.WithValue(ctx, "vaultClient", vaultClient)
 	vaultEngineResource := vaultresourcecontroller.NewVaultEngineResource(&r.ReconcilerBase, instance)
-	return vaultEngineResource.Reconcile(ctx, instance)
+	return vaultEngineResource.Reconcile(ctx1, instance)
 }
 
 // SetupWithManager sets up the controller with the Manager.

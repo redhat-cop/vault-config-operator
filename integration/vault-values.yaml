@@ -58,7 +58,7 @@ server:
   extraContainers:
     # you should not do this in production
     - name: auto-initializer
-      image: hashicorp/vault:1.9.2
+      image: hashicorp/vault:1.12.1
       env: 
       - name: VAULT_ADDR
         value: http://vault.vault.svc:8200
@@ -86,7 +86,7 @@ server:
           mountPath: /usr/local/libexec/vault          
     # you should not do this in production      
     - name: auto-unsealer
-      image: hashicorp/vault:1.9.2
+      image: hashicorp/vault:1.12.1
       env: 
       - name: VAULT_ADDR
         value: http://vault.vault.svc:8200
@@ -115,7 +115,7 @@ server:
         - name: vault-root-token
           mountPath: /vault-root-token  
     - name: github-module-loader
-      image: hashicorp/vault:1.9.2
+      image: hashicorp/vault:1.12.1
       env: 
       - name: VAULT_ADDR
         value: http://vault.vault.svc:8200
@@ -148,7 +148,7 @@ server:
         - name: vault-root-token
           mountPath: /vault-root-token
     - name: vault-admin-initializer
-      image: hashicorp/vault:1.9.2
+      image: hashicorp/vault:1.12.1
       env: 
       - name: VAULT_ADDR
         value: http://vault.vault.svc:8200

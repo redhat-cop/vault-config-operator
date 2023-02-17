@@ -23,6 +23,11 @@ resources:
 - bases/redhatcop.redhat.io_quaysecretenginestaticroles.yaml
 - bases/redhatcop.redhat.io_ldapauthengineconfigs.yaml
 - bases/redhatcop.redhat.io_ldapauthenginegroups.yaml
+- bases/redhatcop.redhat.io_kubernetessecretengineconfigs.yaml
+- bases/redhatcop.redhat.io_kubernetessecretengineroles.yaml
+- bases/redhatcop.redhat.io_jwtoidcauthengineconfigs.yaml
+- bases/redhatcop.redhat.io_jwtoidcauthengineroles.yaml
+- bases/redhatcop.redhat.io_databasesecretenginestaticroles.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
@@ -48,6 +53,11 @@ patchesStrategicMerge:
 #- patches/webhook_in_quaysecretenginestaticroles.yaml
 #- patches/webhook_in_ldapauthengineconfigs.yaml
 #- patches/webhook_in_ldapauthenginegroups.yaml
+#- patches/webhook_in_kubernetessecretengineconfigs.yaml
+#- patches/webhook_in_kubernetessecretengineroles.yaml
+#- patches/webhook_in_jwtoidcauthengineconfigs.yaml
+#- patches/webhook_in_jwtoidcauthengineroles.yaml
+#- patches/webhook_in_databasesecretenginestaticroles.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable cert-manager, uncomment all the sections with [CERTMANAGER] prefix.
@@ -73,6 +83,11 @@ patchesStrategicMerge:
 #- patches/cainjection_in_quaysecretenginestaticroles.yaml
 #- patches/cainjection_in_ldapauthengineconfigs.yaml
 #- patches/cainjection_in_ldapauthenginegroups.yaml
+#- patches/cainjection_in_kubernetessecretengineconfigs.yaml
+#- patches/cainjection_in_kubernetessecretengineroles.yaml
+#- patches/cainjection_in_jwtoidcauthengineconfigs.yaml
+#- patches/cainjection_in_jwtoidcauthengineroles.yaml
+#- patches/cainjection_in_databasesecretenginestaticroles.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.

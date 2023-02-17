@@ -1,10 +1,9 @@
-
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.6.1
+    controller-gen.kubebuilder.io/version: v0.10.0
   creationTimestamp: null
   name: policies.redhatcop.redhat.io
 spec:
@@ -37,7 +36,7 @@ spec:
             description: PolicySpec defines the desired state of Policy
             properties:
               authentication:
-                description: Authentication is the kube aoth configuraiton to be used
+                description: Authentication is the kube auth configuration to be used
                   to execute this request
                 properties:
                   namespace:
@@ -65,9 +64,70 @@ spec:
                           TODO: Add other useful fields. apiVersion, kind, uid?'
                         type: string
                     type: object
+                    x-kubernetes-map-type: atomic
+                type: object
+              connection:
+                description: Connection represents the information needed to connect
+                  to Vault. This operator uses the standard Vault environment variables
+                  to connect to Vault. If you need to override those settings and
+                  for example connect to a different Vault instance, you can do with
+                  this section of the CR.
+                properties:
+                  address:
+                    description: 'Address Address of the Vault server expressed as
+                      a URL and port, for example: https://127.0.0.1:8200/'
+                    type: string
+                  maxRetries:
+                    description: MaxRetries Maximum number of retries when certain
+                      error codes are encountered. The default is 2, for three total
+                      attempts. Set this to 0 or less to disable retrying. Error codes
+                      that are retried are 412 (client consistency requirement not
+                      satisfied) and all 5xx except for 501 (not implemented).
+                    type: integer
+                  tLSConfig:
+                    properties:
+                      cacert:
+                        description: Cacert Path to a PEM-encoded CA certificate file
+                          on the local disk. This file is used to verify the Vault
+                          server's SSL certificate. This environment variable takes
+                          precedence over a cert passed via the secret.
+                        type: string
+                      skipVerify:
+                        description: SkipVerify Do not verify Vault's presented certificate
+                          before communicating with it. Setting this variable is not
+                          recommended and voids Vault's security model.
+                        type: boolean
+                      tlsSecret:
+                        description: 'TLSSecret namespace-local secret containing
+                          the tls material for the connection. the expected keys for
+                          the secret are: ca bundle -> "ca.crt", certificate -> "tls.crt",
+                          key -> "tls.key"'
+                        properties:
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?'
+                            type: string
+                        type: object
+                      tlsServerName:
+                        description: TLSServerName Name to use as the SNI host when
+                          connecting via TLS.
+                        type: string
+                    type: object
+                  timeOut:
+                    description: Timeout Timeout variable. The default value is 60s.
+                    type: string
                 type: object
               policy:
                 description: Policy is a Vault policy expressed in HCL language.
+                type: string
+              type:
+                description: Type represents the policy type, currently the only supported
+                  policy type is "acl", but in the future rgp and egp  might be supported.
+                  If not specified a policy will be created at /sys/policies/<name>,
+                  if specified (the recommended approach) a policy will be created
+                  at /sys/policies/acl/<name>
+                enum:
+                - acl
                 type: string
             type: object
           status:
@@ -78,13 +138,12 @@ spec:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
                     use as an array at the field path .status.conditions.  For example,
-                    type FooStatus struct{     // Represents the observations of a
-                    foo's current state.     // Known .status.conditions.type are:
-                    \"Available\", \"Progressing\", and \"Degraded\"     // +patchMergeKey=type
-                    \    // +patchStrategy=merge     // +listType=map     // +listMapKey=type
-                    \    Conditions []metav1.Condition `json:\"conditions,omitempty\"
-                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`
-                    \n     // other fields }"
+                    \n type FooStatus struct{ // Represents the observations of a
+                    foo's current state. // Known .status.conditions.type are: \"Available\",
+                    \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
+                    // +listType=map // +listMapKey=type Conditions []metav1.Condition
+                    `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
+                    protobuf:\"bytes,1,rep,name=conditions\"` \n // other fields }"
                   properties:
                     lastTransitionTime:
                       description: lastTransitionTime is the last time the condition
@@ -151,9 +210,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []

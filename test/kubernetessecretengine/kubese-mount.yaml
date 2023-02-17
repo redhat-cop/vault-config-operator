@@ -1,0 +1,10 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: SecretEngineMount
+metadata:
+  name: kubese-test
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  type: kubernetes
+  path: ""

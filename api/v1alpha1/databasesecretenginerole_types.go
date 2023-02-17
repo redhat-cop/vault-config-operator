@@ -20,6 +20,7 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -33,20 +34,30 @@ type DatabaseSecretEngineRoleSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Authentication is the kube aoth configuraiton to be used to execute this request
+	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
+	// +kubebuilder:validation:Optional
+	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
+
+	// Authentication is the kube auth configuration to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to create the role.
 	// The final path will be {[spec.authentication.namespace]}/{spec.path}/roles/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 
 	DBSERole `json:",inline"`
 }
 
 var _ vaultutils.VaultObject = &DatabaseSecretEngineRole{}
+
+var _ apis.ConditionsAware = &DatabaseSecretEngineRole{}
+
+func (d *DatabaseSecretEngineRole) GetVaultConnection() *vaultutils.VaultConnection {
+	return d.Spec.Connection
+}
 
 func (d *DatabaseSecretEngineRole) GetPath() string {
 	return string(d.Spec.Path) + "/" + "roles" + "/" + d.Name
@@ -160,8 +171,12 @@ func (i *DBSERole) toMap() map[string]interface{} {
 	payload["default_ttl"] = i.DefaultTTL
 	payload["max_ttl"] = i.MaxTTL
 	payload["creation_statements"] = i.CreationStatements
-	payload["trevocation_statetments"] = i.RevocationStatements
+	payload["revocation_statetments"] = i.RevocationStatements
 	payload["rollback_statements"] = i.RollbackStatements
 	payload["renew_statements"] = i.RenewStatements
 	return payload
+}
+
+func (d *DatabaseSecretEngineRole) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
 }

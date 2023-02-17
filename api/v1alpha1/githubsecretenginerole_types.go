@@ -34,15 +34,19 @@ type GitHubSecretEngineRoleSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Authentication is the kube aoth configuraiton to be used to execute this request
+	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
+	// +kubebuilder:validation:Optional
+	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
+
+	// Authentication is the kube auth configuration to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to create the role.
 	// The final path will be {[spec.authentication.namespace]}/{spec.path}/permissionset/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 
 	// PermissionsSet All parameters are optional. Omitting them results in a token that has access to all of the repositories and permissions that the GitHub App has.
 	// When crafting Vault policy, hyper security sensitive organisations may wish to favour repository_ids (GitHub repository IDs are immutable) instead of repositories (GitHub repository names are mutable).
@@ -51,6 +55,14 @@ type GitHubSecretEngineRoleSpec struct {
 }
 
 type PermissionSet struct {
+
+	//  InstallationID the ID of the app installation. Note the Installation ID from the URL of this page (usually: https://github.com/settings/installations/<installation id>) if you wish to configure using the installation ID directly. Only one of installationID or organizationName is required. If both are provided, installationID takes precedence.
+	// +kubebuilder:validation:Optional
+	InstallationID int64 `json:"installationID,omitempty"`
+
+	// OrganizationName the name of the organization with the GitHub App installation. Only one of installationID or organizationName is required. If both are provided, installationID takes precedence.
+	// +kubebuilder:validation:Optional
+	OrganizationName string `json:"organizationName,omitempty"`
 
 	// Repositories a list of the names of the repositories within the organisation that the installation token can access
 	// +kubebuilder:validation:Optional
@@ -67,6 +79,8 @@ type PermissionSet struct {
 
 func (i *PermissionSet) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
+	payload["installation_id"] = i.InstallationID
+	payload["org_name"] = i.OrganizationName
 	payload["repositories"] = i.Repositories
 	payload["repository_ids"] = i.RepositoriesIDs
 	payload["permissions"] = i.Permissions
@@ -74,6 +88,10 @@ func (i *PermissionSet) toMap() map[string]interface{} {
 }
 
 var _ vaultutils.VaultObject = &GitHubSecretEngineRole{}
+
+func (d *GitHubSecretEngineRole) GetVaultConnection() *vaultutils.VaultConnection {
+	return d.Spec.Connection
+}
 
 func (d *GitHubSecretEngineRole) GetPath() string {
 	return string(d.Spec.Path) + "/" + "permissionset" + "/" + d.Name
@@ -143,4 +161,8 @@ type GitHubSecretEngineRoleList struct {
 
 func init() {
 	SchemeBuilder.Register(&GitHubSecretEngineRole{}, &GitHubSecretEngineRoleList{})
+}
+
+func (d *GitHubSecretEngineRole) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
 }

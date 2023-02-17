@@ -1,10 +1,9 @@
-
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.6.1
+    controller-gen.kubebuilder.io/version: v0.10.0
   creationTimestamp: null
   name: kubernetesauthengineroles.redhatcop.redhat.io
 spec:
@@ -38,11 +37,30 @@ spec:
             description: KubernetesAuthEngineRoleSpec defines the desired state of
               KubernetesAuthEngineRole
             properties:
+              aliasNameSource:
+                default: serviceaccount_uid
+                description: 'AliasNameSource Configures how identity aliases are
+                  generated. Valid choices are: serviceaccount_uid, serviceaccount_name
+                  When serviceaccount_uid is specified, the machine generated UID
+                  from the service account will be used as the identity alias name.
+                  When serviceaccount_name is specified, the service account''s namespace
+                  and name will be used as the identity alias name e.g vault/vault-auth.
+                  While it is strongly advised that you use serviceaccount_uid, you
+                  may also use serviceaccount_name in cases where you want to set
+                  the alias ahead of time, and the risks are mitigated or otherwise
+                  acceptable given your use case. It is very important to limit who
+                  is able to delete/create service accounts within a given cluster.
+                  See the Create an Entity Alias document which further expands on
+                  the potential security implications mentioned above.'
+                enum:
+                - serviceaccount_uid
+                - serviceaccount_name
+                type: string
               audience:
                 description: Audience Audience claim to verify in the JWT.
                 type: string
               authentication:
-                description: Authentication is the kube aoth configuraiton to be used
+                description: Authentication is the kube auth configuration to be used
                   to execute this request
                 properties:
                   namespace:
@@ -70,6 +88,58 @@ spec:
                           TODO: Add other useful fields. apiVersion, kind, uid?'
                         type: string
                     type: object
+                    x-kubernetes-map-type: atomic
+                type: object
+              connection:
+                description: Connection represents the information needed to connect
+                  to Vault. This operator uses the standard Vault environment variables
+                  to connect to Vault. If you need to override those settings and
+                  for example connect to a different Vault instance, you can do with
+                  this section of the CR.
+                properties:
+                  address:
+                    description: 'Address Address of the Vault server expressed as
+                      a URL and port, for example: https://127.0.0.1:8200/'
+                    type: string
+                  maxRetries:
+                    description: MaxRetries Maximum number of retries when certain
+                      error codes are encountered. The default is 2, for three total
+                      attempts. Set this to 0 or less to disable retrying. Error codes
+                      that are retried are 412 (client consistency requirement not
+                      satisfied) and all 5xx except for 501 (not implemented).
+                    type: integer
+                  tLSConfig:
+                    properties:
+                      cacert:
+                        description: Cacert Path to a PEM-encoded CA certificate file
+                          on the local disk. This file is used to verify the Vault
+                          server's SSL certificate. This environment variable takes
+                          precedence over a cert passed via the secret.
+                        type: string
+                      skipVerify:
+                        description: SkipVerify Do not verify Vault's presented certificate
+                          before communicating with it. Setting this variable is not
+                          recommended and voids Vault's security model.
+                        type: boolean
+                      tlsSecret:
+                        description: 'TLSSecret namespace-local secret containing
+                          the tls material for the connection. the expected keys for
+                          the secret are: ca bundle -> "ca.crt", certificate -> "tls.crt",
+                          key -> "tls.key"'
+                        properties:
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?'
+                            type: string
+                        type: object
+                      tlsServerName:
+                        description: TLSServerName Name to use as the SNI host when
+                          connecting via TLS.
+                        type: string
+                    type: object
+                  timeOut:
+                    description: Timeout Timeout variable. The default value is 60s.
+                    type: string
                 type: object
               path:
                 description: Path at which to make the configuration. The final path
@@ -135,6 +205,7 @@ spec:
                           "value". The requirements are ANDed.
                         type: object
                     type: object
+                    x-kubernetes-map-type: atomic
                   targetNamespaces:
                     description: TargetNamespaces is a list of namespace from which
                       service accounts will receive this role. Either TargetNamespaceSelector
@@ -196,6 +267,7 @@ spec:
                   This current value of this will be referenced at renewal time.
                 type: integer
               tokenType:
+                default: default
                 description: 'TokenType The type of token that should be generated.
                   Can be service, batch, or default to use the mount''s tuned default
                   (which unless changed will be service tokens). For token store roles,
@@ -222,13 +294,12 @@ spec:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
                     use as an array at the field path .status.conditions.  For example,
-                    type FooStatus struct{     // Represents the observations of a
-                    foo's current state.     // Known .status.conditions.type are:
-                    \"Available\", \"Progressing\", and \"Degraded\"     // +patchMergeKey=type
-                    \    // +patchStrategy=merge     // +listType=map     // +listMapKey=type
-                    \    Conditions []metav1.Condition `json:\"conditions,omitempty\"
-                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`
-                    \n     // other fields }"
+                    \n type FooStatus struct{ // Represents the observations of a
+                    foo's current state. // Known .status.conditions.type are: \"Available\",
+                    \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
+                    // +listType=map // +listMapKey=type Conditions []metav1.Condition
+                    `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
+                    protobuf:\"bytes,1,rep,name=conditions\"` \n // other fields }"
                   properties:
                     lastTransitionTime:
                       description: lastTransitionTime is the last time the condition
@@ -295,9 +366,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []

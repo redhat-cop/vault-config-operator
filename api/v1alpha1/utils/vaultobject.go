@@ -32,6 +32,8 @@ type VaultObject interface {
 	IsInitialized() bool
 	IsValid() (bool, error)
 	PrepareInternalValues(context context.Context, object client.Object) error
+	GetKubeAuthConfiguration() *KubeAuthConfiguration
+	GetVaultConnection() *VaultConnection
 }
 
 type VaultEndpoint struct {
@@ -41,12 +43,6 @@ type VaultEndpoint struct {
 func NewVaultEndpoint(obj client.Object) *VaultEndpoint {
 	return &VaultEndpoint{
 		vaultObject: obj.(VaultObject),
-	}
-}
-
-func NewVaultEndpointObj(obj VaultObject) *VaultEndpoint {
-	return &VaultEndpoint{
-		vaultObject: obj,
 	}
 }
 
@@ -85,10 +81,6 @@ func (ve *VaultEndpoint) CreateOrUpdate(context context.Context) error {
 		}
 	}
 	return nil
-}
-
-func (ve *VaultEndpoint) GetSecret(context context.Context) (*vault.Secret, bool, error) {
-	return ReadSecret(context, ve.vaultObject.GetPath())
 }
 
 type RabbitMQEngineConfigVaultObject interface {

@@ -35,22 +35,27 @@ import (
 
 // RabbitMQSecretEngineConfigSpec defines the desired state of RabbitMQSecretEngineConfig
 type RabbitMQSecretEngineConfigSpec struct {
+
+	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
+	// +kubebuilder:validation:Optional
+	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
+
 	// Authentication is the k8s auth configuration to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
 	// The final path will be {[spec.authentication.namespace]}/{spec.path}/{metadata.name}/config/connection.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 
 	// +kubebuilder:validation:Required
 	RMQSEConfig `json:",inline"`
 
 	// RootCredentials specifies how to retrieve the credentials for this RabbitMQEngine connection.
 	// +kubebuilder:validation:Required
-	RootCredentials RootCredentialConfig `json:"rootCredentials,omitempty"`
+	RootCredentials vaultutils.RootCredentialConfig `json:"rootCredentials,omitempty"`
 }
 
 type RMQSEConfig struct {
@@ -137,6 +142,10 @@ func (fields *RMQSEConfig) rabbitMQToMap() map[string]interface{} {
 
 var _ apis.ConditionsAware = &RabbitMQSecretEngineConfig{}
 
+func (d *RabbitMQSecretEngineConfig) GetVaultConnection() *vaultutils.VaultConnection {
+	return d.Spec.Connection
+}
+
 func (m *RabbitMQSecretEngineConfig) GetConditions() []metav1.Condition {
 	return m.Status.Conditions
 }
@@ -151,7 +160,7 @@ func (m *RabbitMQSecretEngineConfig) SetUsernameAndPassword(username string, pas
 }
 
 func (rabbitMQ *RabbitMQSecretEngineConfig) isValid() error {
-	return rabbitMQ.Spec.RootCredentials.validateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+	return rabbitMQ.Spec.RootCredentials.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
 }
 
 var _ vaultutils.RabbitMQEngineConfigVaultObject = &RabbitMQSecretEngineConfig{}
@@ -266,4 +275,8 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) CheckTTLValuesProvided() bool {
 		return true
 	}
 	return false
+}
+
+func (d *RabbitMQSecretEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
 }

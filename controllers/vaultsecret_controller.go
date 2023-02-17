@@ -43,6 +43,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	vaultsecretutils "github.com/redhat-cop/vault-config-operator/controllers/vaultsecretutils"
 )
 
@@ -63,8 +64,9 @@ type VaultSecretReconciler struct {
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=vaultsecrets,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=vaultsecrets/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=vaultsecrets/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="",resources=serviceaccounts/token,verbs=create
 //+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
-// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -89,18 +91,19 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	}
 
 	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
+	ctx = context.WithValue(ctx, "restConfig", r.GetRestConfig())
 
 	shouldSync, err := r.shouldSync(ctx, instance)
 	if err != nil {
 		// There was a problem determining if the event should cause a sync.
-		return r.ManageError(ctx, instance, err)
+		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 	}
 
 	if shouldSync {
 		err = r.manageSyncLogic(ctx, instance)
 		if err != nil {
 			r.Log.Error(err, "unable to complete sync logic", "instance", instance)
-			return r.ManageError(ctx, instance, err)
+			return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 		}
 	}
 
@@ -120,9 +123,9 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	//we reschedule the next reconcile at the time in the future corresponding to
 	nextSchedule := time.Until(nextUpdateTime)
 	if nextSchedule > 0 {
-		return r.ManageSuccessWithRequeue(ctx, instance, nextSchedule)
+		return vaultresourcecontroller.ManageOutcomeWithRequeue(ctx, r.ReconcilerBase, instance, err, nextSchedule)
 	} else {
-		return r.ManageSuccessWithRequeue(ctx, instance, time.Second)
+		return vaultresourcecontroller.ManageOutcomeWithRequeue(ctx, r.ReconcilerBase, instance, err, time.Second)
 	}
 
 }
@@ -282,6 +285,7 @@ func (r *VaultSecretReconciler) manageSyncLogic(ctx context.Context, instance *r
 	definitionsStatus := make([]redhatcopv1alpha1.VaultSecretDefinitionStatus, len(instance.Spec.VaultSecretDefinitions))
 
 	for idx, vaultSecretDefinition := range instance.Spec.VaultSecretDefinitions {
+		ctx = context.WithValue(ctx, "vaultConnection", vaultSecretDefinition.GetVaultConnection())
 		vaultClient, err := vaultSecretDefinition.Authentication.GetVaultClient(ctx, instance.Namespace)
 		if err != nil {
 			r.Log.Error(err, "unable to create vault client", "instance", instance)
@@ -289,11 +293,14 @@ func (r *VaultSecretReconciler) manageSyncLogic(ctx context.Context, instance *r
 		}
 
 		ctx = context.WithValue(ctx, "vaultClient", vaultClient)
-		vaultEndpoint := vaultutils.NewVaultEndpointObj(&vaultSecretDefinition)
-		vaultSecret, ok, err := vaultEndpoint.GetSecret(ctx)
-		if !ok {
+		vaultSecretEndpoint := vaultutils.NewVaultSecretEndpoint(&vaultSecretDefinition)
+		vaultSecret, ok, err := vaultSecretEndpoint.GetSecret(ctx)
+		if err != nil {
 			r.Log.Error(err, "unable to read vault secret for ", "path", vaultSecretDefinition.GetPath())
 			return err
+		}
+		if !ok {
+			return errors.New("secret not found at path: " + vaultSecretDefinition.GetPath())
 		}
 
 		definitionsStatus[idx] = redhatcopv1alpha1.VaultSecretDefinitionStatus{

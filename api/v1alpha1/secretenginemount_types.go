@@ -31,8 +31,12 @@ import (
 var _ vaultutils.VaultObject = &SecretEngineMount{}
 var _ vaultutils.VaultEngineObject = &SecretEngineMount{}
 
+func (d *SecretEngineMount) GetVaultConnection() *vaultutils.VaultConnection {
+	return d.Spec.Connection
+}
+
 func (d *SecretEngineMount) GetPath() string {
-	return cleansePath(d.GetEngineListPath() + "/" + string(d.Spec.Path) + "/" + d.Name)
+	return vaultutils.CleansePath(d.GetEngineListPath() + "/" + string(d.Spec.Path) + "/" + d.Name)
 }
 func (d *SecretEngineMount) GetPayload() map[string]interface{} {
 	return d.Spec.toMap()
@@ -75,9 +79,13 @@ type SecretEngineMountSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Authentication is the kube aoth configuraiton to be used to execute this request
+	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
+	// +kubebuilder:validation:Optional
+	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
+
+	// Authentication is the kube auth configuration to be used to execute this request
 	// +kubebuilder:validation:Required
-	Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	Mount `json:",inline"`
 
@@ -85,7 +93,7 @@ type SecretEngineMountSpec struct {
 	// The final path will be {[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path /sys/mounts/{[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
 	// +kubebuilder:validation:Required
-	Path Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty"`
 }
 
 // +k8s:openapi-gen=true
@@ -239,4 +247,8 @@ func (m *Mount) toMap() map[string]interface{} {
 		"external_entropy_access": m.ExternalEntropyAccess,
 		"options":                 m.Options,
 	}
+}
+
+func (d *SecretEngineMount) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+	return &d.Spec.Authentication
 }

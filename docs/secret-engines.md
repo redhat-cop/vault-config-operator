@@ -4,15 +4,19 @@
   - [SecretEngineMount](#secretenginemount)
   - [DatabaseSecretEngineConfig](#databasesecretengineconfig)
   - [DatabaseSecretEngineRole](#databasesecretenginerole)
+  - [DatabaseSecretEngineStaticRole](#databasesecretenginestaticrole)
   - [GitHubSecretEngineConfig](#githubsecretengineconfig)
   - [GitHubSecretEngineRole](#githubsecretenginerole)
   - [QuaySecretEngineConfig](#quaysecretengineconfig)
-  - [QuaySecretEngineStaticRole](#quaysecretenginestaticrole)
   - [QuaySecretEngineRole](#quaysecretenginerole)
+  - [QuaySecretEngineStaticRole](#quaysecretenginestaticrole)
   - [RabbitMQSecretEngineConfig](#rabbitmqsecretengineconfig)
   - [RabbitMQSecretEngineRole](#rabbitmqsecretenginerole)
   - [PKISecretEngineConfig](#pkisecretengineconfig)
   - [PKISecretEngineRole](#pkisecretenginerole)
+  - [KubernetesSecretEngineConfig](#kubernetessecretengineconfig)
+  - [KubernetesSecretEngineRole](#kubernetessecretenginerole)
+
 
 ## SecretEngineMount
 
@@ -65,6 +69,9 @@ spec:
   rootCredentialsFromSecret:
     name: postgresql-admin-password
   path: postgresql-vault-demo/database
+  rootPasswordRotation:
+    enable: true
+    rotationPeriod: 2m  
 ```
 
 The `pluginName` field specifies what type of database this connection is for.
@@ -76,6 +83,10 @@ The `connectionURL` field specifies how to connect to the database.
 The `username` field specific the username to be used to connect to the database. This field is optional, if not specified the username will be retrieved from teh credential secret.
 
 The `path` field specifies the path of the secret engine to which this connection will be added.
+
+The `rootPasswordRotation.enable` field activates the root password rotation. The root password wil be rotated immediately. It is recommended to use this feature with care as there is no way to recover the root password. 
+
+The `rootPasswordRotation.rotationPeriod` field tells the operator to periodically rotate the root password. If only enable is specified the password will be rotated only once.
 
 The password and possibly the username can be retrived a three different ways:
 
@@ -124,9 +135,50 @@ This CR is roughly equivalent to this Vault CLI command:
 vault write [namespace/]postgresql-vault-demo/database/roles/read-only db_name=my-postgresql-database creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{name}}\";"
 ```
 
+## DatabaseSecretEngineStaticRole
+
+The `DatabaseSecretEngineStaticRole` CRD allows a user to create a Database Secret Engine Static Role, here is an example:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: DatabaseSecretEngineStaticRole
+metadata:
+  name: read-only-static
+spec:
+  authentication: 
+    path: kubernetes
+    role: database-engine-admin
+  path: test-vault-config-operator/database
+  dBName: my-postgresql-database
+  username: helloworld
+  rotationPeriod: 3600
+  rotationStatements:
+    - ALTER USER "{{name}}" WITH PASSWORD '{{password}}'; 
+  credentialType: password
+  passwordCredentialConfig: {}
+```  
+
+The `path` field specifies the path of the secret engine that will contain this role.
+
+The `dBname` field specifies the name of the connection to be used with this role.
+
+The `username` field specifies a username/role pre-existing in the database. 
+
+The `rotationStatements` field specifies the statements to run to rotate the user credentials.
+
+Other standard Database Secret Static Engine Role fields are available for fine tuning, see the [Vault Documentation](https://developer.hashicorp.com/vault/api-docs/secret/databases#create-static-role)
+
+This CR is roughly equivalent to this Vault CLI command:
+
+```shell
+vault write [namespace/]test-vault-config-operator/database/static-roles/read-only-static db_name=my-postgresql-database username=helloworld rotation_statements="ALTER USER \"{{name}}\" WITH PASSWORD \"{{password}}\";" rotationPeriod=3600 credentialType=password
+```
+
 ## GitHubSecretEngineConfig
 
-The `GitHubSecretEngineConfig` CRD allows a user to create a GitHub Secret engine configuration. Only one configuration can exists per GitHub secret engine mount point, here is an example:
+The `GitHubSecretEngineConfig` CRD allows a user to create a GitHub Secret engine configuration. 
+Note: this secret engine requires the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github) `v2.0.0` to be installed. 
+Only one configuration can exists per GitHub secret engine mount point, here is an example:
 
 ```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
@@ -142,7 +194,6 @@ spec:
       name: vault-github-app-key
   path: github/raf-backstage-demo
   applicationID: 123456
-  organizationName: raf-backstage-demo
 ```
 
 The `path` field specifies the path of the secret engine that will contain this configuration.
@@ -150,8 +201,6 @@ The `path` field specifies the path of the secret engine that will contain this 
 The `sSHKeyReference` field specifies how to retrieve the ssh key to the GitHub application.
 
 The `applicationID` field specifies application id of the GitHub application.
-
-The `organizationName` field specifies organization in which the application is installed.
 
 More parameters exists for their explanation and for how to install the vault-plugin-secret-github engine see [here](https://github.com/martinbaillie/vault-plugin-secrets-github#config)
 
@@ -177,13 +226,18 @@ spec:
   path: github/raf-backstage-demo
   repositories:
   - hello-world
+  organizationName: raf-backstage-demo
 ```
 
 The `path` field specifies the path of the secret engine that will contain this role.
 
 The `repositories` field specifies on which repositories the generated credential can act.
 
+The `organizationName` field specifies organization in which the application is installed.
+
 More parameters exists for their explanation and for how to install the vault-plugin-secret-github engine see [here](https://github.com/martinbaillie/vault-plugin-secrets-github#permission-sets)
+
+Available permissions are listed [here](https://docs.github.com/en/rest/apps/apps?apiVersion=2022-11-28#create-an-installation-access-token-for-an-app)
 
 This CR is roughly equivalent to this Vault CLI command:
 
@@ -469,4 +523,77 @@ This CR is roughly equivalent to this Vault CLI command:
 vault write pki-vault-demo/pki/roles/my-role \
     allowed_domains=internal.io,pki-vault-demo.svc \
     max_ttl="8760h"
+```
+
+## KubernetesSecretEngineConfig
+
+`KubernetesSecretEngineConfig` CRD allows a user to create a [Kubernetes Secret Engine configuration](https://www.vaultproject.io/api-docs/secret/kubernetes#write-configuration). Here is an example:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KubernetesSecretEngineConfig
+metadata:
+  name: kubese-test
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  path: kubese-test 
+  kubernetesHost: https://kubernetes.default.svc:443
+  jwtReference: 
+    secret:
+      name: default-token-lbnfc
+```
+
+The `kubernetesHost` specifies URL of the API server to connect to.
+
+The `path` field specifies the path of the secret engine to which this connection will be added.
+
+The `jwtReference` specifies a reference to service account token to be used as credentials when connecting to the API server.
+
+This CR is roughly equivalent to this Vault CLI command:
+
+```shell
+vault write -f kube-setest/config \
+    kubernetes_host=https://kubernetes.default.svc:443 \
+    service_account_jwt=xxxx
+```
+
+## KubernetesSecretEngineRole
+
+The `KubernetesSecretEngineRole` CRD allows a user to create a [Kubernetes Secret Engine Role](https://www.vaultproject.io/api-docs/secret/kubernetes#create-role), here is an example:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KubernetesSecretEngineRole
+metadata:
+  name: kubese-default-edit
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  path: kubese-test
+  allowedKubernetesNamespaces:
+  - default
+  kubernetesRoleName: "edit"
+  kubernetesRoleType: "ClusterRole"
+  nameTemplate: vault-sa-{{random 10 | lowercase}}
+```
+
+The `allowedKubernetesNamespaces` field specifies on which namespaces it is possible to request this role.
+
+The `kubernetesRoleName` field specifies which role should the service account receive.
+
+The `kubernetesRoleType` field specifies whether the role is a namespaced role or a cluster role.
+
+The `nameTemplate` field specifies the name template to be sued to create the service account. There are other ways of handling the service accounts, see all the options in the API documentation.
+
+This CR is roughly equivalent to this Vault CLI command:
+
+```shell
+vault write kubese-test/roles/kubese-default-edit \
+    allowed_kubernetes_namespaces="default" \
+    kubernetes_role_name="edit" \
+    kubernetes_role_name="ClusterRole" \
+    nameTemplate="vault-sa-{{random 10 | lowercase}}" \
 ```

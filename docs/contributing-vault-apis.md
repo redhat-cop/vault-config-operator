@@ -50,14 +50,12 @@ Here are the steps:
    var _ apis.ConditionsAware = &MyVaultType{}
    ```
 
-5. Add needed validation and defaulting to the webhook. Notice that all the object will need to add the finalizer in the default webhook and to prevent the path from being changed in the valitating webhooks:
+5. Add needed validation and defaulting to the webhook. Notice that all the resources will need to prevent the path from being changed in the valitating webhooks:
 
   ```golang:
   func (r *MyVaultType) Default() {
     authenginemountlog.Info("default", "name", r.Name)
-    if !controllerutil.ContainsFinalizer(r, GetFinalizer(r)) {
-      controllerutil.AddFinalizer(r, GetFinalizer(r))
-    }
+    //add your defaults here
   }
 
   func (r *MyVaultType) ValidateUpdate(old runtime.Object) error {
@@ -91,6 +89,7 @@ Here are the steps:
       }
 
       ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
+	    ctx = context.WithValue(ctx, "restConfig", r.GetRestConfig())      
       vaultClient, err := instance.Spec.Authentication.GetVaultClient(ctx, instance.Namespace)
       if err != nil {
         r.Log.Error(err, "unable to create vault client", "instance", instance)

@@ -1,0 +1,24 @@
+# permissions for end users to edit jwtoidcauthengineconfigs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jwtoidcauthengineconfig-editor-role
+rules:
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - jwtoidcauthengineconfigs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - jwtoidcauthengineconfigs/status
+  verbs:
+  - get
