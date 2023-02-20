@@ -301,7 +301,7 @@ See <https://github.com/golang/vscode-go/blob/master/docs/settings.md#buildbuild
 ```
 
 ### Running the operator locally
-oc 
+ 
 #### Deploy a Vault instance
 
 If you don't have a Vault instance available for testing, deploy one with these steps:
