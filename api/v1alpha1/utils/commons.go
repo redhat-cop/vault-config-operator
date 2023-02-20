@@ -133,7 +133,7 @@ func (vc *VaultConnection) getConnectionConfig(context context.Context, kubeName
 		if vc.TLSConfig.TLSServerName != nil {
 			tlsConfig.TLSServerName = *vc.TLSConfig.TLSServerName
 		}
-		tlsConfig.Insecure = !vc.TLSConfig.SkipVerify
+		tlsConfig.Insecure = vc.TLSConfig.SkipVerify
 		config.ConfigureTLS(&tlsConfig)
 	}
 	return config, nil
