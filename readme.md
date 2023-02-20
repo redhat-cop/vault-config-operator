@@ -338,7 +338,7 @@ export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.da
 verify that kube authentication works:
 
 ```sh
-token=$(oc get secret DEFAULT_SERVICE_ACCOUNT_SECRET_NAME -n vault-admin -o jsonpath='{.data.token}' | base64 -d)
+export token=$(oc get secret DEFAULT_SERVICE_ACCOUNT_SECRET_NAME -n vault-admin -o jsonpath='{.data.token}' | base64 -d)
 vault write -tls-skip-verify auth/kubernetes/login role=policy-admin jwt=${token}
 ```
 
