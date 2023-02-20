@@ -301,7 +301,7 @@ See <https://github.com/golang/vscode-go/blob/master/docs/settings.md#buildbuild
 ```
 
 ### Running the operator locally
-
+oc 
 #### Deploy a Vault instance
 
 If you don't have a Vault instance available for testing, deploy one with these steps:
@@ -338,7 +338,7 @@ export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.da
 verify that kube authentication works:
 
 ```sh
-export token=$(oc create token default -n vault-admin)
+token=$(oc get secret DEFAULT_SERVICE_ACCOUNT_SECRET_NAME -n vault-admin -o jsonpath='{.data.token}' | base64 -d)
 vault write -tls-skip-verify auth/kubernetes/login role=policy-admin jwt=${token}
 ```
 
