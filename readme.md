@@ -338,7 +338,7 @@ export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.da
 verify that kube authentication works:
 
 ```sh
-export token=$(oc create token default -n vault-admin)
+export token=$(oc create token default -n vault-admin) #requires oc client 4.11.x
 vault write -tls-skip-verify auth/kubernetes/login role=policy-admin jwt=${token}
 ```
 
@@ -347,7 +347,7 @@ vault write -tls-skip-verify auth/kubernetes/login role=policy-admin jwt=${token
 > Note: this operator build process is tested with [podman](https://podman.io/), but some of the build files (Makefile specifically) use docker because they are generated automatically by operator-sdk. It is recommended [remap the docker command to the podman command](https://developers.redhat.com/blog/2020/11/19/transitioning-from-docker-to-podman#transition_to_the_podman_cli).
 
 ```sh
-export repo=raffaelespazzoli
+export repo=raffaelespazzoli #change the organization name to your own and be sure to make the repo public
 docker login quay.io/$repo
 oc new-project vault-config-operator
 oc project vault-config-operator
@@ -380,10 +380,11 @@ Database secret engine connection. This will deploy a postgresql database to con
 
 ```sh
 oc create secret generic postgresql-admin-password --from-literal=postgres-password=changeit -n test-vault-config-operator
-export uid=$(oc get project test-vault-config-operator -o jsonpath='{.metadata.annotations.openshift\.io/sa\.scc\.uid-range}'|sed 's/\/.*//')
-export guid=$(oc get project test-vault-config-operator -o jsonpath='{.metadata.annotations.openshift\.io/sa\.scc\.supplemental-groups}'|sed 's/\/.*//')
+
 helm repo add bitnami https://charts.bitnami.com/bitnami
-helm upgrade my-postgresql-database bitnami/postgresql -i --create-namespace -n test-vault-config-operator -f ./docs/examples/postgresql/postgresql-values.yaml --set securityContext.fsGroup=${guid} --set containerSecurityContext.runAsUser=${uid} --set volumePermissions.securityContext.runAsUser=${uid} --set metrics.securityContext.runAsUser=${uid}
+
+helm upgrade helm upgrade my-postgresql-database bitnami/postgresql -i --create-namespace -n test-vault-config-operator -f ./docs/examples/postgresql/postgresql-values.yaml  --set primary.podSecurityContext.fsGroup=null,primary.podSecurityContext.seccompProfile.type=RuntimeDefault,primary.containerSecurityContext.runAsUser=null,primary.containerSecurityContext.allowPrivilegeEscalation=false,primary.containerSecurityContext.runAsNonRoot=true,primary.containerSecurityContext.seccompProfile.type=RuntimeDefault,volumePermissions.enabled=false,shmVolume.enabled=false #For OpenShift 4.11 and higher, let set OpenShift the runAsUser and fsGroup automatically. Configure the pod and container security context to restrictive defaults and disable the volume permissions setup. See https://github.com/bitnami/charts/tree/main/bitnami/postgresql
+
 oc adm policy add-scc-to-user anyuid -z default -n test-vault-config-operator
 oc apply -f ./test/database-engine-config.yaml -n test-vault-config-operator
 ```
