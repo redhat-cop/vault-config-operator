@@ -61,17 +61,14 @@ func (r *DatabaseSecretEngineStaticRoleReconciler) Reconcile(ctx context.Context
 		return reconcile.Result{}, err
 	}
 
-	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
-	ctx = context.WithValue(ctx, "restConfig", r.GetRestConfig())
-	vaultClient, err := instance.Spec.Authentication.GetVaultClient(ctx, instance.Namespace)
+	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
 	if err != nil {
-		r.Log.Error(err, "unable to create vault client", "instance", instance)
+		r.Log.Error(err, "unable to prepare context", "instance", instance)
 		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 	}
-	ctx = context.WithValue(ctx, "vaultClient", vaultClient)
 	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
 
-	return vaultResource.Reconcile(ctx, instance)
+	return vaultResource.Reconcile(ctx1, instance)
 }
 
 // SetupWithManager sets up the controller with the Manager.
