@@ -1,6 +1,6 @@
 # Contributing a new Vault API
 
-All vault APIs can be manipulated using teh Vault logical client and essentially with three operations: `read`, `write` (corresponding to create and update) and `delete`.
+All vault APIs can be manipulated using the Vault logical client and essentially with three operations: `read`, `write` (corresponding to create and update) and `delete`.
 
 A framework has been created to make it simple to add new types (essentially new secret engine configuration and role types and new authentication engine configuration and role types).
 
