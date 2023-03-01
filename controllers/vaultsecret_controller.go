@@ -93,6 +93,24 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
 	ctx = context.WithValue(ctx, "restConfig", r.GetRestConfig())
 
+	if util.IsBeingDeleted(instance) {
+		if !util.HasFinalizer(instance, vaultutils.GetFinalizer(instance)) {
+			return reconcile.Result{}, nil
+		}
+		err := r.manageCleanUpLogic(ctx, instance)
+		if err != nil {
+			r.Log.Error(err, "unable to delete instance", "instance", instance)
+			return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
+		}
+		util.RemoveFinalizer(instance, vaultutils.GetFinalizer(instance))
+		err = r.GetClient().Update(ctx, instance)
+		if err != nil {
+			r.Log.Error(err, "unable to update instance", "instance", instance)
+			return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
+		}
+		return reconcile.Result{}, nil
+	}
+
 	shouldSync, err := r.shouldSync(ctx, instance)
 	if err != nil {
 		// There was a problem determining if the event should cause a sync.
@@ -128,6 +146,26 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return vaultresourcecontroller.ManageOutcomeWithRequeue(ctx, r.ReconcilerBase, instance, err, time.Second)
 	}
 
+}
+
+func (r *VaultSecretReconciler) manageCleanUpLogic(context context.Context, instance *redhatcopv1alpha1.VaultSecret) error {
+
+	k8sSecret := &corev1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       secretKind,
+			APIVersion: secretAPIVersion,
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      instance.Spec.TemplatizedK8sSecret.Name,
+			Namespace: instance.Namespace,
+		},
+	}
+	err := r.DeleteResourceIfExists(context, k8sSecret)
+	if err != nil {
+		r.Log.Error(err, "unable to delete k8s secret", "instance", instance, "k8s secret", k8sSecret)
+		return err
+	}
+	return nil
 }
 
 func (r *VaultSecretReconciler) formatK8sSecret(instance *redhatcopv1alpha1.VaultSecret, data interface{}) (*corev1.Secret, error) {
@@ -303,6 +341,8 @@ func (r *VaultSecretReconciler) manageSyncLogic(ctx context.Context, instance *r
 			return errors.New("secret not found at path: " + vaultSecretDefinition.GetPath())
 		}
 
+		r.Log.V(1).Info("", "", vaultSecret.LeaseDuration)
+
 		definitionsStatus[idx] = redhatcopv1alpha1.VaultSecretDefinitionStatus{
 			Name:          vaultSecretDefinition.Name,
 			LeaseID:       vaultSecret.LeaseID,
@@ -356,10 +396,16 @@ func (r *VaultSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 				return false
 			}
 
+			if util.IsBeingDeleted(newVaultSecret) {
+				r.Log.V(1).Info("Update Event - Marked for deletion", "kind", vaultSecretKind, "namespacedName", toNamespacedName(e.ObjectNew))
+				return true
+			}
+
 			if !reflect.DeepEqual(oldVaultSecret.Spec, newVaultSecret.Spec) {
 				r.Log.V(1).Info("Update Event - Spec changed", "kind", vaultSecretKind, "namespacedName", toNamespacedName(e.ObjectNew))
 				return true
 			}
+
 			return false
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
