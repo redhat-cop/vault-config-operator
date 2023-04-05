@@ -76,11 +76,6 @@ func (r *RandomSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return reconcile.Result{}, err
 	}
 
-	// how to read this if: if the secret has been initialized once and there is no refresh period or time to refresh has not arrived yet, return.
-	if instance.Status.LastVaultSecretUpdate != nil && (instance.Spec.RefreshPeriod == nil || (instance.Spec.RefreshPeriod != nil && !instance.Status.LastVaultSecretUpdate.Add(instance.Spec.RefreshPeriod.Duration).Before(time.Now()))) {
-		return reconcile.Result{}, nil
-	}
-
 	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
 	if err != nil {
 		r.Log.Error(err, "unable to prepare context", "instance", instance)
@@ -102,6 +97,11 @@ func (r *RandomSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request
 			r.Log.Error(err, "unable to update instance", "instance", instance)
 			return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 		}
+		return reconcile.Result{}, nil
+	}
+
+	// how to read this if: if the secret has been initialized once and there is no refresh period or time to refresh has not arrived yet, return.
+	if instance.Status.LastVaultSecretUpdate != nil && (instance.Spec.RefreshPeriod == nil || (instance.Spec.RefreshPeriod != nil && !instance.Status.LastVaultSecretUpdate.Add(instance.Spec.RefreshPeriod.Duration).Before(time.Now()))) {
 		return reconcile.Result{}, nil
 	}
 
@@ -169,7 +169,7 @@ func (r *RandomSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			if !ok {
 				return false
 			}
-			return newSecret.Spec.RefreshPeriod != oldSecret.Spec.RefreshPeriod || !reflect.DeepEqual(newSecret.Spec.SecretFormat, oldSecret.Spec.SecretFormat)
+			return util.IsBeingDeleted(newSecret) || newSecret.Spec.RefreshPeriod != oldSecret.Spec.RefreshPeriod || !reflect.DeepEqual(newSecret.Spec.SecretFormat, oldSecret.Spec.SecretFormat)
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
 			return true

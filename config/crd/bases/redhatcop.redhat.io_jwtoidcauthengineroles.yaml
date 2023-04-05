@@ -166,6 +166,7 @@ spec:
                               TODO: Add other useful fields. apiVersion, kind, uid?'
                             type: string
                         type: object
+                        x-kubernetes-map-type: atomic
                       tlsServerName:
                         description: TLSServerName Name to use as the SNI host when
                           connecting via TLS.

@@ -118,6 +118,11 @@ func (r *DatabaseSecretEngineConfig) IsValid() (bool, error) {
 
 func (r *DatabaseSecretEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
+	if !r.Status.LastRootPasswordRotation.IsZero() {
+		log.V(1).Info("root credentials rotation already occurred - credentials retrieval skipped")
+		return nil
+	}
+
 	kubeClient := context.Value("kubeClient").(client.Client)
 	if r.Spec.RootCredentials.RandomSecret != nil {
 		randomSecret := &RandomSecret{}
@@ -321,11 +326,13 @@ func (i *DBSEConfig) toMap() map[string]interface{} {
 	}
 	if i.Username != "" {
 		payload["username"] = i.Username
-	} else {
+	} else if i.retrievedUsername != "" { // Only set the username in payload if retrieved - see setInternalCredentials()
 		payload["username"] = i.retrievedUsername
 	}
 	payload["disable_escaping"] = i.DisableEscaping
-	payload["password"] = i.retrievedPassword
+	if i.retrievedPassword != "" { // Only set the password in payload if retrieved - see setInternalCredentials()
+		payload["password"] = i.retrievedPassword
+	}
 
 	return payload
 }
