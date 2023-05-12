@@ -34,9 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-var vaultClientCache = VaultClientCache{
-	clients: make(map[string]*vault.Client),
-}
+var vaultClientCache = VaultClientCache{}
 
 // +kubebuilder:object:generate=true
 // +kubebuilder:validation:Pattern:=`^(?:/?[\w;:@&=\$-\.\+]*)+/?`
@@ -82,8 +80,7 @@ type VaultConnection struct {
 }
 
 type VaultClientCache struct {
-	clients map[string]*vault.Client
-	mutex sync.Mutex
+	clients sync.Map
 }
 
 // +kubebuilder:object:generate=true
@@ -106,21 +103,19 @@ type TLSConfig struct {
 }
 
 func (cache *VaultClientCache) Get(kc *KubeAuthConfiguration) *vault.Client {
-	cache.mutex.Lock()
-	defer cache.mutex.Unlock()
-	return cache.clients[kc.getCacheKey()]
+	if client, ok := cache.clients.Load(kc.getCacheKey()); ok {
+		return client.(*vault.Client)
+	}
+
+	return nil
 }
 
 func (cache *VaultClientCache) Put(kc *KubeAuthConfiguration, client *vault.Client) {
-	cache.mutex.Lock()
-	defer cache.mutex.Unlock()
-	cache.clients[kc.getCacheKey()] = client
+	cache.clients.Store(kc.getCacheKey(), client)
 }
 
 func (cache *VaultClientCache) Delete(kc *KubeAuthConfiguration) {
-	cache.mutex.Lock()
-	defer cache.mutex.Unlock()
-	delete(cache.clients, kc.getCacheKey())
+	cache.clients.Delete(kc.getCacheKey())
 }
 
 func (vc *VaultConnection) getConnectionConfig(context context.Context, kubeNamespace string) (*vault.Config, error) {
@@ -192,8 +187,12 @@ func (kc *KubeAuthConfiguration) GetVaultClient(context context.Context, kubeNam
 
 	vaultClient := vaultClientCache.Get(kc)
 	if vaultClient != nil {
-		log.Info("Returning cached client")
-		return vaultClient, nil
+		// Check if the client's token is still valid.
+		_, err := vaultClient.Auth().Token().LookupSelf()
+		if err == nil {
+			log.V(1).Info("Returning cached client")
+			return vaultClient, nil
+		}
 	}
 
 	jwt, err := kc.getJWTToken(context, kubeNamespace)
@@ -288,6 +287,8 @@ func (kc *KubeAuthConfiguration) createVaultClient(context context.Context, jwt 
 	return client, nil
 }
 
+// If the TTL for the token is less than the maxTTL, the lifetime watcher renews the token until
+// it reaches the maxTTL.
 func (kc *KubeAuthConfiguration) startLifetimeWatcher(client *vault.Client, secret *vault.Secret, log logr.Logger) {
 	watcher, err := client.NewLifetimeWatcher(&vault.LifetimeWatcherInput{
 		Secret: secret,
