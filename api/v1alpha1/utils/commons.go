@@ -287,8 +287,8 @@ func (kc *KubeAuthConfiguration) createVaultClient(context context.Context, jwt 
 	return client, nil
 }
 
-// If the TTL for the token is less than the maxTTL, the lifetime watcher renews the token until
-// it reaches the maxTTL.
+// If the TTL for the token is less than its lease duration, the lifetime watcher renews the token until
+// its lease expires.
 func (kc *KubeAuthConfiguration) startLifetimeWatcher(client *vault.Client, secret *vault.Secret, log logr.Logger) {
 	watcher, err := client.NewLifetimeWatcher(&vault.LifetimeWatcherInput{
 		Secret: secret,
