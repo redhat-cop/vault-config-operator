@@ -30,8 +30,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const ReconcileSuccessful = "ReconcileSuccessful"
-
 func ManageOutcomeWithRequeue(context context.Context, r util.ReconcilerBase, obj client.Object, issue error, requeueAfter time.Duration) (reconcile.Result, error) {
 	log := log.FromContext(context)
 	conditionsAware := (obj).(apis.ConditionsAware)
@@ -46,7 +44,7 @@ func ManageOutcomeWithRequeue(context context.Context, r util.ReconcilerBase, ob
 			}
 		}
 		condition = metav1.Condition{
-			Type:               ReconcileSuccessful,
+			Type:               apis.ReconcileSuccess,
 			LastTransitionTime: metav1.Now(),
 			ObservedGeneration: obj.GetGeneration(),
 			Reason:             apis.ReconcileSuccessReason,
@@ -55,7 +53,7 @@ func ManageOutcomeWithRequeue(context context.Context, r util.ReconcilerBase, ob
 	} else {
 		r.GetRecorder().Event(obj, "Warning", "ProcessingError", issue.Error())
 		condition = metav1.Condition{
-			Type:               ReconcileSuccessful,
+			Type:               apis.ReconcileSuccess,
 			LastTransitionTime: metav1.Now(),
 			ObservedGeneration: obj.GetGeneration(),
 			Message:            issue.Error(),

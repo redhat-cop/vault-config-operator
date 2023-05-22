@@ -44,7 +44,7 @@ var _ = Describe("VaultSecret controller", func() {
 				}
 
 				for _, condition := range ppCreated.Status.Conditions {
-					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+					if condition.Type == apis.ReconcileSuccess && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -70,7 +70,7 @@ var _ = Describe("VaultSecret controller", func() {
 				}
 
 				for _, condition := range pCreated.Status.Conditions {
-					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+					if condition.Type == apis.ReconcileSuccess && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -95,7 +95,7 @@ var _ = Describe("VaultSecret controller", func() {
 				}
 
 				for _, condition := range pCreated.Status.Conditions {
-					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+					if condition.Type == apis.ReconcileSuccess && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -120,7 +120,7 @@ var _ = Describe("VaultSecret controller", func() {
 				}
 
 				for _, condition := range pCreated.Status.Conditions {
-					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+					if condition.Type == apis.ReconcileSuccess && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -145,7 +145,7 @@ var _ = Describe("VaultSecret controller", func() {
 				}
 
 				for _, condition := range kaerCreated.Status.Conditions {
-					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+					if condition.Type == apis.ReconcileSuccess && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -168,7 +168,7 @@ var _ = Describe("VaultSecret controller", func() {
 				}
 
 				for _, condition := range kaerCreated.Status.Conditions {
-					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+					if condition.Type == apis.ReconcileSuccess && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -191,7 +191,7 @@ var _ = Describe("VaultSecret controller", func() {
 				}
 
 				for _, condition := range kaerCreated.Status.Conditions {
-					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+					if condition.Type == apis.ReconcileSuccess && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -216,7 +216,7 @@ var _ = Describe("VaultSecret controller", func() {
 				}
 
 				for _, condition := range semCreated.Status.Conditions {
-					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+					if condition.Type == apis.ReconcileSuccess && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -241,7 +241,7 @@ var _ = Describe("VaultSecret controller", func() {
 				}
 
 				for _, condition := range rsCreated.Status.Conditions {
-					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+					if condition.Type == apis.ReconcileSuccess && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -264,7 +264,7 @@ var _ = Describe("VaultSecret controller", func() {
 				}
 
 				for _, condition := range rsCreated.Status.Conditions {
-					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+					if condition.Type == apis.ReconcileSuccess && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
@@ -292,7 +292,7 @@ var _ = Describe("VaultSecret controller", func() {
 				}
 
 				for _, condition := range created.Status.Conditions {
-					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+					if condition.Type == apis.ReconcileSuccess && condition.Status == metav1.ConditionTrue {
 						return true
 					}
 				}
