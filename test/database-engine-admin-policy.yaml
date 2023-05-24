@@ -18,7 +18,7 @@ spec:
     }
 
     # mount database secrets engines
-    path "/sys/mounts/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/database" {
+    path "/sys/mounts/{{identity.entity.aliases.${auth/kubernetes/@accessor}.metadata.service_account_namespace}}/database" {
       capabilities = [ "create", "read", "update", "delete"]
       allowed_parameters = {
         "type" = ["database"]
@@ -27,27 +27,27 @@ spec:
     }
 
     # tune database secrets engines
-    path "/sys/mounts/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/database/tune" {
+    path "/sys/mounts/{{identity.entity.aliases.${auth/kubernetes/@accessor}.metadata.service_account_namespace}}/database/tune" {
       capabilities = [ "create", "read", "update", "delete"]
     }
 
     # Configure database secrets engines
-    path "/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/database/config/+" {
+    path "/{{identity.entity.aliases.${auth/kubernetes/@accessor}.metadata.service_account_namespace}}/database/config/+" {
       capabilities = [ "create", "read", "update", "delete"]
     }
 
     # Configure database roles
-    path "/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/database/roles/+" {
+    path "/{{identity.entity.aliases.${auth/kubernetes/@accessor}.metadata.service_account_namespace}}/database/roles/+" {
       capabilities = [ "create", "read", "update", "delete"]
     }
 
     # Configure database static roles
-    path "/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/database/static-roles/+" {
+    path "/{{identity.entity.aliases.${auth/kubernetes/@accessor}.metadata.service_account_namespace}}/database/static-roles/+" {
       capabilities = [ "create", "read", "update", "delete"]
     }
 
     # Rotate root credentials
-    path "/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/database/rotate-root/+" {
+    path "/{{identity.entity.aliases.${auth/kubernetes/@accessor}.metadata.service_account_namespace}}/database/rotate-root/+" {
       capabilities = [ "create", "read", "update", "delete"]
     }        
     
