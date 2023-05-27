@@ -45,7 +45,7 @@ func (r *VaultPKIEngineResource) manageCleanUpLogic(context context.Context, ins
 	log := log.FromContext(context)
 	if conditionAware, ok := instance.(apis.ConditionsAware); ok {
 		for _, condition := range conditionAware.GetConditions() {
-			if condition.Status == metav1.ConditionTrue && condition.Type == apis.ReconcileSuccess {
+			if condition.Status == metav1.ConditionTrue && condition.Type == ReconcileSuccessful {
 				log.Info("DeleteIfExists", "Try to: ", instance)
 				err := r.vaultPKIEngineEndpoint.DeleteIfExists(context)
 				if err != nil {
