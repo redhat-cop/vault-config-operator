@@ -6,7 +6,7 @@ ui:
   enabled: true
 
 injector:
-  enabled: fasle
+  enabled: false
   image:
     repository: "registry.connect.redhat.com/hashicorp/vault-k8s"
     tag: "1.2.0-ubi"
