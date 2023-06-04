@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-multierror"
@@ -306,7 +307,11 @@ func (r *RandomSecret) validateEitherPasswordPolicyReferenceOrInline() error {
 func (r *RandomSecret) validateInlinePasswordPolicyFormat() error {
 	if r.Spec.SecretFormat.InlinePasswordPolicy != "" {
 		passwordPolicyFormat := &PasswordPolicyFormat{}
-		return hclsimple.Decode("dummy.hcl", []byte(r.Spec.SecretFormat.InlinePasswordPolicy), nil, passwordPolicyFormat)
+		if strings.HasSuffix(".hcl", r.Spec.SecretKey) {
+			return hclsimple.Decode(r.Spec.SecretKey, []byte(r.Spec.SecretFormat.InlinePasswordPolicy), nil, passwordPolicyFormat)
+		} else {
+			return hclsimple.Decode(r.Spec.SecretKey+".hcl", []byte(r.Spec.SecretFormat.InlinePasswordPolicy), nil, passwordPolicyFormat)
+		}
 	}
 	return nil
 }
