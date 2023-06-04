@@ -83,6 +83,9 @@ func (d *RandomSecret) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *RandomSecret) GetPath() string {
+	if d.Spec.IsKVSecretsEngineV2 {
+		return string(d.Spec.Path) + "/" + "data" + "/" + d.Name
+	}
 	return string(d.Spec.Path) + "/" + d.Name
 }
 
