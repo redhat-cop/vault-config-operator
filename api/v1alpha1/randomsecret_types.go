@@ -209,12 +209,15 @@ func (d *RandomSecret) GenerateNewPassword(context context.Context) error {
 		if err != nil {
 			return err
 		} else {
-			if response.Data != nil {
-				d.Spec.calculatedSecret = response.Data["password"].(string)
-			} else {
+			if response == nil || response.Data == nil {
 				return errors.New("no data returned by password policy")
 			}
-			return nil
+			if password, ok := response.Data["password"]; ok {
+				d.Spec.calculatedSecret = password.(string)
+				return nil
+			} else {
+				return errors.New("password policy did not generate a password")
+			}
 		}
 	}
 	return errors.New("no password policy method specified")
