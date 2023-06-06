@@ -19,7 +19,7 @@ spec:
     }
 
     # mount database kv engines
-    path "/sys/mounts/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/kv-v2" {
+    path "/sys/mounts/{{identity.entity.aliases.${auth/kubernetes/@accessor}.metadata.service_account_namespace}}/kv-v2" {
       capabilities = [ "create", "read", "update", "delete", "list" ]
       allowed_parameters = {
         "type" = ["kv"]
@@ -27,6 +27,6 @@ spec:
       }
     }
     # tune database secrets engines
-    path "/sys/mounts/{{identity.entity.aliases.${accessor}.metadata.service_account_namespace}}/kv-v2/tune" {
+    path "/sys/mounts/{{identity.entity.aliases.${auth/kubernetes/@accessor}.metadata.service_account_namespace}}/kv-v2/tune" {
       capabilities = [ "create", "read", "update", "delete"]
     }    
