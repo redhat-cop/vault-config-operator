@@ -332,7 +332,6 @@ vault auth enable -tls-skip-verify kubernetes
 vault write -tls-skip-verify auth/kubernetes/config kubernetes_host=https://kubernetes.default.svc:443
 vault write -tls-skip-verify auth/kubernetes/role/policy-admin bound_service_account_names=default bound_service_account_namespaces=vault-admin policies=vault-admin ttl=10s
 # noticed how we created a 10s TTL for the tokens created by this authentication engine
-export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.data["kubernetes/"].accessor')
 ```
 
 verify that kube authentication works:
@@ -511,7 +510,6 @@ Since this will run a kind instance, you may then test creating CRs manually...
 ```sh
 export VAULT_TOKEN=$(kubectl get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d)
 export VAULT_ADDR="http://localhost"
-export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.data["kubernetes/"].accessor')
 kubectl create namespace vault-admin
 kubectl create namespace test-vault-config-operator
 ```
