@@ -211,6 +211,11 @@ func (r *JWTOIDCAuthEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAut
 }
 
 func (r *JWTOIDCAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
+
+	if reflect.DeepEqual(r.Spec.OIDCCredentials, vaultutils.RootCredentialConfig{PasswordKey: "password", UsernameKey: "username"}) {
+		return nil
+	}
+
 	return r.setInternalCredentials(context)
 }
 
