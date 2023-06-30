@@ -307,7 +307,7 @@ func (r *RandomSecret) validateEitherPasswordPolicyReferenceOrInline() error {
 func (r *RandomSecret) validateInlinePasswordPolicyFormat() error {
 	if r.Spec.SecretFormat.InlinePasswordPolicy != "" {
 		passwordPolicyFormat := &PasswordPolicyFormat{}
-		if strings.HasSuffix(".hcl", r.Spec.SecretKey) {
+		if strings.HasSuffix(r.Spec.SecretKey, ".hcl") {
 			return hclsimple.Decode(r.Spec.SecretKey, []byte(r.Spec.SecretFormat.InlinePasswordPolicy), nil, passwordPolicyFormat)
 		} else {
 			return hclsimple.Decode(r.Spec.SecretKey+".hcl", []byte(r.Spec.SecretFormat.InlinePasswordPolicy), nil, passwordPolicyFormat)
