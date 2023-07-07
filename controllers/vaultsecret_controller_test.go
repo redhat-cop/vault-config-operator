@@ -4,7 +4,7 @@
 package controllers
 
 import (
-	"context"
+	"fmt"
 	"os"
 	"reflect"
 	"regexp"
@@ -15,6 +15,8 @@ import (
 	. "github.com/onsi/gomega"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
+
+	"encoding/json"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -249,12 +251,12 @@ var _ = Describe("VaultSecret controller", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
-			rsInstance, err = decoder.GetRandomSecretInstance("../test/vaultsecret/randomsecret-another-password.yaml")
+			rsInstanceAnotherPassword, err := decoder.GetRandomSecretInstance("../test/vaultsecret/randomsecret-another-password.yaml")
 			Expect(err).To(BeNil())
-			rsInstance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, rsInstance)).Should(Succeed())
+			rsInstanceAnotherPassword.Namespace = vaultTestNamespaceName
+			Expect(k8sIntegrationClient.Create(ctx, rsInstanceAnotherPassword)).Should(Succeed())
 
-			rslookupKey = types.NamespacedName{Name: rsInstance.Name, Namespace: rsInstance.Namespace}
+			rslookupKey = types.NamespacedName{Name: rsInstanceAnotherPassword.Name, Namespace: rsInstanceAnotherPassword.Namespace}
 			rsCreated = &redhatcopv1alpha1.RandomSecret{}
 
 			Eventually(func() bool {
@@ -273,8 +275,6 @@ var _ = Describe("VaultSecret controller", func() {
 			}, timeout, interval).Should(BeTrue())
 
 			By("By creating a new VaultSecret")
-
-			ctx := context.Background()
 
 			instance, err := decoder.GetVaultSecretInstance("../test/vaultsecret/vaultsecret-randomsecret.yaml")
 			Expect(err).To(BeNil())
@@ -326,6 +326,72 @@ var _ = Describe("VaultSecret controller", func() {
 				Expect(isLowerCaseLetter(s)).To(BeTrue())
 				Expect(len(s)).To(Equal(20))
 			}
+
+			By("Deleting the VaultSecret")
+
+			Expect(k8sIntegrationClient.Delete(ctx, instance)).Should(Succeed())
+
+			By("Checking the K8s Secret was deleted")
+
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, lookupKey, &corev1.Secret{})
+				if err != nil {
+					return true
+				}
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			By("Deleting RandomSecrets")
+
+			Expect(k8sIntegrationClient.Delete(ctx, rsInstance)).Should(Succeed())
+
+			Expect(k8sIntegrationClient.Delete(ctx, rsInstanceAnotherPassword)).Should(Succeed())
+
+			By("Checking the KVv1 secrets in vault were deleted")
+
+			Eventually(func() bool {
+				_, err := vaultClient.KVv1(string(rsInstance.Spec.Path)).Get(ctx, rsInstance.Name)
+				if err != nil {
+					return true
+				}
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			Eventually(func() bool {
+				_, err := vaultClient.KVv1(string(rsInstanceAnotherPassword.Spec.Path)).Get(ctx, rsInstanceAnotherPassword.Name)
+				if err != nil {
+					return true
+				}
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			Eventually(func() error {
+				secret, _ := vaultClient.Logical().Read(string(rsInstanceAnotherPassword.Spec.Path))
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+			By("By Deleting the SecretEngineMount")
+
+			Expect(k8sIntegrationClient.Delete(ctx, semInstance)).Should(Succeed())
+
+			By("Checking the secret engine mount path in vault is deleted")
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(semInstance.GetPath())
+				fmt.Fprintf(GinkgoWriter, "Some log text: %v\n", secret)
+				if err != nil {
+					return nil
+				}
+				return fmt.Errorf("secret is not nil %s", secret.Data)
+			}, timeout, interval).Should(Succeed())
+
 		})
 	})
 })
