@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/redhat-cop/operator-utils/pkg/util"
-	"github.com/redhat-cop/operator-utils/pkg/util/apis"
+	"github.com/redhat-cop/operator-utils/pkg/util/apis" // TODO - are we trying to remove the apis dependency and its status completely since we are using the ReconcileSuccessful constant instead?
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -55,7 +55,7 @@ func ManageOutcomeWithRequeue(context context.Context, r util.ReconcilerBase, ob
 	} else {
 		r.GetRecorder().Event(obj, "Warning", "ProcessingError", issue.Error())
 		condition = metav1.Condition{
-			Type:               ReconcileSuccessful,
+			Type:               ReconcileSuccessful, // TODO - this should be apis.ReconcileError?
 			LastTransitionTime: metav1.Now(),
 			ObservedGeneration: obj.GetGeneration(),
 			Message:            issue.Error(),

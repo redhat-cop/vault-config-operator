@@ -300,7 +300,7 @@ See <https://github.com/golang/vscode-go/blob/master/docs/settings.md#buildbuild
 }
 ```
 
-To launch the debugger locally in vscode you may need a `./.vscode/launch.json` to specify a different Vault address instance and/or disable webhooks.
+To launch the debugger locally in vscode you may need a `./.vscode/launch.json` to specify a different Vault address instance and/or disable webhooks (see the operator-sdk [webhooks run-locally](https://sdk.operatorframework.io/docs/building-operators/golang/webhook/#run-locally) docs for more info).
 
 The following example allows for running a debugger using the Vault instance created by first running the `make integration` command.
 

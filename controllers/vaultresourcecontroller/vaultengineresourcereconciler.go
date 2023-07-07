@@ -46,7 +46,7 @@ func (r *VaultEngineResource) manageCleanUpLogic(context context.Context, instan
 	// we delete this only if it has actually been created. We assume that if there was a successful reconcyle cycle the resource was created in Vault
 	if conditionAware, ok := instance.(apis.ConditionsAware); ok {
 		for _, condition := range conditionAware.GetConditions() {
-			if condition.Status == metav1.ConditionTrue && condition.Type == apis.ReconcileSuccess {
+			if condition.Status == metav1.ConditionTrue && condition.Type == ReconcileSuccessful {
 				err := r.vaultEngineEndpoint.DeleteIfExists(context)
 				if err != nil {
 					log.Error(err, "unable to delete vault resource", "instance", instance)

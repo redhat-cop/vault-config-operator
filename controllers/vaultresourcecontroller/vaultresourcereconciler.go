@@ -75,7 +75,7 @@ func (r *VaultResource) manageCleanUpLogic(context context.Context, instance cli
 	log := log.FromContext(context)
 	if conditionAware, ok := instance.(apis.ConditionsAware); ok {
 		for _, condition := range conditionAware.GetConditions() {
-			if condition.Status == metav1.ConditionTrue && condition.Type == apis.ReconcileSuccess {
+			if condition.Status == metav1.ConditionTrue && condition.Type == ReconcileSuccessful {
 				err := r.vaultEndpoint.DeleteIfExists(context)
 				if err != nil {
 					log.Error(err, "unable to delete vault resource", "instance", instance)
