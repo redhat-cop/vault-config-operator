@@ -82,9 +82,6 @@ var _ = BeforeSuite(func() {
 		Expect(os.Setenv("VAULT_ADDR", "http://localhost:8200")).To(Succeed())
 	}
 
-	Expect(os.Getenv("ACCESSOR")).ToNot(BeEmpty())
-
-	// test that address is valid http address
 	_, err := http.Get(os.Getenv("VAULT_ADDR"))
 	Expect(err).To(BeNil())
 

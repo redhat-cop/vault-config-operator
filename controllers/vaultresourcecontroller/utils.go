@@ -37,14 +37,6 @@ func ManageOutcomeWithRequeue(context context.Context, r util.ReconcilerBase, ob
 	conditionsAware := (obj).(apis.ConditionsAware)
 	var condition metav1.Condition
 	if issue == nil {
-		if !controllerutil.ContainsFinalizer(obj, vaultutils.GetFinalizer(obj)) {
-			controllerutil.AddFinalizer(obj, vaultutils.GetFinalizer(obj))
-			err := r.GetClient().Update(context, obj)
-			if err != nil {
-				log.Error(err, "unable to add reconciler")
-				return reconcile.Result{}, err
-			}
-		}
 		condition = metav1.Condition{
 			Type:               ReconcileSuccessful,
 			LastTransitionTime: metav1.Now(),
@@ -68,6 +60,15 @@ func ManageOutcomeWithRequeue(context context.Context, r util.ReconcilerBase, ob
 	if err != nil {
 		log.Error(err, "unable to update status")
 		return reconcile.Result{}, err
+	}
+	if issue == nil && !controllerutil.ContainsFinalizer(obj, vaultutils.GetFinalizer(obj)) {
+		controllerutil.AddFinalizer(obj, vaultutils.GetFinalizer(obj))
+		// BEWARE: this call *mutates* the object in memory with Kube's response, there *must be invoked last*
+		err := r.GetClient().Update(context, obj)
+		if err != nil {
+			log.Error(err, "unable to add reconciler")
+			return reconcile.Result{}, err
+		}
 	}
 	return reconcile.Result{RequeueAfter: requeueAfter}, issue
 }

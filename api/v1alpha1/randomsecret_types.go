@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-multierror"
@@ -209,12 +210,15 @@ func (d *RandomSecret) GenerateNewPassword(context context.Context) error {
 		if err != nil {
 			return err
 		} else {
-			if response.Data != nil {
-				d.Spec.calculatedSecret = response.Data["password"].(string)
-			} else {
+			if response == nil || response.Data == nil {
 				return errors.New("no data returned by password policy")
 			}
-			return nil
+			if password, ok := response.Data["password"]; ok {
+				d.Spec.calculatedSecret = password.(string)
+				return nil
+			} else {
+				return errors.New("password policy did not generate a password")
+			}
 		}
 	}
 	return errors.New("no password policy method specified")
@@ -306,7 +310,11 @@ func (r *RandomSecret) validateEitherPasswordPolicyReferenceOrInline() error {
 func (r *RandomSecret) validateInlinePasswordPolicyFormat() error {
 	if r.Spec.SecretFormat.InlinePasswordPolicy != "" {
 		passwordPolicyFormat := &PasswordPolicyFormat{}
-		return hclsimple.Decode(r.Spec.SecretKey, []byte(r.Spec.SecretFormat.InlinePasswordPolicy), nil, passwordPolicyFormat)
+		if strings.HasSuffix(r.Spec.SecretKey, ".hcl") {
+			return hclsimple.Decode(r.Spec.SecretKey, []byte(r.Spec.SecretFormat.InlinePasswordPolicy), nil, passwordPolicyFormat)
+		} else {
+			return hclsimple.Decode(r.Spec.SecretKey+".hcl", []byte(r.Spec.SecretFormat.InlinePasswordPolicy), nil, passwordPolicyFormat)
+		}
 	}
 	return nil
 }

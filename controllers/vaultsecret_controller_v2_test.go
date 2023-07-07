@@ -5,10 +5,8 @@ package controllers
 
 import (
 	"context"
-	"os"
 	"reflect"
 	"regexp"
-	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -56,8 +54,6 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 			pInstance, err := decoder.GetPolicyInstance("../test/randomsecret/v2/01-policy-kv-engine-admin-v2.yaml")
 			Expect(err).To(BeNil())
 			pInstance.Namespace = vaultAdminNamespaceName
-			//SUBSTITUE
-			pInstance.Spec.Policy = strings.Replace(pInstance.Spec.Policy, "${accessor}", os.Getenv("ACCESSOR"), -1)
 			Expect(k8sIntegrationClient.Create(ctx, pInstance)).Should(Succeed())
 
 			pLookupKey := types.NamespacedName{Name: pInstance.Name, Namespace: pInstance.Namespace}
@@ -81,8 +77,6 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 			pInstance, err = decoder.GetPolicyInstance("../test/randomsecret/v2/04-policy-secret-writer-v2.yaml")
 			Expect(err).To(BeNil())
 			pInstance.Namespace = vaultAdminNamespaceName
-			//SUBSTITUE
-			pInstance.Spec.Policy = strings.Replace(pInstance.Spec.Policy, "${accessor}", os.Getenv("ACCESSOR"), -1)
 			Expect(k8sIntegrationClient.Create(ctx, pInstance)).Should(Succeed())
 
 			pLookupKey = types.NamespacedName{Name: pInstance.Name, Namespace: pInstance.Namespace}
@@ -106,8 +100,6 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 			pInstance, err = decoder.GetPolicyInstance("../test/vaultsecret/v2/00-policy-secret-reader-v2.yaml")
 			Expect(err).To(BeNil())
 			pInstance.Namespace = vaultAdminNamespaceName
-			//SUBSTITUE
-			pInstance.Spec.Policy = strings.Replace(pInstance.Spec.Policy, "${accessor}", os.Getenv("ACCESSOR"), -1)
 			Expect(k8sIntegrationClient.Create(ctx, pInstance)).Should(Succeed())
 
 			pLookupKey = types.NamespacedName{Name: pInstance.Name, Namespace: pInstance.Namespace}
