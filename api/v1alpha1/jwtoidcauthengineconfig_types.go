@@ -286,7 +286,7 @@ func (i *JWTOIDCConfig) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["oidc_discovery_url"] = i.OIDCDiscoveryURL
 	payload["oidc_discovery_ca_pem"] = i.OIDCDiscoveryCAPEM
-	payload["oidc_client_id"] = i.OIDCClientID
+	payload["oidc_client_id"] = i.retrievedClientID
 	payload["oidc_client_secret"] = i.retrievedClientPassword
 	payload["oidc_response_mode"] = i.OIDCResponseMode
 	payload["oidc_response_types"] = i.OIDCResponseTypes
