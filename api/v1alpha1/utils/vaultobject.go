@@ -63,7 +63,7 @@ func (ve *VaultEndpoint) DeleteKVv2IfExists(context context.Context) error {
 				return nil
 			}
 		}
-		log.Error(err, "unable to delete object at", "path", ve.vaultObject.GetPath())
+		log.Error(err, "unable to delete object at", "path", pathToDelete)
 		return err
 	}
 	return nil
