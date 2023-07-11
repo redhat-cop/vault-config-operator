@@ -100,8 +100,12 @@ func (d *RandomSecret) getV1Payload() map[string]interface{} {
 	return payload
 }
 
+func (d *RandomSecret) IsKVSecretsEngineV2() bool {
+	return d.Spec.IsKVSecretsEngineV2
+}
+
 func (d *RandomSecret) GetPayload() map[string]interface{} {
-	if d.Spec.IsKVSecretsEngineV2 {
+	if d.IsKVSecretsEngineV2() {
 		return map[string]interface{}{
 			"data": d.getV1Payload(),
 		}

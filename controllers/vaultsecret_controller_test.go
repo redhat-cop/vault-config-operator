@@ -26,7 +26,7 @@ var _ = Describe("VaultSecret controller", func() {
 	timeout := time.Second * 120
 	interval := time.Second * 2
 	Context("When creating a VaultSecret from multiple secrets", func() {
-		It("Should create a Secret when created", func() {
+		It("Should create a Secret when created, and be removed from Vault when deleted", func() {
 
 			By("Creating a new PasswordPolicy")
 

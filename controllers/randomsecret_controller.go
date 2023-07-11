@@ -127,10 +127,19 @@ func (r *RandomSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 func (r *RandomSecretReconciler) manageCleanUpLogic(context context.Context, instance *redhatcopv1alpha1.RandomSecret) error {
 	vaultEndpoint := vaultutils.NewVaultEndpoint(instance)
-	err := vaultEndpoint.DeleteIfExists(context)
-	if err != nil {
-		r.Log.Error(err, "unable to delete Vault Secret", "instance", instance)
-		return err
+
+	if instance.IsKVSecretsEngineV2() {
+		err := vaultEndpoint.DeleteKVv2IfExists(context)
+		if err != nil {
+			r.Log.Error(err, "unable to delete KVv2 Vault Secret", "instance", instance)
+			return err
+		}
+	} else {
+		err := vaultEndpoint.DeleteIfExists(context)
+		if err != nil {
+			r.Log.Error(err, "unable to delete Vault Secret", "instance", instance)
+			return err
+		}
 	}
 	return nil
 }

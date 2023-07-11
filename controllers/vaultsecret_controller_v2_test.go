@@ -5,6 +5,8 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"reflect"
 	"regexp"
 	"time"
@@ -24,15 +26,15 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 	timeout := time.Second * 120
 	interval := time.Second * 2
 	Context("When creating a VaultSecret from multiple secrets", func() {
-		It("Should create a Secret when created", func() {
+		It("Should create a Secret when created, and be removed from Vault when deleted", func() {
 
 			By("Creating a new PasswordPolicy")
-			ppInstance, err := decoder.GetPasswordPolicyInstance("../test/randomsecret/v2/00-passwordpolicy-simple-password-policy-v2.yaml")
+			passwordPolicySimplePasswordInstance, err := decoder.GetPasswordPolicyInstance("../test/randomsecret/v2/00-passwordpolicy-simple-password-policy-v2.yaml")
 			Expect(err).To(BeNil())
-			ppInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, ppInstance)).Should(Succeed())
+			passwordPolicySimplePasswordInstance.Namespace = vaultAdminNamespaceName
+			Expect(k8sIntegrationClient.Create(ctx, passwordPolicySimplePasswordInstance)).Should(Succeed())
 
-			pplookupKey := types.NamespacedName{Name: ppInstance.Name, Namespace: ppInstance.Namespace}
+			pplookupKey := types.NamespacedName{Name: passwordPolicySimplePasswordInstance.Name, Namespace: passwordPolicySimplePasswordInstance.Namespace}
 			ppCreated := &redhatcopv1alpha1.PasswordPolicy{}
 
 			Eventually(func() bool {
@@ -51,12 +53,12 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 			}, timeout, interval).Should(BeTrue())
 
 			By("Creating new Policies")
-			pInstance, err := decoder.GetPolicyInstance("../test/randomsecret/v2/01-policy-kv-engine-admin-v2.yaml")
+			policyKVEngineAdminInstance, err := decoder.GetPolicyInstance("../test/randomsecret/v2/01-policy-kv-engine-admin-v2.yaml")
 			Expect(err).To(BeNil())
-			pInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, pInstance)).Should(Succeed())
+			policyKVEngineAdminInstance.Namespace = vaultAdminNamespaceName
+			Expect(k8sIntegrationClient.Create(ctx, policyKVEngineAdminInstance)).Should(Succeed())
 
-			pLookupKey := types.NamespacedName{Name: pInstance.Name, Namespace: pInstance.Namespace}
+			pLookupKey := types.NamespacedName{Name: policyKVEngineAdminInstance.Name, Namespace: policyKVEngineAdminInstance.Namespace}
 			pCreated := &redhatcopv1alpha1.Policy{}
 
 			Eventually(func() bool {
@@ -74,12 +76,12 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
-			pInstance, err = decoder.GetPolicyInstance("../test/randomsecret/v2/04-policy-secret-writer-v2.yaml")
+			policySecretWriterInstance, err := decoder.GetPolicyInstance("../test/randomsecret/v2/04-policy-secret-writer-v2.yaml")
 			Expect(err).To(BeNil())
-			pInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, pInstance)).Should(Succeed())
+			policySecretWriterInstance.Namespace = vaultAdminNamespaceName
+			Expect(k8sIntegrationClient.Create(ctx, policySecretWriterInstance)).Should(Succeed())
 
-			pLookupKey = types.NamespacedName{Name: pInstance.Name, Namespace: pInstance.Namespace}
+			pLookupKey = types.NamespacedName{Name: policySecretWriterInstance.Name, Namespace: policySecretWriterInstance.Namespace}
 			pCreated = &redhatcopv1alpha1.Policy{}
 
 			Eventually(func() bool {
@@ -97,12 +99,12 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
-			pInstance, err = decoder.GetPolicyInstance("../test/vaultsecret/v2/00-policy-secret-reader-v2.yaml")
+			policySecretReaderInstance, err := decoder.GetPolicyInstance("../test/vaultsecret/v2/00-policy-secret-reader-v2.yaml")
 			Expect(err).To(BeNil())
-			pInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, pInstance)).Should(Succeed())
+			policySecretReaderInstance.Namespace = vaultAdminNamespaceName
+			Expect(k8sIntegrationClient.Create(ctx, policySecretReaderInstance)).Should(Succeed())
 
-			pLookupKey = types.NamespacedName{Name: pInstance.Name, Namespace: pInstance.Namespace}
+			pLookupKey = types.NamespacedName{Name: policySecretReaderInstance.Name, Namespace: policySecretReaderInstance.Namespace}
 			pCreated = &redhatcopv1alpha1.Policy{}
 
 			Eventually(func() bool {
@@ -122,12 +124,12 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 
 			By("Creating new KubernetesAuthEngineRoles")
 
-			kaerInstance, err := decoder.GetKubernetesAuthEngineRoleInstance("../test/randomsecret/v2/02-kubernetesauthenginerole-kv-engine-admin-v2.yaml")
+			kaerKVEngineAdminInstance, err := decoder.GetKubernetesAuthEngineRoleInstance("../test/randomsecret/v2/02-kubernetesauthenginerole-kv-engine-admin-v2.yaml")
 			Expect(err).To(BeNil())
-			kaerInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, kaerInstance)).Should(Succeed())
+			kaerKVEngineAdminInstance.Namespace = vaultAdminNamespaceName
+			Expect(k8sIntegrationClient.Create(ctx, kaerKVEngineAdminInstance)).Should(Succeed())
 
-			kaerLookupKey := types.NamespacedName{Name: kaerInstance.Name, Namespace: kaerInstance.Namespace}
+			kaerLookupKey := types.NamespacedName{Name: kaerKVEngineAdminInstance.Name, Namespace: kaerKVEngineAdminInstance.Namespace}
 			kaerCreated := &redhatcopv1alpha1.KubernetesAuthEngineRole{}
 
 			Eventually(func() bool {
@@ -145,12 +147,12 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
-			kaerInstance, err = decoder.GetKubernetesAuthEngineRoleInstance("../test/randomsecret/v2/05-kubernetesauthenginerole-secret-writer-v2.yaml")
+			kaerSecretWriterInstance, err := decoder.GetKubernetesAuthEngineRoleInstance("../test/randomsecret/v2/05-kubernetesauthenginerole-secret-writer-v2.yaml")
 			Expect(err).To(BeNil())
-			kaerInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, kaerInstance)).Should(Succeed())
+			kaerSecretWriterInstance.Namespace = vaultAdminNamespaceName
+			Expect(k8sIntegrationClient.Create(ctx, kaerSecretWriterInstance)).Should(Succeed())
 
-			kaerLookupKey = types.NamespacedName{Name: kaerInstance.Name, Namespace: kaerInstance.Namespace}
+			kaerLookupKey = types.NamespacedName{Name: kaerSecretWriterInstance.Name, Namespace: kaerSecretWriterInstance.Namespace}
 			kaerCreated = &redhatcopv1alpha1.KubernetesAuthEngineRole{}
 
 			Eventually(func() bool {
@@ -168,12 +170,12 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
-			kaerInstance, err = decoder.GetKubernetesAuthEngineRoleInstance("../test/vaultsecret/v2/00-kubernetesauthenginerole-secret-reader-v2.yaml")
+			kaerSecretReaderInstance, err := decoder.GetKubernetesAuthEngineRoleInstance("../test/vaultsecret/v2/00-kubernetesauthenginerole-secret-reader-v2.yaml")
 			Expect(err).To(BeNil())
-			kaerInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, kaerInstance)).Should(Succeed())
+			kaerSecretReaderInstance.Namespace = vaultAdminNamespaceName
+			Expect(k8sIntegrationClient.Create(ctx, kaerSecretReaderInstance)).Should(Succeed())
 
-			kaerLookupKey = types.NamespacedName{Name: kaerInstance.Name, Namespace: kaerInstance.Namespace}
+			kaerLookupKey = types.NamespacedName{Name: kaerSecretReaderInstance.Name, Namespace: kaerSecretReaderInstance.Namespace}
 			kaerCreated = &redhatcopv1alpha1.KubernetesAuthEngineRole{}
 
 			Eventually(func() bool {
@@ -241,12 +243,12 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
-			rsInstance, err = decoder.GetRandomSecretInstance("../test/randomsecret/v2/07-randomsecret-randomsecret-another-password-v2.yaml")
+			rsInstanceAnotherPassword, err := decoder.GetRandomSecretInstance("../test/randomsecret/v2/07-randomsecret-randomsecret-another-password-v2.yaml")
 			Expect(err).To(BeNil())
-			rsInstance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, rsInstance)).Should(Succeed())
+			rsInstanceAnotherPassword.Namespace = vaultTestNamespaceName
+			Expect(k8sIntegrationClient.Create(ctx, rsInstanceAnotherPassword)).Should(Succeed())
 
-			rslookupKey = types.NamespacedName{Name: rsInstance.Name, Namespace: rsInstance.Namespace}
+			rslookupKey = types.NamespacedName{Name: rsInstanceAnotherPassword.Name, Namespace: rsInstanceAnotherPassword.Namespace}
 			rsCreated = &redhatcopv1alpha1.RandomSecret{}
 
 			Eventually(func() bool {
@@ -318,6 +320,171 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				Expect(isLowerCaseLetter(s)).To(BeTrue())
 				Expect(len(s)).To(Equal(20))
 			}
+
+			By("Deleting the VaultSecret")
+
+			Expect(k8sIntegrationClient.Delete(ctx, instance)).Should(Succeed())
+
+			By("Checking the K8s Secret was deleted")
+
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, lookupKey, &corev1.Secret{})
+				if err != nil {
+					return true
+				}
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			By("Deleting RandomSecrets")
+
+			Expect(k8sIntegrationClient.Delete(ctx, rsInstance)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, _ := vaultClient.Logical().Read(rsInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+			Expect(k8sIntegrationClient.Delete(ctx, rsInstanceAnotherPassword)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, _ := vaultClient.Logical().Read(rsInstanceAnotherPassword.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+			By("Deleting the SecretEngineMount")
+
+			Expect(k8sIntegrationClient.Delete(ctx, semInstance)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(semInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+			By("Deleting KubernetesAuthEngineRoles")
+
+			Expect(k8sIntegrationClient.Delete(ctx, kaerSecretReaderInstance)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(kaerSecretReaderInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+			Expect(k8sIntegrationClient.Delete(ctx, kaerSecretWriterInstance)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(kaerSecretWriterInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+			Expect(k8sIntegrationClient.Delete(ctx, kaerKVEngineAdminInstance)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(kaerKVEngineAdminInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+			By("Deleting Policies")
+
+			Expect(k8sIntegrationClient.Delete(ctx, policySecretReaderInstance)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(policySecretReaderInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+			Expect(k8sIntegrationClient.Delete(ctx, policySecretWriterInstance)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(policySecretWriterInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+			Expect(k8sIntegrationClient.Delete(ctx, policyKVEngineAdminInstance)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(policyKVEngineAdminInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+			By("Deleting PasswordPolicy")
+
+			Expect(k8sIntegrationClient.Delete(ctx, passwordPolicySimplePasswordInstance)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(passwordPolicySimplePasswordInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
 		})
 	})
 })

@@ -18,6 +18,7 @@ package utils
 
 import (
 	"context"
+	"strings"
 
 	vault "github.com/hashicorp/vault/api"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -44,6 +45,28 @@ func NewVaultEndpoint(obj client.Object) *VaultEndpoint {
 	return &VaultEndpoint{
 		vaultObject: obj.(VaultObject),
 	}
+}
+
+// Deletes all versions and metadata of the KVv2 secret
+// This is similar to vaultClient.KVv2(mountPath string).DeleteMetadata(ctx context.Context, secretPath string) but works better with existing interface
+func (ve *VaultEndpoint) DeleteKVv2IfExists(context context.Context) error {
+	log := log.FromContext(context)
+	vaultClient := context.Value("vaultClient").(*vault.Client)
+
+	// should match pathToDelete := fmt.Sprintf("%s/metadata/%s", kv.mountPath, secretPath)
+	pathToDelete := strings.Replace(ve.vaultObject.GetPath(), "/data/", "/metadata/", 1)
+
+	_, err := vaultClient.Logical().Delete(pathToDelete)
+	if err != nil {
+		if respErr, ok := err.(*vault.ResponseError); ok {
+			if respErr.StatusCode == 404 {
+				return nil
+			}
+		}
+		log.Error(err, "unable to delete object at", "path", ve.vaultObject.GetPath())
+		return err
+	}
+	return nil
 }
 
 func (ve *VaultEndpoint) DeleteIfExists(context context.Context) error {

@@ -4,6 +4,8 @@
 package controllers
 
 import (
+	"encoding/json"
+	"fmt"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -151,4 +153,109 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 			}, timeout, interval).Should(BeTrue())
 		})
 	})
+
+	Context("When deleting a PKISecretEngineRole", func() {
+		It("It should be deleted from Vault", func() {
+
+			By("Deleting PKISecretEngineRoleInstance(")
+
+			pkiRoleInstance, err := decoder.GetPKISecretEngineRoleInstance("../test/pkisecretengine/pki-secret-engine-role.yaml")
+			Expect(err).To(BeNil())
+			pkiRoleInstance.Namespace = vaultTestNamespaceName
+
+			Expect(k8sIntegrationClient.Delete(ctx, pkiRoleInstance)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(pkiRoleInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+			By("Deleting PKISecretEngineConfigInstance")
+			pkiConfigInstance, err := decoder.GetPKISecretEngineConfigInstance("../test/pkisecretengine/pki-secret-engine-config.yaml")
+			Expect(err).To(BeNil())
+			pkiConfigInstance.Namespace = vaultTestNamespaceName
+
+			Expect(k8sIntegrationClient.Delete(ctx, pkiConfigInstance)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(pkiConfigInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+			By("Deleting SecretEngineMount")
+
+			semInstance, err := decoder.GetSecretEngineMountInstance("../test/pkisecretengine/pki-secret-engine.yaml")
+			Expect(err).To(BeNil())
+			semInstance.Namespace = vaultTestNamespaceName
+
+			Expect(k8sIntegrationClient.Delete(ctx, semInstance)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(semInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+			By("Deleting KubernetesAuthEngineRoleInstance")
+
+			kaerInstance, err := decoder.GetKubernetesAuthEngineRoleInstance("../test/pkisecretengine/pki-secret-engine-kube-auth-role.yaml")
+			Expect(err).To(BeNil())
+			kaerInstance.Namespace = vaultAdminNamespaceName
+
+			Expect(k8sIntegrationClient.Delete(ctx, kaerInstance)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(kaerInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+			By("Deleting Policy")
+			pInstance, err := decoder.GetPolicyInstance("../test/pkisecretengine/pki-secret-engine-admin-policy.yaml")
+			Expect(err).To(BeNil())
+			pInstance.Namespace = vaultAdminNamespaceName
+
+			Expect(k8sIntegrationClient.Delete(ctx, pInstance)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(pInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+		})
+	})
+
 })
