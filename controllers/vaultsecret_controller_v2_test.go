@@ -26,7 +26,7 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 	Context("When creating a VaultSecret from multiple secrets", func() {
 		It("Should create a Secret when created", func() {
 
-			By("By creating a new PasswordPolicy")
+			By("Creating a new PasswordPolicy")
 			ppInstance, err := decoder.GetPasswordPolicyInstance("../test/randomsecret/v2/00-passwordpolicy-simple-password-policy-v2.yaml")
 			Expect(err).To(BeNil())
 			ppInstance.Namespace = vaultAdminNamespaceName
@@ -50,7 +50,7 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
-			By("By creating new Policies")
+			By("Creating new Policies")
 			pInstance, err := decoder.GetPolicyInstance("../test/randomsecret/v2/01-policy-kv-engine-admin-v2.yaml")
 			Expect(err).To(BeNil())
 			pInstance.Namespace = vaultAdminNamespaceName
@@ -120,7 +120,7 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
-			By("By creating new KubernetesAuthEngineRoles")
+			By("Creating new KubernetesAuthEngineRoles")
 
 			kaerInstance, err := decoder.GetKubernetesAuthEngineRoleInstance("../test/randomsecret/v2/02-kubernetesauthenginerole-kv-engine-admin-v2.yaml")
 			Expect(err).To(BeNil())
@@ -191,7 +191,7 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
-			By("By creating a new SecretEngineMount")
+			By("Creating a new SecretEngineMount")
 
 			semInstance, err := decoder.GetSecretEngineMountInstance("../test/randomsecret/v2/03-secretenginemount-kv-v2.yaml")
 			Expect(err).To(BeNil())
@@ -216,7 +216,7 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
-			By("By creating new RandomSecrets")
+			By("Creating new RandomSecrets")
 
 			rsInstance, err := decoder.GetRandomSecretInstance("../test/randomsecret/v2/06-randomsecret-randomsecret-password-v2.yaml")
 			Expect(err).To(BeNil())
@@ -264,7 +264,7 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
-			By("By creating a new VaultSecret")
+			By("Creating a new VaultSecret")
 
 			ctx := context.Background()
 
@@ -292,7 +292,7 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
-			By("By checking the Secret Exists with proper Owner Reference")
+			By("Checking the Secret Exists with proper Owner Reference")
 
 			lookupKey = types.NamespacedName{Name: instance.Spec.TemplatizedK8sSecret.Name, Namespace: instance.Namespace}
 			secret := &corev1.Secret{}
@@ -308,7 +308,7 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 			kind := reflect.TypeOf(redhatcopv1alpha1.VaultSecret{}).Name()
 			Expect(secret.GetObjectMeta().GetOwnerReferences()[0].Kind).Should(Equal(kind))
 
-			By("By checking the Secret Data matches expected pattern")
+			By("Checking the Secret Data matches expected pattern")
 
 			var isLowerCaseLetter = regexp.MustCompile(`^[a-z]+$`).MatchString
 			for k := range instance.Spec.TemplatizedK8sSecret.StringData {
