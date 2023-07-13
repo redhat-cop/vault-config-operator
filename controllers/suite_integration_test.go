@@ -27,6 +27,7 @@ import (
 
 	"net/http"
 
+	vault "github.com/hashicorp/vault/api"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/redhat-cop/operator-utils/pkg/util"
@@ -54,6 +55,7 @@ var ctx context.Context
 var cancel context.CancelFunc
 var vaultTestNamespace *corev1.Namespace
 var vaultAdminNamespace *corev1.Namespace
+var vaultClient *vault.Client
 
 const (
 	vaultTestNamespaceName  = "test-vault-config-operator"
@@ -75,13 +77,23 @@ var _ = BeforeSuite(func() {
 
 	Expect(os.Setenv("USE_EXISTING_CLUSTER", "true")).To(Succeed())
 
-	_, isSet := os.LookupEnv("VAULT_ADDR")
+	vaultAddress, isSet := os.LookupEnv("VAULT_ADDR")
 	if !isSet {
 		Expect(os.Setenv("VAULT_ADDR", "http://localhost:8200")).To(Succeed())
 	}
 
 	_, err := http.Get(os.Getenv("VAULT_ADDR"))
 	Expect(err).To(BeNil())
+
+	vaultToken, isSet := os.LookupEnv("VAULT_TOKEN")
+	Expect(isSet).To(BeTrue())
+
+	config := vault.DefaultConfig()
+	config.Address = vaultAddress
+	vaultClient, err = vault.NewClient(config)
+	Expect(err).To(BeNil())
+	// Authenticate
+	vaultClient.SetToken(vaultToken)
 
 	By("bootstrapping test environment")
 	testIntegrationEnv = &envtest.Environment{

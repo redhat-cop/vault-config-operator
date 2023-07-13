@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/redhat-cop/operator-utils/pkg/util"
-	"github.com/redhat-cop/operator-utils/pkg/util/apis"
+	"github.com/redhat-cop/operator-utils/pkg/util/apis" // TODO this dependency should be removed
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -31,6 +31,9 @@ import (
 )
 
 const ReconcileSuccessful = "ReconcileSuccessful"
+const ReconcileSuccessfulReason = "LastReconcileCycleSucceded"
+const ReconcileFailed = "ReconcileFailed"
+const ReconcileFailedReason = "LastReconcileCycleFailed"
 
 func ManageOutcomeWithRequeue(context context.Context, r util.ReconcilerBase, obj client.Object, issue error, requeueAfter time.Duration) (reconcile.Result, error) {
 	log := log.FromContext(context)
@@ -41,17 +44,17 @@ func ManageOutcomeWithRequeue(context context.Context, r util.ReconcilerBase, ob
 			Type:               ReconcileSuccessful,
 			LastTransitionTime: metav1.Now(),
 			ObservedGeneration: obj.GetGeneration(),
-			Reason:             apis.ReconcileSuccessReason,
+			Reason:             ReconcileSuccessfulReason,
 			Status:             metav1.ConditionTrue,
 		}
 	} else {
 		r.GetRecorder().Event(obj, "Warning", "ProcessingError", issue.Error())
 		condition = metav1.Condition{
-			Type:               ReconcileSuccessful,
+			Type:               ReconcileFailed,
 			LastTransitionTime: metav1.Now(),
 			ObservedGeneration: obj.GetGeneration(),
 			Message:            issue.Error(),
-			Reason:             apis.ReconcileErrorReason,
+			Reason:             ReconcileFailedReason,
 			Status:             metav1.ConditionFalse,
 		}
 	}
