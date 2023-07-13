@@ -88,14 +88,12 @@ func (d *RandomSecret) GetVaultConnection() *vaultutils.VaultConnection {
 func (d *RandomSecret) GetPath() string {
 
 	var path string = strings.TrimSpace(string(d.Spec.Path))
-
 	var sb strings.Builder
 
 	sb.WriteString(path)
 
 	const kvV2PathSuffix string = "/data"
-
-	if d.Spec.IsKVSecretsEngineV2 && !strings.HasSuffix(path, kvV2PathSuffix) {
+	if d.IsKVSecretsEngineV2() && !strings.HasSuffix(path, kvV2PathSuffix) {
 		sb.WriteString(kvV2PathSuffix)
 	}
 
