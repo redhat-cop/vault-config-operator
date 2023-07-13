@@ -5,6 +5,8 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"reflect"
 	"regexp"
 	"time"
@@ -319,169 +321,169 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				Expect(len(s)).To(Equal(20))
 			}
 
-			// By("Deleting the VaultSecret")
+			By("Deleting the VaultSecret")
 
-			// Expect(k8sIntegrationClient.Delete(ctx, instance)).Should(Succeed())
+			Expect(k8sIntegrationClient.Delete(ctx, instance)).Should(Succeed())
 
-			// By("Checking the K8s Secret was deleted")
+			By("Checking the K8s Secret was deleted")
 
-			// Eventually(func() bool {
-			// 	err := k8sIntegrationClient.Get(ctx, lookupKey, &corev1.Secret{})
-			// 	if err != nil {
-			// 		return true
-			// 	}
-			// 	return false
-			// }, timeout, interval).Should(BeTrue())
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, lookupKey, &corev1.Secret{})
+				if err != nil {
+					return true
+				}
+				return false
+			}, timeout, interval).Should(BeTrue())
 
-			// By("Deleting RandomSecrets")
+			By("Deleting RandomSecrets")
 
-			// Expect(k8sIntegrationClient.Delete(ctx, rsInstance)).Should(Succeed())
+			Expect(k8sIntegrationClient.Delete(ctx, rsInstance)).Should(Succeed())
 
-			// Eventually(func() error {
-			// 	secret, _ := vaultClient.Logical().Read(rsInstance.GetPath())
-			// 	if secret == nil {
-			// 		return nil
-			// 	}
-			// 	out, err := json.Marshal(secret)
-			// 	if err != nil {
-			// 		panic(err)
-			// 	}
-			// 	return fmt.Errorf("secret is not nil %s", string(out))
-			// }, timeout, interval).Should(Succeed())
+			Eventually(func() error {
+				secret, _ := vaultClient.Logical().Read(rsInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
 
-			// Expect(k8sIntegrationClient.Delete(ctx, rsInstanceAnotherPassword)).Should(Succeed())
+			Expect(k8sIntegrationClient.Delete(ctx, rsInstanceAnotherPassword)).Should(Succeed())
 
-			// Eventually(func() error {
-			// 	secret, _ := vaultClient.Logical().Read(rsInstanceAnotherPassword.GetPath())
-			// 	if secret == nil {
-			// 		return nil
-			// 	}
-			// 	out, err := json.Marshal(secret)
-			// 	if err != nil {
-			// 		panic(err)
-			// 	}
-			// 	return fmt.Errorf("secret is not nil %s", string(out))
-			// }, timeout, interval).Should(Succeed())
+			Eventually(func() error {
+				secret, _ := vaultClient.Logical().Read(rsInstanceAnotherPassword.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
 
-			// By("Deleting the SecretEngineMount")
+			By("Deleting the SecretEngineMount")
 
-			// Expect(k8sIntegrationClient.Delete(ctx, semInstance)).Should(Succeed())
+			Expect(k8sIntegrationClient.Delete(ctx, semInstance)).Should(Succeed())
 
-			// Eventually(func() error {
-			// 	secret, err := vaultClient.Logical().Read(semInstance.GetPath())
-			// 	if secret == nil {
-			// 		return nil
-			// 	}
-			// 	out, err := json.Marshal(secret)
-			// 	if err != nil {
-			// 		panic(err)
-			// 	}
-			// 	return fmt.Errorf("secret is not nil %s", string(out))
-			// }, timeout, interval).Should(Succeed())
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(semInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
 
-			// By("Deleting KubernetesAuthEngineRoles")
+			By("Deleting KubernetesAuthEngineRoles")
 
-			// Expect(k8sIntegrationClient.Delete(ctx, kaerSecretReaderInstance)).Should(Succeed())
+			Expect(k8sIntegrationClient.Delete(ctx, kaerSecretReaderInstance)).Should(Succeed())
 
-			// Eventually(func() error {
-			// 	secret, err := vaultClient.Logical().Read(kaerSecretReaderInstance.GetPath())
-			// 	if secret == nil {
-			// 		return nil
-			// 	}
-			// 	out, err := json.Marshal(secret)
-			// 	if err != nil {
-			// 		panic(err)
-			// 	}
-			// 	return fmt.Errorf("secret is not nil %s", string(out))
-			// }, timeout, interval).Should(Succeed())
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(kaerSecretReaderInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
 
-			// Expect(k8sIntegrationClient.Delete(ctx, kaerSecretWriterInstance)).Should(Succeed())
+			Expect(k8sIntegrationClient.Delete(ctx, kaerSecretWriterInstance)).Should(Succeed())
 
-			// Eventually(func() error {
-			// 	secret, err := vaultClient.Logical().Read(kaerSecretWriterInstance.GetPath())
-			// 	if secret == nil {
-			// 		return nil
-			// 	}
-			// 	out, err := json.Marshal(secret)
-			// 	if err != nil {
-			// 		panic(err)
-			// 	}
-			// 	return fmt.Errorf("secret is not nil %s", string(out))
-			// }, timeout, interval).Should(Succeed())
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(kaerSecretWriterInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
 
-			// Expect(k8sIntegrationClient.Delete(ctx, kaerKVEngineAdminInstance)).Should(Succeed())
+			Expect(k8sIntegrationClient.Delete(ctx, kaerKVEngineAdminInstance)).Should(Succeed())
 
-			// Eventually(func() error {
-			// 	secret, err := vaultClient.Logical().Read(kaerKVEngineAdminInstance.GetPath())
-			// 	if secret == nil {
-			// 		return nil
-			// 	}
-			// 	out, err := json.Marshal(secret)
-			// 	if err != nil {
-			// 		panic(err)
-			// 	}
-			// 	return fmt.Errorf("secret is not nil %s", string(out))
-			// }, timeout, interval).Should(Succeed())
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(kaerKVEngineAdminInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
 
-			// By("Deleting Policies")
+			By("Deleting Policies")
 
-			// Expect(k8sIntegrationClient.Delete(ctx, policySecretReaderInstance)).Should(Succeed())
+			Expect(k8sIntegrationClient.Delete(ctx, policySecretReaderInstance)).Should(Succeed())
 
-			// Eventually(func() error {
-			// 	secret, err := vaultClient.Logical().Read(policySecretReaderInstance.GetPath())
-			// 	if secret == nil {
-			// 		return nil
-			// 	}
-			// 	out, err := json.Marshal(secret)
-			// 	if err != nil {
-			// 		panic(err)
-			// 	}
-			// 	return fmt.Errorf("secret is not nil %s", string(out))
-			// }, timeout, interval).Should(Succeed())
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(policySecretReaderInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
 
-			// Expect(k8sIntegrationClient.Delete(ctx, policySecretWriterInstance)).Should(Succeed())
+			Expect(k8sIntegrationClient.Delete(ctx, policySecretWriterInstance)).Should(Succeed())
 
-			// Eventually(func() error {
-			// 	secret, err := vaultClient.Logical().Read(policySecretWriterInstance.GetPath())
-			// 	if secret == nil {
-			// 		return nil
-			// 	}
-			// 	out, err := json.Marshal(secret)
-			// 	if err != nil {
-			// 		panic(err)
-			// 	}
-			// 	return fmt.Errorf("secret is not nil %s", string(out))
-			// }, timeout, interval).Should(Succeed())
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(policySecretWriterInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
 
-			// Expect(k8sIntegrationClient.Delete(ctx, policyKVEngineAdminInstance)).Should(Succeed())
+			Expect(k8sIntegrationClient.Delete(ctx, policyKVEngineAdminInstance)).Should(Succeed())
 
-			// Eventually(func() error {
-			// 	secret, err := vaultClient.Logical().Read(policyKVEngineAdminInstance.GetPath())
-			// 	if secret == nil {
-			// 		return nil
-			// 	}
-			// 	out, err := json.Marshal(secret)
-			// 	if err != nil {
-			// 		panic(err)
-			// 	}
-			// 	return fmt.Errorf("secret is not nil %s", string(out))
-			// }, timeout, interval).Should(Succeed())
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(policyKVEngineAdminInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
 
-			// By("Deleting PasswordPolicy")
+			By("Deleting PasswordPolicy")
 
-			// Expect(k8sIntegrationClient.Delete(ctx, passwordPolicySimplePasswordInstance)).Should(Succeed())
+			Expect(k8sIntegrationClient.Delete(ctx, passwordPolicySimplePasswordInstance)).Should(Succeed())
 
-			// Eventually(func() error {
-			// 	secret, err := vaultClient.Logical().Read(passwordPolicySimplePasswordInstance.GetPath())
-			// 	if secret == nil {
-			// 		return nil
-			// 	}
-			// 	out, err := json.Marshal(secret)
-			// 	if err != nil {
-			// 		panic(err)
-			// 	}
-			// 	return fmt.Errorf("secret is not nil %s", string(out))
-			// }, timeout, interval).Should(Succeed())
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(passwordPolicySimplePasswordInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
 
 		})
 	})
