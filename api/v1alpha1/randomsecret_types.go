@@ -50,8 +50,10 @@ type RandomSecretSpec struct {
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to create the secret.
-	// The final path will be {[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
-	// The authentication role must have the following capabilities = [ "create", "update", "delete"] on that path.
+	// The final path in Vault will be {[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
+	// If IsKVSecretsEngineV2 is false, the authentication role must have the following capabilities = [ "create", "update", "delete"] on the {[spec.authentication.namespace]}/{spec.path}/{metadata.name} path.
+	// If IsKVSecretsEngineV2 is true, the authentication role must have the following capabilities = [ "create", "update"] on the {[spec.authentication.namespace]}/{spec.path}/data/{metadata.name} path and capabilities = [ "delete"] on the {[spec.authentication.namespace]}/{spec.path}/metadata/{metadata.name} path.
+	// Additionally, if IsKVSecretsEngineV2 is true, it is acceptable for this value to have a suffix of "/data" or not. This suffix is no longer needed but still supported for backwards compatibility.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
 
@@ -84,7 +86,21 @@ func (d *RandomSecret) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *RandomSecret) GetPath() string {
-	return string(d.Spec.Path) + "/" + d.Name
+
+	var path string = strings.TrimSpace(string(d.Spec.Path))
+	var sb strings.Builder
+
+	sb.WriteString(path)
+
+	const kvV2PathSuffix string = "/data"
+	if d.IsKVSecretsEngineV2() && !strings.HasSuffix(path, kvV2PathSuffix) {
+		sb.WriteString(kvV2PathSuffix)
+	}
+
+	sb.WriteByte('/')
+	sb.WriteString(d.Name)
+
+	return sb.String()
 }
 
 func (d *RandomSecret) getV1Payload() map[string]interface{} {
