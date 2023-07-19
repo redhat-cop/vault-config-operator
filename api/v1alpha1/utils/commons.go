@@ -102,20 +102,20 @@ type TLSConfig struct {
 	TLSServerName *string `json:"tlsServerName,omitempty"`
 }
 
-func (cache *VaultClientCache) Get(kc *KubeAuthConfiguration) *vault.Client {
-	if client, ok := cache.clients.Load(kc.getCacheKey()); ok {
+func (cache *VaultClientCache) Get(kc *KubeAuthConfiguration, kubeNamespace string) *vault.Client {
+	if client, ok := cache.clients.Load(kc.getCacheKey(kubeNamespace)); ok {
 		return client.(*vault.Client)
 	}
 
 	return nil
 }
 
-func (cache *VaultClientCache) Put(kc *KubeAuthConfiguration, client *vault.Client) {
-	cache.clients.Store(kc.getCacheKey(), client)
+func (cache *VaultClientCache) Put(kc *KubeAuthConfiguration, kubeNamespace string, client *vault.Client) {
+	cache.clients.Store(kc.getCacheKey(kubeNamespace), client)
 }
 
-func (cache *VaultClientCache) Delete(kc *KubeAuthConfiguration) {
-	cache.clients.Delete(kc.getCacheKey())
+func (cache *VaultClientCache) Delete(kc *KubeAuthConfiguration, kubeNamespace string) {
+	cache.clients.Delete(kc.getCacheKey(kubeNamespace))
 }
 
 func (vc *VaultConnection) getConnectionConfig(context context.Context, kubeNamespace string) (*vault.Config, error) {
@@ -178,14 +178,14 @@ func (kc *KubeAuthConfiguration) GetServiceAccountName() string {
 	return kc.ServiceAccount.Name
 }
 
-func (kc *KubeAuthConfiguration) getCacheKey() string {
-	return fmt.Sprintf("%s:%s:%s:%s", kc.ServiceAccount.Name, kc.Path, kc.Role, kc.Namespace)
+func (kc *KubeAuthConfiguration) getCacheKey(kubeNamespace string) string {
+	return fmt.Sprintf("%s:%s:%s:%s:%s", kubeNamespace, kc.ServiceAccount.Name, kc.Path, kc.Role, kc.Namespace)
 }
 
 func (kc *KubeAuthConfiguration) GetVaultClient(context context.Context, kubeNamespace string) (*vault.Client, error) {
 	log := log.FromContext(context)
 
-	vaultClient := vaultClientCache.Get(kc)
+	vaultClient := vaultClientCache.Get(kc, kubeNamespace)
 	if vaultClient != nil {
 		// Check if the client's token is still valid.
 		_, err := vaultClient.Auth().Token().LookupSelf()
@@ -205,7 +205,7 @@ func (kc *KubeAuthConfiguration) GetVaultClient(context context.Context, kubeNam
 		log.Error(err, "unable to create vault client")
 		return nil, err
 	}
-	vaultClientCache.Put(kc, vaultClient)
+	vaultClientCache.Put(kc, kubeNamespace, vaultClient)
 	return vaultClient, nil
 }
 
@@ -282,14 +282,14 @@ func (kc *KubeAuthConfiguration) createVaultClient(context context.Context, jwt 
 
 	client.SetToken(secret.Auth.ClientToken)
 
-	go kc.startLifetimeWatcher(client, secret, log)
+	go kc.startLifetimeWatcher(client, namespace, secret, log)
 
 	return client, nil
 }
 
 // If the TTL for the token is less than its lease duration, the lifetime watcher renews the token until
 // its lease expires.
-func (kc *KubeAuthConfiguration) startLifetimeWatcher(client *vault.Client, secret *vault.Secret, log logr.Logger) {
+func (kc *KubeAuthConfiguration) startLifetimeWatcher(client *vault.Client, kubeNamespace string, secret *vault.Secret, log logr.Logger) {
 	watcher, err := client.NewLifetimeWatcher(&vault.LifetimeWatcherInput{
 		Secret: secret,
 	})
@@ -309,7 +309,7 @@ func (kc *KubeAuthConfiguration) startLifetimeWatcher(client *vault.Client, secr
 			}
 
 			log.Info("Deleting cached client")
-			vaultClientCache.Delete(kc)
+			vaultClientCache.Delete(kc, kubeNamespace)
 		case renewal := <-watcher.RenewCh():
 			log.Info(fmt.Sprintf("Successfully renewed token: %#v", renewal))
 		}
