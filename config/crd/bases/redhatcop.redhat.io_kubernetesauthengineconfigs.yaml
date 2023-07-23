@@ -164,8 +164,6 @@ spec:
                 pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
                 type: string
               tokenReviewerServiceAccount:
-                default:
-                  name: default
                 description: TokenReviewerServiceAccount A service account JWT used
                   to access the TokenReview API to validate other JWTs during login.
                   If not set, the JWT submitted in the login payload will be used
