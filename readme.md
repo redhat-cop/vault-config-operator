@@ -103,7 +103,7 @@ At the moment the connection to Vault can be initialized with [Vault's standard 
 See the [OLM documentation](https://github.com/operator-framework/operator-lifecycle-manager/blob/master/doc/design/subscription-config.md#env) on how to pass environment variables via a Subscription.
 The variable that are read at client initialization are listed [here](https://github.com/hashicorp/vault/blob/14101f866414d2ed7850648b465c746ac8fda621/api/client.go#L35).
 
-Additionally, the operator take an option environment variable named `CACHE_VAULT_TOKEN`. If set to a value of `"true"`, the operator will cache the Vault clients (and tokens) it creates per tuple of:
+Additionally, the operator checks for an environment variable named `CACHE_VAULT_TOKEN`. If set to a value of `"true"`, the operator will cache the Vault clients (and tokens) it creates per tuple of:
 - Vault namespace
 - Kubernetes namespace
 - Kubernetes service account
