@@ -171,7 +171,7 @@ func (i *DBSERole) toMap() map[string]interface{} {
 	payload["default_ttl"] = i.DefaultTTL
 	payload["max_ttl"] = i.MaxTTL
 	payload["creation_statements"] = i.CreationStatements
-	payload["revocation_statetments"] = i.RevocationStatements
+	payload["revocation_statements"] = i.RevocationStatements
 	payload["rollback_statements"] = i.RollbackStatements
 	payload["renew_statements"] = i.RenewStatements
 	return payload
