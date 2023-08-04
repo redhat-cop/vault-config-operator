@@ -145,7 +145,7 @@ func (r *QuaySecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) er
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.QuaySecretEngineConfig{}).
+		For(&redhatcopv1alpha1.QuaySecretEngineConfig{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
 		Watches(&source.Kind{Type: &corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Secret",

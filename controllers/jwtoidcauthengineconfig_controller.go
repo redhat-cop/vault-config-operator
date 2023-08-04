@@ -147,7 +147,7 @@ func (r *JWTOIDCAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) e
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.JWTOIDCAuthEngineConfig{}).
+		For(&redhatcopv1alpha1.JWTOIDCAuthEngineConfig{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
 		Watches(&source.Kind{Type: &corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Secret",

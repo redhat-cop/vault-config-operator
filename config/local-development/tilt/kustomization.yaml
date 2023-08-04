@@ -5,9 +5,13 @@ namespace: vault-config-operator
 #commonLabels:
 #  someName: someValue
 
-bases:
+resources:
 - ../../default
 - ./service-account.yaml
+
+patchesStrategicMerge:
+- ./remove-namespace.yaml
+- ./replace-image.yaml
 
 
 patchesJson6902:
@@ -29,6 +33,3 @@ patchesJson6902:
     kind: Service
     name: vault-config-operator-webhook-service
   path: ./secret-injection.yaml
-
-patchesStrategicMerge:
-- replace-image.yaml

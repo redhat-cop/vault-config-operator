@@ -193,6 +193,6 @@ func (r *RandomSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.RandomSecret{}, builder.WithPredicates(needsCreation)).
+		For(&redhatcopv1alpha1.RandomSecret{}, builder.WithPredicates(needsCreation, vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
 		Complete(r)
 }

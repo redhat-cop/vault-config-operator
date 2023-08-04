@@ -117,7 +117,7 @@ func (r *KubernetesSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manag
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.KubernetesSecretEngineConfig{}).
+		For(&redhatcopv1alpha1.KubernetesSecretEngineConfig{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
 		Watches(&source.Kind{Type: &corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Secret",
