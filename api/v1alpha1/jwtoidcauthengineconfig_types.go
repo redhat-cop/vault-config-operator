@@ -23,6 +23,7 @@ import (
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -151,7 +152,7 @@ type JWTOIDCConfig struct {
 	// The options are described in each provider's section in OIDC Provider Setup
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default={}
-	ProviderConfig map[string]string `json:"providerConfig,omitempty"`
+	ProviderConfig *apiextensionsv1.JSON `json:"providerConfig,omitempty"`
 
 	// Pass namespace in the OIDC state parameter instead of as a separate query parameter.
 	// With this setting, the allowed redirect URL(s) in Vault and on the provider side should not contain a namespace query parameter.

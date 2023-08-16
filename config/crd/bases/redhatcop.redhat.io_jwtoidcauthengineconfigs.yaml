@@ -292,12 +292,10 @@ spec:
                 pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
                 type: string
               providerConfig:
-                additionalProperties:
-                  type: string
                 description: 'Configuration options for provider-specific handling.
                   Providers with specific handling include: Azure, Google. The options
                   are described in each provider''s section in OIDC Provider Setup'
-                type: object
+                x-kubernetes-preserve-unknown-fields: true
             type: object
           status:
             description: JWTOIDCAuthEngineConfigStatus defines the observed state
