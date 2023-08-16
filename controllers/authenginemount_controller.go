@@ -21,6 +21,7 @@ import (
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -71,6 +72,7 @@ func (r *AuthEngineMountReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
+	r.Log.Info("reconcile cycle starting for ", "instance", instance)
 	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
 	if err != nil {
 		r.Log.Error(err, "unable to prepare context", "instance", instance)
@@ -83,6 +85,6 @@ func (r *AuthEngineMountReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 // SetupWithManager sets up the controller with the Manager.
 func (r *AuthEngineMountReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.AuthEngineMount{}).
+		For(&redhatcopv1alpha1.AuthEngineMount{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
 		Complete(r)
 }

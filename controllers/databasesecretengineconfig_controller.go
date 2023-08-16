@@ -215,7 +215,7 @@ func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.DatabaseSecretEngineConfig{}).
+		For(&redhatcopv1alpha1.DatabaseSecretEngineConfig{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
 		Watches(&source.Kind{Type: &corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Secret",

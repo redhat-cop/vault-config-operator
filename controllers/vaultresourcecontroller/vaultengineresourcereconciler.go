@@ -60,7 +60,8 @@ func (r *VaultEngineResource) manageCleanUpLogic(context context.Context, instan
 
 func (r *VaultEngineResource) Reconcile(ctx context.Context, instance client.Object) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
-
+	log.Info("starting reconcile cycle")
+	log.V(1).Info("reconcile", "instance", instance)
 	if util.IsBeingDeleted(instance) {
 		if !util.HasFinalizer(instance, vaultutils.GetFinalizer(instance)) {
 			return reconcile.Result{}, nil

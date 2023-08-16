@@ -186,9 +186,9 @@ func (kc *KubeAuthConfiguration) getCacheKey(kubeNamespace string) string {
 func (kc *KubeAuthConfiguration) GetVaultClient(context context.Context, kubeNamespace string) (*vault.Client, error) {
 	log := log.FromContext(context)
 
-	var vaultClient *vault.Client;
+	var vaultClient *vault.Client
 
-	if cacheVaultToken, ok := os.LookupEnv("CACHE_VAULT_TOKEN"); !ok || cacheVaultToken == "true" {
+	if cacheVaultToken, ok := os.LookupEnv("CACHE_VAULT_TOKEN"); ok && cacheVaultToken == "true" {
 		vaultClient := vaultClientCache.Get(kc, kubeNamespace)
 		if vaultClient != nil {
 			// Check if the client's token is still valid.
@@ -256,7 +256,7 @@ func (kc *KubeAuthConfiguration) getJWTToken(context context.Context, kubeNamesp
 
 func (kc *KubeAuthConfiguration) createVaultClient(context context.Context, jwt string, namespace string) (*vault.Client, error) {
 	log := log.FromContext(context)
-	log.Info("Creating new client")
+	log.V(1).Info("Creating new client")
 	vaultConnection := context.Value("vaultConnection").(*VaultConnection)
 	var config *vault.Config
 	if vaultConnection != nil {
@@ -289,7 +289,7 @@ func (kc *KubeAuthConfiguration) createVaultClient(context context.Context, jwt 
 	}
 
 	client.SetToken(secret.Auth.ClientToken)
-	if cacheVaultToken, ok := os.LookupEnv("CACHE_VAULT_TOKEN"); !ok || cacheVaultToken == "true" {
+	if cacheVaultToken, ok := os.LookupEnv("CACHE_VAULT_TOKEN"); ok && cacheVaultToken == "true" {
 		go kc.startLifetimeWatcher(client, namespace, secret, log)
 	}
 
