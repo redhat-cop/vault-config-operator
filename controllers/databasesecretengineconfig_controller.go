@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	corev1 "k8s.io/api/core/v1"
@@ -42,7 +41,7 @@ import (
 
 // DatabaseSecretEngineConfigReconciler reconciles a DatabaseSecretEngineConfig object
 type DatabaseSecretEngineConfigReconciler struct {
-	util.ReconcilerBase
+	vaultresourcecontroller.ReconcilerBase
 	Log            logr.Logger
 	ControllerName string
 }

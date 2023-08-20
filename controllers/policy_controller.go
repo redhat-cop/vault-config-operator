@@ -20,7 +20,6 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
-	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -31,7 +30,7 @@ import (
 
 // PolicyReconciler reconciles a Policy object
 type PolicyReconciler struct {
-	util.ReconcilerBase
+	vaultresourcecontroller.ReconcilerBase
 	Log            logr.Logger
 	ControllerName string
 }

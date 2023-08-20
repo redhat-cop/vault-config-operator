@@ -22,8 +22,8 @@ import (
 	"reflect"
 
 	vault "github.com/hashicorp/vault/api"
-	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -167,7 +167,7 @@ type GitHubSecretEngineConfigStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
-var _ apis.ConditionsAware = &GitHubSecretEngineConfig{}
+var _ vaultresourcecontroller.ConditionsAware = &GitHubSecretEngineConfig{}
 
 func (m *GitHubSecretEngineConfig) GetConditions() []metav1.Condition {
 	return m.Status.Conditions

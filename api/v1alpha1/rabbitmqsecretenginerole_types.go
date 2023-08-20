@@ -22,8 +22,8 @@ import (
 	"log"
 	"reflect"
 
-	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -138,7 +138,7 @@ type RabbitMQSecretEngineRoleList struct {
 	Items           []RabbitMQSecretEngineRole `json:"items"`
 }
 
-var _ apis.ConditionsAware = &RabbitMQSecretEngineConfig{}
+var _ vaultresourcecontroller.ConditionsAware = &RabbitMQSecretEngineConfig{}
 
 func (d *RabbitMQSecretEngineRole) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection

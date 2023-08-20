@@ -31,12 +31,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	"github.com/redhat-cop/operator-utils/pkg/util"
+	//"github.com/redhat-cop/operator-utils/pkg/util"
 
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	"github.com/redhat-cop/vault-config-operator/controllers"
+	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -83,7 +84,7 @@ func main() {
 	}
 
 	if err = (&controllers.KubernetesAuthEngineRoleReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("KubernetesAuthEngineRole"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("KubernetesAuthEngineRole"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("KubernetesAuthEngineRole"),
 		ControllerName: "KubernetesAuthEngineRole",
 	}).SetupWithManager(mgr); err != nil {
@@ -91,7 +92,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controllers.PolicyReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("Policy"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("Policy"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("Policy"),
 		ControllerName: "Policy",
 	}).SetupWithManager(mgr); err != nil {
@@ -99,7 +100,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controllers.DatabaseSecretEngineConfigReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("DatabaseSecretEngineConfig"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("DatabaseSecretEngineConfig"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("DatabaseSecretEngineConfig"),
 		ControllerName: "DatabaseSecretEngineConfig",
 	}).SetupWithManager(mgr); err != nil {
@@ -107,7 +108,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controllers.DatabaseSecretEngineRoleReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("DatabaseSecretEngineRole"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("DatabaseSecretEngineRole"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("DatabaseSecretEngineRole"),
 		ControllerName: "DatabaseSecretEngineRole",
 	}).SetupWithManager(mgr); err != nil {
@@ -115,7 +116,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controllers.SecretEngineMountReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("SecretEngineMount"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("SecretEngineMount"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("SecretEngineMount"),
 		ControllerName: "SecretEngineMount",
 	}).SetupWithManager(mgr); err != nil {
@@ -123,7 +124,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controllers.RandomSecretReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("RandomSecret"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("RandomSecret"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("RandomSecret"),
 		ControllerName: "RandomSecret",
 	}).SetupWithManager(mgr); err != nil {
@@ -132,7 +133,7 @@ func main() {
 	}
 	setupLog.Info("starting AuthEngineMountReconciler")
 	if err = (&controllers.AuthEngineMountReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("AuthEngineMount"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("AuthEngineMount"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("AuthEngineMount"),
 		ControllerName: "AuthEngineMount",
 	}).SetupWithManager(mgr); err != nil {
@@ -141,7 +142,7 @@ func main() {
 	}
 	setupLog.Info("started AuthEngineMountReconciler")
 	if err = (&controllers.KubernetesAuthEngineConfigReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("KubernetesAuthEngineConfig"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("KubernetesAuthEngineConfig"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("KubernetesAuthEngineConfig"),
 		ControllerName: "KubernetesAuthEngineConfig",
 	}).SetupWithManager(mgr); err != nil {
@@ -150,7 +151,7 @@ func main() {
 	}
 
 	if err = (&controllers.LDAPAuthEngineConfigReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("LDAPAuthEngineConfig"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("LDAPAuthEngineConfig"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("LDAPAuthEngineConfig"),
 		ControllerName: "LDAPAuthEngineConfig",
 	}).SetupWithManager(mgr); err != nil {
@@ -159,7 +160,7 @@ func main() {
 	}
 
 	if err = (&controllers.LDAPAuthEngineGroupReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("LDAPAuthEngineGroup"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("LDAPAuthEngineGroup"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("LDAPAuthEngineGroup"),
 		ControllerName: "LDAPAuthEngineGroup",
 	}).SetupWithManager(mgr); err != nil {
@@ -168,7 +169,7 @@ func main() {
 	}
 
 	if err = (&controllers.JWTOIDCAuthEngineConfigReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("JWTOIDCAuthEngineConfig"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("JWTOIDCAuthEngineConfig"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("JWTOIDCAuthEngineConfig"),
 		ControllerName: "JWTOIDCAuthEngineConfig",
 	}).SetupWithManager(mgr); err != nil {
@@ -177,7 +178,7 @@ func main() {
 	}
 
 	if err = (&controllers.JWTOIDCAuthEngineRoleReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("JWTOIDCAuthEngineRole"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("JWTOIDCAuthEngineRole"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("JWTOIDCAuthEngineRole"),
 		ControllerName: "JWTOIDCAuthEngineRole",
 	}).SetupWithManager(mgr); err != nil {
@@ -186,7 +187,7 @@ func main() {
 	}
 
 	if err = (&controllers.VaultSecretReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("VaultSecret"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("VaultSecret"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("VaultSecret"),
 		ControllerName: "VaultSecret",
 	}).SetupWithManager(mgr); err != nil {
@@ -194,7 +195,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controllers.PasswordPolicyReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("PasswordPolicy"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("PasswordPolicy"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("PasswordPolicy"),
 		ControllerName: "PasswordPolicy",
 	}).SetupWithManager(mgr); err != nil {
@@ -202,7 +203,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controllers.RabbitMQSecretEngineConfigReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("RabbitMQSecretEngineConfig"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("RabbitMQSecretEngineConfig"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("RabbitMQSecretEngineConfig"),
 		ControllerName: "RabbitMQSecretEngineConfig",
 	}).SetupWithManager(mgr); err != nil {
@@ -210,7 +211,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controllers.RabbitMQSecretEngineRoleReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("RabbitMQSecretEngineRole"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("RabbitMQSecretEngineRole"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("RabbitMQSecretEngineRole"),
 		ControllerName: "RabbitMQSecretEngineRole",
 	}).SetupWithManager(mgr); err != nil {
@@ -219,7 +220,7 @@ func main() {
 	}
 
 	if err = (&controllers.PKISecretEngineConfigReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("PKISecretEngineConfig"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("PKISecretEngineConfig"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("PKISecretEngineConfig"),
 		ControllerName: "PKISecretEngineConfig",
 	}).SetupWithManager(mgr); err != nil {
@@ -227,7 +228,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controllers.PKISecretEngineRoleReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("PKISecretEngineRole"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("PKISecretEngineRole"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("PKISecretEngineRole"),
 		ControllerName: "PKISecretEngineRole",
 	}).SetupWithManager(mgr); err != nil {
@@ -236,7 +237,7 @@ func main() {
 	}
 
 	if err = (&controllers.GitHubSecretEngineConfigReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("GitHubSecretEngineConfig"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("GitHubSecretEngineConfig"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("GitHubSecretEngineConfig"),
 		ControllerName: "GitHubSecretEngineConfig",
 	}).SetupWithManager(mgr); err != nil {
@@ -245,7 +246,7 @@ func main() {
 	}
 
 	if err = (&controllers.GitHubSecretEngineRoleReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("GitHubSecretEngineRole"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("GitHubSecretEngineRole"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("GitHubSecretEngineRole"),
 		ControllerName: "GitHubSecretEngineRole",
 	}).SetupWithManager(mgr); err != nil {
@@ -254,7 +255,7 @@ func main() {
 	}
 
 	if err = (&controllers.QuaySecretEngineConfigReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("QuaySecretEngineConfig"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("QuaySecretEngineConfig"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("QuaySecretEngineConfig"),
 		ControllerName: "QuaySecretEngineConfig",
 	}).SetupWithManager(mgr); err != nil {
@@ -263,7 +264,7 @@ func main() {
 	}
 
 	if err = (&controllers.QuaySecretEngineRoleReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("QuaySecretEngineRole"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("QuaySecretEngineRole"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("QuaySecretEngineRole"),
 		ControllerName: "QuaySecretEngineRole",
 	}).SetupWithManager(mgr); err != nil {
@@ -272,7 +273,7 @@ func main() {
 	}
 
 	if err = (&controllers.QuaySecretEngineStaticRoleReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("QuaySecretEngineStaticRole"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("QuaySecretEngineStaticRole"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("QuaySecretEngineStaticRole"),
 		ControllerName: "QuaySecretEngineStaticRole",
 	}).SetupWithManager(mgr); err != nil {
@@ -281,7 +282,7 @@ func main() {
 	}
 
 	if err = (&controllers.KubernetesSecretEngineConfigReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("KubernetesSecretEngineConfig"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("KubernetesSecretEngineConfig"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("KubernetesSecretEngineConfig"),
 		ControllerName: "KubernetesSecretEngineConfig",
 	}).SetupWithManager(mgr); err != nil {
@@ -290,7 +291,7 @@ func main() {
 	}
 
 	if err = (&controllers.KubernetesSecretEngineRoleReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("KubernetesSecretEngineRole"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("KubernetesSecretEngineRole"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("KubernetesSecretEngineRole"),
 		ControllerName: "KubernetesSecretEngineRole",
 	}).SetupWithManager(mgr); err != nil {
@@ -299,7 +300,7 @@ func main() {
 	}
 
 	if err = (&controllers.DatabaseSecretEngineStaticRoleReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("DatabaseSecretEngineStaticRole"), mgr.GetAPIReader()),
+		ReconcilerBase: vaultresourcecontroller.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("DatabaseSecretEngineStaticRole"), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName("DatabaseSecretEngineStaticRole"),
 		ControllerName: "DatabaseSecretEngineStaticRole",
 	}).SetupWithManager(mgr); err != nil {

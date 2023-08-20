@@ -18,8 +18,8 @@ package v1alpha1
 
 import (
 	"github.com/hashicorp/go-multierror"
-	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -65,7 +65,7 @@ type VaultSecretStatus struct {
 	VaultSecretDefinitionsStatus []VaultSecretDefinitionStatus `json:"vaultSecretDefinitionsStatus,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
-var _ apis.ConditionsAware = &VaultSecret{}
+var _ vaultresourcecontroller.ConditionsAware = &VaultSecret{}
 
 func (vs *VaultSecret) GetConditions() []metav1.Condition {
 	return vs.Status.Conditions

@@ -3,8 +3,9 @@ package controllers
 import (
 	"context"
 
-	"github.com/redhat-cop/operator-utils/pkg/util"
+	//"github.com/redhat-cop/operator-utils/pkg/util"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -14,7 +15,7 @@ type VaultAuthenticableResource interface {
 	vaultutils.VaultObject
 }
 
-func prepareContext(ctx context.Context, r util.ReconcilerBase, VAR VaultAuthenticableResource) (context.Context, error) {
+func prepareContext(ctx context.Context, r vaultresourcecontroller.ReconcilerBase, VAR VaultAuthenticableResource) (context.Context, error) {
 	rlog := log.FromContext(ctx)
 	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
 	ctx = context.WithValue(ctx, "restConfig", r.GetRestConfig())

@@ -22,6 +22,7 @@ import (
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -168,6 +169,7 @@ type JWTOIDCConfig struct {
 }
 
 var _ vaultutils.VaultObject = &JWTOIDCAuthEngineConfig{}
+var _ vaultresourcecontroller.ConditionsAware = &JWTOIDCAuthEngineConfig{}
 
 func (d *JWTOIDCAuthEngineConfig) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection

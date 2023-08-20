@@ -35,14 +35,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/go-logr/logr"
-	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 )
 
 // LDAPAuthEngineConfigReconciler reconciles a LDAPAuthEngineConfig object
 type LDAPAuthEngineConfigReconciler struct {
-	util.ReconcilerBase
+	vaultresourcecontroller.ReconcilerBase
 	Log            logr.Logger
 	ControllerName string
 }
