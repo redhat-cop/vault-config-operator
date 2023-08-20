@@ -21,6 +21,7 @@ import (
 	"errors"
 	"reflect"
 
+	"github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -70,6 +71,7 @@ func (d *LDAPAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]int
 }
 
 var _ vaultutils.VaultObject = &LDAPAuthEngineConfig{}
+var _ utils.ConditionsAware = &LDAPAuthEngineConfig{}
 
 func (d *LDAPAuthEngineConfig) IsInitialized() bool {
 	return true

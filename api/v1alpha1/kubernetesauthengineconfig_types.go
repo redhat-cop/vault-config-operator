@@ -20,6 +20,7 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -71,6 +72,7 @@ func (d *KubernetesAuthEngineConfig) IsEquivalentToDesiredState(payload map[stri
 }
 
 var _ vaultutils.VaultObject = &KubernetesAuthEngineConfig{}
+var _ utils.ConditionsAware = &KubernetesAuthEngineConfig{}
 
 func (d *KubernetesAuthEngineConfig) IsInitialized() bool {
 	return true

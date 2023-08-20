@@ -20,6 +20,7 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -51,6 +52,7 @@ type PKISecretEngineRoleSpec struct {
 }
 
 var _ vaultutils.VaultObject = &PKISecretEngineRole{}
+var _ utils.ConditionsAware = &PKISecretEngineRole{}
 
 func (d *PKISecretEngineRole) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection

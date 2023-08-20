@@ -35,6 +35,24 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
+// ConditionsAware represents a CRD type that has been enabled with metav1.Conditions, it can then benefit of a series of utility methods.
+type ConditionsAware interface {
+	GetConditions() []metav1.Condition
+	SetConditions(conditions []metav1.Condition)
+}
+
+// AddOrReplaceCondition adds or replaces the passed condition in the passed array of conditions
+func AddOrReplaceCondition(c metav1.Condition, conditions []metav1.Condition) []metav1.Condition {
+	for i, condition := range conditions {
+		if c.Type == condition.Type {
+			conditions[i] = c
+			return conditions
+		}
+	}
+	conditions = append(conditions, c)
+	return conditions
+}
+
 var vaultClientCache = VaultClientCache{}
 
 // +kubebuilder:object:generate=true

@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2/hclsimple"
 	vault "github.com/hashicorp/vault/api"
+	"github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	"github.com/scylladb/go-set/u8set"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -80,6 +81,7 @@ type RandomSecretSpec struct {
 const ttlKey string = "ttl"
 
 var _ vaultutils.VaultObject = &RandomSecret{}
+var _ utils.ConditionsAware = &RandomSecret{}
 
 func (d *RandomSecret) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection

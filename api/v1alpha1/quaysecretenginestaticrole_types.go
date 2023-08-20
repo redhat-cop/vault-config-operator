@@ -20,8 +20,8 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
-	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -102,7 +102,7 @@ type QuaySecretEngineStaticRoleStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
-var _ vaultresourcecontroller.ConditionsAware = &QuaySecretEngineStaticRole{}
+var _ utils.ConditionsAware = &QuaySecretEngineStaticRole{}
 
 func (q *QuaySecretEngineStaticRole) GetConditions() []metav1.Condition {
 	return q.Status.Conditions

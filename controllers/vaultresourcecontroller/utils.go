@@ -20,6 +20,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -54,24 +55,6 @@ func IsOwner(owner, owned metav1.Object) bool {
 		}
 	}
 	return false
-}
-
-// ConditionsAware represents a CRD type that has been enabled with metav1.Conditions, it can then benefit of a series of utility methods.
-type ConditionsAware interface {
-	GetConditions() []metav1.Condition
-	SetConditions(conditions []metav1.Condition)
-}
-
-// AddOrReplaceCondition adds or replaces the passed condition in the passed array of conditions
-func AddOrReplaceCondition(c metav1.Condition, conditions []metav1.Condition) []metav1.Condition {
-	for i, condition := range conditions {
-		if c.Type == condition.Type {
-			conditions[i] = c
-			return conditions
-		}
-	}
-	conditions = append(conditions, c)
-	return conditions
 }
 
 type ReconcilerBase struct {
@@ -124,7 +107,7 @@ func NewFromManager(mgr manager.Manager, recorder record.EventRecorder) Reconcil
 
 func ManageOutcomeWithRequeue(context context.Context, r ReconcilerBase, obj client.Object, issue error, requeueAfter time.Duration) (reconcile.Result, error) {
 	log := log.FromContext(context)
-	conditionsAware := (obj).(ConditionsAware)
+	conditionsAware := (obj).(utils.ConditionsAware)
 	var condition metav1.Condition
 	if issue == nil {
 		condition = metav1.Condition{
@@ -145,7 +128,7 @@ func ManageOutcomeWithRequeue(context context.Context, r ReconcilerBase, obj cli
 			Status:             metav1.ConditionFalse,
 		}
 	}
-	conditionsAware.SetConditions(AddOrReplaceCondition(condition, conditionsAware.GetConditions()))
+	conditionsAware.SetConditions(utils.AddOrReplaceCondition(condition, conditionsAware.GetConditions()))
 	err := r.GetClient().Status().Update(context, obj)
 	if err != nil {
 		log.Error(err, "unable to update status")

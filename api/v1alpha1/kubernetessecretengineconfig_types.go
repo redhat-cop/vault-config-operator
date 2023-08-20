@@ -22,8 +22,8 @@ import (
 	"reflect"
 
 	vault "github.com/hashicorp/vault/api"
+	"github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
-	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -35,7 +35,7 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 var _ vaultutils.VaultObject = &KubernetesSecretEngineConfig{}
-var _ vaultresourcecontroller.ConditionsAware = &KubernetesSecretEngineConfig{}
+var _ utils.ConditionsAware = &KubernetesSecretEngineConfig{}
 
 // KubernetesSecretEngineConfigSpec defines the desired state of KubernetesSecretEngineConfig
 type KubernetesSecretEngineConfigSpec struct {

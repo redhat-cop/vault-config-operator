@@ -23,8 +23,8 @@ import (
 
 	vault "github.com/hashicorp/vault/api"
 	//"github.com/redhat-cop/operator-utils/pkg/util/apis"
+	"github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
-	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -272,7 +272,7 @@ type DatabaseSecretEngineConfigStatus struct {
 	LastRootPasswordRotation metav1.Time `json:"lastRootPasswordRotation,omitempty"`
 }
 
-var _ vaultresourcecontroller.ConditionsAware = &DatabaseSecretEngineConfig{}
+var _ utils.ConditionsAware = &DatabaseSecretEngineConfig{}
 
 func (m *DatabaseSecretEngineConfig) GetConditions() []metav1.Condition {
 	return m.Status.Conditions
