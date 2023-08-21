@@ -21,6 +21,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // log is for logging in this package.
@@ -46,22 +47,22 @@ func (r *JWTOIDCAuthEngineRole) Default() {
 var _ webhook.Validator = &JWTOIDCAuthEngineRole{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *JWTOIDCAuthEngineRole) ValidateCreate() error {
+func (r *JWTOIDCAuthEngineRole) ValidateCreate() (admission.Warnings, error) {
 	jwtoidcauthenginerolelog.Info("validate create", "name", r.Name)
 
-	return nil
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *JWTOIDCAuthEngineRole) ValidateUpdate(old runtime.Object) error {
+func (r *JWTOIDCAuthEngineRole) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	jwtoidcauthenginerolelog.Info("validate update", "name", r.Name)
 
-	return nil
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *JWTOIDCAuthEngineRole) ValidateDelete() error {
+func (r *JWTOIDCAuthEngineRole) ValidateDelete() (admission.Warnings, error) {
 	jwtoidcauthenginerolelog.Info("validate delete", "name", r.Name)
 
-	return nil
+	return nil, nil
 }

@@ -23,6 +23,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // log is for logging in this package.
@@ -51,37 +52,37 @@ func (r *PKISecretEngineConfig) Default() {
 var _ webhook.Validator = &PKISecretEngineConfig{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *PKISecretEngineConfig) ValidateCreate() error {
+func (r *PKISecretEngineConfig) ValidateCreate() (admission.Warnings, error) {
 	pkisecretengineconfiglog.Info("validate create", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
-	return nil
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *PKISecretEngineConfig) ValidateUpdate(old runtime.Object) error {
+func (r *PKISecretEngineConfig) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	pkisecretengineconfiglog.Info("validate update", "name", r.Name)
 
 	// the path cannot be updated
 	if r.Spec.Path != old.(*PKISecretEngineConfig).Spec.Path {
-		return errors.New("spec.path cannot be updated")
+		return nil, errors.New("spec.path cannot be updated")
 	}
 
 	if r.Spec.Type != old.(*PKISecretEngineConfig).Spec.Type {
-		return errors.New("spec.type cannot be updated")
+		return nil, errors.New("spec.type cannot be updated")
 	}
 
 	if r.Spec.PrivateKeyType != old.(*PKISecretEngineConfig).Spec.PrivateKeyType {
-		return errors.New("spec.privateKeyType cannot be updated")
+		return nil, errors.New("spec.privateKeyType cannot be updated")
 	}
 
-	return nil
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *PKISecretEngineConfig) ValidateDelete() error {
+func (r *PKISecretEngineConfig) ValidateDelete() (admission.Warnings, error) {
 	pkisecretengineconfiglog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
+	return nil, nil
 }

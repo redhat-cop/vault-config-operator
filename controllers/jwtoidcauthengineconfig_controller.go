@@ -32,7 +32,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/go-logr/logr"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
@@ -147,14 +146,14 @@ func (r *JWTOIDCAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) e
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&redhatcopv1alpha1.JWTOIDCAuthEngineConfig{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
-		Watches(&source.Kind{Type: &corev1.Secret{
+		Watches(&corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Secret",
 			},
-		}}, handler.EnqueueRequestsFromMapFunc(func(a client.Object) []reconcile.Request {
+		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			s := a.(*corev1.Secret)
-			dbsecs, err := r.findApplicableJOAEForSecret(s)
+			dbsecs, err := r.findApplicableJOAEForSecret(ctx, s)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable JWTOIDCAuthEngine for namespace", "namespace", s.Name)
 				return []reconcile.Request{}
@@ -169,14 +168,14 @@ func (r *JWTOIDCAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) e
 			}
 			return res
 		}), builder.WithPredicates(isBasicAuthSecret)).
-		Watches(&source.Kind{Type: &redhatcopv1alpha1.RandomSecret{
+		Watches(&redhatcopv1alpha1.RandomSecret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "RandomSecret",
 			},
-		}}, handler.EnqueueRequestsFromMapFunc(func(a client.Object) []reconcile.Request {
+		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			rs := a.(*redhatcopv1alpha1.RandomSecret)
-			dbsecs, err := r.findApplicableJOAEForRandomSecret(rs)
+			dbsecs, err := r.findApplicableJOAEForRandomSecret(ctx, rs)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable JWTOIDCAuthEngine for namespace", "namespace", rs.Name)
 				return []reconcile.Request{}
@@ -195,10 +194,10 @@ func (r *JWTOIDCAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) e
 
 }
 
-func (r *JWTOIDCAuthEngineConfigReconciler) findApplicableJOAEForSecret(secret *corev1.Secret) ([]redhatcopv1alpha1.JWTOIDCAuthEngineConfig, error) {
+func (r *JWTOIDCAuthEngineConfigReconciler) findApplicableJOAEForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.JWTOIDCAuthEngineConfig, error) {
 	result := []redhatcopv1alpha1.JWTOIDCAuthEngineConfig{}
 	vrl := &redhatcopv1alpha1.JWTOIDCAuthEngineConfigList{}
-	err := r.GetClient().List(context.TODO(), vrl, &client.ListOptions{
+	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: secret.Namespace,
 	})
 	if err != nil {
@@ -213,10 +212,10 @@ func (r *JWTOIDCAuthEngineConfigReconciler) findApplicableJOAEForSecret(secret *
 	return result, nil
 }
 
-func (r *JWTOIDCAuthEngineConfigReconciler) findApplicableJOAEForRandomSecret(randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.JWTOIDCAuthEngineConfig, error) {
+func (r *JWTOIDCAuthEngineConfigReconciler) findApplicableJOAEForRandomSecret(ctx context.Context, randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.JWTOIDCAuthEngineConfig, error) {
 	result := []redhatcopv1alpha1.JWTOIDCAuthEngineConfig{}
 	vrl := &redhatcopv1alpha1.JWTOIDCAuthEngineConfigList{}
-	err := r.GetClient().List(context.TODO(), vrl, &client.ListOptions{
+	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: randomSecret.Namespace,
 	})
 	if err != nil {

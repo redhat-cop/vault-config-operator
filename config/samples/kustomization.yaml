@@ -26,4 +26,6 @@ resources:
 - redhatcop_v1alpha1_jwtoidcauthengineconfig.yaml
 - redhatcop_v1alpha1_jwtoidcauthenginerole.yaml
 - redhatcop_v1alpha1_databasesecretenginestaticrole.yaml
+- redhatcop_v1alpha1_group.yaml
+- redhatcop_v1alpha1_groupalias.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

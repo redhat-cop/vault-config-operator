@@ -1,0 +1,27 @@
+# permissions for end users to view groupalias.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: groupalias-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: vault-config-operator
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: groupalias-viewer-role
+rules:
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - groupalias
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - groupalias/status
+  verbs:
+  - get

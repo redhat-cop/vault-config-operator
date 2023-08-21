@@ -22,7 +22,6 @@ import (
 	"reflect"
 
 	vault "github.com/hashicorp/vault/api"
-	//"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	"github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"

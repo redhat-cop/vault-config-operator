@@ -24,6 +24,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // log is for logging in this package.
@@ -52,20 +53,20 @@ func (r *AuthEngineMount) Default() {
 var _ webhook.Validator = &AuthEngineMount{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *AuthEngineMount) ValidateCreate() error {
+func (r *AuthEngineMount) ValidateCreate() (admission.Warnings, error) {
 	authenginemountlog.Info("validate create", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
-	return nil
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *AuthEngineMount) ValidateUpdate(old runtime.Object) error {
+func (r *AuthEngineMount) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	authenginemountlog.Info("validate update", "name", r.Name)
 
 	// the path cannot be updated
 	if r.Spec.Path != old.(*AuthEngineMount).Spec.Path {
-		return errors.New("spec.path cannot be updated")
+		return nil, errors.New("spec.path cannot be updated")
 	}
 	// only mount config can be modified
 	oldMount := old.(*AuthEngineMount).Spec.AuthMount
@@ -73,15 +74,15 @@ func (r *AuthEngineMount) ValidateUpdate(old runtime.Object) error {
 	oldMount.Config = AuthMountConfig{}
 	newMount.Config = AuthMountConfig{}
 	if !reflect.DeepEqual(oldMount, newMount) {
-		return errors.New("only .spec.config can be modified")
+		return nil, errors.New("only .spec.config can be modified")
 	}
-	return nil
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *AuthEngineMount) ValidateDelete() error {
+func (r *AuthEngineMount) ValidateDelete() (admission.Warnings, error) {
 	authenginemountlog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
+	return nil, nil
 }

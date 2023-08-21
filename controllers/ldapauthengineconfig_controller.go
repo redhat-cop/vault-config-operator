@@ -32,7 +32,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/go-logr/logr"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
@@ -148,14 +147,14 @@ func (r *LDAPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) erro
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&redhatcopv1alpha1.LDAPAuthEngineConfig{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
-		Watches(&source.Kind{Type: &corev1.Secret{
+		Watches(&corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Secret",
 			},
-		}}, handler.EnqueueRequestsFromMapFunc(func(a client.Object) []reconcile.Request {
+		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			s := a.(*corev1.Secret)
-			dbsecs, err := r.findApplicableLAECForSecret(s)
+			dbsecs, err := r.findApplicableLAECForSecret(ctx, s)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable LDAPAuthEngines for namespace", "namespace", s.Name)
 				return []reconcile.Request{}
@@ -170,14 +169,14 @@ func (r *LDAPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) erro
 			}
 			return res
 		}), builder.WithPredicates(isBasicAuthSecret)).
-		Watches(&source.Kind{Type: &redhatcopv1alpha1.RandomSecret{
+		Watches(&redhatcopv1alpha1.RandomSecret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "RandomSecret",
 			},
-		}}, handler.EnqueueRequestsFromMapFunc(func(a client.Object) []reconcile.Request {
+		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			rs := a.(*redhatcopv1alpha1.RandomSecret)
-			dbsecs, err := r.findApplicableLAECForRandomSecret(rs)
+			dbsecs, err := r.findApplicableLAECForRandomSecret(ctx, rs)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable LDAPAuthEngines for namespace", "namespace", rs.Name)
 				return []reconcile.Request{}
@@ -196,10 +195,10 @@ func (r *LDAPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) erro
 
 }
 
-func (r *LDAPAuthEngineConfigReconciler) findApplicableLAECForSecret(secret *corev1.Secret) ([]redhatcopv1alpha1.LDAPAuthEngineConfig, error) {
+func (r *LDAPAuthEngineConfigReconciler) findApplicableLAECForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.LDAPAuthEngineConfig, error) {
 	result := []redhatcopv1alpha1.LDAPAuthEngineConfig{}
 	vrl := &redhatcopv1alpha1.LDAPAuthEngineConfigList{}
-	err := r.GetClient().List(context.TODO(), vrl, &client.ListOptions{
+	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: secret.Namespace,
 	})
 	if err != nil {
@@ -213,10 +212,10 @@ func (r *LDAPAuthEngineConfigReconciler) findApplicableLAECForSecret(secret *cor
 	}
 	return result, nil
 }
-func (r *LDAPAuthEngineConfigReconciler) findApplicableLAECForRandomSecret(randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.LDAPAuthEngineConfig, error) {
+func (r *LDAPAuthEngineConfigReconciler) findApplicableLAECForRandomSecret(ctx context.Context, randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.LDAPAuthEngineConfig, error) {
 	result := []redhatcopv1alpha1.LDAPAuthEngineConfig{}
 	vrl := &redhatcopv1alpha1.LDAPAuthEngineConfigList{}
-	err := r.GetClient().List(context.TODO(), vrl, &client.ListOptions{
+	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: randomSecret.Namespace,
 	})
 	if err != nil {

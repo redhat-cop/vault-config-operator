@@ -32,7 +32,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/go-logr/logr"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
@@ -145,14 +144,14 @@ func (r *QuaySecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) er
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&redhatcopv1alpha1.QuaySecretEngineConfig{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
-		Watches(&source.Kind{Type: &corev1.Secret{
+		Watches(&corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Secret",
 			},
-		}}, handler.EnqueueRequestsFromMapFunc(func(a client.Object) []reconcile.Request {
+		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			s := a.(*corev1.Secret)
-			quaysecs, err := r.findApplicableQuaySCForSecret(s)
+			quaysecs, err := r.findApplicableQuaySCForSecret(ctx, s)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable databaseSecretEngines for namespace", "namespace", s.Name)
 				return []reconcile.Request{}
@@ -167,14 +166,14 @@ func (r *QuaySecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) er
 			}
 			return res
 		}), builder.WithPredicates(isBasicAuthSecret)).
-		Watches(&source.Kind{Type: &redhatcopv1alpha1.RandomSecret{
+		Watches(&redhatcopv1alpha1.RandomSecret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "RandomSecret",
 			},
-		}}, handler.EnqueueRequestsFromMapFunc(func(a client.Object) []reconcile.Request {
+		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			rs := a.(*redhatcopv1alpha1.RandomSecret)
-			quaysecs, err := r.findApplicableQuaySCForRandomSecret(rs)
+			quaysecs, err := r.findApplicableQuaySCForRandomSecret(ctx, rs)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable QuaySecretEngineConfig for namespace", "namespace", rs.Name)
 				return []reconcile.Request{}
@@ -192,10 +191,10 @@ func (r *QuaySecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) er
 		Complete(r)
 }
 
-func (r *QuaySecretEngineConfigReconciler) findApplicableQuaySCForSecret(secret *corev1.Secret) ([]redhatcopv1alpha1.QuaySecretEngineConfig, error) {
+func (r *QuaySecretEngineConfigReconciler) findApplicableQuaySCForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.QuaySecretEngineConfig, error) {
 	result := []redhatcopv1alpha1.QuaySecretEngineConfig{}
 	vrl := &redhatcopv1alpha1.QuaySecretEngineConfigList{}
-	err := r.GetClient().List(context.TODO(), vrl, &client.ListOptions{
+	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: secret.Namespace,
 	})
 	if err != nil {
@@ -209,10 +208,10 @@ func (r *QuaySecretEngineConfigReconciler) findApplicableQuaySCForSecret(secret 
 	}
 	return result, nil
 }
-func (r *QuaySecretEngineConfigReconciler) findApplicableQuaySCForRandomSecret(randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.QuaySecretEngineConfig, error) {
+func (r *QuaySecretEngineConfigReconciler) findApplicableQuaySCForRandomSecret(ctx context.Context, randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.QuaySecretEngineConfig, error) {
 	result := []redhatcopv1alpha1.QuaySecretEngineConfig{}
 	vrl := &redhatcopv1alpha1.QuaySecretEngineConfigList{}
-	err := r.GetClient().List(context.TODO(), vrl, &client.ListOptions{
+	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: randomSecret.Namespace,
 	})
 	if err != nil {

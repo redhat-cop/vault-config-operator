@@ -1,0 +1,12 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Group
+metadata:
+  labels:
+    app.kubernetes.io/name: group
+    app.kubernetes.io/instance: group-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: group-sample
+spec:
+  # TODO(user): Add fields here

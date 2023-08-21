@@ -30,7 +30,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/go-logr/logr"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
@@ -91,14 +90,14 @@ func (r *KubernetesAuthEngineRoleReconciler) Reconcile(ctx context.Context, req 
 func (r *KubernetesAuthEngineRoleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&redhatcopv1alpha1.KubernetesAuthEngineRole{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
-		Watches(&source.Kind{Type: &corev1.Namespace{
+		Watches(&corev1.Namespace{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Namespace",
 			},
-		}}, handler.EnqueueRequestsFromMapFunc(func(a client.Object) []reconcile.Request {
+		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			ns := a.(*corev1.Namespace)
-			ncl, err := r.findApplicableKubernetesAuthEngineRoles(ns)
+			ncl, err := r.findApplicableKubernetesAuthEngineRoles(ctx, ns)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable kubernetesAuthEngineRoles for namespace", "namespace", ns.Name)
 				return []reconcile.Request{}
@@ -116,10 +115,10 @@ func (r *KubernetesAuthEngineRoleReconciler) SetupWithManager(mgr ctrl.Manager) 
 		Complete(r)
 }
 
-func (r *KubernetesAuthEngineRoleReconciler) findApplicableKubernetesAuthEngineRoles(namespace *corev1.Namespace) ([]redhatcopv1alpha1.KubernetesAuthEngineRole, error) {
+func (r *KubernetesAuthEngineRoleReconciler) findApplicableKubernetesAuthEngineRoles(ctx context.Context, namespace *corev1.Namespace) ([]redhatcopv1alpha1.KubernetesAuthEngineRole, error) {
 	result := []redhatcopv1alpha1.KubernetesAuthEngineRole{}
 	vrl := &redhatcopv1alpha1.KubernetesAuthEngineRoleList{}
-	err := r.GetClient().List(context.TODO(), vrl, &client.ListOptions{})
+	err := r.GetClient().List(ctx, vrl, &client.ListOptions{})
 	if err != nil {
 		r.Log.Error(err, "unable to retrieve the list of KubernetesAuthEngineRoles")
 		return []redhatcopv1alpha1.KubernetesAuthEngineRole{}, err

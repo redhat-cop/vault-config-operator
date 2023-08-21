@@ -36,7 +36,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 // DatabaseSecretEngineConfigReconciler reconciles a DatabaseSecretEngineConfig object
@@ -215,14 +214,14 @@ func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&redhatcopv1alpha1.DatabaseSecretEngineConfig{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
-		Watches(&source.Kind{Type: &corev1.Secret{
+		Watches(&corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Secret",
 			},
-		}}, handler.EnqueueRequestsFromMapFunc(func(a client.Object) []reconcile.Request {
+		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			s := a.(*corev1.Secret)
-			dbsecs, err := r.findApplicableBDSCForSecret(s)
+			dbsecs, err := r.findApplicableBDSCForSecret(ctx, s)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable databaseSecretEngines for namespace", "namespace", s.Name)
 				return []reconcile.Request{}
@@ -237,14 +236,14 @@ func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 			}
 			return res
 		}), builder.WithPredicates(isBasicAuthSecret)).
-		Watches(&source.Kind{Type: &redhatcopv1alpha1.RandomSecret{
+		Watches(&redhatcopv1alpha1.RandomSecret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "RandomSecret",
 			},
-		}}, handler.EnqueueRequestsFromMapFunc(func(a client.Object) []reconcile.Request {
+		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			rs := a.(*redhatcopv1alpha1.RandomSecret)
-			dbsecs, err := r.findApplicableDBSCForRandomSecret(rs)
+			dbsecs, err := r.findApplicableDBSCForRandomSecret(ctx, rs)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable databaseSecretEngines for namespace", "namespace", rs.Name)
 				return []reconcile.Request{}
@@ -262,10 +261,10 @@ func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 		Complete(r)
 }
 
-func (r *DatabaseSecretEngineConfigReconciler) findApplicableBDSCForSecret(secret *corev1.Secret) ([]redhatcopv1alpha1.DatabaseSecretEngineConfig, error) {
+func (r *DatabaseSecretEngineConfigReconciler) findApplicableBDSCForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.DatabaseSecretEngineConfig, error) {
 	result := []redhatcopv1alpha1.DatabaseSecretEngineConfig{}
 	vrl := &redhatcopv1alpha1.DatabaseSecretEngineConfigList{}
-	err := r.GetClient().List(context.TODO(), vrl, &client.ListOptions{
+	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: secret.Namespace,
 	})
 	if err != nil {
@@ -279,10 +278,10 @@ func (r *DatabaseSecretEngineConfigReconciler) findApplicableBDSCForSecret(secre
 	}
 	return result, nil
 }
-func (r *DatabaseSecretEngineConfigReconciler) findApplicableDBSCForRandomSecret(randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.DatabaseSecretEngineConfig, error) {
+func (r *DatabaseSecretEngineConfigReconciler) findApplicableDBSCForRandomSecret(ctx context.Context, randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.DatabaseSecretEngineConfig, error) {
 	result := []redhatcopv1alpha1.DatabaseSecretEngineConfig{}
 	vrl := &redhatcopv1alpha1.DatabaseSecretEngineConfigList{}
-	err := r.GetClient().List(context.TODO(), vrl, &client.ListOptions{
+	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: randomSecret.Namespace,
 	})
 	if err != nil {
