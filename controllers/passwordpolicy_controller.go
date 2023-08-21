@@ -24,7 +24,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	"github.com/go-logr/logr"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 )
@@ -32,8 +31,6 @@ import (
 // PasswordPolicyReconciler reconciles a PasswordPolicy object
 type PasswordPolicyReconciler struct {
 	vaultresourcecontroller.ReconcilerBase
-	Log            logr.Logger
-	ControllerName string
 }
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=passwordpolicies,verbs=get;list;watch;create;update;patch;delete

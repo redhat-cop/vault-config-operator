@@ -19,8 +19,6 @@ package controllers
 import (
 	"context"
 
-	"github.com/go-logr/logr"
-
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
@@ -37,8 +35,6 @@ import (
 // RabbitMQSecretEngineConfigReconciler reconciles a RabbitMQSecretEngineConfig object
 type RabbitMQSecretEngineConfigReconciler struct {
 	vaultresourcecontroller.ReconcilerBase
-	Log            logr.Logger
-	ControllerName string
 }
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=rabbitmqsecretengineconfigs,verbs=get;list;watch;create;update;patch;delete

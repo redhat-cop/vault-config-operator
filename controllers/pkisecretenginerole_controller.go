@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 
-	"github.com/go-logr/logr"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -33,8 +32,6 @@ import (
 // PKISecretEngineRoleReconciler reconciles a PKISecretEngineRole object
 type PKISecretEngineRoleReconciler struct {
 	vaultresourcecontroller.ReconcilerBase
-	Log            logr.Logger
-	ControllerName string
 }
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=pkisecretengineroles,verbs=get;list;watch;create;update;patch;delete

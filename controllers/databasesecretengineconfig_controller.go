@@ -21,7 +21,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/go-logr/logr"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	corev1 "k8s.io/api/core/v1"
@@ -41,8 +40,6 @@ import (
 // DatabaseSecretEngineConfigReconciler reconciles a DatabaseSecretEngineConfig object
 type DatabaseSecretEngineConfigReconciler struct {
 	vaultresourcecontroller.ReconcilerBase
-	Log            logr.Logger
-	ControllerName string
 }
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=databasesecretengineconfigs,verbs=get;list;watch;create;update;patch;delete

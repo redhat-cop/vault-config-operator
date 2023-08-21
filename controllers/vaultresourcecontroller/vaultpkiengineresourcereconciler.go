@@ -19,7 +19,6 @@ package vaultresourcecontroller
 import (
 	"context"
 
-	"github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -43,7 +42,7 @@ func NewVaultPKIEngineResource(reconcilerBase *ReconcilerBase, obj client.Object
 
 func (r *VaultPKIEngineResource) manageCleanUpLogic(context context.Context, instance client.Object) error {
 	log := log.FromContext(context)
-	if conditionAware, ok := instance.(utils.ConditionsAware); ok {
+	if conditionAware, ok := instance.(vaultutils.ConditionsAware); ok {
 		for _, condition := range conditionAware.GetConditions() {
 			if condition.Status == metav1.ConditionTrue && condition.Type == ReconcileSuccessful {
 				log.Info("DeleteIfExists", "Try to: ", instance)

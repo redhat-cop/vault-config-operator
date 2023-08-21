@@ -20,7 +20,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	"github.com/go-logr/logr"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -58,11 +58,13 @@ func IsOwner(owner, owned metav1.Object) bool {
 }
 
 type ReconcilerBase struct {
-	apireader  client.Reader
-	client     client.Client
-	scheme     *runtime.Scheme
-	restConfig *rest.Config
-	recorder   record.EventRecorder
+	apireader      client.Reader
+	client         client.Client
+	scheme         *runtime.Scheme
+	restConfig     *rest.Config
+	recorder       record.EventRecorder
+	Log            logr.Logger
+	ControllerName string
 }
 
 // GetClient returns the underlying client
@@ -90,24 +92,26 @@ func (r *ReconcilerBase) GetDiscoveryClient() (*discovery.DiscoveryClient, error
 	return discovery.NewDiscoveryClientForConfig(r.GetRestConfig())
 }
 
-func NewReconcilerBase(client client.Client, scheme *runtime.Scheme, restConfig *rest.Config, recorder record.EventRecorder, apireader client.Reader) ReconcilerBase {
+func NewReconcilerBase(client client.Client, scheme *runtime.Scheme, restConfig *rest.Config, recorder record.EventRecorder, apireader client.Reader, log logr.Logger, controllerName string) ReconcilerBase {
 	return ReconcilerBase{
-		apireader:  apireader,
-		client:     client,
-		scheme:     scheme,
-		restConfig: restConfig,
-		recorder:   recorder,
+		apireader:      apireader,
+		client:         client,
+		scheme:         scheme,
+		restConfig:     restConfig,
+		recorder:       recorder,
+		Log:            log,
+		ControllerName: controllerName,
 	}
 }
 
 // NewReconcilerBase is a contruction function to create a new ReconcilerBase.
-func NewFromManager(mgr manager.Manager, recorder record.EventRecorder) ReconcilerBase {
-	return NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), recorder, mgr.GetAPIReader())
+func NewFromManager(mgr manager.Manager, controllerName string) ReconcilerBase {
+	return NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor(controllerName), mgr.GetAPIReader(), mgr.GetLogger().WithName("controllers").WithName(controllerName), controllerName)
 }
 
 func ManageOutcomeWithRequeue(context context.Context, r ReconcilerBase, obj client.Object, issue error, requeueAfter time.Duration) (reconcile.Result, error) {
 	log := log.FromContext(context)
-	conditionsAware := (obj).(utils.ConditionsAware)
+	conditionsAware := (obj).(vaultutils.ConditionsAware)
 	var condition metav1.Condition
 	if issue == nil {
 		condition = metav1.Condition{
@@ -128,7 +132,7 @@ func ManageOutcomeWithRequeue(context context.Context, r ReconcilerBase, obj cli
 			Status:             metav1.ConditionFalse,
 		}
 	}
-	conditionsAware.SetConditions(utils.AddOrReplaceCondition(condition, conditionsAware.GetConditions()))
+	conditionsAware.SetConditions(vaultutils.AddOrReplaceCondition(condition, conditionsAware.GetConditions()))
 	err := r.GetClient().Status().Update(context, obj)
 	if err != nil {
 		log.Error(err, "unable to update status")
@@ -148,10 +152,6 @@ func ManageOutcomeWithRequeue(context context.Context, r ReconcilerBase, obj cli
 
 func ManageOutcome(context context.Context, r ReconcilerBase, obj client.Object, issue error) (reconcile.Result, error) {
 	return ManageOutcomeWithRequeue(context, r, obj, issue, 0)
-}
-
-func isValid(obj client.Object) (bool, error) {
-	return obj.(vaultutils.VaultObject).IsValid()
 }
 
 // ResourceGenerationChangedPredicate this predicate will fire an update event when the spec of a resource is changed (controller by ResourceGeneration), or when the finalizers are changed

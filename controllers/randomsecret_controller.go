@@ -21,8 +21,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/go-logr/logr"
-
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
@@ -40,8 +38,6 @@ import (
 // RandomSecretReconciler reconciles a RandomSecret object
 type RandomSecretReconciler struct {
 	vaultresourcecontroller.ReconcilerBase
-	Log            logr.Logger
-	ControllerName string
 }
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=randomsecrets,verbs=get;list;watch;create;update;patch;delete

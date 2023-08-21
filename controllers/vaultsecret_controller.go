@@ -27,7 +27,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/go-logr/logr"
 	//utilstemplates "github.com/redhat-cop/operator-utils/pkg/util/templates"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
@@ -57,8 +56,6 @@ const (
 // VaultSecretReconciler reconciles a VaultSecret object
 type VaultSecretReconciler struct {
 	vaultresourcecontroller.ReconcilerBase
-	Log            logr.Logger
-	ControllerName string
 }
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=vaultsecrets,verbs=get;list;watch;create;update;patch;delete

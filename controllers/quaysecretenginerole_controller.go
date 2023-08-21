@@ -25,7 +25,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	"github.com/go-logr/logr"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 )
@@ -33,8 +32,6 @@ import (
 // QuaySecretEngineRoleReconciler reconciles a QuaySecretEngineRole object
 type QuaySecretEngineRoleReconciler struct {
 	vaultresourcecontroller.ReconcilerBase
-	Log            logr.Logger
-	ControllerName string
 }
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=quaysecretengineroles,verbs=get;list;watch;create;update;patch;delete
