@@ -21,7 +21,6 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -140,7 +139,7 @@ func (fields *RMQSEConfig) rabbitMQToMap() map[string]interface{} {
 	return payload
 }
 
-var _ utils.ConditionsAware = &RabbitMQSecretEngineConfig{}
+var _ vaultutils.ConditionsAware = &RabbitMQSecretEngineConfig{}
 
 func (d *RabbitMQSecretEngineConfig) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection

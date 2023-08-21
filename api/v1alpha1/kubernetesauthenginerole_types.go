@@ -21,7 +21,6 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -57,7 +56,7 @@ type KubernetesAuthEngineRoleSpec struct {
 }
 
 var _ vaultutils.VaultObject = &KubernetesAuthEngineRole{}
-var _ utils.ConditionsAware = &KubernetesAuthEngineRole{}
+var _ vaultutils.ConditionsAware = &KubernetesAuthEngineRole{}
 
 func (d *KubernetesAuthEngineRole) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection

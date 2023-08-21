@@ -20,7 +20,6 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -129,7 +128,7 @@ type AuthMountConfig struct {
 
 var _ vaultutils.VaultObject = &AuthEngineMount{}
 var _ vaultutils.VaultEngineObject = &AuthEngineMount{}
-var _ utils.ConditionsAware = &AuthEngineMount{}
+var _ vaultutils.ConditionsAware = &AuthEngineMount{}
 
 func (mc *AuthMountConfig) toMap() map[string]interface{} {
 	return map[string]interface{}{

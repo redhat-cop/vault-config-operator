@@ -20,7 +20,6 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -53,7 +52,7 @@ type DatabaseSecretEngineRoleSpec struct {
 
 var _ vaultutils.VaultObject = &DatabaseSecretEngineRole{}
 
-var _ utils.ConditionsAware = &DatabaseSecretEngineRole{}
+var _ vaultutils.ConditionsAware = &DatabaseSecretEngineRole{}
 
 func (d *DatabaseSecretEngineRole) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection

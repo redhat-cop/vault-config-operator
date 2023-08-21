@@ -19,18 +19,19 @@ package controllers
 import (
 	"context"
 
-	"k8s.io/apimachinery/pkg/runtime"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 )
 
 // GroupAliasReconciler reconciles a GroupAlias object
 type GroupAliasReconciler struct {
-	client.Client
-	Scheme *runtime.Scheme
+	vaultresourcecontroller.ReconcilerBase
 }
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=groupalias,verbs=get;list;watch;create;update;patch;delete
@@ -49,14 +50,33 @@ type GroupAliasReconciler struct {
 func (r *GroupAliasReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	// Fetch the instance
+	instance := &redhatcopv1alpha1.GroupAlias{}
+	err := r.GetClient().Get(ctx, req.NamespacedName, instance)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			// Request object not found, could have been deleted after reconcile request.
+			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+			// Return and don't requeue
+			return reconcile.Result{}, nil
+		}
+		// Error reading the object - requeue the request.
+		return reconcile.Result{}, err
+	}
 
-	return ctrl.Result{}, nil
+	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
+	if err != nil {
+		r.Log.Error(err, "unable to prepare context", "instance", instance)
+		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
+	}
+	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
+
+	return vaultResource.Reconcile(ctx1, instance)
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *GroupAliasReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.GroupAlias{}).
+		For(&redhatcopv1alpha1.GroupAlias{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
 		Complete(r)
 }

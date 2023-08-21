@@ -20,7 +20,6 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -247,7 +246,7 @@ type JWTOIDCAuthEngineRoleList struct {
 }
 
 var _ vaultutils.VaultObject = &JWTOIDCAuthEngineRole{}
-var _ utils.ConditionsAware = &JWTOIDCAuthEngineRole{}
+var _ vaultutils.ConditionsAware = &JWTOIDCAuthEngineRole{}
 
 func init() {
 	SchemeBuilder.Register(&JWTOIDCAuthEngineRole{}, &JWTOIDCAuthEngineRoleList{})
