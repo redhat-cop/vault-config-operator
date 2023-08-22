@@ -30,9 +30,10 @@ import (
 	vault "github.com/hashicorp/vault/api"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/redhat-cop/operator-utils/pkg/util"
+
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	controllertestutils "github.com/redhat-cop/vault-config-operator/controllers/controllertestutils"
+	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -119,74 +120,88 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&VaultSecretReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("VaultSecret"), mgr.GetAPIReader()),
-		Log:            ctrl.Log.WithName("controllers").WithName("VaultSecret"),
-		ControllerName: "VaultSecret",
-	}).SetupWithManager(mgr)
+	err = (&controllers.KubernetesAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KubernetesAuthEngineRole")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&PasswordPolicyReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("PasswordPolicy"), mgr.GetAPIReader()),
-		Log:            ctrl.Log.WithName("controllers").WithName("PasswordPolicy"),
-		ControllerName: "PasswordPolicy",
-	}).SetupWithManager(mgr)
+	err = (&controllers.PolicyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "Policy")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&PolicyReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("Policy"), mgr.GetAPIReader()),
-		Log:            ctrl.Log.WithName("controllers").WithName("Policy"),
-		ControllerName: "Policy",
-	}).SetupWithManager(mgr)
+	err = (&controllers.DatabaseSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "DatabaseSecretEngineConfig")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&KubernetesAuthEngineRoleReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("KubernetesAuthEngineRole"), mgr.GetAPIReader()),
-		Log:            ctrl.Log.WithName("controllers").WithName("KubernetesAuthEngineRole"),
-		ControllerName: "KubernetesAuthEngineRole",
-	}).SetupWithManager(mgr)
+	err = (&controllers.DatabaseSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "DatabaseSecretEngineRole")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&SecretEngineMountReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("SecretEngineMount"), mgr.GetAPIReader()),
-		Log:            ctrl.Log.WithName("controllers").WithName("SecretEngineMount"),
-		ControllerName: "SecretEngineMount",
-	}).SetupWithManager(mgr)
+	err = (&controllers.SecretEngineMountReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "SecretEngineMount")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&RandomSecretReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("RandomSecret"), mgr.GetAPIReader()),
-		Log:            ctrl.Log.WithName("controllers").WithName("RandomSecret"),
-		ControllerName: "RandomSecret",
-	}).SetupWithManager(mgr)
+	err = (&controllers.RandomSecretReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RandomSecret")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&PKISecretEngineConfigReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("PKISecretEngineConfig"), mgr.GetAPIReader()),
-		Log:            ctrl.Log.WithName("controllers").WithName("PKISecretEngineConfig"),
-		ControllerName: "PKISecretEngineConfig",
-	}).SetupWithManager(mgr)
+	err = (&controllers.AuthEngineMountReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AuthEngineMount")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&PKISecretEngineRoleReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("PKISecretEngineRole"), mgr.GetAPIReader()),
-		Log:            ctrl.Log.WithName("controllers").WithName("PKISecretEngineRole"),
-		ControllerName: "PKISecretEngineRole",
-	}).SetupWithManager(mgr)
+	err = (&controllers.KubernetesAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KubernetesAuthEngineConfig")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&DatabaseSecretEngineConfigReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("DatabaseSecretEngineConfig"), mgr.GetAPIReader()),
-		Log:            ctrl.Log.WithName("controllers").WithName("DatabaseSecretEngineConfig"),
-		ControllerName: "DatabaseSecretEngineConfig",
-	}).SetupWithManager(mgr)
+	err = (&controllers.LDAPAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LDAPAuthEngineConfig")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&DatabaseSecretEngineStaticRoleReconciler{
-		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("DatabaseSecretEngineStaticRole"), mgr.GetAPIReader()),
-		Log:            ctrl.Log.WithName("controllers").WithName("DatabaseSecretEngineStaticRole"),
-		ControllerName: "DatabaseSecretEngineStaticRole",
-	}).SetupWithManager(mgr)
+	err = (&controllers.LDAPAuthEngineGroupReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LDAPAuthEngineGroup")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&controllers.JWTOIDCAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "JWTOIDCAuthEngineConfig")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&controllers.JWTOIDCAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "JWTOIDCAuthEngineRole")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&controllers.VaultSecretReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "VaultSecret")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&controllers.PasswordPolicyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "PasswordPolicy")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&controllers.RabbitMQSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RabbitMQSecretEngineConfig")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&controllers.RabbitMQSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RabbitMQSecretEngineRole")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&controllers.PKISecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "PKISecretEngineConfig")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&controllers.PKISecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "PKISecretEngineRole")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&controllers.GitHubSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GitHubSecretEngineConfig")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&controllers.GitHubSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GitHubSecretEngineRole")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&controllers.QuaySecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "QuaySecretEngineConfig")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&controllers.QuaySecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "QuaySecretEngineRole")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&controllers.QuaySecretEngineStaticRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "QuaySecretEngineStaticRole")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&controllers.KubernetesSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KubernetesSecretEngineConfig")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&controllers.KubernetesSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KubernetesSecretEngineRole")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&controllers.DatabaseSecretEngineStaticRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "DatabaseSecretEngineStaticRole")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&controllers.GroupReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "Group")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&controllers.GroupAliasReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GroupAlias")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
 	By(fmt.Sprintf("Creating the %v namespace", vaultAdminNamespaceName))
