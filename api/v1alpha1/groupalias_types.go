@@ -19,8 +19,10 @@ package v1alpha1
 import (
 	"context"
 	"errors"
+	"fmt"
 	"reflect"
 
+	vault "github.com/hashicorp/vault/api"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -109,7 +111,7 @@ func (d *GroupAlias) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *GroupAlias) GetPath() string {
-	return string("/identity/group-alias/id/" + d.Spec.retrievedAliasID)
+	return vaultutils.CleansePath("/identity/group-alias/id/" + d.Status.ID)
 }
 
 func (d *GroupAlias) GetPayload() map[string]interface{} {
@@ -154,9 +156,33 @@ func (d *GroupAlias) PrepareInternalValues(context context.Context, object clien
 		log.Error(err, "group not found", "name", d.Spec.GroupName)
 		return err
 	}
-	d.Spec.retrievedCanonicalID = secret.Data["name"].(string)
+	d.Spec.retrievedCanonicalID = secret.Data["id"].(string)
 
 	d.Spec.retrievedName = d.Name
+
+	if d.Status.ID == "" {
+		//we have to create the group alias as unfortunately this api is asymmetric
+		payload := map[string]interface{}{
+			"name":           d.Name,
+			"mount_accessor": d.Spec.retrievedMountAccessor,
+			"canonical_id":   d.Spec.retrievedCanonicalID,
+		}
+		log.V(1).Info("create group alias", "payload", payload)
+		vaultClient := context.Value("vaultClient").(*vault.Client)
+		result, err := vaultClient.Logical().Write("/identity/group-alias", payload)
+		if err != nil {
+			log.Error(err, "unable to create group alias", "group alias", d.Spec)
+			return err
+		}
+		d.Status.ID = result.Data["id"].(string)
+		kubeClient := context.Value("kubeClient").(client.Client)
+		err = kubeClient.Status().Update(context, d, &client.SubResourceUpdateOptions{})
+		if err != nil {
+			log.Error(err, "unable to update group alias status, your kube and vault systems may now be inconsistent", "instance", d)
+			return err
+		}
+	}
+
 	d.Spec.retrievedAliasID = d.Status.ID
 	return nil
 }
@@ -171,5 +197,13 @@ func (d *GroupAlias) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguratio
 
 func (d *GroupAlias) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.toMap()
+	delete(payload, "creation_time")
+	delete(payload, "last_update_time")
+	delete(payload, "merged_from_canonical_ids")
+	delete(payload, "metadata")
+	delete(payload, "mount_path")
+	delete(payload, "mount_type")
+	fmt.Print("desired state", desiredState)
+	fmt.Print("actual state", payload)
 	return reflect.DeepEqual(desiredState, payload)
 }

@@ -1,0 +1,16 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GroupAlias
+metadata:
+  labels:
+    app.kubernetes.io/name: groupalias
+    app.kubernetes.io/instance: groupalias-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: groupalias-sample
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  authEngineMountPath: kubernetes
+  groupName: group-sample  

@@ -34,9 +34,9 @@ type GroupAliasReconciler struct {
 	vaultresourcecontroller.ReconcilerBase
 }
 
-//+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=groupalias,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=groupalias/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=groupalias/finalizers,verbs=update
+//+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=groupaliases,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=groupaliases/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=groupaliases/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

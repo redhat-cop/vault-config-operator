@@ -29,10 +29,10 @@ resources:
 - bases/redhatcop.redhat.io_jwtoidcauthengineroles.yaml
 - bases/redhatcop.redhat.io_databasesecretenginestaticroles.yaml
 - bases/redhatcop.redhat.io_groups.yaml
-- bases/redhatcop.redhat.io_groupalias.yaml
+- bases/redhatcop.redhat.io_groupaliases.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
-patchesStrategicMerge:
+patchesStrategicMerge: []
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
 # patches here are for enabling the conversion webhook for each CRD
 # - patches/webhook_in_policies.yaml

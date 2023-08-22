@@ -537,6 +537,15 @@ envsubst < ./test/github-secret-engine-role.yaml | oc apply -f - -n vault-admin
 vault read -tls-skip-verify github/raf-backstage-demo/token/one-repo-only
 ```
 
+Test groups and group aliases
+
+note we just want to very that the group is created in vault, we are not actually setting up a complete authentication workflow. Refer to the jwtoidcauthengine for that.
+
+```sh
+oc apply -f ./test/groups/group.yaml -n vault-admin
+oc apply -f ./test/groups/groupalias.yaml -n vault-admin
+```
+
 ### Test helm chart locally
 
 #### Run the automated helmchart test

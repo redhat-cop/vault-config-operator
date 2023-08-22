@@ -14,7 +14,7 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
-  - groupalias
+  - groupaliases
   verbs:
   - create
   - delete
@@ -26,6 +26,6 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
-  - groupalias/status
+  - groupaliases/status
   verbs:
   - get
