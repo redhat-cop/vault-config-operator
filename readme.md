@@ -8,6 +8,7 @@
   - [Policy management](#policy-management)
   - [Secret Engines](#secret-engines)
   - [Secret Management](#secret-management)
+  - [Identities](#identities)
   - [The common authentication section](#the-common-authentication-section)
   - [The common connection section](#the-common-connection-section)
   - [End to end example](#end-to-end-example)
@@ -81,6 +82,11 @@ Currently this operator covers the following Vault APIs:
 
 1. [RandomSecret](./docs/secret-management.md#RandomSecret) Creates a random secret in a vault [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv) with one password field generated using a [PasswordPolicy](https://www.vaultproject.io/docs/concepts/password-policies)
 2. [VaultSecret](./docs/secret-management.md#VaultSecret) Creates a K8s Secret from one or more Vault Secrets
+
+## Identities
+
+1. [Group](./docs/identities.md#Group) Creates a [Vault Group](https://developer.hashicorp.com/vault/docs/concepts/identity#identity-groups).
+2. [GroupAlias](./docs/identities.md#GroupAlias) Creates a [Vault GroupAlias](https://developer.hashicorp.com/vault/api-docs/secret/identity/group-alias).
 
 ## The common authentication section
 

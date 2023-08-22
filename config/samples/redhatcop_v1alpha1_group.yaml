@@ -9,4 +9,11 @@ metadata:
     app.kubernetes.io/created-by: vault-config-operator
   name: group-sample
 spec:
-  # TODO(user): Add fields here
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  type: external
+  metadata: 
+    team: team-abc
+  policies: 
+  - team-abc-access
