@@ -56,6 +56,7 @@ type KubernetesAuthEngineRoleSpec struct {
 }
 
 var _ vaultutils.VaultObject = &KubernetesAuthEngineRole{}
+var _ vaultutils.ConditionsAware = &KubernetesAuthEngineRole{}
 
 func (d *KubernetesAuthEngineRole) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection

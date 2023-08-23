@@ -53,6 +53,7 @@ type LDAPAuthEngineGroupSpec struct {
 }
 
 var _ vaultutils.VaultObject = &LDAPAuthEngineGroup{}
+var _ vaultutils.ConditionsAware = &LDAPAuthEngineGroup{}
 
 func (d *LDAPAuthEngineGroup) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection

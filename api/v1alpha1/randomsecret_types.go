@@ -80,6 +80,7 @@ type RandomSecretSpec struct {
 const ttlKey string = "ttl"
 
 var _ vaultutils.VaultObject = &RandomSecret{}
+var _ vaultutils.ConditionsAware = &RandomSecret{}
 
 func (d *RandomSecret) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection

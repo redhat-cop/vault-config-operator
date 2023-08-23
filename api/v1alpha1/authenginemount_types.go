@@ -128,6 +128,7 @@ type AuthMountConfig struct {
 
 var _ vaultutils.VaultObject = &AuthEngineMount{}
 var _ vaultutils.VaultEngineObject = &AuthEngineMount{}
+var _ vaultutils.ConditionsAware = &AuthEngineMount{}
 
 func (mc *AuthMountConfig) toMap() map[string]interface{} {
 	return map[string]interface{}{

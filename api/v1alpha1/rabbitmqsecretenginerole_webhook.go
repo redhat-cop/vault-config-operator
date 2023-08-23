@@ -23,6 +23,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // log is for logging in this package.
@@ -49,28 +50,28 @@ func (r *RabbitMQSecretEngineRole) Default() {
 var _ webhook.Validator = &RabbitMQSecretEngineRole{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *RabbitMQSecretEngineRole) ValidateCreate() error {
+func (r *RabbitMQSecretEngineRole) ValidateCreate() (admission.Warnings, error) {
 	rabbitmqsecretenginerolelog.Info("validate create", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
-	return nil
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *RabbitMQSecretEngineRole) ValidateUpdate(old runtime.Object) error {
+func (r *RabbitMQSecretEngineRole) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	rabbitmqsecretenginerolelog.Info("validate update", "name", r.Name)
 
 	// the path cannot be updated
 	if r.Spec.Path != old.(*RabbitMQSecretEngineRole).Spec.Path {
-		return errors.New("spec.path cannot be updated")
+		return nil, errors.New("spec.path cannot be updated")
 	}
-	return nil
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *RabbitMQSecretEngineRole) ValidateDelete() error {
+func (r *RabbitMQSecretEngineRole) ValidateDelete() (admission.Warnings, error) {
 	rabbitmqsecretenginerolelog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
+	return nil, nil
 }

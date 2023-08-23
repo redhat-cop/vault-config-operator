@@ -21,6 +21,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // log is for logging in this package.
@@ -49,19 +50,19 @@ func (r *VaultSecret) Default() {
 var _ webhook.Validator = &VaultSecret{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *VaultSecret) ValidateCreate() error {
+func (r *VaultSecret) ValidateCreate() (admission.Warnings, error) {
 	vaultsecretlog.Info("validate create", "name", r.Name)
-	return r.isValid()
+	return nil, r.isValid()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *VaultSecret) ValidateUpdate(old runtime.Object) error {
+func (r *VaultSecret) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	vaultsecretlog.Info("validate update", "name", r.Name)
-	return r.isValid()
+	return nil, r.isValid()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *VaultSecret) ValidateDelete() error {
+func (r *VaultSecret) ValidateDelete() (admission.Warnings, error) {
 	vaultsecretlog.Info("validate delete", "name", r.Name)
-	return nil
+	return nil, nil
 }

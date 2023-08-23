@@ -51,6 +51,7 @@ type PKISecretEngineRoleSpec struct {
 }
 
 var _ vaultutils.VaultObject = &PKISecretEngineRole{}
+var _ vaultutils.ConditionsAware = &PKISecretEngineRole{}
 
 func (d *PKISecretEngineRole) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection

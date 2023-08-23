@@ -7,6 +7,7 @@ KUBECTL_VERSION ?= v1.25.3
 K8S_MAJOR_VERSION ?= 1.25
 VAULT_VERSION ?= 1.12.2
 
+
 # VERSION defines the project version for the bundle.
 # Update this value when you upgrade the version of your project.
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
@@ -60,7 +61,7 @@ IMG ?= controller:latest
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION = 1.25.0
+ENVTEST_K8S_VERSION ?= 1.26.0
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -167,7 +168,7 @@ ldap-setup: kind-setup vault
 ##@ Build
 
 .PHONY: build
-build: generate fmt vet ## Build manager binary.
+build: manifests generate fmt vet ## Build manager binary.
 	go build -o bin/manager main.go
 
 .PHONY: run

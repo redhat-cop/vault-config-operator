@@ -168,6 +168,7 @@ type JWTOIDCConfig struct {
 }
 
 var _ vaultutils.VaultObject = &JWTOIDCAuthEngineConfig{}
+var _ vaultutils.ConditionsAware = &JWTOIDCAuthEngineConfig{}
 
 func (d *JWTOIDCAuthEngineConfig) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection

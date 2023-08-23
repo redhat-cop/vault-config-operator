@@ -22,7 +22,6 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -134,7 +133,7 @@ func (i *DBSEStaticRole) toMap() map[string]interface{} {
 
 var _ vaultutils.VaultObject = &DatabaseSecretEngineStaticRole{}
 
-var _ apis.ConditionsAware = &DatabaseSecretEngineStaticRole{}
+var _ vaultutils.ConditionsAware = &DatabaseSecretEngineStaticRole{}
 
 func (d *DatabaseSecretEngineStaticRole) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection

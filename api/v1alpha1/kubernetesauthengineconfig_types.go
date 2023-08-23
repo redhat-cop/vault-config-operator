@@ -71,6 +71,7 @@ func (d *KubernetesAuthEngineConfig) IsEquivalentToDesiredState(payload map[stri
 }
 
 var _ vaultutils.VaultObject = &KubernetesAuthEngineConfig{}
+var _ vaultutils.ConditionsAware = &KubernetesAuthEngineConfig{}
 
 func (d *KubernetesAuthEngineConfig) IsInitialized() bool {
 	return true

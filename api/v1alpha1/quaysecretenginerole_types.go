@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"reflect"
 
-	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -132,7 +131,7 @@ type QuaySecretEngineRoleStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
-var _ apis.ConditionsAware = &QuaySecretEngineRole{}
+var _ vaultutils.ConditionsAware = &QuaySecretEngineRole{}
 
 func (q *QuaySecretEngineRole) GetConditions() []metav1.Condition {
 	return q.Status.Conditions

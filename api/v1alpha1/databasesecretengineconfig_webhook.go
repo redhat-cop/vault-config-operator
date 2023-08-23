@@ -23,6 +23,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // log is for logging in this package.
@@ -51,20 +52,20 @@ func (r *DatabaseSecretEngineConfig) Default() {
 var _ webhook.Validator = &DatabaseSecretEngineConfig{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseSecretEngineConfig) ValidateCreate() error {
+func (r *DatabaseSecretEngineConfig) ValidateCreate() (admission.Warnings, error) {
 	databasesecretengineconfiglog.Info("validate create", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
-	return r.isValid()
+	return nil, r.isValid()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseSecretEngineConfig) ValidateUpdate(old runtime.Object) error {
+func (r *DatabaseSecretEngineConfig) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	databasesecretengineconfiglog.Info("validate update", "name", r.Name)
 
 	// the path cannot be updated
 	if r.Spec.Path != old.(*DatabaseSecretEngineConfig).Spec.Path {
-		return errors.New("spec.path cannot be updated")
+		return nil, errors.New("spec.path cannot be updated")
 	}
 	//connection_url, username and verify_connection cannot be changed because they cannot be compare with the actual.
 	// if r.Spec.ConnectionURL != old.(*DatabaseSecretEngineConfig).Spec.ConnectionURL {
@@ -76,13 +77,13 @@ func (r *DatabaseSecretEngineConfig) ValidateUpdate(old runtime.Object) error {
 	// if r.Spec.VerifyConnection != old.(*DatabaseSecretEngineConfig).Spec.VerifyConnection {
 	// 	return errors.New("spec.verifyConnection cannot be updated")
 	// }
-	return r.isValid()
+	return nil, r.isValid()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseSecretEngineConfig) ValidateDelete() error {
+func (r *DatabaseSecretEngineConfig) ValidateDelete() (admission.Warnings, error) {
 	databasesecretengineconfiglog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
+	return nil, nil
 }

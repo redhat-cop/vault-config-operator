@@ -30,6 +30,7 @@ import (
 
 var _ vaultutils.VaultObject = &SecretEngineMount{}
 var _ vaultutils.VaultEngineObject = &SecretEngineMount{}
+var _ vaultutils.ConditionsAware = &SecretEngineMount{}
 
 func (d *SecretEngineMount) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection

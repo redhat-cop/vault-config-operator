@@ -19,8 +19,6 @@ package controllers
 import (
 	"context"
 
-	"github.com/go-logr/logr"
-	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
@@ -36,9 +34,7 @@ import (
 
 // RabbitMQSecretEngineConfigReconciler reconciles a RabbitMQSecretEngineConfig object
 type RabbitMQSecretEngineConfigReconciler struct {
-	util.ReconcilerBase
-	Log            logr.Logger
-	ControllerName string
+	vaultresourcecontroller.ReconcilerBase
 }
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=rabbitmqsecretengineconfigs,verbs=get;list;watch;create;update;patch;delete
@@ -79,7 +75,7 @@ func (r *RabbitMQSecretEngineConfigReconciler) Reconcile(ctx context.Context, re
 		r.Log.Error(err, "unable to prepare context", "instance", instance)
 		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 	}
-	if util.IsBeingDeleted(instance) {
+	if !instance.DeletionTimestamp.IsZero() {
 		// No resources supported for deletion.
 		return reconcile.Result{}, nil
 	}
@@ -90,7 +86,7 @@ func (r *RabbitMQSecretEngineConfigReconciler) Reconcile(ctx context.Context, re
 		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 	}
 
-	return r.ManageSuccess(ctx1, instance)
+	return vaultresourcecontroller.ManageOutcome(ctx1, r.ReconcilerBase, instance, nil)
 }
 
 func (r *RabbitMQSecretEngineConfigReconciler) manageReconcileLogic(context context.Context, instance client.Object) error {

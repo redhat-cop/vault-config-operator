@@ -70,6 +70,7 @@ func (d *LDAPAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]int
 }
 
 var _ vaultutils.VaultObject = &LDAPAuthEngineConfig{}
+var _ vaultutils.ConditionsAware = &LDAPAuthEngineConfig{}
 
 func (d *LDAPAuthEngineConfig) IsInitialized() bool {
 	return true

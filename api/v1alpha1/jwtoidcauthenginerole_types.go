@@ -246,6 +246,7 @@ type JWTOIDCAuthEngineRoleList struct {
 }
 
 var _ vaultutils.VaultObject = &JWTOIDCAuthEngineRole{}
+var _ vaultutils.ConditionsAware = &JWTOIDCAuthEngineRole{}
 
 func init() {
 	SchemeBuilder.Register(&JWTOIDCAuthEngineRole{}, &JWTOIDCAuthEngineRoleList{})

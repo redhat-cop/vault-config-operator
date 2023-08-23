@@ -23,7 +23,6 @@ import (
 	"reflect"
 
 	vault "github.com/hashicorp/vault/api"
-	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -477,7 +476,7 @@ type PKISecretEngineConfigStatus struct {
 	Signed bool `json:"signed,omitempty"`
 }
 
-var _ apis.ConditionsAware = &PKISecretEngineConfig{}
+var _ vaultutils.ConditionsAware = &PKISecretEngineConfig{}
 
 func (m *PKISecretEngineConfig) GetConditions() []metav1.Condition {
 	return m.Status.Conditions

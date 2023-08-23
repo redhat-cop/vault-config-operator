@@ -21,6 +21,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // log is for logging in this package.
@@ -46,22 +47,22 @@ func (r *LDAPAuthEngineGroup) Default() {
 var _ webhook.Validator = &LDAPAuthEngineGroup{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *LDAPAuthEngineGroup) ValidateCreate() error {
+func (r *LDAPAuthEngineGroup) ValidateCreate() (admission.Warnings, error) {
 	ldapauthenginegrouplog.Info("validate create", "name", r.Name)
 
-	return nil
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *LDAPAuthEngineGroup) ValidateUpdate(old runtime.Object) error {
+func (r *LDAPAuthEngineGroup) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	ldapauthenginegrouplog.Info("validate update", "name", r.Name)
 
-	return nil
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *LDAPAuthEngineGroup) ValidateDelete() error {
+func (r *LDAPAuthEngineGroup) ValidateDelete() (admission.Warnings, error) {
 	ldapauthenginegrouplog.Info("validate delete", "name", r.Name)
 
-	return nil
+	return nil, nil
 }

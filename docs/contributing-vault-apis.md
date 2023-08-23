@@ -17,9 +17,14 @@ Here are the steps:
   
   ```golang
     type MyVaultTypeSpec struct {
+
+    // Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
+    // +kubebuilder:validation:Optional
+    Connection *vaultutils.VaultConnection `json:"connection,omitempty"`      
+
     // Authentication is the kube aoth configuraiton to be used to execute this request
     // +kubebuilder:validation:Required
-    Authentication KubeAuthConfiguration `json:"authentication,omitempty"`
+    Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
     // Path at which to create the role.
     // The final path will be {[spec.authentication.namespace]}/{spec.path}/roles/{metadata.name}.
@@ -44,10 +49,10 @@ Here are the steps:
 
   then add the required methods. If you have special treatment field use the `PrepareInternalValues` method to initialze those fields.
 
-4. Implements the `apis.ConditionsAware` interface
+4. Implements the `vaultutils.ConditionsAware` interface
   
    ```golang
-   var _ apis.ConditionsAware = &MyVaultType{}
+   var _ vaultutils.ConditionsAware = &MyVaultType{}
    ```
 
 5. Add needed validation and defaulting to the webhook. Notice that all the resources will need to prevent the path from being changed in the valitating webhooks:
@@ -68,42 +73,43 @@ Here are the steps:
   }
   ```
 
-6. Implement the controller, under normal circumstances this should be straightfornad, just use this code:
+6. Implement the controller, under normal circumstances this should be straightforward, just use this code:
 
   ```golang
     type MyVaultTypeReconciler struct {
-      util.ReconcilerBase
-      Log            logr.Logger
-      ControllerName string
+      vaultresourcecontroller.ReconcilerBase
     }
 
     func (r *MyVaultTypeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
       _ = log.FromContext(ctx)
+
+      // Fetch the instance
       instance := &redhatcopv1alpha1.MyVaultType{}
       err := r.GetClient().Get(ctx, req.NamespacedName, instance)
       if err != nil {
         if apierrors.IsNotFound(err) {
+          // Request object not found, could have been deleted after reconcile request.
+          // Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+          // Return and don't requeue
           return reconcile.Result{}, nil
         }
+        // Error reading the object - requeue the request.
         return reconcile.Result{}, err
       }
 
-      ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
-	    ctx = context.WithValue(ctx, "restConfig", r.GetRestConfig())      
-      vaultClient, err := instance.Spec.Authentication.GetVaultClient(ctx, instance.Namespace)
+      ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
       if err != nil {
-        r.Log.Error(err, "unable to create vault client", "instance", instance)
-        return r.ManageError(ctx, instance, err)
+        r.Log.Error(err, "unable to prepare context", "instance", instance)
+        return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
       }
-      ctx = context.WithValue(ctx, "vaultClient", vaultClient)
       vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
 
-      return vaultResource.Reconcile(ctx, instance)
+      return vaultResource.Reconcile(ctx1, instance)
     }
 
     func (r *MyVaultTypeReconciler) SetupWithManager(mgr ctrl.Manager) error {
       return ctrl.NewControllerManagedBy(mgr).
-        For(&redhatcopv1alpha1.MyVaultType{}).
+        For(&redhatcopv1alpha1.MyVaultType{},builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
         Complete(r)
     }
   ```
@@ -111,12 +117,16 @@ Here are the steps:
 7. On the `main.go` update the controller reconciler to use the new operator util structur.
 
   ```golang
-  	if err = (&controllers.MyVaultTypeReconciler{
-      ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("MyVaultType"), mgr.GetAPIReader()),
-      Log:            ctrl.Log.WithName("controllers").WithName("MyVaultType"),
-      ControllerName: "MyVaultType",
-    }).SetupWithManager(mgr); err != nil {
-      setupLog.Error(err, "unable to create controller", "controller", "MyVaultType")
-      os.Exit(1)
-    }
+	if err = (&controllers.MyVaultTypeReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "MyVaultType")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "MyVaultType")
+		os.Exit(1)
+	}  
+  ...
+
+  if webhooks, ok := os.LookupEnv("ENABLE_WEBHOOKS"); !ok || webhooks != "false" {
+  ...
+  	if err = (&redhatcopv1alpha1.MyVaultType{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "RandomSecret")
+			os.Exit(1)
+		}
   ```

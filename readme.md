@@ -8,6 +8,7 @@
   - [Policy management](#policy-management)
   - [Secret Engines](#secret-engines)
   - [Secret Management](#secret-management)
+  - [Identities](#identities)
   - [The common authentication section](#the-common-authentication-section)
   - [The common connection section](#the-common-connection-section)
   - [End to end example](#end-to-end-example)
@@ -81,6 +82,11 @@ Currently this operator covers the following Vault APIs:
 
 1. [RandomSecret](./docs/secret-management.md#RandomSecret) Creates a random secret in a vault [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv) with one password field generated using a [PasswordPolicy](https://www.vaultproject.io/docs/concepts/password-policies)
 2. [VaultSecret](./docs/secret-management.md#VaultSecret) Creates a K8s Secret from one or more Vault Secrets
+
+## Identities
+
+1. [Group](./docs/identities.md#Group) Creates a [Vault Group](https://developer.hashicorp.com/vault/docs/concepts/identity#identity-groups).
+2. [GroupAlias](./docs/identities.md#GroupAlias) Creates a [Vault GroupAlias](https://developer.hashicorp.com/vault/api-docs/secret/identity/group-alias).
 
 ## The common authentication section
 
@@ -535,6 +541,15 @@ envsubst < ./test/github-secret-engine-config.yaml | oc apply -f - -n vault-admi
 vault write -tls-skip-verify github/raf-backstage-demo/token org_name=${org_name}
 envsubst < ./test/github-secret-engine-role.yaml | oc apply -f - -n vault-admin
 vault read -tls-skip-verify github/raf-backstage-demo/token/one-repo-only
+```
+
+Test groups and group aliases
+
+note we just want to very that the group is created in vault, we are not actually setting up a complete authentication workflow. Refer to the jwtoidcauthengine for that.
+
+```sh
+oc apply -f ./test/groups/group.yaml -n vault-admin
+oc apply -f ./test/groups/groupalias.yaml -n vault-admin
 ```
 
 ### Test helm chart locally

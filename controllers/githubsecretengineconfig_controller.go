@@ -32,19 +32,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	"github.com/go-logr/logr"
-	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 )
 
 // GitHubSecretEngineConfigReconciler reconciles a GitHubSecretEngineConfig object
 type GitHubSecretEngineConfigReconciler struct {
-	util.ReconcilerBase
-	Log            logr.Logger
-	ControllerName string
+	vaultresourcecontroller.ReconcilerBase
 }
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=githubsecretengineconfigs,verbs=get;list;watch;create;update;patch;delete
@@ -124,14 +119,14 @@ func (r *GitHubSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) 
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&redhatcopv1alpha1.GitHubSecretEngineConfig{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
-		Watches(&source.Kind{Type: &corev1.Secret{
+		Watches(&corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Secret",
 			},
-		}}, handler.EnqueueRequestsFromMapFunc(func(a client.Object) []reconcile.Request {
+		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			s := a.(*corev1.Secret)
-			dbsecs, err := r.findApplicableGHSCForSecret(s)
+			dbsecs, err := r.findApplicableGHSCForSecret(ctx, s)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable github SecretEngines for namespace", "namespace", s.Name)
 				return []reconcile.Request{}
@@ -149,10 +144,10 @@ func (r *GitHubSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) 
 		Complete(r)
 }
 
-func (r *GitHubSecretEngineConfigReconciler) findApplicableGHSCForSecret(secret *corev1.Secret) ([]redhatcopv1alpha1.GitHubSecretEngineConfig, error) {
+func (r *GitHubSecretEngineConfigReconciler) findApplicableGHSCForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.GitHubSecretEngineConfig, error) {
 	result := []redhatcopv1alpha1.GitHubSecretEngineConfig{}
 	vrl := &redhatcopv1alpha1.GitHubSecretEngineConfigList{}
-	err := r.GetClient().List(context.TODO(), vrl, &client.ListOptions{
+	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: secret.Namespace,
 	})
 	if err != nil {
