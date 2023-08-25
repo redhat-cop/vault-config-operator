@@ -64,12 +64,10 @@ type AuthMount struct {
 
 	// Local Specifies if the auth method is local only. Local auth methods are not replicated nor (if a secondary) removed by replication. Logins via local auth methods do not make use of identity, i.e. no entity or groups will be attached to the token.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=true
 	Local bool `json:"local,omitempty"`
 
 	// SealWrap Enable seal wrapping for the mount, causing values stored by the mount to be wrapped by the seal's encryption capability.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=true
 	SealWrap bool `json:"sealwrap,omitempty"`
 }
 
