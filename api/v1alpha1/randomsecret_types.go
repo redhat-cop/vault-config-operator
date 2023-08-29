@@ -87,21 +87,7 @@ func (d *RandomSecret) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *RandomSecret) GetPath() string {
-
-	var path string = strings.TrimSpace(string(d.Spec.Path))
-	var sb strings.Builder
-
-	sb.WriteString(path)
-
-	const kvV2PathSuffix string = "/data"
-	if d.IsKVSecretsEngineV2() && !strings.HasSuffix(path, kvV2PathSuffix) {
-		sb.WriteString(kvV2PathSuffix)
-	}
-
-	sb.WriteByte('/')
-	sb.WriteString(d.Name)
-
-	return sb.String()
+	return string(d.Spec.Path) + "/" + d.Name
 }
 
 func (d *RandomSecret) getV1Payload() map[string]interface{} {
@@ -311,6 +297,7 @@ func (r *RandomSecret) isValid() error {
 	result = multierror.Append(result, r.validateEitherPasswordPolicyReferenceOrInline())
 	result = multierror.Append(result, r.validateInlinePasswordPolicyFormat())
 	result = multierror.Append(result, r.validateSecretKey())
+	result = multierror.Append(result, r.validateKVv2DataInPath())
 	return result.ErrorOrNil()
 }
 
@@ -349,4 +336,11 @@ func (r *RandomSecret) validateSecretKey() error {
 
 func (d *RandomSecret) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
+}
+
+func (r *RandomSecret) validateKVv2DataInPath() error {
+	if r.IsKVSecretsEngineV2() && !strings.Contains("/data/", r.GetPath()) {
+		return errors.New("KVv2 secrets must have /data defined in the path, for example /secret-mount-path/data/path")
+	}
+	return nil
 }
