@@ -22,7 +22,6 @@ import (
 	"reflect"
 
 	vault "github.com/hashicorp/vault/api"
-	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -48,7 +47,7 @@ type GitHubSecretEngineConfigSpec struct {
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
-	// The final path will be {[spec.authentication.namespace]}/{spec.path}/config.
+	// The final path in Vault will be {[spec.authentication.namespace]}/{spec.path}/config.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
@@ -167,7 +166,7 @@ type GitHubSecretEngineConfigStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
-var _ apis.ConditionsAware = &GitHubSecretEngineConfig{}
+var _ vaultutils.ConditionsAware = &GitHubSecretEngineConfig{}
 
 func (m *GitHubSecretEngineConfig) GetConditions() []metav1.Condition {
 	return m.Status.Conditions

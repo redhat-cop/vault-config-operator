@@ -19,8 +19,12 @@ package utils
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os"
 	"strings"
+	"sync"
 
+	"github.com/go-logr/logr"
 	vault "github.com/hashicorp/vault/api"
 	authv1 "k8s.io/api/authentication/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -30,6 +34,26 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
+
+// ConditionsAware represents a CRD type that has been enabled with metav1.Conditions, it can then benefit of a series of utility methods.
+type ConditionsAware interface {
+	GetConditions() []metav1.Condition
+	SetConditions(conditions []metav1.Condition)
+}
+
+// AddOrReplaceCondition adds or replaces the passed condition in the passed array of conditions
+func AddOrReplaceCondition(c metav1.Condition, conditions []metav1.Condition) []metav1.Condition {
+	for i, condition := range conditions {
+		if c.Type == condition.Type {
+			conditions[i] = c
+			return conditions
+		}
+	}
+	conditions = append(conditions, c)
+	return conditions
+}
+
+var vaultClientCache = VaultClientCache{}
 
 // +kubebuilder:object:generate=true
 // +kubebuilder:validation:Pattern:=`^(?:/?[\w;:@&=\$-\.\+]*)+/?`
@@ -74,6 +98,10 @@ type VaultConnection struct {
 	MaxRetries *int `json:"maxRetries,omitempty"`
 }
 
+type VaultClientCache struct {
+	clients sync.Map
+}
+
 // +kubebuilder:object:generate=true
 type TLSConfig struct {
 	// Cacert Path to a PEM-encoded CA certificate file on the local disk. This file is used to verify the Vault server's SSL certificate. This environment variable takes precedence over a cert passed via the secret.
@@ -91,6 +119,22 @@ type TLSConfig struct {
 	// TLSServerName Name to use as the SNI host when connecting via TLS.
 	// +kubebuilder:validation:Optional
 	TLSServerName *string `json:"tlsServerName,omitempty"`
+}
+
+func (cache *VaultClientCache) Get(kc *KubeAuthConfiguration, kubeNamespace string) *vault.Client {
+	if client, ok := cache.clients.Load(kc.getCacheKey(kubeNamespace)); ok {
+		return client.(*vault.Client)
+	}
+
+	return nil
+}
+
+func (cache *VaultClientCache) Put(kc *KubeAuthConfiguration, kubeNamespace string, client *vault.Client) {
+	cache.clients.Store(kc.getCacheKey(kubeNamespace), client)
+}
+
+func (cache *VaultClientCache) Delete(kc *KubeAuthConfiguration, kubeNamespace string) {
+	cache.clients.Delete(kc.getCacheKey(kubeNamespace))
 }
 
 func (vc *VaultConnection) getConnectionConfig(context context.Context, kubeNamespace string) (*vault.Config, error) {
@@ -153,17 +197,40 @@ func (kc *KubeAuthConfiguration) GetServiceAccountName() string {
 	return kc.ServiceAccount.Name
 }
 
+func (kc *KubeAuthConfiguration) getCacheKey(kubeNamespace string) string {
+	return fmt.Sprintf("%s:%s:%s:%s:%s", kubeNamespace, kc.ServiceAccount.Name, kc.Path, kc.Role, kc.Namespace)
+}
+
 func (kc *KubeAuthConfiguration) GetVaultClient(context context.Context, kubeNamespace string) (*vault.Client, error) {
 	log := log.FromContext(context)
+
+	var vaultClient *vault.Client
+
+	if cacheVaultToken, ok := os.LookupEnv("CACHE_VAULT_TOKEN"); ok && cacheVaultToken == "true" {
+		vaultClient := vaultClientCache.Get(kc, kubeNamespace)
+		if vaultClient != nil {
+			// Check if the client's token is still valid.
+			_, err := vaultClient.Auth().Token().LookupSelf()
+			if err == nil {
+				log.V(1).Info("Returning cached client")
+				return vaultClient, nil
+			}
+		}
+	}
+
 	jwt, err := kc.getJWTToken(context, kubeNamespace)
 	if err != nil {
 		log.Error(err, "unable to retrieve jwt token for", "namespace", kubeNamespace, "serviceaccount", kc.GetServiceAccountName())
 		return nil, err
 	}
-	vaultClient, err := kc.createVaultClient(context, jwt, kubeNamespace)
+	vaultClient, err = kc.createVaultClient(context, jwt, kubeNamespace)
 	if err != nil {
 		log.Error(err, "unable to create vault client")
 		return nil, err
+	}
+
+	if cacheVaultToken, ok := os.LookupEnv("CACHE_VAULT_TOKEN"); !ok || cacheVaultToken == "true" {
+		vaultClientCache.Put(kc, kubeNamespace, vaultClient)
 	}
 	return vaultClient, nil
 }
@@ -207,6 +274,7 @@ func (kc *KubeAuthConfiguration) getJWTToken(context context.Context, kubeNamesp
 
 func (kc *KubeAuthConfiguration) createVaultClient(context context.Context, jwt string, namespace string) (*vault.Client, error) {
 	log := log.FromContext(context)
+	log.V(1).Info("Creating new client")
 	vaultConnection := context.Value("vaultConnection").(*VaultConnection)
 	var config *vault.Config
 	if vaultConnection != nil {
@@ -239,8 +307,41 @@ func (kc *KubeAuthConfiguration) createVaultClient(context context.Context, jwt 
 	}
 
 	client.SetToken(secret.Auth.ClientToken)
+	if cacheVaultToken, ok := os.LookupEnv("CACHE_VAULT_TOKEN"); ok && cacheVaultToken == "true" {
+		go kc.startLifetimeWatcher(client, namespace, secret, log)
+	}
 
 	return client, nil
+}
+
+// If the TTL for the token is less than its lease duration, the lifetime watcher renews the token until
+// its lease expires.
+func (kc *KubeAuthConfiguration) startLifetimeWatcher(client *vault.Client, kubeNamespace string, secret *vault.Secret, log logr.Logger) {
+	watcher, err := client.NewLifetimeWatcher(&vault.LifetimeWatcherInput{
+		Secret: secret,
+	})
+
+	if err != nil {
+		log.Error(err, "Unable to start lifetime watcher.")
+	}
+
+	go watcher.Start()
+	defer watcher.Stop()
+
+	for {
+		select {
+		case err := <-watcher.DoneCh():
+			if err != nil {
+				log.Error(err, "error while renewing token")
+			}
+
+			log.Info("Deleting cached client")
+			vaultClientCache.Delete(kc, kubeNamespace)
+		case renewal := <-watcher.RenewCh():
+			log.Info(fmt.Sprintf("Successfully renewed token: %#v", renewal))
+		}
+
+	}
 }
 
 func CleansePath(path string) string {

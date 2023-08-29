@@ -27,9 +27,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/go-logr/logr"
-	"github.com/redhat-cop/operator-utils/pkg/util"
-	utilstemplates "github.com/redhat-cop/operator-utils/pkg/util/templates"
+	//utilstemplates "github.com/redhat-cop/operator-utils/pkg/util/templates"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -38,6 +36,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -56,9 +55,7 @@ const (
 
 // VaultSecretReconciler reconciles a VaultSecret object
 type VaultSecretReconciler struct {
-	util.ReconcilerBase
-	Log            logr.Logger
-	ControllerName string
+	vaultresourcecontroller.ReconcilerBase
 }
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=vaultsecrets,verbs=get;list;watch;create;update;patch;delete
@@ -93,8 +90,8 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
 	ctx = context.WithValue(ctx, "restConfig", r.GetRestConfig())
 
-	if util.IsBeingDeleted(instance) {
-		if !util.HasFinalizer(instance, vaultutils.GetFinalizer(instance)) {
+	if !instance.GetDeletionTimestamp().IsZero() {
+		if !controllerutil.ContainsFinalizer(instance, vaultutils.GetFinalizer(instance)) {
 			return reconcile.Result{}, nil
 		}
 		err := r.manageCleanUpLogic(ctx, instance)
@@ -102,7 +99,7 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			r.Log.Error(err, "unable to delete instance", "instance", instance)
 			return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 		}
-		util.RemoveFinalizer(instance, vaultutils.GetFinalizer(instance))
+		controllerutil.RemoveFinalizer(instance, vaultutils.GetFinalizer(instance))
 		err = r.GetClient().Update(ctx, instance)
 		if err != nil {
 			r.Log.Error(err, "unable to update instance", "instance", instance)
@@ -130,7 +127,7 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	// If a duration incalculable, simply don't requeue
 	if !ok {
 		instance.Status.NextVaultSecretUpdate = nil
-		return r.ManageSuccess(ctx, instance)
+		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, nil)
 	}
 
 	nextUpdateTime := instance.Status.LastVaultSecretUpdate.Add(duration)
@@ -173,7 +170,7 @@ func (r *VaultSecretReconciler) formatK8sSecret(instance *redhatcopv1alpha1.Vaul
 	bytesData := make(map[string][]byte)
 	for k, v := range instance.Spec.TemplatizedK8sSecret.StringData {
 
-		tpl, err := template.New("").Funcs(utilstemplates.AdvancedTemplateFuncMap(r.GetRestConfig(), r.Log)).Parse(v)
+		tpl, err := template.New("").Funcs(vaultresourcecontroller.AdvancedTemplateFuncMap(r.GetRestConfig(), r.Log)).Parse(v)
 		if err != nil {
 			r.Log.Error(err, "unable to create template", "instance", instance)
 			return nil, err
@@ -278,7 +275,7 @@ func (r *VaultSecretReconciler) shouldSync(ctx context.Context, instance *redhat
 	} else {
 
 		//if the secret exists and isn't owned by this VaultSecret then the name needs to be different
-		if !util.IsOwner(instance, secret) {
+		if !vaultresourcecontroller.IsOwner(instance, secret) {
 			return false, fmt.Errorf("the k8s Secret %v is not owned by VaultSecret %v", secretNamespacedName.String(), toNamespacedName(instance))
 		}
 
@@ -396,7 +393,7 @@ func (r *VaultSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 				return false
 			}
 
-			if util.IsBeingDeleted(newVaultSecret) {
+			if !newVaultSecret.GetDeletionTimestamp().IsZero() {
 				r.Log.V(1).Info("Update Event - Marked for deletion", "kind", vaultSecretKind, "namespacedName", toNamespacedName(e.ObjectNew))
 				return true
 			}
@@ -459,7 +456,7 @@ func (r *VaultSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.VaultSecret{}, builder.WithPredicates(vaultSecretPredicate)).
+		For(&redhatcopv1alpha1.VaultSecret{}, builder.WithPredicates(vaultSecretPredicate, vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
 		Owns(&corev1.Secret{}, builder.WithPredicates(k8sSecretPredicate)).
 		Complete(r)
 }

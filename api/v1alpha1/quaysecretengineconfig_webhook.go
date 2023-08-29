@@ -23,6 +23,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // log is for logging in this package.
@@ -50,27 +51,27 @@ func (r *QuaySecretEngineConfig) Default() {
 var _ webhook.Validator = &QuaySecretEngineConfig{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *QuaySecretEngineConfig) ValidateCreate() error {
+func (r *QuaySecretEngineConfig) ValidateCreate() (admission.Warnings, error) {
 	quaysecretengineconfiglog.Info("validate create", "name", r.Name)
 
-	return r.isValid()
+	return nil, r.isValid()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *QuaySecretEngineConfig) ValidateUpdate(old runtime.Object) error {
+func (r *QuaySecretEngineConfig) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	quaysecretengineconfiglog.Info("validate update", "name", r.Name)
 
 	// the path cannot be updated
 	if r.Spec.Path != old.(*QuaySecretEngineConfig).Spec.Path {
-		return errors.New("spec.path cannot be updated")
+		return nil, errors.New("spec.path cannot be updated")
 	}
-	return r.isValid()
+	return nil, r.isValid()
 
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *QuaySecretEngineConfig) ValidateDelete() error {
+func (r *QuaySecretEngineConfig) ValidateDelete() (admission.Warnings, error) {
 	quaysecretengineconfiglog.Info("validate delete", "name", r.Name)
 
-	return nil
+	return nil, nil
 }

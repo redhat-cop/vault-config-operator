@@ -1,0 +1,14 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Group
+metadata:
+  name: group-sample
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  type: external
+  metadata: 
+    team: team-abc
+  policies: 
+  - team-abc-access
+

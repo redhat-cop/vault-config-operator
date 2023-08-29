@@ -7,6 +7,7 @@ KUBECTL_VERSION ?= v1.25.3
 K8S_MAJOR_VERSION ?= 1.25
 VAULT_VERSION ?= 1.12.2
 
+
 # VERSION defines the project version for the bundle.
 # Update this value when you upgrade the version of your project.
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
@@ -60,7 +61,7 @@ IMG ?= controller:latest
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION = 1.25.0
+ENVTEST_K8S_VERSION ?= 1.26.0
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -121,7 +122,6 @@ test: manifests generate fmt vet envtest ## Run tests.
 integration: kind-setup deploy-vault deploy-ingress vault manifests generate fmt vet envtest ## Run tests.
 	export VAULT_TOKEN=$$($(KUBECTL) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
 	export VAULT_ADDR="http://localhost:8081" ;\
-	export ACCESSOR=$$($(VAULT) read -tls-skip-verify -format json sys/auth | jq -r '.data["kubernetes/"].accessor') ;\
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration
 
 .PHONY: deploy-ingress
@@ -168,7 +168,7 @@ ldap-setup: kind-setup vault
 ##@ Build
 
 .PHONY: build
-build: generate fmt vet ## Build manager binary.
+build: manifests generate fmt vet ## Build manager binary.
 	go build -o bin/manager main.go
 
 .PHONY: run
@@ -299,7 +299,7 @@ helmchart: helmchart-clean kustomize helm
 	repo=${OPERATOR_NAME} envsubst < ./config/local-development/tilt/env-replace-image.yaml > ./config/local-development/tilt/replace-image.yaml
 	$(KUSTOMIZE) build ./config/helmchart -o ./charts/${OPERATOR_NAME}/templates
 	sed -i 's/release-namespace/{{.Release.Namespace}}/' ./charts/${OPERATOR_NAME}/templates/*.yaml
-	rm ./charts/${OPERATOR_NAME}/templates/v1_namespace_release-namespace.yaml ./charts/${OPERATOR_NAME}/templates/apps_v1_deployment_${OPERATOR_NAME}-controller-manager.yaml
+	rm ./charts/${OPERATOR_NAME}/templates/apps_v1_deployment_${OPERATOR_NAME}-controller-manager.yaml
 	mv ./charts/${OPERATOR_NAME}/templates/apiextensions.k8s.io_v1_customresourcedefinition* ./charts/${OPERATOR_NAME}/crds
 	cp ./config/helmchart/templates/* ./charts/${OPERATOR_NAME}/templates
 	version=${VERSION} envsubst < ./config/helmchart/Chart.yaml.tpl  > ./charts/${OPERATOR_NAME}/Chart.yaml

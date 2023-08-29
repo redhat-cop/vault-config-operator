@@ -23,6 +23,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // log is for logging in this package.
@@ -53,28 +54,28 @@ func (r *GitHubSecretEngineConfig) Default() {
 var _ webhook.Validator = &GitHubSecretEngineConfig{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *GitHubSecretEngineConfig) ValidateCreate() error {
+func (r *GitHubSecretEngineConfig) ValidateCreate() (admission.Warnings, error) {
 	githubsecretengineconfiglog.Info("validate create", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
-	return r.isValid()
+	return nil, r.isValid()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *GitHubSecretEngineConfig) ValidateUpdate(old runtime.Object) error {
+func (r *GitHubSecretEngineConfig) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	githubsecretengineconfiglog.Info("validate update", "name", r.Name)
 
 	// the path cannot be updated
 	if r.Spec.Path != old.(*GitHubSecretEngineConfig).Spec.Path {
-		return errors.New("spec.path cannot be updated")
+		return nil, errors.New("spec.path cannot be updated")
 	}
-	return r.isValid()
+	return nil, r.isValid()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *GitHubSecretEngineConfig) ValidateDelete() error {
+func (r *GitHubSecretEngineConfig) ValidateDelete() (admission.Warnings, error) {
 	githubsecretengineconfiglog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
+	return nil, nil
 }

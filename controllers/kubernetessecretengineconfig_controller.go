@@ -31,10 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	"github.com/go-logr/logr"
-	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	corev1 "k8s.io/api/core/v1"
@@ -42,9 +39,7 @@ import (
 
 // KubernetesSecretEngineConfigReconciler reconciles a KubernetesSecretEngineConfig object
 type KubernetesSecretEngineConfigReconciler struct {
-	util.ReconcilerBase
-	Log            logr.Logger
-	ControllerName string
+	vaultresourcecontroller.ReconcilerBase
 }
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=kubernetessecretengineconfigs,verbs=get;list;watch;create;update;patch;delete
@@ -117,15 +112,15 @@ func (r *KubernetesSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manag
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.KubernetesSecretEngineConfig{}).
-		Watches(&source.Kind{Type: &corev1.Secret{
+		For(&redhatcopv1alpha1.KubernetesSecretEngineConfig{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
+		Watches(&corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Secret",
 			},
-		}}, handler.EnqueueRequestsFromMapFunc(func(a client.Object) []reconcile.Request {
+		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			s := a.(*corev1.Secret)
-			dbsecs, err := r.findApplicableKSECForSecret(s)
+			dbsecs, err := r.findApplicableKSECForSecret(ctx, s)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable github SecretEngines for namespace", "namespace", s.Name)
 				return []reconcile.Request{}
@@ -143,10 +138,10 @@ func (r *KubernetesSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manag
 		Complete(r)
 }
 
-func (r *KubernetesSecretEngineConfigReconciler) findApplicableKSECForSecret(secret *corev1.Secret) ([]redhatcopv1alpha1.KubernetesSecretEngineConfig, error) {
+func (r *KubernetesSecretEngineConfigReconciler) findApplicableKSECForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.KubernetesSecretEngineConfig, error) {
 	result := []redhatcopv1alpha1.KubernetesSecretEngineConfig{}
 	vrl := &redhatcopv1alpha1.KubernetesSecretEngineConfigList{}
-	err := r.GetClient().List(context.TODO(), vrl, &client.ListOptions{
+	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: secret.Namespace,
 	})
 	if err != nil {

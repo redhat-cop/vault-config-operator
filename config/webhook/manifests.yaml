@@ -128,6 +128,46 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-group
+  failurePolicy: Fail
+  name: mgroup.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - groups
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-groupalias
+  failurePolicy: Fail
+  name: mgroupalias.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - groupalias
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /mutate-redhatcop-redhat-io-v1alpha1-jwtoidcauthengineconfig
   failurePolicy: Fail
   name: mjwtoidcauthengineconfig.kb.io
@@ -620,6 +660,46 @@ webhooks:
     - UPDATE
     resources:
     - githubsecretengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-group
+  failurePolicy: Fail
+  name: vgroup.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - groups
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-groupalias
+  failurePolicy: Fail
+  name: vgroupalias.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - groupalias
   sideEffects: None
 - admissionReviewVersions:
   - v1

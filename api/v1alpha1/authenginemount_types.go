@@ -42,7 +42,7 @@ type AuthEngineMountSpec struct {
 	AuthMount `json:",inline"`
 
 	// Path at which this auth engine will be mounted
-	// The final path will be {[spec.authentication.namespace]}/auth/{spec.path}/{metadata.name}.
+	// The final path in Vault will be {[spec.authentication.namespace]}/auth/{spec.path}/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path /sys/auth/{[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
@@ -64,12 +64,10 @@ type AuthMount struct {
 
 	// Local Specifies if the auth method is local only. Local auth methods are not replicated nor (if a secondary) removed by replication. Logins via local auth methods do not make use of identity, i.e. no entity or groups will be attached to the token.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=true
 	Local bool `json:"local,omitempty"`
 
 	// SealWrap Enable seal wrapping for the mount, causing values stored by the mount to be wrapped by the seal's encryption capability.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=true
 	SealWrap bool `json:"sealwrap,omitempty"`
 }
 
@@ -128,6 +126,7 @@ type AuthMountConfig struct {
 
 var _ vaultutils.VaultObject = &AuthEngineMount{}
 var _ vaultutils.VaultEngineObject = &AuthEngineMount{}
+var _ vaultutils.ConditionsAware = &AuthEngineMount{}
 
 func (mc *AuthMountConfig) toMap() map[string]interface{} {
 	return map[string]interface{}{

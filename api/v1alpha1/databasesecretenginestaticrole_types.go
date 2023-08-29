@@ -22,7 +22,6 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -43,7 +42,7 @@ type DatabaseSecretEngineStaticRoleSpec struct {
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to create the role.
-	// The final path will be {[spec.authentication.namespace]}/{spec.path}/roles/{metadata.name}.
+	// The final path in Vault will be {[spec.authentication.namespace]}/{spec.path}/roles/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
@@ -134,7 +133,7 @@ func (i *DBSEStaticRole) toMap() map[string]interface{} {
 
 var _ vaultutils.VaultObject = &DatabaseSecretEngineStaticRole{}
 
-var _ apis.ConditionsAware = &DatabaseSecretEngineStaticRole{}
+var _ vaultutils.ConditionsAware = &DatabaseSecretEngineStaticRole{}
 
 func (d *DatabaseSecretEngineStaticRole) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection

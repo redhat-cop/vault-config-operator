@@ -144,7 +144,7 @@ spec:
                 type: object
               path:
                 description: Path at which to make the configuration. The final path
-                  will be {[spec.authentication.namespace]}/auth/{spec.path}/role/{metadata.name}.
+                  in Vault will be {[spec.authentication.namespace]}/auth/{spec.path}/role/{metadata.name}.
                   The authentication role must have the following capabilities = [
                   "create", "read", "update", "delete"] on that path.
                 pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?

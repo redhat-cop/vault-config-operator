@@ -21,20 +21,17 @@ import (
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	"github.com/go-logr/logr"
-	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 )
 
 // QuaySecretEngineRoleReconciler reconciles a QuaySecretEngineRole object
 type QuaySecretEngineRoleReconciler struct {
-	util.ReconcilerBase
-	Log            logr.Logger
-	ControllerName string
+	vaultresourcecontroller.ReconcilerBase
 }
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=quaysecretengineroles,verbs=get;list;watch;create;update;patch;delete
@@ -75,6 +72,6 @@ func (r *QuaySecretEngineRoleReconciler) Reconcile(ctx context.Context, req ctrl
 // SetupWithManager sets up the controller with the Manager.
 func (r *QuaySecretEngineRoleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.QuaySecretEngineRole{}).
+		For(&redhatcopv1alpha1.QuaySecretEngineRole{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
 		Complete(r)
 }

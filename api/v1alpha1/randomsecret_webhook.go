@@ -23,6 +23,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // log is for logging in this package.
@@ -51,35 +52,35 @@ func (r *RandomSecret) Default() {
 var _ webhook.Validator = &RandomSecret{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *RandomSecret) ValidateCreate() error {
+func (r *RandomSecret) ValidateCreate() (admission.Warnings, error) {
 	randomsecretlog.Info("validate create", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
-	return r.isValid()
+	return nil, r.isValid()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *RandomSecret) ValidateUpdate(old runtime.Object) error {
+func (r *RandomSecret) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	randomsecretlog.Info("validate update", "name", r.Name)
 
 	// the path cannot be updated
 	if r.Spec.Path != old.(*RandomSecret).Spec.Path {
-		return errors.New("spec.path cannot be updated")
+		return nil, errors.New("spec.path cannot be updated")
 	}
 
 	// the secret key cannot be updated
 	if r.Spec.SecretKey != old.(*RandomSecret).Spec.SecretKey {
-		return errors.New("spec.secretKey cannot be updated")
+		return nil, errors.New("spec.secretKey cannot be updated")
 	}
 
 	// TODO(user): fill in your validation logic upon object update.
-	return r.isValid()
+	return nil, r.isValid()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *RandomSecret) ValidateDelete() error {
+func (r *RandomSecret) ValidateDelete() (admission.Warnings, error) {
 	randomsecretlog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
+	return nil, nil
 }

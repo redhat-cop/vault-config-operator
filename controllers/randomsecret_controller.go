@@ -21,8 +21,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/go-logr/logr"
-	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
@@ -30,6 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -38,9 +37,7 @@ import (
 
 // RandomSecretReconciler reconciles a RandomSecret object
 type RandomSecretReconciler struct {
-	util.ReconcilerBase
-	Log            logr.Logger
-	ControllerName string
+	vaultresourcecontroller.ReconcilerBase
 }
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=randomsecrets,verbs=get;list;watch;create;update;patch;delete
@@ -82,8 +79,8 @@ func (r *RandomSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 	}
 
-	if util.IsBeingDeleted(instance) {
-		if !util.HasFinalizer(instance, vaultutils.GetFinalizer(instance)) {
+	if !instance.GetDeletionTimestamp().IsZero() {
+		if !controllerutil.ContainsFinalizer(instance, vaultutils.GetFinalizer(instance)) {
 			return reconcile.Result{}, nil
 		}
 		err := r.manageCleanUpLogic(ctx1, instance)
@@ -91,7 +88,7 @@ func (r *RandomSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request
 			r.Log.Error(err, "unable to delete instance", "instance", instance)
 			return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 		}
-		util.RemoveFinalizer(instance, vaultutils.GetFinalizer(instance))
+		controllerutil.RemoveFinalizer(instance, vaultutils.GetFinalizer(instance))
 		err = r.GetClient().Update(ctx1, instance)
 		if err != nil {
 			r.Log.Error(err, "unable to update instance", "instance", instance)
@@ -127,10 +124,19 @@ func (r *RandomSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 func (r *RandomSecretReconciler) manageCleanUpLogic(context context.Context, instance *redhatcopv1alpha1.RandomSecret) error {
 	vaultEndpoint := vaultutils.NewVaultEndpoint(instance)
-	err := vaultEndpoint.DeleteIfExists(context)
-	if err != nil {
-		r.Log.Error(err, "unable to delete Vault Secret", "instance", instance)
-		return err
+
+	if instance.IsKVSecretsEngineV2() {
+		err := vaultEndpoint.DeleteKVv2IfExists(context)
+		if err != nil {
+			r.Log.Error(err, "unable to delete KVv2 Vault Secret", "instance", instance)
+			return err
+		}
+	} else {
+		err := vaultEndpoint.DeleteIfExists(context)
+		if err != nil {
+			r.Log.Error(err, "unable to delete Vault Secret", "instance", instance)
+			return err
+		}
 	}
 	return nil
 }
@@ -169,7 +175,7 @@ func (r *RandomSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			if !ok {
 				return false
 			}
-			return util.IsBeingDeleted(newSecret) || newSecret.Spec.RefreshPeriod != oldSecret.Spec.RefreshPeriod || !reflect.DeepEqual(newSecret.Spec.SecretFormat, oldSecret.Spec.SecretFormat)
+			return !newSecret.GetDeletionTimestamp().IsZero() || newSecret.Spec.RefreshPeriod != oldSecret.Spec.RefreshPeriod || !reflect.DeepEqual(newSecret.Spec.SecretFormat, oldSecret.Spec.SecretFormat)
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
 			return true
@@ -184,6 +190,6 @@ func (r *RandomSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.RandomSecret{}, builder.WithPredicates(needsCreation)).
+		For(&redhatcopv1alpha1.RandomSecret{}, builder.WithPredicates(needsCreation, vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
 		Complete(r)
 }

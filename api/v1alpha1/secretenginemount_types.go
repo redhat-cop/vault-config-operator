@@ -30,6 +30,7 @@ import (
 
 var _ vaultutils.VaultObject = &SecretEngineMount{}
 var _ vaultutils.VaultEngineObject = &SecretEngineMount{}
+var _ vaultutils.ConditionsAware = &SecretEngineMount{}
 
 func (d *SecretEngineMount) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection
@@ -90,7 +91,7 @@ type SecretEngineMountSpec struct {
 	Mount `json:",inline"`
 
 	// Path at which this secret engine will be available
-	// The final path will be {[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
+	// The final path in Vault will be {[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path /sys/mounts/{[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`

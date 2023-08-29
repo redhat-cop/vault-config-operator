@@ -20,7 +20,6 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -41,7 +40,7 @@ type KubernetesSecretEngineRoleSpec struct {
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to create the role.
-	// The final path will be {[spec.authentication.namespace]}/{spec.path}/roles/{metadata.name}.
+	// The final path in Vault will be {[spec.authentication.namespace]}/{spec.path}/roles/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
@@ -55,7 +54,7 @@ type KubernetesSecretEngineRoleSpec struct {
 
 var _ vaultutils.VaultObject = &KubernetesSecretEngineRole{}
 
-var _ apis.ConditionsAware = &KubernetesSecretEngineRole{}
+var _ vaultutils.ConditionsAware = &KubernetesSecretEngineRole{}
 
 func (d *KubernetesSecretEngineRole) GetPath() string {
 	return string(d.Spec.Path) + "/" + "roles" + "/" + d.Name

@@ -19,20 +19,17 @@ package controllers
 import (
 	"context"
 
-	"github.com/go-logr/logr"
-	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // PolicyReconciler reconciles a Policy object
 type PolicyReconciler struct {
-	util.ReconcilerBase
-	Log            logr.Logger
-	ControllerName string
+	vaultresourcecontroller.ReconcilerBase
 }
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=policies,verbs=get;list;watch;create;update;patch;delete
@@ -80,6 +77,6 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 // SetupWithManager sets up the controller with the Manager.
 func (r *PolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.Policy{}).
+		For(&redhatcopv1alpha1.Policy{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
 		Complete(r)
 }

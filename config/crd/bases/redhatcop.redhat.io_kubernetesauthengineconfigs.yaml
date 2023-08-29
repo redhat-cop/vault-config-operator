@@ -158,14 +158,12 @@ spec:
                 type: string
               path:
                 description: Path at which to make the configuration. The final path
-                  will be {[spec.authentication.namespace]}/auth/{spec.path}/config/{metadata.name}.
+                  in Vault will be {[spec.authentication.namespace]}/auth/{spec.path}/config/{metadata.name}.
                   The authentication role must have the following capabilities = [
                   "create", "read", "update", "delete"] on that path.
                 pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
                 type: string
               tokenReviewerServiceAccount:
-                default:
-                  name: default
                 description: TokenReviewerServiceAccount A service account JWT used
                   to access the TokenReview API to validate other JWTs during login.
                   If not set, the JWT submitted in the login payload will be used

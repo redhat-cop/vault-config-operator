@@ -43,7 +43,7 @@ type KubernetesAuthEngineRoleSpec struct {
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
-	// The final path will be {[spec.authentication.namespace]}/auth/{spec.path}/role/{metadata.name}.
+	// The final path in Vault will be {[spec.authentication.namespace]}/auth/{spec.path}/role/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
@@ -56,6 +56,7 @@ type KubernetesAuthEngineRoleSpec struct {
 }
 
 var _ vaultutils.VaultObject = &KubernetesAuthEngineRole{}
+var _ vaultutils.ConditionsAware = &KubernetesAuthEngineRole{}
 
 func (d *KubernetesAuthEngineRole) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection

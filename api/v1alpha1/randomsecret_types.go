@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-multierror"
@@ -49,8 +50,10 @@ type RandomSecretSpec struct {
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to create the secret.
-	// The final path will be {[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
-	// The authentication role must have the following capabilities = [ "create", "update", "delete"] on that path.
+	// The final path in Vault will be {[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
+	// If IsKVSecretsEngineV2 is false, the authentication role must have the following capabilities = [ "create", "update", "delete"] on the {[spec.authentication.namespace]}/{spec.path}/{metadata.name} path.
+	// If IsKVSecretsEngineV2 is true, the authentication role must have the following capabilities = [ "create", "update"] on the {[spec.authentication.namespace]}/{spec.path}/data/{metadata.name} path and capabilities = [ "delete"] on the {[spec.authentication.namespace]}/{spec.path}/metadata/{metadata.name} path.
+	// Additionally, if IsKVSecretsEngineV2 is true, it is acceptable for this value to have a suffix of "/data" or not. This suffix is no longer needed but still supported for backwards compatibility.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
 
@@ -77,13 +80,28 @@ type RandomSecretSpec struct {
 const ttlKey string = "ttl"
 
 var _ vaultutils.VaultObject = &RandomSecret{}
+var _ vaultutils.ConditionsAware = &RandomSecret{}
 
 func (d *RandomSecret) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection
 }
 
 func (d *RandomSecret) GetPath() string {
-	return string(d.Spec.Path) + "/" + d.Name
+
+	var path string = strings.TrimSpace(string(d.Spec.Path))
+	var sb strings.Builder
+
+	sb.WriteString(path)
+
+	const kvV2PathSuffix string = "/data"
+	if d.IsKVSecretsEngineV2() && !strings.HasSuffix(path, kvV2PathSuffix) {
+		sb.WriteString(kvV2PathSuffix)
+	}
+
+	sb.WriteByte('/')
+	sb.WriteString(d.Name)
+
+	return sb.String()
 }
 
 func (d *RandomSecret) getV1Payload() map[string]interface{} {
@@ -99,8 +117,12 @@ func (d *RandomSecret) getV1Payload() map[string]interface{} {
 	return payload
 }
 
+func (d *RandomSecret) IsKVSecretsEngineV2() bool {
+	return d.Spec.IsKVSecretsEngineV2
+}
+
 func (d *RandomSecret) GetPayload() map[string]interface{} {
-	if d.Spec.IsKVSecretsEngineV2 {
+	if d.IsKVSecretsEngineV2() {
 		return map[string]interface{}{
 			"data": d.getV1Payload(),
 		}
@@ -209,12 +231,15 @@ func (d *RandomSecret) GenerateNewPassword(context context.Context) error {
 		if err != nil {
 			return err
 		} else {
-			if response.Data != nil {
-				d.Spec.calculatedSecret = response.Data["password"].(string)
-			} else {
+			if response == nil || response.Data == nil {
 				return errors.New("no data returned by password policy")
 			}
-			return nil
+			if password, ok := response.Data["password"]; ok {
+				d.Spec.calculatedSecret = password.(string)
+				return nil
+			} else {
+				return errors.New("password policy did not generate a password")
+			}
 		}
 	}
 	return errors.New("no password policy method specified")
@@ -306,7 +331,11 @@ func (r *RandomSecret) validateEitherPasswordPolicyReferenceOrInline() error {
 func (r *RandomSecret) validateInlinePasswordPolicyFormat() error {
 	if r.Spec.SecretFormat.InlinePasswordPolicy != "" {
 		passwordPolicyFormat := &PasswordPolicyFormat{}
-		return hclsimple.Decode(r.Spec.SecretKey, []byte(r.Spec.SecretFormat.InlinePasswordPolicy), nil, passwordPolicyFormat)
+		if strings.HasSuffix(r.Spec.SecretKey, ".hcl") {
+			return hclsimple.Decode(r.Spec.SecretKey, []byte(r.Spec.SecretFormat.InlinePasswordPolicy), nil, passwordPolicyFormat)
+		} else {
+			return hclsimple.Decode(r.Spec.SecretKey+".hcl", []byte(r.Spec.SecretFormat.InlinePasswordPolicy), nil, passwordPolicyFormat)
+		}
 	}
 	return nil
 }

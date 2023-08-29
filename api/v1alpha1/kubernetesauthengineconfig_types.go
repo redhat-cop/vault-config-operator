@@ -42,7 +42,7 @@ type KubernetesAuthEngineConfigSpec struct {
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
-	// The final path will be {[spec.authentication.namespace]}/auth/{spec.path}/config/{metadata.name}.
+	// The final path in Vault will be {[spec.authentication.namespace]}/auth/{spec.path}/config/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
@@ -50,8 +50,7 @@ type KubernetesAuthEngineConfigSpec struct {
 	KAECConfig `json:",inline"`
 
 	// TokenReviewerServiceAccount A service account JWT used to access the TokenReview API to validate other JWTs during login. If not set, the JWT submitted in the login payload will be used to access the Kubernetes TokenReview API.
-	// +kubebuilder:validation:Required
-	// +kubebuilder:default={"name": "default"}
+	// +kubebuilder:validation:Optional
 	TokenReviewerServiceAccount *corev1.LocalObjectReference `json:"tokenReviewerServiceAccount,omitempty"`
 }
 
@@ -72,6 +71,7 @@ func (d *KubernetesAuthEngineConfig) IsEquivalentToDesiredState(payload map[stri
 }
 
 var _ vaultutils.VaultObject = &KubernetesAuthEngineConfig{}
+var _ vaultutils.ConditionsAware = &KubernetesAuthEngineConfig{}
 
 func (d *KubernetesAuthEngineConfig) IsInitialized() bool {
 	return true
@@ -79,12 +79,17 @@ func (d *KubernetesAuthEngineConfig) IsInitialized() bool {
 
 func (d *KubernetesAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	log := log.FromContext(context)
-	jwt, err := d.getJWTToken(context)
-	if err != nil {
-		log.Error(err, "unable retrieve jwt token for ", "service account", d.Namespace+"/"+d.Spec.TokenReviewerServiceAccount.Name)
-		return err
+
+	// Check if TokenReviewerServiceAccount exists before calling getJWTToken
+	if d.Spec.TokenReviewerServiceAccount != nil {
+		jwt, err := d.getJWTToken(context)
+		if err != nil {
+			log.Error(err, "unable to retrieve jwt token for service account", "service account", d.Namespace+"/"+d.Spec.TokenReviewerServiceAccount.Name)
+			return err
+		}
+		d.Spec.retrievedTokenReviewerJWT = jwt
 	}
-	d.Spec.retrievedTokenReviewerJWT = jwt
+
 	return nil
 }
 

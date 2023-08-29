@@ -21,20 +21,17 @@ import (
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	"github.com/go-logr/logr"
-	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 )
 
 // PKISecretEngineConfigReconciler reconciles a PKISecretEngineConfig object
 type PKISecretEngineConfigReconciler struct {
-	util.ReconcilerBase
-	Log            logr.Logger
-	ControllerName string
+	vaultresourcecontroller.ReconcilerBase
 }
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=pkisecretengineconfigs,verbs=get;list;watch;create;update;patch;delete
@@ -78,6 +75,6 @@ func (r *PKISecretEngineConfigReconciler) Reconcile(ctx context.Context, req ctr
 // SetupWithManager sets up the controller with the Manager.
 func (r *PKISecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.PKISecretEngineConfig{}).
+		For(&redhatcopv1alpha1.PKISecretEngineConfig{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
 		Complete(r)
 }

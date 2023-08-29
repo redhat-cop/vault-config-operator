@@ -37,7 +37,7 @@ type LDAPAuthEngineGroupSpec struct {
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
-	// The final path will be {[spec.authentication.namespace]}/auth/{spec.path}/groups/{metadata.name}.
+	// The final path in Vault will be {[spec.authentication.namespace]}/auth/{spec.path}/groups/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
@@ -53,6 +53,7 @@ type LDAPAuthEngineGroupSpec struct {
 }
 
 var _ vaultutils.VaultObject = &LDAPAuthEngineGroup{}
+var _ vaultutils.ConditionsAware = &LDAPAuthEngineGroup{}
 
 func (d *LDAPAuthEngineGroup) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection

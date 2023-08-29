@@ -21,19 +21,16 @@ import (
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	"github.com/go-logr/logr"
-	"github.com/redhat-cop/operator-utils/pkg/util"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 )
 
 // PasswordPolicyReconciler reconciles a PasswordPolicy object
 type PasswordPolicyReconciler struct {
-	util.ReconcilerBase
-	Log            logr.Logger
-	ControllerName string
+	vaultresourcecontroller.ReconcilerBase
 }
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=passwordpolicies,verbs=get;list;watch;create;update;patch;delete
@@ -80,6 +77,6 @@ func (r *PasswordPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 // SetupWithManager sets up the controller with the Manager.
 func (r *PasswordPolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.PasswordPolicy{}).
+		For(&redhatcopv1alpha1.PasswordPolicy{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
 		Complete(r)
 }

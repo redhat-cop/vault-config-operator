@@ -286,18 +286,16 @@ spec:
                 type: boolean
               path:
                 description: Path at which to make the configuration. The final path
-                  will be {[spec.authentication.namespace]}/auth/{spec.path}/config/{metadata.name}.
+                  in Vault will be {[spec.authentication.namespace]}/auth/{spec.path}/config/{metadata.name}.
                   The authentication role must have the following capabilities = [
                   "create", "read", "update", "delete"] on that path.
                 pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
                 type: string
               providerConfig:
-                additionalProperties:
-                  type: string
                 description: 'Configuration options for provider-specific handling.
                   Providers with specific handling include: Azure, Google. The options
                   are described in each provider''s section in OIDC Provider Setup'
-                type: object
+                x-kubernetes-preserve-unknown-fields: true
             type: object
           status:
             description: JWTOIDCAuthEngineConfigStatus defines the observed state

@@ -20,7 +20,6 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -38,7 +37,7 @@ type QuaySecretEngineStaticRoleSpec struct {
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
-	// The final path will be {[spec.authentication.namespace]}/{spec.path}/static-roles/{metadata.name}.
+	// The final path in Vault will be {[spec.authentication.namespace]}/{spec.path}/static-roles/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
@@ -102,7 +101,7 @@ type QuaySecretEngineStaticRoleStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
-var _ apis.ConditionsAware = &QuaySecretEngineStaticRole{}
+var _ vaultutils.ConditionsAware = &QuaySecretEngineStaticRole{}
 
 func (q *QuaySecretEngineStaticRole) GetConditions() []metav1.Condition {
 	return q.Status.Conditions

@@ -19,22 +19,21 @@ package vaultresourcecontroller
 import (
 	"context"
 
-	"github.com/redhat-cop/operator-utils/pkg/util"
-	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 type VaultResource struct {
 	vaultEndpoint  *vaultutils.VaultEndpoint
-	reconcilerBase *util.ReconcilerBase
+	reconcilerBase *ReconcilerBase
 }
 
-func NewVaultResource(reconcilerBase *util.ReconcilerBase, obj client.Object) *VaultResource {
+func NewVaultResource(reconcilerBase *ReconcilerBase, obj client.Object) *VaultResource {
 	return &VaultResource{
 		reconcilerBase: reconcilerBase,
 		vaultEndpoint:  vaultutils.NewVaultEndpoint(obj),
@@ -43,9 +42,10 @@ func NewVaultResource(reconcilerBase *util.ReconcilerBase, obj client.Object) *V
 
 func (r *VaultResource) Reconcile(ctx context.Context, instance client.Object) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
-
-	if util.IsBeingDeleted(instance) {
-		if !util.HasFinalizer(instance, vaultutils.GetFinalizer(instance)) {
+	log.Info("starting reconcile cycle")
+	log.V(1).Info("reconcile", "instance", instance)
+	if !instance.GetDeletionTimestamp().IsZero() {
+		if !controllerutil.ContainsFinalizer(instance, vaultutils.GetFinalizer(instance)) {
 			return reconcile.Result{}, nil
 		}
 		err := r.manageCleanUpLogic(ctx, instance)
@@ -53,7 +53,7 @@ func (r *VaultResource) Reconcile(ctx context.Context, instance client.Object) (
 			log.Error(err, "unable to delete instance", "instance", instance)
 			return ManageOutcome(ctx, *r.reconcilerBase, instance, err)
 		}
-		util.RemoveFinalizer(instance, vaultutils.GetFinalizer(instance))
+		controllerutil.RemoveFinalizer(instance, vaultutils.GetFinalizer(instance))
 		err = r.reconcilerBase.GetClient().Update(ctx, instance)
 		if err != nil {
 			log.Error(err, "unable to update instance", "instance", instance)
@@ -73,9 +73,9 @@ func (r *VaultResource) Reconcile(ctx context.Context, instance client.Object) (
 
 func (r *VaultResource) manageCleanUpLogic(context context.Context, instance client.Object) error {
 	log := log.FromContext(context)
-	if conditionAware, ok := instance.(apis.ConditionsAware); ok {
+	if conditionAware, ok := instance.(vaultutils.ConditionsAware); ok {
 		for _, condition := range conditionAware.GetConditions() {
-			if condition.Status == metav1.ConditionTrue && condition.Type == apis.ReconcileSuccess {
+			if condition.Status == metav1.ConditionTrue && condition.Type == ReconcileSuccessful {
 				err := r.vaultEndpoint.DeleteIfExists(context)
 				if err != nil {
 					log.Error(err, "unable to delete vault resource", "instance", instance)

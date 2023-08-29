@@ -8,6 +8,7 @@
   - [Policy management](#policy-management)
   - [Secret Engines](#secret-engines)
   - [Secret Management](#secret-management)
+  - [Identities](#identities)
   - [The common authentication section](#the-common-authentication-section)
   - [The common connection section](#the-common-connection-section)
   - [End to end example](#end-to-end-example)
@@ -82,6 +83,11 @@ Currently this operator covers the following Vault APIs:
 1. [RandomSecret](./docs/secret-management.md#RandomSecret) Creates a random secret in a vault [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv) with one password field generated using a [PasswordPolicy](https://www.vaultproject.io/docs/concepts/password-policies)
 2. [VaultSecret](./docs/secret-management.md#VaultSecret) Creates a K8s Secret from one or more Vault Secrets
 
+## Identities
+
+1. [Group](./docs/identities.md#Group) Creates a [Vault Group](https://developer.hashicorp.com/vault/docs/concepts/identity#identity-groups).
+2. [GroupAlias](./docs/identities.md#GroupAlias) Creates a [Vault GroupAlias](https://developer.hashicorp.com/vault/api-docs/secret/identity/group-alias).
+
 ## The common authentication section
 
 All APIs share a common authentication section, details can be found [here](./docs/auth-section.md)
@@ -102,6 +108,15 @@ See [this section](./docs/contributing-vault-apis.md) of the documentation for a
 At the moment the connection to Vault can be initialized with [Vault's standard environment variables](https://www.vaultproject.io/docs/commands#environment-variables).
 See the [OLM documentation](https://github.com/operator-framework/operator-lifecycle-manager/blob/master/doc/design/subscription-config.md#env) on how to pass environment variables via a Subscription.
 The variable that are read at client initialization are listed [here](https://github.com/hashicorp/vault/blob/14101f866414d2ed7850648b465c746ac8fda621/api/client.go#L35).
+
+Additionally, the operator checks for an environment variable named `CACHE_VAULT_TOKEN`. If set to a value of `"true"`, the operator will cache the Vault clients (and tokens) it creates per tuple of:
+- Vault namespace
+- Kubernetes namespace
+- Kubernetes service account
+- Kubernetes auth engine path
+- Kubernetes auth engine role
+
+By default, or if the variable is set to any other value, the operator will create a new client with a new token for each request it makes to Vault.
 
 For certificates, the recommended approach is to mount the secret or configmap containing the certificate as described [here](https://github.com/operator-framework/operator-lifecycle-manager/blob/master/doc/design/subscription-config.md#volumes), and the configure the corresponding variables to point at the files location in the mounted path.
 
@@ -300,6 +315,37 @@ See <https://github.com/golang/vscode-go/blob/master/docs/settings.md#buildbuild
 }
 ```
 
+To launch the debugger locally in vscode you may need a `./.vscode/launch.json` to specify a different Vault address instance and/or disable webhooks (see the operator-sdk [webhooks run-locally](https://sdk.operatorframework.io/docs/building-operators/golang/webhook/#run-locally) docs for more info).
+
+The following example allows for running a debugger using the Vault instance created by first running the `make integration` command.
+
+```json
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Package",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceRoot}",
+            "args": [
+                "--health-probe-bind-address", ":8888",
+            ],
+            "env": {
+                "ENABLE_WEBHOOKS": "false",
+                "VAULT_ADDR": "http://localhost:8081",
+            }
+        }
+    ]
+}
+```
+
+Afterwards, selecting Run->Start Debugging in vscode should start the debugger.
+
 ### Running the operator locally
 
 #### Deploy a Vault instance
@@ -332,7 +378,6 @@ vault auth enable -tls-skip-verify kubernetes
 vault write -tls-skip-verify auth/kubernetes/config kubernetes_host=https://kubernetes.default.svc:443
 vault write -tls-skip-verify auth/kubernetes/role/policy-admin bound_service_account_names=default bound_service_account_namespaces=vault-admin policies=vault-admin ttl=10s
 # noticed how we created a 10s TTL for the tokens created by this authentication engine
-export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.data["kubernetes/"].accessor')
 ```
 
 verify that kube authentication works:
@@ -498,6 +543,15 @@ envsubst < ./test/github-secret-engine-role.yaml | oc apply -f - -n vault-admin
 vault read -tls-skip-verify github/raf-backstage-demo/token/one-repo-only
 ```
 
+Test groups and group aliases
+
+note we just want to very that the group is created in vault, we are not actually setting up a complete authentication workflow. Refer to the jwtoidcauthengine for that.
+
+```sh
+oc apply -f ./test/groups/group.yaml -n vault-admin
+oc apply -f ./test/groups/groupalias.yaml -n vault-admin
+```
+
 ### Test helm chart locally
 
 #### Run the automated helmchart test
@@ -511,7 +565,6 @@ Since this will run a kind instance, you may then test creating CRs manually...
 ```sh
 export VAULT_TOKEN=$(kubectl get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d)
 export VAULT_ADDR="http://localhost"
-export accessor=$(vault read -tls-skip-verify -format json sys/auth | jq -r '.data["kubernetes/"].accessor')
 kubectl create namespace vault-admin
 kubectl create namespace test-vault-config-operator
 ```

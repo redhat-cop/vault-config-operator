@@ -21,7 +21,6 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/redhat-cop/operator-utils/pkg/util/apis"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -45,7 +44,7 @@ type RabbitMQSecretEngineConfigSpec struct {
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
-	// The final path will be {[spec.authentication.namespace]}/{spec.path}/{metadata.name}/config/connection.
+	// The final path in Vault will be {[spec.authentication.namespace]}/{spec.path}/{metadata.name}/config/connection.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
@@ -140,7 +139,7 @@ func (fields *RMQSEConfig) rabbitMQToMap() map[string]interface{} {
 	return payload
 }
 
-var _ apis.ConditionsAware = &RabbitMQSecretEngineConfig{}
+var _ vaultutils.ConditionsAware = &RabbitMQSecretEngineConfig{}
 
 func (d *RabbitMQSecretEngineConfig) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection

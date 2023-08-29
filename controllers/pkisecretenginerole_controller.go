@@ -19,10 +19,9 @@ package controllers
 import (
 	"context"
 
-	"github.com/go-logr/logr"
-	"github.com/redhat-cop/operator-utils/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -32,9 +31,7 @@ import (
 
 // PKISecretEngineRoleReconciler reconciles a PKISecretEngineRole object
 type PKISecretEngineRoleReconciler struct {
-	util.ReconcilerBase
-	Log            logr.Logger
-	ControllerName string
+	vaultresourcecontroller.ReconcilerBase
 }
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=pkisecretengineroles,verbs=get;list;watch;create;update;patch;delete
@@ -78,6 +75,6 @@ func (r *PKISecretEngineRoleReconciler) Reconcile(ctx context.Context, req ctrl.
 // SetupWithManager sets up the controller with the Manager.
 func (r *PKISecretEngineRoleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.PKISecretEngineRole{}).
+		For(&redhatcopv1alpha1.PKISecretEngineRole{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
 		Complete(r)
 }

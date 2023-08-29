@@ -23,6 +23,7 @@ import (
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -39,7 +40,7 @@ type JWTOIDCAuthEngineConfigSpec struct {
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
-	// The final path will be {[spec.authentication.namespace]}/auth/{spec.path}/config/{metadata.name}.
+	// The final path in Vault will be {[spec.authentication.namespace]}/auth/{spec.path}/config/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
@@ -151,7 +152,7 @@ type JWTOIDCConfig struct {
 	// The options are described in each provider's section in OIDC Provider Setup
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default={}
-	ProviderConfig map[string]string `json:"providerConfig,omitempty"`
+	ProviderConfig *apiextensionsv1.JSON `json:"providerConfig,omitempty"`
 
 	// Pass namespace in the OIDC state parameter instead of as a separate query parameter.
 	// With this setting, the allowed redirect URL(s) in Vault and on the provider side should not contain a namespace query parameter.
@@ -167,6 +168,7 @@ type JWTOIDCConfig struct {
 }
 
 var _ vaultutils.VaultObject = &JWTOIDCAuthEngineConfig{}
+var _ vaultutils.ConditionsAware = &JWTOIDCAuthEngineConfig{}
 
 func (d *JWTOIDCAuthEngineConfig) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection
@@ -211,6 +213,11 @@ func (r *JWTOIDCAuthEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAut
 }
 
 func (r *JWTOIDCAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
+
+	if reflect.DeepEqual(r.Spec.OIDCCredentials, vaultutils.RootCredentialConfig{PasswordKey: "password", UsernameKey: "username"}) {
+		return nil
+	}
+
 	return r.setInternalCredentials(context)
 }
 
@@ -286,7 +293,7 @@ func (i *JWTOIDCConfig) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["oidc_discovery_url"] = i.OIDCDiscoveryURL
 	payload["oidc_discovery_ca_pem"] = i.OIDCDiscoveryCAPEM
-	payload["oidc_client_id"] = i.OIDCClientID
+	payload["oidc_client_id"] = i.retrievedClientID
 	payload["oidc_client_secret"] = i.retrievedClientPassword
 	payload["oidc_response_mode"] = i.OIDCResponseMode
 	payload["oidc_response_types"] = i.OIDCResponseTypes
