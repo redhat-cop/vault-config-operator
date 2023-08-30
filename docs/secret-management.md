@@ -25,7 +25,7 @@ spec:
   refreshPeriod: 1h
 ```
 
-The `path` field specifies the path at which the secret will be written, it must correspond to a kv Secret Engine mount.
+The `path` field specifies the path at which the secret will be written, it must correspond to a kv Secret Engine mount. Note that if isKVSecretsEngineV2 is true, the path must include the /data string as defined in <https://developer.hashicorp.com/vault/api-docs/secret/kv/kv-v2>
 
 The `isKVSecretsEngineV2` field is used to indicate if the KV Secrets Engine (defined in the `path`) expects a v1 or v2 data payload. Defaults to false to indicate that a v1 payload will be sent.
 
