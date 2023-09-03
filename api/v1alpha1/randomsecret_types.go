@@ -339,7 +339,7 @@ func (d *RandomSecret) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfigurat
 }
 
 func (r *RandomSecret) validateKVv2DataInPath() error {
-	if r.IsKVSecretsEngineV2() && !strings.Contains("/data/", r.GetPath()) {
+	if r.IsKVSecretsEngineV2() && !strings.Contains(r.GetPath(), "/data/") {
 		return errors.New("KVv2 secrets must have /data defined in the path, for example /secret-mount-path/data/path")
 	}
 	return nil
