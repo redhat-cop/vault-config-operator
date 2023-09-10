@@ -46,10 +46,15 @@ type LDAPAuthEngineConfigSpec struct {
 
 	LDAPConfig `json:",inline"`
 
-	// BindCredentials used to connect to the LDAP service on the specified LDAP Server
-	// BindCredentials consists in bindDN and bindPass, which can be created as Kubernetes Secret, VaultSecret or RandomSecret
+	// BindCredentials is used to connect to the LDAP service on the specified LDAP Server.
+	// BindCredentials consists in bindDN and bindPass, which can be created as Kubernetes Secret, VaultSecret or RandomSecret.
 	// +kubebuilder:validation:Required
 	BindCredentials vaultutils.RootCredentialConfig `json:"bindCredentials,omitempty"`
+
+	// CertificateConfig represents the LDAP service certificate configuration.
+	// CertificateConfig consists in certificate, clientTLSCert and clientTLSKey which can be consumed from an Kubernetes Secret.
+	// +kubebuilder:validation:Optional
+	CertificateConfig CertConfig `json:"certificateConfig,omitempty"`
 }
 
 func (d *LDAPAuthEngineConfig) GetVaultConnection() *vaultutils.VaultConnection {
@@ -320,6 +325,31 @@ type LDAPConfig struct {
 	retrievedPassword string `json:"-"`
 
 	retrievedUsername string `json:"-"`
+}
+
+// +kubebuilder:object:generate=true
+type CertConfig struct {
+	// Secret retrieves the credentials from a Kubernetes secret. The secret must be of basicauth type (https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret). This will map the "username" and "password" keys of the secret to the username and password of this config. If the kubernetes secret is updated, this configuration will also be updated. All other keys will be ignored. Only one of RootCredentialsFromVaultSecret or RootCredentialsFromSecret or RootCredentialsFromRandomSecret can be specified.
+	// username: Specifies the name of the user to use as the "root" user when connecting to the database. This "root" user is used to create/update/delete users managed by these plugins, so you will need to ensure that this user has permissions to manipulate users appropriate to the database. This is typically used in the connection_url field via the templating directive "{{"username"}}" or "{{"name"}}".
+	// password: Specifies the password to use when connecting with the username. This value will not be returned by Vault when performing a read upon the configuration. This is typically used in the connection_url field via the templating directive "{{"password"}}".
+	// If username is provided as spec.username, it takes precedence over the username retrieved from the referenced secret
+	// +kubebuilder:validation:Optional
+	Secret *corev1.LocalObjectReference `json:"secret,omitempty"`
+
+	// Certificate key to be used when retrieving the CA Certificate from an Kubernetes secret
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default="certificate"
+	Certificate string `json:"certificate,omitempty"`
+
+	// ClientTLSCert key to be used when retrieving the Client Certificate from an Kubernetes secret
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default="clientTLSCert"
+	ClientTLSCert string `json:"clientTLSCert,omitempty"`
+
+	// ClientTLSKey key to be used when retrieving the Client Certificate Key from an Kubernetes secret
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default="clientTLSKey"
+	ClientTLSKey string `json:"clientTLSKey,omitempty"`
 }
 
 // LDAPAuthEngineConfigStatus defines the observed state of LDAPAuthEngineConfig

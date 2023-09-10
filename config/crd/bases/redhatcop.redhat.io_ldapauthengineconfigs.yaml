@@ -89,10 +89,10 @@ spec:
                     x-kubernetes-map-type: atomic
                 type: object
               bindCredentials:
-                description: BindCredentials used to connect to the LDAP service on
-                  the specified LDAP Server BindCredentials consists in bindDN and
-                  bindPass, which can be created as Kubernetes Secret, VaultSecret
-                  or RandomSecret
+                description: BindCredentials is used to connect to the LDAP service
+                  on the specified LDAP Server. BindCredentials consists in bindDN
+                  and bindPass, which can be created as Kubernetes Secret, VaultSecret
+                  or RandomSecret.
                 properties:
                   passwordKey:
                     default: password
@@ -203,6 +203,55 @@ spec:
                 description: Certificate CA certificate to use when verifying LDAP
                   server certificate, must be x509 PEM encoded.
                 type: string
+              certificateConfig:
+                description: CertificateConfig represents the LDAP service certificate
+                  configuration. CertificateConfig consists in certificate, clientTLSCert
+                  and clientTLSKey which can be created as Kubernetes Secret.
+                properties:
+                  certificate:
+                    default: certificate
+                    description: Certificate key to be used when retrieving the CA
+                      Certificate from an Kubernetes secret
+                    type: string
+                  clientTLSCert:
+                    default: clientTLSCert
+                    description: ClientTLSCert key to be used when retrieving the
+                      Client Certificate from an Kubernetes secret
+                    type: string
+                  clientTLSKey:
+                    default: clientTLSKey
+                    description: clientTLSKey key to be used when retrieving the Client
+                      Certificate Key from an Kubernetes secret
+                    type: string
+                  secret:
+                    description: 'Secret retrieves the credentials from a Kubernetes
+                      secret. The secret must be of basicauth type (https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret).
+                      This will map the "username" and "password" keys of the secret
+                      to the username and password of this config. If the kubernetes
+                      secret is updated, this configuration will also be updated.
+                      All other keys will be ignored. Only one of RootCredentialsFromVaultSecret
+                      or RootCredentialsFromSecret or RootCredentialsFromRandomSecret
+                      can be specified. username: Specifies the name of the user to
+                      use as the "root" user when connecting to the database. This
+                      "root" user is used to create/update/delete users managed by
+                      these plugins, so you will need to ensure that this user has
+                      permissions to manipulate users appropriate to the database.
+                      This is typically used in the connection_url field via the templating
+                      directive "{{"username"}}" or "{{"name"}}". password: Specifies
+                      the password to use when connecting with the username. This
+                      value will not be returned by Vault when performing a read upon
+                      the configuration. This is typically used in the connection_url
+                      field via the templating directive "{{"password"}}". If username
+                      is provided as spec.username, it takes precedence over the username
+                      retrieved from the referenced secret'
+                    properties:
+                      name:
+                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          TODO: Add other useful fields. apiVersion, kind, uid?'
+                        type: string
+                    type: object
+                    x-kubernetes-map-type: atomic
+                type: object
               clientTLSCert:
                 default: ""
                 description: ClientTLSCert Client certificate to provide to the LDAP
