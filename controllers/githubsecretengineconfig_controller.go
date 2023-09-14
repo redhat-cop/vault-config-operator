@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/controllers/k8sevt"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 )
 
@@ -118,7 +119,8 @@ func (r *GitHubSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) 
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.GitHubSecretEngineConfig{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
+		For(&redhatcopv1alpha1.GitHubSecretEngineConfig{},
+			builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{}, k8sevt.Log{})).
 		Watches(&corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Secret",
@@ -126,6 +128,7 @@ func (r *GitHubSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) 
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			s := a.(*corev1.Secret)
+			r.Log.V(1).Info("fanning event on Secret out to applicable GitHubSecretEngineConfigs", "namespace", s.Namespace, "name", s.Name)
 			dbsecs, err := r.findApplicableGHSCForSecret(ctx, s)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable github SecretEngines for namespace", "namespace", s.Name)
@@ -140,7 +143,7 @@ func (r *GitHubSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) 
 				})
 			}
 			return res
-		}), builder.WithPredicates(isSSHSecret)).
+		}), builder.WithPredicates(isSSHSecret, k8sevt.Log{})).
 		Complete(r)
 }
 

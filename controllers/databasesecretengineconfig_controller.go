@@ -22,6 +22,7 @@ import (
 	"time"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/controllers/k8sevt"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -210,7 +211,8 @@ func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.DatabaseSecretEngineConfig{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
+		For(&redhatcopv1alpha1.DatabaseSecretEngineConfig{},
+			builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{}, k8sevt.Log{})).
 		Watches(&corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Secret",
@@ -218,6 +220,7 @@ func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			s := a.(*corev1.Secret)
+			r.Log.V(1).Info("fanning event on Secret out to applicable DatabaseSecretEngineConfigs", "namespace", s.Namespace, "name", s.Name)
 			dbsecs, err := r.findApplicableBDSCForSecret(ctx, s)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable databaseSecretEngines for namespace", "namespace", s.Name)
@@ -232,7 +235,7 @@ func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 				})
 			}
 			return res
-		}), builder.WithPredicates(isBasicAuthSecret)).
+		}), builder.WithPredicates(isBasicAuthSecret, k8sevt.Log{})).
 		Watches(&redhatcopv1alpha1.RandomSecret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "RandomSecret",
@@ -240,6 +243,7 @@ func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			rs := a.(*redhatcopv1alpha1.RandomSecret)
+			r.Log.V(1).Info("fanning event on RandomSecret out to applicable RandomSecrets", "namespace", rs.Namespace, "name", rs.Name)
 			dbsecs, err := r.findApplicableDBSCForRandomSecret(ctx, rs)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable databaseSecretEngines for namespace", "namespace", rs.Name)
@@ -254,7 +258,7 @@ func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 				})
 			}
 			return res
-		}), builder.WithPredicates(isUpdatedRandomSecret)).
+		}), builder.WithPredicates(isUpdatedRandomSecret, k8sevt.Log{})).
 		Complete(r)
 }
 

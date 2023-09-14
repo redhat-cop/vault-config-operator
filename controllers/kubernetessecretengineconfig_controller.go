@@ -33,6 +33,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/controllers/k8sevt"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -112,7 +113,8 @@ func (r *KubernetesSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manag
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.KubernetesSecretEngineConfig{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
+		For(&redhatcopv1alpha1.KubernetesSecretEngineConfig{},
+			builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{}, k8sevt.Log{})).
 		Watches(&corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Secret",
@@ -120,6 +122,7 @@ func (r *KubernetesSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manag
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			s := a.(*corev1.Secret)
+			r.Log.V(1).Info("fanning event on Secret out to applicable KubernetesSecretEngineConfigs", "namespace", s.Namespace, "name", s.Name)
 			dbsecs, err := r.findApplicableKSECForSecret(ctx, s)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable github SecretEngines for namespace", "namespace", s.Name)
@@ -134,7 +137,7 @@ func (r *KubernetesSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manag
 				})
 			}
 			return res
-		}), builder.WithPredicates(isSATokenSecret)).
+		}), builder.WithPredicates(isSATokenSecret, k8sevt.Log{})).
 		Complete(r)
 }
 
