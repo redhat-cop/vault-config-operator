@@ -335,10 +335,10 @@ func (kc *KubeAuthConfiguration) startLifetimeWatcher(client *vault.Client, kube
 				log.Error(err, "error while renewing token")
 			}
 
-			log.Info("Deleting cached client")
+			log.V(1).Info("Deleting cached client")
 			vaultClientCache.Delete(kc, kubeNamespace)
 		case renewal := <-watcher.RenewCh():
-			log.Info(fmt.Sprintf("Successfully renewed token: %#v", renewal))
+			log.V(1).Info(fmt.Sprintf("Successfully renewed token: %#v", renewal))
 		}
 
 	}

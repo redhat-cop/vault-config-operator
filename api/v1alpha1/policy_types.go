@@ -94,7 +94,7 @@ func (d *Policy) PrepareInternalValues(context context.Context, object client.Ob
 		d.Spec.Policy = strings.ReplaceAll(d.Spec.Policy, placeholder, accessor)
 	}
 
-	log.Info("Auth engine accessor(s) resolved", "policy", d.Spec.Policy)
+	log.V(1).Info("Auth engine accessor(s) resolved", "policy", d.Spec.Policy)
 	return nil
 }
 
