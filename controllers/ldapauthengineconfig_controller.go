@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/controllers/k8sevt"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 )
 
@@ -143,7 +144,8 @@ func (r *LDAPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) erro
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.LDAPAuthEngineConfig{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
+		For(&redhatcopv1alpha1.LDAPAuthEngineConfig{},
+			builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{}, k8sevt.Log{})).
 		Watches(&corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Secret",
@@ -151,6 +153,7 @@ func (r *LDAPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) erro
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			s := a.(*corev1.Secret)
+			r.Log.V(1).Info("fanning event on Secret out to applicable LDAPAuthEngineConfigs", "namespace", s.Namespace, "name", s.Name)
 			dbsecs, err := r.findApplicableLAECForSecret(ctx, s)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable LDAPAuthEngines for namespace", "namespace", s.Name)
@@ -165,7 +168,8 @@ func (r *LDAPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) erro
 				})
 			}
 			return res
-		}), builder.WithPredicates(isBasicAuthSecret)).
+
+		}), builder.WithPredicates(isBasicAuthSecret, k8sevt.Log{})).
 		Watches(&redhatcopv1alpha1.RandomSecret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "RandomSecret",
@@ -173,6 +177,7 @@ func (r *LDAPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) erro
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			rs := a.(*redhatcopv1alpha1.RandomSecret)
+			r.Log.V(1).Info("fanning event on RandomSecret out to applicable LDAPAuthEngineConfigs", "namespace", rs.Namespace, "name", rs.Name)
 			dbsecs, err := r.findApplicableLAECForRandomSecret(ctx, rs)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable LDAPAuthEngines for namespace", "namespace", rs.Name)
@@ -187,7 +192,7 @@ func (r *LDAPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) erro
 				})
 			}
 			return res
-		}), builder.WithPredicates(isUpdatedRandomSecret)).
+		}), builder.WithPredicates(isUpdatedRandomSecret, k8sevt.Log{})).
 		Complete(r)
 
 }

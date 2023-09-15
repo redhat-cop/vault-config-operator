@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/controllers/k8sevt"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 )
 
@@ -142,7 +143,8 @@ func (r *JWTOIDCAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) e
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.JWTOIDCAuthEngineConfig{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
+		For(&redhatcopv1alpha1.JWTOIDCAuthEngineConfig{},
+			builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{}, k8sevt.Log{})).
 		Watches(&corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Secret",
@@ -150,6 +152,7 @@ func (r *JWTOIDCAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) e
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			s := a.(*corev1.Secret)
+			r.Log.V(1).Info("fanning event on Secret out to applicable JWTOIDCAuthEngineConfigs", "namespace", s.Namespace, "name", s.Name)
 			dbsecs, err := r.findApplicableJOAEForSecret(ctx, s)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable JWTOIDCAuthEngine for namespace", "namespace", s.Name)
@@ -164,7 +167,7 @@ func (r *JWTOIDCAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) e
 				})
 			}
 			return res
-		}), builder.WithPredicates(isBasicAuthSecret)).
+		}), builder.WithPredicates(isBasicAuthSecret, k8sevt.Log{})).
 		Watches(&redhatcopv1alpha1.RandomSecret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "RandomSecret",
@@ -172,6 +175,7 @@ func (r *JWTOIDCAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) e
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			rs := a.(*redhatcopv1alpha1.RandomSecret)
+			r.Log.V(1).Info("fanning event on RandomSecret out to applicable JWTOIDCAuthEngineConfigs", "namespace", rs.Namespace, "name", rs.Name)
 			dbsecs, err := r.findApplicableJOAEForRandomSecret(ctx, rs)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable JWTOIDCAuthEngine for namespace", "namespace", rs.Name)
@@ -186,7 +190,7 @@ func (r *JWTOIDCAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) e
 				})
 			}
 			return res
-		}), builder.WithPredicates(isUpdatedRandomSecret)).
+		}), builder.WithPredicates(isUpdatedRandomSecret, k8sevt.Log{})).
 		Complete(r)
 
 }

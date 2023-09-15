@@ -32,6 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/controllers/k8sevt"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 )
 
@@ -86,7 +87,8 @@ func (r *KubernetesAuthEngineRoleReconciler) Reconcile(ctx context.Context, req 
 // SetupWithManager sets up the controller with the Manager.
 func (r *KubernetesAuthEngineRoleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.KubernetesAuthEngineRole{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
+		For(&redhatcopv1alpha1.KubernetesAuthEngineRole{},
+			builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{}, k8sevt.Log{})).
 		Watches(&corev1.Namespace{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Namespace",
@@ -94,6 +96,7 @@ func (r *KubernetesAuthEngineRoleReconciler) SetupWithManager(mgr ctrl.Manager) 
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			ns := a.(*corev1.Namespace)
+			r.Log.V(1).Info("fanning event on Namespace out to applicable KubernetesAuthEngineRoles", "namespace", ns.Name)
 			ncl, err := r.findApplicableKubernetesAuthEngineRoles(ctx, ns)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable kubernetesAuthEngineRoles for namespace", "namespace", ns.Name)
@@ -108,7 +111,7 @@ func (r *KubernetesAuthEngineRoleReconciler) SetupWithManager(mgr ctrl.Manager) 
 				})
 			}
 			return res
-		})).
+		}), builder.WithPredicates(k8sevt.Log{})).
 		Complete(r)
 }
 
