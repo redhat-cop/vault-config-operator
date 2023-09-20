@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"context"
 	"errors"
+	"fmt"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
@@ -81,8 +82,12 @@ func (d *LDAPAuthEngineConfig) IsInitialized() bool {
 	return true
 }
 
+// func (d *LDAPAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
+// 	return d.setInternalCredentials(context)
+// }
+
 func (d *LDAPAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
-	return d.setInternalCredentials(context)
+	return d.setCertificate(context)
 }
 
 func (r *LDAPAuthEngineConfig) IsValid() (bool, error) {
@@ -151,6 +156,30 @@ func (r *LDAPAuthEngineConfig) setInternalCredentials(context context.Context) e
 		}
 		return nil
 	}
+	return errors.New("no means of retrieving a secret was specified")
+}
+
+func (r *LDAPAuthEngineConfig) setCertificate(context context.Context) error {
+	log := log.FromContext(context)
+	kubeClient := context.Value("kubeClient").(client.Client)
+
+	if r.Spec.CertificateConfig.TLSSecret != nil {
+		secret := &corev1.Secret{}
+		err := kubeClient.Get(context, types.NamespacedName{
+			Namespace: r.Namespace,
+			Name:      r.Spec.CertificateConfig.TLSSecret.Name,
+		}, secret)
+
+		if err != nil {
+			log.Error(err, "unable to retrieve Secret", "instance", r)
+			return err
+		}
+
+		fmt.Println("Certificate: ", string(secret.Data["ca.crt"]))
+		fmt.Println("ClientTLSCert: ", string(secret.Data["tls.crt"]))
+		fmt.Println("ClientTLSKey: ", string(secret.Data["tls.key"]))
+	}
+
 	return errors.New("no means of retrieving a secret was specified")
 }
 
@@ -329,27 +358,11 @@ type LDAPConfig struct {
 
 // +kubebuilder:object:generate=true
 type CertConfig struct {
-	// Secret retrieves the credentials from a Kubernetes secret. The secret must be of basicauth type (https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret). This will map the "username" and "password" keys of the secret to the username and password of this config. If the kubernetes secret is updated, this configuration will also be updated. All other keys will be ignored. Only one of RootCredentialsFromVaultSecret or RootCredentialsFromSecret or RootCredentialsFromRandomSecret can be specified.
-	// username: Specifies the name of the user to use as the "root" user when connecting to the database. This "root" user is used to create/update/delete users managed by these plugins, so you will need to ensure that this user has permissions to manipulate users appropriate to the database. This is typically used in the connection_url field via the templating directive "{{"username"}}" or "{{"name"}}".
-	// password: Specifies the password to use when connecting with the username. This value will not be returned by Vault when performing a read upon the configuration. This is typically used in the connection_url field via the templating directive "{{"password"}}".
-	// If username is provided as spec.username, it takes precedence over the username retrieved from the referenced secret
+	// Kubernetes provides a builtin Secret type kubernetes.io/tls for storing a certificate and its associated key that are typically used for TLS.
+	// TLSSecret retrieves the credentials from a Kubernetes TLS Secret (https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets).
+	// When using this type of Secret, the tls.key and the tls.crt key must be provided in the data (or stringData) field of the Secret configuration, although the API server doesn't actually validate the values for each key.
 	// +kubebuilder:validation:Optional
-	Secret *corev1.LocalObjectReference `json:"secret,omitempty"`
-
-	// Certificate key to be used when retrieving the CA Certificate from an Kubernetes secret
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:default="certificate"
-	Certificate string `json:"certificate,omitempty"`
-
-	// ClientTLSCert key to be used when retrieving the Client Certificate from an Kubernetes secret
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:default="clientTLSCert"
-	ClientTLSCert string `json:"clientTLSCert,omitempty"`
-
-	// ClientTLSKey key to be used when retrieving the Client Certificate Key from an Kubernetes secret
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:default="clientTLSKey"
-	ClientTLSKey string `json:"clientTLSKey,omitempty"`
+	TLSSecret *corev1.LocalObjectReference `json:"TLSSecret,omitempty"`
 }
 
 // LDAPAuthEngineConfigStatus defines the observed state of LDAPAuthEngineConfig

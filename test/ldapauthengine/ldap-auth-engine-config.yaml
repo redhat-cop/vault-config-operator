@@ -5,7 +5,7 @@ metadata:
 spec:
   authentication: 
     path: kubernetes
-    role: policy-admin
+    role: vault-admin
     serviceAccount:
       name: default
   path: ldap/test
@@ -18,6 +18,9 @@ spec:
       name: bindcredentials
     usernameKey: username
     passwordKey: password
+  certificateConfig:
+    TLSSecret:
+      name: ldap-tls-certificate
   insecureTLS: true
   groupFilter: (|(memberUid={{.Username}})(member={{.UserDN}})(uniqueMember={{.UserDN}}))
   userFilter: "({{.UserAttr}}={{.Username}})"

@@ -5,7 +5,7 @@ metadata:
 spec:
   authentication: 
     path: kubernetes
-    role: policy-admin
+    role: vault-admin
     serviceAccount:
       name: default
   type: ldap
