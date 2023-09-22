@@ -126,6 +126,10 @@ func (d *KubernetesSecretEngineConfig) PrepareInternalValues(context context.Con
 	return d.setInternalCredentials(context)
 }
 
+func (d *KubernetesSecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (r *KubernetesSecretEngineConfig) IsValid() (bool, error) {
 	err := r.isValid()
 	return err == nil, err

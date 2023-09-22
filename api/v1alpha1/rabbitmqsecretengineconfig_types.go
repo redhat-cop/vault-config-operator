@@ -185,6 +185,10 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) PrepareInternalValues(context contex
 	return rabbitMQ.setInternalCredentials(context)
 }
 
+func (rabbitMQ *RabbitMQSecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (rabbitMQ *RabbitMQSecretEngineConfig) IsValid() (bool, error) {
 	err := rabbitMQ.isValid()
 	return err == nil, err

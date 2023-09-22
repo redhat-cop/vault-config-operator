@@ -285,6 +285,10 @@ func (d *JWTOIDCAuthEngineRole) PrepareInternalValues(context context.Context, o
 	return nil
 }
 
+func (d *JWTOIDCAuthEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (r *JWTOIDCRole) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["name"] = r.Name

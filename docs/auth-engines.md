@@ -153,6 +153,14 @@ spec:
   The `clientTLSCert` field - Client certificate to provide to the LDAP server, must be x509 PEM encoded (optional).
   
   The `clientTLSKey` field - Client certificate key to provide to the LDAP server, must be x509 PEM encoded (optional).
+
+  In addition, this CRD provides the `tLSConfig` field, where you can specify `certificate`, `clientTLSCert` and `clientTLSKey` by using a TLS Kubernetes secret, as shown below:
+
+```yaml
+  tLSConfig:
+    tlsSecret:
+     name: ldap-tls-certificate
+```
   
   The `denyNullBind` field - This option prevents users from bypassing authentication when providing an empty password.
   

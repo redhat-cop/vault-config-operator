@@ -70,6 +70,10 @@ func (q *QuaySecretEngineStaticRole) PrepareInternalValues(context context.Conte
 	return nil
 }
 
+func (q *QuaySecretEngineStaticRole) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (q *QuaySecretEngineStaticRole) IsValid() (bool, error) {
 	return true, nil
 }

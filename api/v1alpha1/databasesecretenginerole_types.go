@@ -77,6 +77,10 @@ func (d *DatabaseSecretEngineRole) PrepareInternalValues(context context.Context
 	return nil
 }
 
+func (d *DatabaseSecretEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (r *DatabaseSecretEngineRole) IsValid() (bool, error) {
 	return true, nil
 }

@@ -110,6 +110,10 @@ func (d *DatabaseSecretEngineConfig) PrepareInternalValues(context context.Conte
 	return d.setInternalCredentials(context)
 }
 
+func (d *DatabaseSecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (r *DatabaseSecretEngineConfig) IsValid() (bool, error) {
 	err := r.isValid()
 	return err == nil, err

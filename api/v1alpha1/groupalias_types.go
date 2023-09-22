@@ -187,6 +187,10 @@ func (d *GroupAlias) PrepareInternalValues(context context.Context, object clien
 	return nil
 }
 
+func (d *GroupAlias) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (r *GroupAlias) IsValid() (bool, error) {
 	return true, nil
 }

@@ -221,6 +221,10 @@ func (r *JWTOIDCAuthEngineConfig) PrepareInternalValues(context context.Context,
 	return r.setInternalCredentials(context)
 }
 
+func (r *JWTOIDCAuthEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (r *JWTOIDCAuthEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
 	kubeClient := context.Value("kubeClient").(client.Client)

@@ -93,6 +93,10 @@ func (d *KubernetesAuthEngineConfig) PrepareInternalValues(context context.Conte
 	return nil
 }
 
+func (d *KubernetesAuthEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (kc *KubernetesAuthEngineConfig) getJWTToken(context context.Context) (string, error) {
 	expiration := int64(60 * 60 * 24 * 365)
 	return vaultutils.GetJWTTokenWithDuration(context, kc.Spec.TokenReviewerServiceAccount.Name, kc.Namespace, expiration)

@@ -111,6 +111,10 @@ func (d *GitHubSecretEngineRole) PrepareInternalValues(context context.Context, 
 	return nil
 }
 
+func (d *GitHubSecretEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (r *GitHubSecretEngineRole) IsValid() (bool, error) {
 	return true, nil
 }

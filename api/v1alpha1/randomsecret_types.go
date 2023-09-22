@@ -128,6 +128,10 @@ func (d *RandomSecret) PrepareInternalValues(context context.Context, object cli
 	return d.GenerateNewPassword(context)
 }
 
+func (d *RandomSecret) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 type VaultPasswordPolicy struct {
 	// PasswordPolicyName a ref to a password policy defined in Vault. Notice that in order to use this, the Vault role you use needs the following capabilities = ["read"] on /sys/policy/password.
 	// Only one of PasswordPolicyName or InlinePasswordPolicy can be specified
