@@ -40,8 +40,10 @@ With a RandomSecret it is possible to build workflow in which the root password 
 This CR is roughly equivalent to this Vault CLI command:
 
 ```shell
-vault kv put [namespace/]kv/vault-tenant password=<generated value>
+vault kv put [namespace/]kv/vault-tenant/my-postgresql-admin-password password=<generated value>
 ```
+
+The optional field `nameOverride` can be used if the `name` of the RandomSecret resource should not be used as the last path segment.
 
 ## VaultSecret
 
