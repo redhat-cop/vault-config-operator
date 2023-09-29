@@ -50,7 +50,7 @@ type RandomSecretSpec struct {
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to create the secret.
-	// The final path in Vault will be {[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
+	// The final path in Vault will be {[spec.authentication.namespace]}/{spec.path}/{metadata.name}, unless {spec.nameOverride} is set, which would then replace {metadata.name}.
 	// If IsKVSecretsEngineV2 is false, the authentication role must have the following capabilities = [ "create", "update", "delete"] on the {[spec.authentication.namespace]}/{spec.path}/{metadata.name} path.
 	// If IsKVSecretsEngineV2 is true, the authentication role must have the following capabilities = [ "create", "update"] on the {[spec.authentication.namespace]}/{spec.path}/data/{metadata.name} path and capabilities = [ "delete"] on the {[spec.authentication.namespace]}/{spec.path}/metadata/{metadata.name} path.
 	// Additionally, if IsKVSecretsEngineV2 is true, it is acceptable for this value to have a suffix of "/data" or not. This suffix is no longer needed but still supported for backwards compatibility.
@@ -75,6 +75,11 @@ type RandomSecretSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=false
 	IsKVSecretsEngineV2 bool `json:"isKVSecretsEngineV2,omitempty"`
+
+	// NameOverride will be used instead of {metadata.name} as the final segment for the Vault path if present.
+	// This allows for multiple RandomSecret resources within the same kubernetes namespace that share the same last path segment.
+	// +kubebuilder:validation:Optional
+	NameOverride string `json:"nameOverride,omitempty"`
 }
 
 const ttlKey string = "ttl"
@@ -87,7 +92,11 @@ func (d *RandomSecret) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *RandomSecret) GetPath() string {
-	return string(d.Spec.Path) + "/" + d.Name
+	if d.Spec.NameOverride == "" {
+		return string(d.Spec.Path) + "/" + d.Name
+	} else {
+		return string(d.Spec.Path) + "/" + d.Spec.NameOverride
+	}
 }
 
 func (d *RandomSecret) getV1Payload() map[string]interface{} {

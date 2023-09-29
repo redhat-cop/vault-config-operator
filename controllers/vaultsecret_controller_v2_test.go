@@ -266,6 +266,29 @@ var _ = Describe("VaultSecret controller for v2 secrets", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
+			rsInstanceNameOverridePassword, err := decoder.GetRandomSecretInstance("../test/randomsecret/v2/08-randomsecret-randomsecret-nameoverride-v2.yaml")
+			Expect(err).To(BeNil())
+			rsInstanceNameOverridePassword.Namespace = vaultTestNamespaceName
+			Expect(k8sIntegrationClient.Create(ctx, rsInstanceNameOverridePassword)).Should(Succeed())
+
+			rslookupKey = types.NamespacedName{Name: rsInstanceNameOverridePassword.Name, Namespace: rsInstanceAnotherPassword.Namespace}
+			rsCreated = &redhatcopv1alpha1.RandomSecret{}
+
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, rslookupKey, rsCreated)
+				if err != nil {
+					return false
+				}
+
+				for _, condition := range rsCreated.Status.Conditions {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+						return true
+					}
+				}
+
+				return false
+			}, timeout, interval).Should(BeTrue())
+
 			By("Creating a new VaultSecret")
 
 			ctx := context.Background()
