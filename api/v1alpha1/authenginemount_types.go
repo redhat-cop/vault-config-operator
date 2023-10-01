@@ -46,6 +46,18 @@ type AuthEngineMountSpec struct {
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path /sys/auth/{[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
+
+	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern:='[a-z0-9]([-a-z0-9]*[a-z0-9])?'
+	Name string `json:"name,omitempty"`
+}
+
+func (d *AuthEngineMount) GetPath() string {
+	if d.Spec.Name != "" {
+		return vaultutils.CleansePath(d.GetEngineListPath() + "/" + string(d.Spec.Path) + "/" + d.Spec.Name)
+	}
+	return vaultutils.CleansePath(d.GetEngineListPath() + "/" + string(d.Spec.Path) + "/" + d.Name)
 }
 
 type AuthMount struct {
@@ -83,7 +95,7 @@ type AuthMountConfig struct {
 	// AuditNonHMACRequestKeys list of keys that will not be HMAC'd by audit devices in the request data object.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	// kubebuilder:validation:UniqueItems=true
+	// kubebuilder:validation:UniqueItems:=true
 	AuditNonHMACRequestKeys []string `json:"auditNonHMACRequestKeys,omitempty"`
 
 	// AuditNonHMACResponseKeys list of keys that will not be HMAC'd by audit devices in the response data object.
@@ -101,7 +113,7 @@ type AuthMountConfig struct {
 	// PassthroughRequestHeaders list of headers to whitelist and pass from the request to the plugin.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	// kubebuilder:validation:UniqueItems=true
+	// kubebuilder:validation:UniqueItems:=true
 	PassthroughRequestHeaders []string `json:"passthroughRequestHeaders,omitempty"`
 
 	// AllowedResponseHeaders list of headers to whitelist, allowing a plugin to include them in the response.
@@ -159,10 +171,6 @@ func (d *AuthEngineMount) GetVaultConnection() *vaultutils.VaultConnection {
 
 func (d *AuthEngineMount) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
-}
-
-func (d *AuthEngineMount) GetPath() string {
-	return vaultutils.CleansePath(d.GetEngineListPath() + "/" + string(d.Spec.Path) + "/" + d.Name)
 }
 
 func (d *AuthEngineMount) GetPayload() map[string]interface{} {

@@ -39,6 +39,11 @@ type GroupSpec struct {
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	GroupConfig `json:",inline"`
+
+	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern:='[a-z0-9]([-a-z0-9]*[a-z0-9])?'
+	Name string `json:"name,omitempty"`
 }
 
 type GroupConfig struct {
@@ -123,7 +128,10 @@ func (d *Group) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *Group) GetPath() string {
-	return string("/identity/group/name/" + d.Name)
+	if d.Spec.Name != "" {
+		return vaultutils.CleansePath(string("/identity/group/name/" + d.Spec.Name))
+	}
+	return vaultutils.CleansePath(string("/identity/group/name/" + d.Name))
 }
 
 func (d *Group) GetPayload() map[string]interface{} {

@@ -46,6 +46,11 @@ type RabbitMQSecretEngineRoleSpec struct {
 
 	// +kubebuilder:validation:Required
 	RMQSERole `json:",inline"`
+
+	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern:='[a-z0-9]([-a-z0-9]*[a-z0-9])?'
+	Name string `json:"name,omitempty"`
 }
 
 type RMQSERole struct {
@@ -157,8 +162,11 @@ func init() {
 
 var _ vaultutils.VaultObject = &RabbitMQSecretEngineRole{}
 
-func (rabbitMQ *RabbitMQSecretEngineRole) GetPath() string {
-	return string(rabbitMQ.Spec.Path) + "/" + "roles" + "/" + rabbitMQ.Name
+func (d *RabbitMQSecretEngineRole) GetPath() string {
+	if d.Spec.Name != "" {
+		return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + d.Spec.Name)
+	}
+	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + d.Name)
 }
 func (rabbitMQ *RabbitMQSecretEngineRole) GetPayload() map[string]interface{} {
 	return rabbitMQ.Spec.rabbitMQToMap()

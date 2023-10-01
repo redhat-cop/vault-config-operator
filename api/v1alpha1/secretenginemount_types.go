@@ -37,6 +37,9 @@ func (d *SecretEngineMount) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *SecretEngineMount) GetPath() string {
+	if d.Spec.Name != "" {
+		return vaultutils.CleansePath(d.GetEngineListPath() + "/" + string(d.Spec.Path) + "/" + d.Spec.Name)
+	}
 	return vaultutils.CleansePath(d.GetEngineListPath() + "/" + string(d.Spec.Path) + "/" + d.Name)
 }
 func (d *SecretEngineMount) GetPayload() map[string]interface{} {
@@ -95,6 +98,11 @@ type SecretEngineMountSpec struct {
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path /sys/mounts/{[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
+
+	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern:='[a-z0-9]([-a-z0-9]*[a-z0-9])?'
+	Name string `json:"name,omitempty"`
 }
 
 // +k8s:openapi-gen=true

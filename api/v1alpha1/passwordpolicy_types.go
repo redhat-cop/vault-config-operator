@@ -36,7 +36,10 @@ func (d *PasswordPolicy) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *PasswordPolicy) GetPath() string {
-	return "sys/policies/password/" + d.Name
+	if d.Spec.Name != "" {
+		return vaultutils.CleansePath("sys/policies/password/" + d.Spec.Name)
+	}
+	return vaultutils.CleansePath("sys/policies/password/" + d.Name)
 }
 func (d *PasswordPolicy) GetPayload() map[string]interface{} {
 	return map[string]interface{}{
@@ -75,6 +78,11 @@ type PasswordPolicySpec struct {
 	// Authentication is the kube auth configuration to be used to execute this request
 	// +kubebuilder:validation:Required
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
+
+	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern:='[a-z0-9]([-a-z0-9]*[a-z0-9])?'
+	Name string `json:"name,omitempty"`
 }
 
 // PolicyStatus defines the observed state of Policy
