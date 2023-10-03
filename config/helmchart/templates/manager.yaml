@@ -27,8 +27,8 @@ spec:
       {{- end }}
       containers:
       - args:
-        - --secure-listen-address=0.0.0.0:8443
-        - --upstream=http://127.0.0.1:8080/
+        - --secure-listen-address=0.0.0.0:{{ .Values.kube_rbac_proxy.securePort }}
+        - --upstream=http://127.0.0.1:{{ .Values.metricsPort }}/
         - --logtostderr=true
         - --tls-cert-file=/etc/certs/tls/tls.crt
         - --tls-private-key-file=/etc/certs/tls/tls.key
@@ -36,7 +36,7 @@ spec:
         image: "{{ .Values.kube_rbac_proxy.image.repository }}:{{ .Values.kube_rbac_proxy.image.tag }}"
         name: kube-rbac-proxy
         ports:
-        - containerPort: 8443
+        - containerPort: {{ .Values.kube_rbac_proxy.securePort }}
           name: https
         volumeMounts:
         - mountPath: /etc/certs/tls
@@ -48,6 +48,8 @@ spec:
         - /manager
         args:
         - --leader-elect
+        - --metrics-bind-address=0.0.0.0:{{ .Values.metricsPort }}
+        - --health-probe-bind-address=0.0.0.0:{{ .Values.healthProbePort }}
         {{- with .Values.args }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -70,15 +72,19 @@ spec:
         livenessProbe:
           httpGet:
             path: /healthz
-            port: 8081
+            port: {{ .Values.healthProbePort }}
           initialDelaySeconds: 15
           periodSeconds: 20
         readinessProbe:
           httpGet:
             path: /readyz
-            port: 8081
+            port: {{ .Values.healthProbePort }}
           initialDelaySeconds: 5
           periodSeconds: 10
+      {{- if .Values.hostNetwork }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

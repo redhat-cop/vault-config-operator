@@ -31,6 +31,7 @@ tolerations: []
 affinity: {}
 
 kube_rbac_proxy:
+  securePort: 8443
   image:
     repository: quay.io/redhat-cop/kube-rbac-proxy
     pullPolicy: IfNotPresent
@@ -43,5 +44,8 @@ kube_rbac_proxy:
       cpu: 5m
       memory: 64Mi
 
+metricsPort: 8080
+healthProbePort: 8081
+hostNetwork: false
 enableMonitoring: true
 enableCertManager: false
