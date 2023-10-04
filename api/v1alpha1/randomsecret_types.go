@@ -78,7 +78,7 @@ type RandomSecretSpec struct {
 
 	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Pattern:='[a-z0-9]([-a-z0-9]*[a-z0-9])?'
+	// +kubebuilder:validation:Pattern:=`[a-z0-9]([-a-z0-9]*[a-z0-9])?`
 	Name string `json:"name,omitempty"`
 }
 
