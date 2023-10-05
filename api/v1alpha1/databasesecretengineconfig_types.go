@@ -56,6 +56,11 @@ type DatabaseSecretEngineConfigSpec struct {
 	// RootCredentials specifies how to retrieve the credentials for this DatabaseEngine connection.
 	// +kubebuilder:validation:Required
 	RootCredentials vaultutils.RootCredentialConfig `json:"rootCredentials,omitempty"`
+
+	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern:=`[a-z0-9]([-a-z0-9]*[a-z0-9])?`
+	Name string `json:"name,omitempty"`
 }
 
 var _ vaultutils.VaultObject = &DatabaseSecretEngineConfig{}
@@ -65,10 +70,16 @@ func (d *DatabaseSecretEngineConfig) GetVaultConnection() *vaultutils.VaultConne
 }
 
 func (d *DatabaseSecretEngineConfig) GetPath() string {
-	return string(d.Spec.Path) + "/" + "config" + "/" + d.Name
+	if d.Spec.Name != "" {
+		return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "config" + "/" + d.Spec.Name)
+	}
+	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "config" + "/" + d.Name)
 }
 func (d *DatabaseSecretEngineConfig) GetRootPasswordRotationPath() string {
-	return string(d.Spec.Path) + "/" + "rotate-root" + "/" + d.Name
+	if d.Spec.Name != "" {
+		return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "rotate-root" + "/" + d.Spec.Name)
+	}
+	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "rotate-root" + "/" + d.Name)
 }
 func (d *DatabaseSecretEngineConfig) GetPayload() map[string]interface{} {
 	return d.Spec.toMap()

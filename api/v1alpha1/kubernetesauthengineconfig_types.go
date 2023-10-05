@@ -52,6 +52,11 @@ type KubernetesAuthEngineConfigSpec struct {
 	// TokenReviewerServiceAccount A service account JWT used to access the TokenReview API to validate other JWTs during login. If not set, the JWT submitted in the login payload will be used to access the Kubernetes TokenReview API.
 	// +kubebuilder:validation:Optional
 	TokenReviewerServiceAccount *corev1.LocalObjectReference `json:"tokenReviewerServiceAccount,omitempty"`
+
+	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern:=`[a-z0-9]([-a-z0-9]*[a-z0-9])?`
+	Name string `json:"name,omitempty"`
 }
 
 func (d *KubernetesAuthEngineConfig) GetVaultConnection() *vaultutils.VaultConnection {
@@ -59,6 +64,9 @@ func (d *KubernetesAuthEngineConfig) GetVaultConnection() *vaultutils.VaultConne
 }
 
 func (d *KubernetesAuthEngineConfig) GetPath() string {
+	if d.Spec.Name != "" {
+		return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/" + d.Spec.Name + "/config")
+	}
 	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/" + d.Name + "/config")
 }
 

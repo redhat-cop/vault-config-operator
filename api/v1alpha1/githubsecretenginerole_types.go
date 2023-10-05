@@ -51,6 +51,11 @@ type GitHubSecretEngineRoleSpec struct {
 	// When crafting Vault policy, hyper security sensitive organisations may wish to favour repository_ids (GitHub repository IDs are immutable) instead of repositories (GitHub repository names are mutable).
 	// +kubebuilder:validation:Optional
 	PermissionSet `json:",inline"`
+
+	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern:=`[a-z0-9]([-a-z0-9]*[a-z0-9])?`
+	Name string `json:"name,omitempty"`
 }
 
 type PermissionSet struct {
@@ -93,7 +98,10 @@ func (d *GitHubSecretEngineRole) GetVaultConnection() *vaultutils.VaultConnectio
 }
 
 func (d *GitHubSecretEngineRole) GetPath() string {
-	return string(d.Spec.Path) + "/" + "permissionset" + "/" + d.Name
+	if d.Spec.Name != "" {
+		return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "permissionset" + "/" + d.Spec.Name)
+	}
+	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "permissionset" + "/" + d.Name)
 }
 func (d *GitHubSecretEngineRole) GetPayload() map[string]interface{} {
 	return d.Spec.toMap()

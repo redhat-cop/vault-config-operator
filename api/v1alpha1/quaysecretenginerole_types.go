@@ -63,6 +63,11 @@ type QuaySecretEngineRoleSpec struct {
 	Path vaultutils.Path `json:"path,omitempty"`
 
 	QuayRole `json:",inline"`
+
+	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern:=`[a-z0-9]([-a-z0-9]*[a-z0-9])?`
+	Name string `json:"name,omitempty"`
 }
 
 var _ vaultutils.VaultObject = &QuaySecretEngineRole{}
@@ -71,8 +76,11 @@ func (d *QuaySecretEngineRole) GetVaultConnection() *vaultutils.VaultConnection 
 	return d.Spec.Connection
 }
 
-func (q *QuaySecretEngineRole) GetPath() string {
-	return string(q.Spec.Path) + "/" + "roles" + "/" + q.Name
+func (d *QuaySecretEngineRole) GetPath() string {
+	if d.Spec.Name != "" {
+		return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + d.Spec.Name)
+	}
+	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + d.Name)
 }
 func (q *QuaySecretEngineRole) GetPayload() map[string]interface{} {
 	return q.Spec.toMap()

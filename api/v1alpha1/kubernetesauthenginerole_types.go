@@ -53,6 +53,11 @@ type KubernetesAuthEngineRoleSpec struct {
 	// TargetNamespaces specifies how to retrieve the namespaces bound to this Vault role.
 	// +kubebuilder:validation:Required
 	TargetNamespaces vaultutils.TargetNamespaceConfig `json:"targetNamespaces,omitempty"`
+
+	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern:=`[a-z0-9]([-a-z0-9]*[a-z0-9])?`
+	Name string `json:"name,omitempty"`
 }
 
 var _ vaultutils.VaultObject = &KubernetesAuthEngineRole{}
@@ -63,6 +68,9 @@ func (d *KubernetesAuthEngineRole) GetVaultConnection() *vaultutils.VaultConnect
 }
 
 func (d *KubernetesAuthEngineRole) GetPath() string {
+	if d.Spec.Name != "" {
+		return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/role/" + d.Spec.Name)
+	}
 	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/role/" + d.Name)
 }
 func (d *KubernetesAuthEngineRole) GetPayload() map[string]interface{} {

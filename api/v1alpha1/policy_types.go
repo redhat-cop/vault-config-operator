@@ -41,10 +41,16 @@ func (d *Policy) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *Policy) GetPath() string {
-	if d.Spec.Type != "" {
-		return "sys/policies/" + d.Spec.Type + "/" + d.Name
+	if d.Spec.Name != "" {
+		if d.Spec.Type != "" {
+			return vaultutils.CleansePath("sys/policies/" + d.Spec.Type + "/" + d.Spec.Name)
+		}
+		return vaultutils.CleansePath("sys/policy/" + d.Spec.Name)
 	}
-	return "sys/policy/" + d.Name
+	if d.Spec.Type != "" {
+		return vaultutils.CleansePath("sys/policies/" + d.Spec.Type + "/" + d.Name)
+	}
+	return vaultutils.CleansePath("sys/policy/" + d.Name)
 }
 func (d *Policy) GetPayload() map[string]interface{} {
 	return map[string]interface{}{
@@ -53,7 +59,7 @@ func (d *Policy) GetPayload() map[string]interface{} {
 }
 func (d *Policy) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.GetPayload()
-	desiredState["name"] = d.Name
+	desiredState["name"] = map[bool]string{true: d.Spec.Name, false: d.Name}[d.Spec.Name != ""]
 	if d.Spec.Type == "" {
 		desiredState["rules"] = desiredState["policy"]
 		delete(desiredState, "policy")
@@ -127,6 +133,11 @@ type PolicySpec struct {
 	// Authentication is the kube auth configuration to be used to execute this request
 	// +kubebuilder:validation:Required
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
+
+	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern:=`[a-z0-9]([-a-z0-9]*[a-z0-9])?`
+	Name string `json:"name,omitempty"`
 }
 
 // PolicyStatus defines the observed state of Policy
