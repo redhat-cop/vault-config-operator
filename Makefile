@@ -2,11 +2,20 @@ CHART_REPO_URL ?= http://example.com
 HELM_REPO_DEST ?= /tmp/gh-pages
 OPERATOR_NAME ?=$(shell basename -z `pwd`)
 HELM_VERSION ?= v3.11.0
-KIND_VERSION ?= v0.17.0
-KUBECTL_VERSION ?= v1.25.3
-K8S_MAJOR_VERSION ?= 1.25
-VAULT_VERSION ?= 1.12.2
-
+KIND_VERSION ?= v0.20.0
+KUBECTL_VERSION ?= v1.27.3
+K8S_MAJOR_VERSION ?= 1.27
+KUSTOMIZE_VERSION ?= v3.8.7
+CONTROLLER_TOOLS_VERSION ?= v0.11.1
+# Note changes to the vault version should also match image tags within the integration/vault-values.yaml and config/local-development/vault-values.yaml files
+VAULT_VERSION ?= 1.14.0
+# The vault version should also match the appVersion in the vault helm chart
+VAULT_CHART_VERSION ?= 0.25.0
+# Set the Operator SDK version to use. By default, what is installed on the system is used.
+# This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
+OPERATOR_SDK_VERSION ?= v1.31.0
+# ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
+ENVTEST_K8S_VERSION ?= 1.26.0
 
 # VERSION defines the project version for the bundle.
 # Update this value when you upgrade the version of your project.
@@ -60,8 +69,6 @@ BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
 IMG ?= controller:latest
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
-# ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION ?= 1.26.0
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -118,10 +125,11 @@ vet: ## Run go vet against code.
 test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
 
+# note: envtest requires docker, podman will not work
 .PHONY: integration
 integration: kind-setup deploy-vault deploy-ingress vault manifests generate fmt vet envtest ## Run tests.
 	export VAULT_TOKEN=$$($(KUBECTL) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
-	export VAULT_ADDR="http://localhost:8081" ;\
+	export VAULT_ADDR="http://localhost:8200" ;\
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration
 
 .PHONY: deploy-ingress
@@ -133,17 +141,17 @@ deploy-ingress: kubectl helm
 
 .PHONY: deploy-vault
 deploy-vault: kubectl helm
-	$(KUBECTL) create namespace vault --dry-run=client -o yaml | kubectl apply -f - 
+	$(KUBECTL) create namespace vault --dry-run=client -o yaml | $(KUBECTL) apply -f - 
 	$(KUBECTL) apply -f ./integration/rolebinding-admin.yaml -n vault
 	$(HELM) repo add hashicorp https://helm.releases.hashicorp.com
-	$(HELM) upgrade vault hashicorp/vault -i --create-namespace -n vault --atomic -f ./integration/vault-values.yaml
+	$(HELM) show chart hashicorp/vault --version $(VAULT_CHART_VERSION)
+	$(HELM) upgrade vault hashicorp/vault --version $(VAULT_CHART_VERSION) -i --create-namespace -n vault --atomic -f ./integration/vault-values.yaml
 	$(KUBECTL) wait --for=condition=ready pod/vault-0 -n vault --timeout=5m
 
 .PHONY: kind-setup
 kind-setup: kind
 	$(KIND) delete cluster
 	$(KIND) create cluster --image docker.io/kindest/node:$(KUBECTL_VERSION) --config=./integration/cluster-kind.yaml
-
 
 .PHONY: ldap-setup 
 ldap-setup: kind-setup vault
@@ -163,7 +171,6 @@ ldap-setup: kind-setup vault
 	$(KUBECTL) apply -f ./test/ldapauthengine/ldap-auth-engine-group.yaml
 ## Login with LDAP user (check database.ldiff for its membership)
 	$(VAULT) login -method=ldap -path=ldap/test/ username=trevor password=admin
-
 
 ##@ Build
 
@@ -195,7 +202,7 @@ install: manifests kustomize kubectl ## Install CRDs into the K8s cluster specif
 
 .PHONY: uninstall
 uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: deploy
 deploy: manifests kustomize kubectl ## Deploy controller to the K8s cluster specified in ~/.kube/config.
@@ -204,43 +211,37 @@ deploy: manifests kustomize kubectl ## Deploy controller to the K8s cluster spec
 
 .PHONY: undeploy
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
-
+	$(KUSTOMIZE) build config/default | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
 LOCALBIN ?= $(shell pwd)/bin
 $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
 
-## Tool Binaries
-KUSTOMIZE ?= $(LOCALBIN)/kustomize
-CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
-ENVTEST ?= $(LOCALBIN)/setup-envtest
-
-KUSTOMIZE_VERSION ?= v3.8.7
-CONTROLLER_TOOLS_VERSION ?= v0.10.0
-
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
+KUSTOMIZE ?= $(LOCALBIN)/kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
 $(KUSTOMIZE): $(LOCALBIN)
 	test -s $(LOCALBIN)/kustomize || { curl -s $(KUSTOMIZE_INSTALL_SCRIPT) | bash -s -- $(subst v,,$(KUSTOMIZE_VERSION)) $(LOCALBIN); }
 
 .PHONY: controller-gen
+CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
 $(CONTROLLER_GEN): $(LOCALBIN)
-	test -s $(LOCALBIN)/controller-gen || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
+	test -s $(LOCALBIN)/controller-gen || echo "Downloading controller-gen to ${CONTROLLER_GEN}..." && GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
 
 .PHONY: envtest
+ENVTEST ?= $(LOCALBIN)/setup-envtest
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
-	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+	test -s $(LOCALBIN)/setup-envtest || echo "Downloading setup-envtest to ${ENVTEST}..." && GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
 
 .PHONY: bundle
-bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
-	operator-sdk generate kustomize manifests --interactive=false -q
+bundle: manifests kustomize operator-sdk ## Generate bundle manifests and metadata, then validate generated files.
+	$(OPERATOR_SDK) generate kustomize manifests --interactive=false -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
-	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle $(BUNDLE_GEN_FLAGS)
-	operator-sdk bundle validate ./bundle
+	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle $(BUNDLE_GEN_FLAGS)
+	$(OPERATOR_SDK) bundle validate ./bundle
 
 .PHONY: bundle-build
 bundle-build: ## Build the bundle image.
@@ -251,7 +252,7 @@ bundle-push: ## Push the bundle image.
 	$(MAKE) docker-push IMG=$(BUNDLE_IMG)
 
 .PHONY: opm
-OPM = ./bin/opm
+OPM ?= $(LOCALBIN)/opm
 opm: ## Download opm locally if necessary.
 ifeq (,$(wildcard $(OPM)))
 ifeq (,$(shell which opm 2>/dev/null))
@@ -351,59 +352,63 @@ helmchart-clean:
 	rm -rf ./charts
 
 .PHONY: kind
-KIND = ./bin/kind
-kind: ## Download kind locally if necessary.
-ifeq (,$(wildcard $(KIND)))
-ifeq (,$(shell which kind 2>/dev/null))
-	$(call go-get-tool,$(KIND),sigs.k8s.io/kind@${KIND_VERSION})
-else
-KIND = $(shell which kind)
-endif
-endif
+KIND ?= $(LOCALBIN)/kind
+kind: $(KIND) ## Download kind locally if necessary.
+$(KIND): $(LOCALBIN)
+	test -s $(LOCALBIN)/kind || echo "Downloading kind to ${KIND}..." && GOBIN=$(LOCALBIN) go install sigs.k8s.io/kind@${KIND_VERSION}
 
 .PHONY: kubectl
-KUBECTL = ./bin/kubectl
+KUBECTL ?= $(LOCALBIN)/kubectl
 kubectl: ## Download kubectl locally if necessary.
 ifeq (,$(wildcard $(KUBECTL)))
-ifeq (,$(shell which kubectl 2>/dev/null))
-	echo "Downloading ${KUBECTL} for managing k8s resources."
+	@{ \
+	set -e ;\
+	echo "Downloading kubectl to ${KUBECTL}..." ;\
 	OS=$(shell go env GOOS) ;\
 	ARCH=$(shell go env GOARCH) ;\
 	curl --create-dirs -sSLo ${KUBECTL} https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/$${OS}/$${ARCH}/kubectl ;\
-	chmod +x ${KUBECTL}
-else
-KUBECTL = $(shell which kubectl)
-endif
+	chmod +x ${KUBECTL} ;\
+	}
 endif
 
 .PHONY: vault
-VAULT = ./bin/vault
+VAULT ?= $(LOCALBIN)/vault
 vault: ## Download vault cli locally if necessary.
 ifeq (,$(wildcard $(VAULT)))
-ifeq (,$(shell which vault 2>/dev/null))
-	echo "Downloading ${VAULT} cli."
+	echo "Downloading vault to ${VAULT}..."
 	OS=$(shell go env GOOS) ;\
 	ARCH=$(shell go env GOARCH) ;\
 	curl --create-dirs -sSLo ${VAULT}.zip https://releases.hashicorp.com/vault/${VAULT_VERSION}/vault_${VAULT_VERSION}_$${OS}_$${ARCH}.zip ;\
-	unzip ${VAULT}.zip -d ./bin/ ;\
+	unzip ${VAULT}.zip -d $(LOCALBIN)/ ;\
 	chmod +x ${VAULT}
-else
-VAULT = $(shell which vault)
-endif
 endif
 
 .PHONY: helm
-HELM = ./bin/helm
+HELM ?= $(LOCALBIN)/helm
 helm: ## Download helm locally if necessary.
 ifeq (,$(wildcard $(HELM)))
-ifeq (,$(shell which helm 2>/dev/null))
-	echo "Downloading ${HELM}."
+	echo "Downloading helm to ${HELM}..."
 	OS=$(shell go env GOOS) ;\
 	ARCH=$(shell go env GOARCH) ;\
 	curl --create-dirs -sSLo ${HELM}.tar.gz https://get.helm.sh/helm-${HELM_VERSION}-$${OS}-$${ARCH}.tar.gz ;\
-	tar -xf ${HELM}.tar.gz -C ./bin/ ;\
+	tar -xf ${HELM}.tar.gz -C $(LOCALBIN)/ ;\
 	mv ./bin/$${OS}-$${ARCH}/helm ${HELM}
-else
-HELM = $(shell which helm)
 endif
+
+.PHONY: operator-sdk
+OPERATOR_SDK ?= $(LOCALBIN)/operator-sdk
+operator-sdk: ## Download operator-sdk locally if necessary.
+ifeq (,$(wildcard $(OPERATOR_SDK)))
+	@{ \
+	set -e ;\
+	echo "Downloading operator-sdk to $(OPERATOR_SDK)..." ;\
+	mkdir -p $(dir $(OPERATOR_SDK)) ;\
+	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
+	curl -sSLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_$${OS}_$${ARCH} ;\
+	chmod +x $(OPERATOR_SDK) ;\
+	}
 endif
+
+.PHONY: clean
+clean:
+	rm -rf $(LOCALBIN) ./bundle ./charts

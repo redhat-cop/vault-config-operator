@@ -339,7 +339,7 @@ The following example allows for running a debugger using the Vault instance cre
             ],
             "env": {
                 "ENABLE_WEBHOOKS": "false",
-                "VAULT_ADDR": "http://localhost:8081",
+                "VAULT_ADDR": "http://localhost:8200",
             }
         }
     ]
@@ -621,6 +621,8 @@ operator-sdk run bundle --install-mode AllNamespaces -n vault-config-operator qu
 ```
 
 ## Integration Test
+
+> Note the envtest seems to only work with kind when using docker instead of podman
 
 ```sh
 make integration
