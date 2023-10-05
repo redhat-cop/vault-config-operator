@@ -55,6 +55,10 @@ func (d *PasswordPolicy) PrepareInternalValues(context context.Context, object c
 	return nil
 }
 
+func (d *PasswordPolicy) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (r *PasswordPolicy) IsValid() (bool, error) {
 	return true, nil
 }

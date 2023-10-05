@@ -97,6 +97,11 @@ func (d *KubernetesAuthEngineRole) PrepareInternalValues(context context.Context
 	return nil
 }
 
+func (d *KubernetesAuthEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
+
+	return nil
+}
+
 func (r *KubernetesAuthEngineRole) findSelectedNamespaceNames(context context.Context) ([]string, error) {
 	log := log.FromContext(context)
 	result := []string{}

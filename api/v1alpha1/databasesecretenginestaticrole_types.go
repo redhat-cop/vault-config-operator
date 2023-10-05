@@ -158,6 +158,10 @@ func (d *DatabaseSecretEngineStaticRole) PrepareInternalValues(context context.C
 	return nil
 }
 
+func (d *DatabaseSecretEngineStaticRole) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (r *DatabaseSecretEngineStaticRole) IsValid() (bool, error) {
 	err := r.isValid()
 	return err == nil, err

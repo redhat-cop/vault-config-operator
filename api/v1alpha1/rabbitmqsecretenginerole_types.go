@@ -176,6 +176,10 @@ func (rabbitMQ *RabbitMQSecretEngineRole) PrepareInternalValues(context context.
 	return nil
 }
 
+func (rabbitMQ *RabbitMQSecretEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (rabbitMQ *RabbitMQSecretEngineRole) IsValid() (bool, error) {
 	return true, nil
 }

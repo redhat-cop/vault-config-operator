@@ -98,6 +98,10 @@ func (d *Policy) PrepareInternalValues(context context.Context, object client.Ob
 	return nil
 }
 
+func (d *Policy) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (r *Policy) IsValid() (bool, error) {
 	return true, nil
 }

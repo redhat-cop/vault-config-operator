@@ -61,6 +61,10 @@ func (d *SecretEngineMount) PrepareInternalValues(context context.Context, objec
 	return nil
 }
 
+func (d *SecretEngineMount) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (d *SecretEngineMount) GetEngineListPath() string {
 	return "sys/mounts"
 }

@@ -95,6 +95,13 @@ func (r *VaultResource) manageReconcileLogic(context context.Context, instance c
 		log.Error(err, "unable to prepare internal values", "instance", instance)
 		return err
 	}
+
+	err = instance.(vaultutils.VaultObject).PrepareTLSConfig(context, instance)
+	if err != nil {
+		log.Error(err, "unable to prepare TLS Config values", "instance", instance)
+		return err
+	}
+
 	err = r.vaultEndpoint.CreateOrUpdate(context)
 	if err != nil {
 		log.Error(err, "unable to create/update vault resource", "instance", instance)

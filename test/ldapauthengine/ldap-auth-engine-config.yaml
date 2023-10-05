@@ -22,4 +22,3 @@ spec:
   groupFilter: (|(memberUid={{.Username}})(member={{.UserDN}})(uniqueMember={{.UserDN}}))
   userFilter: "({{.UserAttr}}={{.Username}})"
   groupDN: 'ou=Groups,dc=example,dc=com'
-  

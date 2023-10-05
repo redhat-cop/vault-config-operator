@@ -79,6 +79,10 @@ func (d *LDAPAuthEngineGroup) PrepareInternalValues(context context.Context, obj
 	return nil
 }
 
+func (d *LDAPAuthEngineGroup) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (r *LDAPAuthEngineGroup) IsValid() (bool, error) {
 	return true, nil
 }

@@ -150,6 +150,10 @@ func (d *Group) PrepareInternalValues(context context.Context, object client.Obj
 	return nil
 }
 
+func (d *Group) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (r *Group) IsValid() (bool, error) {
 	return true, nil
 }

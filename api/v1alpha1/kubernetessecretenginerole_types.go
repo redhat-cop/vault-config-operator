@@ -75,6 +75,10 @@ func (d *KubernetesSecretEngineRole) PrepareInternalValues(context context.Conte
 	return nil
 }
 
+func (d *KubernetesSecretEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (r *KubernetesSecretEngineRole) IsValid() (bool, error) {
 	return true, nil
 }

@@ -185,6 +185,10 @@ func (d *AuthEngineMount) PrepareInternalValues(context context.Context, object 
 	return nil
 }
 
+func (d *AuthEngineMount) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (d *AuthEngineMount) GetEngineListPath() string {
 	return "sys/auth"
 }

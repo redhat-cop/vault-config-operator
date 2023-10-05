@@ -76,6 +76,10 @@ func (d *PKISecretEngineRole) PrepareInternalValues(context context.Context, obj
 	return nil
 }
 
+func (p *PKISecretEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (r *PKISecretEngineRole) IsValid() (bool, error) {
 	return true, nil
 }

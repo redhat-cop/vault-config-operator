@@ -46,10 +46,15 @@ type LDAPAuthEngineConfigSpec struct {
 
 	LDAPConfig `json:",inline"`
 
-	// BindCredentials used to connect to the LDAP service on the specified LDAP Server
-	// BindCredentials consists in bindDN and bindPass, which can be created as Kubernetes Secret, VaultSecret or RandomSecret
+	// BindCredentials is used to connect to the LDAP service on the specified LDAP Server.
+	// BindCredentials consists in bindDN and bindPass, which can be created as Kubernetes Secret, VaultSecret or RandomSecret.
 	// +kubebuilder:validation:Required
 	BindCredentials vaultutils.RootCredentialConfig `json:"bindCredentials,omitempty"`
+
+	// CertificateConfig represents the LDAP service certificate configuration.
+	// CertificateConfig consists in certificate, clientTLSCert and clientTLSKey which can be consumed from an Kubernetes Secret.
+	// +kubebuilder:validation:Optional
+	TLSConfig vaultutils.TLSConfig `json:"tLSConfig,omitempty"`
 }
 
 func (d *LDAPAuthEngineConfig) GetVaultConnection() *vaultutils.VaultConnection {
@@ -78,6 +83,15 @@ func (d *LDAPAuthEngineConfig) IsInitialized() bool {
 
 func (d *LDAPAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	return d.setInternalCredentials(context)
+}
+
+func (d *LDAPAuthEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
+
+	if reflect.DeepEqual(d.Spec.TLSConfig, vaultutils.TLSConfig{TLSSecret: &corev1.LocalObjectReference{}}) {
+		return nil
+	}
+
+	return d.setTLSConfig(context)
 }
 
 func (r *LDAPAuthEngineConfig) IsValid() (bool, error) {
@@ -147,6 +161,40 @@ func (r *LDAPAuthEngineConfig) setInternalCredentials(context context.Context) e
 		return nil
 	}
 	return errors.New("no means of retrieving a secret was specified")
+}
+
+func (r *LDAPAuthEngineConfig) setTLSConfig(context context.Context) error {
+	log := log.FromContext(context)
+	kubeClient := context.Value("kubeClient").(client.Client)
+
+	if r.Spec.TLSConfig.TLSSecret != nil {
+		secret := &corev1.Secret{}
+		err := kubeClient.Get(context, types.NamespacedName{
+			Namespace: r.Namespace,
+			Name:      r.Spec.TLSConfig.TLSSecret.Name,
+		}, secret)
+
+		if err != nil {
+			log.Error(err, "unable to retrieve TLS Secret", "instance", r)
+			return err
+		}
+
+		r.Spec.retrievedCertificate = string(secret.Data["ca.crt"])
+		r.Spec.retrievedClientTLSCert = string(secret.Data["tls.crt"])
+		r.Spec.retrievedClientTLSKey = string(secret.Data["tls.key"])
+
+		return nil
+
+	} else if r.Spec.Certificate != "" || r.Spec.ClientTLSCert != "" || r.Spec.ClientTLSKey != "" {
+
+		r.Spec.retrievedCertificate = r.Spec.Certificate
+		r.Spec.retrievedClientTLSCert = r.Spec.ClientTLSCert
+		r.Spec.retrievedClientTLSKey = r.Spec.ClientTLSKey
+
+		return nil
+	}
+
+	return nil
 }
 
 type LDAPConfig struct {
@@ -320,6 +368,12 @@ type LDAPConfig struct {
 	retrievedPassword string `json:"-"`
 
 	retrievedUsername string `json:"-"`
+
+	retrievedCertificate string `json:"-"`
+
+	retrievedClientTLSCert string `json:"-"`
+
+	retrievedClientTLSKey string `json:"-"`
 }
 
 // LDAPAuthEngineConfigStatus defines the observed state of LDAPAuthEngineConfig
@@ -378,9 +432,17 @@ func (i *LDAPConfig) toMap() map[string]interface{} {
 	payload["tls_min_version"] = i.TLSMinVersion
 	payload["tls_max_version"] = i.TLSMaxVersion
 	payload["insecure_tls"] = i.InsecureTLS
-	payload["certificate"] = i.Certificate
-	payload["client_tls_cert"] = i.ClientTLSCert
-	payload["client_tls_key"] = i.ClientTLSKey
+
+	if i.Certificate != "" || i.ClientTLSCert != "" || i.ClientTLSKey != "" {
+
+		i.retrievedCertificate = i.Certificate
+		i.retrievedClientTLSCert = i.ClientTLSCert
+		i.retrievedClientTLSKey = i.ClientTLSKey
+	}
+
+	payload["certificate"] = i.retrievedCertificate
+	payload["client_tls_cert"] = i.retrievedClientTLSCert
+	payload["client_tls_key"] = i.retrievedClientTLSKey
 	payload["binddn"] = i.BindDN
 	payload["bindpass"] = i.retrievedPassword
 	payload["userdn"] = i.UserDN
