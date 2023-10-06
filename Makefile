@@ -411,4 +411,4 @@ endif
 
 .PHONY: clean
 clean:
-	rm -rf $(LOCALBIN) ./bundle ./charts
+	rm -rf $(LOCALBIN) ./bundle ./bundle-* ./charts

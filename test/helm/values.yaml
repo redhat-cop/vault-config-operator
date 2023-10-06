@@ -1,0 +1,6 @@
+env:
+  - name: VAULT_ADDR
+    value: https://vault.vault.svc.cluster.local:8200
+  - name: VAULT_SKIP_VERIFY 
+    value: "true"
+enableCertManager: false

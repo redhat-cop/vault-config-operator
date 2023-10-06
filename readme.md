@@ -10,10 +10,10 @@
   - [Secret Management](#secret-management)
   - [Identities](#identities)
   - [The common authentication section](#the-common-authentication-section)
-  - [The common connection section](#the-common-connection-section)
   - [End to end example](#end-to-end-example)
   - [Contributing a new Vault type](#contributing-a-new-vault-type)
   - [Initializing the connection to Vault](#initializing-the-connection-to-vault)
+  - [The Common connection section](#the-common-connection-section)
   - [Deploying the Operator](#deploying-the-operator)
     - [Multiarch Support](#multiarch-support)
     - [Deploying from OperatorHub](#deploying-from-operatorhub)
@@ -128,13 +128,11 @@ This is a configmap that will be injected with the OpenShift service-ca, you wil
 
 ```yaml
 apiVersion: v1
-
 kind: ConfigMap
 metadata:
   annotations:
     service.beta.openshift.io/inject-cabundle: "true"
   name: ocp-service-ca
-data: []
 ```
 
 Here is the subscription using that configmap:
@@ -586,7 +584,7 @@ Deploy chart...
 
 ```sh
 make helmchart IMG=${imageRepository} VERSION=${imageTag}
-helm upgrade -i vault-config-operator-local charts/vault-config-operator -n vault-config-operator-local --create-namespace
+helm upgrade -i vault-config-operator-local charts/vault-config-operator -n vault-config-operator-local --create-namespace -f test/helm/values.yaml
 ```
 
 Delete...
@@ -613,11 +611,18 @@ make bundle IMG=quay.io/$repo/vault-config-operator:latest
 operator-sdk bundle validate ./bundle --select-optional suite=operatorframework --optional-values=k8s-version=1.25
 make bundle-build BUNDLE_IMG=quay.io/$repo/vault-config-operator-bundle:latest
 docker push quay.io/$repo/vault-config-operator-bundle:latest
-operator-sdk bundle validate quay.io/$repo/vault-config-operator-bundle:latest suite=operatorframework --optional-values=k8s-version=1.25
+operator-sdk bundle validate quay.io/$repo/vault-config-operator-bundle:latest --select-optional suite=operatorframework --optional-values=k8s-version=1.25
 oc new-project vault-config-operator
 oc label namespace vault-config-operator openshift.io/cluster-monitoring="true"
 operator-sdk cleanup vault-config-operator -n vault-config-operator
 operator-sdk run bundle --install-mode AllNamespaces -n vault-config-operator quay.io/$repo/vault-config-operator-bundle:latest
+```
+
+Configure Subscription to use local vault for testing...
+
+```sh
+oc apply -f test/olm/configmap-ocp-service-ca.yaml -n vault-config-operator
+oc apply -f test/olm/subscription-vault-config-operator-v0-0-1-sub.yaml -n vault-config-operator
 ```
 
 ## Integration Test
@@ -653,6 +658,4 @@ git push upstream -f <tagname>
 
 ```sh
 operator-sdk cleanup vault-config-operator -n vault-config-operator
-oc delete operatorgroup operator-sdk-og
-oc delete catalogsource vault-config-operator-catalog
 ```
