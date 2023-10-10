@@ -580,11 +580,22 @@ export imageRepository="quay.io/redhat-cop/vault-config-operator"
 export imageTag="$(git -c 'versionsort.suffix=-' ls-remote --exit-code --refs --sort='version:refname' --tags https://github.com/redhat-cop/vault-config-operator.git '*.*.*' | tail --lines=1 | cut --delimiter='/' --fields=3)"
 ```
 
-Deploy chart...
+Deploy chart using service serving certificates...
 
 ```sh
 make helmchart IMG=${imageRepository} VERSION=${imageTag}
+oc new-project vault-config-operator-local
+oc apply -f test/helm/configmap-ocp-service-ca.yaml -n vault-config-operator-local
 helm upgrade -i vault-config-operator-local charts/vault-config-operator -n vault-config-operator-local --create-namespace -f test/helm/values.yaml
+```
+
+Deploy chart using cert manager certificates...
+
+```sh
+make helmchart IMG=${imageRepository} VERSION=${imageTag}
+oc new-project vault-config-operator-local
+oc apply -f test/helm/configmap-ocp-service-ca.yaml -n vault-config-operator-local
+helm upgrade -i vault-config-operator-local charts/vault-config-operator -n vault-config-operator-local --create-namespace -f test/helm/values.yaml --set enableCertManager=true
 ```
 
 Delete...

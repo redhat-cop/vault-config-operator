@@ -17,7 +17,7 @@ spec:
   issuerRef:
     kind: Issuer
     name: selfsigned-issuer
-  secretName: webhook-server-cert
+  secretName: certmanager-webhook-service-cert
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -30,5 +30,5 @@ spec:
   issuerRef:
     kind: Issuer
     name: selfsigned-issuer
-  secretName: vault-config-operator-certs
+  secretName: certmanager-metrics-service-cert
 {{ end }}

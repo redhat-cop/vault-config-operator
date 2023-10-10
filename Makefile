@@ -305,8 +305,9 @@ helmchart: helmchart-clean kustomize helm
 	cp ./config/helmchart/templates/* ./charts/${OPERATOR_NAME}/templates
 	version=${VERSION} envsubst < ./config/helmchart/Chart.yaml.tpl  > ./charts/${OPERATOR_NAME}/Chart.yaml
 	version=${VERSION} image_repo=$${IMG%:*} envsubst < ./config/helmchart/values.yaml.tpl  > ./charts/${OPERATOR_NAME}/values.yaml
-	sed -i '1s/^/{{ if .Values.enableMonitoring }}/' ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_${OPERATOR_NAME}-controller-manager-metrics-monitor.yaml
-	echo {{ end }} >> ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_${OPERATOR_NAME}-controller-manager-metrics-monitor.yaml
+	sed -i '1s/^/{{- if .Values.enableMonitoring }}\n/' ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_${OPERATOR_NAME}-controller-manager-metrics-monitor.yaml
+	echo {{- end }} >> ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_${OPERATOR_NAME}-controller-manager-metrics-monitor.yaml
+	sed -i 's/name: vault-config-operator-certs/{{- if .Values.enableCertManager }}\n          name: certmanager-metrics-service-cert\n          {{- else }}\n          name: vault-config-operator-certs\n          {{- end }}/' ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_${OPERATOR_NAME}-controller-manager-metrics-monitor.yaml
 	$(HELM) lint ./charts/${OPERATOR_NAME}	
 
 .PHONY: helmchart-repo

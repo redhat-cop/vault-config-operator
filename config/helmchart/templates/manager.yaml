@@ -20,6 +20,8 @@ spec:
         {{- include "vault-config-operator.selectorLabels" . | nindent 8 }}
         control-plane: vault-config-operator
     spec:
+      securityContext:
+        runAsNonRoot: true
       serviceAccountName: controller-manager
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -35,6 +37,11 @@ spec:
         - --v=0
         image: "{{ .Values.kube_rbac_proxy.image.repository }}:{{ .Values.kube_rbac_proxy.image.tag }}"
         name: kube-rbac-proxy
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - "ALL"
         ports:
         - containerPort: 8443
           name: https
@@ -65,6 +72,11 @@ spec:
           {{- toYaml . | nindent 8 }}
         {{- end }}
         name: {{ .Chart.Name }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - "ALL"
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
         livenessProbe:
@@ -95,10 +107,18 @@ spec:
       - name: vault-config-operator-certs
         secret:
           defaultMode: 420
+          {{- if .Values.enableCertManager }}
+          secretName: certmanager-metrics-service-cert
+          {{- else }}
           secretName: vault-config-operator-certs
+          {{- end }}          
       - name: webhook-server-cert
         secret:
+          {{- if .Values.enableCertManager }}
+          secretName: certmanager-webhook-service-cert
+          {{- else }}
           secretName: webhook-server-cert
+          {{- end }}
           defaultMode: 420
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 6 }}

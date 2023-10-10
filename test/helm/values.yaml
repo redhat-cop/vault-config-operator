@@ -1,6 +1,13 @@
 env:
   - name: VAULT_ADDR
     value: https://vault.vault.svc.cluster.local:8200
-  - name: VAULT_SKIP_VERIFY 
-    value: "true"
+  - name: VAULT_CACERT 
+    value: /vault-ca/service-ca.crt
 enableCertManager: false
+volumes:
+  - name: vault-ca
+    configMap:
+      name: ocp-service-ca
+volumeMounts:
+  - mountPath: /vault-ca
+    name: vault-ca
