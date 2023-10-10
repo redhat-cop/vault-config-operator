@@ -1,5 +1,5 @@
 - op: add
   path: /metadata/annotations
   value:
-    cert-manager.io/inject-ca-from: '{{- if .Values.enableCertManager }}{{- printf "%s/certmanager-webhook-service-cert" .Release.Namespace }}{{- end }}'
+    cert-manager.io/inject-ca-from: '{{- if .Values.enableCertManager }}{{- printf "%s/vault-config-operator-webhook-service-cert" .Release.Namespace }}{{- end }}'
     service.beta.openshift.io/inject-cabundle: '{{- if .Values.enableCertManager }} {{- printf "false" }} {{- else }} {{- printf "true" }} {{- end }}'

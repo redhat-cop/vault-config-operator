@@ -21,13 +21,14 @@ spec:
         control-plane: vault-config-operator
     spec:
       securityContext:
-        runAsNonRoot: true
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       serviceAccountName: controller-manager
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
+      {{- if .Values.enableMonitoring }}
       - args:
         - --secure-listen-address=0.0.0.0:8443
         - --upstream=http://127.0.0.1:8080/
@@ -38,19 +39,17 @@ spec:
         image: "{{ .Values.kube_rbac_proxy.image.repository }}:{{ .Values.kube_rbac_proxy.image.tag }}"
         name: kube-rbac-proxy
         securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-              - "ALL"
+          {{- toYaml .Values.kube_rbac_proxy.securityContext | nindent 10 }}
         ports:
         - containerPort: 8443
           name: https
         volumeMounts:
         - mountPath: /etc/certs/tls
-          name: vault-config-operator-certs
+          name: metrics-service-cert
         imagePullPolicy: {{ .Values.kube_rbac_proxy.image.pullPolicy }}
         resources:
           {{- toYaml .Values.kube_rbac_proxy.resources | nindent 10 }}
+      {{- end }}
       - command:
         - /manager
         args:
@@ -61,7 +60,7 @@ spec:
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         volumeMounts:
-        - name: webhook-server-cert
+        - name: webhook-service-cert
           readOnly: true
           mountPath: /tmp/k8s-webhook-server/serving-certs
         {{- with .Values.volumeMounts }}
@@ -73,10 +72,7 @@ spec:
         {{- end }}
         name: {{ .Chart.Name }}
         securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-              - "ALL"
+          {{- toYaml .Values.securityContext | nindent 10 }}
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
         livenessProbe:
@@ -104,18 +100,20 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-      - name: vault-config-operator-certs
+      {{- if .Values.enableMonitoring }}
+      - name: metrics-service-cert
         secret:
           defaultMode: 420
           {{- if .Values.enableCertManager }}
-          secretName: certmanager-metrics-service-cert
+          secretName: vault-config-operator-metrics-service-cert
           {{- else }}
           secretName: vault-config-operator-certs
-          {{- end }}          
-      - name: webhook-server-cert
+          {{- end }}
+      {{- end }}
+      - name: webhook-service-cert
         secret:
           {{- if .Values.enableCertManager }}
-          secretName: certmanager-webhook-service-cert
+          secretName: vault-config-operator-webhook-service-cert
           {{- else }}
           secretName: webhook-server-cert
           {{- end }}
@@ -123,4 +121,3 @@ spec:
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 6 }}
       {{- end }}
-
