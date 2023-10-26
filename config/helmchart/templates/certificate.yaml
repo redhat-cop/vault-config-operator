@@ -1,4 +1,4 @@
-{{ if .Values.enableCertManager }}
+{{- if .Values.enableCertManager }}
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
@@ -9,7 +9,7 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: serving-cert
+  name: vault-config-operator-webhook-service-cert
 spec:
   dnsNames:
   - vault-config-operator-webhook-service.{{ .Release.Namespace }}.svc
@@ -17,12 +17,12 @@ spec:
   issuerRef:
     kind: Issuer
     name: selfsigned-issuer
-  secretName: webhook-server-cert
+  secretName: vault-config-operator-webhook-service-cert
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: metrics-serving-cert
+  name: vault-config-operator-metrics-service-cert
 spec:
   dnsNames:
   - vault-config-operator-controller-manager-metrics-service.{{ .Release.Namespace }}.svc
@@ -30,5 +30,5 @@ spec:
   issuerRef:
     kind: Issuer
     name: selfsigned-issuer
-  secretName: vault-config-operator-certs
-{{ end }}
+  secretName: vault-config-operator-metrics-service-cert
+{{- end }}
