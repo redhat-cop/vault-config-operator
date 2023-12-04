@@ -141,7 +141,7 @@ spec:
               name:
                 description: The name of the obejct created in Vault. If this is specified
                   it takes precedence over {metatada.name}
-                pattern: '''[a-z0-9]([-a-z0-9]*[a-z0-9])?'''
+                pattern: '[a-z0-9]([-a-z0-9]*[a-z0-9])?'
                 type: string
               policies:
                 description: Policies Policies to be tied to the group. kubebuilder:validation:UniqueItems=true
