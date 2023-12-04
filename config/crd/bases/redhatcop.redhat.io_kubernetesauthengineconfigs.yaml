@@ -159,7 +159,7 @@ spec:
               name:
                 description: The name of the obejct created in Vault. If this is specified
                   it takes precedence over {metatada.name}
-                pattern: '''[a-z0-9]([-a-z0-9]*[a-z0-9])?'''
+                pattern: '[a-z0-9]([-a-z0-9]*[a-z0-9])?'
                 type: string
               path:
                 description: Path at which to make the configuration. The final path
