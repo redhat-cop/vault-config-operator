@@ -81,6 +81,10 @@ func (q *QuaySecretEngineConfig) PrepareInternalValues(context context.Context, 
 	return q.setInternalCredentials(context)
 }
 
+func (q *QuaySecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return q.setInternalCredentials(context)
+}
+
 func (q *QuaySecretEngineConfig) IsValid() (bool, error) {
 	err := q.isValid()
 	return err == nil, err

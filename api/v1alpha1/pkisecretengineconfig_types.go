@@ -452,6 +452,11 @@ func (p *PKISecretEngineConfig) isValid() error {
 func (p *PKISecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	return nil
 }
+
+func (p *PKISecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (p *PKISecretEngineConfig) setSignedIntermediate(signed string) {
 	p.Spec.signedIntermediate = signed
 }

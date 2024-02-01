@@ -10,10 +10,10 @@
   - [Secret Management](#secret-management)
   - [Identities](#identities)
   - [The common authentication section](#the-common-authentication-section)
-  - [The common connection section](#the-common-connection-section)
   - [End to end example](#end-to-end-example)
   - [Contributing a new Vault type](#contributing-a-new-vault-type)
   - [Initializing the connection to Vault](#initializing-the-connection-to-vault)
+  - [The Common connection section](#the-common-connection-section)
   - [Deploying the Operator](#deploying-the-operator)
     - [Multiarch Support](#multiarch-support)
     - [Deploying from OperatorHub](#deploying-from-operatorhub)
@@ -128,13 +128,11 @@ This is a configmap that will be injected with the OpenShift service-ca, you wil
 
 ```yaml
 apiVersion: v1
-
 kind: ConfigMap
 metadata:
   annotations:
     service.beta.openshift.io/inject-cabundle: "true"
   name: ocp-service-ca
-data: []
 ```
 
 Here is the subscription using that configmap:
@@ -266,10 +264,10 @@ helm upgrade vault-config-operator vault-config-operator/vault-config-operator
 If you want the installation to create self-signed certificates for the webhook and the metrics server, set `enableCertManager` to `true`. The installation will create a self-signed issuer and the required certificates.
 
 If you want to provide your own `cert-manager` certificates instead, please create the following two certificates:
-- A certificate named `serving-cert` in the operator's target namespace, with secret name `webhook-server-cert`, for the following domain names:
+- A certificate with a name of your choice in the operator's target namespace, with secret name `vault-config-operator-webhook-service-cert`, for the following domain names:
   - `vault-config-operator-webhook-service.<target namespace>.svc`
   - `vault-config-operator-webhook-service.<target namespace>.svc.cluster.local`
-- A certificate with a name of your choice in the operator's target namespace, with secret name `vault-config-operator-certs`, for the following domain names:
+- A certificate with a name of your choice in the operator's target namespace, with secret name `vault-config-operator-metrics-service-cert`, for the following domain names:
   - `vault-config-operator-controller-manager-metrics-service.<target namespace>.svc`
   - `vault-config-operator-controller-manager-metrics-service.<target namespace>.svc.cluster.local`
 
@@ -339,7 +337,7 @@ The following example allows for running a debugger using the Vault instance cre
             ],
             "env": {
                 "ENABLE_WEBHOOKS": "false",
-                "VAULT_ADDR": "http://localhost:8081",
+                "VAULT_ADDR": "http://localhost:8200",
             }
         }
     ]
@@ -582,11 +580,22 @@ export imageRepository="quay.io/redhat-cop/vault-config-operator"
 export imageTag="$(git -c 'versionsort.suffix=-' ls-remote --exit-code --refs --sort='version:refname' --tags https://github.com/redhat-cop/vault-config-operator.git '*.*.*' | tail --lines=1 | cut --delimiter='/' --fields=3)"
 ```
 
-Deploy chart...
+Deploy chart using service serving certificates...
 
 ```sh
 make helmchart IMG=${imageRepository} VERSION=${imageTag}
-helm upgrade -i vault-config-operator-local charts/vault-config-operator -n vault-config-operator-local --create-namespace
+oc new-project vault-config-operator-local
+oc apply -f test/helm/configmap-ocp-service-ca.yaml -n vault-config-operator-local
+helm upgrade -i vault-config-operator-local charts/vault-config-operator -n vault-config-operator-local --create-namespace -f test/helm/values.yaml
+```
+
+Deploy chart using cert manager certificates...
+
+```sh
+make helmchart IMG=${imageRepository} VERSION=${imageTag}
+oc new-project vault-config-operator-local
+oc apply -f test/helm/configmap-ocp-service-ca.yaml -n vault-config-operator-local
+helm upgrade -i vault-config-operator-local charts/vault-config-operator -n vault-config-operator-local --create-namespace -f test/helm/values.yaml --set enableCertManager=true
 ```
 
 Delete...
@@ -613,14 +622,23 @@ make bundle IMG=quay.io/$repo/vault-config-operator:latest
 operator-sdk bundle validate ./bundle --select-optional suite=operatorframework --optional-values=k8s-version=1.25
 make bundle-build BUNDLE_IMG=quay.io/$repo/vault-config-operator-bundle:latest
 docker push quay.io/$repo/vault-config-operator-bundle:latest
-operator-sdk bundle validate quay.io/$repo/vault-config-operator-bundle:latest suite=operatorframework --optional-values=k8s-version=1.25
+operator-sdk bundle validate quay.io/$repo/vault-config-operator-bundle:latest --select-optional suite=operatorframework --optional-values=k8s-version=1.25
 oc new-project vault-config-operator
 oc label namespace vault-config-operator openshift.io/cluster-monitoring="true"
 operator-sdk cleanup vault-config-operator -n vault-config-operator
 operator-sdk run bundle --install-mode AllNamespaces -n vault-config-operator quay.io/$repo/vault-config-operator-bundle:latest
 ```
 
+Configure Subscription to use local vault for testing...
+
+```sh
+oc apply -f test/olm/configmap-ocp-service-ca.yaml -n vault-config-operator
+oc apply -f test/olm/subscription-vault-config-operator-v0-0-1-sub.yaml -n vault-config-operator
+```
+
 ## Integration Test
+
+> Note the envtest seems to only work with kind when using docker instead of podman
 
 ```sh
 make integration
@@ -651,6 +669,4 @@ git push upstream -f <tagname>
 
 ```sh
 operator-sdk cleanup vault-config-operator -n vault-config-operator
-oc delete operatorgroup operator-sdk-og
-oc delete catalogsource vault-config-operator-catalog
 ```

@@ -51,6 +51,11 @@ type GroupAliasSpec struct {
 	retrievedAliasID string `json:"-"`
 
 	retrievedName string `json:"-"`
+
+	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern:=`[a-z0-9]([-a-z0-9]*[a-z0-9])?`
+	Name string `json:"name,omitempty"`
 }
 
 type GroupAliasConfig struct {
@@ -157,13 +162,16 @@ func (d *GroupAlias) PrepareInternalValues(context context.Context, object clien
 		return err
 	}
 	d.Spec.retrievedCanonicalID = secret.Data["id"].(string)
-
-	d.Spec.retrievedName = d.Name
+	if d.Spec.Name != "" {
+		d.Spec.retrievedName = d.Spec.Name
+	} else {
+		d.Spec.retrievedName = d.Name
+	}
 
 	if d.Status.ID == "" {
 		//we have to create the group alias as unfortunately this api is asymmetric
 		payload := map[string]interface{}{
-			"name":           d.Name,
+			"name":           map[bool]string{true: d.Spec.Name, false: d.Name}[d.Spec.Name != ""],
 			"mount_accessor": d.Spec.retrievedMountAccessor,
 			"canonical_id":   d.Spec.retrievedCanonicalID,
 		}
@@ -184,6 +192,10 @@ func (d *GroupAlias) PrepareInternalValues(context context.Context, object clien
 	}
 
 	d.Spec.retrievedAliasID = d.Status.ID
+	return nil
+}
+
+func (d *GroupAlias) PrepareTLSConfig(context context.Context, object client.Object) error {
 	return nil
 }
 

@@ -48,6 +48,11 @@ type DatabaseSecretEngineRoleSpec struct {
 	Path vaultutils.Path `json:"path,omitempty"`
 
 	DBSERole `json:",inline"`
+
+	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern:=`[a-z0-9]([-a-z0-9]*[a-z0-9])?`
+	Name string `json:"name,omitempty"`
 }
 
 var _ vaultutils.VaultObject = &DatabaseSecretEngineRole{}
@@ -59,7 +64,10 @@ func (d *DatabaseSecretEngineRole) GetVaultConnection() *vaultutils.VaultConnect
 }
 
 func (d *DatabaseSecretEngineRole) GetPath() string {
-	return string(d.Spec.Path) + "/" + "roles" + "/" + d.Name
+	if d.Spec.Name != "" {
+		return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + d.Spec.Name)
+	}
+	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + d.Name)
 }
 func (d *DatabaseSecretEngineRole) GetPayload() map[string]interface{} {
 	return d.Spec.toMap()
@@ -74,6 +82,10 @@ func (d *DatabaseSecretEngineRole) IsInitialized() bool {
 }
 
 func (d *DatabaseSecretEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
+	return nil
+}
+
+func (d *DatabaseSecretEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
 	return nil
 }
 

@@ -116,6 +116,10 @@ func (d *GitHubSecretEngineConfig) PrepareInternalValues(context context.Context
 	return d.setInternalCredentials(context)
 }
 
+func (d *GitHubSecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return d.setInternalCredentials(context)
+}
+
 func (r *GitHubSecretEngineConfig) IsValid() (bool, error) {
 	err := r.isValid()
 	return err == nil, err

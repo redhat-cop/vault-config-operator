@@ -75,6 +75,11 @@ type RandomSecretSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=false
 	IsKVSecretsEngineV2 bool `json:"isKVSecretsEngineV2,omitempty"`
+
+	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern:=`[a-z0-9]([-a-z0-9]*[a-z0-9])?`
+	Name string `json:"name,omitempty"`
 }
 
 const ttlKey string = "ttl"
@@ -87,7 +92,10 @@ func (d *RandomSecret) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *RandomSecret) GetPath() string {
-	return string(d.Spec.Path) + "/" + d.Name
+	if d.Spec.Name != "" {
+		return vaultutils.CleansePath(string(d.Spec.Path) + "/" + d.Spec.Name)
+	}
+	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + d.Name)
 }
 
 func (d *RandomSecret) getV1Payload() map[string]interface{} {
@@ -126,6 +134,10 @@ func (d *RandomSecret) IsInitialized() bool {
 
 func (d *RandomSecret) PrepareInternalValues(context context.Context, object client.Object) error {
 	return d.GenerateNewPassword(context)
+}
+
+func (d *RandomSecret) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
 }
 
 type VaultPasswordPolicy struct {

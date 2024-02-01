@@ -64,6 +64,16 @@ spec:
       kind: GitHubSecretEngineRole
       name: githubsecretengineroles.redhatcop.redhat.io
       version: v1alpha1
+    - description: GroupAlias is the Schema for the groupalias API
+      displayName: Group Alias
+      kind: GroupAlias
+      name: groupaliases.redhatcop.redhat.io
+      version: v1alpha1
+    - description: Group is the Schema for the groups API
+      displayName: Group
+      kind: Group
+      name: groups.redhatcop.redhat.io
+      version: v1alpha1
     - description: JWTOIDCAuthEngineConfig is the Schema for the jwtoidcauthengineconfigs
         API
       displayName: JWTOIDCAuth Engine Config

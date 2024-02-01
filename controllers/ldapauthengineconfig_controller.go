@@ -111,6 +111,35 @@ func (r *LDAPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) erro
 		},
 	}
 
+	isTLSSecret := predicate.Funcs{
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			newSecret, ok := e.ObjectNew.DeepCopyObject().(*corev1.Secret)
+			if !ok || newSecret.Type == "kubernetes.io/tls" {
+				return false
+			}
+			oldSecret, ok := e.ObjectOld.DeepCopyObject().(*corev1.Secret)
+			if !ok {
+				return true
+			}
+			// return bytes.Equal(oldSecret.Data["username"], newSecret.Data["username"]) || bytes.Equal(oldSecret.Data["password"], newSecret.Data["password"])
+			return bytes.Equal(oldSecret.Data["ca.crt"], newSecret.Data["ca.crt"]) || bytes.Equal(oldSecret.Data["tls.crt"], newSecret.Data["tls.crt"]) || bytes.Equal(oldSecret.Data["tls.key"], newSecret.Data["tls.key"])
+		},
+		CreateFunc: func(e event.CreateEvent) bool {
+			newSecret, ok := e.Object.DeepCopyObject().(*corev1.Secret)
+			if !ok || newSecret.Type == "kubernetes.io/tls" {
+				return false
+			}
+			return true
+		},
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			return false
+		},
+
+		GenericFunc: func(e event.GenericEvent) bool {
+			return false
+		},
+	}
+
 	isUpdatedRandomSecret := predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			newSecret, ok := e.ObjectNew.DeepCopyObject().(*redhatcopv1alpha1.RandomSecret)
@@ -166,6 +195,28 @@ func (r *LDAPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) erro
 			}
 			return res
 		}), builder.WithPredicates(isBasicAuthSecret)).
+		Watches(&corev1.Secret{
+			TypeMeta: metav1.TypeMeta{
+				Kind: "Secret",
+			},
+		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
+			res := []reconcile.Request{}
+			s := a.(*corev1.Secret)
+			dbsecs, err := r.findApplicableLAECForTLSSecret(ctx, s)
+			if err != nil {
+				r.Log.Error(err, "unable to find applicable LDAPAuthEngines for namespace", "namespace", s.Name)
+				return []reconcile.Request{}
+			}
+			for _, dbsec := range dbsecs {
+				res = append(res, reconcile.Request{
+					NamespacedName: types.NamespacedName{
+						Name:      dbsec.GetName(),
+						Namespace: dbsec.GetNamespace(),
+					},
+				})
+			}
+			return res
+		}), builder.WithPredicates(isTLSSecret)).
 		Watches(&redhatcopv1alpha1.RandomSecret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "RandomSecret",
@@ -209,6 +260,25 @@ func (r *LDAPAuthEngineConfigReconciler) findApplicableLAECForSecret(ctx context
 	}
 	return result, nil
 }
+
+func (r *LDAPAuthEngineConfigReconciler) findApplicableLAECForTLSSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.LDAPAuthEngineConfig, error) {
+	result := []redhatcopv1alpha1.LDAPAuthEngineConfig{}
+	vrl := &redhatcopv1alpha1.LDAPAuthEngineConfigList{}
+	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
+		Namespace: secret.Namespace,
+	})
+	if err != nil {
+		r.Log.Error(err, "unable to retrieve the list of LDAPAuthEngineConfig")
+		return nil, err
+	}
+	for _, vr := range vrl.Items {
+		if vr.Spec.TLSConfig.TLSSecret != nil && vr.Spec.TLSConfig.TLSSecret.Name == secret.Name {
+			result = append(result, vr)
+		}
+	}
+	return result, nil
+}
+
 func (r *LDAPAuthEngineConfigReconciler) findApplicableLAECForRandomSecret(ctx context.Context, randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.LDAPAuthEngineConfig, error) {
 	result := []redhatcopv1alpha1.LDAPAuthEngineConfig{}
 	vrl := &redhatcopv1alpha1.LDAPAuthEngineConfigList{}

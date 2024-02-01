@@ -33,6 +33,7 @@ type VaultObject interface {
 	IsInitialized() bool
 	IsValid() (bool, error)
 	PrepareInternalValues(context context.Context, object client.Object) error
+	PrepareTLSConfig(context context.Context, object client.Object) error
 	GetKubeAuthConfiguration() *KubeAuthConfiguration
 	GetVaultConnection() *VaultConnection
 }

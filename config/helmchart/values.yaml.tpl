@@ -19,6 +19,15 @@ volumes: []
 volumeMounts: []
 podAnnotations: {}
 
+podSecurityContext:
+  runAsNonRoot: true
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - "ALL"
+
 resources:
   requests:
     cpu: 100m
@@ -42,6 +51,11 @@ kube_rbac_proxy:
     requests:
       cpu: 5m
       memory: 64Mi
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - "ALL"
 
 enableMonitoring: true
 enableCertManager: false

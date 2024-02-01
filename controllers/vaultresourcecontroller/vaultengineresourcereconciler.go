@@ -94,6 +94,13 @@ func (r *VaultEngineResource) manageReconcileLogic(context context.Context, inst
 		log.Error(err, "unable to prepare internal values", "instance", instance)
 		return err
 	}
+
+	err = instance.(vaultutils.VaultObject).PrepareTLSConfig(context, instance)
+	if err != nil {
+		log.Error(err, "unable to prepare TLS Config values", "instance", instance)
+		return err
+	}
+
 	found, err := r.vaultEngineEndpoint.Exists(context)
 	if err != nil {
 		log.Error(err, "unable to check if exists", "instance", instance)

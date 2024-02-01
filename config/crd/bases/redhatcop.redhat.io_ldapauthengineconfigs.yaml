@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.10.0
+    controller-gen.kubebuilder.io/version: v0.11.1
   creationTimestamp: null
   name: ldapauthengineconfigs.redhatcop.redhat.io
 spec:
@@ -89,10 +89,10 @@ spec:
                     x-kubernetes-map-type: atomic
                 type: object
               bindCredentials:
-                description: BindCredentials used to connect to the LDAP service on
-                  the specified LDAP Server BindCredentials consists in bindDN and
-                  bindPass, which can be created as Kubernetes Secret, VaultSecret
-                  or RandomSecret
+                description: BindCredentials is used to connect to the LDAP service
+                  on the specified LDAP Server. BindCredentials consists in bindDN
+                  and bindPass, which can be created as Kubernetes Secret, VaultSecret
+                  or RandomSecret.
                 properties:
                   passwordKey:
                     default: password
@@ -320,6 +320,39 @@ spec:
                 description: StartTLS If true, issues a StartTLS command after establishing
                   an unencrypted connection.
                 type: boolean
+              tLSConfig:
+                description: CertificateConfig represents the LDAP service certificate
+                  configuration. CertificateConfig consists in certificate, clientTLSCert
+                  and clientTLSKey which can be consumed from an Kubernetes Secret.
+                properties:
+                  cacert:
+                    description: Cacert Path to a PEM-encoded CA certificate file
+                      on the local disk. This file is used to verify the Vault server's
+                      SSL certificate. This environment variable takes precedence
+                      over a cert passed via the secret.
+                    type: string
+                  skipVerify:
+                    description: SkipVerify Do not verify Vault's presented certificate
+                      before communicating with it. Setting this variable is not recommended
+                      and voids Vault's security model.
+                    type: boolean
+                  tlsSecret:
+                    description: 'TLSSecret namespace-local secret containing the
+                      tls material for the connection. the expected keys for the secret
+                      are: ca bundle -> "ca.crt", certificate -> "tls.crt", key ->
+                      "tls.key"'
+                    properties:
+                      name:
+                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          TODO: Add other useful fields. apiVersion, kind, uid?'
+                        type: string
+                    type: object
+                    x-kubernetes-map-type: atomic
+                  tlsServerName:
+                    description: TLSServerName Name to use as the SNI host when connecting
+                      via TLS.
+                    type: string
+                type: object
               tokenBoundCIDRs:
                 default: ""
                 description: TokenBoundCIDRs List of CIDR blocks; if set, specifies

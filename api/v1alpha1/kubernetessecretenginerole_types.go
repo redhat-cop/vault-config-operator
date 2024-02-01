@@ -50,6 +50,11 @@ type KubernetesSecretEngineRoleSpec struct {
 	TargetNamespaces vaultutils.TargetNamespaceConfig `json:"targetNamespaces,omitempty"`
 
 	KubeSERole `json:",inline"`
+
+	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern:=`[a-z0-9]([-a-z0-9]*[a-z0-9])?`
+	Name string `json:"name,omitempty"`
 }
 
 var _ vaultutils.VaultObject = &KubernetesSecretEngineRole{}
@@ -57,7 +62,10 @@ var _ vaultutils.VaultObject = &KubernetesSecretEngineRole{}
 var _ vaultutils.ConditionsAware = &KubernetesSecretEngineRole{}
 
 func (d *KubernetesSecretEngineRole) GetPath() string {
-	return string(d.Spec.Path) + "/" + "roles" + "/" + d.Name
+	if d.Spec.Name != "" {
+		return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + d.Spec.Name)
+	}
+	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + d.Name)
 }
 func (d *KubernetesSecretEngineRole) GetPayload() map[string]interface{} {
 	return d.Spec.toMap()
@@ -75,6 +83,10 @@ func (d *KubernetesSecretEngineRole) PrepareInternalValues(context context.Conte
 	return nil
 }
 
+func (d *KubernetesSecretEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
+	return nil
+}
+
 func (r *KubernetesSecretEngineRole) IsValid() (bool, error) {
 	return true, nil
 }
@@ -82,10 +94,16 @@ func (r *KubernetesSecretEngineRole) IsValid() (bool, error) {
 type KubeSERole struct {
 
 	// AllowedKubernetesNamespaces The list of Kubernetes namespaces this role can generate credentials for. If set to "*" all namespaces are allowed.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
 	AllowedKubernetesNamespaces []string `json:"allowedKubernetesNamespaces,omitempty"`
+
+	// A label selector for Kubernetes namespaces in which credentials can be generated.
+	// Accepts either a JSON or YAML object. The value should be of type LabelSelector as illustrated: "'{'matchLabels':{'stage':'prod','sa-generator':'vault'}}".
+	// If set with allowed_kubernetes_namespaces, the conditions are ORed.
+	// +kubebuilder:validation:Optional
+	AllowedKubernetesNamespaceSelector string `json:"allowedKubernetesNamespaceSelector,omitempty"`
 
 	// DeafulTTL Specifies the TTL for the leases associated with this role. Accepts time suffixed strings ("1h") or an integer number of seconds. Defaults to system/engine default TTL time.
 	// +kubebuilder:validation:Optional
@@ -96,6 +114,11 @@ type KubeSERole struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="0s"
 	MaxTTL metav1.Duration `json:"maxTTL,omitempty"`
+
+	// DefaultAudiences The default intended audiences for generated Kubernetes tokens, specified by a comma separated string. e.g "custom-audience-0,custom-audience-1".
+	// If not set or set to "", the Kubernetes cluster default for audiences of service account tokens will be used.
+	// +kubebuilder:validation:Optional
+	DefaultAudiences string `json:"defaultAudiences,omitempty"`
 
 	// ServiceAccountName The pre-existing service account to generate tokens for. Mutually exclusive with all role parameters. If set, only a Kubernetes token will be created when credentials are requested. See the Kubernetes service account documentation for more details on service accounts.
 	// +kubebuilder:validation:Optional
@@ -131,8 +154,10 @@ type KubeSERole struct {
 func (i *KubeSERole) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["allowed_kubernetes_namespaces"] = i.AllowedKubernetesNamespaces
+	payload["allowed_kubernetes_namespace_selector"] = i.AllowedKubernetesNamespaceSelector
 	payload["token_max_ttl"] = i.DefaultTTL
 	payload["token_default_ttl"] = i.MaxTTL
+	payload["token_default_audiences"] = i.DefaultAudiences
 	payload["service_account_name"] = i.ServiceAccountName
 	payload["kubernetes_role_name"] = i.KubernetesRoleName
 	payload["kubernetes_role_type"] = i.KubernetesRoleType

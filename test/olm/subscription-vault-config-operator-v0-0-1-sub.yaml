@@ -1,0 +1,20 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  labels:
+    operators.coreos.com/vault-config-operator.vault-config-operator: ""
+  name: vault-config-operator-v0-0-1-sub
+spec:
+  config:
+    env:
+    - name: VAULT_CACERT
+      value: /vault-ca/service-ca.crt
+    - name: VAULT_ADDR
+      value: https://vault.vault.svc.cluster.local:8200
+    volumes:
+    - name: vault-ca
+      configMap:
+        name: ocp-service-ca
+    volumeMounts:
+    - mountPath: /vault-ca
+      name: vault-ca

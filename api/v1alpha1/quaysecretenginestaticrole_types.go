@@ -43,6 +43,11 @@ type QuaySecretEngineStaticRoleSpec struct {
 	Path vaultutils.Path `json:"path,omitempty"`
 
 	QuayBaseRole `json:",inline"`
+
+	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern:=`[a-z0-9]([-a-z0-9]*[a-z0-9])?`
+	Name string `json:"name,omitempty"`
 }
 
 var _ vaultutils.VaultObject = &QuaySecretEngineStaticRole{}
@@ -51,8 +56,11 @@ func (d *QuaySecretEngineStaticRole) GetVaultConnection() *vaultutils.VaultConne
 	return d.Spec.Connection
 }
 
-func (q *QuaySecretEngineStaticRole) GetPath() string {
-	return string(q.Spec.Path) + "/" + "static-roles" + "/" + q.Name
+func (d *QuaySecretEngineStaticRole) GetPath() string {
+	if d.Spec.Name != "" {
+		return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "static-roles" + "/" + d.Spec.Name)
+	}
+	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "static-roles" + "/" + d.Name)
 }
 func (q *QuaySecretEngineStaticRole) GetPayload() map[string]interface{} {
 	return q.Spec.toMap()
@@ -67,6 +75,10 @@ func (q *QuaySecretEngineStaticRole) IsInitialized() bool {
 }
 
 func (q *QuaySecretEngineStaticRole) PrepareInternalValues(context context.Context, object client.Object) error {
+	return nil
+}
+
+func (q *QuaySecretEngineStaticRole) PrepareTLSConfig(context context.Context, object client.Object) error {
 	return nil
 }
 
