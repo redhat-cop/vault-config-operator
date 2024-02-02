@@ -194,7 +194,10 @@ func (kc *KubeAuthConfiguration) GetKubeAuthPath() string {
 }
 
 func (kc *KubeAuthConfiguration) GetServiceAccountName() string {
-	return kc.ServiceAccount.Name
+	if kc.ServiceAccount != nil {
+		return kc.ServiceAccount.Name
+	}
+	return "default"
 }
 
 func (kc *KubeAuthConfiguration) getCacheKey(kubeNamespace string) string {
