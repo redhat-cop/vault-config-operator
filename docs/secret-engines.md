@@ -72,6 +72,7 @@ spec:
   rootPasswordRotation:
     enable: true
     rotationPeriod: 2m  
+  passwordAuthentication: scram-sha-256
 ```
 
 The `pluginName` field specifies what type of database this connection is for.
@@ -87,6 +88,8 @@ The `path` field specifies the path of the secret engine to which this connectio
 The `rootPasswordRotation.enable` field activates the root password rotation. The root password wil be rotated immediately. It is recommended to use this feature with care as there is no way to recover the root password. 
 
 The `rootPasswordRotation.rotationPeriod` field tells the operator to periodically rotate the root password. If only enable is specified the password will be rotated only once.
+
+The `passwordAuthentication` field, set to `scram-sha-256`, tells Vault to hash the password before sending it to PostgreSQL. This field is optional; if not specified, the default value is "password". When set to "password", passwords are sent to PostgreSQL in clear text and may appear as such in PostgreSQL logs.
 
 The password and possibly the username can be retrived a three different ways:
 
