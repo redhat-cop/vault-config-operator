@@ -1342,10 +1342,8 @@ func (in *JWTOIDCRole) DeepCopyInto(out *JWTOIDCRole) {
 	}
 	if in.BoundClaims != nil {
 		in, out := &in.BoundClaims, &out.BoundClaims
-		*out = make(map[string]string, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
-		}
+		*out = new(apiextensionsv1.JSON)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.ClaimMappings != nil {
 		in, out := &in.ClaimMappings, &out.ClaimMappings
