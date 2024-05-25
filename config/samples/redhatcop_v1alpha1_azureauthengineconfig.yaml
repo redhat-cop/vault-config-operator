@@ -17,7 +17,7 @@ spec:
   connection:
     address: 'https://vault.example.com'
   path: azure
-  resource: ""
+  resource: "https://management.azure.com/"
   environment: "AzurePublicCloud"
   maxRetries: 3
   maxRetryDelay: 60
