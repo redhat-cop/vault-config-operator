@@ -36,7 +36,36 @@ spec:
           spec:
             description: AzureAuthEngineConfigSpec defines the desired state of AzureAuthEngineConfig
             properties:
-              AzureCredentials:
+              authentication:
+                properties:
+                  namespace:
+                    description: Namespace is the Vault namespace to be used in all
+                      the operations withing this connection/authentication. Only
+                      available in Vault Enterprise.
+                    type: string
+                  path:
+                    default: kubernetes
+                    description: Path is the path of the role used for this kube auth
+                      authentication. The operator will try to authenticate at {[namespace/]}auth/{spec.path}
+                    pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
+                    type: string
+                  role:
+                    description: Role the role to be used during authentication
+                    type: string
+                  serviceAccount:
+                    default:
+                      name: default
+                    description: ServiceAccount is the service account used for the
+                      kube auth authentication
+                    properties:
+                      name:
+                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          TODO: Add other useful fields. apiVersion, kind, uid?'
+                        type: string
+                    type: object
+                    x-kubernetes-map-type: atomic
+                type: object
+              azureCredentials:
                 description: AzureCredentials consists in ClientID and ClientSecret,
                   which can be created as Kubernetes Secret, VaultSecret or RandomSecret
                 properties:
@@ -126,35 +155,6 @@ spec:
                         description: Path is the path to the secret
                         type: string
                     type: object
-                type: object
-              authentication:
-                properties:
-                  namespace:
-                    description: Namespace is the Vault namespace to be used in all
-                      the operations withing this connection/authentication. Only
-                      available in Vault Enterprise.
-                    type: string
-                  path:
-                    default: kubernetes
-                    description: Path is the path of the role used for this kube auth
-                      authentication. The operator will try to authenticate at {[namespace/]}auth/{spec.path}
-                    pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
-                    type: string
-                  role:
-                    description: Role the role to be used during authentication
-                    type: string
-                  serviceAccount:
-                    default:
-                      name: default
-                    description: ServiceAccount is the service account used for the
-                      kube auth authentication
-                    properties:
-                      name:
-                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                          TODO: Add other useful fields. apiVersion, kind, uid?'
-                        type: string
-                    type: object
-                    x-kubernetes-map-type: atomic
                 type: object
               clientID:
                 default: ""
