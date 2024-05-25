@@ -1,0 +1,33 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AzureAuthEngineConfig
+metadata:
+  labels:
+    app.kubernetes.io/name: azureauthengineconfig
+    app.kubernetes.io/instance: azureauthengineconfig-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: azureauthengineconfig-sample
+spec:
+  authentication:
+    path: vault-admin
+    role: vault-admin
+    serviceAccount:
+      name: vault
+  connection:
+    address: 'https://vault.example.com'
+  path: azure
+  resource: ""
+  environment: "AzurePublicCloud"
+  maxRetries: 3
+  maxRetryDelay: 60
+  retryDelay: 4
+  tenantID: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxx"
+  clientID: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxx"
+  azureCredentials:
+    secret: 
+      name: aad-credentials
+    usernameKey: client_id
+    passwordKey: client_secret
+
+
