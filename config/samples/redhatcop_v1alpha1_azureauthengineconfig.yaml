@@ -29,5 +29,3 @@ spec:
       name: aad-credentials
     usernameKey: client_id
     passwordKey: client_secret
-
-
