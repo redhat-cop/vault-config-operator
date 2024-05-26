@@ -75,6 +75,15 @@ type AzureAuthEngineConfig struct {
 	Status AzureAuthEngineConfigStatus `json:"status,omitempty"`
 }
 
+//+kubebuilder:object:root=true
+
+// AzureAuthEngineConfigList contains a list of AzureAuthEngineConfig
+type AzureAuthEngineConfigList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []AzureAuthEngineConfig `json:"items"`
+}
+
 type AzureConfig struct {
 	//The tenant id for the Azure Active Directory organization. This value can also be provided with the AZURE_TENANT_ID environment variable.
 	// +kubebuilder:validation:Required
@@ -120,16 +129,6 @@ type AzureConfig struct {
 
 	retrievedClientPassword string `json:"-"`
 }
-
-//+kubebuilder:object:root=true
-
-// AzureAuthEngineConfigList contains a list of AzureAuthEngineConfig
-type AzureAuthEngineConfigList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []AzureAuthEngineConfig `json:"items"`
-}
-
 
 var _ vaultutils.VaultObject = &AzureAuthEngineConfig{}
 var _ vaultutils.ConditionsAware = &AzureAuthEngineConfig{}

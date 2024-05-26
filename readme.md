@@ -57,6 +57,7 @@ Currently this operator covers the following Vault APIs:
    - [LDAPAuthEngineGroup](./docs/auth-engines.md#ldapauthenginegroup) Creates or updates [Vault LDAP Authentication Engine Group](https://www.vaultproject.io/api-docs/auth/ldap#create-update-ldap-group) policies.
 5. [JWTOIDCAuthEngineConfig](./docs/auth-engines.md#jwtoidcauthengineconfig) Configures a [Vault JWT/OIDC Authentication Endpoint](https://developer.hashicorp.com/vault/api-docs/auth/jwt)
    - [JWTOIDCAuthEngineRole](./docs/auth-engines.md#jwtoidcauthenginerole) Register a role in an Authentication Engine Mount of type [JWT/OIDC](https://developer.hashicorp.com/vault/api-docs/auth/jwt#create-role)
+6. [AzureAuthEngineConfig](./docs/auth-engines.md#azureauthengineconfig) Configures a [Vault Azure Authentication Endpoint](https://developer.hashicorp.com/vault/api-docs/auth/azure)
 
 ## Policy management
 

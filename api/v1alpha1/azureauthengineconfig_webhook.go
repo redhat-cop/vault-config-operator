@@ -35,7 +35,7 @@ func (r *AzureAuthEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) error 
 		Complete()
 }
 
-//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-azureauthengineconfig,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=azureauthengineconfigs,verbs=create;update,versions=v1alpha1,name=mazureauthengineconfig.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-azureauthengineconfig,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=azureauthengineconfigs,verbs=create,versions=v1alpha1,name=mazureauthengineconfig.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &AzureAuthEngineConfig{}
 
@@ -44,8 +44,7 @@ func (r *AzureAuthEngineConfig) Default() {
 	azureauthengineconfiglog.Info("default", "name", r.Name)
 }
 
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-azureauthengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=azureauthengineconfigs,verbs=create;update,versions=v1alpha1,name=vazureauthengineconfig.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-azureauthengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=azureauthengineconfigs,verbs=update,versions=v1alpha1,name=vazureauthengineconfig.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Validator = &AzureAuthEngineConfig{}
 
