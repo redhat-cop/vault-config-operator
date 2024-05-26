@@ -73,6 +73,32 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
+  - azureauthengineroles
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - azureauthengineroles/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - azureauthengineroles/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
   - databasesecretengineconfigs
   verbs:
   - create
