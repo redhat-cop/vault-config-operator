@@ -36,15 +36,6 @@ spec:
           spec:
             description: AzureAuthEngineRoleSpec defines the desired state of AzureAuthEngineRole
             properties:
-              Policies:
-                description: 'DEPRECATED: Please use the token_policies parameter
-                  instead. List of token policies to encode onto generated tokens.
-                  Depending on the auth method, this list may be supplemented by user/group/other
-                  values. kubebuilder:validation:UniqueItems=true'
-                items:
-                  type: string
-                type: array
-                x-kubernetes-list-type: set
               authentication:
                 description: Authentication is the kube auth configuraiton to be used
                   to execute this request
@@ -178,6 +169,15 @@ spec:
                   "create", "read", "update", "delete"] on that path.
                 pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
                 type: string
+              policies:
+                description: 'DEPRECATED: Please use the token_policies parameter
+                  instead. List of token policies to encode onto generated tokens.
+                  Depending on the auth method, this list may be supplemented by user/group/other
+                  values. kubebuilder:validation:UniqueItems=true'
+                items:
+                  type: string
+                type: array
+                x-kubernetes-list-type: set
               tokenBoundCIDRs:
                 description: List of CIDR blocks. If set, specifies blocks of IP addresses
                   which can authenticate successfully, and ties the resulting token

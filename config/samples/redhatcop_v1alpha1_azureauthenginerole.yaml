@@ -9,4 +9,46 @@ metadata:
     app.kubernetes.io/created-by: vault-config-operator
   name: azureauthenginerole-sample
 spec:
-  # TODO(user): Add fields here
+  authentication:
+    path: vault-admin
+    role: vault-admin
+    serviceAccount:
+      name: vault
+  connection:
+    address: 'https://vault.example.com'
+  path: azure
+  name: dev-role
+  boundServicePrincipalIDs:
+    - sp1
+    - sp2
+  boundGroupIDs:
+    - group1
+    - group2
+  boundLocations:
+    - location1
+    - location2
+  boundSubscriptionIDs:
+    - subscription1  
+    - subscription2
+  BoundResourceGroups:
+    - resourcegroup1
+    - resourcegroup2
+  boundScaleSets:
+    - scaleset1
+    - scaleset1
+  tokenTTL: ""
+  tokenMaxTTL: ""
+  tokenPolicies:
+    - policy1
+    - policy2
+  policies:
+    - policy1
+    - policy2
+  tokenBoundCIDRs:
+    - CIDR1
+    - CIDR2
+  tokenExplicitMaxTTL: ""
+  tokenNoDefaultPolicy: false
+  tokenNumUses: 0
+  tokenPeriod: 0
+  tokenType: ""

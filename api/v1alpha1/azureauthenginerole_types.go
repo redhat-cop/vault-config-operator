@@ -141,7 +141,7 @@ type AzureRole struct {
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	Policies []string `json:"Policies,omitempty"`
+	Policies []string `json:"policies,omitempty"`
 
 	// List of CIDR blocks.
 	// If set, specifies blocks of IP addresses which can authenticate successfully, and ties the resulting token to these blocks as well.
