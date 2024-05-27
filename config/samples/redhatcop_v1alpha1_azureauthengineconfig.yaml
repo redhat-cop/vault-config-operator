@@ -16,7 +16,7 @@ spec:
       name: vault
   connection:
     address: 'https://vault.example.com'
-  path: azure
+  path: azure/test
   resource: "https://management.azure.com/"
   environment: "AzurePublicCloud"
   maxRetries: 3
@@ -27,5 +27,5 @@ spec:
   azureCredentials:
     secret: 
       name: aad-credentials
-    usernameKey: client_id
-    passwordKey: client_secret
+    usernameKey: clientid
+    passwordKey: clientsecret
