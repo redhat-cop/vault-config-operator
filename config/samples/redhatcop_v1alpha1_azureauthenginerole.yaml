@@ -45,8 +45,8 @@ spec:
     - policy1
     - policy2
   tokenBoundCIDRs:
-    - CIDR1
-    - CIDR2
+    - 10.20.102.13
+    - 10.20.102.15
   tokenExplicitMaxTTL: ""
   tokenNoDefaultPolicy: false
   tokenNumUses: 0
