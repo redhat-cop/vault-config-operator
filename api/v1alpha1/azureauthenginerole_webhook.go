@@ -63,7 +63,7 @@ func (r *AzureAuthEngineRole) ValidateUpdate(old runtime.Object) (admission.Warn
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *AzureAuthEngineRole)  ValidateDelete() (admission.Warnings, error) {
+func (r *AzureAuthEngineRole) ValidateDelete() (admission.Warnings, error) {
 	azureauthenginerolelog.Info("validate delete", "name", r.Name)
 
 	return nil, nil

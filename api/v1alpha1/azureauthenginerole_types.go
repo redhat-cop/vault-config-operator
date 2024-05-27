@@ -252,6 +252,6 @@ func (r *AzureRole) toMap() map[string]interface{} {
 	payload["token_num_uses"] = r.TokenNumUses
 	payload["token_period"] = r.TokenPeriod
 	payload["token_type"] = r.TokenType
-	
+
 	return payload
 }
