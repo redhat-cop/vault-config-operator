@@ -90,14 +90,12 @@ spec:
                 type: array
                 x-kubernetes-list-type: set
               boundClaims:
-                additionalProperties:
-                  type: string
                 description: If set, a map of claims (keys) to match against respective
                   claim values (values) The expected value may be a single string
                   or a list of strings The interpretation of the bound claim values
                   is configured with bound_claims_type Keys support JSON pointer syntax
                   for referencing claims
-                type: object
+                x-kubernetes-preserve-unknown-fields: true
               boundClaimsType:
                 default: string
                 description: Configures the interpretation of the bound_claims values.

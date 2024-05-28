@@ -21,6 +21,7 @@ import (
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -105,7 +106,7 @@ type JWTOIDCRole struct {
 	// Keys support JSON pointer syntax for referencing claims
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default={}
-	BoundClaims map[string]string `json:"boundClaims,omitempty"`
+	BoundClaims *apiextensionsv1.JSON `json:"boundClaims,omitempty"`
 
 	// Configures the interpretation of the bound_claims values.
 	// If "string" (the default), the values will treated as string literals and must match exactly.
