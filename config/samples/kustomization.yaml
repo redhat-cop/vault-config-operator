@@ -29,4 +29,5 @@ resources:
 - redhatcop_v1alpha1_group.yaml
 - redhatcop_v1alpha1_groupalias.yaml
 - redhatcop_v1alpha1_azureauthengineconfig.yaml
+- redhatcop_v1alpha1_azureauthenginerole.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

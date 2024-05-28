@@ -8,6 +8,7 @@
     - [LDAPAuthEngineGroup](#ldapauthenginegroup)
   - [JWTOIDCAuthEngineConfig](#jwtoidcauthengineconfig)
     - [JWTOIDCAuthEngineRole](#jwtoidcauthenginerole)
+  - [AzureAuthEngineRole](#azureauthenginerole)
 
 ## AuthEngineMount
 
@@ -408,7 +409,6 @@ spec:
 
  The `tokenType` field - The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens). For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time
 
-
 ## AzureAuthEngineConfig
 
 The `AzureAuthEngineConfig` CRD allows a user to configure an authentication engine mount of type [Azure](https://developer.hashicorp.com/vault/api-docs/auth/azure).
@@ -501,3 +501,81 @@ If the secret is updated this connection will also be updated.
     passwordKey: clientsecret
 ```
 When the RandomSecret generates a new secret, this connection will also be updated.
+
+## AzureAuthEngineRole
+ The `AzureAuthEngineRole` CRD allows a user to register a role in an authentication engine mount of type [Azure](hhttps://developer.hashicorp.com/vault/api-docs/auth/azure#create-update-role).
+
+ ```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AzureAuthEngineRole
+metadata:
+  labels:
+    app.kubernetes.io/name: azureauthenginerole
+    app.kubernetes.io/instance: azureauthenginerole-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: azureauthenginerole-sample
+spec:
+  authentication:
+    path: vault-admin
+    role: vault-admin
+    serviceAccount:
+      name: vault
+  connection:
+    address: 'https://vault.example.com'
+  path: azure
+  name: dev-role
+  boundServicePrincipalIDs:
+    - sp1
+    - sp2
+  boundGroupIDs:
+    - group1
+    - group2
+  boundLocations:
+    - location1
+    - location2
+  boundSubscriptionIDs:
+    - subscription1  
+    - subscription2
+  BoundResourceGroups:
+    - resourcegroup1
+    - resourcegroup2
+  boundScaleSets:
+    - scaleset1
+    - scaleset1
+  tokenTTL: ""
+  tokenMaxTTL: ""
+  tokenPolicies:
+    - policy1
+    - policy2
+  policies:
+    - policy1
+    - policy2
+  tokenBoundCIDRs:
+    - CIDR1
+    - CIDR2
+  tokenExplicitMaxTTL: ""
+  tokenNoDefaultPolicy: false
+  tokenNumUses: 0
+  tokenPeriod: 0
+  tokenType: ""
+ ```
+
+  The `name` field - Name of the role
+  The `bound_service_principal_ids` field - The list of Service Principal IDs that login is restricted to.
+  The `bound_group_ids` field - The list of group ids that login is restricted to.
+  The `bound_locations` field - The list of locations that login is restricted to.
+  The `bound_subscription_ids` field - The list of subscription IDs that login is restricted to.
+  The `bound_resource_groups` field - The list of resource groups that login is restricted to.
+  The `bound_scale_sets` field - The list of scale set names that the login is restricted to.
+  The `token_ttl` field - The incremental lifetime for generated tokens. This current value of this will be referenced at renewal time.
+  The `token_max_ttl` field - The maximum lifetime for generated tokens. This current value of this will be referenced at renewal time.
+  The `token_policies` field - List of token policies to encode onto generated tokens. Depending on the auth method, this list may be supplemented by user/group/other values.
+  The `policies` field - DEPRECATED: Please use the token_policies parameter instead. List of token policies to encode onto generated tokens. Depending on the auth method, this list may be supplemented by user/group/other values.
+  The `token_bound_cidrs` field - List of CIDR blocks; if set, specifies blocks of IP addresses which can authenticate successfully, and ties the resulting token to these blocks as well.
+  The `token_explicit_max_ttl` field - If set, will encode an explicit max TTL onto the token. This is a hard cap even if token_ttl and token_max_ttl would otherwise allow a renewal.
+  The `token_no_default_policy` field - If set, the default policy will not be set on generated tokens; otherwise it will be added to the policies set in token_policies.
+  The `token_num_uses` field - The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited. If you require the token to have the ability to create child tokens, you will need to set this value to 0.
+  The `token_period` field - The maximum allowed period value when a periodic token is requested from this role.
+  The `token_type` field - The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens). For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time. For machine based authentication cases, you should use batch type tokens.
