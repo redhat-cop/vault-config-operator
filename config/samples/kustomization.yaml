@@ -28,4 +28,5 @@ resources:
 - redhatcop_v1alpha1_databasesecretenginestaticrole.yaml
 - redhatcop_v1alpha1_group.yaml
 - redhatcop_v1alpha1_groupalias.yaml
+- redhatcop_v1alpha1_azureauthengineconfig.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
