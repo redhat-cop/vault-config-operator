@@ -228,7 +228,10 @@ var _ = BeforeSuite(func() {
 	err = (&GroupAlias{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&AzureAuthEngineRole{}).SetupWebhookWithManager(mgr)
+	err = (&AzureAuthEngineConfig{}).SetupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+  
+  err = (&AzureAuthEngineRole{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:webhook

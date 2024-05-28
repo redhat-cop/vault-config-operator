@@ -31,6 +31,25 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-azureauthengineconfig
+  failurePolicy: Fail
+  name: mazureauthengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - azureauthengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /mutate-redhatcop-redhat-io-v1alpha1-azureauthenginerole
   failurePolicy: Fail
   name: mazureauthenginerole.kb.io
@@ -43,7 +62,7 @@ webhooks:
     - CREATE
     resources:
     - azureauthengineroles
-  sideEffects: None
+  sideEffects: None 
 - admissionReviewVersions:
   - v1
   - v1beta1
@@ -579,6 +598,25 @@ webhooks:
     - UPDATE
     resources:
     - authenginemounts
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-azureauthengineconfig
+  failurePolicy: Fail
+  name: vazureauthengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - UPDATE
+    resources:
+    - azureauthengineconfigs
   sideEffects: None
 - admissionReviewVersions:
   - v1

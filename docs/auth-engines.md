@@ -409,7 +409,100 @@ spec:
 
  The `tokenType` field - The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens). For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time
 
- ## AzureAuthEngineRole
+## AzureAuthEngineConfig
+
+The `AzureAuthEngineConfig` CRD allows a user to configure an authentication engine mount of type [Azure](https://developer.hashicorp.com/vault/api-docs/auth/azure).
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AzureAuthEngineConfig
+metadata:
+  labels:
+    app.kubernetes.io/name: azureauthengineconfig
+    app.kubernetes.io/instance: azureauthengineconfig-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: azureauthengineconfig-sample
+spec:
+  authentication:
+    path: vault-admin
+    role: vault-admin
+    serviceAccount:
+      name: vault
+  connection:
+    address: 'https://vault.example.com'
+  path: azure
+  resource: "https://management.azure.com/"
+  environment: "AzurePublicCloud"
+  maxRetries: 3
+  maxRetryDelay: 60
+  retryDelay: 4
+  tenantID: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxx"
+  clientID: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxx"
+  azureCredentials:
+    secret: 
+      name: aad-credentials
+    usernameKey: client_id
+    passwordKey: client_secret
+```
+
+ The `tenant_id` field - The tenant id for the Azure Active Directory organization. This value can also be provided with the AZURE_TENANT_ID environment variable.
+
+ The `resource` field - The resource URL for the application registered in Azure Active Directory. 
+ The value is expected to match the audience (aud claim) of the JWT provided to the login API. 
+ See the resource parameter for how the audience is set when requesting a JWT access token from the Azure Instance Metadata Service (IMDS) endpoint. This value can also be provided with the AZURE_AD_RESOURCE environment variable.
+
+ The `environment` field - The Azure cloud environment. Valid values: AzurePublicCloud, AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud. This value can also be provided with the AZURE_ENVIRONMENT environment variable.
+
+ The `client_id` field - The client id for credentials to query the Azure APIs. Currently read permissions to query compute resources are required. This value can also be provided with the AZURE_CLIENT_ID environment variable.
+
+ The `client_secret` field - The client secret for credentials to query the Azure APIs. This value can also be provided with the AZURE_CLIENT_SECRET environment variable.
+
+ The `max_retries` field - The maximum number of attempts a failed operation will be retried before producing an error.
+
+ The `max_retry_delay` field - The maximum delay, in seconds, allowed before retrying an operation.
+
+ The `retry_delay` field - The initial amount of delay, in seconds, to use before retrying an operation. Increases exponentially.
+
+ The `azureCredentials` field - The OAuth Client Secret from the provider for OIDC roles.
+ The OIDCClientSecret and possibly the OIDCClientID can be retrived a three different ways :
+
+1. From a Kubernetes secret, specifying the `azureCredentials` field as follows:
+```yaml
+  azureCredentials:
+    secret: 
+      name: aad-credentials
+    usernameKey: clientid
+    passwordKey: clientsecret
+```
+The secret must be of [basic auth type](https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret). 
+
+Example Secret : 
+```bash
+kubectl create secret generic aad-credentials --from-literal=clientid="123456-1234-1234-1234-123456789" --from-literal=clientsecret="saffsfsdfsfsdgsdgsdgsdgghdfhdhdgsjgjgjfj" -n vault-admin
+```
+If the secret is updated this connection will also be updated.
+
+2. From a [Vault secret](https://developer.hashicorp.com/vault/docs/secrets/kv), specifying the `azureCredentials` field as follows :
+```yaml
+  azureCredentials:
+    vaultSecret: 
+      path: secret/foo
+    usernameKey: clientid
+    passwordKey: clientsecret
+```
+3. From a [RandomSecret](secret-management.md#RandomSecret), specifying the `azureCredentials` field as follows : 
+```yaml
+  azureCredentials:
+    randomSecret: 
+      name: aad-credentials
+    usernameKey: clientid
+    passwordKey: clientsecret
+```
+When the RandomSecret generates a new secret, this connection will also be updated.
+
+## AzureAuthEngineRole
  The `AzureAuthEngineRole` CRD allows a user to register a role in an authentication engine mount of type [Azure](hhttps://developer.hashicorp.com/vault/api-docs/auth/azure#create-update-role).
 
  ```yaml
@@ -486,5 +579,3 @@ spec:
   The `token_num_uses` field - The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited. If you require the token to have the ability to create child tokens, you will need to set this value to 0.
   The `token_period` field - The maximum allowed period value when a periodic token is requested from this role.
   The `token_type` field - The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens). For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time. For machine based authentication cases, you should use batch type tokens.
-
-
