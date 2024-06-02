@@ -1,0 +1,12 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GCPAuthEngineConfig
+metadata:
+  labels:
+    app.kubernetes.io/name: gcpauthengineconfig
+    app.kubernetes.io/instance: gcpauthengineconfig-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: gcpauthengineconfig-sample
+spec:
+  # TODO(user): Add fields here

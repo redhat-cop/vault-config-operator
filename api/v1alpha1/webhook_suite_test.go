@@ -30,6 +30,7 @@ import (
 
 	admissionv1beta1 "k8s.io/api/admission/v1"
 
+	admissionv1beta1 "k8s.io/api/admission/v1beta1"
 	//+kubebuilder:scaffold:imports
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -230,8 +231,11 @@ var _ = BeforeSuite(func() {
 
 	err = (&AzureAuthEngineConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
-  
-  err = (&AzureAuthEngineRole{}).SetupWebhookWithManager(mgr)
+
+	err = (&AzureAuthEngineRole{}).SetupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = (&GCPAuthEngineConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:webhook
