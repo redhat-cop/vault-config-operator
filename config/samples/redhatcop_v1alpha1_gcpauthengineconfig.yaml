@@ -17,7 +17,7 @@ spec:
   connection:
     address: 'https://vault.example.com'
   path: azure
-  serviceAccount: ""
+  serviceAccount: "vault-sa"
   IAMalias: "default"
   IAMmetadata: "default"
   GCEalias: "role_id"
