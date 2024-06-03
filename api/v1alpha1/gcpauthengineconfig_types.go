@@ -47,7 +47,7 @@ type GCPAuthEngineConfigSpec struct {
 	// +kubebuilder:validation:Required
 	GCPConfig `json:",inline"`
 
-	// GCPCredentials consists in ClientID and ClientSecret, which can be created as Kubernetes Secret, VaultSecret or RandomSecret
+	// GCPCredentials in JSON string containing the contents of a GCP service account credentials file.
 	// +kubebuilder:validation:Optional
 	GCPCredentials vaultutils.RootCredentialConfig `json:"GCPCredentials,omitempty"`
 }
@@ -83,12 +83,6 @@ type GCPAuthEngineConfigList struct {
 }
 
 type GCPConfig struct {
-	// A JSON string containing the contents of a GCP service account credentials file.
-	// The service account associated with the credentials file must have the following permissions.
-	// If this value is empty, Vault will try to use Application Default Credentials from the machine on which the Vault server is running.
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
-	Credentials string `json:"credentials,omitempty"`
 
 	// Must be either unique_id or role_id.
 	// If unique_id is specified, the service account's unique ID will be used for alias names during login.
@@ -133,6 +127,8 @@ type GCPConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default={}
 	CustomEndpoint *apiextensionsv1.JSON `json:"customEndpoint,omitempty"`
+
+	retrievedCredentials string `json:"-"`
 }
 
 var _ vaultutils.VaultObject = &GCPAuthEngineConfig{}
@@ -150,9 +146,8 @@ func (r *GCPAuthEngineConfig) SetConditions(conditions []metav1.Condition) {
 	r.Status.Conditions = conditions
 }
 
-func (r *GCPAuthEngineConfig) SetClientIDAndClientSecret(ClientID string, ClientSecret string) {
-	r.Spec.GCPConfig.retrievedClientID = ClientID
-	r.Spec.GCPConfig.retrievedClientPassword = ClientSecret
+func (r *GCPAuthEngineConfig) SetCredentials(Credentials string) {
+	r.Spec.GCPConfig.retrievedCredentials = Credentials
 }
 
 func (r *GCPAuthEngineConfig) GetPath() string {
@@ -182,7 +177,7 @@ func (r *GCPAuthEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthCon
 
 func (r *GCPAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 
-	if reflect.DeepEqual(r.Spec.GCPCredentials, vaultutils.RootCredentialConfig{PasswordKey: "clientsecret", UsernameKey: "clientid"}) {
+	if reflect.DeepEqual(r.Spec.GCPCredentials, vaultutils.RootCredentialConfig{PasswordKey: "credentials"}) {
 		return nil
 	}
 
@@ -229,9 +224,9 @@ func (r *GCPAuthEngineConfig) setInternalCredentials(context context.Context) er
 			return err
 		}
 		if r.Spec.ClientID == "" {
-			r.SetClientIDAndClientSecret(string(secret.Data[r.Spec.GCPCredentials.UsernameKey]), string(secret.Data[r.Spec.GCPCredentials.PasswordKey]))
+			r.SetCredentials(string(secret.Data[r.Spec.GCPCredentials.PasswordKey]))
 		} else {
-			r.SetClientIDAndClientSecret(r.Spec.AzureConfig.ClientID, string(secret.Data[r.Spec.GCPCredentials.PasswordKey]))
+			r.SetCredentials(string(secret.Data[r.Spec.GCPCredentials.PasswordKey]))
 		}
 		return nil
 	}
@@ -246,11 +241,11 @@ func (r *GCPAuthEngineConfig) setInternalCredentials(context context.Context) er
 			return err
 		}
 		if r.Spec.ClientID == "" {
-			r.SetClientIDAndClientSecret(secret.Data[r.Spec.GCPCredentials.UsernameKey].(string), secret.Data[r.Spec.GCPCredentials.PasswordKey].(string))
-			log.V(1).Info("", "clientid", secret.Data[r.Spec.GCPCredentials.UsernameKey].(string), "clientsecret", secret.Data[r.Spec.GCPCredentials.PasswordKey].(string))
+			r.SetCredentials(secret.Data[r.Spec.GCPCredentials.PasswordKey].(string))
+			log.V(1).Info("", "credentials", secret.Data[r.Spec.GCPCredentials.PasswordKey].(string))
 		} else {
-			r.SetClientIDAndClientSecret(r.Spec.GCPConfig.ClientID, secret.Data[r.Spec.GCPCredentials.PasswordKey].(string))
-			log.V(1).Info("", "clientid", r.Spec.GCPConfig.ClientID, "clientsecret", secret.Data[r.Spec.GCPCredentials.PasswordKey].(string))
+			r.SetCredentials(secret.Data[r.Spec.GCPCredentials.PasswordKey].(string))
+			log.V(1).Info("", "credentials", secret.Data[r.Spec.GCPCredentials.PasswordKey].(string))
 		}
 		return nil
 	}
@@ -263,7 +258,7 @@ func init() {
 
 func (i *GCPConfig) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
-	payload["credentials"] = i.Credentials
+	payload["credentials"] = i.retrievedCredentials
 	payload["iam_alias"] = i.IAMalias
 	payload["iam_metadata"] = i.IAMmetadata
 	payload["gce_alias"] = i.GCEalias
