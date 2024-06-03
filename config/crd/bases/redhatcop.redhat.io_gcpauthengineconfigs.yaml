@@ -270,6 +270,10 @@ spec:
                   "create", "read", "update", "delete"] on that path.
                 pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
                 type: string
+              serviceAccount:
+                default: ""
+                description: Service Account Name
+                type: string
             type: object
           status:
             description: GCPAuthEngineConfigStatus defines the observed state of GCPAuthEngineConfig

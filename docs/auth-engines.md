@@ -8,6 +8,7 @@
     - [LDAPAuthEngineGroup](#ldapauthenginegroup)
   - [JWTOIDCAuthEngineConfig](#jwtoidcauthengineconfig)
     - [JWTOIDCAuthEngineRole](#jwtoidcauthenginerole)
+  - [GCPAuthEngineConfig](#gcpauthengineconfig)
   - [AzureAuthEngineRole](#azureauthenginerole)
 
 ## AuthEngineMount
@@ -408,6 +409,78 @@ spec:
  The `tokenPeriod` field - The period, if any, to set on the token
 
  The `tokenType` field - The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens). For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time
+
+## GCPAuthEngineConfig
+
+The `GCPAuthEngineConfig` CRD allows a user to configure an authentication engine mount of type [Google Cloud](https://developer.hashicorp.com/vault/api-docs/auth/gcp).
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GCPAuthEngineConfig
+metadata:
+  labels:
+    app.kubernetes.io/name: gcpauthengineconfig
+    app.kubernetes.io/instance: gcpauthengineconfig-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: gcpauthengineconfig-sample
+spec:
+  authentication:
+    path: vault-admin
+    role: vault-admin
+    serviceAccount:
+      name: vault
+  connection:
+    address: 'https://vault.example.com'
+  path: azure
+  serviceAccount: ""
+  IAMalias: "default"
+  IAMmetadata: "default"
+  GCEalias: "role_id"
+  GCEmetadata: "default"
+  customEndpoint: {}
+  GCPCredentials:
+    secret: 
+      name: gcp-serviceaccount-credentials
+    usernameKey: serviceaccount
+    passwordKey: credentials
+```
+
+ The `serviceAccount` field - Service Account Name. A service account is a special kind of account typically used by an application or compute workload, such as a Compute Engine instance, rather than a person. 
+ 
+ A service account is identified by its email address, which is unique to the account. 
+ 
+ Applications use service accounts to make authorized API calls by authenticating as either the service account itself, or as Google Workspace or Cloud Identity users through domain-wide delegation. 
+ 
+ When an application authenticates as a service account, it has access to all resources that the service account has permission to access.
+
+ The `IAMalias` field - Must be either unique_id or role_id. If unique_id is specified, the service account's unique ID will be used for alias names during login. If role_id is specified, the ID of the Vault role will be used. Only used if role type is iam.
+
+ The `IAMmetadata` field - The metadata to include on the token returned by the login endpoint. This metadata will be added to both audit logs, and on the iam_alias. By default, it includes project_id, role, service_account_id, and service_account_email. 
+ - To include no metadata, set to "" via the CLI or [] via the API. 
+ - To use only particular fields, select the explicit fields. 
+ - To restore to defaults, send only a field of default. 
+ 
+ Only select fields that will have a low rate of change for your iam_alias because each change triggers a storage write and can have a performance impact at scale. Only used if role type is iam.
+
+ The `GCEalias` field - Must be either instance_id or role_id. If instance_id is specified, the GCE instance ID will be used for alias names during login. If role_id is specified, the ID of the Vault role will be used. Only used if role type is gce.
+
+ The `GCEmetadata` field - The metadata to include on the token returned by the login endpoint. This metadata will be added to both audit logs, and on the gce_alias. By default, it includes instance_creation_timestamp, instance_id, instance_name, project_id, project_number, role, service_account_id, service_account_email, and zone. 
+ - To include no metadata, set to "" via the CLI or [] via the API. 
+ - To use only particular fields, select the explicit fields. 
+ - To restore to defaults, send only a field of default. 
+ 
+ Only select fields that will have a low rate of change for your gce_alias because each change triggers a storage write and can have a performance impact at scale. Only used if role type is gce.
+
+ The `customEndpoint` field - Specifies overrides to service endpoints used when making API requests. This allows specific requests made during authentication to target alternative service endpoints for use in Private Google Access environments.
+ Overrides are set at the subdomain level using the following keys:
+ - api - Replaces the service endpoint used in API requests to https://www.googleapis.com.
+ - iam - Replaces the service endpoint used in API requests to https://iam.googleapis.com.
+ - crm - Replaces the service endpoint used in API requests to https://cloudresourcemanager.googleapis.com.
+ - compute - Replaces the service endpoint used in API requests to https://compute.googleapis.com.
+ 
+ The endpoint value provided for a given key has the form of scheme://host:port. The scheme:// and :port portions of the endpoint value are optional.
 
 ## AzureAuthEngineConfig
 

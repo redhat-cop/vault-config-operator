@@ -9,4 +9,22 @@ metadata:
     app.kubernetes.io/created-by: vault-config-operator
   name: gcpauthengineconfig-sample
 spec:
-  # TODO(user): Add fields here
+  authentication:
+    path: vault-admin
+    role: vault-admin
+    serviceAccount:
+      name: vault
+  connection:
+    address: 'https://vault.example.com'
+  path: azure
+  serviceAccount: ""
+  IAMalias: "default"
+  IAMmetadata: "default"
+  GCEalias: "role_id"
+  GCEmetadata: "default"
+  customEndpoint: {}
+  GCPCredentials:
+    secret: 
+      name: gcp-serviceaccount-credentials
+    usernameKey: serviceaccount
+    passwordKey: credentials  

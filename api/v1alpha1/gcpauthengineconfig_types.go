@@ -84,6 +84,15 @@ type GCPAuthEngineConfigList struct {
 
 type GCPConfig struct {
 
+
+	// Service Account Name. A service account is a special kind of account typically used by an application or compute workload, such as a Compute Engine instance, rather than a person. 
+	// A service account is identified by its email address, which is unique to the account.
+	// Applications use service accounts to make authorized API calls by authenticating as either the service account itself, or as Google Workspace or Cloud Identity users through domain-wide delegation. 
+	// When an application authenticates as a service account, it has access to all resources that the service account has permission to access.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default=""
+	ServiceAccount string `json:"serviceAccount,omitempty"`	
+
 	// Must be either unique_id or role_id.
 	// If unique_id is specified, the service account's unique ID will be used for alias names during login.
 	// If role_id is specified, the ID of the Vault role will be used. Only used if role type is iam.
@@ -128,6 +137,7 @@ type GCPConfig struct {
 	// +kubebuilder:default={}
 	CustomEndpoint *apiextensionsv1.JSON `json:"customEndpoint,omitempty"`
 
+	retrievedServiceAccount string `json:"-"`
 	retrievedCredentials string `json:"-"`
 }
 
@@ -146,7 +156,8 @@ func (r *GCPAuthEngineConfig) SetConditions(conditions []metav1.Condition) {
 	r.Status.Conditions = conditions
 }
 
-func (r *GCPAuthEngineConfig) SetCredentials(Credentials string) {
+func (r *GCPAuthEngineConfig) SetServiceAccountAndCredentials(ServiceAccount string, Credentials string) {
+	r.Spec.GCPConfig.retrievedServiceAccount = ServiceAccount
 	r.Spec.GCPConfig.retrievedCredentials = Credentials
 }
 
@@ -177,7 +188,7 @@ func (r *GCPAuthEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthCon
 
 func (r *GCPAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 
-	if reflect.DeepEqual(r.Spec.GCPCredentials, vaultutils.RootCredentialConfig{PasswordKey: "credentials"}) {
+	if reflect.DeepEqual(r.Spec.GCPCredentials, vaultutils.RootCredentialConfig{UsernameKey: "serviceaccount", PasswordKey: "credentials"}) {
 		return nil
 	}
 
@@ -210,7 +221,7 @@ func (r *GCPAuthEngineConfig) setInternalCredentials(context context.Context) er
 			log.Error(err, "unable to retrieve vault secret", "instance", r)
 			return err
 		}
-		r.SetClientIDAndClientSecret(r.Spec.ClientID, secret.Data[randomSecret.Spec.SecretKey].(string))
+		r.SetServiceAccountAndCredentials(r.Spec.ServiceAccount, secret.Data[randomSecret.Spec.SecretKey].(string))
 		return nil
 	}
 	if r.Spec.GCPCredentials.Secret != nil {
@@ -223,10 +234,10 @@ func (r *GCPAuthEngineConfig) setInternalCredentials(context context.Context) er
 			log.Error(err, "unable to retrieve Secret", "instance", r)
 			return err
 		}
-		if r.Spec.ClientID == "" {
-			r.SetCredentials(string(secret.Data[r.Spec.GCPCredentials.PasswordKey]))
+		if r.Spec.ServiceAccount == "" {
+			r.SetServiceAccountAndCredentials(string(secret.Data[r.Spec.GCPCredentials.UsernameKey]), string(secret.Data[r.Spec.GCPCredentials.PasswordKey]))
 		} else {
-			r.SetCredentials(string(secret.Data[r.Spec.GCPCredentials.PasswordKey]))
+			r.SetServiceAccountAndCredentials(r.Spec.GCPCredentials.UsernameKey, string(secret.Data[r.Spec.GCPCredentials.PasswordKey]))
 		}
 		return nil
 	}
@@ -240,12 +251,12 @@ func (r *GCPAuthEngineConfig) setInternalCredentials(context context.Context) er
 			log.Error(err, "unable to retrieve vault secret", "instance", r)
 			return err
 		}
-		if r.Spec.ClientID == "" {
-			r.SetCredentials(secret.Data[r.Spec.GCPCredentials.PasswordKey].(string))
-			log.V(1).Info("", "credentials", secret.Data[r.Spec.GCPCredentials.PasswordKey].(string))
+		if r.Spec.ServiceAccount == "" {
+			r.SetServiceAccountAndCredentials(secret.Data[r.Spec.GCPCredentials.UsernameKey].(string), secret.Data[r.Spec.GCPCredentials.PasswordKey].(string))
+			log.V(1).Info("", "serviceaccount", secret.Data[r.Spec.GCPCredentials.UsernameKey].(string), "credentials", secret.Data[r.Spec.GCPCredentials.PasswordKey].(string))
 		} else {
-			r.SetCredentials(secret.Data[r.Spec.GCPCredentials.PasswordKey].(string))
-			log.V(1).Info("", "credentials", secret.Data[r.Spec.GCPCredentials.PasswordKey].(string))
+			r.SetServiceAccountAndCredentials(r.Spec.GCPConfig.ServiceAccount, secret.Data[r.Spec.GCPCredentials.PasswordKey].(string))
+			log.V(1).Info("", "serviceaccount", r.Spec.GCPConfig.ServiceAccount, "credentials", secret.Data[r.Spec.GCPCredentials.PasswordKey].(string))
 		}
 		return nil
 	}
