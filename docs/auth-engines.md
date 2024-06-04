@@ -730,19 +730,35 @@ spec:
  ```
 
   The `name` field - Name of the role
+
   The `bound_service_principal_ids` field - The list of Service Principal IDs that login is restricted to.
+
   The `bound_group_ids` field - The list of group ids that login is restricted to.
+
   The `bound_locations` field - The list of locations that login is restricted to.
+
   The `bound_subscription_ids` field - The list of subscription IDs that login is restricted to.
+
   The `bound_resource_groups` field - The list of resource groups that login is restricted to.
+
   The `bound_scale_sets` field - The list of scale set names that the login is restricted to.
+
   The `token_ttl` field - The incremental lifetime for generated tokens. This current value of this will be referenced at renewal time.
+
   The `token_max_ttl` field - The maximum lifetime for generated tokens. This current value of this will be referenced at renewal time.
+
   The `token_policies` field - List of token policies to encode onto generated tokens. Depending on the auth method, this list may be supplemented by user/group/other values.
+
   The `policies` field - DEPRECATED: Please use the token_policies parameter instead. List of token policies to encode onto generated tokens. Depending on the auth method, this list may be supplemented by user/group/other values.
+
   The `token_bound_cidrs` field - List of CIDR blocks; if set, specifies blocks of IP addresses which can authenticate successfully, and ties the resulting token to these blocks as well.
+
   The `token_explicit_max_ttl` field - If set, will encode an explicit max TTL onto the token. This is a hard cap even if token_ttl and token_max_ttl would otherwise allow a renewal.
+
   The `token_no_default_policy` field - If set, the default policy will not be set on generated tokens; otherwise it will be added to the policies set in token_policies.
+
   The `token_num_uses` field - The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited. If you require the token to have the ability to create child tokens, you will need to set this value to 0.
+
   The `token_period` field - The maximum allowed period value when a periodic token is requested from this role.
+  
   The `token_type` field - The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens). For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time. For machine based authentication cases, you should use batch type tokens.
