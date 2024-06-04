@@ -9,4 +9,33 @@ metadata:
     app.kubernetes.io/created-by: vault-config-operator
   name: gcpauthenginerole-sample
 spec:
-  # TODO(user): Add fields here
+  authentication:
+    path: vault-admin
+    role: vault-admin
+    serviceAccount:
+      name: vault
+  connection:
+    address: 'https://vault.example.com'
+  path: gcp
+  name: "gcp-iam-role"
+  type: "iam"
+  boundServiceAccounts: {}
+  boundProjects: {}
+  addGroupAliases: false
+  tokenTTL: ""
+  tokenMaxTTL: ""
+  tokenPolicies: []
+  policies: []
+  tokenBoundCIDRs: []
+  tokenExplicitMaxTTL: ""
+  tokenNoDefaultPolicy: false
+  tokenNumUses: 0
+  tokenPeriod: 0
+  tokenType: ""
+  maxJWTExp: ""
+  allowGCEInference: false
+  boundZones: []
+  boundRegions: []
+  boundInstanceGroups: []
+  boundLabels: []
+
