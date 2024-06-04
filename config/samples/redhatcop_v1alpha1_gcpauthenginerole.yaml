@@ -1,0 +1,12 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GCPAuthEngineRole
+metadata:
+  labels:
+    app.kubernetes.io/name: gcpauthenginerole
+    app.kubernetes.io/instance: gcpauthenginerole-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: gcpauthenginerole-sample
+spec:
+  # TODO(user): Add fields here

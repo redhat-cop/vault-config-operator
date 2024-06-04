@@ -272,7 +272,16 @@ spec:
                 type: string
               serviceAccount:
                 default: ""
-                description: Service Account Name
+                description: Service Account Name. A service account is a special
+                  kind of account typically used by an application or compute workload,
+                  such as a Compute Engine instance, rather than a person. A service
+                  account is identified by its email address, which is unique to the
+                  account. Applications use service accounts to make authorized API
+                  calls by authenticating as either the service account itself, or
+                  as Google Workspace or Cloud Identity users through domain-wide
+                  delegation. When an application authenticates as a service account,
+                  it has access to all resources that the service account has permission
+                  to access.
                 type: string
             type: object
           status:
