@@ -10,7 +10,8 @@
     - [JWTOIDCAuthEngineRole](#jwtoidcauthenginerole)
   - [GCPAuthEngineConfig](#gcpauthengineconfig)
     - [GCPAuthEngineRole](#gcpauthenginerole)
-  - [AzureAuthEngineRole](#azureauthenginerole)
+  - [AzureAuthEngineConfig](#azureauthengineconfig)
+    - [AzureAuthEngineRole](#azureauthenginerole)
 
 ## AuthEngineMount
 
@@ -762,3 +763,4 @@ spec:
   The `token_period` field - The maximum allowed period value when a periodic token is requested from this role.
   
   The `token_type` field - The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens). For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time. For machine based authentication cases, you should use batch type tokens.
+
