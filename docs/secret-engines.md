@@ -16,6 +16,7 @@
   - [PKISecretEngineRole](#pkisecretenginerole)
   - [KubernetesSecretEngineConfig](#kubernetessecretengineconfig)
   - [KubernetesSecretEngineRole](#kubernetessecretenginerole)
+  - [AzureSecretEngineConfig] (#azuresecretengineconfig)
 
 
 ## SecretEngineMount
@@ -597,3 +598,92 @@ vault write kubese-test/roles/kubese-default-edit \
     kubernetes_role_name="ClusterRole" \
     nameTemplate="vault-sa-{{random 10 | lowercase}}" \
 ```
+
+
+## AzureSecretEngineConfig
+
+The `AzureSecretEngineConfig` CRD allows a user to create an Azure Secret Engine configuration. 
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AzureSecretEngineConfig
+metadata:
+  labels:
+    app.kubernetes.io/name: azuresecretengineconfig
+    app.kubernetes.io/instance: azuresecretengineconfig-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: azuresecretengineconfig-sample
+spec:
+  authentication:
+    path: vault-admin
+    role: vault-admin
+    serviceAccount:
+      name: vault
+  connection:
+    address: 'https://vault.example.com'
+  path: azure
+  tenantID: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxx"
+  clientID: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxx"
+  subscriptionID: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxx"
+  environment: "AzurePublicCloud"
+  passwordPolicy: ""
+  rootPasswordTTL: "128d"
+  azureCredentials:
+    secret: 
+      name: aad-credentials
+    usernameKey: clientid
+    passwordKey: clientsecret
+```
+
+The `subscription_id` field - The subscription id for the Azure Active Directory. This value can also be provided with the AZURE_SUBSCRIPTION_ID environment variable.
+
+The `tenant_id` field - The tenant id for the Azure Active Directory. This value can also be provided with the AZURE_TENANT_ID environment variable.
+
+The `client_id` field - The OAuth2 client id to connect to Azure. This value can also be provided with the AZURE_CLIENT_ID environment variable. See authentication for more details.
+
+The `client_secret` field - 
+
+The `environment` field - The Azure environment. This value can also be provided with the AZURE_ENVIRONMENT environment variable. If not specified, Vault will use Azure Public Cloud.
+
+The `password_policy` field - Specifies a password policy to use when creating dynamic credentials. Defaults to generating an alphanumeric password if not set.
+
+The `root_password_ttl` field - Specifies how long the root password is valid for in Azure when rotate-root generates a new client secret. Uses duration format strings.
+
+ The `azureCredentials` field - The OAuth Client Secret from the provider for OIDC roles.
+ The OIDCClientSecret and possibly the OIDCClientID can be retrived a three different ways :
+
+1. From a Kubernetes secret, specifying the `azureCredentials` field as follows:
+```yaml
+  azureCredentials:
+    secret: 
+      name: aad-credentials
+    usernameKey: clientid
+    passwordKey: clientsecret
+```
+The secret must be of [basic auth type](https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret). 
+
+Example Secret : 
+```bash
+kubectl create secret generic aad-credentials --from-literal=clientid="123456-1234-1234-1234-123456789" --from-literal=clientsecret="saffsfsdfsfsdgsdgsdgsdgghdfhdhdgsjgjgjfj" -n vault-admin
+```
+If the secret is updated this connection will also be updated.
+
+2. From a [Vault secret](https://developer.hashicorp.com/vault/docs/secrets/kv), specifying the `azureCredentials` field as follows :
+```yaml
+  azureCredentials:
+    vaultSecret: 
+      path: secret/foo
+    usernameKey: clientid
+    passwordKey: clientsecret
+```
+3. From a [RandomSecret](secret-management.md#RandomSecret), specifying the `azureCredentials` field as follows : 
+```yaml
+  azureCredentials:
+    randomSecret: 
+      name: aad-credentials
+    usernameKey: clientid
+    passwordKey: clientsecret
+```
+When the RandomSecret generates a new secret, this connection will also be updated.
