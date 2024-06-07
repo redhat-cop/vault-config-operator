@@ -637,17 +637,17 @@ spec:
     passwordKey: clientsecret
 ```
 
-The `subscription_id` field - The subscription id for the Azure Active Directory. This value can also be provided with the AZURE_SUBSCRIPTION_ID environment variable.
+The `subscriptionID` field - The subscription id for the Azure Active Directory. This value can also be provided with the AZURE_SUBSCRIPTION_ID environment variable.
 
-The `tenant_id` field - The tenant id for the Azure Active Directory. This value can also be provided with the AZURE_TENANT_ID environment variable.
+The `tenantID` field - The tenant id for the Azure Active Directory. This value can also be provided with the AZURE_TENANT_ID environment variable.
 
-The `client_id` field - The OAuth2 client id to connect to Azure. This value can also be provided with the AZURE_CLIENT_ID environment variable. See authentication for more details.
+The `clientID` field - The OAuth2 client id to connect to Azure. This value can also be provided with the AZURE_CLIENT_ID environment variable. See authentication for more details.
 
 The `environment` field - The Azure environment. This value can also be provided with the AZURE_ENVIRONMENT environment variable. If not specified, Vault will use Azure Public Cloud.
 
-The `password_policy` field - Specifies a password policy to use when creating dynamic credentials. Defaults to generating an alphanumeric password if not set.
+The `passwordPolicy` field - Specifies a password policy to use when creating dynamic credentials. Defaults to generating an alphanumeric password if not set.
 
-The `root_password_ttl` field - Specifies how long the root password is valid for in Azure when rotate-root generates a new client secret. Uses duration format strings.
+The `rootPasswordTTL` field - Specifies how long the root password is valid for in Azure when rotate-root generates a new client secret. Uses duration format strings.
 
  The `azureCredentials` field - The OAuth Client Secret from the provider for OIDC roles.
  The OIDCClientSecret and possibly the OIDCClientID can be retrived a three different ways :
