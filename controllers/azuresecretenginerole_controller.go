@@ -19,18 +19,16 @@ package controllers
 import (
 	"context"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 )
 
 // AzureSecretEngineRoleReconciler reconciles a AzureSecretEngineRole object
 type AzureSecretEngineRoleReconciler struct {
-	client.Client
-	Scheme *runtime.Scheme
+	vaultresourcecontroller.ReconcilerBase
 }
 
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=azuresecretengineroles,verbs=get;list;watch;create;update;patch;delete
