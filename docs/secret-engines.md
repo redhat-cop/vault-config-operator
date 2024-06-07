@@ -643,8 +643,6 @@ The `tenant_id` field - The tenant id for the Azure Active Directory. This value
 
 The `client_id` field - The OAuth2 client id to connect to Azure. This value can also be provided with the AZURE_CLIENT_ID environment variable. See authentication for more details.
 
-The `client_secret` field - 
-
 The `environment` field - The Azure environment. This value can also be provided with the AZURE_ENVIRONMENT environment variable. If not specified, Vault will use Azure Public Cloud.
 
 The `password_policy` field - Specifies a password policy to use when creating dynamic credentials. Defaults to generating an alphanumeric password if not set.
