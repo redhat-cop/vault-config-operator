@@ -16,6 +16,7 @@
   - [PKISecretEngineRole](#pkisecretenginerole)
   - [KubernetesSecretEngineConfig](#kubernetessecretengineconfig)
   - [KubernetesSecretEngineRole](#kubernetessecretenginerole)
+  - [AzureSecretEngineRole] (#azuresecretenginerole)
 
 
 ## SecretEngineMount
@@ -597,3 +598,56 @@ vault write kubese-test/roles/kubese-default-edit \
     kubernetes_role_name="ClusterRole" \
     nameTemplate="vault-sa-{{random 10 | lowercase}}" \
 ```
+
+## AzureSecretEngineRole
+The `AzureSecretEngineRole` CRD allows a user to create a [Azure Secret Engine Role](https://developer.hashicorp.com/vault/api-docs/secret/azure#create-update-role)
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AzureSecretEngineRole
+metadata:
+  labels:
+    app.kubernetes.io/name: azuresecretenginerole
+    app.kubernetes.io/instance: azuresecretenginerole-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: azuresecretenginerole-sample
+spec:
+  authentication:
+    path: vault-admin
+    role: vault-admin
+    serviceAccount:
+      name: vault
+  connection:
+    address: 'https://vault.example.com'
+  path: azure
+  name: "azure-role"
+  azureRoles: ""
+  azureGroups: ""
+  applicationObjectID: ""
+  persistApp: ""
+  TTL: ""
+  maxTTL: ""
+  permanentlyDelete: ""
+  signInAudience: ""
+  tags: ""
+```
+
+ The `azureRoles` field - List of Azure roles to be assigned to the generated service principal. The array must be in JSON format, properly escaped as a string. See roles docs for details on role definition.
+ 
+ The `azureGroups` field - List of Azure groups that the generated service principal will be assigned to. The array must be in JSON format, properly escaped as a string. See groups docs for more details.
+
+ The `applicationObjectID` field - Application Object ID for an existing service principal that will be used instead of creating dynamic service principals. If present, azure_roles will be ignored. See roles docs for details on role definition.
+
+ The `persistApp` field - If set to true, persists the created service principal and application for the lifetime of the role. Useful for when the Service Principal needs to maintain ownership of objects it creates.
+
+ The `TTL` field - Specifies the default TTL for service principals generated using this role. Accepts time suffixed strings ("1h") or an integer number of seconds. Defaults to the system/engine default TTL time.
+
+ The `maxTTL` field - Specifies the maximum TTL for service principals generated using this role. Accepts time suffixed strings ("1h") or an integer number of seconds. Defaults to the system/engine max TTL time.
+
+ The `permanentlyDelete` field - Specifies whether to permanently delete Applications and Service Principals that are dynamically created by Vault. If application_object_id is present, permanently_delete must be false.
+
+ The `signInAudience` field - Specifies the security principal types that are allowed to sign in to the application. Valid values are: AzureADMyOrg, AzureADMultipleOrgs, AzureADandPersonalMicrosoftAccount, PersonalMicrosoftAccount.
+
+ The `tags` field - A comma-separated string of Azure tags to attach to an application.
