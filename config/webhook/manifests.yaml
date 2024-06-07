@@ -62,7 +62,26 @@ webhooks:
     - CREATE
     resources:
     - azureauthengineroles
-  sideEffects: None 
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-azuresecretenginerole
+  failurePolicy: Fail
+  name: mazuresecretenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - azuresecretengineroles
+  sideEffects: None
 - admissionReviewVersions:
   - v1
   - v1beta1
@@ -636,6 +655,25 @@ webhooks:
     - UPDATE
     resources:
     - azureauthengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-azuresecretenginerole
+  failurePolicy: Fail
+  name: vazuresecretenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - UPDATE
+    resources:
+    - azuresecretengineroles
   sideEffects: None
 - admissionReviewVersions:
   - v1
