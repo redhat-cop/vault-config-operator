@@ -155,8 +155,8 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "AzureAuthEngineConfig")
 		os.Exit(1)
 	}
-  
-  	if err = (&controllers.AzureAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AzureAuthEngineRole")}).SetupWithManager(mgr); err != nil {
+
+	if err = (&controllers.AzureAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AzureAuthEngineRole")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AzureAuthEngineRole")
 		os.Exit(1)
 	}
@@ -194,6 +194,11 @@ func main() {
 
 	if err = (&controllers.GitHubSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GitHubSecretEngineRole")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GitHubSecretEngineRole")
+		os.Exit(1)
+	}
+
+	if err = (&controllers.AzureSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AzureSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AzureSecretEngineConfig")
 		os.Exit(1)
 	}
 
@@ -288,7 +293,7 @@ func main() {
 		if err = (&redhatcopv1alpha1.AzureAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "AzureAuthEngineRole")
 			os.Exit(1)
-		}    
+		}
 		if err = (&redhatcopv1alpha1.VaultSecret{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "VaultSecret")
 			os.Exit(1)
@@ -310,7 +315,10 @@ func main() {
 			setupLog.Error(err, "unable to create webhook", "webhook", "GitHubSecretEngineRole")
 			os.Exit(1)
 		}
-
+		if err = (&redhatcopv1alpha1.AzureSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "AzureSecretEngineConfig")
+			os.Exit(1)
+		}
 		if err = (&redhatcopv1alpha1.PKISecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "PKISecretEngineConfig")
 			os.Exit(1)
