@@ -125,6 +125,32 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
+  - azuresecretengineconfigs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - azuresecretengineconfigs/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - azuresecretengineconfigs/status
+  verbs:
+  - get
+  - patch
+  - update  
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
   - azuresecretengineroles
   verbs:
   - create

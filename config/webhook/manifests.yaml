@@ -69,9 +69,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-redhatcop-redhat-io-v1alpha1-azuresecretenginerole
+      path: /validate-redhatcop-redhat-io-v1alpha1-azuresecretengineconfig
   failurePolicy: Fail
-  name: mazuresecretenginerole.kb.io
+  name: vazuresecretengineconfig.kb.io
   rules:
   - apiGroups:
     - redhatcop.redhat.io
@@ -79,9 +79,29 @@ webhooks:
     - v1alpha1
     operations:
     - CREATE
+    - UPDATE
+    resources:
+    - azuresecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-azuresecretenginerole
+  failurePolicy: Fail
+  name: vazuresecretenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - UPDATE
     resources:
     - azuresecretengineroles
-  sideEffects: None
+  sideEffects: None 
 - admissionReviewVersions:
   - v1
   - v1beta1
@@ -662,6 +682,26 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-azuresecretengineconfig
+  failurePolicy: Fail
+  name: vazuresecretengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - azuresecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /validate-redhatcop-redhat-io-v1alpha1-azuresecretenginerole
   failurePolicy: Fail
   name: vazuresecretenginerole.kb.io
@@ -674,7 +714,7 @@ webhooks:
     - UPDATE
     resources:
     - azuresecretengineroles
-  sideEffects: None
+  sideEffects: None 
 - admissionReviewVersions:
   - v1
   - v1beta1
