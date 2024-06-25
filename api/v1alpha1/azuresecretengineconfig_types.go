@@ -29,30 +29,32 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-// AzureAuthEngineConfigSpec defines the desired state of AzureAuthEngineConfig
-type AzureAuthEngineConfigSpec struct {
+// AzureSecretEngineConfigSpec defines the desired state of AzureSecretEngineConfig
+type AzureSecretEngineConfigSpec struct {
 	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
 	// +kubebuilder:validation:Optional
 	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
 
+	// Authentication is the kube auth configuration to be used to execute this request
+	// +kubebuilder:validation:Required
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
-	// The final path in Vault will be {[spec.authentication.namespace]}/auth/{spec.path}/config/{metadata.name}.
+	// The final path in Vault will be {[spec.authentication.namespace]}/{spec.path}/config/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
 
-	// +kubebuilder:validation:Required
-	AzureConfig `json:",inline"`
-
 	// AzureCredentials consists in ClientID and ClientSecret, which can be created as Kubernetes Secret, VaultSecret or RandomSecret
 	// +kubebuilder:validation:Optional
 	AzureCredentials vaultutils.RootCredentialConfig `json:"azureCredentials,omitempty"`
+
+	// +kubebuilder:validation:Required
+	AzureSEConfig `json:",inline"`
 }
 
-// AzureAuthEngineConfigStatus defines the observed state of AzureAuthEngineConfig
-type AzureAuthEngineConfigStatus struct {
+// AzureSecretEngineConfigStatus defines the observed state of AzureSecretEngineConfig
+type AzureSecretEngineConfigStatus struct {
 	// +patchMergeKey=type
 	// +patchStrategy=merge
 	// +listType=map
@@ -63,116 +65,112 @@ type AzureAuthEngineConfigStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// AzureAuthEngineConfig is the Schema for the azureauthengineconfigs API
-type AzureAuthEngineConfig struct {
+// AzureSecretEngineConfig is the Schema for the azuresecretengineconfigs API
+type AzureSecretEngineConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   AzureAuthEngineConfigSpec   `json:"spec,omitempty"`
-	Status AzureAuthEngineConfigStatus `json:"status,omitempty"`
+	Spec   AzureSecretEngineConfigSpec   `json:"spec,omitempty"`
+	Status AzureSecretEngineConfigStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// AzureAuthEngineConfigList contains a list of AzureAuthEngineConfig
-type AzureAuthEngineConfigList struct {
+// AzureSecretEngineConfigList contains a list of AzureSecretEngineConfig
+type AzureSecretEngineConfigList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []AzureAuthEngineConfig `json:"items"`
+	Items           []AzureSecretEngineConfig `json:"items"`
 }
 
-type AzureConfig struct {
-	//The tenant id for the Azure Active Directory organization. This value can also be provided with the AZURE_TENANT_ID environment variable.
+type AzureSEConfig struct {
+
+	// The subscription id for the Azure Active Directory. This value can also be provided with the AZURE_SUBSCRIPTION_ID environment variable.
+	// +kubebuilder:validation:Required
+	SubscriptionID string `json:"subscriptionID"`
+
+	// The tenant id for the Azure Active Directory organization. This value can also be provided with the AZURE_TENANT_ID environment variable.
 	// +kubebuilder:validation:Required
 	TenantID string `json:"tenantID"`
 
-	//The resource URL for the application registered in Azure Active Directory.
-	//The value is expected to match the audience (aud claim) of the JWT provided to the login API.
-	//See the resource parameter for how the audience is set when requesting a JWT access token from the Azure Instance Metadata Service (IMDS) endpoint.
-	//This value can also be provided with the AZURE_AD_RESOURCE environment variable.
-	// +kubebuilder:validation:Required
-	Resource string `json:"resource"`
-
-	//The Azure cloud environment. Valid values: AzurePublicCloud, AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud.
-	//This value can also be provided with the AZURE_ENVIRONMENT environment variable
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:default="AzurePublicCloud"
-	Environment string `json:"environment,omitempty"`
-
-	//The client id for credentials to query the Azure APIs.
-	//Currently read permissions to query compute resources are required.
-	//This value can also be provided with the AZURE_CLIENT_ID environment variable.
+	// The client id for credentials to query the Azure APIs.
+	// Currently read permissions to query compute resources are required.
+	// This value can also be provided with the AZURE_CLIENT_ID environment variable.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=""
 	ClientID string `json:"clientID,omitempty"`
 
-	//The maximum number of attempts a failed operation will be retried before producing an error.
+	// The Azure cloud environment. Valid values: AzurePublicCloud, AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud.
+	// This value can also be provided with the AZURE_ENVIRONMENT environment variable
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=3
-	MaxRetries int64 `json:"maxRetries"`
+	// +kubebuilder:default="AzurePublicCloud"
+	Environment string `json:"environment,omitempty"`
 
-	//The maximum delay, in seconds, allowed before retrying an operation
+	// Specifies a password policy to use when creating dynamic credentials. Defaults to generating an alphanumeric password if not set.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=60
-	MaxRetryDelay int64 `json:"maxRetryDelay"`
+	// +kubebuilder:default=""
+	PasswordPolicy string `json:"passwordPolicy,omitempty"`
 
-	//The initial amount of delay, in seconds, to use before retrying an operation.
-	//Increases exponentially
+	// Specifies how long the root password is valid for in Azure when rotate-root generates a new client secret. Uses duration format strings.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=4
-	RetryDelay int64 `json:"retryDelay"`
+	// +kubebuilder:default="182d"
+	RootPasswordTTL string `json:"rootPasswordTTL,omitempty"`
 
 	retrievedClientID string `json:"-"`
 
 	retrievedClientPassword string `json:"-"`
 }
 
-var _ vaultutils.VaultObject = &AzureAuthEngineConfig{}
-var _ vaultutils.ConditionsAware = &AzureAuthEngineConfig{}
+var _ vaultutils.VaultObject = &AzureSecretEngineConfig{}
+var _ vaultutils.ConditionsAware = &AzureSecretEngineConfig{}
 
-func (d *AzureAuthEngineConfig) GetVaultConnection() *vaultutils.VaultConnection {
-	return d.Spec.Connection
+func init() {
+	SchemeBuilder.Register(&AzureSecretEngineConfig{}, &AzureSecretEngineConfigList{})
 }
 
-func (r *AzureAuthEngineConfig) GetConditions() []metav1.Condition {
-	return r.Status.Conditions
-}
-
-func (r *AzureAuthEngineConfig) SetConditions(conditions []metav1.Condition) {
+func (r *AzureSecretEngineConfig) SetConditions(conditions []metav1.Condition) {
 	r.Status.Conditions = conditions
 }
 
-func (r *AzureAuthEngineConfig) SetClientIDAndClientSecret(ClientID string, ClientSecret string) {
-	r.Spec.AzureConfig.retrievedClientID = ClientID
-	r.Spec.AzureConfig.retrievedClientPassword = ClientSecret
+func (d *AzureSecretEngineConfig) GetVaultConnection() *vaultutils.VaultConnection {
+	return d.Spec.Connection
 }
 
-func (r *AzureAuthEngineConfig) GetPath() string {
-	return vaultutils.CleansePath("auth/" + string(r.Spec.Path) + "/config")
+func (r *AzureSecretEngineConfig) GetConditions() []metav1.Condition {
+	return r.Status.Conditions
 }
 
-func (r *AzureAuthEngineConfig) GetPayload() map[string]interface{} {
-	return r.Spec.AzureConfig.toMap()
-}
-
-func (r *AzureAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
-	desiredState := r.Spec.AzureConfig.toMap()
-	return reflect.DeepEqual(desiredState, payload)
-}
-
-func (r *AzureAuthEngineConfig) IsInitialized() bool {
-	return true
-}
-
-func (r *AzureAuthEngineConfig) IsValid() (bool, error) {
-	return true, nil
-}
-
-func (r *AzureAuthEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
+func (r *AzureSecretEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &r.Spec.Authentication
 }
 
-func (r *AzureAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
+func (d *AzureSecretEngineConfig) GetPath() string {
+	return string(d.Spec.Path) + "/" + "config"
+}
+
+func (d *AzureSecretEngineConfig) GetPayload() map[string]interface{} {
+	return d.Spec.toMap()
+}
+
+func (r *AzureSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+	desiredState := r.Spec.AzureSEConfig.toMap()
+	return reflect.DeepEqual(desiredState, payload)
+}
+
+func (r *AzureSecretEngineConfig) IsInitialized() bool {
+	return true
+}
+
+func (r *AzureSecretEngineConfig) IsValid() (bool, error) {
+	err := r.isValid()
+	return err == nil, err
+}
+
+func (r *AzureSecretEngineConfig) isValid() error {
+	return r.Spec.AzureCredentials.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+}
+
+func (r *AzureSecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 
 	if reflect.DeepEqual(r.Spec.AzureCredentials, vaultutils.RootCredentialConfig{PasswordKey: "clientsecret", UsernameKey: "clientid"}) {
 		return nil
@@ -181,11 +179,11 @@ func (r *AzureAuthEngineConfig) PrepareInternalValues(context context.Context, o
 	return r.setInternalCredentials(context)
 }
 
-func (r *AzureAuthEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
+func (d *AzureSecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
 	return nil
 }
 
-func (r *AzureAuthEngineConfig) setInternalCredentials(context context.Context) error {
+func (r *AzureSecretEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
 	kubeClient := context.Value("kubeClient").(client.Client)
 	if r.Spec.AzureCredentials.RandomSecret != nil {
@@ -223,7 +221,7 @@ func (r *AzureAuthEngineConfig) setInternalCredentials(context context.Context) 
 		if r.Spec.ClientID == "" {
 			r.SetClientIDAndClientSecret(string(secret.Data[r.Spec.AzureCredentials.UsernameKey]), string(secret.Data[r.Spec.AzureCredentials.PasswordKey]))
 		} else {
-			r.SetClientIDAndClientSecret(r.Spec.AzureConfig.ClientID, string(secret.Data[r.Spec.AzureCredentials.PasswordKey]))
+			r.SetClientIDAndClientSecret(r.Spec.AzureSEConfig.ClientID, string(secret.Data[r.Spec.AzureCredentials.PasswordKey]))
 		}
 		return nil
 	}
@@ -241,28 +239,28 @@ func (r *AzureAuthEngineConfig) setInternalCredentials(context context.Context) 
 			r.SetClientIDAndClientSecret(secret.Data[r.Spec.AzureCredentials.UsernameKey].(string), secret.Data[r.Spec.AzureCredentials.PasswordKey].(string))
 			log.V(1).Info("", "clientid", secret.Data[r.Spec.AzureCredentials.UsernameKey].(string), "clientsecret", secret.Data[r.Spec.AzureCredentials.PasswordKey].(string))
 		} else {
-			r.SetClientIDAndClientSecret(r.Spec.AzureConfig.ClientID, secret.Data[r.Spec.AzureCredentials.PasswordKey].(string))
-			log.V(1).Info("", "clientid", r.Spec.AzureConfig.ClientID, "clientsecret", secret.Data[r.Spec.AzureCredentials.PasswordKey].(string))
+			r.SetClientIDAndClientSecret(r.Spec.AzureSEConfig.ClientID, secret.Data[r.Spec.AzureCredentials.PasswordKey].(string))
+			log.V(1).Info("", "clientid", r.Spec.AzureSEConfig.ClientID, "clientsecret", secret.Data[r.Spec.AzureCredentials.PasswordKey].(string))
 		}
 		return nil
 	}
 	return errors.New("no means of retrieving a secret was specified")
 }
 
-func init() {
-	SchemeBuilder.Register(&AzureAuthEngineConfig{}, &AzureAuthEngineConfigList{})
+func (r *AzureSecretEngineConfig) SetClientIDAndClientSecret(ClientID string, ClientSecret string) {
+	r.Spec.AzureSEConfig.retrievedClientID = ClientID
+	r.Spec.AzureSEConfig.retrievedClientPassword = ClientSecret
 }
 
-func (i *AzureConfig) toMap() map[string]interface{} {
+func (i *AzureSEConfig) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
+	payload["subscription_id"] = i.SubscriptionID
 	payload["tenant_id"] = i.TenantID
-	payload["resource"] = i.Resource
-	payload["environment"] = i.Environment
 	payload["client_id"] = i.retrievedClientID
 	payload["client_secret"] = i.retrievedClientPassword
-	payload["max_retries"] = i.MaxRetries
-	payload["max_retry_delay"] = i.MaxRetryDelay
-	payload["retry_delay"] = i.RetryDelay
+	payload["environment"] = i.Environment
+	payload["password_policy"] = i.PasswordPolicy
+	payload["root_password_ttl"] = i.RootPasswordTTL
 
 	return payload
 }
