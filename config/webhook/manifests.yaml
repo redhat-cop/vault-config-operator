@@ -677,6 +677,26 @@ webhooks:
   sideEffects: None
 - admissionReviewVersions:
   - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-azuresecretengineconfig
+  failurePolicy: Fail
+  name: vazuresecretengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - azuresecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
