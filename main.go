@@ -161,6 +161,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controllers.GCPAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GCPAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GCPAuthEngineConfig")
+		os.Exit(1)
+	}
+	if err = (&controllers.GCPAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GCPAuthEngineRole")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GCPAuthEngineRole")
+		os.Exit(1)
+	}
 	if err = (&controllers.VaultSecretReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "VaultSecret")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VaultSecret")
 		os.Exit(1)
@@ -294,6 +302,16 @@ func main() {
 			setupLog.Error(err, "unable to create webhook", "webhook", "AzureAuthEngineRole")
 			os.Exit(1)
 		}
+    
+		if err = (&redhatcopv1alpha1.GCPAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "GCPAuthEngineConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.GCPAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "GCPAuthEngineRole")
+			os.Exit(1)
+		}
+    
 		if err = (&redhatcopv1alpha1.VaultSecret{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "VaultSecret")
 			os.Exit(1)

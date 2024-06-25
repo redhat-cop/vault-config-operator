@@ -234,7 +234,10 @@ var _ = BeforeSuite(func() {
 	err = (&AzureAuthEngineRole{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&AzureSecretEngineConfig{}).SetupWebhookWithManager(mgr)
+	err = (&GCPAuthEngineConfig{}).SetupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = (&GCPAuthEngineRole{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:webhook
