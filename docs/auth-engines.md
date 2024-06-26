@@ -9,6 +9,7 @@
   - [JWTOIDCAuthEngineConfig](#jwtoidcauthengineconfig)
     - [JWTOIDCAuthEngineRole](#jwtoidcauthenginerole)
   - [GCPAuthEngineConfig](#gcpauthengineconfig)
+    - [GCPAuthEngineRole](#gcpauthenginerole)
   - [AzureAuthEngineConfig](#azureauthengineconfig)
     - [AzureAuthEngineRole](#azureauthenginerole)
 
@@ -483,6 +484,98 @@ spec:
  
  The endpoint value provided for a given key has the form of scheme://host:port. The scheme:// and :port portions of the endpoint value are optional.
 
+## GCPAuthEngineRole
+ The `GCPAuthEngineRole` CRD allows a user to register a role in an authentication engine mount of type [Google Cloud](https://developer.hashicorp.com/vault/api-docs/auth/gcp#create-update-role).
+
+ ```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GCPAuthEngineRole
+metadata:
+  labels:
+    app.kubernetes.io/name: gcpauthenginerole
+    app.kubernetes.io/instance: gcpauthenginerole-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: gcpauthenginerole-sample
+spec:
+  authentication:
+    path: vault-admin
+    role: vault-admin
+    serviceAccount:
+      name: vault
+  connection:
+    address: 'https://vault.example.com'
+  path: gcp
+  name: "gcp-iam-role"
+  type: "iam"
+  boundServiceAccounts: {}
+  boundProjects: {}
+  addGroupAliases: false
+  tokenTTL: ""
+  tokenMaxTTL: ""
+  tokenPolicies: []
+  policies: []
+  tokenBoundCIDRs: []
+  tokenExplicitMaxTTL: ""
+  tokenNoDefaultPolicy: false
+  tokenNumUses: 0
+  tokenPeriod: 0
+  tokenType: ""
+  maxJWTExp: ""
+  allowGCEInference: false
+  boundZones: []
+  boundRegions: []
+  boundInstanceGroups: []
+  boundLabels: []
+ ```
+
+The `name` field - The name of the role.
+
+The `type` field - The type of this role. Certain fields correspond to specific roles and will be rejected otherwise. Please see below for more information.
+
+The `bound_service_accounts` field - An array of service account emails or IDs that login is restricted to, either directly or through an associated instance. If set to *, all service accounts are allowed (you can bind this further using bound_projects.)
+
+The `bound_projects` field - An array of GCP project IDs. Only entities belonging to this project can authenticate under the role.
+
+The `add_group_aliases` field -  If true, any auth token generated under this token will have associated group aliases, namely project-$PROJECT_ID, folder-$PROJECT_ID, and organization-$ORG_ID for the entities project and all its folder or organization ancestors. This requires Vault to have IAM permission resourcemanager.projects.get.
+
+The `token_ttl` field - The incremental lifetime for generated tokens. This current value of this will be referenced at renewal time.
+
+The `token_max_ttl` field -  The maximum lifetime for generated tokens. This current value of this will be referenced at renewal time.
+
+The `token_policies` field - List of token policies to encode onto generated tokens. Depending on the auth method, this list may be supplemented by user/group/other values.
+
+The `policies` field - DEPRECATED: Please use the token_policies parameter instead. List of token policies to encode onto generated tokens. Depending on the auth method, this list may be supplemented by user/group/other values.
+
+The `token_bound_cidrs` field - List of CIDR blocks; if set, specifies blocks of IP addresses which can authenticate successfully, and ties the resulting token to these blocks as well.
+
+The `token_explicit_max_ttl` field - If set, will encode an explicit max TTL onto the token. This is a hard cap even if token_ttl and token_max_ttl would otherwise allow a renewal.
+
+The `token_no_default_policy` field - If set, the default policy will not be set on generated tokens; otherwise it will be added to the policies set in token_policies.
+
+The `token_num_uses` field - The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited. If you require the token to have the ability to create child tokens, you will need to set this value to 0.
+
+The `token_period` field - The maximum allowed period value when a periodic token is requested from this role.
+
+The `token_type` field - The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens). For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time. For machine based authentication cases, you should use batch type tokens.
+
+#### The following parameters are only valid when the role is of type "iam":
+
+The `max_jwt_exp` field - The number of seconds past the time of authentication that the login param JWT must expire within. For example, if a user attempts to login with a token that expires within an hour and this is set to 15 minutes, Vault will return an error prompting the user to create a new signed JWT with a shorter exp. The GCE metadata tokens currently do not allow the exp claim to be customized.
+
+The `allow_gce_inference` field - A flag to determine if this role should allow GCE instances to authenticate by inferring service accounts from the GCE identity metadata token.
+
+#### The following parameters are only valid when the role is of type "gce":
+
+The `bound_zones` field - The list of zones that a GCE instance must belong to in order to be authenticated. If bound_instance_groups is provided, it is assumed to be a zonal group and the group must belong to this zone.
+
+The `bound_regions` field - The list of regions that a GCE instance must belong to in order to be authenticated. If bound_instance_groups is provided, it is assumed to be a regional group and the group must belong to this region. If bound_zones are provided, this attribute is ignored.
+
+The `bound_instance_groups` field - The instance groups that an authorized instance must belong to in order to be authenticated. If specified, either bound_zones or bound_regions must be set too.
+
+The `bound_labels` field - A comma-separated list of GCP labels formatted as "key:value" strings that must be set on authorized GCE instances. Because GCP labels are not currently ACL'd, we recommend that this be used in conjunction with other restrictions.
+
 ## AzureAuthEngineConfig
 
 The `AzureAuthEngineConfig` CRD allows a user to configure an authentication engine mount of type [Azure](https://developer.hashicorp.com/vault/api-docs/auth/azure).
@@ -577,7 +670,7 @@ If the secret is updated this connection will also be updated.
 When the RandomSecret generates a new secret, this connection will also be updated.
 
 ## AzureAuthEngineRole
- The `AzureAuthEngineRole` CRD allows a user to register a role in an authentication engine mount of type [Azure](hhttps://developer.hashicorp.com/vault/api-docs/auth/azure#create-update-role).
+ The `AzureAuthEngineRole` CRD allows a user to register a role in an authentication engine mount of type [Azure](https://developer.hashicorp.com/vault/api-docs/auth/azure#create-update-role).
 
  ```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
@@ -667,5 +760,6 @@ spec:
   The `token_num_uses` field - The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited. If you require the token to have the ability to create child tokens, you will need to set this value to 0.
 
   The `token_period` field - The maximum allowed period value when a periodic token is requested from this role.
-
+  
   The `token_type` field - The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens). For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time. For machine based authentication cases, you should use batch type tokens.
+

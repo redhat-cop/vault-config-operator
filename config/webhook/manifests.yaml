@@ -79,20 +79,18 @@ webhooks:
     - v1alpha1
     operations:
     - CREATE
-    - UPDATE
     resources:
     - gcpauthengineconfigs
   sideEffects: None
 - admissionReviewVersions:
   - v1
-  - v1beta1
   clientConfig:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-redhatcop-redhat-io-v1alpha1-databasesecretengineconfig
+      path: /mutate-redhatcop-redhat-io-v1alpha1-gcpauthenginerole
   failurePolicy: Fail
-  name: mdatabasesecretengineconfig.kb.io
+  name: mgcpauthenginerole.kb.io
   rules:
   - apiGroups:
     - redhatcop.redhat.io
@@ -101,7 +99,7 @@ webhooks:
     operations:
     - CREATE
     resources:
-    - databasesecretengineconfigs
+    - gcpauthengineroles
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -141,6 +139,44 @@ webhooks:
     - CREATE
     resources:
     - databasesecretenginestaticroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-gcpauthengineconfig
+  failurePolicy: Fail
+  name: mgcpauthengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - gcpauthengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-gcpauthenginerole
+  failurePolicy: Fail
+  name: mgcpauthenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - gcpauthengineroles
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -773,10 +809,28 @@ webhooks:
     apiVersions:
     - v1alpha1
     operations:
-    - CREATE
     - UPDATE
     resources:
     - gcpauthengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-gcpauthenginerole
+  failurePolicy: Fail
+  name: vgcpauthenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - UPDATE
+    resources:
+    - gcpauthengineroles
   sideEffects: None
 - admissionReviewVersions:
   - v1
