@@ -144,6 +144,17 @@ type KAECConfig struct {
 	// +kubebuilder:default=false
 	DisableLocalCAJWT bool `json:"disableLocalCAJWT,omitempty"`
 
+	// UseOperatorPodCA . This field is considered only if `kubernetesCACert` is not set and `disableLocalCAJWT` is set to true.
+	// In this case if this field is set to true the operator pod's CA is injected. This is the original behavior before the introduction of this field
+	// If tis field is set to false, the os ca bundle of where vault is running will be used.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default=true
+	UseOperatorPodCA bool `json:"useOperatorPodCA,omitempty"`
+
+	// UseAnnotationsAsAliasMetadata  Use annotations from the client token's associated service account as alias metadata for the Vault entity. Only annotations with the vault.hashicorp.com/alias-metadata- key prefix are targeted as alias metadata and your annotations must be 512 characters or less due to the Vault alias metadata value limit. For example, if you configure the annotation vault.hashicorp.com/alias-metadata-foo, Vault saves the string "foo" along with the annotation value to the alias metadata. To save alias metadata, Vault must have permission to read service accounts from the Kubernetes API.
+	// +kubebuilder:validation:Optional
+	UseAnnotationsAsAliasMetadata bool `json:"useAnnotationsAsAliasMetadata,omitempty"`
+
 	retrievedTokenReviewerJWT string `json:"-"`
 }
 
@@ -199,6 +210,8 @@ func (i *KAECConfig) toMap() map[string]interface{} {
 	payload["issuer"] = i.Issuer
 	payload["disable_iss_validation"] = i.DisableISSValidation
 	payload["disable_local_ca_jwt"] = i.DisableLocalCAJWT
+	payload["use_annotations_as_alias_metadata"] = i.UseAnnotationsAsAliasMetadata
+
 	return payload
 }
 
