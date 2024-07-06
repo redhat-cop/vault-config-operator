@@ -61,6 +61,10 @@ var _ vaultutils.VaultObject = &KubernetesSecretEngineRole{}
 
 var _ vaultutils.ConditionsAware = &KubernetesSecretEngineRole{}
 
+func (d *KubernetesSecretEngineRole) IsDeletable() bool {
+	return true
+}
+
 func (d *KubernetesSecretEngineRole) GetPath() string {
 	if d.Spec.Name != "" {
 		return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + d.Spec.Name)

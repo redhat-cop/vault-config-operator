@@ -74,6 +74,10 @@ func (q *QuaySecretEngineStaticRole) IsInitialized() bool {
 	return true
 }
 
+func (d *QuaySecretEngineStaticRole) IsDeletable() bool {
+	return true
+}
+
 func (q *QuaySecretEngineStaticRole) PrepareInternalValues(context context.Context, object client.Object) error {
 	return nil
 }

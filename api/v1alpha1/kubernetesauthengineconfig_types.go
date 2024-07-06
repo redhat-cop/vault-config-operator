@@ -85,6 +85,10 @@ func (d *KubernetesAuthEngineConfig) IsInitialized() bool {
 	return true
 }
 
+func (d *KubernetesAuthEngineConfig) IsDeletable() bool {
+	return false
+}
+
 func (d *KubernetesAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	log := log.FromContext(context)
 

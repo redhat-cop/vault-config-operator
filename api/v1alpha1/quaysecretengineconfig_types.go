@@ -59,6 +59,10 @@ func (d *QuaySecretEngineConfig) GetVaultConnection() *vaultutils.VaultConnectio
 	return d.Spec.Connection
 }
 
+func (d *QuaySecretEngineConfig) IsDeletable() bool {
+	return false
+}
+
 func (q *QuaySecretEngineConfig) GetPath() string {
 	return string(q.Spec.Path) + "/" + "config"
 }

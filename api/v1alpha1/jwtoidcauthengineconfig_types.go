@@ -174,6 +174,10 @@ func (d *JWTOIDCAuthEngineConfig) GetVaultConnection() *vaultutils.VaultConnecti
 	return d.Spec.Connection
 }
 
+func (d *JWTOIDCAuthEngineConfig) IsDeletable() bool {
+	return false
+}
+
 func (r *JWTOIDCAuthEngineConfig) GetConditions() []metav1.Condition {
 	return r.Status.Conditions
 }

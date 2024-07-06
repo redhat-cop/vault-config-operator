@@ -32,6 +32,7 @@ type VaultObject interface {
 	IsEquivalentToDesiredState(payload map[string]interface{}) bool
 	IsInitialized() bool
 	IsValid() (bool, error)
+	IsDeletable() bool
 	PrepareInternalValues(context context.Context, object client.Object) error
 	PrepareTLSConfig(context context.Context, object client.Object) error
 	GetKubeAuthConfiguration() *KubeAuthConfiguration

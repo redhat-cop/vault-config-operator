@@ -153,6 +153,10 @@ func (m *RabbitMQSecretEngineConfig) SetConditions(conditions []metav1.Condition
 	m.Status.Conditions = conditions
 }
 
+func (d *RabbitMQSecretEngineConfig) IsDeletable() bool {
+	return false
+}
+
 func (m *RabbitMQSecretEngineConfig) SetUsernameAndPassword(username string, password string) {
 	m.Spec.RMQSEConfig.retrievedUsername = username
 	m.Spec.RMQSEConfig.retrievedPassword = password

@@ -69,6 +69,10 @@ func (d *DatabaseSecretEngineConfig) GetVaultConnection() *vaultutils.VaultConne
 	return d.Spec.Connection
 }
 
+func (d *DatabaseSecretEngineConfig) IsDeletable() bool {
+	return true
+}
+
 func (d *DatabaseSecretEngineConfig) GetPath() string {
 	if d.Spec.Name != "" {
 		return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "config" + "/" + d.Spec.Name)
