@@ -192,7 +192,6 @@ func (r *AzureSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) e
 
 }
 
-
 func (r *AzureSecretEngineConfigReconciler) findApplicableASEForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.AzureSecretEngineConfig, error) {
 	result := []redhatcopv1alpha1.AzureSecretEngineConfig{}
 	vrl := &redhatcopv1alpha1.AzureSecretEngineConfigList{}

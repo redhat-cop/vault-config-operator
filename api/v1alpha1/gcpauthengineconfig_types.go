@@ -84,14 +84,13 @@ type GCPAuthEngineConfigList struct {
 
 type GCPConfig struct {
 
-
-	// Service Account Name. A service account is a special kind of account typically used by an application or compute workload, such as a Compute Engine instance, rather than a person. 
+	// Service Account Name. A service account is a special kind of account typically used by an application or compute workload, such as a Compute Engine instance, rather than a person.
 	// A service account is identified by its email address, which is unique to the account.
-	// Applications use service accounts to make authorized API calls by authenticating as either the service account itself, or as Google Workspace or Cloud Identity users through domain-wide delegation. 
+	// Applications use service accounts to make authorized API calls by authenticating as either the service account itself, or as Google Workspace or Cloud Identity users through domain-wide delegation.
 	// When an application authenticates as a service account, it has access to all resources that the service account has permission to access.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=""
-	ServiceAccount string `json:"serviceAccount,omitempty"`	
+	ServiceAccount string `json:"serviceAccount,omitempty"`
 
 	// Must be either unique_id or role_id.
 	// If unique_id is specified, the service account's unique ID will be used for alias names during login.
@@ -138,7 +137,7 @@ type GCPConfig struct {
 	CustomEndpoint *apiextensionsv1.JSON `json:"customEndpoint,omitempty"`
 
 	retrievedServiceAccount string `json:"-"`
-	retrievedCredentials string `json:"-"`
+	retrievedCredentials    string `json:"-"`
 }
 
 var _ vaultutils.VaultObject = &GCPAuthEngineConfig{}
