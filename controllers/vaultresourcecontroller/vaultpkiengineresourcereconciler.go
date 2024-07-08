@@ -42,6 +42,11 @@ func NewVaultPKIEngineResource(reconcilerBase *ReconcilerBase, obj client.Object
 
 func (r *VaultPKIEngineResource) manageCleanUpLogic(context context.Context, instance client.Object) error {
 	log := log.FromContext(context)
+	if vaultObject, ok := instance.(vaultutils.VaultObject); ok {
+		if !vaultObject.IsDeletable() {
+			return nil
+		}
+	}
 	if conditionAware, ok := instance.(vaultutils.ConditionsAware); ok {
 		for _, condition := range conditionAware.GetConditions() {
 			if condition.Status == metav1.ConditionTrue && condition.Type == ReconcileSuccessful {

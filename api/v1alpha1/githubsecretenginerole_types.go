@@ -115,6 +115,10 @@ func (d *GitHubSecretEngineRole) IsInitialized() bool {
 	return true
 }
 
+func (d *GitHubSecretEngineRole) IsDeletable() bool {
+	return true
+}
+
 func (d *GitHubSecretEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
 	return nil
 }

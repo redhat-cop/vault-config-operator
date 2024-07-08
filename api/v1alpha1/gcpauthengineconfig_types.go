@@ -147,6 +147,10 @@ func (d *GCPAuthEngineConfig) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection
 }
 
+func (d *GCPAuthEngineConfig) IsDeletable() bool {
+	return false
+}
+
 func (r *GCPAuthEngineConfig) GetConditions() []metav1.Condition {
 	return r.Status.Conditions
 }

@@ -59,6 +59,10 @@ var _ vaultutils.VaultObject = &DatabaseSecretEngineRole{}
 
 var _ vaultutils.ConditionsAware = &DatabaseSecretEngineRole{}
 
+func (d *DatabaseSecretEngineRole) IsDeletable() bool {
+	return true
+}
+
 func (d *DatabaseSecretEngineRole) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection
 }

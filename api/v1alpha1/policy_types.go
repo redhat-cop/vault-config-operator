@@ -71,6 +71,10 @@ func (d *Policy) IsInitialized() bool {
 	return true
 }
 
+func (d *Policy) IsDeletable() bool {
+	return true
+}
+
 func (d *Policy) PrepareInternalValues(context context.Context, object client.Object) error {
 	// Fast path escape if no "${..}" placeholder is detected
 	match, err := regexp.MatchString("\\${[^}]+}", d.Spec.Policy)

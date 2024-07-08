@@ -130,6 +130,10 @@ type AzureConfig struct {
 var _ vaultutils.VaultObject = &AzureAuthEngineConfig{}
 var _ vaultutils.ConditionsAware = &AzureAuthEngineConfig{}
 
+func (d *AzureAuthEngineConfig) IsDeletable() bool {
+	return true
+}
+
 func (d *AzureAuthEngineConfig) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection
 }

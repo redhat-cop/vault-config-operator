@@ -128,6 +128,10 @@ func init() {
 	SchemeBuilder.Register(&AzureSecretEngineConfig{}, &AzureSecretEngineConfigList{})
 }
 
+func (d *AzureSecretEngineConfig) IsDeletable() bool {
+	return true
+}
+
 func (r *AzureSecretEngineConfig) SetConditions(conditions []metav1.Condition) {
 	r.Status.Conditions = conditions
 }

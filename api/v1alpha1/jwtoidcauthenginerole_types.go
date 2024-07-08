@@ -257,6 +257,10 @@ func (d *JWTOIDCAuthEngineRole) GetVaultConnection() *vaultutils.VaultConnection
 	return d.Spec.Connection
 }
 
+func (d *JWTOIDCAuthEngineRole) IsDeletable() bool {
+	return true
+}
+
 func (r *JWTOIDCAuthEngineRole) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &r.Spec.Authentication
 }

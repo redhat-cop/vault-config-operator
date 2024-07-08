@@ -76,6 +76,10 @@ func (d *QuaySecretEngineRole) GetVaultConnection() *vaultutils.VaultConnection 
 	return d.Spec.Connection
 }
 
+func (d *QuaySecretEngineRole) IsDeletable() bool {
+	return true
+}
+
 func (d *QuaySecretEngineRole) GetPath() string {
 	if d.Spec.Name != "" {
 		return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + d.Spec.Name)

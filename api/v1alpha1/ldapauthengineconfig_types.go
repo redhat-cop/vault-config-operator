@@ -61,6 +61,10 @@ func (d *LDAPAuthEngineConfig) GetVaultConnection() *vaultutils.VaultConnection 
 	return d.Spec.Connection
 }
 
+func (d *LDAPAuthEngineConfig) IsDeletable() bool {
+	return false
+}
+
 func (d *LDAPAuthEngineConfig) GetPath() string {
 	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/config")
 }

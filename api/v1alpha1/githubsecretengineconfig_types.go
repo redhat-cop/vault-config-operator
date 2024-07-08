@@ -96,6 +96,10 @@ func (d *GitHubSecretEngineConfig) GetVaultConnection() *vaultutils.VaultConnect
 	return d.Spec.Connection
 }
 
+func (d *GitHubSecretEngineConfig) IsDeletable() bool {
+	return false
+}
+
 func (d *GitHubSecretEngineConfig) GetPath() string {
 	return string(d.Spec.Path) + "/" + "config"
 }
