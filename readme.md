@@ -526,6 +526,13 @@ oc apply -f ./test/kube-auth-engine-config.yaml -n vault-admin
 oc apply -f ./test/kube-auth-engine-role.yaml -n vault-admin
 ```
 
+Kube auth engine use vault pod OS ca bundle
+
+```sh
+oc apply -f ./test/kube-auth-engine-mount.yaml -n vault-admin
+oc apply -f ./test/kube-auth-engine-config-vault-pod-ca.yaml -n vault-admin
+```
+
 Github secret engine
 
 create a github application following the instructions [here](https://github.com/martinbaillie/vault-plugin-secrets-github#setup-github).
