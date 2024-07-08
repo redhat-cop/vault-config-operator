@@ -69,9 +69,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-redhatcop-redhat-io-v1alpha1-azuresecretengineconfig
+      path: /mutate-redhatcop-redhat-io-v1alpha1-azuresecretengineconfig
   failurePolicy: Fail
-  name: vazuresecretengineconfig.kb.io
+  name: mazuresecretengineconfig.kb.io
   rules:
   - apiGroups:
     - redhatcop.redhat.io
@@ -79,7 +79,6 @@ webhooks:
     - v1alpha1
     operations:
     - CREATE
-    - UPDATE
     resources:
     - azuresecretengineconfigs
   sideEffects: None
@@ -89,16 +88,16 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-redhatcop-redhat-io-v1alpha1-azuresecretenginerole
+      path: /mutate-redhatcop-redhat-io-v1alpha1-azuresecretenginerole
   failurePolicy: Fail
-  name: vazuresecretenginerole.kb.io
+  name: mazuresecretenginerole.kb.io
   rules:
   - apiGroups:
     - redhatcop.redhat.io
     apiVersions:
     - v1alpha1
     operations:
-    - UPDATE
+    - CREATE
     resources:
     - azuresecretengineroles
   sideEffects: None 
@@ -160,6 +159,44 @@ webhooks:
     - CREATE
     resources:
     - databasesecretenginestaticroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-gcpauthengineconfig
+  failurePolicy: Fail
+  name: mgcpauthengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - gcpauthengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-gcpauthenginerole
+  failurePolicy: Fail
+  name: mgcpauthenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - gcpauthengineroles
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -775,6 +812,44 @@ webhooks:
     - UPDATE
     resources:
     - databasesecretenginestaticroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-gcpauthengineconfig
+  failurePolicy: Fail
+  name: vgcpauthengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - UPDATE
+    resources:
+    - gcpauthengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-gcpauthenginerole
+  failurePolicy: Fail
+  name: vgcpauthenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - UPDATE
+    resources:
+    - gcpauthengineroles
   sideEffects: None
 - admissionReviewVersions:
   - v1

@@ -1,0 +1,30 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GCPAuthEngineConfig
+metadata:
+  labels:
+    app.kubernetes.io/name: gcpauthengineconfig
+    app.kubernetes.io/instance: gcpauthengineconfig-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: gcpauthengineconfig-sample
+spec:
+  authentication:
+    path: vault-admin
+    role: vault-admin
+    serviceAccount:
+      name: vault
+  connection:
+    address: 'https://vault.example.com'
+  path: azure
+  serviceAccount: "vault-sa"
+  IAMalias: "default"
+  IAMmetadata: "default"
+  GCEalias: "role_id"
+  GCEmetadata: "default"
+  customEndpoint: {}
+  GCPCredentials:
+    secret: 
+      name: gcp-serviceaccount-credentials
+    usernameKey: serviceaccount
+    passwordKey: credentials  
