@@ -1,16 +1,18 @@
 module github.com/redhat-cop/vault-config-operator
 
-go 1.19
+go 1.21
+
+toolchain go1.21.8
 
 require (
-	github.com/BurntSushi/toml v1.2.1
+	github.com/BurntSushi/toml v1.4.0
 	github.com/Masterminds/sprig/v3 v3.2.3
-	github.com/go-logr/logr v1.2.4
+	github.com/go-logr/logr v1.4.2
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/hashicorp/hcl/v2 v2.17.0
-	github.com/hashicorp/vault/api v1.9.2
-	github.com/onsi/ginkgo/v2 v2.9.5
-	github.com/onsi/gomega v1.27.7
+	github.com/hashicorp/hcl/v2 v2.21.0
+	github.com/hashicorp/vault/api v1.17.1
+	github.com/onsi/ginkgo/v2 v2.19.0
+	github.com/onsi/gomega v1.33.1
 	github.com/pkg/errors v0.9.1
 	github.com/scylladb/go-set v1.0.2
 	k8s.io/api v0.27.3
