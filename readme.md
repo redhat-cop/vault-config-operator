@@ -14,6 +14,7 @@
   - [Contributing a new Vault type](#contributing-a-new-vault-type)
   - [Initializing the connection to Vault](#initializing-the-connection-to-vault)
   - [The Common connection section](#the-common-connection-section)
+  - [Node on deleting resources](#note-on-deleting-resources)
   - [Deploying the Operator](#deploying-the-operator)
     - [Multiarch Support](#multiarch-support)
     - [Deploying from OperatorHub](#deploying-from-operatorhub)
@@ -196,6 +197,11 @@ Here is an example:
 ```
 
 This section features the same options that are available via environment variables when using the `vault` client. Keep in mind that this configuration override the default explained above, so you need to specify only the field that need to be different.
+
+## Note on deleting resources
+
+As mentioned in the introduction, this operator is built on the philosophy of a one to one high fidelity mapping between CRDs and vault APIs. Some Vault APIs though are not fully REST compliant. In particular some resources cannot be deleted. This mostly happens on configuration resources (either authentication or secret engine configuration). Configuration resources in general cannot be deleted when there is a 1 to 1 relationship (as opposed to one to many) between the mount and the configuration.
+CRDs corresponding to configuration resources can be identified by the Config postfix. When a CRD of a non deletable configuration is deleted in Kubernetes, this result in a no-op. The only way to delete the configuration is to also delete the corresponding mount.
 
 ## Deploying the Operator
 
