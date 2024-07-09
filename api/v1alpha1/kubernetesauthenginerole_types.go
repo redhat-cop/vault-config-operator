@@ -67,6 +67,10 @@ func (d *KubernetesAuthEngineRole) GetVaultConnection() *vaultutils.VaultConnect
 	return d.Spec.Connection
 }
 
+func (d *KubernetesAuthEngineRole) IsDeletable() bool {
+	return true
+}
+
 func (d *KubernetesAuthEngineRole) GetPath() string {
 	if d.Spec.Name != "" {
 		return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/role/" + d.Spec.Name)

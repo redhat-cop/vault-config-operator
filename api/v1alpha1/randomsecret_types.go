@@ -98,6 +98,10 @@ func (d *RandomSecret) GetPath() string {
 	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + d.Name)
 }
 
+func (d *RandomSecret) IsDeletable() bool {
+	return true
+}
+
 func (d *RandomSecret) getV1Payload() map[string]interface{} {
 
 	payload := map[string]interface{}{

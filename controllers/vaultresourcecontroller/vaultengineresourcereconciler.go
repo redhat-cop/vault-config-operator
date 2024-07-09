@@ -42,7 +42,12 @@ func NewVaultEngineResource(reconcilerBase *ReconcilerBase, obj client.Object) *
 
 func (r *VaultEngineResource) manageCleanUpLogic(context context.Context, instance client.Object) error {
 	log := log.FromContext(context)
-	// we delete this only if it has actually been created. We assume that if there was a successful reconcyle cycle the resource was created in Vault
+	if vaultObject, ok := instance.(vaultutils.VaultObject); ok {
+		if !vaultObject.IsDeletable() {
+			return nil
+		}
+	}
+	// we delete this only if it has actually been created. We assume that if there was a successful reconcile cycle the resource was created in Vault
 	if conditionAware, ok := instance.(vaultutils.ConditionsAware); ok {
 		for _, condition := range conditionAware.GetConditions() {
 			if condition.Status == metav1.ConditionTrue && condition.Type == ReconcileSuccessful {

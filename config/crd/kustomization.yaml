@@ -32,6 +32,7 @@ resources:
 - bases/redhatcop.redhat.io_groupaliases.yaml
 - bases/redhatcop.redhat.io_azureauthengineconfigs.yaml
 - bases/redhatcop.redhat.io_azureauthengineroles.yaml
+- bases/redhatcop.redhat.io_azuresecretengineconfigs.yaml
 - bases/redhatcop.redhat.io_gcpauthengineconfigs.yaml
 - bases/redhatcop.redhat.io_gcpauthengineroles.yaml
 #+kubebuilder:scaffold:crdkustomizeresource

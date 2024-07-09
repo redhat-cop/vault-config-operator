@@ -53,6 +53,10 @@ type AuthEngineMountSpec struct {
 	Name string `json:"name,omitempty"`
 }
 
+func (d *AuthEngineMount) IsDeletable() bool {
+	return true
+}
+
 func (d *AuthEngineMount) GetPath() string {
 	if d.Spec.Name != "" {
 		return vaultutils.CleansePath(d.GetEngineListPath() + "/" + string(d.Spec.Path) + "/" + d.Spec.Name)

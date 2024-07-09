@@ -9,21 +9,21 @@ injector:
   enabled: false
   image:
     repository: "registry.connect.redhat.com/hashicorp/vault-k8s"
-    tag: "1.2.1-ubi"
+    tag: "1.4.2-ubi"
 
   agentImage:
     repository: "registry.connect.redhat.com/hashicorp/vault"
-    tag: "1.14.0-ubi"    
+    tag: "1.17.1-ubi"    
 
 csi:
   image:
     repository: "docker.io/hashicorp/vault-csi-provider"
-    tag: "1.2.1"
+    tag: "1.4.2"
     pullPolicy: IfNotPresent     
 
 server:
   image:
-    tag: "1.14.0-ubi"
+    tag: "1.17.1-ubi"
     repository: registry.connect.redhat.com/hashicorp/vault
 
   extraEnvironmentVars:
@@ -108,7 +108,7 @@ server:
   extraContainers:
     # you should not do this in production
     - name: auto-initializer
-      image: registry.connect.redhat.com/hashicorp/vault:1.14.0-ubi
+      image: registry.connect.redhat.com/hashicorp/vault:1.17.1-ubi
       env: 
       - name: NAMESPACE
         valueFrom:
@@ -145,7 +145,7 @@ server:
           mountPath: /usr/local/libexec/vault          
     # you should not do this in production      
     - name: auto-unsealer
-      image: registry.connect.redhat.com/hashicorp/vault:1.14.0-ubi
+      image: registry.connect.redhat.com/hashicorp/vault:1.17.1-ubi
       env: 
       - name: VAULT_SKIP_VERIFY
         value: "true"        
@@ -178,7 +178,7 @@ server:
         - name: vault-root-token
           mountPath: /vault-root-token  
     - name: github-module-loader
-      image: registry.connect.redhat.com/hashicorp/vault:1.14.0-ubi
+      image: registry.connect.redhat.com/hashicorp/vault:1.17.1-ubi
       env: 
       - name: VAULT_SKIP_VERIFY
         value: "true"        

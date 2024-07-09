@@ -106,6 +106,10 @@ func (d *KubernetesSecretEngineConfig) GetVaultConnection() *vaultutils.VaultCon
 	return d.Spec.Connection
 }
 
+func (d *KubernetesSecretEngineConfig) IsDeletable() bool {
+	return true
+}
+
 func (d *KubernetesSecretEngineConfig) GetPath() string {
 	return string(d.Spec.Path) + "/" + "config"
 }

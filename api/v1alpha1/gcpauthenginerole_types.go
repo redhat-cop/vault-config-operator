@@ -215,6 +215,10 @@ func init() {
 	SchemeBuilder.Register(&GCPAuthEngineRole{}, &GCPAuthEngineRoleList{})
 }
 
+func (d *GCPAuthEngineRole) IsDeletable() bool {
+	return true
+}
+
 func (r *GCPAuthEngineRole) GetConditions() []metav1.Condition {
 	return r.Status.Conditions
 }

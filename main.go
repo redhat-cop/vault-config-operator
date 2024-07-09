@@ -314,7 +314,7 @@ func main() {
 			setupLog.Error(err, "unable to create webhook", "webhook", "GCPAuthEngineRole")
 			os.Exit(1)
 		}
-    
+
 		if err = (&redhatcopv1alpha1.VaultSecret{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "VaultSecret")
 			os.Exit(1)

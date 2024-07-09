@@ -45,7 +45,7 @@ var _ webhook.Defaulter = &KubernetesAuthEngineConfig{}
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *KubernetesAuthEngineConfig) Default() {
 	kubernetesauthengineconfiglog.Info("default", "name", r.Name)
-	if r.Spec.KubernetesCACert == "" {
+	if r.Spec.UseOperatorPodCA && r.Spec.KubernetesCACert == "" {
 		b, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
 		if err != nil {
 			kubernetesauthengineconfiglog.Error(err, "unable to read file /var/run/secrets/kubernetes.io/serviceaccount/ca.crt")

@@ -119,6 +119,10 @@ func (m *Group) GetConditions() []metav1.Condition {
 	return m.Status.Conditions
 }
 
+func (d *Group) IsDeletable() bool {
+	return true
+}
+
 func (m *Group) SetConditions(conditions []metav1.Condition) {
 	m.Status.Conditions = conditions
 }
