@@ -144,6 +144,10 @@ func (d *DatabaseSecretEngineStaticRole) GetVaultConnection() *vaultutils.VaultC
 	return d.Spec.Connection
 }
 
+func (d *DatabaseSecretEngineStaticRole) IsDeletable() bool {
+	return true
+}
+
 func (d *DatabaseSecretEngineStaticRole) GetPath() string {
 	if d.Spec.Name != "" {
 		return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "static-roles" + "/" + d.Spec.Name)

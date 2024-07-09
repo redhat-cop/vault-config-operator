@@ -233,6 +233,10 @@ func (d *PKISecretEngineConfig) GetVaultConnection() *vaultutils.VaultConnection
 	return d.Spec.Connection
 }
 
+func (d *PKISecretEngineConfig) IsDeletable() bool {
+	return false
+}
+
 func (p *PKISecretEngineConfig) GetPath() string {
 	return string(p.Spec.Path)
 }

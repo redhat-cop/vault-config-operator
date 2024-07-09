@@ -54,6 +54,10 @@ func (d *PasswordPolicy) IsInitialized() bool {
 	return true
 }
 
+func (d *PasswordPolicy) IsDeletable() bool {
+	return true
+}
+
 func (d *PasswordPolicy) PrepareInternalValues(context context.Context, object client.Object) error {
 	return nil
 }

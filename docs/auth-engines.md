@@ -58,7 +58,15 @@ The `path` field specifies the path to configure. the complete path of the confi
 
 The `tokenReviewerServiceAccount.name` field specifies the service account to be used to perform the token review. This account must exists and must be granted the TokenReviews create permission. If not specified it will default to `default`.
 
-The `kubernetesCACert` field is the base64 encoded CA certificate that can be used to validate the connection to the master API. It will default to the content of the file `/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"`. This default should work for most cases.
+The `kubernetesCACert` field is the base64 encoded CA certificate that can be used to validate the connection to the master API. If passed, that CA bundle will be used. Consult the following table to see what happens when the field is not passed
+
+| `kubernetesCACert`    | `disableLocalCAJWT` | `useOperatorPodCA` | Behaviour |
+| -------- | ------- | -------- | ------- |
+| set | ignored | ignored | the set CA is used |
+| unset | false | ignored | the `/var/run/secrets/kubernetes.io/serviceaccount/ca.crt` of the Vault's pod is used. If Vault is not running in a pod, then the behavior is undefined |
+| unset | true  | false | the default os CA where Vault is running is used |
+| unset | true  | true  | the `/var/run/secrets/kubernetes.io/serviceaccount/ca.crt` the operator pod is inject and used |
+
 
 The `kubernetesHost` field defines the master api endpoint. It defaults to `https://kubernetes.default.svc:443` and it should work most cases.
 

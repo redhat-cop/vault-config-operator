@@ -188,6 +188,10 @@ func init() {
 	SchemeBuilder.Register(&AzureAuthEngineRole{}, &AzureAuthEngineRoleList{})
 }
 
+func (d *AzureAuthEngineRole) IsDeletable() bool {
+	return true
+}
+
 func (r *AzureAuthEngineRole) GetConditions() []metav1.Condition {
 	return r.Status.Conditions
 }

@@ -152,6 +152,10 @@ func (m *RabbitMQSecretEngineRole) GetConditions() []metav1.Condition {
 	return m.Status.Conditions
 }
 
+func (d *RabbitMQSecretEngineRole) IsDeletable() bool {
+	return true
+}
+
 func (m *RabbitMQSecretEngineRole) SetConditions(conditions []metav1.Condition) {
 	m.Status.Conditions = conditions
 }

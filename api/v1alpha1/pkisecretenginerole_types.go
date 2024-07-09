@@ -92,6 +92,10 @@ func (r *PKISecretEngineRole) IsValid() (bool, error) {
 	return true, nil
 }
 
+func (d *PKISecretEngineRole) IsDeletable() bool {
+	return true
+}
+
 type PKIRole struct {
 
 	// Specifies the Time To Live value provided as a string duration with time suffix. Hour is the largest suffix. If not set, uses the system default value or the value of max_ttl, whichever is shorter.

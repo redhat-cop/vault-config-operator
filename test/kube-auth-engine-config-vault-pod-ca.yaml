@@ -1,0 +1,13 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KubernetesAuthEngineConfig
+metadata:
+  name: authenginemount-sample
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  path: kube-authengine-mount-sample
+  disableISSValidation: true
+  disableLocalCAJWT: true
+  useOperatorPodCA: false
+  kubernetesHost: https://api.${cluster_base_domain}:6443

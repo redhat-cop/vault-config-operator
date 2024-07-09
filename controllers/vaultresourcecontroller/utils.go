@@ -112,6 +112,7 @@ func NewFromManager(mgr manager.Manager, controllerName string) ReconcilerBase {
 func ManageOutcomeWithRequeue(context context.Context, r ReconcilerBase, obj client.Object, issue error, requeueAfter time.Duration) (reconcile.Result, error) {
 	log := log.FromContext(context)
 	conditionsAware := (obj).(vaultutils.ConditionsAware)
+
 	var condition metav1.Condition
 	if issue == nil {
 		condition = metav1.Condition{
@@ -138,15 +139,30 @@ func ManageOutcomeWithRequeue(context context.Context, r ReconcilerBase, obj cli
 		log.Error(err, "unable to update status")
 		return reconcile.Result{}, err
 	}
-	if issue == nil && !controllerutil.ContainsFinalizer(obj, vaultutils.GetFinalizer(obj)) {
-		controllerutil.AddFinalizer(obj, vaultutils.GetFinalizer(obj))
-		// BEWARE: this call *mutates* the object in memory with Kube's response, there *must be invoked last*
-		err := r.GetClient().Update(context, obj)
-		if err != nil {
-			log.Error(err, "unable to add reconciler")
-			return reconcile.Result{}, err
+	if vaultObject, ok := obj.(vaultutils.VaultObject); ok {
+		if vaultObject.IsDeletable() {
+			if issue == nil && !controllerutil.ContainsFinalizer(obj, vaultutils.GetFinalizer(obj)) {
+				controllerutil.AddFinalizer(obj, vaultutils.GetFinalizer(obj))
+				// BEWARE: this call *mutates* the object in memory with Kube's response, there *must be invoked last*
+				err := r.GetClient().Update(context, obj)
+				if err != nil {
+					log.Error(err, "unable to add reconciler")
+					return reconcile.Result{}, err
+				}
+			}
+		}
+	} else {
+		if issue == nil && !controllerutil.ContainsFinalizer(obj, vaultutils.GetFinalizer(obj)) {
+			controllerutil.AddFinalizer(obj, vaultutils.GetFinalizer(obj))
+			// BEWARE: this call *mutates* the object in memory with Kube's response, there *must be invoked last*
+			err := r.GetClient().Update(context, obj)
+			if err != nil {
+				log.Error(err, "unable to add reconciler")
+				return reconcile.Result{}, err
+			}
 		}
 	}
+
 	return reconcile.Result{RequeueAfter: requeueAfter}, issue
 }
 

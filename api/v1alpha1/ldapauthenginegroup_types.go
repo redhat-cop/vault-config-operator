@@ -63,6 +63,10 @@ func (d *LDAPAuthEngineGroup) GetPath() string {
 	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/groups/" + string(d.Spec.Name))
 }
 
+func (d *LDAPAuthEngineGroup) IsDeletable() bool {
+	return true
+}
+
 func (d *LDAPAuthEngineGroup) GetPayload() map[string]interface{} {
 	return d.toMap()
 }

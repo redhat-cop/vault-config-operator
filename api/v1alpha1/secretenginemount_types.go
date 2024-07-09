@@ -36,6 +36,10 @@ func (d *SecretEngineMount) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection
 }
 
+func (d *SecretEngineMount) IsDeletable() bool {
+	return true
+}
+
 func (d *SecretEngineMount) GetPath() string {
 	if d.Spec.Name != "" {
 		return vaultutils.CleansePath(d.GetEngineListPath() + "/" + string(d.Spec.Path) + "/" + d.Spec.Name)
