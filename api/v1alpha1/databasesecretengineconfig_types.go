@@ -237,6 +237,12 @@ type DBSEConfig struct {
 	// kubebuilder:validation:UniqueItems=true
 	RootRotationStatements []string `json:"rootRotationStatements,omitempty"`
 
+	// PasswordAuthentication When set to "scram-sha-256", passwords will be hashed by Vault and stored as-is by PostgreSQL. Using "scram-sha-256" requires a minimum version of PostgreSQL 10. Available options are "scram-sha-256" and "password". The default is "password". When set to "password", passwords will be sent to PostgreSQL in plaintext format and may appear in PostgreSQL logs as-is.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum:={"password","scram-sha-256"}
+	// +kubebuilder:default:="password"
+	PasswordAuthentication string `json:"passwordAuthentication,omitempty"`
+
 	// PasswordPolicy The name of the password policy to use when generating passwords for this database. If not specified, this will use a default policy defined as: 20 characters with at least 1 uppercase, 1 lowercase, 1 number, and 1 dash character.
 	// +kubebuilder:validation:Optional
 	PasswordPolicy string `json:"passwordPolicy,omitempty"`
