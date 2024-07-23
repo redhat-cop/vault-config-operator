@@ -156,6 +156,10 @@ func (d *AzureSecretEngineRole) GetPayload() map[string]interface{} {
 	return d.Spec.toMap()
 }
 
+func (d *AzureSecretEngineRole) IsDeletable() bool {
+	return true
+}
+
 func (d *AzureSecretEngineRole) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection
 }
