@@ -30,6 +30,8 @@ resources:
 - redhatcop_v1alpha1_groupalias.yaml
 - redhatcop_v1alpha1_azureauthengineconfig.yaml
 - redhatcop_v1alpha1_azureauthenginerole.yaml
+- redhatcop_v1alpha1_azuresecretengineconfig.yaml
+- redhatcop_v1alpha1_azuresecretenginerole.yaml
 - redhatcop_v1alpha1_gcpauthengineconfig.yaml
 - redhatcop_v1alpha1_gcpauthenginerole.yaml
 

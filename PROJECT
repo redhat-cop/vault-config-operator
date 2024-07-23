@@ -424,5 +424,18 @@ resources:
   webhooks:
     defaulting: true
     validation: true
+    webhookVersion: v1   
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: redhat.io
+  group: redhatcop
+  kind: AzureSecretEngineRole
+  path: github.com/redhat-cop/vault-config-operator/api/v1alpha1
+  version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
     webhookVersion: v1
 version: "3"
