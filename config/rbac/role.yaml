@@ -287,6 +287,9 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
   - githubsecretengineconfigs
   verbs:
   - create
