@@ -492,7 +492,6 @@ spec:
  
  The endpoint value provided for a given key has the form of scheme://host:port. The scheme:// and :port portions of the endpoint value are optional.
 
-
 ## GCPAuthEngineRole
  The `GCPAuthEngineRole` CRD allows a user to register a role in an authentication engine mount of type [Google Cloud](https://developer.hashicorp.com/vault/api-docs/auth/gcp#create-update-role).
 

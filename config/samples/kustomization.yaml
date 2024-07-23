@@ -32,5 +32,4 @@ resources:
 - redhatcop_v1alpha1_azureauthenginerole.yaml
 - redhatcop_v1alpha1_gcpauthengineconfig.yaml
 - redhatcop_v1alpha1_gcpauthenginerole.yaml
-
 #+kubebuilder:scaffold:manifestskustomizesamples
