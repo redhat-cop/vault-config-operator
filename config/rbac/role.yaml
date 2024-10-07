@@ -147,6 +147,32 @@ rules:
   verbs:
   - get
   - patch
+  - update  
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - azuresecretengineroles
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - azuresecretengineroles/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - azuresecretengineroles/status
+  verbs:
+  - get
+  - patch
   - update
 - apiGroups:
   - redhatcop.redhat.io
