@@ -5,7 +5,7 @@ HELM_VERSION ?= v3.11.0
 KIND_VERSION ?= v0.20.0
 KUBECTL_VERSION ?= v1.27.3
 K8S_MAJOR_VERSION ?= 1.27
-KUSTOMIZE_VERSION ?= v3.8.7
+KUSTOMIZE_VERSION ?= v3.10.0
 CONTROLLER_TOOLS_VERSION ?= v0.11.1
 # Note changes to the vault version should also match image tags within the integration/vault-values.yaml and config/local-development/vault-values.yaml files
 VAULT_VERSION ?= 1.14.0
@@ -141,7 +141,7 @@ deploy-ingress: kubectl helm
 
 .PHONY: deploy-vault
 deploy-vault: kubectl helm
-	$(KUBECTL) create namespace vault --dry-run=client -o yaml | $(KUBECTL) apply -f - 
+	$(KUBECTL) create namespace vault --dry-run=client -o yaml | $(KUBECTL) apply -f -
 	$(KUBECTL) apply -f ./integration/rolebinding-admin.yaml -n vault
 	$(HELM) repo add hashicorp https://helm.releases.hashicorp.com
 	$(HELM) show chart hashicorp/vault --version $(VAULT_CHART_VERSION)
@@ -153,16 +153,16 @@ kind-setup: kind
 	$(KIND) delete cluster
 	$(KIND) create cluster --image docker.io/kindest/node:$(KUBECTL_VERSION) --config=./integration/cluster-kind.yaml
 
-.PHONY: ldap-setup 
+.PHONY: ldap-setup
 ldap-setup: kind-setup vault
 ## Deploy LDAP Instance in ldap namespace
-	$(KUBECTL) create namespace ldap 
+	$(KUBECTL) create namespace ldap
 	$(KUBECTL) apply -f ./integration/ldap -n ldap
 	$(KUBECTL) wait --for=condition=ready -n ldap pod $$($(KUBECTL) get pods -n ldap -l=app=ldap -o json | jq '.items[].metadata.name') --timeout=5m
 	$(KUBECTL) port-forward -n vault vault-0 8201:8200
 	$(KUBECTL) port-forward $$($(KUBECTL) get pods -n ldap -l=app=ldap -o json | jq '.items[].metadata.name') 8555:389 -n ldap
 	export VAULT_ADDR=http://localhost:8201
-	export VAULT_SKIP_VERIFY=true 
+	export VAULT_SKIP_VERIFY=true
 	$(KUBECTL) apply -f ./test/ldapauthengine/ldap-auth-engine-mount.yaml
 	$(KUBECTL) apply -f ./test/ldapauthengine/ldap-auth-engine-config.yaml
 ## Create new Group in LDAP
@@ -308,7 +308,7 @@ helmchart: helmchart-clean kustomize helm
 	sed -i '1s/^/{{- if .Values.enableMonitoring }}\n/' ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_${OPERATOR_NAME}-controller-manager-metrics-monitor.yaml
 	echo {{- end }} >> ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_${OPERATOR_NAME}-controller-manager-metrics-monitor.yaml
 	sed -i 's/name: vault-config-operator-certs/{{- if .Values.enableCertManager }}\n          name: vault-config-operator-metrics-service-cert\n          {{- else }}\n          name: vault-config-operator-certs\n          {{- end }}/' ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_${OPERATOR_NAME}-controller-manager-metrics-monitor.yaml
-	$(HELM) lint ./charts/${OPERATOR_NAME}	
+	$(HELM) lint ./charts/${OPERATOR_NAME}
 
 .PHONY: helmchart-repo
 helmchart-repo: helmchart
@@ -317,7 +317,7 @@ helmchart-repo: helmchart
 	$(HELM) repo index --url ${CHART_REPO_URL} ${HELM_REPO_DEST}
 
 .PHONY: helmchart-repo-push
-helmchart-repo-push: helmchart-repo	
+helmchart-repo-push: helmchart-repo
 	git -C ${HELM_REPO_DEST} add .
 	git -C ${HELM_REPO_DEST} status
 	git -C ${HELM_REPO_DEST} commit -m "Release ${VERSION}"

@@ -16,8 +16,8 @@ resources:
 - bases/redhatcop.redhat.io_githubsecretengineroles.yaml
 - bases/redhatcop.redhat.io_rabbitmqsecretengineconfigs.yaml
 - bases/redhatcop.redhat.io_rabbitmqsecretengineroles.yaml
-- bases/redhatcop.redhat.io_pkisecretengineroles.yaml
 - bases/redhatcop.redhat.io_pkisecretengineconfigs.yaml
+- bases/redhatcop.redhat.io_pkisecretengineroles.yaml
 - bases/redhatcop.redhat.io_quaysecretengineconfigs.yaml
 - bases/redhatcop.redhat.io_quaysecretengineroles.yaml
 - bases/redhatcop.redhat.io_quaysecretenginestaticroles.yaml
@@ -41,11 +41,12 @@ resources:
 patchesStrategicMerge: []
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
 # patches here are for enabling the conversion webhook for each CRD
-# - patches/webhook_in_policies.yaml
-# - patches/webhook_in_secretenginemounts.yaml
-# - patches/webhook_in_databasesecretengineconfigs.yaml
-# - patches/webhook_in_databasesecretengineroles.yaml
-# - patches/webhook_in_randomsecrets.yaml
+#- patches/webhook_in_kubernetesauthengineroles.yaml
+#- patches/webhook_in_policies.yaml
+#- patches/webhook_in_secretenginemounts.yaml
+#- patches/webhook_in_databasesecretengineconfigs.yaml
+#- patches/webhook_in_databasesecretengineroles.yaml
+#- patches/webhook_in_randomsecrets.yaml
 #- patches/webhook_in_authenginemounts.yaml
 #- patches/webhook_in_kubernetesauthengineconfigs.yaml
 #- patches/webhook_in_vaultsecrets.yaml
@@ -67,7 +68,7 @@ patchesStrategicMerge: []
 #- patches/webhook_in_jwtoidcauthengineroles.yaml
 #- patches/webhook_in_databasesecretenginestaticroles.yaml
 #- patches/webhook_in_groups.yaml
-#- patches/webhook_in_groupalias.yaml
+#- patches/webhook_in_groupaliases.yaml
 #- patches/webhook_in_azureauthengineconfigs.yaml
 #- patches/webhook_in_azureauthengineroles.yaml
 #- patches/webhook_in_azuresecretengineconfigs.yaml
@@ -105,7 +106,7 @@ patchesStrategicMerge: []
 #- patches/cainjection_in_jwtoidcauthengineroles.yaml
 #- patches/cainjection_in_databasesecretenginestaticroles.yaml
 #- patches/cainjection_in_groups.yaml
-#- patches/cainjection_in_groupalias.yaml
+#- patches/cainjection_in_groupaliases.yaml
 #- patches/cainjection_in_azureauthengineconfigs.yaml
 #- patches/cainjection_in_azureauthengineroles.yaml
 #- patches/cainjection_in_azuresecretengineconfigs.yaml
@@ -117,3 +118,4 @@ patchesStrategicMerge: []
 # the following config is for teaching kustomize how to do kustomization for CRDs.
 configurations:
 - kustomizeconfig.yaml
+

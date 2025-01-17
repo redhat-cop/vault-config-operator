@@ -100,7 +100,7 @@ webhooks:
     - CREATE
     resources:
     - azuresecretengineroles
-  sideEffects: None 
+  sideEffects: None
 - admissionReviewVersions:
   - v1
   - v1beta1
@@ -274,7 +274,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - groupalias
+    - groupaliases
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -751,7 +751,7 @@ webhooks:
     - UPDATE
     resources:
     - azuresecretengineroles
-  sideEffects: None 
+  sideEffects: None
 - admissionReviewVersions:
   - v1
   - v1beta1
@@ -928,7 +928,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - groupalias
+    - groupaliases
   sideEffects: None
 - admissionReviewVersions:
   - v1

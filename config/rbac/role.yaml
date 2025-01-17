@@ -147,7 +147,7 @@ rules:
   verbs:
   - get
   - patch
-  - update  
+  - update
 - apiGroups:
   - redhatcop.redhat.io
   resources:

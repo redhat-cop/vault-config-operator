@@ -78,7 +78,7 @@ type GroupAliasStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// GroupAlias is the Schema for the groupalias API
+// GroupAlias is the Schema for the groupaliases API
 type GroupAlias struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

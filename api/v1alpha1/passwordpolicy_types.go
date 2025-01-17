@@ -114,7 +114,7 @@ func (m *PasswordPolicy) SetConditions(conditions []metav1.Condition) {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// PasswordPolicy is the Schema for the passowordpolicies API
+// PasswordPolicy is the Schema for the passwordpolicies API
 type PasswordPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
