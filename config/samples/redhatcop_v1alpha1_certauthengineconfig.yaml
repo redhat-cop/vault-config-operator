@@ -1,0 +1,20 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: CertAuthEngineConfig
+metadata:
+  labels:
+    app.kubernetes.io/name: certauthengineconfig
+    app.kubernetes.io/instance: certauthengineconfig-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: certauthengineconfig-sample
+spec:
+  authentication:
+    path: vault-admin
+    role: vault-admin
+    serviceAccount:
+      name: vault
+  connection:
+    address: "https://vault.example.com"
+  path: cert
+  name: test

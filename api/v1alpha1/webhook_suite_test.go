@@ -246,6 +246,9 @@ var _ = BeforeSuite(func() {
 	err = (&GCPAuthEngineRole{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
+	err = (&CertAuthEngineConfig{}).SetupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
 	//+kubebuilder:scaffold:webhook
 
 	go func() {

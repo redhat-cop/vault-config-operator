@@ -177,6 +177,32 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
+  - certauthengineconfigs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - certauthengineconfigs/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - certauthengineconfigs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
   - databasesecretengineconfigs
   verbs:
   - create
