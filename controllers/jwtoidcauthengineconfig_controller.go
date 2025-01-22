@@ -202,7 +202,7 @@ func (r *JWTOIDCAuthEngineConfigReconciler) findApplicableJOAEForSecret(ctx cont
 		return nil, err
 	}
 	for _, vr := range vrl.Items {
-		if vr.Spec.OIDCCredentials.Secret != nil && vr.Spec.OIDCCredentials.Secret.Name == secret.Name {
+		if vr.Spec.OIDCCredentials != nil && vr.Spec.OIDCCredentials.Secret != nil && vr.Spec.OIDCCredentials.Secret.Name == secret.Name {
 			result = append(result, vr)
 		}
 	}
@@ -220,7 +220,7 @@ func (r *JWTOIDCAuthEngineConfigReconciler) findApplicableJOAEForRandomSecret(ct
 		return nil, err
 	}
 	for _, vr := range vrl.Items {
-		if vr.Spec.OIDCCredentials.RandomSecret != nil && vr.Spec.OIDCCredentials.RandomSecret.Name == randomSecret.Name {
+		if vr.Spec.OIDCCredentials != nil && vr.Spec.OIDCCredentials.RandomSecret != nil && vr.Spec.OIDCCredentials.RandomSecret.Name == randomSecret.Name {
 			result = append(result, vr)
 		}
 	}
