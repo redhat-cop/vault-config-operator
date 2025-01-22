@@ -447,7 +447,7 @@ func (i *LDAPConfig) toMap() map[string]interface{} {
 	payload["certificate"] = i.retrievedCertificate
 	payload["client_tls_cert"] = i.retrievedClientTLSCert
 	payload["client_tls_key"] = i.retrievedClientTLSKey
-	payload["binddn"] = i.BindDN
+	payload["binddn"] = i.retrievedUsername
 	payload["bindpass"] = i.retrievedPassword
 	payload["userdn"] = i.UserDN
 	payload["userattr"] = i.UserAttr
