@@ -1,0 +1,40 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: CertAuthEngineRole
+metadata:
+  labels:
+    app.kubernetes.io/name: certauthenginerole
+    app.kubernetes.io/instance: certauthenginerole-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: certauthenginerole-sample
+spec:
+  authentication:
+    path: vault-admin
+    role: vault-admin
+    serviceAccount:
+      name: vault
+  connection:
+    address: "https://vault.example.com"
+  path: cert/test
+  name: test-role
+  certificate: |
+    -----BEGIN CERTIFICATE-----
+    MIIDJTCCAg2gAwIBAgIUF119kmCNlnMwK6yOOpfRs4JGhAAwDQYJKoZIhvcNAQEL
+    BQAwFjEUMBIGA1UEAwwLZXhhbXBsZS5jb20wHhcNMjUwMTIxMTM0MjExWhcNMjYw
+    MTIxMTM0MjExWjAWMRQwEgYDVQQDDAtleGFtcGxlLmNvbTCCASIwDQYJKoZIhvcN
+    AQEBBQADggEPADCCAQoCggEBALad4Sx97VyFSfOepJoXUGYljg7hL+z20pVL2/M8
+    8HXAQl4qf/i45b//Qz8VogMxdg3Y9J7O/M0n9hxbL18i1gm270VjEFyzjJCyUq0R
+    72WMM4Sr3OjQPnVtJoQkWnH7wR3zsWK2N4NuIPdE3Ofb48Olyachffv7xCI+MLIa
+    /adcyRggM4Z5f2nBCMcXL8D/eY03qCgd/U1aaPJ0WyJTZHLL4euL0ewKlKtB1JnU
+    4MrRa5mbPQ3B+OhxcaD/7BNV6hPXAe2zftEv8LcimhbVoj3XmLJ+om58YIaEMadk
+    Jj61xnXbf+F/iV41onzwvTPNWCSWiLowDl8P3zkabuS583sCAwEAAaNrMGkwHQYD
+    VR0OBBYEFH971CwrqkTvUz2qrUncWMS5ULwKMB8GA1UdIwQYMBaAFH971CwrqkTv
+    Uz2qrUncWMS5ULwKMA8GA1UdEwEB/wQFMAMBAf8wFgYDVR0RBA8wDYILZXhhbXBs
+    ZS5jb20wDQYJKoZIhvcNAQELBQADggEBAIQzT113TQC9BqitOCOoDFCJqcM+BHmf
+    ITEKlEhlqubPvA40lD4wkz67RP2SdQbF1glzZW5sDTxMjpHL+8nhdmo65CJpsQGP
+    yMPwnOvx7W5JWQJa1Yt+48JNhgIymDMun+xwDsjNnlBqp0Kr7HkOxPimMPWN4R6B
+    ydG96puDGBYqxB1ujx5seOGfGvxPBBr3h8kNg054rtIIDrUG2iUTfpNIILJrd8Q2
+    shop9//3VcIpUJO7Z1brvK/Hp4DrcKBZVo7vd8n+5uCx3vBA0tjqNAXYtFnSRvDZ
+    6XV+rCZecDBFkaLuJ5YgYEK15gGe6lQAez6DTVLXMAKhZ52kceefnwM=
+    -----END CERTIFICATE-----

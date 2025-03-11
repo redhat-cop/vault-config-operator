@@ -5,20 +5,21 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.1
   creationTimestamp: null
-  name: passwordpolicies.redhatcop.redhat.io
+  name: certauthengineconfigs.redhatcop.redhat.io
 spec:
   group: redhatcop.redhat.io
   names:
-    kind: PasswordPolicy
-    listKind: PasswordPolicyList
-    plural: passwordpolicies
-    singular: passwordpolicy
+    kind: CertAuthEngineConfig
+    listKind: CertAuthEngineConfigList
+    plural: certauthengineconfigs
+    singular: certauthengineconfig
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: PasswordPolicy is the Schema for the passwordpolicies API
+        description: CertAuthEngineConfig is the Schema for the certauthengineconfigs
+          API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -33,7 +34,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: PasswordPolicySpec defines the desired state of PasswordPolicy
+            description: CertAuthEngineConfigSpec defines the desired state of CertAuthEngineConfig
             properties:
               authentication:
                 description: Authentication is the kube auth configuration to be used
@@ -118,18 +119,42 @@ spec:
                     description: Timeout Timeout variable. The default value is 60s.
                     type: string
                 type: object
+              disableBinding:
+                default: false
+                description: If set, during renewal, skips the matching of presented
+                  client identity with the client identity used during login.
+                type: boolean
+              enableIdentityAliasMetadata:
+                default: false
+                description: If set, metadata of the certificate including the metadata
+                  corresponding to allowedMetadataExtensions will be stored in the
+                  alias.
+                type: boolean
               name:
-                description: The name of the obejct created in Vault. If this is specified
+                description: The name of the object created in Vault. If this is specified
                   it takes precedence over {metatada.name}
                 pattern: '[a-z0-9]([-a-z0-9]*[a-z0-9])?'
                 type: string
-              passwordPolicy:
-                description: PasswordPolicy  is a Vault password policy (https://www.vaultproject.io/docs/concepts/password-policies)
-                  expressed in HCL language.
+              ocspCacheSize:
+                default: 100
+                description: The size of the OCSP response LRU cache. Note that this
+                  cache is used for all configured certificates.
+                type: integer
+              path:
+                description: Path at which to make the configuration. The final path
+                  in Vault will be {[spec.authentication.namespace]}/auth/{spec.path}/{metadata.name}/config.
+                  The authentication role must have the following capabilities = [
+                  "create", "read", "update", "delete"] on that path.
+                pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
                 type: string
+              roleCacheSize:
+                default: 200
+                description: The size of the role cache. Use -1 to disable role caching.
+                type: integer
             type: object
           status:
-            description: PolicyStatus defines the observed state of Policy
+            description: CertAuthEngineConfigStatus defines the observed state of
+              CertAuthEngineConfig
             properties:
               conditions:
                 items:

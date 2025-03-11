@@ -34,6 +34,24 @@ spec:
       kind: AuthEngineMount
       name: authenginemounts.redhatcop.redhat.io
       version: v1alpha1
+    - description: AzureAuthEngineConfig is the Schema for the azureauthengineconfigs
+        API
+      displayName: Azure Auth Engine Config
+      kind: AzureAuthEngineConfig
+      name: azureauthengineconfigs.redhatcop.redhat.io
+      version: v1alpha1
+    - description: AzureAuthEngineRole is the Schema for the azureauthengineroles
+        API
+      displayName: Azure Auth Engine Role
+      kind: AzureAuthEngineRole
+      name: azureauthengineroles.redhatcop.redhat.io
+      version: v1alpha1
+    - description: AzureSecretEngineRole is the Schema for the azuresecretengineroles
+        API
+      displayName: Azure Secret Engine Role
+      kind: AzureSecretEngineRole
+      name: azuresecretengineroles.redhatcop.redhat.io
+      version: v1alpha1
     - description: DatabaseSecretEngineConfig is the Schema for the databasesecretengineconfigs
         API
       displayName: Database Secret Engine Config
@@ -52,6 +70,17 @@ spec:
       kind: DatabaseSecretEngineStaticRole
       name: databasesecretenginestaticroles.redhatcop.redhat.io
       version: v1alpha1
+    - description: GCPAuthEngineConfig is the Schema for the gcpauthengineconfigs
+        API
+      displayName: GCPAuth Engine Config
+      kind: GCPAuthEngineConfig
+      name: gcpauthengineconfigs.redhatcop.redhat.io
+      version: v1alpha1
+    - description: GCPAuthEngineRole is the Schema for the gcpauthengineroles API
+      displayName: GCPAuth Engine Role
+      kind: GCPAuthEngineRole
+      name: gcpauthengineroles.redhatcop.redhat.io
+      version: v1alpha1
     - description: GitHubSecretEngineConfig is the Schema for the githubsecretengineconfigs
         API
       displayName: Git Hub Secret Engine Config
@@ -64,7 +93,7 @@ spec:
       kind: GitHubSecretEngineRole
       name: githubsecretengineroles.redhatcop.redhat.io
       version: v1alpha1
-    - description: GroupAlias is the Schema for the groupalias API
+    - description: GroupAlias is the Schema for the groupaliases API
       displayName: Group Alias
       kind: GroupAlias
       name: groupaliases.redhatcop.redhat.io
@@ -122,7 +151,7 @@ spec:
       kind: LDAPAuthEngineGroup
       name: ldapauthenginegroups.redhatcop.redhat.io
       version: v1alpha1
-    - description: PasswordPolicy is the Schema for the passowordpolicies API
+    - description: PasswordPolicy is the Schema for the passwordpolicies API
       displayName: Password Policy
       kind: PasswordPolicy
       name: passwordpolicies.redhatcop.redhat.io

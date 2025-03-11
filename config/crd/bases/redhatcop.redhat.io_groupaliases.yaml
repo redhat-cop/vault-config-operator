@@ -18,7 +18,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: GroupAlias is the Schema for the groupalias API
+        description: GroupAlias is the Schema for the groupaliases API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
