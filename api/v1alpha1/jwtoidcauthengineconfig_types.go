@@ -50,7 +50,7 @@ type JWTOIDCAuthEngineConfigSpec struct {
 	// OIDCCredentials from the provider for OIDC roles
 	// OIDCCredentials consists in OIDCClientID and OIDCClientSecret, which can be created as Kubernetes Secret, VaultSecret or RandomSecret
 	// +kubebuilder:validation:Optional
-	OIDCCredentials vaultutils.RootCredentialConfig `json:"OIDCCredentials,omitempty"`
+	OIDCCredentials *vaultutils.RootCredentialConfig `json:"OIDCCredentials,omitempty"`
 }
 
 // JWTOIDCAuthEngineConfigStatus defines the observed state of JWTOIDCAuthEngineConfig
@@ -231,66 +231,69 @@ func (r *JWTOIDCAuthEngineConfig) PrepareTLSConfig(context context.Context, obje
 
 func (r *JWTOIDCAuthEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
-	kubeClient := context.Value("kubeClient").(client.Client)
-	if r.Spec.OIDCCredentials.RandomSecret != nil {
-		randomSecret := &RandomSecret{}
-		err := kubeClient.Get(context, types.NamespacedName{
-			Namespace: r.Namespace,
-			Name:      r.Spec.OIDCCredentials.RandomSecret.Name,
-		}, randomSecret)
-		if err != nil {
-			log.Error(err, "unable to retrieve RandomSecret", "instance", r)
-			return err
+	if r.Spec.OIDCCredentials != nil {
+		kubeClient := context.Value("kubeClient").(client.Client)
+		if r.Spec.OIDCCredentials.RandomSecret != nil {
+			randomSecret := &RandomSecret{}
+			err := kubeClient.Get(context, types.NamespacedName{
+				Namespace: r.Namespace,
+				Name:      r.Spec.OIDCCredentials.RandomSecret.Name,
+			}, randomSecret)
+			if err != nil {
+				log.Error(err, "unable to retrieve RandomSecret", "instance", r)
+				return err
+			}
+			secret, exists, err := vaultutils.ReadSecret(context, randomSecret.GetPath())
+			if err != nil {
+				return err
+			}
+			if !exists {
+				err = errors.New("secret not found")
+				log.Error(err, "unable to retrieve vault secret", "instance", r)
+				return err
+			}
+			r.SetUsernameAndPassword(r.Spec.OIDCClientID, secret.Data[randomSecret.Spec.SecretKey].(string))
+			return nil
 		}
-		secret, exists, err := vaultutils.ReadSecret(context, randomSecret.GetPath())
-		if err != nil {
-			return err
+		if r.Spec.OIDCCredentials.Secret != nil {
+			secret := &corev1.Secret{}
+			err := kubeClient.Get(context, types.NamespacedName{
+				Namespace: r.Namespace,
+				Name:      r.Spec.OIDCCredentials.Secret.Name,
+			}, secret)
+			if err != nil {
+				log.Error(err, "unable to retrieve Secret", "instance", r)
+				return err
+			}
+			if r.Spec.OIDCClientID == "" {
+				r.SetUsernameAndPassword(string(secret.Data[r.Spec.OIDCCredentials.UsernameKey]), string(secret.Data[r.Spec.OIDCCredentials.PasswordKey]))
+			} else {
+				r.SetUsernameAndPassword(r.Spec.JWTOIDCConfig.OIDCClientID, string(secret.Data[r.Spec.OIDCCredentials.PasswordKey]))
+			}
+			return nil
 		}
-		if !exists {
-			err = errors.New("secret not found")
-			log.Error(err, "unable to retrieve vault secret", "instance", r)
-			return err
+		if r.Spec.OIDCCredentials.VaultSecret != nil {
+			secret, exists, err := vaultutils.ReadSecret(context, string(r.Spec.OIDCCredentials.VaultSecret.Path))
+			if err != nil {
+				return err
+			}
+			if !exists {
+				err = errors.New("secret not found")
+				log.Error(err, "unable to retrieve vault secret", "instance", r)
+				return err
+			}
+			if r.Spec.OIDCClientID == "" {
+				r.SetUsernameAndPassword(secret.Data[r.Spec.OIDCCredentials.UsernameKey].(string), secret.Data[r.Spec.OIDCCredentials.PasswordKey].(string))
+				log.V(1).Info("", "username", secret.Data[r.Spec.OIDCCredentials.UsernameKey].(string), "password", secret.Data[r.Spec.OIDCCredentials.PasswordKey].(string))
+			} else {
+				r.SetUsernameAndPassword(r.Spec.JWTOIDCConfig.OIDCClientID, secret.Data[r.Spec.OIDCCredentials.PasswordKey].(string))
+				log.V(1).Info("", "username", r.Spec.JWTOIDCConfig.OIDCClientID, "password", secret.Data[r.Spec.OIDCCredentials.PasswordKey].(string))
+			}
+			return nil
 		}
-		r.SetUsernameAndPassword(r.Spec.OIDCClientID, secret.Data[randomSecret.Spec.SecretKey].(string))
-		return nil
+		return errors.New("no means of retrieving a secret was specified")
 	}
-	if r.Spec.OIDCCredentials.Secret != nil {
-		secret := &corev1.Secret{}
-		err := kubeClient.Get(context, types.NamespacedName{
-			Namespace: r.Namespace,
-			Name:      r.Spec.OIDCCredentials.Secret.Name,
-		}, secret)
-		if err != nil {
-			log.Error(err, "unable to retrieve Secret", "instance", r)
-			return err
-		}
-		if r.Spec.OIDCClientID == "" {
-			r.SetUsernameAndPassword(string(secret.Data[r.Spec.OIDCCredentials.UsernameKey]), string(secret.Data[r.Spec.OIDCCredentials.PasswordKey]))
-		} else {
-			r.SetUsernameAndPassword(r.Spec.JWTOIDCConfig.OIDCClientID, string(secret.Data[r.Spec.OIDCCredentials.PasswordKey]))
-		}
-		return nil
-	}
-	if r.Spec.OIDCCredentials.VaultSecret != nil {
-		secret, exists, err := vaultutils.ReadSecret(context, string(r.Spec.OIDCCredentials.VaultSecret.Path))
-		if err != nil {
-			return err
-		}
-		if !exists {
-			err = errors.New("secret not found")
-			log.Error(err, "unable to retrieve vault secret", "instance", r)
-			return err
-		}
-		if r.Spec.OIDCClientID == "" {
-			r.SetUsernameAndPassword(secret.Data[r.Spec.OIDCCredentials.UsernameKey].(string), secret.Data[r.Spec.OIDCCredentials.PasswordKey].(string))
-			log.V(1).Info("", "username", secret.Data[r.Spec.OIDCCredentials.UsernameKey].(string), "password", secret.Data[r.Spec.OIDCCredentials.PasswordKey].(string))
-		} else {
-			r.SetUsernameAndPassword(r.Spec.JWTOIDCConfig.OIDCClientID, secret.Data[r.Spec.OIDCCredentials.PasswordKey].(string))
-			log.V(1).Info("", "username", r.Spec.JWTOIDCConfig.OIDCClientID, "password", secret.Data[r.Spec.OIDCCredentials.PasswordKey].(string))
-		}
-		return nil
-	}
-	return errors.New("no means of retrieving a secret was specified")
+	return nil
 }
 
 func init() {
