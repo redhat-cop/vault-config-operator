@@ -87,6 +87,16 @@ func (ve *VaultEndpoint) DeleteIfExists(context context.Context) error {
 	return nil
 }
 
+func (ve *VaultEndpoint) Exists(context context.Context) (bool, error) {
+	log := log.FromContext(context)
+	_, found, err := read(context, ve.vaultObject.GetPath())
+	if err != nil {
+		log.Error(err, "unable to check object existence at", "path", ve.vaultObject.GetPath())
+		return false, err
+	}
+	return found, nil
+}
+
 func (ve *VaultEndpoint) Create(context context.Context) error {
 	return write(context, ve.vaultObject.GetPath(), ve.vaultObject.GetPayload())
 }
