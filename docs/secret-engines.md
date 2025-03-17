@@ -96,6 +96,8 @@ The password and possibly the username can be retrived a three different ways:
 2. From a Vault secret, specifying the `rootCredentialsFromVaultSecret` field.
 3. From a [RandomSecret](#RandomSecret), specifying the `rootCredentialsFromRandomSecret` field. When the RandomSecret generates a new secret, this connection will also be updated.
 
+The `passwordAuthentication` field, set to `scram-sha-256`, tells Vault to hash the password before sending it to PostgreSQL. This field is optional; if not specified, the default value is "password". When set to "password", passwords are sent to PostgreSQL in clear text and may appear as such in PostgreSQL logs.
+
 Many other standard Database Secret Engine Config fields are available for fine tuning, see the [Vault Documentation](https://www.vaultproject.io/api-docs/secret/databases#configure-connection)
 
 This CR is roughly equivalent to this Vault CLI command:
