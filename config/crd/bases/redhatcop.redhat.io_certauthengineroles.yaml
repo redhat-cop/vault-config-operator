@@ -5,20 +5,21 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.1
   creationTimestamp: null
-  name: passwordpolicies.redhatcop.redhat.io
+  name: certauthengineroles.redhatcop.redhat.io
 spec:
   group: redhatcop.redhat.io
   names:
-    kind: PasswordPolicy
-    listKind: PasswordPolicyList
-    plural: passwordpolicies
-    singular: passwordpolicy
+    kind: CertAuthEngineRole
+    listKind: CertAuthEngineRoleList
+    plural: certauthengineroles
+    singular: certauthenginerole
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: PasswordPolicy is the Schema for the passwordpolicies API
+        description: CertAuthEngineRole is the Schema for the certauthengineroles
+          API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -33,8 +34,57 @@ spec:
           metadata:
             type: object
           spec:
-            description: PasswordPolicySpec defines the desired state of PasswordPolicy
+            description: CertAuthEngineRoleSpec defines the desired state of CertAuthEngineRole
             properties:
+              allowedCommonNames:
+                description: Constrain the Common Names in the client certificate
+                  with a globbed pattern. Value is a comma-separated list of patterns.
+                  Authentication requires at least one Name matching at least one
+                  pattern. If not set, defaults to allowing all names.
+                items:
+                  type: string
+                type: array
+              allowedDNSSANs:
+                description: Constrain the Alternative Names in the client certificate
+                  with a globbed pattern. Value is a comma-separated list of patterns.
+                  Authentication requires at least one DNS matching at least one pattern.
+                  If not set, defaults to allowing all dns.
+                items:
+                  type: string
+                type: array
+              allowedEmailSANs:
+                description: Constrain the Alternative Names in the client certificate
+                  with a globbed pattern. Value is a comma-separated list of patterns.
+                  Authentication requires at least one Email matching at least one
+                  pattern. If not set, defaults to allowing all emails.
+                items:
+                  type: string
+                type: array
+              allowedMetadataExtensions:
+                description: A comma separated string or array of oid extensions.
+                  Upon successful authentication, these extensions will be added as
+                  metadata if they are present in the certificate. The metadata key
+                  will be the string consisting of the oid numbers separated by a
+                  dash (-) instead of a dot (.) to allow usage in ACL templates.
+                items:
+                  type: string
+                type: array
+              allowedOrganizationalUnits:
+                description: Constrain the Organizational Units (OU) in the client
+                  certificate with a globbed pattern. Value is a comma-separated list
+                  of OU patterns. Authentication requires at least one OU matching
+                  at least one pattern. If not set, defaults to allowing all OUs.
+                items:
+                  type: string
+                type: array
+              allowedURISANs:
+                description: Constrain the Alternative Names in the client certificate
+                  with a globbed pattern. Value is a comma-separated list of URI patterns.
+                  Authentication requires at least one URI matching at least one pattern.
+                  If not set, defaults to allowing all URIs.
+                items:
+                  type: string
+                type: array
               authentication:
                 description: Authentication is the kube auth configuration to be used
                   to execute this request
@@ -66,6 +116,9 @@ spec:
                     type: object
                     x-kubernetes-map-type: atomic
                 type: object
+              certificate:
+                description: The PEM-format CA certificate.
+                type: string
               connection:
                 description: Connection represents the information needed to connect
                   to Vault. This operator uses the standard Vault environment variables
@@ -118,18 +171,128 @@ spec:
                     description: Timeout Timeout variable. The default value is 60s.
                     type: string
                 type: object
+              displayName:
+                description: The display_name to set on tokens issued when authenticating
+                  against this CA certificate. If not set, defaults to the name of
+                  the role.
+                type: string
               name:
-                description: The name of the obejct created in Vault. If this is specified
+                description: The name of the object created in Vault. If this is specified
                   it takes precedence over {metatada.name}
                 pattern: '[a-z0-9]([-a-z0-9]*[a-z0-9])?'
                 type: string
-              passwordPolicy:
-                description: PasswordPolicy  is a Vault password policy (https://www.vaultproject.io/docs/concepts/password-policies)
-                  expressed in HCL language.
+              ocspCACertificates:
+                description: Any additional OCSP responder certificates needed to
+                  verify OCSP responses. Provided as base64 encoded PEM data.
+                type: string
+              ocspEnabled:
+                default: false
+                description: If enabled, validate certificates' revocation status
+                  using OCSP.
+                type: boolean
+              ocspFailOpen:
+                default: false
+                description: If true and an OCSP response cannot be fetched or is
+                  of an unknown status, the login will proceed as if the certificate
+                  has not been revoked.
+                type: boolean
+              ocspMaxRetries:
+                default: 4
+                description: The number of retries attempted before giving up on an
+                  OCSP request. 0 will disable retries.
+                format: int64
+                type: integer
+              ocspQueryAllServers:
+                default: false
+                description: If set to true, rather than accepting the first successful
+                  OCSP response, query all servers and consider the certificate valid
+                  only if all servers agree.
+                type: boolean
+              ocspServersOverride:
+                description: A comma-separated list of OCSP server addresses. If unset,
+                  the OCSP server is determined from the AuthorityInformationAccess
+                  extension on the certificate being inspected.
+                items:
+                  type: string
+                type: array
+              ocspThisUpdateMaxAge:
+                description: If greater than 0, specifies the maximum age of an OCSP
+                  thisUpdate field. This avoids accepting old responses without a
+                  nextUpdate field.
+                type: string
+              path:
+                description: Path at which to make the configuration. The final path
+                  in Vault will be {[spec.authentication.namespace]}/auth/{spec.path}/certs/{metadata.name}.
+                  The authentication role must have the following capabilities = [
+                  "create", "read", "update", "delete"] on that path.
+                pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
+                type: string
+              requiredExtensions:
+                description: Require specific Custom Extension OIDs to exist and match
+                  the pattern. Value is a comma separated string or array of oid:value.
+                  Expects the extension value to be some type of ASN1 encoded string.
+                  All conditions must be met. To match on the hex-encoded value of
+                  the extension, including non-string extensions, use the format hex:<oid>:<value>.
+                  Supports globbing on value.
+                items:
+                  type: string
+                type: array
+              tokenBoundCIDRs:
+                description: List of CIDR blocks; if set, specifies blocks of IP addresses
+                  which can authenticate successfully, and ties the resulting token
+                  to these blocks as well.
+                items:
+                  type: string
+                type: array
+              tokenExplicitMaxTTL:
+                description: If set, will encode an explicit max TTL onto the token.
+                  This is a hard cap even if tokenTTL and tokenMaxTTL would otherwise
+                  allow a renewal.
+                type: string
+              tokenMaxTTL:
+                description: The maximum lifetime for generated tokens. This current
+                  value of this will be referenced at renewal time.
+                type: string
+              tokenNoDefaultPolicy:
+                default: false
+                description: If set, the default policy will not be set on generated
+                  tokens; otherwise it will be added to the policies set in tokenPolicies.
+                type: boolean
+              tokenNumUses:
+                default: 0
+                description: The maximum number of times a generated token may be
+                  used (within its lifetime); 0 means unlimited. If you require the
+                  token to have the ability to create child tokens, you will need
+                  to set this value to 0.
+                format: int64
+                type: integer
+              tokenPeriod:
+                description: The maximum allowed period value when a periodic token
+                  is requested from this role.
+                type: string
+              tokenPolicies:
+                description: List of token policies to encode onto generated tokens.
+                  Depending on the auth method, this list may be supplemented by user/group/other
+                  values.
+                items:
+                  type: string
+                type: array
+              tokenTTL:
+                description: The incremental lifetime for generated tokens. This current
+                  value of this will be referenced at renewal time.
+                type: string
+              tokenType:
+                description: 'The type of token that should be generated. Can be service,
+                  batch, or default to use the mount''s tuned default (which unless
+                  changed will be service tokens). For token store roles, there are
+                  two additional possibilities: default-service and default-batch
+                  which specify the type to return unless the client requests a different
+                  type at generation time. For machine based authentication cases,
+                  you should use batch type tokens.'
                 type: string
             type: object
           status:
-            description: PolicyStatus defines the observed state of Policy
+            description: CertAuthEngineRoleStatus defines the observed state of CertAuthEngineRole
             properties:
               conditions:
                 items:

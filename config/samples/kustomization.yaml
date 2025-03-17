@@ -34,5 +34,7 @@ resources:
 - redhatcop_v1alpha1_azuresecretenginerole.yaml
 - redhatcop_v1alpha1_gcpauthengineconfig.yaml
 - redhatcop_v1alpha1_gcpauthenginerole.yaml
-
+- redhatcop_v1alpha1_certauthengineconfig.yaml
+- redhatcop_v1alpha1_certauthenginerole.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
+

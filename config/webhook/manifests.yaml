@@ -100,7 +100,47 @@ webhooks:
     - CREATE
     resources:
     - azuresecretengineroles
-  sideEffects: None 
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-certauthengineconfig
+  failurePolicy: Fail
+  name: mcertauthengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - certauthengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-certauthenginerole
+  failurePolicy: Fail
+  name: mcertauthenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - certauthengineroles
+  sideEffects: None
 - admissionReviewVersions:
   - v1
   - v1beta1
@@ -274,7 +314,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - groupalias
+    - groupaliases
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -751,7 +791,47 @@ webhooks:
     - UPDATE
     resources:
     - azuresecretengineroles
-  sideEffects: None 
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-certauthengineconfig
+  failurePolicy: Fail
+  name: vcertauthengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - certauthengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-certauthenginerole
+  failurePolicy: Fail
+  name: vcertauthenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - certauthengineroles
+  sideEffects: None
 - admissionReviewVersions:
   - v1
   - v1beta1
@@ -928,7 +1008,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - groupalias
+    - groupaliases
   sideEffects: None
 - admissionReviewVersions:
   - v1

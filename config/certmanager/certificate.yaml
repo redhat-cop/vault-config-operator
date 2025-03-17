@@ -23,3 +23,18 @@ spec:
     kind: Issuer
     name: selfsigned-issuer
   secretName: webhook-server-cert # this secret will not be prefixed, since it's not managed by kustomize
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: metrics-cert  # this name should match the one appeared in kustomizeconfig.yaml
+  namespace: system
+spec:
+  # $(METRICS_SERVICE_NAME) and $(METRICS_SERVICE_NAMESPACE) will be substituted by kustomize
+  dnsNames:
+  - $(METRICS_SERVICE_NAME).$(METRICS_SERVICE_NAMESPACE).svc
+  - $(METRICS_SERVICE_NAME).$(METRICS_SERVICE_NAMESPACE).svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: selfsigned-issuer
+  secretName: vault-config-operator-certs # this secret will not be prefixed, since it's not managed by kustomize

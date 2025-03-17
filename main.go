@@ -169,6 +169,16 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "GCPAuthEngineRole")
 		os.Exit(1)
 	}
+
+	if err = (&controllers.CertAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "CertAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "CertAuthEngineConfig")
+		os.Exit(1)
+	}
+	if err = (&controllers.CertAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "CertAuthEngineRole")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "CertAuthEngineRole")
+		os.Exit(1)
+	}
+
 	if err = (&controllers.VaultSecretReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "VaultSecret")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VaultSecret")
 		os.Exit(1)
@@ -207,9 +217,9 @@ func main() {
 
 	if err = (&controllers.AzureSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AzureSecretEngineRole")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AzureSecretEngineRole")
-    os.Exit(1)
-  }
-  
+		os.Exit(1)
+	}
+
 	if err = (&controllers.AzureSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AzureSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AzureSecretEngineConfig")
 		os.Exit(1)
@@ -317,6 +327,15 @@ func main() {
 			os.Exit(1)
 		}
 
+		if err = (&redhatcopv1alpha1.CertAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "CertAuthEngineConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.CertAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "CertAuthEngineRole")
+			os.Exit(1)
+		}
+
 		if err = (&redhatcopv1alpha1.VaultSecret{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "VaultSecret")
 			os.Exit(1)
@@ -343,12 +362,12 @@ func main() {
 			setupLog.Error(err, "unable to create webhook", "webhook", "AzureSecretEngineRole")
 			os.Exit(1)
 		}
-    
+
 		if err = (&redhatcopv1alpha1.AzureSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "AzureSecretEngineConfig")
 			os.Exit(1)
 		}
-    
+
 		if err = (&redhatcopv1alpha1.PKISecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "PKISecretEngineConfig")
 			os.Exit(1)
