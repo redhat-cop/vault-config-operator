@@ -43,24 +43,6 @@ This CR is roughly equivalent to this Vault CLI command:
 vault kv put [namespace/]kv/vault-tenant password=<generated value>
 ```
 
-### Retention policy on delete
-
-Since v0.8.17, when a `RandomSecret` Kubernetes resource is deleted, then the corresponding KV secret is also entirely deleted
-from Vault (all versions of it when using using KVv2).
-
-Since v0.8.30, this can be controlled using the optional `spec.kvSecretRetainPolicy` attribute,
-which possible values are `Delete` (default) or `Retain`.
-
-When set to `Retain`, then the KV secret is *not* deleted from Vault when the `RandomSecret` resource is deleted: this allows to
-protect randomly-generated but important secrets from unexpected deletion, such as a root password as described above
-(which you don't want to loose if the Kubernetes `RandomSecret` was erroneously deleted).
-
-In addition to this, starting with v0.8.30, when a `RandomSecret` is created without a `refreshPeriod`
-and with a corresponding *existing* Vault secret, this Vault secret will *not* be updated:
-this is intended to provide overwrite protection for Kubernetes recreate-after-delete actions
-and again avoid loosing the initially generated secret value.
-
-
 ## VaultSecret
 
 The VaultSecret CRD allows a user to create a K8s Secret from one or more Vault Secrets. It uses go templating to allow formatting of the K8s Secret in the `output.stringData` section of the spec.

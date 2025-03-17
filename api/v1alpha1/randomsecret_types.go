@@ -80,19 +80,9 @@ type RandomSecretSpec struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Pattern:=`[a-z0-9]([-a-z0-9]*[a-z0-9])?`
 	Name string `json:"name,omitempty"`
-
-	// The KV secret retain policy to apply when the Kubernetes resource is deleted.
-	// When unspecified, the KV secret is also deleted.
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Enum:={"Delete","Retain"}
-	// +kubebuilder:default:="Delete"
-	KvSecretRetainPolicy string `json:"kvSecretRetainPolicy,omitempty"`
 }
 
 const ttlKey string = "ttl"
-
-const RetainKvSecretRetainPolicy = "Retain"
-const DeleteKvSecretRetainPolicy = "Delete"
 
 var _ vaultutils.VaultObject = &RandomSecret{}
 var _ vaultutils.ConditionsAware = &RandomSecret{}
