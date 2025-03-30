@@ -20,6 +20,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/google/go-cmp/cmp"
 	vault "github.com/hashicorp/vault/api"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -58,6 +59,7 @@ func (ve *VaultEndpoint) DeleteKVv2IfExists(context context.Context) error {
 	// should match pathToDelete := fmt.Sprintf("%s/metadata/%s", kv.mountPath, secretPath)
 	pathToDelete := strings.Replace(ve.vaultObject.GetPath(), "/data/", "/metadata/", 1)
 
+	log.V(1).Info("deleting resource from Vault", "op", "VaultEndpoint.DeleteKVv2IfExists")
 	_, err := vaultClient.Logical().Delete(pathToDelete)
 	if err != nil {
 		if respErr, ok := err.(*vault.ResponseError); ok {
@@ -73,6 +75,7 @@ func (ve *VaultEndpoint) DeleteKVv2IfExists(context context.Context) error {
 
 func (ve *VaultEndpoint) DeleteIfExists(context context.Context) error {
 	log := log.FromContext(context)
+	log.V(1).Info("deleting resource from Vault", "op", "VaultEndpoint.DeleteIfExists")
 	vaultClient := context.Value("vaultClient").(*vault.Client)
 	_, err := vaultClient.Logical().Delete(ve.vaultObject.GetPath())
 	if err != nil {
@@ -88,21 +91,30 @@ func (ve *VaultEndpoint) DeleteIfExists(context context.Context) error {
 }
 
 func (ve *VaultEndpoint) Create(context context.Context) error {
+	log := log.FromContext(context)
+	log.V(1).Info("creating resource in Vault", "op", "VaultEndpoint.Create")
 	return write(context, ve.vaultObject.GetPath(), ve.vaultObject.GetPayload())
 }
 
 func (ve *VaultEndpoint) CreateOrUpdate(context context.Context) error {
 	log := log.FromContext(context)
+	log.V(1).Info("reading resource from Vault", "op", "VaultEndpoint.CreateOrUpdate")
 	currentPayload, found, err := read(context, ve.vaultObject.GetPath())
 	if err != nil {
 		log.Error(err, "unable to read object at", "path", ve.vaultObject.GetPath())
 		return err
 	}
 	if !found {
+		log.V(1).Info("resource does not exist, creating it in Vault", "op", "VaultEndpoint.CreateOrUpdate")
 		return write(context, ve.vaultObject.GetPath(), ve.vaultObject.GetPayload())
 	} else {
 		if !ve.vaultObject.IsEquivalentToDesiredState(currentPayload) {
-			return write(context, ve.vaultObject.GetPath(), ve.vaultObject.GetPayload())
+			updatedPayload := ve.vaultObject.GetPayload()
+			log.V(1).Info("resource is not in sync, writing to Vault", "op", "VaultEndpoint.CreateOrUpdate",
+				"diff", cmp.Diff(currentPayload, updatedPayload))
+			return write(context, ve.vaultObject.GetPath(), updatedPayload)
+		} else {
+			log.V(1).Info("vault resource is already in sync", "op", "VaultEndpoint.CreateOrUpdate")
 		}
 	}
 	return nil
@@ -125,22 +137,31 @@ func (ve *RabbitMQEngineConfigVaultEndpoint) CreateOrUpdateLease(context context
 	if ve.rabbitMQEngineConfigVaultEndpoint.CheckTTLValuesProvided() {
 		return nil
 	}
+	log.V(1).Info("reading resource from Vault", "op", "RabbitMQEngineConfigVaultEndpoint.CreateOrUpdateLease")
 	currentPayload, found, err := read(context, ve.rabbitMQEngineConfigVaultEndpoint.GetLeasePath())
 	if err != nil {
 		log.Error(err, "unable to read object at", "path", ve.rabbitMQEngineConfigVaultEndpoint.GetLeasePath())
 		return err
 	}
 	if !found {
+		log.V(1).Info("resource does not exist, creating it in Vault", "op", "RabbitMQEngineConfigVaultEndpoint.CreateOrUpdateLease")
 		return write(context, ve.rabbitMQEngineConfigVaultEndpoint.GetLeasePath(), ve.rabbitMQEngineConfigVaultEndpoint.GetLeasePayload())
 	} else {
 		if !ve.rabbitMQEngineConfigVaultEndpoint.IsEquivalentToDesiredState(currentPayload) {
-			return write(context, ve.rabbitMQEngineConfigVaultEndpoint.GetLeasePath(), ve.rabbitMQEngineConfigVaultEndpoint.GetLeasePayload())
+			updatedPayload := ve.rabbitMQEngineConfigVaultEndpoint.GetLeasePayload()
+			log.V(1).Info("resource is not in sync, writing to Vault", "op", "RabbitMQEngineConfigVaultEndpoint.CreateOrUpdateLease",
+				"diff", cmp.Diff(currentPayload, updatedPayload))
+			return write(context, ve.rabbitMQEngineConfigVaultEndpoint.GetLeasePath(), updatedPayload)
+		} else {
+			log.V(1).Info("vault resource is already in sync", "op", "RabbitMQEngineConfigVaultEndpoint.CreateOrUpdateLease")
 		}
 	}
 	return nil
 }
 
 func (ve *RabbitMQEngineConfigVaultEndpoint) Create(context context.Context) error {
+	log := log.FromContext(context)
+	log.V(1).Info("creating resource in Vault", "op", "RabbitMQEngineConfigVaultEndpoint.Create")
 	return write(context, ve.rabbitMQEngineConfigVaultEndpoint.GetPath(), ve.rabbitMQEngineConfigVaultEndpoint.GetPayload())
 }
 
