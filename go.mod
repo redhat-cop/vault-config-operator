@@ -2,7 +2,7 @@ module github.com/redhat-cop/vault-config-operator
 
 go 1.21
 
-toolchain go1.21.8
+toolchain go1.24.2
 
 require (
 	github.com/BurntSushi/toml v1.4.0
