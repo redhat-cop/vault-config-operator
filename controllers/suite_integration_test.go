@@ -65,7 +65,7 @@ const (
 
 func TestIntegrationAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
-
+	_, _ = fmt.Fprintf(GinkgoWriter, "Starting integration test suite\n")
 	RunSpecs(t, "Controller Integration Suite")
 }
 

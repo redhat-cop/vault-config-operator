@@ -3,8 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: certauthengineroles.redhatcop.redhat.io
 spec:
   group: redhatcop.redhat.io
@@ -22,14 +21,19 @@ spec:
           API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -37,51 +41,50 @@ spec:
             description: CertAuthEngineRoleSpec defines the desired state of CertAuthEngineRole
             properties:
               allowedCommonNames:
-                description: Constrain the Common Names in the client certificate
-                  with a globbed pattern. Value is a comma-separated list of patterns.
-                  Authentication requires at least one Name matching at least one
-                  pattern. If not set, defaults to allowing all names.
+                description: |-
+                  Constrain the Common Names in the client certificate with a globbed pattern.
+                  Value is a comma-separated list of patterns.
+                  Authentication requires at least one Name matching at least one pattern. If not set, defaults to allowing all names.
                 items:
                   type: string
                 type: array
               allowedDNSSANs:
-                description: Constrain the Alternative Names in the client certificate
-                  with a globbed pattern. Value is a comma-separated list of patterns.
-                  Authentication requires at least one DNS matching at least one pattern.
-                  If not set, defaults to allowing all dns.
+                description: |-
+                  Constrain the Alternative Names in the client certificate with a globbed pattern.
+                  Value is a comma-separated list of patterns.
+                  Authentication requires at least one DNS matching at least one pattern. If not set, defaults to allowing all dns.
                 items:
                   type: string
                 type: array
               allowedEmailSANs:
-                description: Constrain the Alternative Names in the client certificate
-                  with a globbed pattern. Value is a comma-separated list of patterns.
-                  Authentication requires at least one Email matching at least one
-                  pattern. If not set, defaults to allowing all emails.
+                description: |-
+                  Constrain the Alternative Names in the client certificate with a globbed pattern.
+                  Value is a comma-separated list of patterns.
+                  Authentication requires at least one Email matching at least one pattern. If not set, defaults to allowing all emails.
                 items:
                   type: string
                 type: array
               allowedMetadataExtensions:
-                description: A comma separated string or array of oid extensions.
-                  Upon successful authentication, these extensions will be added as
-                  metadata if they are present in the certificate. The metadata key
-                  will be the string consisting of the oid numbers separated by a
-                  dash (-) instead of a dot (.) to allow usage in ACL templates.
+                description: |-
+                  A comma separated string or array of oid extensions.
+                  Upon successful authentication, these extensions will be added as metadata if they are present in the certificate.
+                  The metadata key will be the string consisting of the oid numbers separated by a dash (-) instead of a dot (.) to allow usage in ACL templates.
                 items:
                   type: string
                 type: array
               allowedOrganizationalUnits:
-                description: Constrain the Organizational Units (OU) in the client
-                  certificate with a globbed pattern. Value is a comma-separated list
-                  of OU patterns. Authentication requires at least one OU matching
-                  at least one pattern. If not set, defaults to allowing all OUs.
+                description: |-
+                  Constrain the Organizational Units (OU) in the client certificate with a globbed pattern.
+                  Value is a comma-separated list of OU patterns.
+                  Authentication requires at least one OU matching at least one pattern. If not set, defaults to allowing all OUs.
                 items:
                   type: string
                 type: array
               allowedURISANs:
-                description: Constrain the Alternative Names in the client certificate
-                  with a globbed pattern. Value is a comma-separated list of URI patterns.
-                  Authentication requires at least one URI matching at least one pattern.
-                  If not set, defaults to allowing all URIs.
+                description: |-
+                  Constrain the Alternative Names in the client certificate with a globbed pattern.
+                  Value is a comma-separated list of URI patterns.
+                  Authentication requires at least one URI matching at least one pattern. If not set, defaults to allowing all URIs.
                 items:
                   type: string
                 type: array
@@ -110,8 +113,10 @@ spec:
                       kube auth authentication
                     properties:
                       name:
-                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                          TODO: Add other useful fields. apiVersion, kind, uid?'
+                        description: |-
+                          Name of the referent.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          TODO: Add other useful fields. apiVersion, kind, uid?
                         type: string
                     type: object
                     x-kubernetes-map-type: atomic
@@ -157,8 +162,10 @@ spec:
                           key -> "tls.key"'
                         properties:
                           name:
-                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                              TODO: Add other useful fields. apiVersion, kind, uid?'
+                            description: |-
+                              Name of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?
                             type: string
                         type: object
                         x-kubernetes-map-type: atomic
@@ -172,9 +179,9 @@ spec:
                     type: string
                 type: object
               displayName:
-                description: The display_name to set on tokens issued when authenticating
-                  against this CA certificate. If not set, defaults to the name of
-                  the role.
+                description: |-
+                  The display_name to set on tokens issued when authenticating against this CA certificate.
+                  If not set, defaults to the name of the role.
                 type: string
               name:
                 description: The name of the object created in Vault. If this is specified
@@ -182,8 +189,9 @@ spec:
                 pattern: '[a-z0-9]([-a-z0-9]*[a-z0-9])?'
                 type: string
               ocspCACertificates:
-                description: Any additional OCSP responder certificates needed to
-                  verify OCSP responses. Provided as base64 encoded PEM data.
+                description: |-
+                  Any additional OCSP responder certificates needed to verify OCSP responses.
+                  Provided as base64 encoded PEM data.
                 type: string
               ocspEnabled:
                 default: false
@@ -209,30 +217,30 @@ spec:
                   only if all servers agree.
                 type: boolean
               ocspServersOverride:
-                description: A comma-separated list of OCSP server addresses. If unset,
-                  the OCSP server is determined from the AuthorityInformationAccess
-                  extension on the certificate being inspected.
+                description: |-
+                  A comma-separated list of OCSP server addresses.
+                  If unset, the OCSP server is determined from the AuthorityInformationAccess extension on the certificate being inspected.
                 items:
                   type: string
                 type: array
               ocspThisUpdateMaxAge:
-                description: If greater than 0, specifies the maximum age of an OCSP
-                  thisUpdate field. This avoids accepting old responses without a
-                  nextUpdate field.
+                description: |-
+                  If greater than 0, specifies the maximum age of an OCSP thisUpdate field.
+                  This avoids accepting old responses without a nextUpdate field.
                 type: string
               path:
-                description: Path at which to make the configuration. The final path
-                  in Vault will be {[spec.authentication.namespace]}/auth/{spec.path}/certs/{metadata.name}.
-                  The authentication role must have the following capabilities = [
-                  "create", "read", "update", "delete"] on that path.
+                description: |-
+                  Path at which to make the configuration.
+                  The final path in Vault will be {[spec.authentication.namespace]}/auth/{spec.path}/certs/{metadata.name}.
+                  The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
                 pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
                 type: string
               requiredExtensions:
-                description: Require specific Custom Extension OIDs to exist and match
-                  the pattern. Value is a comma separated string or array of oid:value.
-                  Expects the extension value to be some type of ASN1 encoded string.
-                  All conditions must be met. To match on the hex-encoded value of
-                  the extension, including non-string extensions, use the format hex:<oid>:<value>.
+                description: |-
+                  Require specific Custom Extension OIDs to exist and match the pattern.
+                  Value is a comma separated string or array of oid:value.
+                  Expects the extension value to be some type of ASN1 encoded string. All conditions must be met.
+                  To match on the hex-encoded value of the extension, including non-string extensions, use the format hex:<oid>:<value>.
                   Supports globbing on value.
                 items:
                   type: string
@@ -245,9 +253,9 @@ spec:
                   type: string
                 type: array
               tokenExplicitMaxTTL:
-                description: If set, will encode an explicit max TTL onto the token.
-                  This is a hard cap even if tokenTTL and tokenMaxTTL would otherwise
-                  allow a renewal.
+                description: |-
+                  If set, will encode an explicit max TTL onto the token.
+                  This is a hard cap even if tokenTTL and tokenMaxTTL would otherwise allow a renewal.
                 type: string
               tokenMaxTTL:
                 description: The maximum lifetime for generated tokens. This current
@@ -260,10 +268,9 @@ spec:
                 type: boolean
               tokenNumUses:
                 default: 0
-                description: The maximum number of times a generated token may be
-                  used (within its lifetime); 0 means unlimited. If you require the
-                  token to have the ability to create child tokens, you will need
-                  to set this value to 0.
+                description: |-
+                  The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited.
+                  If you require the token to have the ability to create child tokens, you will need to set this value to 0.
                 format: int64
                 type: integer
               tokenPeriod:
@@ -271,9 +278,9 @@ spec:
                   is requested from this role.
                 type: string
               tokenPolicies:
-                description: List of token policies to encode onto generated tokens.
-                  Depending on the auth method, this list may be supplemented by user/group/other
-                  values.
+                description: |-
+                  List of token policies to encode onto generated tokens.
+                  Depending on the auth method, this list may be supplemented by user/group/other values.
                 items:
                   type: string
                 type: array
@@ -282,13 +289,11 @@ spec:
                   value of this will be referenced at renewal time.
                 type: string
               tokenType:
-                description: 'The type of token that should be generated. Can be service,
-                  batch, or default to use the mount''s tuned default (which unless
-                  changed will be service tokens). For token store roles, there are
-                  two additional possibilities: default-service and default-batch
-                  which specify the type to return unless the client requests a different
-                  type at generation time. For machine based authentication cases,
-                  you should use batch type tokens.'
+                description: |-
+                  The type of token that should be generated.
+                  Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens).
+                  For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time.
+                  For machine based authentication cases, you should use batch type tokens.
                 type: string
             type: object
           status:
@@ -297,42 +302,42 @@ spec:
               conditions:
                 items:
                   description: "Condition contains details for one aspect of the current
-                    state of this API Resource. --- This struct is intended for direct
-                    use as an array at the field path .status.conditions.  For example,
-                    \n type FooStatus struct{ // Represents the observations of a
-                    foo's current state. // Known .status.conditions.type are: \"Available\",
-                    \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
-                    // +listType=map // +listMapKey=type Conditions []metav1.Condition
-                    `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
-                    protobuf:\"bytes,1,rep,name=conditions\"` \n // other fields }"
+                    state of this API Resource.\n---\nThis struct is intended for
+                    direct use as an array at the field path .status.conditions.  For
+                    example,\n\n\n\ttype FooStatus struct{\n\t    // Represents the
+                    observations of a foo's current state.\n\t    // Known .status.conditions.type
+                    are: \"Available\", \"Progressing\", and \"Degraded\"\n\t    //
+                    +patchMergeKey=type\n\t    // +patchStrategy=merge\n\t    // +listType=map\n\t
+                    \   // +listMapKey=type\n\t    Conditions []metav1.Condition `json:\"conditions,omitempty\"
+                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`\n\n\n\t
+                    \   // other fields\n\t}"
                   properties:
                     lastTransitionTime:
-                      description: lastTransitionTime is the last time the condition
-                        transitioned from one status to another. This should be when
-                        the underlying condition changed.  If that is not known, then
-                        using the time when the API field changed is acceptable.
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
                       format: date-time
                       type: string
                     message:
-                      description: message is a human readable message indicating
-                        details about the transition. This may be an empty string.
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
                       maxLength: 32768
                       type: string
                     observedGeneration:
-                      description: observedGeneration represents the .metadata.generation
-                        that the condition was set based upon. For instance, if .metadata.generation
-                        is currently 12, but the .status.conditions[x].observedGeneration
-                        is 9, the condition is out of date with respect to the current
-                        state of the instance.
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
                       format: int64
                       minimum: 0
                       type: integer
                     reason:
-                      description: reason contains a programmatic identifier indicating
-                        the reason for the condition's last transition. Producers
-                        of specific condition types may define expected values and
-                        meanings for this field, and whether the values are considered
-                        a guaranteed API. The value should be a CamelCase string.
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                        Producers of specific condition types may define expected values and meanings for this field,
+                        and whether the values are considered a guaranteed API.
+                        The value should be a CamelCase string.
                         This field may not be empty.
                       maxLength: 1024
                       minLength: 1
@@ -346,11 +351,12 @@ spec:
                       - Unknown
                       type: string
                     type:
-                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
-                        --- Many .condition.type values are consistent across resources
-                        like Available, but because arbitrary conditions can be useful
-                        (see .node.status.conditions), the ability to deconflict is
-                        important. The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                      description: |-
+                        type of condition in CamelCase or in foo.example.com/CamelCase.
+                        ---
+                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+                        useful (see .node.status.conditions), the ability to deconflict is important.
+                        The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                       type: string

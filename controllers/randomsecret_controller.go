@@ -158,7 +158,7 @@ func (r *RandomSecretReconciler) manageReconcileLogic(context context.Context, i
 		found, err := vaultEndpoint.Exists(context)
 		if err != nil {
 			r.Log.Error(err, "unable to verify secret existence", "instance", instance)
-			return err
+			// return err
 		}
 		if found {
 			r.Log.Info("no refresh period is defined and Vault secret already exists - nothing to do", "name", instance.Name)
