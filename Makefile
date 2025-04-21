@@ -6,9 +6,9 @@ KIND_VERSION ?= v0.27.0
 KUBECTL_VERSION ?= v1.29.0
 KUSTOMIZE_VERSION ?= v5.4.3
 # Note changes to the vault version should also match image tags within the integration/vault-values.yaml and config/local-development/vault-values.yaml files
-VAULT_VERSION ?= 1.14.0
+VAULT_VERSION ?= 1.19.0
 # The vault version should also match the appVersion in the vault helm chart
-VAULT_CHART_VERSION ?= 0.25.0
+VAULT_CHART_VERSION ?= 0.30.0
 # Set the Operator SDK version to use. By default, what is installed on the system is used.
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
 OPERATOR_SDK_VERSION ?= v1.31.0
