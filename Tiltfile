@@ -26,7 +26,7 @@ custom_build(
 local_resource(
   'vault-config-operator-manifests',
   'make manifests',
-  deps=['./bin']
+  deps=['./api']
 )
 
 allow_k8s_contexts(k8s_context())
