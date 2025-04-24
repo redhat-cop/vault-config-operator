@@ -20,6 +20,7 @@ import (
 	"context"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/controllers/k8sevt"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -77,6 +78,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 // SetupWithManager sets up the controller with the Manager.
 func (r *PolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.Policy{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
+		For(&redhatcopv1alpha1.Policy{},
+			builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{}, k8sevt.Log{})).
 		Complete(r)
 }
