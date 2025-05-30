@@ -148,7 +148,7 @@ func (i *GroupSpec) toMap() map[string]interface{} {
 	payload["metadata"] = i.Metadata
 	payload["policies"] = i.Policies
 	if i.Type == "internal" {
-		payload["member_group_ids"] = i.MemberEntityIDs
+		payload["member_group_ids"] = i.MemberGroupIDs
 		payload["member_entity_ids"] = i.MemberEntityIDs
 	}
 	return payload
