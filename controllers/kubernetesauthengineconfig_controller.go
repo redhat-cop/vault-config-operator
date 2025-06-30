@@ -26,6 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/controllers/k8sevt"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 )
 
@@ -84,6 +85,7 @@ func (r *KubernetesAuthEngineConfigReconciler) Reconcile(ctx context.Context, re
 func (r *KubernetesAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.KubernetesAuthEngineConfig{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
+		For(&redhatcopv1alpha1.KubernetesAuthEngineConfig{},
+			builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{}, k8sevt.Log{})).
 		Complete(r)
 }

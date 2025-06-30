@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/controllers/k8sevt"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 )
 
@@ -140,7 +141,8 @@ func (r *QuaySecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) er
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.QuaySecretEngineConfig{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
+		For(&redhatcopv1alpha1.QuaySecretEngineConfig{},
+			builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{}, k8sevt.Log{})).
 		Watches(&corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Secret",
@@ -148,6 +150,7 @@ func (r *QuaySecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) er
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			s := a.(*corev1.Secret)
+			r.Log.V(1).Info("fanning event on Secret out to applicable QuaySecretEngineConfigs", "namespace", s.Namespace, "name", s.Name)
 			quaysecs, err := r.findApplicableQuaySCForSecret(ctx, s)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable databaseSecretEngines for namespace", "namespace", s.Name)
@@ -162,7 +165,7 @@ func (r *QuaySecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) er
 				})
 			}
 			return res
-		}), builder.WithPredicates(isBasicAuthSecret)).
+		}), builder.WithPredicates(isBasicAuthSecret, k8sevt.Log{})).
 		Watches(&redhatcopv1alpha1.RandomSecret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "RandomSecret",
@@ -170,6 +173,7 @@ func (r *QuaySecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) er
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			rs := a.(*redhatcopv1alpha1.RandomSecret)
+			r.Log.V(1).Info("fanning event on RandomSecret out to applicable QuaySecretEngineConfigs", "namespace", rs.Namespace, "name", rs.Name)
 			quaysecs, err := r.findApplicableQuaySCForRandomSecret(ctx, rs)
 			if err != nil {
 				r.Log.Error(err, "unable to find applicable QuaySecretEngineConfig for namespace", "namespace", rs.Name)
@@ -184,7 +188,7 @@ func (r *QuaySecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) er
 				})
 			}
 			return res
-		}), builder.WithPredicates(isUpdatedRandomSecret)).
+		}), builder.WithPredicates(isUpdatedRandomSecret, k8sevt.Log{})).
 		Complete(r)
 }
 
