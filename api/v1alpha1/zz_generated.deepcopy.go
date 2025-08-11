@@ -3376,12 +3376,12 @@ func (in *PKIRole) DeepCopyInto(out *PKIRole) {
 	}
 	if in.KeyUsage != nil {
 		in, out := &in.KeyUsage, &out.KeyUsage
-		*out = make([]string, len(*in))
+		*out = make([]KeyUsage, len(*in))
 		copy(*out, *in)
 	}
 	if in.ExtKeyUsage != nil {
 		in, out := &in.ExtKeyUsage, &out.ExtKeyUsage
-		*out = make([]string, len(*in))
+		*out = make([]ExtKeyUsage, len(*in))
 		copy(*out, *in)
 	}
 	if in.ExtKeyUsageOids != nil {
