@@ -53,6 +53,7 @@ func (r *VaultResource) Reconcile(ctx context.Context, instance client.Object) (
 			log.Error(err, "unable to delete instance", "instance", instance)
 			return ManageOutcome(ctx, *r.reconcilerBase, instance, err)
 		}
+		log.V(1).Info("removing k8s resource finalizer")
 		controllerutil.RemoveFinalizer(instance, vaultutils.GetFinalizer(instance))
 		err = r.reconcilerBase.GetClient().Update(ctx, instance)
 		if err != nil {
