@@ -184,17 +184,15 @@ type PKIRole struct {
 
 	// Specifies the allowed key usage constraint on issued certificates. Valid values can be found at https://golang.org/pkg/crypto/x509/#KeyUsage - simply drop the KeyUsage part of the value. Values are not case-sensitive. To specify no key usage constraints, set this to an empty list.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Enum:=DigitalSignature;KeyAgreement;KeyEncipherment;ContentCommitment;DataEncipherment;CertSign;CRLSign;EncipherOnly;DecipherOnly
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	KeyUsage []string `json:"keyUsage,omitempty"`
+	KeyUsage []KeyUsage `json:"keyUsage,omitempty"`
 
 	// Specifies the allowed extended key usage constraint on issued certificates. Valid values can be found at https://golang.org/pkg/crypto/x509/#ExtKeyUsage - simply drop the ExtKeyUsage part of the value. Values are not case-sensitive. To specify no key usage constraints, set this to an empty list.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Enum:=ServerAuth;ClientAuth;CodeSigning;EmailProtection;IPSECEndSystem;IPSECTunnel;IPSECUser;TimeStamping;OCSPSigning;MicrosoftServerGatedCrypto;NetscapeServerGatedCrypto;MicrosoftCommercialCodeSigning;MicrosoftKernelCodeSigning
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	ExtKeyUsage []string `json:"extKeyUsage,omitempty"`
+	ExtKeyUsage []ExtKeyUsage `json:"extKeyUsage,omitempty"`
 
 	// A comma-separated string or list of extended key usage oids.
 	// +kubebuilder:validation:Optional
@@ -271,6 +269,14 @@ type PKIRole struct {
 	// +kubebuilder:default="30s"
 	NotBeforeDuration metav1.Duration `json:"notBeforeDuration,omitempty"`
 }
+
+// KeyUsage specifies the allowed key usage constraint on issued certificates. Valid values can be found at https://golang.org/pkg/crypto/x509/#KeyUsage - simply drop the KeyUsage part of the value.
+// +kubebuilder:validation:Enum:=DigitalSignature;KeyAgreement;KeyEncipherment;ContentCommitment;DataEncipherment;CertSign;CRLSign;EncipherOnly;DecipherOnly
+type KeyUsage string
+
+// ExtKeyUsage specifies the allowed extended key usage constraint on issued certificates. Valid values can be found at https://golang.org/pkg/crypto/x509/#ExtKeyUsage - simply drop the ExtKeyUsage part of the value.
+// +kubebuilder:validation:Enum:=ServerAuth;ClientAuth;CodeSigning;EmailProtection;IPSECEndSystem;IPSECTunnel;IPSECUser;TimeStamping;OCSPSigning;MicrosoftServerGatedCrypto;NetscapeServerGatedCrypto;MicrosoftCommercialCodeSigning;MicrosoftKernelCodeSigning
+type ExtKeyUsage string
 
 // PKISecretEngineRoleStatus defines the observed state of PKISecretEngineRole
 type PKISecretEngineRoleStatus struct {
