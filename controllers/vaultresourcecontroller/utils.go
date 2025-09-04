@@ -18,6 +18,7 @@ package vaultresourcecontroller
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -43,6 +44,23 @@ const ReconcileSuccessful = "ReconcileSuccessful"
 const ReconcileSuccessfulReason = "LastReconcileCycleSucceded"
 const ReconcileFailed = "ReconcileFailed"
 const ReconcileFailedReason = "LastReconcileCycleFailed"
+
+// SyncPeriod stores the manager's sync period for use in predicates
+var SyncPeriod time.Duration = 36000 * time.Second // Default to 10 hours
+
+// SetSyncPeriod sets the sync period for use in predicates
+func SetSyncPeriod(period time.Duration) {
+	SyncPeriod = period
+}
+
+// IsDriftDetectionEnabled returns whether drift detection is enabled
+// Controlled via ENABLE_DRIFT_DETECTION environment variable (default: false)
+func IsDriftDetectionEnabled() bool {
+	if enableDrift, ok := os.LookupEnv("ENABLE_DRIFT_DETECTION"); ok {
+		return enableDrift == "true"
+	}
+	return false
+}
 
 func IsOwner(owner, owned metav1.Object) bool {
 	runtimeObj, ok := (owner).(runtime.Object)
@@ -170,23 +188,70 @@ func ManageOutcome(context context.Context, r ReconcilerBase, obj client.Object,
 	return ManageOutcomeWithRequeue(context, r, obj, issue, 0)
 }
 
-// ResourceGenerationChangedPredicate this predicate will fire an update event when the spec of a resource is changed (controller by ResourceGeneration), or when the finalizers are changed
-type ResourceGenerationChangedPredicate struct {
+// PeriodicReconcilePredicate combines generation-based filtering with optional time-based reconciliation
+// to allow periodic drift detection while avoiding excessive API calls.
+// This predicate replaces ResourceGenerationChangedPredicate and provides both:
+// 1. Immediate reconciliation on spec changes (generation change)
+// 2. Optional periodic reconciliation for drift detection when enabled via ENABLE_DRIFT_DETECTION
+type PeriodicReconcilePredicate struct {
 	predicate.Funcs
+	// ReconcileInterval defines how often to allow reconciliation even without spec changes
+	ReconcileInterval time.Duration
 }
 
-// Update implements default UpdateEvent filter for validating resource version change
-func (ResourceGenerationChangedPredicate) Update(e event.UpdateEvent) bool {
-	if e.ObjectOld == nil {
+// NewPeriodicReconcilePredicate creates a new predicate with the specified reconcile interval
+func NewPeriodicReconcilePredicate(reconcileInterval time.Duration) PeriodicReconcilePredicate {
+	return PeriodicReconcilePredicate{
+		ReconcileInterval: reconcileInterval,
+	}
+}
+
+// NewPeriodicReconcilePredicateWithSyncPeriod creates a new predicate using the manager's sync period as the reconcile interval
+func NewPeriodicReconcilePredicateWithSyncPeriod(syncPeriod time.Duration) PeriodicReconcilePredicate {
+	return NewPeriodicReconcilePredicate(syncPeriod)
+}
+
+// NewDefaultPeriodicReconcilePredicate creates a new predicate using the configured sync period
+func NewDefaultPeriodicReconcilePredicate() PeriodicReconcilePredicate {
+	return NewPeriodicReconcilePredicate(SyncPeriod)
+}
+
+// Update implements UpdateEvent filter that provides unified reconciliation logic:
+// - Always reconciles on spec changes (generation change) for immediate response
+// - Optionally reconciles periodically after time interval for drift detection when enabled
+func (p PeriodicReconcilePredicate) Update(e event.UpdateEvent) bool {
+	// Check for nil objects at the interface level and underlying object level
+	if e.ObjectOld == nil || e.ObjectNew == nil {
 		return false
 	}
-	if e.ObjectNew == nil {
+
+	// Always reconcile if the generation changed (spec change)
+	if e.ObjectNew.GetGeneration() != e.ObjectOld.GetGeneration() {
+		return true
+	}
+
+	// Only do periodic drift detection if enabled
+	if !IsDriftDetectionEnabled() {
 		return false
 	}
-	if e.ObjectNew.GetGeneration() == e.ObjectOld.GetGeneration() {
-		return false
+
+	// For periodic reconciliation, check if enough time has passed since last successful reconcile
+	if conditionsAware, ok := e.ObjectNew.(vaultutils.ConditionsAware); ok {
+		conditions := conditionsAware.GetConditions()
+		for _, condition := range conditions {
+			if condition.Type == ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+				// If we have a successful reconcile condition, check if the interval has elapsed
+				timeSinceLastReconcile := time.Since(condition.LastTransitionTime.Time)
+				if timeSinceLastReconcile >= p.ReconcileInterval {
+					return true
+				}
+				break
+			}
+		}
 	}
-	return true
+
+	// Don't reconcile if generation hasn't changed and interval hasn't elapsed
+	return false
 }
 
 // CreateOrUpdateResource creates a resource if it doesn't exist, and updates (overwrites it), if it exist

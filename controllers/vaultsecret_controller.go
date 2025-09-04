@@ -456,7 +456,7 @@ func (r *VaultSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.VaultSecret{}, builder.WithPredicates(vaultSecretPredicate, vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
+		For(&redhatcopv1alpha1.VaultSecret{}, builder.WithPredicates(vaultSecretPredicate, vaultresourcecontroller.NewDefaultPeriodicReconcilePredicate())).
 		Owns(&corev1.Secret{}, builder.WithPredicates(k8sSecretPredicate)).
 		Complete(r)
 }

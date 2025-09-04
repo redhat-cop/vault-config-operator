@@ -137,6 +137,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Set the sync period for use in predicates
+	vaultresourcecontroller.SetSyncPeriod(syncPeriod)
+
 	if err = (&controllers.KubernetesAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KubernetesAuthEngineRole")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "KubernetesAuthEngineRole")
 		os.Exit(1)
