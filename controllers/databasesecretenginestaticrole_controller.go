@@ -71,6 +71,6 @@ func (r *DatabaseSecretEngineStaticRoleReconciler) Reconcile(ctx context.Context
 // SetupWithManager sets up the controller with the Manager.
 func (r *DatabaseSecretEngineStaticRoleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.DatabaseSecretEngineStaticRole{}, builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
+		For(&redhatcopv1alpha1.DatabaseSecretEngineStaticRole{}, builder.WithPredicates(vaultresourcecontroller.NewDefaultPeriodicReconcilePredicate())).
 		Complete(r)
 }

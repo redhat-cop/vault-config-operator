@@ -109,7 +109,7 @@ Here are the steps:
 
     func (r *MyVaultTypeReconciler) SetupWithManager(mgr ctrl.Manager) error {
       return ctrl.NewControllerManagedBy(mgr).
-        For(&redhatcopv1alpha1.MyVaultType{},builder.WithPredicates(vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
+        For(&redhatcopv1alpha1.MyVaultType{},builder.WithPredicates(vaultresourcecontroller.NewDefaultPeriodicReconcilePredicate())).
         Complete(r)
     }
   ```
