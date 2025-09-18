@@ -120,7 +120,7 @@ Additionally, the operator checks for an environment variable named `CACHE_VAULT
 
 By default, or if the variable is set to any other value, the operator will create a new client with a new token for each request it makes to Vault.
 
-SyncPeriod determines the minimum frequency at which watched resources are reconciled. Set the environment variable named `SYNC_PERIOD_SECONDS` to update the frequency at which watched resources are reconciled. It defaults to 10 hours if unset.
+SyncPeriod determines the minimum frequency at which watched resources are reconciled. Set the environment variable named `SYNC_PERIOD_SECONDS` to update the frequency at which watched resources are reconciled. It defaults to 10 hours if unset and ONLY works when `ENABLE_DRIFT_DETECTION` is set to `true`. The reconciliation also accounts for any drift that may have happened in Vault since the last reconciliation. This feature is disabled by default to maintain optimal performance.
 
 For certificates, the recommended approach is to mount the secret or configmap containing the certificate as described [here](https://github.com/operator-framework/operator-lifecycle-manager/blob/master/doc/design/subscription-config.md#volumes), and the configure the corresponding variables to point at the files location in the mounted path.
 

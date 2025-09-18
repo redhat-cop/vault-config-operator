@@ -126,6 +126,6 @@ func (r *RabbitMQSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&redhatcopv1alpha1.RabbitMQSecretEngineConfig{}, builder.WithPredicates(filter, vaultresourcecontroller.ResourceGenerationChangedPredicate{})).
+		For(&redhatcopv1alpha1.RabbitMQSecretEngineConfig{}, builder.WithPredicates(filter, vaultresourcecontroller.NewDefaultPeriodicReconcilePredicate())).
 		Complete(r)
 }
