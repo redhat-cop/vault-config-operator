@@ -3,7 +3,7 @@ module github.com/redhat-cop/vault-config-operator
 go 1.22.0
 
 require (
-	github.com/BurntSushi/toml v1.4.0
+	github.com/BurntSushi/toml v1.5.0
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/go-logr/logr v1.4.2
 	github.com/hashicorp/go-multierror v1.1.1
