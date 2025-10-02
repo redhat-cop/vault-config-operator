@@ -1,91 +1,143 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
 # Adds namespace to all resources.
 namespace: vault-config-operator
 
-# Value of this field is prepended to the
-# names of all resources, e.g. a deployment named
-# "wordpress" becomes "alices-wordpress".
-# Note that it should also match with the prefix (text before '-') of the namespace
-# field above.
+# Prefix for all resource names.
 namePrefix: vault-config-operator-
 
-# Labels to add to all resources and selectors.
-#commonLabels:
-#  someName: someValue
+resources:
+  - ../crd
+  - ../rbac
+  - ../manager
+  # [WEBHOOK] Enable if you have webhooks scaffolded.
+  - ../webhook
+  # [CERTMANAGER] Enable if you scaffolded cert-manager (requires WEBHOOK).
+  # - ../certmanager
+  # [PROMETHEUS] Enable if you have the prometheus bits.
+  - ../prometheus
 
-bases:
-- ../crd
-- ../rbac
-- ../manager
-# [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix including the one in
-# crd/kustomization.yaml
-- ../webhook
-# [CERTMANAGER] To enable cert-manager, uncomment all sections with 'CERTMANAGER'. 'WEBHOOK' components are required.
-# - ../certmanager
-# [PROMETHEUS] To enable prometheus monitor, uncomment all sections with 'PROMETHEUS'.
-- ../prometheus
+patches:
+  # Protect /metrics behind auth.
+  - path: manager_auth_proxy_patch.yaml
+  # [WEBHOOK] Enable if you use webhooks.
+  - path: manager_webhook_patch.yaml
+  # [CERTMANAGER] Enable if you use cert-manager.
+  # - path: webhookcainjection_patch.yaml
 
-patchesStrategicMerge:
-# Protect the /metrics endpoint by putting it behind auth.
-# If you want your controller-manager to expose the /metrics
-# endpoint w/o any authn/z, please comment the following line.
-- manager_auth_proxy_patch.yaml
+# Kustomize v5 replacement transformer (vars are deprecated).
+replacements:
+  # --- Metrics service name -> Deployment env[0].value ---
+  - source:
+      group: ""          # core
+      version: v1
+      kind: Service
+      name: controller-manager-metrics-service
+      fieldPath: metadata.name
+    targets:
+      - select:
+          group: apps
+          version: v1
+          kind: Deployment
+          name: controller-manager
+        fieldPaths:
+          - spec.template.spec.containers.0.env.0.value
+        options:
+          create: true
 
-# Mount the controller config file for loading manager configurations
-# through a ComponentConfig type
-#- manager_config_patch.yaml
+  # --- Metrics service namespace -> Deployment env[1].value ---
+  - source:
+      group: ""          # core
+      version: v1
+      kind: Service
+      name: controller-manager-metrics-service
+      fieldPath: metadata.namespace
+    targets:
+      - select:
+          group: apps
+          version: v1
+          kind: Deployment
+          name: controller-manager
+        fieldPaths:
+          - spec.template.spec.containers.0.env.1.value
+        options:
+          create: true
 
-# [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix including the one in
-# crd/kustomization.yaml
-- manager_webhook_patch.yaml
+  # --- Prometheus Role name -> RoleBinding roleRef.name ---
+  - source:
+      group: rbac.authorization.k8s.io
+      version: v1
+      kind: Role
+      name: prometheus-k8s
+      fieldPath: metadata.name
+    targets:
+      - select:
+          group: rbac.authorization.k8s.io
+          version: v1
+          kind: RoleBinding
+          name: prometheus-k8s-rolebinding
+        fieldPaths:
+          - roleRef.name
 
-# [CERTMANAGER] To enable cert-manager, uncomment all sections with 'CERTMANAGER'.
-# Uncomment 'CERTMANAGER' sections in crd/kustomization.yaml to enable the CA injection in the admission webhooks.
-# 'CERTMANAGER' needs to be enabled to use ca injection
-# - webhookcainjection_patch.yaml
-
-# the following config is for teaching kustomize how to do var substitution
-vars:
-- name: METRICS_SERVICE_NAME
-  objref:
-    kind: Service
-    version: v1
-    name: controller-manager-metrics-service
-- name: METRICS_SERVICE_NAMESPACE
-  objref:
-    kind: Service
-    version: v1
-    name: controller-manager-metrics-service
-  fieldref:
-    fieldpath: metadata.namespace
-- name: ROLE_NAME
-  objref:
-    kind: Role
-    apiVersion: rbac.authorization.k8s.io/v1
-    name: prometheus-k8s    
-# [CERTMANAGER] To enable cert-manager, uncomment all sections with 'CERTMANAGER' prefix.
-# - name: CERTIFICATE_NAMESPACE # namespace of the certificate CR
-#   objref:
-#     kind: Certificate
-#     group: cert-manager.io
-#     version: v1
-#     name: serving-cert # this name should match the one in certificate.yaml
-#   fieldref:
-#     fieldpath: metadata.namespace
-# - name: CERTIFICATE_NAME
-#   objref:
-#     kind: Certificate
-#     group: cert-manager.io
-#     version: v1
-#     name: serving-cert # this name should match the one in certificate.yaml
-# - name: SERVICE_NAMESPACE # namespace of the service
-#   objref:
-#     kind: Service
-#     version: v1
-#     name: webhook-service
-#   fieldref:
-#     fieldpath: metadata.namespace
-# - name: SERVICE_NAME
-#   objref:
-#     kind: Service
-#     version: v1
-#     name: webhook-service
+  # [CERTMANAGER] If you enable cert-manager, uncomment these:
+  # - source:
+  #     group: cert-manager.io
+  #     version: v1
+  #     kind: Certificate
+  #     name: serving-cert
+  #     fieldPath: metadata.namespace
+  #   targets:
+  #     - select:
+  #         group: apps
+  #         version: v1
+  #         kind: Deployment
+  #         name: controller-manager
+  #       fieldPaths:
+  #         - spec.template.spec.containers.0.env.2.value
+  #       options:
+  #         create: true
+  #
+  # - source:
+  #     group: ""      # core
+  #     version: v1
+  #     kind: Service
+  #     name: webhook-service
+  #     fieldPath: metadata.namespace
+  #   targets:
+  #     - select:
+  #         group: admissionregistration.k8s.io
+  #         version: v1
+  #         kind: MutatingWebhookConfiguration
+  #         name: mutating-webhook-configuration
+  #       fieldPaths:
+  #         - webhooks.0.clientConfig.service.namespace
+  #     - select:
+  #         group: admissionregistration.k8s.io
+  #         version: v1
+  #         kind: ValidatingWebhookConfiguration
+  #         name: validating-webhook-configuration
+  #       fieldPaths:
+  #         - webhooks.0.clientConfig.service.namespace
+  #
+  # - source:
+  #     group: ""      # core
+  #     version: v1
+  #     kind: Service
+  #     name: webhook-service
+  #     fieldPath: metadata.name
+  #   targets:
+  #     - select:
+  #         group: admissionregistration.k8s.io
+  #         version: v1
+  #         kind: MutatingWebhookConfiguration
+  #         name: mutating-webhook-configuration
+  #       fieldPaths:
+  #         - webhooks.0.clientConfig.service.name
+  #     - select:
+  #         group: admissionregistration.k8s.io
+  #         version: v1
+  #         kind: ValidatingWebhookConfiguration
+  #         name: validating-webhook-configuration
+  #       fieldPaths:
+  #         - webhooks.0.clientConfig.service.name
