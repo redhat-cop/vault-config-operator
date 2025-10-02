@@ -41,10 +41,21 @@ func (d *SecretEngineMount) IsDeletable() bool {
 }
 
 func (d *SecretEngineMount) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath(d.GetEngineListPath() + "/" + string(d.Spec.Path) + "/" + d.Spec.Name)
+	var pathComponent string
+	if d.Spec.Path != "" {
+		pathComponent = string(d.Spec.Path)
+	} else {
+		// When Path is empty, use the name directly as the mount path
+		if d.Spec.Name != "" {
+			return vaultutils.CleansePath(d.GetEngineListPath() + "/" + d.Spec.Name)
+		}
+		return vaultutils.CleansePath(d.GetEngineListPath() + "/" + d.Name)
 	}
-	return vaultutils.CleansePath(d.GetEngineListPath() + "/" + string(d.Spec.Path) + "/" + d.Name)
+
+	if d.Spec.Name != "" {
+		return vaultutils.CleansePath(d.GetEngineListPath() + "/" + pathComponent + "/" + d.Spec.Name)
+	}
+	return vaultutils.CleansePath(d.GetEngineListPath() + "/" + pathComponent + "/" + d.Name)
 }
 func (d *SecretEngineMount) GetPayload() map[string]interface{} {
 	return d.Spec.toMap()
@@ -101,10 +112,10 @@ type SecretEngineMountSpec struct {
 
 	Mount `json:",inline"`
 
-	// Path at which this secret engine will be available
-	// The final path in Vault will be {[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
-	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path /sys/mounts/{[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
-	// +kubebuilder:validation:Required
+	// Path at which this secret engine will be available. If not specified, defaults to the resource name (/sys/mounts/{[spec.authentication.namespace]}/{metadata.name}).
+	// The final path in Vault will be {[spec.authentication.namespace]}/{[spec.path]}/{metadata.name}.
+	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on computed path /sys/mounts/{[spec.authentication.namespace]}/{[spec.path]}/{metadata.name} or /sys/mounts/{[spec.authentication.namespace]}/{metadata.name} if path is empty.
+	// +kubebuilder:validation:Optional
 	Path vaultutils.Path `json:"path,omitempty"`
 
 	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
