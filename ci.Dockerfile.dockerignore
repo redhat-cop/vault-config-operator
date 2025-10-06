@@ -1,7 +1,7 @@
 api/
 bundle/
 config/
-controllers/
+internal/controllers/
 examples/
 hack/
 test/

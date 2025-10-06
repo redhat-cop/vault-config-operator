@@ -1,3 +1,6 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
 # Adds namespace to all resources.
 namespace: vault-config-operator
 
@@ -6,30 +9,26 @@ namespace: vault-config-operator
 #  someName: someValue
 
 resources:
-- ../../default
-- ./service-account.yaml
+  - ../../default
+  - ./service-account.yaml
 
-patchesStrategicMerge:
-- ./remove-namespace.yaml
-- ./replace-image.yaml
-
-
-patchesJson6902:
-- target:
-    group: admissionregistration.k8s.io
-    version: v1
-    kind: MutatingWebhookConfiguration
-    name: vault-config-operator-mutating-webhook-configuration
-  path: ./ca-injection.yaml
-- target:
-    group: admissionregistration.k8s.io
-    version: v1
-    kind: ValidatingWebhookConfiguration
-    name: vault-config-operator-validating-webhook-configuration
-  path: ./ca-injection.yaml
-- target:
-    group: ""
-    version: v1
-    kind: Service
-    name: vault-config-operator-webhook-service
-  path: ./secret-injection.yaml
+patches:
+  - path: ./remove-namespace.yaml
+  - target:
+      group: admissionregistration.k8s.io
+      version: v1
+      kind: MutatingWebhookConfiguration
+      name: vault-config-operator-mutating-webhook-configuration
+    path: ./ca-injection.yaml
+  - target:
+      group: admissionregistration.k8s.io
+      version: v1
+      kind: ValidatingWebhookConfiguration
+      name: vault-config-operator-validating-webhook-configuration
+    path: ./ca-injection.yaml
+  - target:
+      group: ""
+      version: v1
+      kind: Service
+      name: vault-config-operator-webhook-service
+    path: ./secret-injection.yaml
