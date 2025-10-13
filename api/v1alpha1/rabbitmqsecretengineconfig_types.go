@@ -220,7 +220,30 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) setInternalCredentials(context conte
 			log.Error(err, "unable to retrieve vault secret", "instance", rabbitMQ)
 			return err
 		}
-		rabbitMQ.SetUsernameAndPassword(rabbitMQ.Spec.Username, secret.Data[randomSecret.Spec.SecretKey].(string))
+
+		// Handle both KV v1 and v2 secret formats
+		var secretData map[string]interface{}
+		if dataInterface, exists := secret.Data["data"]; exists {
+			// KV v2 format: secret data is nested under "data" key
+			var ok bool
+			secretData, ok = dataInterface.(map[string]interface{})
+			if !ok {
+				err := errors.New("vault secret data is not in expected format for KV v2")
+				log.Error(err, "unable to parse vault secret data", "instance", rabbitMQ)
+				return err
+			}
+		} else {
+			// KV v1 format: secret data is directly in Data
+			secretData = secret.Data
+		}
+
+		password, ok := secretData[randomSecret.Spec.SecretKey].(string)
+		if !ok {
+			err := errors.New("secret key not found or not a string in vault secret")
+			log.Error(err, "unable to retrieve secret value from vault secret", "instance", rabbitMQ, "key", randomSecret.Spec.SecretKey)
+			return err
+		}
+		rabbitMQ.SetUsernameAndPassword(rabbitMQ.Spec.Username, password)
 		return nil
 	}
 	if rabbitMQ.Spec.RootCredentials.Secret != nil {
@@ -250,12 +273,46 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) setInternalCredentials(context conte
 			log.Error(err, "unable to retrieve vault secret", "instance", rabbitMQ)
 			return err
 		}
-		if rabbitMQ.Spec.Username == "" {
-			rabbitMQ.SetUsernameAndPassword(secret.Data[rabbitMQ.Spec.RootCredentials.UsernameKey].(string), secret.Data[rabbitMQ.Spec.RootCredentials.PasswordKey].(string))
-			log.V(1).Info("", "username", secret.Data[rabbitMQ.Spec.RootCredentials.UsernameKey].(string), "password", secret.Data[rabbitMQ.Spec.RootCredentials.PasswordKey].(string))
+		// Handle both KV v1 and v2 secret formats
+		var secretData map[string]interface{}
+		if dataInterface, exists := secret.Data["data"]; exists {
+			// KV v2 format: secret data is nested under "data" key
+			var ok bool
+			secretData, ok = dataInterface.(map[string]interface{})
+			if !ok {
+				err := errors.New("vault secret data is not in expected format for KV v2")
+				log.Error(err, "unable to parse vault secret data", "instance", rabbitMQ)
+				return err
+			}
 		} else {
-			rabbitMQ.SetUsernameAndPassword(rabbitMQ.Spec.Username, secret.Data[rabbitMQ.Spec.RootCredentials.PasswordKey].(string))
-			log.V(1).Info("", "username", rabbitMQ.Spec.Username, "password", secret.Data[rabbitMQ.Spec.RootCredentials.PasswordKey].(string))
+			// KV v1 format: secret data is directly in Data
+			secretData = secret.Data
+		}
+
+		if rabbitMQ.Spec.Username == "" {
+			username, ok := secretData[rabbitMQ.Spec.RootCredentials.UsernameKey].(string)
+			if !ok {
+				err := errors.New("username key not found or not a string in vault secret")
+				log.Error(err, "unable to retrieve username from vault secret", "instance", rabbitMQ, "key", rabbitMQ.Spec.RootCredentials.UsernameKey)
+				return err
+			}
+			password, ok := secretData[rabbitMQ.Spec.RootCredentials.PasswordKey].(string)
+			if !ok {
+				err := errors.New("password key not found or not a string in vault secret")
+				log.Error(err, "unable to retrieve password from vault secret", "instance", rabbitMQ, "key", rabbitMQ.Spec.RootCredentials.PasswordKey)
+				return err
+			}
+			rabbitMQ.SetUsernameAndPassword(username, password)
+			log.V(1).Info("", "username", username, "password", password)
+		} else {
+			password, ok := secretData[rabbitMQ.Spec.RootCredentials.PasswordKey].(string)
+			if !ok {
+				err := errors.New("password key not found or not a string in vault secret")
+				log.Error(err, "unable to retrieve password from vault secret", "instance", rabbitMQ, "key", rabbitMQ.Spec.RootCredentials.PasswordKey)
+				return err
+			}
+			rabbitMQ.SetUsernameAndPassword(rabbitMQ.Spec.Username, password)
+			log.V(1).Info("", "username", rabbitMQ.Spec.Username, "password", password)
 		}
 		return nil
 	}
