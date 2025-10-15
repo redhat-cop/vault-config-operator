@@ -13,5 +13,5 @@ configMapGenerator:
   name: manager-config
 images:
 - name: controller
-  newName: quay.io/raffaelespazzoli/vault-config-operator
+  newName: controller
   newTag: latest

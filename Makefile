@@ -4,7 +4,7 @@ OPERATOR_NAME ?=$(shell basename -z `pwd`)
 HELM_VERSION ?= v3.11.0
 KIND_VERSION ?= v0.27.0
 KUBECTL_VERSION ?= v1.29.0
-KUSTOMIZE_VERSION ?= v5.4.2
+KUSTOMIZE_VERSION ?= v5.4.3
 # Note changes to the vault version should also match image tags within the integration/vault-values.yaml and config/local-development/vault-values.yaml files
 VAULT_VERSION ?= 1.19.0
 # The vault version should also match the appVersion in the vault helm chart
@@ -13,10 +13,10 @@ VAULT_CHART_VERSION ?= 0.30.0
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
 OPERATOR_SDK_VERSION ?= v1.36.0
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION ?= 1.30.0
+ENVTEST_K8S_VERSION ?= 1.31.0
 
-CONTROLLER_TOOLS_VERSION ?= v0.15.0
-ENVTEST_VERSION ?= release-0.18
+CONTROLLER_TOOLS_VERSION ?= v0.18.0
+ENVTEST_VERSION ?= release-0.19
 GOLANGCI_LINT_VERSION ?= v1.59.1
 GO ?= go
 
