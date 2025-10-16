@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+
 	vaultresourcecontroller2 "github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 
 	corev1 "k8s.io/api/core/v1"
@@ -109,6 +110,7 @@ func (r *KubernetesAuthEngineRoleReconciler) SetupWithManager(mgr ctrl.Manager) 
 			}
 			return res
 		})).
+		Named("vaultconfigoperator-kubernetesauthenginerole").
 		Complete(r)
 }
 

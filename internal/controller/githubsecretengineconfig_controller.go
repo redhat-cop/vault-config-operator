@@ -19,6 +19,7 @@ package controllers
 import (
 	"bytes"
 	"context"
+
 	vaultresourcecontroller2 "github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 
 	corev1 "k8s.io/api/core/v1"
@@ -141,6 +142,7 @@ func (r *GitHubSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) 
 			}
 			return res
 		}), builder.WithPredicates(isSSHSecret)).
+		Named("vaultconfigoperator-githubsecretengineconfig").
 		Complete(r)
 }
 

@@ -19,6 +19,7 @@ package controllers
 import (
 	"bytes"
 	"context"
+
 	vaultresourcecontroller2 "github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -135,6 +136,7 @@ func (r *KubernetesSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manag
 			}
 			return res
 		}), builder.WithPredicates(isSATokenSecret)).
+		Named("vaultconfigoperator-kubernetessecretengineconfig").
 		Complete(r)
 }
 

@@ -19,6 +19,7 @@ package controllers
 import (
 	"bytes"
 	"context"
+
 	vaultresourcecontroller2 "github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 
 	corev1 "k8s.io/api/core/v1"
@@ -183,6 +184,7 @@ func (r *GCPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) error
 			}
 			return res
 		}), builder.WithPredicates(isUpdatedRandomSecret)).
+		Named("vaultconfigoperator-gcpauthengineconfig").
 		Complete(r)
 
 }

@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+
 	vaultresourcecontroller2 "github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -71,5 +72,6 @@ func (r *GCPAuthEngineRoleReconciler) Reconcile(ctx context.Context, req ctrl.Re
 func (r *GCPAuthEngineRoleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&redhatcopv1alpha1.GCPAuthEngineRole{}).
+		Named("vaultconfigoperator-gcpauthenginerole").
 		Complete(r)
 }

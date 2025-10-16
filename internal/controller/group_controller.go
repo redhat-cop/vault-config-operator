@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+
 	vaultresourcecontroller2 "github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -78,5 +79,6 @@ func (r *GroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 func (r *GroupReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&redhatcopv1alpha1.Group{}, builder.WithPredicates(vaultresourcecontroller2.NewDefaultPeriodicReconcilePredicate())).
+		Named("vaultconfigoperator-group").
 		Complete(r)
 }

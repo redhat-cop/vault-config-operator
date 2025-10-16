@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+
 	vaultresourcecontroller2 "github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -76,5 +77,6 @@ func (r *JWTOIDCAuthEngineRoleReconciler) Reconcile(ctx context.Context, req ctr
 func (r *JWTOIDCAuthEngineRoleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&redhatcopv1alpha1.JWTOIDCAuthEngineRole{}, builder.WithPredicates(vaultresourcecontroller2.NewDefaultPeriodicReconcilePredicate())).
+		Named("vaultconfigoperator-jwtoidcauthenginerole").
 		Complete(r)
 }

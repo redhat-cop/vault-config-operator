@@ -19,6 +19,7 @@ package controllers
 import (
 	"bytes"
 	"context"
+
 	vaultresourcecontroller2 "github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 
 	corev1 "k8s.io/api/core/v1"
@@ -187,6 +188,7 @@ func (r *JWTOIDCAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) e
 			}
 			return res
 		}), builder.WithPredicates(isUpdatedRandomSecret)).
+		Named("vaultconfigoperator-jwtoidcauthengineconfig").
 		Complete(r)
 
 }

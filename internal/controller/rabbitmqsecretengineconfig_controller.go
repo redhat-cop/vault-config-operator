@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+
 	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
@@ -127,5 +128,6 @@ func (r *RabbitMQSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&redhatcopv1alpha1.RabbitMQSecretEngineConfig{}, builder.WithPredicates(filter, vaultresourcecontroller.NewDefaultPeriodicReconcilePredicate())).
+		Named("vaultconfigoperator-rabbitmqsecretengineconfig").
 		Complete(r)
 }

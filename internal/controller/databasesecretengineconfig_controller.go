@@ -19,8 +19,9 @@ package controllers
 import (
 	"bytes"
 	"context"
-	vaultresourcecontroller2 "github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 	"time"
+
+	vaultresourcecontroller2 "github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -255,6 +256,7 @@ func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 			}
 			return res
 		}), builder.WithPredicates(isUpdatedRandomSecret)).
+		Named("vaultconfigoperator-databasesecretengineconfig").
 		Complete(r)
 }
 

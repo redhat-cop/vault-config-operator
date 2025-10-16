@@ -19,6 +19,7 @@ package controllers
 import (
 	"bytes"
 	"context"
+
 	vaultresourcecontroller2 "github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 
 	corev1 "k8s.io/api/core/v1"
@@ -239,6 +240,7 @@ func (r *LDAPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) erro
 			}
 			return res
 		}), builder.WithPredicates(isUpdatedRandomSecret)).
+		Named("vaultconfigoperator-ldapauthengineconfig").
 		Complete(r)
 
 }

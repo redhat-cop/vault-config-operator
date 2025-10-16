@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+
 	vaultresourcecontroller2 "github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -72,5 +73,6 @@ func (r *DatabaseSecretEngineStaticRoleReconciler) Reconcile(ctx context.Context
 func (r *DatabaseSecretEngineStaticRoleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&redhatcopv1alpha1.DatabaseSecretEngineStaticRole{}, builder.WithPredicates(vaultresourcecontroller2.NewDefaultPeriodicReconcilePredicate())).
+		Named("vaultconfigoperator-databasesecretenginestaticrole").
 		Complete(r)
 }

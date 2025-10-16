@@ -17,11 +17,6 @@ resources:
   # - ../certmanager
   # [PROMETHEUS] Enable if you have the prometheus bits.
   - ../prometheus
-  # [NETWORK POLICY] Protect the /metrics endpoint and Webhook Server with NetworkPolicy.
-  # Only Pod(s) running a namespace labeled with 'metrics: enabled' will be able to gather the metrics.
-  # Only CR(s) which requires webhooks and are applied on namespaces labeled with 'webhooks: enabled' will
-  # be able to communicate with the Webhook Server.
-  #- ../network-policy
 
 patches:
   # Protect /metrics behind auth.
@@ -30,6 +25,19 @@ patches:
   - path: manager_webhook_patch.yaml
   # [CERTMANAGER] Enable if you use cert-manager.
   # - path: webhookcainjection_patch.yaml
+  # Uncomment the patches line if you enable Metrics and CertManager
+
+  # [METRICS-WITH-CERTS] To enable metrics protected with certManager, uncomment the following line.
+  # This patch will protect the metrics with certManager self-signed certs.
+  #  - path: cert_metrics_manager_patch.yaml
+  #    target:
+  #      kind: Deployment
+
+  # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix including the one in
+  # crd/kustomization.yaml
+#  - path: manager_webhook_patch.yaml
+#    target:
+#      kind: Deployment
 
 # Kustomize v5 replacement transformer (vars are deprecated).
 replacements:
@@ -85,22 +93,101 @@ replacements:
         fieldPaths:
           - roleRef.name
 
-  # [CERTMANAGER] If you enable cert-manager, uncomment these:
-  # - source:
-  #     group: cert-manager.io
+  # - source: # Uncomment the following block to enable certificates for metrics
+  #     kind: Service
   #     version: v1
-  #     kind: Certificate
-  #     name: serving-cert
+  #     name: controller-manager-metrics-service
+  #     fieldPath: metadata.name
+  #   targets:
+  #     - select:
+  #         kind: Certificate
+  #         group: cert-manager.io
+  #         version: v1
+  #         name: metrics-certs
+  #       fieldPaths:
+  #         - spec.dnsNames.0
+  #         - spec.dnsNames.1
+  #       options:
+  #         delimiter: '.'
+  #         index: 0
+  #         create: true
+  #     - select: # Uncomment the following to set the Service name for TLS config in Prometheus ServiceMonitor
+  #         kind: ServiceMonitor
+  #         group: monitoring.coreos.com
+  #         version: v1
+  #         name: controller-manager-metrics-monitor
+  #       fieldPaths:
+  #         - spec.endpoints.0.tlsConfig.serverName
+  #       options:
+  #         delimiter: '.'
+  #         index: 0
+  #         create: true
+  #
+  # - source:
+  #     kind: Service
+  #     version: v1
+  #     name: controller-manager-metrics-service
   #     fieldPath: metadata.namespace
   #   targets:
   #     - select:
-  #         group: apps
+  #         kind: Certificate
+  #         group: cert-manager.io
   #         version: v1
-  #         kind: Deployment
-  #         name: controller-manager
+  #         name: metrics-certs
   #       fieldPaths:
-  #         - spec.template.spec.containers.0.env.2.value
+  #         - spec.dnsNames.0
+  #         - spec.dnsNames.1
   #       options:
+  #         delimiter: '.'
+  #         index: 1
+  #         create: true
+  #     - select: # Uncomment the following to set the Service namespace for TLS in Prometheus ServiceMonitor
+  #         kind: ServiceMonitor
+  #         group: monitoring.coreos.com
+  #         version: v1
+  #         name: controller-manager-metrics-monitor
+  #       fieldPaths:
+  #         - spec.endpoints.0.tlsConfig.serverName
+  #       options:
+  #         delimiter: '.'
+  #         index: 1
+  #         create: true
+  #
+  # - source: # Uncomment the following block if you have any webhook
+  #     kind: Service
+  #     version: v1
+  #     name: webhook-service
+  #     fieldPath: .metadata.name # Name of the service
+  #   targets:
+  #     - select:
+  #         kind: Certificate
+  #         group: cert-manager.io
+  #         version: v1
+  #         name: serving-cert
+  #       fieldPaths:
+  #         - .spec.dnsNames.0
+  #         - .spec.dnsNames.1
+  #       options:
+  #         delimiter: '.'
+  #         index: 0
+  #         create: true
+  # - source:
+  #     kind: Service
+  #     version: v1
+  #     name: webhook-service
+  #     fieldPath: .metadata.namespace # Namespace of the service
+  #   targets:
+  #     - select:
+  #         kind: Certificate
+  #         group: cert-manager.io
+  #         version: v1
+  #         name: serving-cert
+  #       fieldPaths:
+  #         - .spec.dnsNames.0
+  #         - .spec.dnsNames.1
+  #       options:
+  #         delimiter: '.'
+  #         index: 1
   #         create: true
   #
   # - source:
@@ -146,3 +233,21 @@ replacements:
   #         name: validating-webhook-configuration
   #       fieldPaths:
   #         - webhooks.0.clientConfig.service.name
+
+  # +kubebuilder:scaffold:crdkustomizecainjectionns
+  # - source:   # example (keep commented)
+  #     group: ""      # core
+  #     version: v1
+  #     kind: Service
+  #     name: webhook-service
+  #     fieldPath: metadata.namespace
+  #   targets:
+  #     - select:
+  #         group: apiextensions.k8s.io
+  #         version: v1
+  #         kind: CustomResourceDefinition
+  #         name: <plural>.<group>   # e.g., vaultsecrets.redhatcop.redhat.io
+  #       fieldPaths:
+  #         - spec.conversion.webhook.clientConfig.service.namespace
+  #       options:
+  #         create: true

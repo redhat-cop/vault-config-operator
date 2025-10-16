@@ -19,6 +19,7 @@ package controllers
 import (
 	"bytes"
 	"context"
+
 	vaultresourcecontroller2 "github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultsecretutils"
 
@@ -457,6 +458,7 @@ func (r *VaultSecretReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&redhatcopv1alpha1.VaultSecret{}, builder.WithPredicates(vaultSecretPredicate, vaultresourcecontroller2.NewDefaultPeriodicReconcilePredicate())).
 		Owns(&corev1.Secret{}, builder.WithPredicates(k8sSecretPredicate)).
+		Named("vaultconfigoperator-vaultsecret").
 		Complete(r)
 }
 

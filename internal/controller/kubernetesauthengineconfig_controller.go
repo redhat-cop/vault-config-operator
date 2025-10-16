@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+
 	vaultresourcecontroller2 "github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -85,5 +86,6 @@ func (r *KubernetesAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&redhatcopv1alpha1.KubernetesAuthEngineConfig{}, builder.WithPredicates(vaultresourcecontroller2.NewDefaultPeriodicReconcilePredicate())).
+		Named("vaultconfigoperator-kubernetesauthengineconfig").
 		Complete(r)
 }
