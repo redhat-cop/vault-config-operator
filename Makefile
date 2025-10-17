@@ -12,13 +12,14 @@ VAULT_CHART_VERSION ?= 0.30.0
 # Set the Operator SDK version to use. By default, what is installed on the system is used.
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
 OPERATOR_SDK_VERSION ?= v1.36.0
-# ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION ?= 1.31.0
 
 CONTROLLER_TOOLS_VERSION ?= v0.18.0
-ENVTEST_VERSION ?= release-0.19
 GOLANGCI_LINT_VERSION ?= v1.59.1
 GO ?= go
+
+ENVTEST_VERSION := $(shell go list -m -f "{{ .Version }}" sigs.k8s.io/controller-runtime | awk -F'[v.]' '{printf "release-%d.%d", $$2, $$3}')
+# ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
+ENVTEST_K8S_VERSION := $(shell go list -m -f "{{ .Version }}" k8s.io/api | awk -F'[v.]' '{printf "1.%d", $$3}')
 
 # VERSION defines the project version for the bundle.
 # Update this value when you upgrade the version of your project.
@@ -126,15 +127,17 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 .PHONY: test
-test: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
+test: manifests generate fmt vet setup-envtest ## Run tests.
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" \
+		go test ./... -coverprofile cover.out
 
 # note: envtest requires docker, podman will not work
 .PHONY: integration
-integration: kind-setup deploy-vault deploy-ingress vault manifests generate fmt vet envtest ## Run tests.
-	export VAULT_TOKEN=$$($(KUBECTL) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
-	export VAULT_ADDR="http://localhost:8200" ;\
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration
+integration: kind-setup deploy-vault deploy-ingress vault manifests generate fmt vet setup-envtest ## Run tests.
+	VAULT_TOKEN="$$($(KUBECTL) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d)" \
+	VAULT_ADDR="http://localhost:8200" \
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" \
+		go test ./... -coverprofile cover.out --tags=integration
 
 .PHONY: deploy-ingress
 deploy-ingress: kubectl helm
@@ -256,11 +259,6 @@ $(KUSTOMIZE): $(LOCALBIN)
 controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
 $(CONTROLLER_GEN): $(LOCALBIN)
 	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen,$(CONTROLLER_TOOLS_VERSION))
-
-.PHONY: envtest
-envtest: $(ENVTEST) ## Download setup-envtest locally if necessary.
-$(ENVTEST): $(LOCALBIN)
-	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest,$(ENVTEST_VERSION))
 
 .PHONY: golangci-lint
 golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
@@ -476,3 +474,8 @@ endif
 .PHONY: clean
 clean:
 	rm -rf $(LOCALBIN) ./bundle ./bundle-* ./charts
+
+.PHONY: setup-envtest
+setup-envtest:
+	@$(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path || { \
+	echo "Error setting up envtest"; exit 1; }

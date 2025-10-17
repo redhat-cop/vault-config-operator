@@ -17,12 +17,12 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"errors"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -37,11 +37,13 @@ func (r *DatabaseSecretEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) e
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-databasesecretengineconfig,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=databasesecretengineconfigs,verbs=create,versions=v1alpha1,name=mdatabasesecretengineconfig.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Defaulter = &DatabaseSecretEngineConfig{}
+var _ admission.CustomDefaulter = &DatabaseSecretEngineConfig{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *DatabaseSecretEngineConfig) Default() {
-	authenginemountlog.Info("default", "name", r.Name)
+// Default implements admission.CustomDefaulter so a webhook will be registered for the type
+func (r *DatabaseSecretEngineConfig) Default(_ context.Context, obj runtime.Object) error {
+	o := obj.(*DatabaseSecretEngineConfig)
+	authenginemountlog.Info("default", "name", o.Name)
+	return nil
 }
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -49,40 +51,45 @@ func (r *DatabaseSecretEngineConfig) Default() {
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-databasesecretengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=databasesecretengineconfigs,verbs=create;update,versions=v1alpha1,name=vdatabasesecretengineconfig.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Validator = &DatabaseSecretEngineConfig{}
+var _ admission.CustomValidator = &DatabaseSecretEngineConfig{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseSecretEngineConfig) ValidateCreate() (admission.Warnings, error) {
-	databasesecretengineconfiglog.Info("validate create", "name", r.Name)
+// ValidateCreate implements admission.CustomValidator so a webhook will be registered for the type
+func (r *DatabaseSecretEngineConfig) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	o := obj.(*DatabaseSecretEngineConfig)
+	databasesecretengineconfiglog.Info("validate create", "name", o.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
-	return nil, r.isValid()
+	return nil, o.isValid()
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseSecretEngineConfig) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	databasesecretengineconfiglog.Info("validate update", "name", r.Name)
+// ValidateUpdate implements admission.CustomValidator so a webhook will be registered for the type
+func (r *DatabaseSecretEngineConfig) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+	old := oldObj.(*DatabaseSecretEngineConfig)
+	new := newObj.(*DatabaseSecretEngineConfig)
+
+	databasesecretengineconfiglog.Info("validate update", "name", new.Name)
 
 	// the path cannot be updated
-	if r.Spec.Path != old.(*DatabaseSecretEngineConfig).Spec.Path {
+	if new.Spec.Path != old.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}
 	//connection_url, username and verify_connection cannot be changed because they cannot be compare with the actual.
-	// if r.Spec.ConnectionURL != old.(*DatabaseSecretEngineConfig).Spec.ConnectionURL {
-	// 	return errors.New("spec.connectionURL cannot be updated")
+	// if new.Spec.ConnectionURL != old.Spec.ConnectionURL {
+	// 	return nil, errors.New("spec.connectionURL cannot be updated")
 	// }
-	// if r.Spec.Username != old.(*DatabaseSecretEngineConfig).Spec.Username {
-	// 	return errors.New("spec.username cannot be updated")
+	// if new.Spec.Username != old.Spec.Username {
+	// 	return nil, errors.New("spec.username cannot be updated")
 	// }
-	// if r.Spec.VerifyConnection != old.(*DatabaseSecretEngineConfig).Spec.VerifyConnection {
-	// 	return errors.New("spec.verifyConnection cannot be updated")
+	// if new.Spec.VerifyConnection != old.Spec.VerifyConnection {
+	// 	return nil, errors.New("spec.verifyConnection cannot be updated")
 	// }
-	return nil, r.isValid()
+	return nil, new.isValid()
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseSecretEngineConfig) ValidateDelete() (admission.Warnings, error) {
-	databasesecretengineconfiglog.Info("validate delete", "name", r.Name)
+// ValidateDelete implements admission.CustomValidator so a webhook will be registered for the type
+func (r *DatabaseSecretEngineConfig) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	o := obj.(*DatabaseSecretEngineConfig)
+	databasesecretengineconfiglog.Info("validate delete", "name", o.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil, nil

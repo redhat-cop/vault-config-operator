@@ -21,11 +21,12 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/redhat-cop/vault-config-operator/internal/controller/controllertestutils"
-	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/redhat-cop/vault-config-operator/internal/controller/controllertestutils"
+	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 
 	"net/http"
 
@@ -97,6 +98,7 @@ var _ = BeforeSuite(func() {
 
 	By("bootstrapping test environment")
 	testIntegrationEnv = &envtest.Environment{
+		BinaryAssetsDirectory: getFirstFoundEnvTestBinaryDir(),
 		CRDDirectoryPaths:     []string{filepath.Join("..", "config", "crd", "bases")},
 		ErrorIfCRDPathMissing: true,
 	}
@@ -236,3 +238,18 @@ var _ = AfterSuite(func() {
 	err := testIntegrationEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
+
+func getFirstFoundEnvTestBinaryDir() string {
+	basePath := filepath.Join("..", "..", "..", "bin", "k8s")
+	entries, err := os.ReadDir(basePath)
+	if err != nil {
+		logf.Log.Error(err, "Failed to read directory", "path", basePath)
+		return ""
+	}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			return filepath.Join(basePath, entry.Name())
+		}
+	}
+	return ""
+}

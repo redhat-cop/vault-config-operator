@@ -17,13 +17,13 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"errors"
 	"reflect"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -40,37 +40,42 @@ func (r *SecretEngineMount) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-secretenginemount,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=secretenginemounts,verbs=create,versions=v1alpha1,name=msecretenginemount.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Defaulter = &SecretEngineMount{}
+var _ admission.CustomDefaulter = &SecretEngineMount{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *SecretEngineMount) Default() {
-	authenginemountlog.Info("default", "name", r.Name)
+func (r *SecretEngineMount) Default(_ context.Context, obj runtime.Object) error {
+	cr := obj.(*SecretEngineMount)
+	authenginemountlog.Info("default", "name", cr.Name)
+	return nil
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-secretenginemount,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=secretenginemounts,verbs=update,versions=v1alpha1,name=vsecretenginemount.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Validator = &SecretEngineMount{}
+var _ admission.CustomValidator = &SecretEngineMount{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *SecretEngineMount) ValidateCreate() (admission.Warnings, error) {
-	secretenginemountlog.Info("validate create", "name", r.Name)
+func (r *SecretEngineMount) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr := obj.(*SecretEngineMount)
+	secretenginemountlog.Info("validate create", "name", cr.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
 	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *SecretEngineMount) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	secretenginemountlog.Info("validate update", "name", r.Name)
+func (r *SecretEngineMount) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+	oldSEM := oldObj.(*SecretEngineMount)
+	cr := newObj.(*SecretEngineMount)
+	secretenginemountlog.Info("validate update", "name", cr.Name)
 
 	// the path cannot be updated
-	if r.Spec.Path != old.(*SecretEngineMount).Spec.Path {
+	if cr.Spec.Path != oldSEM.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}
 	// only mount config can be modified
-	oldMount := old.(*SecretEngineMount).Spec.Mount
-	newMount := r.Spec.Mount
+	oldMount := oldSEM.Spec.Mount
+	newMount := cr.Spec.Mount
 	oldMount.Config = MountConfig{}
 	newMount.Config = MountConfig{}
 	if !reflect.DeepEqual(oldMount, newMount) {
@@ -80,8 +85,9 @@ func (r *SecretEngineMount) ValidateUpdate(old runtime.Object) (admission.Warnin
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *SecretEngineMount) ValidateDelete() (admission.Warnings, error) {
-	secretenginemountlog.Info("validate delete", "name", r.Name)
+func (r *SecretEngineMount) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr := obj.(*SecretEngineMount)
+	secretenginemountlog.Info("validate delete", "name", cr.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil, nil

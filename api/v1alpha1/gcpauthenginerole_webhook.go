@@ -17,10 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -35,34 +36,41 @@ func (r *GCPAuthEngineRole) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-gcpauthenginerole,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=gcpauthengineroles,verbs=create,versions=v1alpha1,name=mgcpauthenginerole.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Defaulter = &GCPAuthEngineRole{}
+var _ admission.CustomDefaulter = &GCPAuthEngineRole{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *GCPAuthEngineRole) Default() {
-	gcpauthenginerolelog.Info("default", "name", r.Name)
+// Default implements admission.CustomDefaulter so a webhook will be registered for the type
+func (r *GCPAuthEngineRole) Default(_ context.Context, obj runtime.Object) error {
+	cr := obj.(*GCPAuthEngineRole)
+	gcpauthenginerolelog.Info("default", "name", cr.Name)
+	return nil
 }
 
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-gcpauthenginerole,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=gcpauthengineroles,verbs=update,versions=v1alpha1,name=vgcpauthenginerole.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &GCPAuthEngineRole{}
+var _ admission.CustomValidator = &GCPAuthEngineRole{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *GCPAuthEngineRole) ValidateCreate() (admission.Warnings, error) {
-	gcpauthenginerolelog.Info("validate create", "name", r.Name)
-
-	return nil, nil
-}
-
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *GCPAuthEngineRole) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	gcpauthenginerolelog.Info("validate update", "name", r.Name)
+// ValidateCreate implements admission.CustomValidator so a webhook will be registered for the type
+func (r *GCPAuthEngineRole) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr := obj.(*GCPAuthEngineRole)
+	gcpauthenginerolelog.Info("validate create", "name", cr.Name)
 
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *GCPAuthEngineRole) ValidateDelete() (admission.Warnings, error) {
-	gcpauthenginerolelog.Info("validate delete", "name", r.Name)
+// ValidateUpdate implements admission.CustomValidator so a webhook will be registered for the type
+func (r *GCPAuthEngineRole) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+	_ = oldObj.(*GCPAuthEngineRole)
+	new := newObj.(*GCPAuthEngineRole)
+
+	gcpauthenginerolelog.Info("validate update", "name", new.Name)
+
+	return nil, nil
+}
+
+// ValidateDelete implements admission.CustomValidator so a webhook will be registered for the type
+func (r *GCPAuthEngineRole) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr := obj.(*GCPAuthEngineRole)
+	gcpauthenginerolelog.Info("validate delete", "name", cr.Name)
 
 	return nil, nil
 }

@@ -17,10 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -35,34 +36,38 @@ func (r *JWTOIDCAuthEngineRole) SetupWebhookWithManager(mgr ctrl.Manager) error 
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-jwtoidcauthenginerole,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=jwtoidcauthengineroles,verbs=create,versions=v1alpha1,name=mjwtoidcauthenginerole.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Defaulter = &JWTOIDCAuthEngineRole{}
+var _ admission.CustomDefaulter = &JWTOIDCAuthEngineRole{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *JWTOIDCAuthEngineRole) Default() {
-	jwtoidcauthenginerolelog.Info("default", "name", r.Name)
+// Default implements admission.CustomDefaulter so a webhook will be registered for the type
+func (r *JWTOIDCAuthEngineRole) Default(_ context.Context, obj runtime.Object) error {
+	cr := obj.(*JWTOIDCAuthEngineRole)
+	jwtoidcauthenginerolelog.Info("default", "name", cr.Name)
+	return nil
 }
 
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-jwtoidcauthenginerole,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=jwtoidcauthengineroles,verbs=update,versions=v1alpha1,name=vjwtoidcauthenginerole.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &JWTOIDCAuthEngineRole{}
+var _ admission.CustomValidator = &JWTOIDCAuthEngineRole{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *JWTOIDCAuthEngineRole) ValidateCreate() (admission.Warnings, error) {
-	jwtoidcauthenginerolelog.Info("validate create", "name", r.Name)
-
+// ValidateCreate implements admission.CustomValidator so a webhook will be registered for the type
+func (r *JWTOIDCAuthEngineRole) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr := obj.(*JWTOIDCAuthEngineRole)
+	jwtoidcauthenginerolelog.Info("validate create", "name", cr.Name)
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *JWTOIDCAuthEngineRole) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	jwtoidcauthenginerolelog.Info("validate update", "name", r.Name)
+// ValidateUpdate implements admission.CustomValidator so a webhook will be registered for the type
+func (r *JWTOIDCAuthEngineRole) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+	_ = oldObj.(*JWTOIDCAuthEngineRole)
+	new := newObj.(*JWTOIDCAuthEngineRole)
 
+	jwtoidcauthenginerolelog.Info("validate update", "name", new.Name)
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *JWTOIDCAuthEngineRole) ValidateDelete() (admission.Warnings, error) {
-	jwtoidcauthenginerolelog.Info("validate delete", "name", r.Name)
-
+// ValidateDelete implements admission.CustomValidator so a webhook will be registered for the type
+func (r *JWTOIDCAuthEngineRole) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr := obj.(*JWTOIDCAuthEngineRole)
+	jwtoidcauthenginerolelog.Info("validate delete", "name", cr.Name)
 	return nil, nil
 }

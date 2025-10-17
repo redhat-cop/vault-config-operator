@@ -17,12 +17,12 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"errors"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -39,40 +39,47 @@ func (r *KubernetesAuthEngineRole) SetupWebhookWithManager(mgr ctrl.Manager) err
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-kubernetesauthenginerole,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=kubernetesauthengineroles,verbs=create,versions=v1alpha1,name=mkubernetesauthenginerole.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Defaulter = &KubernetesAuthEngineRole{}
+var _ admission.CustomDefaulter = &KubernetesAuthEngineRole{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *KubernetesAuthEngineRole) Default() {
-	authenginemountlog.Info("default", "name", r.Name)
+// Default implements admission.CustomDefaulter so a webhook will be registered for the type
+func (r *KubernetesAuthEngineRole) Default(_ context.Context, obj runtime.Object) error {
+	cr := obj.(*KubernetesAuthEngineRole)
+	authenginemountlog.Info("default", "name", cr.Name)
+	return nil
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-kubernetesauthenginerole,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=kubernetesauthengineroles,verbs=create;update,versions=v1alpha1,name=vkubernetesauthenginerole.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Validator = &KubernetesAuthEngineRole{}
+var _ admission.CustomValidator = &KubernetesAuthEngineRole{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *KubernetesAuthEngineRole) ValidateCreate() (admission.Warnings, error) {
-	kubernetesauthenginerolelog.Info("validate create", "name", r.Name)
+// ValidateCreate implements admission.CustomValidator so a webhook will be registered for the type
+func (r *KubernetesAuthEngineRole) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr := obj.(*KubernetesAuthEngineRole)
+	kubernetesauthenginerolelog.Info("validate create", "name", cr.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
-	return nil, r.isValid()
+	return nil, cr.isValid()
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *KubernetesAuthEngineRole) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	kubernetesauthenginerolelog.Info("validate update", "name", r.Name)
+// ValidateUpdate implements admission.CustomValidator so a webhook will be registered for the type
+func (r *KubernetesAuthEngineRole) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+	old := oldObj.(*KubernetesAuthEngineRole)
+	new := newObj.(*KubernetesAuthEngineRole)
+
+	kubernetesauthenginerolelog.Info("validate update", "name", new.Name)
 
 	// the path cannot be updated
-	if r.Spec.Path != old.(*KubernetesAuthEngineRole).Spec.Path {
+	if new.Spec.Path != old.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}
-	return nil, r.isValid()
+	return nil, new.isValid()
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *KubernetesAuthEngineRole) ValidateDelete() (admission.Warnings, error) {
-	kubernetesauthenginerolelog.Info("validate delete", "name", r.Name)
+// ValidateDelete implements admission.CustomValidator so a webhook will be registered for the type
+func (r *KubernetesAuthEngineRole) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr := obj.(*KubernetesAuthEngineRole)
+	kubernetesauthenginerolelog.Info("validate delete", "name", cr.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil, nil

@@ -17,12 +17,12 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"errors"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -37,30 +37,35 @@ func (r *QuaySecretEngineStaticRole) SetupWebhookWithManager(mgr ctrl.Manager) e
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-quaysecretenginestaticrole,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=quaysecretenginestaticroles,verbs=create,versions=v1alpha1,name=mquaysecretenginestaticrole.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Defaulter = &QuaySecretEngineStaticRole{}
+var _ admission.CustomDefaulter = &QuaySecretEngineStaticRole{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *QuaySecretEngineStaticRole) Default() {
-	quaysecretenginestaticrolelog.Info("default", "name", r.Name)
+func (r *QuaySecretEngineStaticRole) Default(_ context.Context, obj runtime.Object) error {
+	cr := obj.(*QuaySecretEngineStaticRole)
+	quaysecretenginestaticrolelog.Info("default", "name", cr.Name)
+	return nil
 }
 
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-quaysecretenginestaticrole,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=quaysecretenginestaticroles,verbs=create;update,versions=v1alpha1,name=vquaysecretenginestaticrole.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &QuaySecretEngineStaticRole{}
+var _ admission.CustomValidator = &QuaySecretEngineStaticRole{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *QuaySecretEngineStaticRole) ValidateCreate() (admission.Warnings, error) {
-	quaysecretenginestaticrolelog.Info("validate create", "name", r.Name)
+func (r *QuaySecretEngineStaticRole) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr := obj.(*QuaySecretEngineStaticRole)
+	quaysecretenginestaticrolelog.Info("validate create", "name", cr.Name)
 
 	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *QuaySecretEngineStaticRole) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	quaysecretenginestaticrolelog.Info("validate update", "name", r.Name)
+func (r *QuaySecretEngineStaticRole) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+	oldRole := oldObj.(*QuaySecretEngineStaticRole)
+	cr := newObj.(*QuaySecretEngineStaticRole)
+	quaysecretenginestaticrolelog.Info("validate update", "name", cr.Name)
 
 	// the path cannot be updated
-	if r.Spec.Path != old.(*QuaySecretEngineStaticRole).Spec.Path {
+	if cr.Spec.Path != oldRole.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}
 
@@ -68,8 +73,9 @@ func (r *QuaySecretEngineStaticRole) ValidateUpdate(old runtime.Object) (admissi
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *QuaySecretEngineStaticRole) ValidateDelete() (admission.Warnings, error) {
-	quaysecretenginestaticrolelog.Info("validate delete", "name", r.Name)
+func (r *QuaySecretEngineStaticRole) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr := obj.(*QuaySecretEngineStaticRole)
+	quaysecretenginestaticrolelog.Info("validate delete", "name", cr.Name)
 
 	return nil, nil
 }

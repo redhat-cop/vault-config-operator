@@ -17,10 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -37,32 +38,38 @@ func (r *VaultSecret) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-vaultsecret,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=vaultsecrets,verbs=create;update,versions=v1alpha1,name=mvaultsecret.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Defaulter = &VaultSecret{}
+var _ admission.CustomDefaulter = &VaultSecret{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *VaultSecret) Default() {
+func (r *VaultSecret) Default(_ context.Context, obj runtime.Object) error {
+	cr := obj.(*VaultSecret)
 	// vaultsecretlog.Info("default", "name", r.Name)
+	_ = cr
+	return nil
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-vaultsecret,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=vaultsecrets,verbs=create;update,versions=v1alpha1,name=vvaultsecret.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Validator = &VaultSecret{}
+var _ admission.CustomValidator = &VaultSecret{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *VaultSecret) ValidateCreate() (admission.Warnings, error) {
-	vaultsecretlog.Info("validate create", "name", r.Name)
-	return nil, r.isValid()
+func (r *VaultSecret) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr := obj.(*VaultSecret)
+	vaultsecretlog.Info("validate create", "name", cr.Name)
+	return nil, cr.isValid()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *VaultSecret) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	vaultsecretlog.Info("validate update", "name", r.Name)
-	return nil, r.isValid()
+func (r *VaultSecret) ValidateUpdate(_ context.Context, _oldObj, newObj runtime.Object) (admission.Warnings, error) {
+	cr := newObj.(*VaultSecret)
+	vaultsecretlog.Info("validate update", "name", cr.Name)
+	return nil, cr.isValid()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *VaultSecret) ValidateDelete() (admission.Warnings, error) {
-	vaultsecretlog.Info("validate delete", "name", r.Name)
+func (r *VaultSecret) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr := obj.(*VaultSecret)
+	vaultsecretlog.Info("validate delete", "name", cr.Name)
 	return nil, nil
 }

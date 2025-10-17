@@ -17,10 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -37,37 +38,43 @@ func (r *Policy) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-policy,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=policies,verbs=create,versions=v1alpha1,name=mpolicy.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Defaulter = &Policy{}
+var _ admission.CustomDefaulter = &Policy{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *Policy) Default() {
-	policylog.Info("default", "name", r.Name)
+func (r *Policy) Default(_ context.Context, obj runtime.Object) error {
+	cr := obj.(*Policy)
+	policylog.Info("default", "name", cr.Name)
+	return nil
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-policy,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=policies,verbs=create;update,versions=v1alpha1,name=vpolicy.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Validator = &Policy{}
+var _ admission.CustomValidator = &Policy{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *Policy) ValidateCreate() (admission.Warnings, error) {
-	policylog.Info("validate create", "name", r.Name)
+func (r *Policy) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr := obj.(*Policy)
+	policylog.Info("validate create", "name", cr.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
 	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *Policy) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	policylog.Info("validate update", "name", r.Name)
+func (r *Policy) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+	_ = oldObj.(*Policy)
+	cr := newObj.(*Policy)
+	policylog.Info("validate update", "name", cr.Name)
 
 	// TODO(user): fill in your validation logic upon object update.
 	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *Policy) ValidateDelete() (admission.Warnings, error) {
-	policylog.Info("validate delete", "name", r.Name)
+func (r *Policy) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr := obj.(*Policy)
+	policylog.Info("validate delete", "name", cr.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil, nil

@@ -17,12 +17,12 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"errors"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -37,39 +37,57 @@ func (r *AzureSecretEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) erro
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-azuresecretengineconfig,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=azuresecretengineconfigs,verbs=create,versions=v1alpha1,name=mazuresecretengineconfig.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Defaulter = &AzureSecretEngineConfig{}
+var _ admission.CustomDefaulter = &AzureSecretEngineConfig{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *AzureSecretEngineConfig) Default() {
-	azuresecretengineconfiglog.Info("default", "name", r.Name)
+func (r *AzureSecretEngineConfig) Default(_ context.Context, obj runtime.Object) error {
+	cr, ok := obj.(*AzureSecretEngineConfig)
+	if !ok {
+		return nil
+	}
+	azuresecretengineconfiglog.Info("default", "name", cr.Name)
 
+	return nil
 }
 
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-azuresecretengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=azuresecretengineconfigs,verbs=create;update,versions=v1alpha1,name=vazuresecretengineconfig.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &AzureSecretEngineConfig{}
+var _ admission.CustomValidator = &AzureSecretEngineConfig{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *AzureSecretEngineConfig) ValidateCreate() (admission.Warnings, error) {
-	azuresecretengineconfiglog.Info("validate create", "name", r.Name)
+func (r *AzureSecretEngineConfig) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr, ok := obj.(*AzureSecretEngineConfig)
+	if !ok {
+		return nil, nil
+	}
+	azuresecretengineconfiglog.Info("validate create", "name", cr.Name)
 
 	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *AzureSecretEngineConfig) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	azuresecretengineconfiglog.Info("validate update", "name", r.Name)
+func (r *AzureSecretEngineConfig) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+	newCR, ok := newObj.(*AzureSecretEngineConfig)
+	if !ok {
+		return nil, nil
+	}
+	oldCR, _ := oldObj.(*AzureSecretEngineConfig)
+	azuresecretengineconfiglog.Info("validate update", "name", newCR.Name)
 
 	// the path cannot be updated
-	if r.Spec.Path != old.(*AzureSecretEngineConfig).Spec.Path {
+	if newCR.Spec.Path != oldCR.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}
-	return nil, r.isValid()
+	return nil, newCR.isValid()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *AzureSecretEngineConfig) ValidateDelete() (admission.Warnings, error) {
-	azuresecretengineconfiglog.Info("validate delete", "name", r.Name)
+func (r *AzureSecretEngineConfig) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr, ok := obj.(*AzureSecretEngineConfig)
+	if !ok {
+		return nil, nil
+	}
+	azuresecretengineconfiglog.Info("validate delete", "name", cr.Name)
 
 	return nil, nil
 }
