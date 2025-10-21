@@ -247,8 +247,9 @@ CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 GOLANGCI_LINT = $(LOCALBIN)/golangci-lint
 
-## Tool Versions
-# above
+$(ENVTEST): $(LOCALBIN)
+	@mkdir -p $(LOCALBIN)
+	GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@$(ENVTEST_VERSION)
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -476,6 +477,6 @@ clean:
 	rm -rf $(LOCALBIN) ./bundle ./bundle-* ./charts
 
 .PHONY: setup-envtest
-setup-envtest:
+setup-envtest: $(ENVTEST)
 	@$(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path || { \
-	echo "Error setting up envtest"; exit 1; }
+		echo "Error setting up envtest"; exit 1; }
