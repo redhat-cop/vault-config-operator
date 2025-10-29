@@ -31,6 +31,8 @@ import (
 	"net/http"
 
 	vault "github.com/hashicorp/vault/api"
+
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
