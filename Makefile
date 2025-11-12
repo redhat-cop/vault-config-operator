@@ -11,7 +11,7 @@ VAULT_VERSION ?= 1.19.0
 VAULT_CHART_VERSION ?= 0.30.0
 # Set the Operator SDK version to use. By default, what is installed on the system is used.
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
-OPERATOR_SDK_VERSION ?= v1.36.0
+OPERATOR_SDK_VERSION ?= v1.41.0
 
 CONTROLLER_TOOLS_VERSION ?= v0.18.0
 GOLANGCI_LINT_VERSION ?= v2.1.0
