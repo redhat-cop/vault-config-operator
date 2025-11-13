@@ -2,8 +2,25 @@ apiVersion: v1
 entries:
   vault-config-operator:
   - apiVersion: v1
+    appVersion: v0.8.36
+    created: "2025-11-13T14:11:40.972479692Z"
+    description: Helm chart that deploys vault-config-operator
+    digest: f10c17a2b40eb4ea390885a397091be2fa314971c4839c60931ceb2ac99c04e2
+    keywords:
+    - volume
+    - storage
+    - csi
+    - expansion
+    - monitoring
+    name: vault-config-operator
+    sources:
+    - https://github.com/redhat-cop/vault-config-operator
+    urls:
+    - https://redhat-cop.github.io/vault-config-operator/vault-config-operator/vault-config-operator-v0.8.36.tgz
+    version: v0.8.36
+  - apiVersion: v1
     appVersion: v0.8.35
-    created: "2025-10-14T19:13:02.226860314Z"
+    created: "2025-11-13T14:11:40.96984753Z"
     description: Helm chart that deploys vault-config-operator
     digest: 6af1ae9d690f23663311efd7f70be33c0d75412b953631380436db3e938538b2
     keywords:
@@ -20,7 +37,7 @@ entries:
     version: v0.8.35
   - apiVersion: v1
     appVersion: v0.8.34
-    created: "2025-10-14T19:13:02.224097043Z"
+    created: "2025-11-13T14:11:40.967999843Z"
     description: Helm chart that deploys vault-config-operator
     digest: a05ee40cea0c301440d42645f70678630ecc214829c5467a22573e7217ca7359
     keywords:
@@ -37,7 +54,7 @@ entries:
     version: v0.8.34
   - apiVersion: v1
     appVersion: v0.8.33
-    created: "2025-10-14T19:13:02.222226541Z"
+    created: "2025-11-13T14:11:40.965363508Z"
     description: Helm chart that deploys vault-config-operator
     digest: c8112bb0958e1dd83e0ea2a442184702a140338c53f76b07f434e5716e53e213
     keywords:
@@ -54,7 +71,7 @@ entries:
     version: v0.8.33
   - apiVersion: v1
     appVersion: v0.8.32
-    created: "2025-10-14T19:13:02.219379919Z"
+    created: "2025-11-13T14:11:40.963396419Z"
     description: Helm chart that deploys vault-config-operator
     digest: dec9a46355b4b3d90f3da4779a8dc2d089d0965d151af1dd8468f7be4a2be03e
     keywords:
@@ -71,7 +88,7 @@ entries:
     version: v0.8.32
   - apiVersion: v1
     appVersion: v0.8.31
-    created: "2025-10-14T19:13:02.217524285Z"
+    created: "2025-11-13T14:11:40.96042948Z"
     description: Helm chart that deploys vault-config-operator
     digest: 06483b9b11d6ea2b0b6e086734157921ac806fb4846aa8f49579eb478f9cd5c7
     keywords:
@@ -88,7 +105,7 @@ entries:
     version: v0.8.31
   - apiVersion: v1
     appVersion: v0.8.30
-    created: "2025-10-14T19:13:02.215198266Z"
+    created: "2025-11-13T14:11:40.958724028Z"
     description: Helm chart that deploys vault-config-operator
     digest: 481b8c69f4f4d3b0774f970b8aaa9cc655260b8c00865b5594a76531b41539a8
     keywords:
@@ -105,7 +122,7 @@ entries:
     version: v0.8.30
   - apiVersion: v1
     appVersion: v0.8.29
-    created: "2025-10-14T19:13:02.211710074Z"
+    created: "2025-11-13T14:11:40.954954709Z"
     description: Helm chart that deploys vault-config-operator
     digest: aef4d535f673f85fbd079b418868a446f83ecab9c91e565723ddc9aded279db4
     keywords:
@@ -122,7 +139,7 @@ entries:
     version: v0.8.29
   - apiVersion: v1
     appVersion: v0.8.28
-    created: "2025-10-14T19:13:02.209256449Z"
+    created: "2025-11-13T14:11:40.952531644Z"
     description: Helm chart that deploys vault-config-operator
     digest: 03b5320bb16ee48e51a3b482f997b6c9ee63f8cf7247c5496d0d2f3848e572d6
     keywords:
@@ -139,7 +156,7 @@ entries:
     version: v0.8.28
   - apiVersion: v1
     appVersion: v0.8.27
-    created: "2025-10-14T19:13:02.207723678Z"
+    created: "2025-11-13T14:11:40.951053394Z"
     description: Helm chart that deploys vault-config-operator
     digest: b7ec2bd46ada6958bd00a14d060c6c5f6606ea5dac8890308b94d56a684cffb9
     keywords:
@@ -156,7 +173,7 @@ entries:
     version: v0.8.27
   - apiVersion: v1
     appVersion: v0.8.25
-    created: "2025-10-14T19:13:02.206261588Z"
+    created: "2025-11-13T14:11:40.949543905Z"
     description: Helm chart that deploys vault-config-operator
     digest: 74d62add19882c06530ca85a0a8d8c619b03ad6a56edd2e1aec14670dc5cf41d
     keywords:
@@ -173,7 +190,7 @@ entries:
     version: v0.8.25
   - apiVersion: v1
     appVersion: v0.8.24
-    created: "2025-10-14T19:13:02.204000627Z"
+    created: "2025-11-13T14:11:40.947369935Z"
     description: Helm chart that deploys vault-config-operator
     digest: ac3fc4abdd63fb82ec1ad0b67c48702022c45821ae4a6301cef07206880aef0c
     keywords:
@@ -190,7 +207,7 @@ entries:
     version: v0.8.24
   - apiVersion: v1
     appVersion: v0.8.23
-    created: "2025-10-14T19:13:02.202569586Z"
+    created: "2025-11-13T14:11:40.945983316Z"
     description: Helm chart that deploys vault-config-operator
     digest: 4add1623dcf91f1e0d9465c4cccf994dfe3984f986a6fc8ab6b4f23239f284a6
     keywords:
@@ -207,7 +224,7 @@ entries:
     version: v0.8.23
   - apiVersion: v1
     appVersion: v0.8.22
-    created: "2025-10-14T19:13:02.201178108Z"
+    created: "2025-11-13T14:11:40.944644094Z"
     description: Helm chart that deploys vault-config-operator
     digest: 100ca75190c0c35251e127804569eee2dd7e8d97f2e10d6e3e11c23e5980b41a
     keywords:
@@ -224,7 +241,7 @@ entries:
     version: v0.8.22
   - apiVersion: v1
     appVersion: v0.8.21
-    created: "2025-10-14T19:13:02.198795803Z"
+    created: "2025-11-13T14:11:40.942347011Z"
     description: Helm chart that deploys vault-config-operator
     digest: 50ba34945f7da18e1ab071143042434bf1b2693666aa5c97a05551ee0509f64f
     keywords:
@@ -241,7 +258,7 @@ entries:
     version: v0.8.21
   - apiVersion: v1
     appVersion: v0.8.20
-    created: "2025-10-14T19:13:02.197416799Z"
+    created: "2025-11-13T14:11:40.940992661Z"
     description: Helm chart that deploys vault-config-operator
     digest: 1b75b126d2e3ac0357fb930bccf810786b471adbf559dec5c4272ebb5a66472d
     keywords:
@@ -258,7 +275,7 @@ entries:
     version: v0.8.20
   - apiVersion: v1
     appVersion: v0.8.19
-    created: "2025-10-14T19:13:02.194012324Z"
+    created: "2025-11-13T14:11:40.937587389Z"
     description: Helm chart that deploys vault-config-operator
     digest: 63fdce4a6f6a3866fe487a75b606a3358c508220d723b7920cff5230bf9503df
     keywords:
@@ -275,7 +292,7 @@ entries:
     version: v0.8.19
   - apiVersion: v1
     appVersion: v0.8.18
-    created: "2025-10-14T19:13:02.192688022Z"
+    created: "2025-11-13T14:11:40.936251835Z"
     description: Helm chart that deploys vault-config-operator
     digest: 446a07d9423ae9fc942d565ac0e9570e78284f1a57d17224451700486974e6c5
     keywords:
@@ -292,7 +309,7 @@ entries:
     version: v0.8.18
   - apiVersion: v1
     appVersion: v0.8.17
-    created: "2025-10-14T19:13:02.191295572Z"
+    created: "2025-11-13T14:11:40.933877342Z"
     description: Helm chart that deploys vault-config-operator
     digest: 6b70a6fd05b93330cd45adeec7a8dbce3e1d6971d98d6d8e8ec471573ec6126b
     keywords:
@@ -309,7 +326,7 @@ entries:
     version: v0.8.17
   - apiVersion: v1
     appVersion: v0.8.16
-    created: "2025-10-14T19:13:02.18919453Z"
+    created: "2025-11-13T14:11:40.93260207Z"
     description: Helm chart that deploys vault-config-operator
     digest: 89d41bb93d8cc1e94ce906d1bc2ac7d2f5411ecafbcda12753c5853d847554ca
     keywords:
@@ -326,7 +343,7 @@ entries:
     version: v0.8.16
   - apiVersion: v1
     appVersion: v0.8.15
-    created: "2025-10-14T19:13:02.18782829Z"
+    created: "2025-11-13T14:11:40.931298645Z"
     description: Helm chart that deploys vault-config-operator
     digest: b8fbbfcdb12f94210363b57274e448741c0581540a7a6f280f8ebeaa41c7609c
     keywords:
@@ -343,7 +360,7 @@ entries:
     version: v0.8.15
   - apiVersion: v1
     appVersion: v0.8.14
-    created: "2025-10-14T19:13:02.185557543Z"
+    created: "2025-11-13T14:11:40.929669334Z"
     description: Helm chart that deploys vault-config-operator
     digest: d350eab26ddec18589c20f929026f99480675d3ce077bcf08f9cc3f93ec2f5fe
     keywords:
@@ -360,7 +377,7 @@ entries:
     version: v0.8.14
   - apiVersion: v1
     appVersion: v0.8.13
-    created: "2025-10-14T19:13:02.184201241Z"
+    created: "2025-11-13T14:11:40.927784678Z"
     description: Helm chart that deploys vault-config-operator
     digest: eb12a6283fcb34196e5bfba0dbae717ec5b80e030b157f58edabc6fd2658395f
     keywords:
@@ -377,7 +394,7 @@ entries:
     version: v0.8.13
   - apiVersion: v1
     appVersion: v0.8.12
-    created: "2025-10-14T19:13:02.182864335Z"
+    created: "2025-11-13T14:11:40.926408257Z"
     description: Helm chart that deploys vault-config-operator
     digest: 5d9a91502b032d91e3303f3122726b5c493dc3151f649711ed592a8fefb343fb
     keywords:
@@ -394,7 +411,7 @@ entries:
     version: v0.8.12
   - apiVersion: v1
     appVersion: v0.8.11
-    created: "2025-10-14T19:13:02.181275076Z"
+    created: "2025-11-13T14:11:40.924207909Z"
     description: Helm chart that deploys vault-config-operator
     digest: 91a9b2354060041046d1b0531a85b7d8773a6bcd8ebabc38381434e0d255df16
     keywords:
@@ -411,7 +428,7 @@ entries:
     version: v0.8.11
   - apiVersion: v1
     appVersion: v0.8.10
-    created: "2025-10-14T19:13:02.179314005Z"
+    created: "2025-11-13T14:11:40.922922978Z"
     description: Helm chart that deploys vault-config-operator
     digest: fc0871d165b27a6d21896c50db403152d1ed6663eba850c55d447458de0a2124
     keywords:
@@ -428,7 +445,7 @@ entries:
     version: v0.8.10
   - apiVersion: v1
     appVersion: v0.8.9
-    created: "2025-10-14T19:13:02.232873081Z"
+    created: "2025-11-13T14:11:40.97830825Z"
     description: Helm chart that deploys vault-config-operator
     digest: 3ebbaf9b12da5341623f8b44c31592533e0da5ef452fbb169e2ad4d2fc890f97
     keywords:
@@ -445,7 +462,7 @@ entries:
     version: v0.8.9
   - apiVersion: v1
     appVersion: v0.8.7
-    created: "2025-10-14T19:13:02.230943817Z"
+    created: "2025-11-13T14:11:40.976258291Z"
     description: Helm chart that deploys vault-config-operator
     digest: 3a0b9c2b0cf4b0ae44fb33925150d4a3497721fb0a2d9d7625db0ce4f46a32a7
     keywords:
@@ -462,7 +479,7 @@ entries:
     version: v0.8.7
   - apiVersion: v1
     appVersion: v0.8.5
-    created: "2025-10-14T19:13:02.229443326Z"
+    created: "2025-11-13T14:11:40.975056085Z"
     description: Helm chart that deploys vault-config-operator
     digest: 6bdc6f3e6467dbd468f4f9a8e9eeb257e265508ffef976fbda6e5c3d70f2cc6b
     keywords:
@@ -479,7 +496,7 @@ entries:
     version: v0.8.5
   - apiVersion: v1
     appVersion: v0.8.4
-    created: "2025-10-14T19:13:02.228193563Z"
+    created: "2025-11-13T14:11:40.97382818Z"
     description: Helm chart that deploys vault-config-operator
     digest: 3e5ccb38ae515981ebc7910cb50f5a1fcd5a7fb6630e6a2cadd97b8fb44e3302
     keywords:
@@ -496,7 +513,7 @@ entries:
     version: v0.8.4
   - apiVersion: v1
     appVersion: v0.8.3
-    created: "2025-10-14T19:13:02.212979504Z"
+    created: "2025-11-13T14:11:40.956162646Z"
     description: Helm chart that deploys vault-config-operator
     digest: 86d2935f0e024525bf7d297e4841f37d8e0cc5ccfc054f683f75b9ff82a5acfd
     keywords:
@@ -513,7 +530,7 @@ entries:
     version: v0.8.3
   - apiVersion: v1
     appVersion: v0.8.2
-    created: "2025-10-14T19:13:02.195930885Z"
+    created: "2025-11-13T14:11:40.938821275Z"
     description: Helm chart that deploys vault-config-operator
     digest: 15bbc6d91fdd229b8da5214060611d3d5cef18a5f4826659149f5a84e8b4e614
     keywords:
@@ -530,7 +547,7 @@ entries:
     version: v0.8.2
   - apiVersion: v1
     appVersion: v0.8.0
-    created: "2025-10-14T19:13:02.177996857Z"
+    created: "2025-11-13T14:11:40.921613171Z"
     description: Helm chart that deploys vault-config-operator
     digest: 22f4bc81736f5859965939d0babf8ac09f0272f3baa345f29912394bf2692208
     keywords:
@@ -547,7 +564,7 @@ entries:
     version: v0.8.0
   - apiVersion: v1
     appVersion: v0.7.1
-    created: "2025-10-14T19:13:02.175941727Z"
+    created: "2025-11-13T14:11:40.919298722Z"
     description: Helm chart that deploys vault-config-operator
     digest: e49eaa89797f27575fc0948beb4426ac4576e478ee6bc6c3220f046f3432d7c6
     keywords:
@@ -564,7 +581,7 @@ entries:
     version: v0.7.1
   - apiVersion: v1
     appVersion: v0.6.5
-    created: "2025-10-14T19:13:02.174788504Z"
+    created: "2025-11-13T14:11:40.918169081Z"
     description: Helm chart that deploys vault-config-operator
     digest: 050cf6b11e31d1c86e3bd6a1eec6f298e56b318ec48b02f7aef009d5a947e534
     keywords:
@@ -581,7 +598,7 @@ entries:
     version: v0.6.5
   - apiVersion: v1
     appVersion: v0.6.4
-    created: "2025-10-14T19:13:02.173606809Z"
+    created: "2025-11-13T14:11:40.917011788Z"
     description: Helm chart that deploys vault-config-operator
     digest: e93703b09276e85dd253b74d5175d5f6b2776b1d64584a13ea4d915d567390af
     keywords:
@@ -598,7 +615,7 @@ entries:
     version: v0.6.4
   - apiVersion: v1
     appVersion: v0.6.3
-    created: "2025-10-14T19:13:02.172462031Z"
+    created: "2025-11-13T14:11:40.915849866Z"
     description: Helm chart that deploys vault-config-operator
     digest: 69944c8ee01477cc7f67c4e3b53fe2169c621483f280faedf2bc73ebe6fb507a
     keywords:
@@ -615,7 +632,7 @@ entries:
     version: v0.6.3
   - apiVersion: v1
     appVersion: v0.6.2
-    created: "2025-10-14T19:13:02.170590259Z"
+    created: "2025-11-13T14:11:40.913854072Z"
     description: Helm chart that deploys vault-config-operator
     digest: 5667ad32299db5ebdf03c0fdd4fc13d9643d58e812d7d52af5a7f96268a86357
     keywords:
@@ -632,7 +649,7 @@ entries:
     version: v0.6.2
   - apiVersion: v1
     appVersion: v0.6.1
-    created: "2025-10-14T19:13:02.169416298Z"
+    created: "2025-11-13T14:11:40.912784863Z"
     description: Helm chart that deploys vault-config-operator
     digest: 42c54950b1f813bf7b197b38ba3e411fa3f8854f9de1aa66fd3afa7cda3aff1e
     keywords:
@@ -649,7 +666,7 @@ entries:
     version: v0.6.1
   - apiVersion: v1
     appVersion: v0.6.0
-    created: "2025-10-14T19:13:02.168273775Z"
+    created: "2025-11-13T14:11:40.911680669Z"
     description: Helm chart that deploys vault-config-operator
     digest: 4c280dec2ccc722a1926281d3dcd43d386bf35ab50ea38ed301a42bcd0611925
     keywords:
@@ -666,7 +683,7 @@ entries:
     version: v0.6.0
   - apiVersion: v1
     appVersion: v0.5.1
-    created: "2025-10-14T19:13:02.167119921Z"
+    created: "2025-11-13T14:11:40.910534957Z"
     description: Helm chart that deploys vault-config-operator
     digest: 2f26f3383c4a5eebfee48768f6d22c13245af7b9db319a6c3399105d74448d5f
     keywords:
@@ -683,7 +700,7 @@ entries:
     version: v0.5.1
   - apiVersion: v1
     appVersion: v0.5.0
-    created: "2025-10-14T19:13:02.165281873Z"
+    created: "2025-11-13T14:11:40.908561994Z"
     description: Helm chart that deploys vault-config-operator
     digest: 4336371b93e4c6ef8b437ad224e53e542989015015935f0c180ba58b061423ed
     keywords:
@@ -700,7 +717,7 @@ entries:
     version: v0.5.0
   - apiVersion: v1
     appVersion: v0.4.1
-    created: "2025-10-14T19:13:02.164197909Z"
+    created: "2025-11-13T14:11:40.907464472Z"
     description: Helm chart that deploys vault-config-operator
     digest: 6e2e74f4e4fafbc03221384b184ec611917a8c5971fb3f1397fb8634b7845bbb
     keywords:
@@ -717,7 +734,7 @@ entries:
     version: v0.4.1
   - apiVersion: v1
     appVersion: v0.4.0
-    created: "2025-10-14T19:13:02.163230303Z"
+    created: "2025-11-13T14:11:40.906488006Z"
     description: Helm chart that deploys vault-config-operator
     digest: 42ba826e362be3a563df76f8eb043ecd084ba71257ca960925ad8e170d2cac34
     keywords:
@@ -734,7 +751,7 @@ entries:
     version: v0.4.0
   - apiVersion: v1
     appVersion: v0.3.1
-    created: "2025-10-14T19:13:02.162239854Z"
+    created: "2025-11-13T14:11:40.905497793Z"
     description: Helm chart that deploys vault-config-operator
     digest: 52f29a8a2e9f76e1e0eda0c4071d85af33444edf60abad6b8508e8df6d8751a4
     keywords:
@@ -751,7 +768,7 @@ entries:
     version: v0.3.1
   - apiVersion: v1
     appVersion: v0.3.0
-    created: "2025-10-14T19:13:02.160400327Z"
+    created: "2025-11-13T14:11:40.903446131Z"
     description: Helm chart that deploys vault-config-operator
     digest: 3a566fd2f6a64af68ed080b19855e92f96756f13c7a47172af613a4a4305edd1
     keywords:
@@ -768,7 +785,7 @@ entries:
     version: v0.3.0
   - apiVersion: v1
     appVersion: v0.2.0
-    created: "2025-10-14T19:13:02.159249809Z"
+    created: "2025-11-13T14:11:40.901962521Z"
     description: Helm chart that deploys vault-config-operator
     digest: 8e8ed1b4452c3d8eec7af1b7e6d27341c898d14e90ac2a2bb4eadaac5d4377e7
     keywords:
@@ -785,7 +802,7 @@ entries:
     version: v0.2.0
   - apiVersion: v1
     appVersion: v0.1.2
-    created: "2025-10-14T19:13:02.158408007Z"
+    created: "2025-11-13T14:11:40.900706634Z"
     description: Helm chart that deploys vault-config-operator
     digest: 3d2a41efc27037e32536ba78e48fb629cabd8384b062481d3f6c895a34913fdb
     keywords:
@@ -802,7 +819,7 @@ entries:
     version: v0.1.2
   - apiVersion: v1
     appVersion: v0.1.1
-    created: "2025-10-14T19:13:02.157636327Z"
+    created: "2025-11-13T14:11:40.900038001Z"
     description: Helm chart that deploys vault-config-operator
     digest: d90c92ba424c7871e01da34de221cf5d741f42f5ef60e016c172df7b9816a8f4
     keywords:
@@ -819,7 +836,7 @@ entries:
     version: v0.1.1
   - apiVersion: v1
     appVersion: v0.1.0
-    created: "2025-10-14T19:13:02.156912926Z"
+    created: "2025-11-13T14:11:40.899388963Z"
     description: Helm chart that deploys vault-config-operator
     digest: e24d4e563c07567ca39914a1769da30fbdce6186ecf58511c21aff5a765eef18
     keywords:
@@ -834,4 +851,4 @@ entries:
     urls:
     - https://redhat-cop.github.io/vault-config-operator/vault-config-operator/vault-config-operator-v0.1.0.tgz
     version: v0.1.0
-generated: "2025-10-14T19:13:02.156046349Z"
+generated: "2025-11-13T14:11:40.89858625Z"
