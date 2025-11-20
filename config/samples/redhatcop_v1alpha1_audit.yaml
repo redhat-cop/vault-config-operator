@@ -1,0 +1,12 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Audit
+metadata:
+  labels:
+    app.kubernetes.io/name: audit
+    app.kubernetes.io/instance: audit-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: audit-sample
+spec:
+  # TODO(user): Add fields here
