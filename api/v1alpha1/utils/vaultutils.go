@@ -48,7 +48,7 @@ func read(context context.Context, path string) (map[string]interface{}, bool, e
 	secret, err := vaultClient.Logical().Read(path)
 	if err != nil {
 		if respErr, ok := err.(*vault.ResponseError); ok {
-			if respErr.StatusCode == 404 || respErr.StatusCode == 204 {
+			if respErr.StatusCode == 400 || respErr.StatusCode == 404 || respErr.StatusCode == 204 {
 				return nil, false, nil
 			}
 		}
