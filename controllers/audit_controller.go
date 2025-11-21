@@ -52,18 +52,13 @@ type AuditReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.4/pkg/reconcile
 func (r *AuditReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
-
 	// Fetch the instance
 	instance := &redhatcopv1alpha1.Audit{}
 	err := r.GetClient().Get(ctx, req.NamespacedName, instance)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
 			return reconcile.Result{}, nil
 		}
-		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
 	r.Log.Info("reconcile cycle starting for ", "instance", instance)
@@ -72,7 +67,7 @@ func (r *AuditReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		r.Log.Error(err, "unable to prepare context", "instance", instance)
 		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 	}
-	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
+	vaultResource := vaultresourcecontroller.NewVaultAuditResource(&r.ReconcilerBase, instance)
 	return vaultResource.Reconcile(ctx1, instance)
 }
 

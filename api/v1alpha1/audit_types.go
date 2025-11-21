@@ -94,6 +94,7 @@ func init() {
 }
 
 var _ vaultutils.VaultObject = &Audit{}
+var _ vaultutils.VaultAuditObject = &Audit{}
 var _ vaultutils.ConditionsAware = &Audit{}
 
 func (d *Audit) GetVaultConnection() *vaultutils.VaultConnection {
