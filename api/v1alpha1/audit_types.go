@@ -130,6 +130,19 @@ func (d *Audit) IsEquivalentToDesiredState(payload map[string]interface{}) bool 
 	if payload["local"] != desiredPayload["local"] {
 		return false
 	}
+	if options, ok := payload["options"].(map[string]string); !ok {
+		return false
+	} else {
+		desiredOptions := desiredPayload["options"].(map[string]string)
+		if len(options) != len(desiredOptions) {
+			return false
+		}
+		for k, v := range options {
+			if desiredOptions[k] != v {
+				return false
+			}
+		}
+	}
 	return true
 }
 
