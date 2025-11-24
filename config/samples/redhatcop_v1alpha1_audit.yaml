@@ -9,4 +9,12 @@ metadata:
     app.kubernetes.io/created-by: vault-config-operator
   name: audit-sample
 spec:
-  # TODO(user): Add fields here
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  path: audit-sample
+  type: file
+  options:
+    file_path: stdout
+    hmac_accessor: "false"
+    enable_list_responses: "true"
