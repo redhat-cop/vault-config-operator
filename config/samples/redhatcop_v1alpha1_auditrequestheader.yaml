@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/created-by: vault-config-operator
   name: auditrequestheader-sample
 spec:
-   authentication: 
+  authentication: 
     path: kubernetes
     role: policy-admin
   name: custom-header
