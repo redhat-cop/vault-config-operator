@@ -36,5 +36,7 @@ resources:
 - redhatcop_v1alpha1_gcpauthenginerole.yaml
 - redhatcop_v1alpha1_certauthengineconfig.yaml
 - redhatcop_v1alpha1_certauthenginerole.yaml
+- redhatcop_v1alpha1_audit.yaml
+- redhatcop_v1alpha1_auditrequestheader.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
 

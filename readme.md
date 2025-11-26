@@ -9,6 +9,7 @@
   - [Secret Engines](#secret-engines)
   - [Secret Management](#secret-management)
   - [Identities](#identities)
+  - [Audit Management](#audit-management)
   - [The common authentication section](#the-common-authentication-section)
   - [End to end example](#end-to-end-example)
   - [Contributing a new Vault type](#contributing-a-new-vault-type)
@@ -89,6 +90,11 @@ Currently this operator covers the following Vault APIs:
 
 1. [Group](./docs/identities.md#Group) Creates a [Vault Group](https://developer.hashicorp.com/vault/docs/concepts/identity#identity-groups).
 2. [GroupAlias](./docs/identities.md#GroupAlias) Creates a [Vault GroupAlias](https://developer.hashicorp.com/vault/api-docs/secret/identity/group-alias).
+
+## Audit Management
+
+1. [Audit](./docs/audit-management.md#Audit) Configures Vault [Audit Devices](https://developer.hashicorp.com/vault/docs/audit) for detailed logging of requests and responses.
+2. [AuditRequestHeader](./docs/audit-management.md#AuditRequestHeader) Configures which HTTP request headers should be captured in [Vault audit logs](https://developer.hashicorp.com/vault/docs/audit).
 
 ## The common authentication section
 
