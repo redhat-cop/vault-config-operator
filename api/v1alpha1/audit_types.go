@@ -39,14 +39,22 @@ type AuditSpec struct {
 
 	// Path is the path where the audit device will be mounted (e.g., "file", "file2", "syslog")
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=255
+	// +kubebuilder:validation:Pattern=`^[a-zA-Z0-9/_-]+$`
 	Path string `json:"path"`
 
 	// Type specifies the type of audit device (e.g., "file", "socket", "syslog")
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=1084
+	// +kubebuilder:validation:Pattern=`^[a-zA-Z0-9/_-]+$`
+	// +kubebuilder:validation:Enum=file;socket;syslog
 	Type string `json:"type"`
 
 	// Description is a human-friendly description of the audit device
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:MaxLength=1024
 	Description string `json:"description,omitempty"`
 
 	// Options contains the configuration options for the audit device

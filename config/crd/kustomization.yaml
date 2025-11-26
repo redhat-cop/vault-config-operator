@@ -81,8 +81,6 @@ patchesStrategicMerge: []
 #- patches/webhook_in_gcpauthengineroles.yaml
 #- patches/webhook_in_certauthengineconfigs.yaml
 #- patches/webhook_in_certauthengineroles.yaml
-#- patches/webhook_in_audits.yaml
-#- patches/webhook_in_auditrequestheaders.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable cert-manager, uncomment all the sections with [CERTMANAGER] prefix.

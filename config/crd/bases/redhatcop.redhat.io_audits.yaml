@@ -129,6 +129,7 @@ spec:
               description:
                 description: Description is a human-friendly description of the audit
                   device
+                maxLength: 1024
                 type: string
               local:
                 description: Local specifies if the audit device is a local mount
@@ -144,10 +145,20 @@ spec:
               path:
                 description: Path is the path where the audit device will be mounted
                   (e.g., "file", "file2", "syslog")
+                maxLength: 255
+                minLength: 1
+                pattern: ^[a-zA-Z0-9/_-]+$
                 type: string
               type:
                 description: Type specifies the type of audit device (e.g., "file",
                   "socket", "syslog")
+                enum:
+                - file
+                - socket
+                - syslog
+                maxLength: 1084
+                minLength: 1
+                pattern: ^[a-zA-Z0-9/_-]+$
                 type: string
             required:
             - options
