@@ -2,9 +2,19 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# Global parameters
+# Global Docker image registry
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  # imagePullSecrets:
+  #   - myRegistryKeySecretName
+
 replicaCount: 1
 
 image:
+  # image.registry -- Image registry (overridden by global.imageRegistry if set)
+  registry: ${image_registry}
   repository: ${image_repo}
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
@@ -41,7 +51,9 @@ affinity: {}
 
 kube_rbac_proxy:
   image:
-    repository: quay.io/redhat-cop/kube-rbac-proxy
+    # kube_rbac_proxy.image.registry -- Image registry (overridden by global.imageRegistry if set)
+    registry: quay.io
+    repository: redhat-cop/kube-rbac-proxy
     pullPolicy: IfNotPresent
     tag: v0.11.0
   resources:
