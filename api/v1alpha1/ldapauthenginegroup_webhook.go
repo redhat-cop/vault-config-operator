@@ -17,10 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -35,34 +36,38 @@ func (r *LDAPAuthEngineGroup) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-ldapauthenginegroup,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=ldapauthenginegroups,verbs=create,versions=v1alpha1,name=mldapauthenginegroup.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Defaulter = &LDAPAuthEngineGroup{}
+var _ admission.CustomDefaulter = &LDAPAuthEngineGroup{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *LDAPAuthEngineGroup) Default() {
-	ldapauthenginegrouplog.Info("default", "name", r.Name)
+// Default implements admission.CustomDefaulter so a webhook will be registered for the type
+func (r *LDAPAuthEngineGroup) Default(_ context.Context, obj runtime.Object) error {
+	cr := obj.(*LDAPAuthEngineGroup)
+	ldapauthenginegrouplog.Info("default", "name", cr.Name)
+	return nil
 }
 
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-ldapauthenginegroup,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=ldapauthenginegroups,verbs=update,versions=v1alpha1,name=vldapauthenginegroup.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &LDAPAuthEngineGroup{}
+var _ admission.CustomValidator = &LDAPAuthEngineGroup{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *LDAPAuthEngineGroup) ValidateCreate() (admission.Warnings, error) {
-	ldapauthenginegrouplog.Info("validate create", "name", r.Name)
-
+// ValidateCreate implements admission.CustomValidator so a webhook will be registered for the type
+func (r *LDAPAuthEngineGroup) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr := obj.(*LDAPAuthEngineGroup)
+	ldapauthenginegrouplog.Info("validate create", "name", cr.Name)
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *LDAPAuthEngineGroup) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	ldapauthenginegrouplog.Info("validate update", "name", r.Name)
+// ValidateUpdate implements admission.CustomValidator so a webhook will be registered for the type
+func (r *LDAPAuthEngineGroup) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+	_ = oldObj.(*LDAPAuthEngineGroup)
+	new := newObj.(*LDAPAuthEngineGroup)
 
+	ldapauthenginegrouplog.Info("validate update", "name", new.Name)
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *LDAPAuthEngineGroup) ValidateDelete() (admission.Warnings, error) {
-	ldapauthenginegrouplog.Info("validate delete", "name", r.Name)
-
+// ValidateDelete implements admission.CustomValidator so a webhook will be registered for the type
+func (r *LDAPAuthEngineGroup) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr := obj.(*LDAPAuthEngineGroup)
+	ldapauthenginegrouplog.Info("validate delete", "name", cr.Name)
 	return nil, nil
 }

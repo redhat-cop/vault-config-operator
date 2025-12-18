@@ -17,12 +17,12 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"errors"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -39,40 +39,47 @@ func (r *DatabaseSecretEngineRole) SetupWebhookWithManager(mgr ctrl.Manager) err
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-databasesecretenginerole,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=databasesecretengineroles,verbs=create,versions=v1alpha1,name=mdatabasesecretenginerole.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Defaulter = &DatabaseSecretEngineRole{}
+var _ admission.CustomDefaulter = &DatabaseSecretEngineRole{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *DatabaseSecretEngineRole) Default() {
-	authenginemountlog.Info("default", "name", r.Name)
+// Default implements admission.CustomDefaulter so a webhook will be registered for the type
+func (r *DatabaseSecretEngineRole) Default(_ context.Context, obj runtime.Object) error {
+	o := obj.(*DatabaseSecretEngineRole)
+	authenginemountlog.Info("default", "name", o.Name)
+	return nil
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-databasesecretenginerole,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=databasesecretengineroles,verbs=update,versions=v1alpha1,name=vdatabasesecretenginerole.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Validator = &DatabaseSecretEngineRole{}
+var _ admission.CustomValidator = &DatabaseSecretEngineRole{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseSecretEngineRole) ValidateCreate() (admission.Warnings, error) {
-	databasesecretenginerolelog.Info("validate create", "name", r.Name)
+// ValidateCreate implements admission.CustomValidator so a webhook will be registered for the type
+func (r *DatabaseSecretEngineRole) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	o := obj.(*DatabaseSecretEngineRole)
+	databasesecretenginerolelog.Info("validate create", "name", o.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseSecretEngineRole) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	databasesecretenginerolelog.Info("validate update", "name", r.Name)
+// ValidateUpdate implements admission.CustomValidator so a webhook will be registered for the type
+func (r *DatabaseSecretEngineRole) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+	old := oldObj.(*DatabaseSecretEngineRole)
+	new := newObj.(*DatabaseSecretEngineRole)
+
+	databasesecretenginerolelog.Info("validate update", "name", new.Name)
 
 	// the path cannot be updated
-	if r.Spec.Path != old.(*DatabaseSecretEngineRole).Spec.Path {
+	if new.Spec.Path != old.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseSecretEngineRole) ValidateDelete() (admission.Warnings, error) {
-	databasesecretenginerolelog.Info("validate delete", "name", r.Name)
+// ValidateDelete implements admission.CustomValidator so a webhook will be registered for the type
+func (r *DatabaseSecretEngineRole) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	o := obj.(*DatabaseSecretEngineRole)
+	databasesecretenginerolelog.Info("validate delete", "name", o.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil, nil

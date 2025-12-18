@@ -17,10 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -37,34 +38,52 @@ func (r *AzureAuthEngineRole) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-azureauthenginerole,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=azureauthengineroles,verbs=create,versions=v1alpha1,name=mazureauthenginerole.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Defaulter = &AzureAuthEngineRole{}
+var _ admission.CustomDefaulter = &AzureAuthEngineRole{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *AzureAuthEngineRole) Default() {
-	azureauthenginerolelog.Info("default", "name", r.Name)
+func (r *AzureAuthEngineRole) Default(_ context.Context, obj runtime.Object) error {
+	cr, ok := obj.(*AzureAuthEngineRole)
+	if !ok {
+		return nil
+	}
+	azureauthenginerolelog.Info("default", "name", cr.Name)
+	return nil
 }
 
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-azureauthenginerole,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=azureauthengineroles,verbs=update,versions=v1alpha1,name=vazureauthenginerole.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &AzureAuthEngineRole{}
+var _ admission.CustomValidator = &AzureAuthEngineRole{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *AzureAuthEngineRole) ValidateCreate() (admission.Warnings, error) {
-	azureauthenginerolelog.Info("validate create", "name", r.Name)
+func (r *AzureAuthEngineRole) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr, ok := obj.(*AzureAuthEngineRole)
+	if !ok {
+		return nil, nil
+	}
+	azureauthenginerolelog.Info("validate create", "name", cr.Name)
 
 	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *AzureAuthEngineRole) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	azureauthenginerolelog.Info("validate update", "name", r.Name)
+func (r *AzureAuthEngineRole) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+	newCR, ok := newObj.(*AzureAuthEngineRole)
+	if !ok {
+		return nil, nil
+	}
+	_ = oldObj // currently unused; keep signature for interface compliance
+	azureauthenginerolelog.Info("validate update", "name", newCR.Name)
 
 	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *AzureAuthEngineRole) ValidateDelete() (admission.Warnings, error) {
-	azureauthenginerolelog.Info("validate delete", "name", r.Name)
+func (r *AzureAuthEngineRole) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr, ok := obj.(*AzureAuthEngineRole)
+	if !ok {
+		return nil, nil
+	}
+	azureauthenginerolelog.Info("validate delete", "name", cr.Name)
 
 	return nil, nil
 }

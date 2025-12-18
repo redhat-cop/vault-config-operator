@@ -17,12 +17,12 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"errors"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -39,49 +39,56 @@ func (r *PKISecretEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) error 
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-pkisecretengineconfig,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=pkisecretengineconfigs,verbs=create,versions=v1alpha1,name=mpkisecretengineconfig.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Defaulter = &PKISecretEngineConfig{}
+var _ admission.CustomDefaulter = &PKISecretEngineConfig{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *PKISecretEngineConfig) Default() {
-	pkisecretengineconfiglog.Info("default", "name", r.Name)
+// Default implements admission.CustomDefaulter so a webhook will be registered for the type
+func (r *PKISecretEngineConfig) Default(_ context.Context, obj runtime.Object) error {
+	cr := obj.(*PKISecretEngineConfig)
+	pkisecretengineconfiglog.Info("default", "name", cr.Name)
+	return nil
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-pkisecretengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=pkisecretengineconfigs,verbs=update,versions=v1alpha1,name=vpkisecretengineconfig.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Validator = &PKISecretEngineConfig{}
+var _ admission.CustomValidator = &PKISecretEngineConfig{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *PKISecretEngineConfig) ValidateCreate() (admission.Warnings, error) {
-	pkisecretengineconfiglog.Info("validate create", "name", r.Name)
+// ValidateCreate implements admission.CustomValidator so a webhook will be registered for the type
+func (r *PKISecretEngineConfig) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr := obj.(*PKISecretEngineConfig)
+	pkisecretengineconfiglog.Info("validate create", "name", cr.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *PKISecretEngineConfig) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	pkisecretengineconfiglog.Info("validate update", "name", r.Name)
+// ValidateUpdate implements admission.CustomValidator so a webhook will be registered for the type
+func (r *PKISecretEngineConfig) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+	old := oldObj.(*PKISecretEngineConfig)
+	new := newObj.(*PKISecretEngineConfig)
+
+	pkisecretengineconfiglog.Info("validate update", "name", new.Name)
 
 	// the path cannot be updated
-	if r.Spec.Path != old.(*PKISecretEngineConfig).Spec.Path {
+	if new.Spec.Path != old.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}
 
-	if r.Spec.Type != old.(*PKISecretEngineConfig).Spec.Type {
+	if new.Spec.Type != old.Spec.Type {
 		return nil, errors.New("spec.type cannot be updated")
 	}
 
-	if r.Spec.PrivateKeyType != old.(*PKISecretEngineConfig).Spec.PrivateKeyType {
+	if new.Spec.PrivateKeyType != old.Spec.PrivateKeyType {
 		return nil, errors.New("spec.privateKeyType cannot be updated")
 	}
 
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *PKISecretEngineConfig) ValidateDelete() (admission.Warnings, error) {
-	pkisecretengineconfiglog.Info("validate delete", "name", r.Name)
+// ValidateDelete implements admission.CustomValidator so a webhook will be registered for the type
+func (r *PKISecretEngineConfig) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr := obj.(*PKISecretEngineConfig)
+	pkisecretengineconfiglog.Info("validate delete", "name", cr.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil, nil

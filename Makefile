@@ -11,13 +11,15 @@ VAULT_VERSION ?= 1.19.0
 VAULT_CHART_VERSION ?= 0.30.0
 # Set the Operator SDK version to use. By default, what is installed on the system is used.
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
-OPERATOR_SDK_VERSION ?= v1.31.0
-# ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION ?= 1.29.0
+OPERATOR_SDK_VERSION ?= v1.41.0
 
-CONTROLLER_TOOLS_VERSION ?= v0.14.0
-ENVTEST_VERSION ?= release-0.17
-GOLANGCI_LINT_VERSION ?= v1.59.1
+CONTROLLER_TOOLS_VERSION ?= v0.18.0
+GOLANGCI_LINT_VERSION ?= v2.1.0
+GO ?= go
+
+ENVTEST_VERSION := $(shell go list -m -f "{{ .Version }}" sigs.k8s.io/controller-runtime | awk -F'[v.]' '{printf "release-%d.%d", $$2, $$3}')
+# ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
+ENVTEST_K8S_VERSION := $(shell go list -m -f "{{ .Version }}" k8s.io/api | awk -F'[v.]' '{printf "1.%d", $$3}')
 
 # VERSION defines the project version for the bundle.
 # Update this value when you upgrade the version of your project.
@@ -69,6 +71,7 @@ BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
 
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
+PLATFORMS ?= linux/amd64,linux/arm64
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
 
@@ -124,15 +127,17 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 .PHONY: test
-test: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
+test: manifests generate fmt vet setup-envtest ## Run tests.
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" \
+		go test ./... -coverprofile cover.out
 
 # note: envtest requires docker, podman will not work
 .PHONY: integration
-integration: kind-setup deploy-vault deploy-ingress vault manifests generate fmt vet envtest ## Run tests.
-	export VAULT_TOKEN=$$($(KUBECTL) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
-	export VAULT_ADDR="http://localhost:8200" ;\
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration
+integration: kind-setup deploy-vault deploy-ingress vault manifests generate fmt vet setup-envtest ## Run tests.
+	VAULT_TOKEN="$$($(KUBECTL) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d)" \
+	VAULT_ADDR="http://localhost:8200" \
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" \
+		go test ./... -coverprofile cover.out --tags=integration
 
 .PHONY: deploy-ingress
 deploy-ingress: kubectl helm
@@ -178,11 +183,11 @@ ldap-setup: kind-setup vault
 
 .PHONY: build
 build: manifests generate fmt vet ## Build manager binary.
-	go build -o bin/manager main.go
+	go build -o bin/manager ./cmd/main.go
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
-	go run ./main.go
+	go run ./cmd/main.go
 
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.
@@ -191,6 +196,13 @@ docker-build: test ## Build docker image with the manager.
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
+
+.PHONY: docker-buildx
+docker-buildx: ## Build and push docker image for the manager for cross-platform support
+	- docker buildx create --name project-v3-builder
+	docker buildx use project-v3-builder
+	- docker buildx build --push --platform=$(PLATFORMS) --tag $(IMG) -f Dockerfile .
+	- docker buildx rm project-v3-builder
 
 .PHONY: build-installer
 build-installer: manifests generate kustomize ## Generate a consolidated YAML with CRDs and deployment.
@@ -235,8 +247,9 @@ CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 GOLANGCI_LINT = $(LOCALBIN)/golangci-lint
 
-## Tool Versions
-# above
+$(ENVTEST): $(LOCALBIN)
+	@mkdir -p $(LOCALBIN)
+	GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@$(ENVTEST_VERSION)
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -248,29 +261,24 @@ controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessar
 $(CONTROLLER_GEN): $(LOCALBIN)
 	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen,$(CONTROLLER_TOOLS_VERSION))
 
-.PHONY: envtest
-envtest: $(ENVTEST) ## Download setup-envtest locally if necessary.
-$(ENVTEST): $(LOCALBIN)
-	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest,$(ENVTEST_VERSION))
-
 .PHONY: golangci-lint
 golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
 $(GOLANGCI_LINT): $(LOCALBIN)
-	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION))
+	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/v2/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION))
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
-# $1 - target path with name of binary
+# $1 - target path with name of binary (ideally with version)
 # $2 - package url which can be installed
 # $3 - specific version of package
 define go-install-tool
 @[ -f "$(1)-$(3)" ] || { \
-set -e; \
-package=$(2)@$(3) ;\
-echo "Downloading $${package}" ;\
-rm -f $(1) || true ;\
-GOBIN=$(LOCALBIN) go install $${package} ;\
-mv $(1) $(1)-$(3) ;\
-} ;\
+  set -e; \
+  package=$(2)@$(3); \
+  echo "Downloading $${package}"; \
+  rm -f $(1) || true; \
+  GOBIN=$(LOCALBIN) $(GO) install $${package}; \
+  mv $(1) $(1)-$(3); \
+}; \
 ln -sf $(1)-$(3) $(1)
 endef
 
@@ -315,8 +323,7 @@ ifeq (,$(shell which opm 2>/dev/null))
 	set -e ;\
 	mkdir -p $(dir $(OPM)) ;\
 	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
-	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v1.23.0/$${OS}-$${ARCH}-opm ;\
-	chmod +x $(OPM) ;\
+	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v1.55.0/$${OS}-$${ARCH}-opm ;\
 	}
 else
 OPM = $(shell which opm)
@@ -468,3 +475,8 @@ endif
 .PHONY: clean
 clean:
 	rm -rf $(LOCALBIN) ./bundle ./bundle-* ./charts
+
+.PHONY: setup-envtest
+setup-envtest: $(ENVTEST)
+	@$(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path || { \
+		echo "Error setting up envtest"; exit 1; }

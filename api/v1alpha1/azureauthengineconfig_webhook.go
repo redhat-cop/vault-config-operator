@@ -17,12 +17,12 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"errors"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -37,38 +37,56 @@ func (r *AzureAuthEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) error 
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-azureauthengineconfig,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=azureauthengineconfigs,verbs=create,versions=v1alpha1,name=mazureauthengineconfig.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Defaulter = &AzureAuthEngineConfig{}
+var _ admission.CustomDefaulter = &AzureAuthEngineConfig{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *AzureAuthEngineConfig) Default() {
-	azureauthengineconfiglog.Info("default", "name", r.Name)
+func (r *AzureAuthEngineConfig) Default(_ context.Context, obj runtime.Object) error {
+	cr, ok := obj.(*AzureAuthEngineConfig)
+	if !ok {
+		return nil
+	}
+	azureauthengineconfiglog.Info("default", "name", cr.Name)
+	return nil
 }
 
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-azureauthengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=azureauthengineconfigs,verbs=update,versions=v1alpha1,name=vazureauthengineconfig.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &AzureAuthEngineConfig{}
+var _ admission.CustomValidator = &AzureAuthEngineConfig{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *AzureAuthEngineConfig) ValidateCreate() (admission.Warnings, error) {
-	azureauthengineconfiglog.Info("validate create", "name", r.Name)
+func (r *AzureAuthEngineConfig) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr, ok := obj.(*AzureAuthEngineConfig)
+	if !ok {
+		return nil, nil
+	}
+	azureauthengineconfiglog.Info("validate create", "name", cr.Name)
 
 	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *AzureAuthEngineConfig) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	jwtoidcauthengineconfiglog.Info("validate update", "name", r.Name)
+func (r *AzureAuthEngineConfig) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+	newCR, ok := newObj.(*AzureAuthEngineConfig)
+	if !ok {
+		return nil, nil
+	}
+	oldCR, _ := oldObj.(*AzureAuthEngineConfig)
+	jwtoidcauthengineconfiglog.Info("validate update", "name", newCR.Name)
 
 	// the path cannot be updated
-	if r.Spec.Path != old.(*AzureAuthEngineConfig).Spec.Path {
+	if newCR.Spec.Path != oldCR.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}
 	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *AzureAuthEngineConfig) ValidateDelete() (admission.Warnings, error) {
-	azureauthengineconfiglog.Info("validate delete", "name", r.Name)
+func (r *AzureAuthEngineConfig) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	cr, ok := obj.(*AzureAuthEngineConfig)
+	if !ok {
+		return nil, nil
+	}
+	azureauthengineconfiglog.Info("validate delete", "name", cr.Name)
 
 	return nil, nil
 }

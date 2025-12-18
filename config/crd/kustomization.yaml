@@ -1,48 +1,49 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
 # This kustomization.yaml is not intended to be run by itself,
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/redhatcop.redhat.io_kubernetesauthengineroles.yaml
-- bases/redhatcop.redhat.io_policies.yaml
-- bases/redhatcop.redhat.io_secretenginemounts.yaml
-- bases/redhatcop.redhat.io_databasesecretengineconfigs.yaml
-- bases/redhatcop.redhat.io_databasesecretengineroles.yaml
-- bases/redhatcop.redhat.io_randomsecrets.yaml
-- bases/redhatcop.redhat.io_authenginemounts.yaml
-- bases/redhatcop.redhat.io_kubernetesauthengineconfigs.yaml
-- bases/redhatcop.redhat.io_vaultsecrets.yaml
-- bases/redhatcop.redhat.io_passwordpolicies.yaml
-- bases/redhatcop.redhat.io_githubsecretengineconfigs.yaml
-- bases/redhatcop.redhat.io_githubsecretengineroles.yaml
-- bases/redhatcop.redhat.io_rabbitmqsecretengineconfigs.yaml
-- bases/redhatcop.redhat.io_rabbitmqsecretengineroles.yaml
-- bases/redhatcop.redhat.io_pkisecretengineconfigs.yaml
-- bases/redhatcop.redhat.io_pkisecretengineroles.yaml
-- bases/redhatcop.redhat.io_quaysecretengineconfigs.yaml
-- bases/redhatcop.redhat.io_quaysecretengineroles.yaml
-- bases/redhatcop.redhat.io_quaysecretenginestaticroles.yaml
-- bases/redhatcop.redhat.io_ldapauthengineconfigs.yaml
-- bases/redhatcop.redhat.io_ldapauthenginegroups.yaml
-- bases/redhatcop.redhat.io_kubernetessecretengineconfigs.yaml
-- bases/redhatcop.redhat.io_kubernetessecretengineroles.yaml
-- bases/redhatcop.redhat.io_jwtoidcauthengineconfigs.yaml
-- bases/redhatcop.redhat.io_jwtoidcauthengineroles.yaml
-- bases/redhatcop.redhat.io_databasesecretenginestaticroles.yaml
-- bases/redhatcop.redhat.io_groups.yaml
-- bases/redhatcop.redhat.io_groupaliases.yaml
-- bases/redhatcop.redhat.io_azureauthengineconfigs.yaml
-- bases/redhatcop.redhat.io_azureauthengineroles.yaml
-- bases/redhatcop.redhat.io_azuresecretengineconfigs.yaml
-- bases/redhatcop.redhat.io_azuresecretengineroles.yaml
-- bases/redhatcop.redhat.io_gcpauthengineconfigs.yaml
-- bases/redhatcop.redhat.io_gcpauthengineroles.yaml
-- bases/redhatcop.redhat.io_certauthengineconfigs.yaml
-- bases/redhatcop.redhat.io_certauthengineroles.yaml
+  - bases/redhatcop.redhat.io_kubernetesauthengineroles.yaml
+  - bases/redhatcop.redhat.io_policies.yaml
+  - bases/redhatcop.redhat.io_secretenginemounts.yaml
+  - bases/redhatcop.redhat.io_databasesecretengineconfigs.yaml
+  - bases/redhatcop.redhat.io_databasesecretengineroles.yaml
+  - bases/redhatcop.redhat.io_randomsecrets.yaml
+  - bases/redhatcop.redhat.io_authenginemounts.yaml
+  - bases/redhatcop.redhat.io_kubernetesauthengineconfigs.yaml
+  - bases/redhatcop.redhat.io_vaultsecrets.yaml
+  - bases/redhatcop.redhat.io_passwordpolicies.yaml
+  - bases/redhatcop.redhat.io_githubsecretengineconfigs.yaml
+  - bases/redhatcop.redhat.io_githubsecretengineroles.yaml
+  - bases/redhatcop.redhat.io_rabbitmqsecretengineconfigs.yaml
+  - bases/redhatcop.redhat.io_rabbitmqsecretengineroles.yaml
+  - bases/redhatcop.redhat.io_pkisecretengineconfigs.yaml
+  - bases/redhatcop.redhat.io_pkisecretengineroles.yaml
+  - bases/redhatcop.redhat.io_quaysecretengineconfigs.yaml
+  - bases/redhatcop.redhat.io_quaysecretengineroles.yaml
+  - bases/redhatcop.redhat.io_quaysecretenginestaticroles.yaml
+  - bases/redhatcop.redhat.io_ldapauthengineconfigs.yaml
+  - bases/redhatcop.redhat.io_ldapauthenginegroups.yaml
+  - bases/redhatcop.redhat.io_kubernetessecretengineconfigs.yaml
+  - bases/redhatcop.redhat.io_kubernetessecretengineroles.yaml
+  - bases/redhatcop.redhat.io_jwtoidcauthengineconfigs.yaml
+  - bases/redhatcop.redhat.io_jwtoidcauthengineroles.yaml
+  - bases/redhatcop.redhat.io_databasesecretenginestaticroles.yaml
+  - bases/redhatcop.redhat.io_groups.yaml
+  - bases/redhatcop.redhat.io_groupaliases.yaml
+  - bases/redhatcop.redhat.io_azureauthengineconfigs.yaml
+  - bases/redhatcop.redhat.io_azureauthengineroles.yaml
+  - bases/redhatcop.redhat.io_azuresecretengineconfigs.yaml
+  - bases/redhatcop.redhat.io_azuresecretengineroles.yaml
+  - bases/redhatcop.redhat.io_gcpauthengineconfigs.yaml
+  - bases/redhatcop.redhat.io_gcpauthengineroles.yaml
+  - bases/redhatcop.redhat.io_certauthengineconfigs.yaml
+  - bases/redhatcop.redhat.io_certauthengineroles.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
-patchesStrategicMerge: []
-# [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
-# patches here are for enabling the conversion webhook for each CRD
+# [WEBHOOK] To enable webhook, uncomment specific entries for CRDs created with --conversion.
 #- patches/webhook_in_kubernetesauthengineroles.yaml
 #- patches/webhook_in_policies.yaml
 #- patches/webhook_in_secretenginemounts.yaml
@@ -81,47 +82,6 @@ patchesStrategicMerge: []
 #- patches/webhook_in_certauthengineroles.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
-# [CERTMANAGER] To enable cert-manager, uncomment all the sections with [CERTMANAGER] prefix.
-# patches here are for enabling the CA injection for each CRD
-#- patches/cainjection_in_kubernetesauthengineroles.yaml
-#- patches/cainjection_in_policies.yaml
-#- patches/cainjection_in_secretenginemounts.yaml
-#- patches/cainjection_in_databasesecretengineconfigs.yaml
-#- patches/cainjection_in_databasesecretengineroles.yaml
-#- patches/cainjection_in_randomsecrets.yaml
-#- patches/cainjection_in_authenginemounts.yaml
-#- patches/cainjection_in_kubernetesauthengineconfigs.yaml
-#- patches/cainjection_in_vaultsecrets.yaml
-#- patches/cainjection_in_passwordpolicies.yaml
-#- patches/cainjection_in_githubsecretengineconfigs.yaml
-#- patches/cainjection_in_githubsecretengineroles.yaml
-#- patches/cainjection_in_rabbitmqsecretengineconfigs.yaml
-#- patches/cainjection_in_rabbitmqsecretengineroles.yaml
-#- patches/cainjection_in_pkisecretengineconfigs.yaml
-#- patches/cainjection_in_pkisecretengineroles.yaml
-#- patches/cainjection_in_quaysecretengineconfigs.yaml
-#- patches/cainjection_in_quaysecretengineroles.yaml
-#- patches/cainjection_in_quaysecretenginestaticroles.yaml
-#- patches/cainjection_in_ldapauthengineconfigs.yaml
-#- patches/cainjection_in_ldapauthenginegroups.yaml
-#- patches/cainjection_in_kubernetessecretengineconfigs.yaml
-#- patches/cainjection_in_kubernetessecretengineroles.yaml
-#- patches/cainjection_in_jwtoidcauthengineconfigs.yaml
-#- patches/cainjection_in_jwtoidcauthengineroles.yaml
-#- patches/cainjection_in_databasesecretenginestaticroles.yaml
-#- patches/cainjection_in_groups.yaml
-#- patches/cainjection_in_groupaliases.yaml
-#- patches/cainjection_in_azureauthengineconfigs.yaml
-#- patches/cainjection_in_azureauthengineroles.yaml
-#- patches/cainjection_in_azuresecretengineconfigs.yaml
-#- patches/cainjection_in_azuresecretengineroles.yaml
-#- patches/cainjection_in_gcpauthengineconfigs.yaml
-#- patches/cainjection_in_gcpauthengineroles.yaml
-#- patches/cainjection_in_certauthengineconfigs.yaml
-#- patches/cainjection_in_certauthengineroles.yaml
-#+kubebuilder:scaffold:crdkustomizecainjectionpatch
-
 # the following config is for teaching kustomize how to do kustomization for CRDs.
 configurations:
-- kustomizeconfig.yaml
-
+  - kustomizeconfig.yaml
