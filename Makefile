@@ -69,6 +69,18 @@ BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
 
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
+
+# Parse image components from IMG (e.g., quay.io/org/repo:tag)
+# IMG_NO_TAG removes the tag portion
+IMG_NO_TAG = $(firstword $(subst :, ,${IMG}))
+# Count slashes to determine if registry is present
+IMG_PARTS = $(subst /, ,$(IMG_NO_TAG))
+IMG_PARTS_COUNT = $(words $(IMG_PARTS))
+# If 3+ parts (registry/org/repo), first part is registry; otherwise empty
+IMAGE_REGISTRY = $(if $(filter 3,$(IMG_PARTS_COUNT))$(filter 4,$(IMG_PARTS_COUNT))$(filter 5,$(IMG_PARTS_COUNT)),$(firstword $(IMG_PARTS)),)
+# Repository is everything after registry (or full path if no registry)
+IMAGE_REPO = $(if $(IMAGE_REGISTRY),$(subst $(IMAGE_REGISTRY)/,,$(IMG_NO_TAG)),$(IMG_NO_TAG))
+
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
 
@@ -359,7 +371,7 @@ helmchart: helmchart-clean kustomize helm
 	mv ./charts/${OPERATOR_NAME}/templates/apiextensions.k8s.io_v1_customresourcedefinition* ./charts/${OPERATOR_NAME}/crds
 	cp ./config/helmchart/templates/* ./charts/${OPERATOR_NAME}/templates
 	version=${VERSION} envsubst < ./config/helmchart/Chart.yaml.tpl  > ./charts/${OPERATOR_NAME}/Chart.yaml
-	version=${VERSION} image_repo=$${IMG%:*} envsubst < ./config/helmchart/values.yaml.tpl  > ./charts/${OPERATOR_NAME}/values.yaml
+	version=${VERSION} image_registry=${IMAGE_REGISTRY} image_repo=${IMAGE_REPO} envsubst < ./config/helmchart/values.yaml.tpl  > ./charts/${OPERATOR_NAME}/values.yaml
 	sed -i '1s/^/{{- if .Values.enableMonitoring }}\n/' ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_${OPERATOR_NAME}-controller-manager-metrics-monitor.yaml
 	echo {{- end }} >> ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_${OPERATOR_NAME}-controller-manager-metrics-monitor.yaml
 	sed -i 's/name: vault-config-operator-certs/{{- if .Values.enableCertManager }}\n          name: vault-config-operator-metrics-service-cert\n          {{- else }}\n          name: vault-config-operator-certs\n          {{- end }}/' ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_${OPERATOR_NAME}-controller-manager-metrics-monitor.yaml
@@ -384,7 +396,7 @@ HELM_TEST_IMG_TAG ?= helmchart-test
 # Deploy the helmchart to a kind cluster to test deployment.
 # If the test-metrics sidecar in the prometheus pod is ready, the metrics work and the test is successful.
 .PHONY: helmchart-test
-helmchart-test: kind-setup deploy-vault helmchart
+helmchart-test: kind-setup deploy-vault helmchart helmchart-unittest
 	$(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker-build
 	docker tag ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
 	$(KIND) load docker-image ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
@@ -402,6 +414,14 @@ helmchart-test: kind-setup deploy-vault helmchart
 	$(KUBECTL) wait --namespace ${OPERATOR_NAME}-local --for=condition=ready pod --selector=app.kubernetes.io/name=${OPERATOR_NAME} --timeout=90s
 	$(KUBECTL) wait --namespace default --for=condition=ready pod prometheus-kube-prometheus-stack-prometheus-0 --timeout=180s
 	$(KUBECTL) exec prometheus-kube-prometheus-stack-prometheus-0 -n default -c test-metrics -- /bin/sh -c "echo 'Example metrics...' && cat /tmp/ready"
+
+.PHONY: helmchart-unittest
+helmchart-unittest: helmchart helm-unittest
+	mkdir -p ./charts-unittest/
+	rm -rf ./charts-unittest/${OPERATOR_NAME}
+	cp -r ./charts/${OPERATOR_NAME} ./charts-unittest/${OPERATOR_NAME}
+	cp -r ./config/helmchart/tests ./charts-unittest/${OPERATOR_NAME}/tests
+	$(HELM) unittest ./charts-unittest/${OPERATOR_NAME}/
 
 .PHONY: helmchart-clean
 helmchart-clean:
@@ -450,6 +470,10 @@ ifeq (,$(wildcard $(HELM)))
 	tar -xf ${HELM}.tar.gz -C $(LOCALBIN)/ ;\
 	mv ./bin/$${OS}-$${ARCH}/helm ${HELM}
 endif
+
+.PHONY: helm-unittest
+helm-unittest: helm ## Download helm unittest plugin locally.
+	${HELM} plugin list | grep -q unittest || ${HELM} plugin install https://github.com/helm-unittest/helm-unittest.git
 
 .PHONY: operator-sdk
 OPERATOR_SDK ?= $(LOCALBIN)/operator-sdk
