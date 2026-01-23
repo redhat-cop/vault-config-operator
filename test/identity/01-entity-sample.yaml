@@ -1,0 +1,14 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Entity
+metadata:
+  name: test-entity
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  metadata: 
+    team: engineering
+    environment: test
+  policies: 
+  - default
+  disabled: false

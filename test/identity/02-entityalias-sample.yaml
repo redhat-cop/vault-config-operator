@@ -1,0 +1,12 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: EntityAlias
+metadata:
+  name: test-entity-alias
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  authEngineMountPath: kubernetes
+  entityName: test-entity
+  customMetadata:
+    contact: admin@example.com
