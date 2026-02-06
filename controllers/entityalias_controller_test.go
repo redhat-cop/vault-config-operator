@@ -85,6 +85,11 @@ var _ = Describe("EntityAlias controller", func() {
 			By("Deleting the Entity")
 			Expect(k8sIntegrationClient.Delete(ctx, entityCreated)).Should(Succeed())
 
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, entityLookupKey, entityCreated)
+				return err != nil
+			}, timeout, interval).Should(BeTrue())
+
 		})
 	})
 })
