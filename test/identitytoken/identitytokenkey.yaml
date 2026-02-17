@@ -1,0 +1,13 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: IdentityTokenKey
+metadata:
+  name: test-key
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  rotationPeriod: "24h"
+  verificationTTL: "24h"
+  allowedClientIDs:
+  - "*"
+  algorithm: RS256

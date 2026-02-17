@@ -1,0 +1,9 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: IdentityTokenConfig
+metadata:
+  name: test-token-config
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  issuer: ""

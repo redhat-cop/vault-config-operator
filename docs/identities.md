@@ -10,6 +10,9 @@ The vault config operator supports the following API related to the Identity sec
   - [IdentityOIDCScope](#identityoidcscope)
   - [IdentityOIDCClient](#identityoidcclient)
   - [IdentityOIDCAssignment](#identityoidcassignment)
+  - [IdentityTokenConfig](#identitytokenconfig)
+  - [IdentityTokenKey](#identitytokenkey)
+  - [IdentityTokenRole](#identitytokenrole)
 
 
 ## Group
@@ -153,3 +156,74 @@ The following fields are available:
 
 - `entityIDs` - (optional) List of Vault entity IDs.
 - `groupIDs` - (optional) List of Vault group IDs.
+
+## IdentityTokenConfig
+
+The IdentityTokenConfig CRD allows configuring the [Identity Tokens backend](https://developer.hashicorp.com/vault/api-docs/secret/identity/tokens#configure-the-identity-tokens-backend). This is a singleton configuration resource — deleting the CR will not remove the configuration from Vault.
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: IdentityTokenConfig
+metadata:
+  name: identitytokenconfig-sample
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  issuer: "https://example.com:1234"
+```
+
+The following fields are available:
+
+- `issuer` - (optional) Issuer URL to be used in the `iss` claim of the token. If not set, Vault's `api_addr` will be used.
+
+## IdentityTokenKey
+
+The IdentityTokenKey CRD allows creating or updating a [named key](https://developer.hashicorp.com/vault/api-docs/secret/identity/tokens#create-a-named-key) used by a role to sign tokens.
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: IdentityTokenKey
+metadata:
+  name: identitytokenkey-sample
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  rotationPeriod: "24h"
+  verificationTTL: "24h"
+  allowedClientIDs:
+  - "*"
+  algorithm: RS256
+```
+
+The following fields are available:
+
+- `rotationPeriod` - (optional, default: `"24h"`) How often to generate a new signing key.
+- `verificationTTL` - (optional, default: `"24h"`) How long the public portion of a signing key will be available for verification after being rotated.
+- `allowedClientIDs` - (optional) List of role client IDs allowed to use this key. Use `"*"` to allow all roles.
+- `algorithm` - (optional, default: `"RS256"`) Signing algorithm. Allowed values: RS256, RS384, RS512, ES256, ES384, ES512, EdDSA.
+
+## IdentityTokenRole
+
+The IdentityTokenRole CRD allows creating or updating a [role](https://developer.hashicorp.com/vault/api-docs/secret/identity/tokens#create-or-update-a-role). ID tokens are generated against a role and signed against a named key.
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: IdentityTokenRole
+metadata:
+  name: identitytokenrole-sample
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  key: identitytokenkey-sample
+  ttl: "24h"
+```
+
+The following fields are available:
+
+- `key` - (required) A configured named key; the key must already exist.
+- `template` - (optional) The template string to use for generating tokens. May be in string-ified JSON or base64 format.
+- `clientID` - (optional) Client ID. A random ID will be generated if left unset.
+- `ttl` - (optional, default: `"24h"`) TTL of the tokens generated against the role.

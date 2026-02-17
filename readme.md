@@ -94,6 +94,9 @@ Currently this operator covers the following Vault APIs:
 4. [IdentityOIDCScope](./docs/identities.md#IdentityOIDCScope) Creates a [Vault OIDC Scope](https://developer.hashicorp.com/vault/api-docs/secret/identity/oidc-provider#create-or-update-a-scope).
 5. [IdentityOIDCClient](./docs/identities.md#IdentityOIDCClient) Creates a [Vault OIDC Client](https://developer.hashicorp.com/vault/api-docs/secret/identity/oidc-provider#create-or-update-a-client).
 6. [IdentityOIDCAssignment](./docs/identities.md#IdentityOIDCAssignment) Creates a [Vault OIDC Assignment](https://developer.hashicorp.com/vault/api-docs/secret/identity/oidc-provider#create-or-update-an-assignment).
+7. [IdentityTokenConfig](./docs/identities.md#IdentityTokenConfig) Configures the [Identity Tokens backend](https://developer.hashicorp.com/vault/api-docs/secret/identity/tokens#configure-the-identity-tokens-backend).
+8. [IdentityTokenKey](./docs/identities.md#IdentityTokenKey) Creates a [named key](https://developer.hashicorp.com/vault/api-docs/secret/identity/tokens#create-a-named-key) for signing identity tokens.
+9. [IdentityTokenRole](./docs/identities.md#IdentityTokenRole) Creates a [role](https://developer.hashicorp.com/vault/api-docs/secret/identity/tokens#create-or-update-a-role) for generating identity tokens.
 
 ## Audit Management
 
@@ -585,6 +588,16 @@ oc apply -f ./test/identityoidc/identityoidcassignment.yaml -n vault-admin
 oc apply -f ./test/identityoidc/identityoidcscope.yaml -n vault-admin
 oc apply -f ./test/identityoidc/identityoidcclient.yaml -n vault-admin
 oc apply -f ./test/identityoidc/identityoidcprovider.yaml -n vault-admin
+```
+
+Test Identity Token resources
+
+The resources should be applied in order: config, key, then role.
+
+```sh
+oc apply -f ./test/identitytoken/identitytokenconfig.yaml -n vault-admin
+oc apply -f ./test/identitytoken/identitytokenkey.yaml -n vault-admin
+oc apply -f ./test/identitytoken/identitytokenrole.yaml -n vault-admin
 ```
 
 ### Test helm chart locally
