@@ -1,0 +1,18 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: IdentityOIDCAssignment
+metadata:
+  labels:
+    app.kubernetes.io/name: identityoidcassignment
+    app.kubernetes.io/instance: identityoidcassignment-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: identityoidcassignment-sample
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  entityIDs:
+  - b6094ac6-baf4-6520-b05a-2bd9f07c66da
+  groupIDs:
+  - 262ca5b9-7b69-0a84-446a-303dc7d778af

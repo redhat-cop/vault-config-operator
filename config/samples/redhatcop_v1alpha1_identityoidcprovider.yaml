@@ -1,0 +1,18 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: IdentityOIDCProvider
+metadata:
+  labels:
+    app.kubernetes.io/name: identityoidcprovider
+    app.kubernetes.io/instance: identityoidcprovider-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: identityoidcprovider-sample
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  allowedClientIDs:
+  - "*"
+  scopesSupported:
+  - test-scope

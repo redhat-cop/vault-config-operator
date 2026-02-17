@@ -1,0 +1,12 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: IdentityOIDCProvider
+metadata:
+  name: test-provider
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  allowedClientIDs:
+  - "*"
+  scopesSupported:
+  - test-scope
