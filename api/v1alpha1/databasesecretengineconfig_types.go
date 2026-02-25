@@ -18,6 +18,8 @@ package v1alpha1
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"reflect"
 
@@ -89,6 +91,9 @@ func (d *DatabaseSecretEngineConfig) GetPayload() map[string]interface{} {
 	return d.Spec.toMap()
 }
 func (d *DatabaseSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+	if d.Spec.DBSEConfig.RootPasswordRotation != nil && d.Spec.DBSEConfig.RootPasswordRotation.Enable && d.Status.LastRootPasswordRotation.IsZero() {
+		return false
+	}
 	desiredState := d.Spec.DBSEConfig.toMap()
 	connectionDetails := map[string]interface{}{}
 	connectionDetails["connection_url"] = desiredState["connection_url"]
@@ -140,11 +145,6 @@ func (r *DatabaseSecretEngineConfig) IsValid() (bool, error) {
 
 func (r *DatabaseSecretEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
-	if !r.Status.LastRootPasswordRotation.IsZero() {
-		log.V(1).Info("root credentials rotation already occurred - credentials retrieval skipped")
-		return nil
-	}
-
 	kubeClient := context.Value("kubeClient").(client.Client)
 	if r.Spec.RootCredentials.RandomSecret != nil {
 		randomSecret := &RandomSecret{}
@@ -297,6 +297,10 @@ type DatabaseSecretEngineConfigStatus struct {
 
 	// +kubebuilder:validation:Optional
 	LastRootPasswordRotation metav1.Time `json:"lastRootPasswordRotation,omitempty"`
+
+	// CredentialsHash stores the hash of the current username and password to detect credential changes
+	// +kubebuilder:validation:Optional
+	CredentialsHash string `json:"credentialsHash,omitempty"`
 }
 
 var _ vaultutils.ConditionsAware = &DatabaseSecretEngineConfig{}
@@ -309,9 +313,27 @@ func (m *DatabaseSecretEngineConfig) SetConditions(conditions []metav1.Condition
 	m.Status.Conditions = conditions
 }
 
+// computeCredentialsHash creates a SHA256 hash of the username and password combination
+func computeCredentialsHash(username, password string) string {
+	data := username + ":" + password
+	hash := sha256.Sum256([]byte(data))
+	return hex.EncodeToString(hash[:])
+}
+
 func (m *DatabaseSecretEngineConfig) SetUsernameAndPassword(username string, password string) {
+	newHash := computeCredentialsHash(username, password)
+
+	// Store the retrieved credentials for this reconciliation
 	m.Spec.DBSEConfig.retrievedUsername = username
 	m.Spec.DBSEConfig.retrievedPassword = password
+
+	// If the hash has changed, reset the last rotation time to trigger a new rotation
+	if m.Status.CredentialsHash != "" && m.Status.CredentialsHash != newHash {
+		m.Status.LastRootPasswordRotation = metav1.Time{}
+	}
+
+	// Update the stored hash
+	m.Status.CredentialsHash = newHash
 }
 
 //+kubebuilder:object:root=true
