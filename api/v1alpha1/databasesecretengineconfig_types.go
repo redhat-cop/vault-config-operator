@@ -95,18 +95,22 @@ func (d *DatabaseSecretEngineConfig) IsEquivalentToDesiredState(payload map[stri
 	connectionDetails["disable_escaping"] = desiredState["disable_escaping"]
 	connectionDetails["root_credentials_rotate_statements"] = desiredState["root_credentials_rotate_statements"]
 	connectionDetails["username"] = desiredState["username"]
-	if desiredState["verify_connection"] == true {
-		connectionDetails["verify_connection"] = desiredState["verify_connection"]
-	}
 	desiredState["connection_details"] = connectionDetails
 	//delete fields that have been moved to connection_details
 	delete(desiredState, "password")
 	delete(desiredState, "connection_url")
 	delete(desiredState, "username")
-	delete(desiredState, "verify_connection")
 	delete(desiredState, "disable_escaping")
 
-	return reflect.DeepEqual(desiredState, payload)
+	// Create filtered payload with only the fields we manage
+	filteredPayload := make(map[string]interface{})
+	for key, value := range payload {
+		if _, exists := desiredState[key]; exists || key == "connection_details" {
+			filteredPayload[key] = value
+		}
+	}
+
+	return reflect.DeepEqual(desiredState, filteredPayload)
 }
 
 func toInterfaceArray(values []string) []interface{} {
