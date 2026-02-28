@@ -101,6 +101,46 @@ func (ve *VaultEndpoint) Create(context context.Context) error {
 	return write(context, ve.vaultObject.GetPath(), ve.vaultObject.GetPayload())
 }
 
+// CreateOrMergeKV reads existing KV secret data and merges the new payload keys into it.
+// This allows multiple resources to contribute different keys to the same Vault secret path.
+// For KVv2, it expects the payload in {"data": {...}} format.
+func (ve *VaultEndpoint) CreateOrMergeKV(context context.Context, isKVv2 bool) error {
+	log := log.FromContext(context)
+	currentPayload, found, err := read(context, ve.vaultObject.GetPath())
+	if err != nil {
+		log.Error(err, "unable to read object at", "path", ve.vaultObject.GetPath())
+		return err
+	}
+	if !found {
+		return write(context, ve.vaultObject.GetPath(), ve.vaultObject.GetPayload())
+	}
+	// Merge new keys into existing data
+	newPayload := ve.vaultObject.GetPayload()
+	if isKVv2 {
+		// For KVv2, data is nested under "data" key
+		existingData, ok := currentPayload["data"].(map[string]interface{})
+		if !ok {
+			existingData = make(map[string]interface{})
+		}
+		newData, ok := newPayload["data"].(map[string]interface{})
+		if !ok {
+			return write(context, ve.vaultObject.GetPath(), newPayload)
+		}
+		for k, v := range newData {
+			existingData[k] = v
+		}
+		mergedPayload := map[string]interface{}{
+			"data": existingData,
+		}
+		return write(context, ve.vaultObject.GetPath(), mergedPayload)
+	}
+	// For KVv1, merge directly
+	for k, v := range newPayload {
+		currentPayload[k] = v
+	}
+	return write(context, ve.vaultObject.GetPath(), currentPayload)
+}
+
 func (ve *VaultEndpoint) CreateOrUpdate(context context.Context) error {
 	log := log.FromContext(context)
 	currentPayload, found, err := read(context, ve.vaultObject.GetPath())
