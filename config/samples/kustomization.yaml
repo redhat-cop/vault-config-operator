@@ -38,5 +38,12 @@ resources:
 - redhatcop_v1alpha1_certauthenginerole.yaml
 - redhatcop_v1alpha1_audit.yaml
 - redhatcop_v1alpha1_auditrequestheader.yaml
+- redhatcop_v1alpha1_identityoidcprovider.yaml
+- redhatcop_v1alpha1_identityoidcscope.yaml
+- redhatcop_v1alpha1_identityoidcclient.yaml
+- redhatcop_v1alpha1_identityoidcassignment.yaml
+- redhatcop_v1alpha1_identitytokenconfig.yaml
+- redhatcop_v1alpha1_identitytokenkey.yaml
+- redhatcop_v1alpha1_identitytokenrole.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
 

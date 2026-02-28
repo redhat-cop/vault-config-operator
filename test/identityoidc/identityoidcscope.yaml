@@ -1,0 +1,10 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: IdentityOIDCScope
+metadata:
+  name: test-scope
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  template: '{ "groups": {{identity.entity.groups.names}} }'
+  description: A test scope for groups claim.

@@ -1,0 +1,10 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: IdentityTokenRole
+metadata:
+  name: identitytokenrole-sample
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  key: identitytokenkey-sample
+  ttl: "24h"

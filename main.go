@@ -318,6 +318,41 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controllers.IdentityOIDCProviderReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCProvider")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "IdentityOIDCProvider")
+		os.Exit(1)
+	}
+
+	if err = (&controllers.IdentityOIDCScopeReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCScope")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "IdentityOIDCScope")
+		os.Exit(1)
+	}
+
+	if err = (&controllers.IdentityOIDCClientReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCClient")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "IdentityOIDCClient")
+		os.Exit(1)
+	}
+
+	if err = (&controllers.IdentityOIDCAssignmentReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCAssignment")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "IdentityOIDCAssignment")
+		os.Exit(1)
+	}
+
+	if err = (&controllers.IdentityTokenConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityTokenConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "IdentityTokenConfig")
+		os.Exit(1)
+	}
+
+	if err = (&controllers.IdentityTokenKeyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityTokenKey")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "IdentityTokenKey")
+		os.Exit(1)
+	}
+
+	if err = (&controllers.IdentityTokenRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityTokenRole")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "IdentityTokenRole")
+		os.Exit(1)
+	}
+
 	if webhooks, ok := os.LookupEnv("ENABLE_WEBHOOKS"); !ok || webhooks != "false" {
 		if err = (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "RandomSecret")
@@ -475,6 +510,36 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.GroupAlias{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "GroupAlias")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.IdentityOIDCProvider{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "IdentityOIDCProvider")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.IdentityOIDCScope{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "IdentityOIDCScope")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.IdentityOIDCClient{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "IdentityOIDCClient")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.IdentityOIDCAssignment{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "IdentityOIDCAssignment")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.IdentityTokenConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "IdentityTokenConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.IdentityTokenKey{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "IdentityTokenKey")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.IdentityTokenRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "IdentityTokenRole")
 			os.Exit(1)
 		}
 	}

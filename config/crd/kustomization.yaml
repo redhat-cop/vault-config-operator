@@ -40,6 +40,13 @@ resources:
 - bases/redhatcop.redhat.io_certauthengineroles.yaml
 - bases/redhatcop.redhat.io_audits.yaml
 - bases/redhatcop.redhat.io_auditrequestheaders.yaml
+- bases/redhatcop.redhat.io_identityoidcproviders.yaml
+- bases/redhatcop.redhat.io_identityoidcscopes.yaml
+- bases/redhatcop.redhat.io_identityoidcclients.yaml
+- bases/redhatcop.redhat.io_identityoidcassignments.yaml
+- bases/redhatcop.redhat.io_identitytokenconfigs.yaml
+- bases/redhatcop.redhat.io_identitytokenkeys.yaml
+- bases/redhatcop.redhat.io_identitytokenroles.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge: []
@@ -81,6 +88,13 @@ patchesStrategicMerge: []
 #- patches/webhook_in_gcpauthengineroles.yaml
 #- patches/webhook_in_certauthengineconfigs.yaml
 #- patches/webhook_in_certauthengineroles.yaml
+#- patches/webhook_in_identityoidcproviders.yaml
+#- patches/webhook_in_identityoidcscopes.yaml
+#- patches/webhook_in_identityoidcclients.yaml
+#- patches/webhook_in_identityoidcassignments.yaml
+#- patches/webhook_in_identitytokenconfigs.yaml
+#- patches/webhook_in_identitytokenkeys.yaml
+#- patches/webhook_in_identitytokenroles.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable cert-manager, uncomment all the sections with [CERTMANAGER] prefix.
@@ -123,6 +137,13 @@ patchesStrategicMerge: []
 #- patches/cainjection_in_certauthengineroles.yaml
 #- patches/cainjection_in_audits.yaml
 #- patches/cainjection_in_auditrequestheaders.yaml
+#- patches/cainjection_in_identityoidcproviders.yaml
+#- patches/cainjection_in_identityoidcscopes.yaml
+#- patches/cainjection_in_identityoidcclients.yaml
+#- patches/cainjection_in_identityoidcassignments.yaml
+#- patches/cainjection_in_identitytokenconfigs.yaml
+#- patches/cainjection_in_identitytokenkeys.yaml
+#- patches/cainjection_in_identitytokenroles.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.

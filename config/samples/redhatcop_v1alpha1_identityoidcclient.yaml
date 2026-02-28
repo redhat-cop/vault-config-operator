@@ -1,0 +1,22 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: IdentityOIDCClient
+metadata:
+  labels:
+    app.kubernetes.io/name: identityoidcclient
+    app.kubernetes.io/instance: identityoidcclient-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: identityoidcclient-sample
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  key: default
+  clientType: confidential
+  redirectURIs:
+  - https://example.com/callback
+  assignments:
+  - allow_all
+  idTokenTTL: "24h"
+  accessTokenTTL: "24h"
