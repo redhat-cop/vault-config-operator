@@ -148,6 +148,14 @@ func (d *IdentityTokenRole) IsInitialized() bool {
 }
 
 func (d *IdentityTokenRole) PrepareInternalValues(context context.Context, object client.Object) error {
+	if d.Spec.Template == "" {
+		return nil
+	}
+	resolved, err := vaultutils.ResolveAuthAccessors(context, d.Spec.Template)
+	if err != nil {
+		return err
+	}
+	d.Spec.Template = resolved
 	return nil
 }
 
