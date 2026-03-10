@@ -269,14 +269,6 @@ func (r *JWTOIDCAuthEngineRole) GetPath() string {
 	return vaultutils.CleansePath("auth/" + string(r.Spec.Path) + "/role/" + r.getName())
 }
 
-func (r *JWTOIDCAuthEngineRole) getName() string {
-	if r.Spec.Name != "" {
-		return r.Spec.Name
-	}
-
-	return r.Name
-}
-
 func (r *JWTOIDCAuthEngineRole) GetPayload() map[string]interface{} {
 	return r.Spec.JWTOIDCRole.toMap()
 }
@@ -332,4 +324,12 @@ func (r *JWTOIDCRole) toMap() map[string]interface{} {
 	payload["token_type"] = r.TokenType
 
 	return payload
+}
+
+func (r *JWTOIDCAuthEngineRole) getName() string {
+	if r.Spec.Name != "" {
+		return r.Spec.Name
+	}
+
+	return r.Name
 }
