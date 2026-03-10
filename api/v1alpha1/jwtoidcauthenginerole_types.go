@@ -266,7 +266,15 @@ func (r *JWTOIDCAuthEngineRole) GetKubeAuthConfiguration() *vaultutils.KubeAuthC
 }
 
 func (r *JWTOIDCAuthEngineRole) GetPath() string {
-	return vaultutils.CleansePath("auth/" + string(r.Spec.Path) + "/role/" + string(r.Spec.Name))
+	return vaultutils.CleansePath("auth/" + string(r.Spec.Path) + "/role/" + r.getName())
+}
+
+func (r *JWTOIDCAuthEngineRole) getName() string {
+	if r.Spec.Name != "" {
+		return r.Spec.Name
+	}
+
+	return r.Name
 }
 
 func (r *JWTOIDCAuthEngineRole) GetPayload() map[string]interface{} {
