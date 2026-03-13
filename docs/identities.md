@@ -227,3 +227,28 @@ The following fields are available:
 - `template` - (optional) The template string to use for generating tokens. May be in string-ified JSON or base64 format.
 - `clientID` - (optional) Client ID. A random ID will be generated if left unset.
 - `ttl` - (optional, default: `"24h"`) TTL of the tokens generated against the role.
+
+### Auth engine accessor resolution in templates
+
+The `template` field supports the same `${auth/<auth engine path>/@accessor}` placeholder syntax as [Policy](../docs/policy-management.md#policy). The operator will automatically replace these placeholders with the accessor of the auth engine mounted at the given path before writing the role to Vault.
+
+For example:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: IdentityTokenRole
+metadata:
+  name: identitytokenrole-with-accessor
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  key: identitytokenkey-sample
+  template: |
+    {
+      "namespace": {{identity.entity.aliases.${auth/kubernetes/@accessor}.metadata.service_account_namespace}}
+    }
+  ttl: "24h"
+```
+
+Note: the Vault role used for authentication (specified in the `authentication` section) must have `read` and `list` access to Vault's `sys/auth` API endpoint for this automated resolution to work. Any unresolved placeholder is left as-is in the configured template.

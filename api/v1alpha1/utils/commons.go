@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -431,6 +432,38 @@ func (credentials *RootCredentialConfig) ValidateEitherFromVaultSecretOrFromSecr
 
 func GetFinalizer(instance client.Object) string {
 	return "controller-" + strings.ToLower(instance.GetObjectKind().GroupVersionKind().Kind)
+}
+
+// ResolveAuthAccessors replaces all occurrences of ${auth/<auth engine path>/@accessor} in the given
+// input string with the actual accessor value from Vault. It reads all auth engines from sys/auth
+// and performs the replacement for each one. If no placeholders are found, the input is returned unchanged.
+// The Vault role used for authentication must have read and list access to sys/auth for this to work.
+func ResolveAuthAccessors(context context.Context, input string) (string, error) {
+	match, err := regexp.MatchString("\\${[^}]+}", input)
+	if err != nil || !match {
+		return input, nil
+	}
+
+	log := log.FromContext(context)
+
+	vaultClient := context.Value("vaultClient").(*vault.Client)
+	secret, err := vaultClient.Logical().Read("sys/auth")
+	if err != nil {
+		log.Error(err, "could not resolve auth engine accessor(s) - unable to retrieve auth engines at", "path", "sys/auth")
+		return input, nil
+	}
+	if secret == nil {
+		return input, errors.New("could not resolve auth engine accessor(s) - listing auth engines at sys/auth unexpectedly returned null")
+	}
+
+	for key, data := range secret.Data {
+		authenginepath := strings.Trim(key, "/")
+		placeholder := "${auth/" + authenginepath + "/@accessor}"
+		accessor := data.(map[string]interface{})["accessor"].(string)
+		input = strings.ReplaceAll(input, placeholder, accessor)
+	}
+
+	return input, nil
 }
 
 // +kubebuilder:object:generate=true
