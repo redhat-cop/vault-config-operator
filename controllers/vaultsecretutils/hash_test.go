@@ -3,6 +3,8 @@ package vaultsecretutils
 import (
 	"strings"
 	"testing"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -99,5 +101,143 @@ func TestNil(t *testing.T) {
 
 	if hash != emptyOrNilHash {
 		t.Errorf("Unexpected Hash, got: %v, want: %v.", hash, emptyOrNilHash)
+	}
+}
+
+func TestHashMeta(t *testing.T) {
+	meta := metav1.ObjectMeta{
+		Labels:      map[string]string{"app": "test"},
+		Annotations: map[string]string{"note": "value"},
+	}
+
+	hash := HashMeta(meta)
+
+	if hash == "" {
+		t.Error("HashMeta returned empty string")
+	}
+
+	// same input should produce same hash
+	hash2 := HashMeta(meta)
+	if hash != hash2 {
+		t.Errorf("HashMeta not deterministic, got: %v and %v", hash, hash2)
+	}
+}
+
+func TestHashMetaDifferentLabels(t *testing.T) {
+	meta1 := metav1.ObjectMeta{
+		Labels: map[string]string{"app": "test"},
+	}
+	meta2 := metav1.ObjectMeta{
+		Labels: map[string]string{"app": "other"},
+	}
+
+	if HashMeta(meta1) == HashMeta(meta2) {
+		t.Error("HashMeta should differ when labels differ")
+	}
+}
+
+func TestHashMetaDifferentAnnotations(t *testing.T) {
+	meta1 := metav1.ObjectMeta{
+		Annotations: map[string]string{"key": "value1"},
+	}
+	meta2 := metav1.ObjectMeta{
+		Annotations: map[string]string{"key": "value2"},
+	}
+
+	if HashMeta(meta1) == HashMeta(meta2) {
+		t.Error("HashMeta should differ when annotations differ")
+	}
+}
+
+func TestHashMetaNilMaps(t *testing.T) {
+	meta := metav1.ObjectMeta{}
+
+	hash := HashMeta(meta)
+
+	if hash == "" {
+		t.Error("HashMeta returned empty string for nil labels/annotations")
+	}
+}
+
+func TestHashMetaEmptyMaps(t *testing.T) {
+	meta1 := metav1.ObjectMeta{
+		Labels:      map[string]string{},
+		Annotations: map[string]string{},
+	}
+	meta2 := metav1.ObjectMeta{}
+
+	// empty maps and nil maps should produce the same hash since fmt.Sprintf
+	// renders both as "map[]"
+	if HashMeta(meta1) != HashMeta(meta2) {
+		t.Errorf("HashMeta should be equal for empty and nil maps, got: %v and %v", HashMeta(meta1), HashMeta(meta2))
+	}
+}
+
+func TestGetResourceVersion(t *testing.T) {
+	meta := metav1.ObjectMeta{
+		Generation: 1,
+		Labels:     map[string]string{"app": "test"},
+	}
+
+	rv := GetResourceVersion(meta)
+
+	if rv == "" {
+		t.Error("GetResourceVersion returned empty string")
+	}
+
+	// should start with the generation number
+	if rv[:2] != "1-" {
+		t.Errorf("GetResourceVersion should start with generation, got: %v", rv)
+	}
+}
+
+func TestGetResourceVersionChangesOnGeneration(t *testing.T) {
+	meta1 := metav1.ObjectMeta{
+		Generation: 1,
+		Labels:     map[string]string{"app": "test"},
+	}
+	meta2 := metav1.ObjectMeta{
+		Generation: 2,
+		Labels:     map[string]string{"app": "test"},
+	}
+
+	rv1 := GetResourceVersion(meta1)
+	rv2 := GetResourceVersion(meta2)
+
+	if rv1 == rv2 {
+		t.Error("GetResourceVersion should differ when generation differs")
+	}
+}
+
+func TestGetResourceVersionChangesOnMetadata(t *testing.T) {
+	meta1 := metav1.ObjectMeta{
+		Generation: 1,
+		Labels:     map[string]string{"app": "test"},
+	}
+	meta2 := metav1.ObjectMeta{
+		Generation: 1,
+		Labels:     map[string]string{"app": "changed"},
+	}
+
+	rv1 := GetResourceVersion(meta1)
+	rv2 := GetResourceVersion(meta2)
+
+	if rv1 == rv2 {
+		t.Error("GetResourceVersion should differ when labels differ")
+	}
+}
+
+func TestGetResourceVersionStableWhenUnchanged(t *testing.T) {
+	meta := metav1.ObjectMeta{
+		Generation:  3,
+		Labels:      map[string]string{"app": "test"},
+		Annotations: map[string]string{"note": "value"},
+	}
+
+	rv1 := GetResourceVersion(meta)
+	rv2 := GetResourceVersion(meta)
+
+	if rv1 != rv2 {
+		t.Errorf("GetResourceVersion should be stable, got: %v and %v", rv1, rv2)
 	}
 }
