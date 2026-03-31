@@ -172,7 +172,7 @@ type RabbitMQEngineConfigVaultEndpoint struct {
 func (ve *RabbitMQEngineConfigVaultEndpoint) CreateOrUpdateLease(context context.Context) error {
 	log := log.FromContext(context)
 	// Skip lease configuration if no values provided
-	if ve.rabbitMQEngineConfigVaultEndpoint.CheckTTLValuesProvided() {
+	if !ve.rabbitMQEngineConfigVaultEndpoint.CheckTTLValuesProvided() {
 		return nil
 	}
 	currentPayload, found, err := read(context, ve.rabbitMQEngineConfigVaultEndpoint.GetLeasePath())
