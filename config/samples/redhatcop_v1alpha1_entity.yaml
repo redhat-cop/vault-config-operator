@@ -1,0 +1,21 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Entity
+metadata:
+  labels:
+    app.kubernetes.io/name: entity
+    app.kubernetes.io/instance: entity-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: entity-sample
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  metadata: 
+    team: engineering
+    environment: production
+  policies: 
+  - dev-policy
+  - read-only-policy
+  disabled: false
