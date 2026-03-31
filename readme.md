@@ -9,6 +9,7 @@
   - [Secret Engines](#secret-engines)
   - [Secret Management](#secret-management)
   - [Identities](#identities)
+  - [Audit Management](#audit-management)
   - [The common authentication section](#the-common-authentication-section)
   - [End to end example](#end-to-end-example)
   - [Contributing a new Vault type](#contributing-a-new-vault-type)
@@ -89,6 +90,18 @@ Currently this operator covers the following Vault APIs:
 
 1. [Group](./docs/identities.md#Group) Creates a [Vault Group](https://developer.hashicorp.com/vault/docs/concepts/identity#identity-groups).
 2. [GroupAlias](./docs/identities.md#GroupAlias) Creates a [Vault GroupAlias](https://developer.hashicorp.com/vault/api-docs/secret/identity/group-alias).
+3. [IdentityOIDCProvider](./docs/identities.md#IdentityOIDCProvider) Creates a [Vault OIDC Provider](https://developer.hashicorp.com/vault/api-docs/secret/identity/oidc-provider#create-or-update-a-provider).
+4. [IdentityOIDCScope](./docs/identities.md#IdentityOIDCScope) Creates a [Vault OIDC Scope](https://developer.hashicorp.com/vault/api-docs/secret/identity/oidc-provider#create-or-update-a-scope).
+5. [IdentityOIDCClient](./docs/identities.md#IdentityOIDCClient) Creates a [Vault OIDC Client](https://developer.hashicorp.com/vault/api-docs/secret/identity/oidc-provider#create-or-update-a-client).
+6. [IdentityOIDCAssignment](./docs/identities.md#IdentityOIDCAssignment) Creates a [Vault OIDC Assignment](https://developer.hashicorp.com/vault/api-docs/secret/identity/oidc-provider#create-or-update-an-assignment).
+7. [IdentityTokenConfig](./docs/identities.md#IdentityTokenConfig) Configures the [Identity Tokens backend](https://developer.hashicorp.com/vault/api-docs/secret/identity/tokens#configure-the-identity-tokens-backend).
+8. [IdentityTokenKey](./docs/identities.md#IdentityTokenKey) Creates a [named key](https://developer.hashicorp.com/vault/api-docs/secret/identity/tokens#create-a-named-key) for signing identity tokens.
+9. [IdentityTokenRole](./docs/identities.md#IdentityTokenRole) Creates a [role](https://developer.hashicorp.com/vault/api-docs/secret/identity/tokens#create-or-update-a-role) for generating identity tokens.
+
+## Audit Management
+
+1. [Audit](./docs/audit-management.md#Audit) Configures Vault [Audit Devices](https://developer.hashicorp.com/vault/docs/audit) for detailed logging of requests and responses.
+2. [AuditRequestHeader](./docs/audit-management.md#AuditRequestHeader) Configures which HTTP request headers should be captured in [Vault audit logs](https://developer.hashicorp.com/vault/docs/audit).
 
 ## The common authentication section
 
@@ -564,6 +577,27 @@ note we just want to very that the group is created in vault, we are not actuall
 ```sh
 oc apply -f ./test/groups/group.yaml -n vault-admin
 oc apply -f ./test/groups/groupalias.yaml -n vault-admin
+```
+
+Test Identity OIDC Provider resources
+
+The resources should be applied in order: assignment, scope, client, then provider.
+
+```sh
+oc apply -f ./test/identityoidc/identityoidcassignment.yaml -n vault-admin
+oc apply -f ./test/identityoidc/identityoidcscope.yaml -n vault-admin
+oc apply -f ./test/identityoidc/identityoidcclient.yaml -n vault-admin
+oc apply -f ./test/identityoidc/identityoidcprovider.yaml -n vault-admin
+```
+
+Test Identity Token resources
+
+The resources should be applied in order: config, key, then role.
+
+```sh
+oc apply -f ./test/identitytoken/identitytokenconfig.yaml -n vault-admin
+oc apply -f ./test/identitytoken/identitytokenkey.yaml -n vault-admin
+oc apply -f ./test/identitytoken/identitytokenrole.yaml -n vault-admin
 ```
 
 ### Test helm chart locally

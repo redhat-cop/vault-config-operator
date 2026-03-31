@@ -577,4 +577,381 @@ var _ = Describe("Random Secret controller for v2 secrets", func() {
 
 		})
 	})
+
+	Context("When creating multiple RandomSecrets contributing to the same Vault path", func() {
+		It("Should merge different keys into the same Vault secret", func() {
+
+			By("Creating a new PasswordPolicy")
+			passwordPolicySimplePasswordInstance, err := decoder.GetPasswordPolicyInstance("../test/randomsecret/v2/00-passwordpolicy-simple-password-policy-v2.yaml")
+			Expect(err).To(BeNil())
+			passwordPolicySimplePasswordInstance.Namespace = vaultAdminNamespaceName
+			Expect(k8sIntegrationClient.Create(ctx, passwordPolicySimplePasswordInstance)).Should(Succeed())
+
+			pplookupKey := types.NamespacedName{Name: passwordPolicySimplePasswordInstance.Name, Namespace: passwordPolicySimplePasswordInstance.Namespace}
+			ppCreated := &redhatcopv1alpha1.PasswordPolicy{}
+
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, pplookupKey, ppCreated)
+				if err != nil {
+					return false
+				}
+
+				for _, condition := range ppCreated.Status.Conditions {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+						return true
+					}
+				}
+
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			By("Creating new Policies")
+			policyKVEngineAdminInstance, err := decoder.GetPolicyInstance("../test/randomsecret/v2/01-policy-kv-engine-admin-v2.yaml")
+			Expect(err).To(BeNil())
+			policyKVEngineAdminInstance.Namespace = vaultAdminNamespaceName
+			Expect(k8sIntegrationClient.Create(ctx, policyKVEngineAdminInstance)).Should(Succeed())
+
+			pLookupKey := types.NamespacedName{Name: policyKVEngineAdminInstance.Name, Namespace: policyKVEngineAdminInstance.Namespace}
+			pCreated := &redhatcopv1alpha1.Policy{}
+
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, pLookupKey, pCreated)
+				if err != nil {
+					return false
+				}
+
+				for _, condition := range pCreated.Status.Conditions {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+						return true
+					}
+				}
+
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			policySecretWriterInstance, err := decoder.GetPolicyInstance("../test/randomsecret/v2/04-policy-secret-writer-v2.yaml")
+			Expect(err).To(BeNil())
+			policySecretWriterInstance.Namespace = vaultAdminNamespaceName
+			Expect(k8sIntegrationClient.Create(ctx, policySecretWriterInstance)).Should(Succeed())
+
+			pLookupKey = types.NamespacedName{Name: policySecretWriterInstance.Name, Namespace: policySecretWriterInstance.Namespace}
+			pCreated = &redhatcopv1alpha1.Policy{}
+
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, pLookupKey, pCreated)
+				if err != nil {
+					return false
+				}
+
+				for _, condition := range pCreated.Status.Conditions {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+						return true
+					}
+				}
+
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			By("Creating new KubernetesAuthEngineRoles")
+
+			kaerKVEngineAdminInstance, err := decoder.GetKubernetesAuthEngineRoleInstance("../test/randomsecret/v2/02-kubernetesauthenginerole-kv-engine-admin-v2.yaml")
+			Expect(err).To(BeNil())
+			kaerKVEngineAdminInstance.Namespace = vaultAdminNamespaceName
+			Expect(k8sIntegrationClient.Create(ctx, kaerKVEngineAdminInstance)).Should(Succeed())
+
+			kaerLookupKey := types.NamespacedName{Name: kaerKVEngineAdminInstance.Name, Namespace: kaerKVEngineAdminInstance.Namespace}
+			kaerCreated := &redhatcopv1alpha1.KubernetesAuthEngineRole{}
+
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, kaerLookupKey, kaerCreated)
+				if err != nil {
+					return false
+				}
+
+				for _, condition := range kaerCreated.Status.Conditions {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+						return true
+					}
+				}
+
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			kaerSecretWriterInstance, err := decoder.GetKubernetesAuthEngineRoleInstance("../test/randomsecret/v2/05-kubernetesauthenginerole-secret-writer-v2.yaml")
+			Expect(err).To(BeNil())
+			kaerSecretWriterInstance.Namespace = vaultAdminNamespaceName
+			Expect(k8sIntegrationClient.Create(ctx, kaerSecretWriterInstance)).Should(Succeed())
+
+			kaerLookupKey = types.NamespacedName{Name: kaerSecretWriterInstance.Name, Namespace: kaerSecretWriterInstance.Namespace}
+			kaerCreated = &redhatcopv1alpha1.KubernetesAuthEngineRole{}
+
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, kaerLookupKey, kaerCreated)
+				if err != nil {
+					return false
+				}
+
+				for _, condition := range kaerCreated.Status.Conditions {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+						return true
+					}
+				}
+
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			By("Creating a new SecretEngineMount")
+
+			semInstance, err := decoder.GetSecretEngineMountInstance("../test/randomsecret/v2/03-secretenginemount-kv-v2.yaml")
+			Expect(err).To(BeNil())
+			semInstance.Namespace = vaultTestNamespaceName
+			Expect(k8sIntegrationClient.Create(ctx, semInstance)).Should(Succeed())
+
+			semLookupKey := types.NamespacedName{Name: semInstance.Name, Namespace: semInstance.Namespace}
+			semCreated := &redhatcopv1alpha1.SecretEngineMount{}
+
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, semLookupKey, semCreated)
+				if err != nil {
+					return false
+				}
+
+				for _, condition := range semCreated.Status.Conditions {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+						return true
+					}
+				}
+
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			By("Creating first RandomSecret with password key")
+
+			rsPasswordInstance, err := decoder.GetRandomSecretInstance("../test/randomsecret/v2/09-randomsecret-multikey-password-v2.yaml")
+			Expect(err).To(BeNil())
+			rsPasswordInstance.Namespace = vaultTestNamespaceName
+			Expect(k8sIntegrationClient.Create(ctx, rsPasswordInstance)).Should(Succeed())
+
+			rsPasswordLookupKey := types.NamespacedName{Name: rsPasswordInstance.Name, Namespace: rsPasswordInstance.Namespace}
+			rsPasswordCreated := &redhatcopv1alpha1.RandomSecret{}
+
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, rsPasswordLookupKey, rsPasswordCreated)
+				if err != nil {
+					return false
+				}
+
+				for _, condition := range rsPasswordCreated.Status.Conditions {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+						return true
+					}
+				}
+
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			By("Verifying Vault secret has password key")
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(rsPasswordInstance.GetPath())
+				if err != nil {
+					return err
+				}
+				if secret == nil {
+					return fmt.Errorf("secret is nil")
+				}
+				data, ok := secret.Data["data"].(map[string]interface{})
+				if !ok {
+					return fmt.Errorf("data field is not a map")
+				}
+				if _, ok := data["password"]; !ok {
+					return fmt.Errorf("password key not found")
+				}
+				return nil
+			}, timeout, interval).Should(Succeed())
+
+			By("Creating second RandomSecret with username key at same path")
+
+			rsUsernameInstance, err := decoder.GetRandomSecretInstance("../test/randomsecret/v2/10-randomsecret-multikey-username-v2.yaml")
+			Expect(err).To(BeNil())
+			rsUsernameInstance.Namespace = vaultTestNamespaceName
+			Expect(k8sIntegrationClient.Create(ctx, rsUsernameInstance)).Should(Succeed())
+
+			rsUsernameLookupKey := types.NamespacedName{Name: rsUsernameInstance.Name, Namespace: rsUsernameInstance.Namespace}
+			rsUsernameCreated := &redhatcopv1alpha1.RandomSecret{}
+
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, rsUsernameLookupKey, rsUsernameCreated)
+				if err != nil {
+					return false
+				}
+
+				for _, condition := range rsUsernameCreated.Status.Conditions {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+						return true
+					}
+				}
+
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			By("Verifying Vault secret has both password and username keys")
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(rsPasswordInstance.GetPath())
+				if err != nil {
+					return err
+				}
+				if secret == nil {
+					return fmt.Errorf("secret is nil")
+				}
+				data, ok := secret.Data["data"].(map[string]interface{})
+				if !ok {
+					return fmt.Errorf("data field is not a map")
+				}
+				if _, ok := data["password"]; !ok {
+					return fmt.Errorf("password key not found")
+				}
+				if _, ok := data["username"]; !ok {
+					return fmt.Errorf("username key not found")
+				}
+				return nil
+			}, timeout, interval).Should(Succeed())
+
+			By("Deleting first RandomSecret (password)")
+
+			Expect(k8sIntegrationClient.Delete(ctx, rsPasswordInstance)).Should(Succeed())
+
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, rsPasswordLookupKey, rsPasswordCreated)
+				return err != nil
+			}, timeout, interval).Should(BeTrue())
+
+			By("Verifying username key still exists in Vault after deleting password RandomSecret")
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(rsPasswordInstance.GetPath())
+				if err != nil {
+					return err
+				}
+				if secret == nil {
+					return fmt.Errorf("secret is nil")
+				}
+				data, ok := secret.Data["data"].(map[string]interface{})
+				if !ok {
+					return fmt.Errorf("data field is not a map")
+				}
+				if _, ok := data["username"]; !ok {
+					return fmt.Errorf("username key not found")
+				}
+				// Password should still exist since kvSecretRetainPolicy is Retain
+				if _, ok := data["password"]; !ok {
+					return fmt.Errorf("password key should still exist with Retain policy")
+				}
+				return nil
+			}, timeout, interval).Should(Succeed())
+
+			By("Deleting second RandomSecret (username)")
+
+			Expect(k8sIntegrationClient.Delete(ctx, rsUsernameInstance)).Should(Succeed())
+
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, rsUsernameLookupKey, rsUsernameCreated)
+				return err != nil
+			}, timeout, interval).Should(BeTrue())
+
+			By("Deleting the SecretEngineMount")
+
+			Expect(k8sIntegrationClient.Delete(ctx, semInstance)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(semInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+			By("Deleting KubernetesAuthEngineRoles")
+
+			Expect(k8sIntegrationClient.Delete(ctx, kaerSecretWriterInstance)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(kaerSecretWriterInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+			Expect(k8sIntegrationClient.Delete(ctx, kaerKVEngineAdminInstance)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(kaerKVEngineAdminInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+			By("Deleting Policies")
+
+			Expect(k8sIntegrationClient.Delete(ctx, policySecretWriterInstance)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(policySecretWriterInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+			Expect(k8sIntegrationClient.Delete(ctx, policyKVEngineAdminInstance)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(policyKVEngineAdminInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+			By("Deleting PasswordPolicy")
+
+			Expect(k8sIntegrationClient.Delete(ctx, passwordPolicySimplePasswordInstance)).Should(Succeed())
+
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read(passwordPolicySimplePasswordInstance.GetPath())
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+		})
+	})
 })

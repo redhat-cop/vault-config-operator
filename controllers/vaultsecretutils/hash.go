@@ -3,7 +3,10 @@ package vaultsecretutils
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"sort"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func hashHashes(l [32]byte, r [32]byte) [32]byte {
@@ -33,4 +36,18 @@ func HashData(data map[string][]byte) string {
 	}
 
 	return hex.EncodeToString(rootSha[:])
+}
+
+// HashMeta returns a SHA-256 hash of the object's labels and annotations.
+func HashMeta(meta metav1.ObjectMeta) string {
+	h := sha256.New()
+	h.Write([]byte(fmt.Sprintf("%v", meta.Labels)))
+	h.Write([]byte(fmt.Sprintf("%v", meta.Annotations)))
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+// GetResourceVersion returns a string combining the object's generation and a hash of its metadata.
+// This is used to detect spec or metadata changes that should trigger an immediate resync.
+func GetResourceVersion(meta metav1.ObjectMeta) string {
+	return fmt.Sprintf("%d-%s", meta.GetGeneration(), HashMeta(meta))
 }

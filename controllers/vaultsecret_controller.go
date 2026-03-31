@@ -259,6 +259,20 @@ func toNamespacedName(obj metav1.Object) string {
 
 func (r *VaultSecretReconciler) shouldSync(ctx context.Context, instance *redhatcopv1alpha1.VaultSecret) (bool, error) {
 
+	// if syncOnResourceChange is enabled and the VaultSecret spec or metadata has changed since the last sync,
+	// always sync immediately.
+	if instance.Spec.SyncOnResourceChange {
+		currentResourceVersion := vaultsecretutils.GetResourceVersion(instance.ObjectMeta)
+		if instance.Status.SyncedResourceVersion != currentResourceVersion {
+			r.Log.V(1).Info("VaultSecret resource version changed, forcing sync",
+				"namespacedName", toNamespacedName(instance),
+				"syncedResourceVersion", instance.Status.SyncedResourceVersion,
+				"currentResourceVersion", currentResourceVersion)
+			return true, nil
+		}
+	}
+
+	// check if the k8s secret is valid (exists, owned, data not tampered with)
 	secretNamespacedName := &types.NamespacedName{
 		Name:      instance.Spec.TemplatizedK8sSecret.Name,
 		Namespace: instance.Namespace,
@@ -374,6 +388,7 @@ func (r *VaultSecretReconciler) manageSyncLogic(ctx context.Context, instance *r
 
 	now := metav1.NewTime(time.Now())
 	instance.Status.LastVaultSecretUpdate = &now
+	instance.Status.SyncedResourceVersion = vaultsecretutils.GetResourceVersion(instance.ObjectMeta)
 	instance.Status.VaultSecretDefinitionsStatus = definitionsStatus
 
 	return nil

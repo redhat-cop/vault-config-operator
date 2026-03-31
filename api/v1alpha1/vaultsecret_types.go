@@ -38,6 +38,12 @@ type VaultSecretSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=90
 	RefreshThreshold int `json:"refreshThreshold,omitempty"`
+	// SyncOnResourceChange if set to true, the operator will immediately resync the secret from Vault
+	// whenever the VaultSecret spec or metadata changes, bypassing the time-based refresh gate.
+	// By default this is false, meaning changes to the resource will only take effect at the next scheduled refresh.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default=false
+	SyncOnResourceChange bool `json:"syncOnResourceChange,omitempty"`
 	// VaultSecretDefinitions are the secrets in Vault.
 	// +kubebuilder:validation:Required
 	VaultSecretDefinitions []VaultSecretDefinition `json:"vaultSecretDefinitions,omitempty"`
@@ -59,6 +65,11 @@ type VaultSecretStatus struct {
 
 	//NextVaultSecretUpdate the next time when this secret will be synced with Vault. If nil, it will not be refreshed.
 	NextVaultSecretUpdate *metav1.Time `json:"nextVaultSecretUpdate,omitempty"`
+
+	//SyncedResourceVersion is a combination of the VaultSecret's generation and metadata hash.
+	//Is enabled by SyncOnResourceChange: true
+	// +kubebuilder:validation:Optional
+	SyncedResourceVersion string `json:"syncedResourceVersion,omitempty"`
 
 	//VaultSecretDefinitionsStatus information used to determine if the secret should be rereconciled
 	VaultSecretDefinitionsStatus []VaultSecretDefinitionStatus `json:"vaultSecretDefinitionsStatus,omitempty" patchStrategy:"merge" patchMergeKey:"type"`

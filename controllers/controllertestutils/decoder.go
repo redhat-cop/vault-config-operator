@@ -186,3 +186,33 @@ func (d *decoder) GetDatabaseSecretEngineStaticRoleInstance(filename string) (*r
 
 	return nil, errDecode
 }
+
+func (d *decoder) GetEntityInstance(filename string) (*redhatcopv1alpha1.Entity, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.Entity{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.Entity)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetEntityAliasInstance(filename string) (*redhatcopv1alpha1.EntityAlias, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.EntityAlias{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.EntityAlias)
+		return o, nil
+	}
+
+	return nil, errDecode
+}

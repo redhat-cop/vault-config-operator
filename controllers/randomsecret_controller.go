@@ -152,24 +152,12 @@ func (r *RandomSecretReconciler) manageReconcileLogic(context context.Context, i
 		return nil
 	}
 	vaultEndpoint := vaultutils.NewVaultEndpoint(instance)
-	// When this is a newly created RandomSecret and no refresh period is defined (= one-off random password)
-	// check that the Vault KV secret does not exist already to avoid overwriting its existing value.
-	if instance.Status.LastVaultSecretUpdate == nil && instance.Spec.RefreshPeriod == nil {
-		found, err := vaultEndpoint.Exists(context)
-		if err != nil {
-			r.Log.Info("unable to verify secret existence", "instance", instance, "error", err)
-		}
-		if found {
-			r.Log.Info("no refresh period is defined and Vault secret already exists - nothing to do", "name", instance.Name)
-			return nil
-		}
-	}
 	err := instance.PrepareInternalValues(context, instance)
 	if err != nil {
 		r.Log.Error(err, "unable to generate new secret", "instance", instance)
 		return err
 	}
-	err = vaultEndpoint.Create(context)
+	err = vaultEndpoint.CreateOrMergeKV(context, instance.IsKVSecretsEngineV2())
 	if err != nil {
 		r.Log.Error(err, "unable to create/update Vault Secret", "instance", instance)
 		return err

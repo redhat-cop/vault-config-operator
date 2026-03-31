@@ -46,6 +46,58 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
+  - auditrequestheaders
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - auditrequestheaders/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - auditrequestheaders/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - audits
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - audits/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - audits/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
   - authenginemounts
   verbs:
   - create
@@ -315,6 +367,58 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
+  - entities
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - entities/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - entities/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - entityaliases
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - entityaliases/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - entityaliases/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
   - gcpauthengineconfigs
   verbs:
   - create
@@ -464,6 +568,188 @@ rules:
   - redhatcop.redhat.io
   resources:
   - groups/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identityoidcassignments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identityoidcassignments/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identityoidcassignments/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identityoidcclients
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identityoidcclients/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identityoidcclients/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identityoidcproviders
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identityoidcproviders/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identityoidcproviders/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identityoidcscopes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identityoidcscopes/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identityoidcscopes/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identitytokenconfigs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identitytokenconfigs/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identitytokenconfigs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identitytokenkeys
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identitytokenkeys/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identitytokenkeys/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identitytokenroles
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identitytokenroles/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - identitytokenroles/status
   verbs:
   - get
   - patch

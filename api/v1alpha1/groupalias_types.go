@@ -153,7 +153,7 @@ func (d *GroupAlias) PrepareInternalValues(context context.Context, object clien
 		log.Error(err, "authEngineMount not found at path", "path", d.Spec.AuthEngineMountPath)
 		return err
 	}
-	d.Spec.retrievedMountAccessor = secret.Data["accessor"].(string)
+	mountAccessor := secret.Data["accessor"].(string)
 
 	secret, found, err = vaultutils.ReadSecret(context, vaultutils.CleansePath("/identity/group/name/"+d.Spec.GroupName))
 	if err != nil {
@@ -165,19 +165,14 @@ func (d *GroupAlias) PrepareInternalValues(context context.Context, object clien
 		log.Error(err, "group not found", "name", d.Spec.GroupName)
 		return err
 	}
-	d.Spec.retrievedCanonicalID = secret.Data["id"].(string)
-	if d.Spec.Name != "" {
-		d.Spec.retrievedName = d.Spec.Name
-	} else {
-		d.Spec.retrievedName = d.Name
-	}
+	canonicalID := secret.Data["id"].(string)
 
 	if d.Status.ID == "" {
 		//we have to create the group alias as unfortunately this api is asymmetric
 		payload := map[string]interface{}{
 			"name":           map[bool]string{true: d.Spec.Name, false: d.Name}[d.Spec.Name != ""],
-			"mount_accessor": d.Spec.retrievedMountAccessor,
-			"canonical_id":   d.Spec.retrievedCanonicalID,
+			"mount_accessor": mountAccessor,
+			"canonical_id":   canonicalID,
 		}
 		log.V(1).Info("create group alias", "payload", payload)
 		vaultClient := context.Value("vaultClient").(*vault.Client)
@@ -195,7 +190,16 @@ func (d *GroupAlias) PrepareInternalValues(context context.Context, object clien
 		}
 	}
 
+	// Set all retrieved fields after any status update to ensure they're always available
+	// Status().Update() overwrites the local object, clearing non-persisted fields
+	d.Spec.retrievedMountAccessor = mountAccessor
+	d.Spec.retrievedCanonicalID = canonicalID
 	d.Spec.retrievedAliasID = d.Status.ID
+	if d.Spec.Name != "" {
+		d.Spec.retrievedName = d.Spec.Name
+	} else {
+		d.Spec.retrievedName = d.Name
+	}
 	return nil
 }
 

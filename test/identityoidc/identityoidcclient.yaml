@@ -1,0 +1,16 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: IdentityOIDCClient
+metadata:
+  name: test-client
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  key: default
+  clientType: confidential
+  redirectURIs:
+  - https://example.com/callback
+  assignments:
+  - test-assignment
+  idTokenTTL: "24h"
+  accessTokenTTL: "24h"
