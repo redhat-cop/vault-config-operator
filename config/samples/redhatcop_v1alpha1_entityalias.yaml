@@ -1,0 +1,19 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: EntityAlias
+metadata:
+  labels:
+    app.kubernetes.io/name: entityalias
+    app.kubernetes.io/instance: entityalias-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: entityalias-sample
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  authEngineMountPath: kubernetes
+  entityName: entity-sample
+  customMetadata:
+    contact_email: user@example.com
+    department: engineering

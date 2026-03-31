@@ -4,6 +4,8 @@ The always present [Identity secret engine](https://developer.hashicorp.com/vaul
 
 The vault config operator supports the following API related to the Identity secret engine
 
+  - [Entity](#entity)
+  - [EntityAlias](#entityalias)
   - [Group](#group)
   - [GroupAlias](#groupalias)
   - [IdentityOIDCProvider](#identityoidcprovider)
@@ -14,6 +16,65 @@ The vault config operator supports the following API related to the Identity sec
   - [IdentityTokenKey](#identitytokenkey)
   - [IdentityTokenRole](#identitytokenrole)
 
+## Entity
+
+The Entity CRD allows defining a [Vault Entity](https://developer.hashicorp.com/vault/api-docs/secret/identity/entity).
+
+An entity represents a single user or service that can authenticate to Vault through one or more authentication methods. Entities can have associated policies and metadata.
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Entity
+metadata:
+  name: entity-sample
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  metadata: 
+    team: engineering
+    environment: production
+  policies: 
+  - dev-policy
+  - read-only-policy
+  disabled: false
+```
+
+### Entity Fields
+
+- `metadata`: A map of key-value pairs to be associated with the entity. This is useful for storing additional information about the entity.
+- `policies`: A list of policy names to be tied to the entity. These policies define what the entity can access in Vault.
+- `disabled`: A boolean flag indicating whether the entity is disabled. When disabled, the entity's associated tokens cannot be used, but they are not revoked.
+
+## EntityAlias
+
+The EntityAlias CRD allows defining a [Vault EntityAlias](https://developer.hashicorp.com/vault/api-docs/secret/identity/entity-alias).
+
+An entity alias maps an identity from an authentication source (like Kubernetes, LDAP, etc.) to a Vault entity. This allows the same logical entity to authenticate through different methods.
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: EntityAlias
+metadata:
+  name: entityalias-sample
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  authEngineMountPath: kubernetes
+  entityName: entity-sample
+  customMetadata:
+    contact_email: user@example.com
+    department: engineering
+```
+
+### EntityAlias Fields
+
+- `authEngineMountPath`: The path where the authentication engine is mounted (e.g., "kubernetes", "ldap").
+- `entityName`: The name of the Entity resource to which this alias belongs.
+- `customMetadata`: A map of arbitrary string to string valued user-provided metadata meant to describe the alias.
+
+**Note**: Similar to GroupAlias, we pass the auth engine mount path and entity name instead of their respective IDs as expected by the Vault API. The vault-config-operator will resolve those values to the relative IDs, keeping things simpler for the user.
 
 ## Group
 
@@ -52,7 +113,7 @@ spec:
   groupName: group-sample 
 ```
 
-Notice that we pass the auth engine mount path and the group name as opposed to the respctive IDs as expected by the Vault API. The vault-config-operator will resolved those values to teh relative IDs. This should keep things simpler for the user.
+Notice that we pass the auth engine mount path and the group name as opposed to the respective IDs as expected by the Vault API. The vault-config-operator will resolve those values to the relative IDs. This should keep things simpler for the user.
 
 ## IdentityOIDCProvider
 

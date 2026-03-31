@@ -1,0 +1,95 @@
+//go:build integration
+// +build integration
+
+package controllers
+
+import (
+	"time"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+)
+
+var _ = Describe("EntityAlias controller", func() {
+
+	timeout := time.Second * 120
+	interval := time.Second * 2
+
+	Context("When creating an EntityAlias", func() {
+		It("Should create an EntityAlias in Vault", func() {
+
+			By("Creating a new Entity first")
+			entityInstance, err := decoder.GetEntityInstance("../test/identity/01-entity-sample.yaml")
+			Expect(err).To(BeNil())
+			entityInstance.Namespace = vaultAdminNamespaceName
+			Expect(k8sIntegrationClient.Create(ctx, entityInstance)).Should(Succeed())
+
+			entityLookupKey := types.NamespacedName{Name: entityInstance.Name, Namespace: entityInstance.Namespace}
+			entityCreated := &redhatcopv1alpha1.Entity{}
+
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, entityLookupKey, entityCreated)
+				if err != nil {
+					return false
+				}
+
+				for _, condition := range entityCreated.Status.Conditions {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+						return true
+					}
+				}
+
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			By("Creating a new EntityAlias")
+			entityAliasInstance, err := decoder.GetEntityAliasInstance("../test/identity/02-entityalias-sample.yaml")
+			Expect(err).To(BeNil())
+			entityAliasInstance.Namespace = vaultAdminNamespaceName
+			Expect(k8sIntegrationClient.Create(ctx, entityAliasInstance)).Should(Succeed())
+
+			lookupKey := types.NamespacedName{Name: entityAliasInstance.Name, Namespace: entityAliasInstance.Namespace}
+			created := &redhatcopv1alpha1.EntityAlias{}
+
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, lookupKey, created)
+				if err != nil {
+					return false
+				}
+
+				for _, condition := range created.Status.Conditions {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+						return true
+					}
+				}
+
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			By("Verifying that the EntityAlias has an ID")
+			Expect(created.Status.ID).NotTo(BeEmpty())
+
+			By("Deleting the EntityAlias")
+			Expect(k8sIntegrationClient.Delete(ctx, created)).Should(Succeed())
+
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, lookupKey, created)
+				return err != nil
+			}, timeout, interval).Should(BeTrue())
+
+			By("Deleting the Entity")
+			Expect(k8sIntegrationClient.Delete(ctx, entityCreated)).Should(Succeed())
+
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, entityLookupKey, entityCreated)
+				return err != nil
+			}, timeout, interval).Should(BeTrue())
+
+		})
+	})
+})

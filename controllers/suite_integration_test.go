@@ -204,6 +204,12 @@ var _ = BeforeSuite(func() {
 	err = (&GroupAliasReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GroupAlias")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
+	err = (&EntityReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "Entity")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&EntityAliasReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "EntityAlias")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
 	By(fmt.Sprintf("Creating the %v namespace", vaultAdminNamespaceName))
 	vaultAdminNamespace = &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{

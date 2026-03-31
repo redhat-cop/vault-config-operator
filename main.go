@@ -299,6 +299,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controllers.EntityReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "Entity")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Entity")
+		os.Exit(1)
+	}
+
+	if err = (&controllers.EntityAliasReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "EntityAlias")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "EntityAlias")
+		os.Exit(1)
+	}
+
 	if err = (&controllers.GroupReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "Group")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Group")
 		os.Exit(1)
