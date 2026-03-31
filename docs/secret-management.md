@@ -72,6 +72,7 @@ Any manual data change or deletion of the K8s Secret owned by a VaultSecret CR w
 
 - `refreshPeriod` the pull interval for syncing Vault secrets with the K8s Secret. This settings takes precedence over any lease duration returned by vault, effectively controlling when exactly all vault secrets defined in the vaultSecretDefinitions should re-sync.
 - `refreshThreshold` this is will instruct the operator to refresh the K8s Secret when a percentage of the lease duration has elapsed, if no `refreshPeriod` is specified. This is particularly useful for controlling when dynamic secrets should be refreshed before the lease duration is exceeded. The default is 90, meaning the secret would refresh after 90% of the time has passed from the vault secret's lease duration. When multiple vaultSecretDefinitions are defined, the smallest lease duration will be used when performing the scheduling for the next refresh.
+- `syncOnResourceChange` if set to `true`, the operator will immediately resync the secret from Vault whenever the VaultSecret spec or metadata (labels/annotations) changes, bypassing the time-based refresh gate. By default this is `false`, meaning changes to the VaultSecret resource will only take effect at the next scheduled refresh (controlled by `refreshPeriod` or `refreshThreshold`). This is useful when you want spec changes like updating `output.stringData` templates or `vaultSecretDefinitions` to be reflected in the K8s Secret right away without waiting for the next refresh cycle.
 - `vaultSecretDefinitions` is an array of Vault Secret References. Every `vaultSecretDefinition` has...
   - [authentication](#the-authentication-section) section.
   - `name` a unique name for the Vault secret to reference when templating, since many Vault secrets may have the same name.
@@ -94,6 +95,7 @@ metadata:
   name: randomsecret
 spec:
   refreshPeriod: 1m0s
+  syncOnResourceChange: true
   vaultSecretDefinitions:
     - authentication:
         path: kubernetes
