@@ -1,3 +1,4 @@
+KUBECTL_WAIT_TIMEOUT ?= 5m
 CHART_REPO_URL ?= http://example.com
 HELM_REPO_DEST ?= /tmp/gh-pages
 OPERATOR_NAME ?=$(shell basename -z `pwd`)
@@ -139,7 +140,7 @@ deploy-ingress: kubectl helm
 	$(HELM) upgrade -i ingress-nginx ./integration/helm/ingress-nginx -n vault --atomic --create-namespace
 	curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml | $(KUBECTL) create -f - -n ingress-nginx
 	$(KUBECTL) rollout status deployment ingress-nginx-controller -n ingress-nginx -w
-	$(KUBECTL) wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=90s
+	$(KUBECTL) wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=${KUBECTL_WAIT_TIMEOUT}
 
 .PHONY: deploy-vault
 deploy-vault: kubectl helm
@@ -148,7 +149,7 @@ deploy-vault: kubectl helm
 	$(HELM) repo add hashicorp https://helm.releases.hashicorp.com
 	$(HELM) show chart hashicorp/vault --version $(VAULT_CHART_VERSION)
 	$(HELM) upgrade vault hashicorp/vault --version $(VAULT_CHART_VERSION) -i --create-namespace -n vault --atomic -f ./integration/vault-values.yaml
-	$(KUBECTL) wait --for=condition=ready pod/vault-0 -n vault --timeout=5m
+	$(KUBECTL) wait --for=condition=ready pod/vault-0 -n vault --timeout=${KUBECTL_WAIT_TIMEOUT}
 
 .PHONY: kind-setup
 kind-setup: kind
@@ -160,7 +161,7 @@ ldap-setup: kind-setup vault
 ## Deploy LDAP Instance in ldap namespace
 	$(KUBECTL) create namespace ldap
 	$(KUBECTL) apply -f ./integration/ldap -n ldap
-	$(KUBECTL) wait --for=condition=ready -n ldap pod $$($(KUBECTL) get pods -n ldap -l=app=ldap -o json | jq '.items[].metadata.name') --timeout=5m
+	$(KUBECTL) wait --for=condition=ready -n ldap pod $$($(KUBECTL) get pods -n ldap -l=app=ldap -o json | jq '.items[].metadata.name') --timeout=${KUBECTL_WAIT_TIMEOUT}
 	$(KUBECTL) port-forward -n vault vault-0 8201:8200
 	$(KUBECTL) port-forward $$($(KUBECTL) get pods -n ldap -l=app=ldap -o json | jq '.items[].metadata.name') 8555:389 -n ldap
 	export VAULT_ADDR=http://localhost:8201
@@ -399,8 +400,8 @@ helmchart-test: kind-setup deploy-vault helmchart
 	  --set image.tag=${HELM_TEST_IMG_TAG} \
 	  --set env[0].name=VAULT_ADDR \
 	  --set env[0].value=http://vault.vault.svc:8200
-	$(KUBECTL) wait --namespace ${OPERATOR_NAME}-local --for=condition=ready pod --selector=app.kubernetes.io/name=${OPERATOR_NAME} --timeout=90s || { $(KUBECTL) get pods -A; $(KUBECTL) logs -n ${OPERATOR_NAME}-local deploy/${OPERATOR_NAME}-local --all-containers; exit 1; }
-	$(KUBECTL) wait --namespace default --for=condition=ready pod prometheus-kube-prometheus-stack-prometheus-0 --timeout=5m || { $(KUBECTL) get pods -A; $(KUBECTL) logs -n default statefulset/prometheus-kube-prometheus-stack-prometheus --all-containers; exit 1; }
+	$(KUBECTL) wait --namespace ${OPERATOR_NAME}-local --for=condition=ready pod --selector=app.kubernetes.io/name=${OPERATOR_NAME} --timeout=${KUBECTL_WAIT_TIMEOUT} || { $(KUBECTL) get pods -A; $(KUBECTL) logs -n ${OPERATOR_NAME}-local deploy/${OPERATOR_NAME}-local --all-containers; exit 1; }
+	$(KUBECTL) wait --namespace default --for=condition=ready pod prometheus-kube-prometheus-stack-prometheus-0 --timeout=${KUBECTL_WAIT_TIMEOUT} || { $(KUBECTL) get pods -A; $(KUBECTL) logs -n default statefulset/prometheus-kube-prometheus-stack-prometheus --all-containers; exit 1; }
 	$(KUBECTL) exec prometheus-kube-prometheus-stack-prometheus-0 -n default -c test-metrics -- /bin/sh -c "echo 'Example metrics...' && cat /tmp/ready"
 
 .PHONY: helmchart-clean
@@ -449,20 +450,6 @@ ifeq (,$(wildcard $(HELM)))
 	curl --create-dirs -sSLo ${HELM}.tar.gz https://get.helm.sh/helm-${HELM_VERSION}-$${OS}-$${ARCH}.tar.gz ;\
 	tar -xf ${HELM}.tar.gz -C $(LOCALBIN)/ ;\
 	mv ./bin/$${OS}-$${ARCH}/helm ${HELM}
-endif
-
-.PHONY: operator-sdk
-OPERATOR_SDK ?= $(LOCALBIN)/operator-sdk
-operator-sdk: ## Download operator-sdk locally if necessary.
-ifeq (,$(wildcard $(OPERATOR_SDK)))
-	@{ \
-	set -e ;\
-	echo "Downloading operator-sdk to $(OPERATOR_SDK)..." ;\
-	mkdir -p $(dir $(OPERATOR_SDK)) ;\
-	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
-	curl -sSLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_$${OS}_$${ARCH} ;\
-	chmod +x $(OPERATOR_SDK) ;\
-	}
 endif
 
 .PHONY: clean
