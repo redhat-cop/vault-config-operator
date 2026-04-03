@@ -36,7 +36,7 @@ spec:
         - --tls-cert-file=/etc/certs/tls/tls.crt
         - --tls-private-key-file=/etc/certs/tls/tls.key
         - --v=0
-        image: "{{ .Values.kube_rbac_proxy.image.repository }}:{{ .Values.kube_rbac_proxy.image.tag }}"
+        image: {{ include "vault-config-operator.image" ( dict "imageRoot" .Values.kube_rbac_proxy.image "global" .Values.global "Chart" .Chart "context" $ ) }}
         name: kube-rbac-proxy
         securityContext:
           {{- toYaml .Values.kube_rbac_proxy.securityContext | nindent 10 }}
@@ -57,7 +57,7 @@ spec:
         {{- with .Values.args }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        image: {{ include "vault-config-operator.image" ( dict "imageRoot" .Values.image "global" .Values.global "Chart" .Chart "context" $ ) }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         volumeMounts:
         - name: webhook-service-cert

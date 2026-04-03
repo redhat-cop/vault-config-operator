@@ -29,6 +29,7 @@ bundle
 bundle/**
 bundle.Dockerfile
 charts/
+charts-unittest/
 bundle*/
 
 .vscode

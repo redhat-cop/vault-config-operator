@@ -22,3 +22,5 @@
 *.tmproj
 .vscode/
 local-development/
+# helm unittest
+tests

@@ -1,0 +1,95 @@
+suite: Image repository and tag tests
+templates:
+  - manager.yaml
+tests:
+  - it: default values
+    asserts:
+      - isKind:
+          of: Deployment
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: ^quay\.io/redhat-cop/kube-rbac-proxy:v\d+\.\d+\.\d+$
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: controller:0.0.1
+  - it: latest tag for operator
+    set:
+      image.tag: latest
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: controller:latest
+  - it: image repository and tag for operator
+    set:
+      image.repository: quay.io/redhat-cop/vault-config-operator
+      image.tag: 1.0.0
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: quay.io/redhat-cop/vault-config-operator:1.0.0
+  - it: image registry
+    set:
+      image.registry: quay.io
+      image.repository: redhat-cop/vault-config-operator
+      image.tag: 1.0.1
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: quay.io/redhat-cop/vault-config-operator:1.0.1
+  - it: global image registry
+    set:
+      global.imageRegistry: quay.io
+    asserts:
+      - isKind:
+          of: Deployment
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: ^quay\.io/redhat-cop/kube-rbac-proxy:v\d+\.\d+\.\d+$
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: quay.io/controller:0.0.1
+  - it: image registry template
+    set:
+      global.containerImageRegistry: registry.example.com
+      image.registry: "{{.Values.global.containerImageRegistry}}"
+      image.repository: redhat-cop/vault-config-operator
+      image.tag: 1.0.1
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: registry.example.com/redhat-cop/vault-config-operator:1.0.1
+  - it: image repository template
+    set:
+      global.containerImageRegistry: registry.example.com
+      image.repository: "{{.Values.global.containerImageRegistry}}/redhat-cop/vault-config-operator"
+      image.tag: 1.0.1
+    asserts:
+      - isKind:
+          of: Deployment
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: ^quay\.io/redhat-cop/kube-rbac-proxy:v\d+\.\d+\.\d+$
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: registry.example.com/redhat-cop/vault-config-operator:1.0.1
+  - it: global image registry template
+    set:
+      global.containerImageRegistry: registry.example.com
+      global.imageRegistry: "{{.Values.global.containerImageRegistry}}"
+    asserts:
+      - isKind:
+          of: Deployment
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: ^registry\.example\.com/redhat-cop/kube-rbac-proxy:v\d+\.\d+\.\d+$
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: registry.example.com/controller:0.0.1
