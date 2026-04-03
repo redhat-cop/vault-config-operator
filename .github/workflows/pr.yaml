@@ -14,7 +14,7 @@ on:
 jobs:
   shared-operator-workflow:
     name: shared-operator-workflow
-    uses: trevorbox/github-workflows-operators/.github/workflows/pr-operator.yml@44fcea4bf1c011c5a64fa7f5b887390c9f9dd2a6
+    uses: redhat-cop/github-workflows-operators/.github/workflows/pr-operator.yml@5b0493408637600ef9c71d2321337adac65153a3 # v1.1.6
     with: 
       RUN_UNIT_TESTS: true
       RUN_INTEGRATION_TESTS: true
