@@ -1,6 +1,6 @@
 # Story 1.1: Unit tests for `toMap()` and `IsEquivalentToDesiredState` — Simple Standard Types
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -20,43 +20,51 @@ So that I can confidently modify CRD fields without breaking the declarative rec
 
 ## Types Covered
 
-| # | Type | File | Has `toMap()` | Has Existing Tests | Test File |
-|---|------|------|---------------|--------------------|-----------|
-| 1 | IdentityOIDCScope | `api/v1alpha1/identityoidcscope_types.go` | Yes (on `*IdentityOIDCScopeSpec`) | Yes — GetPath, GetPayload, omit-empty, IsEquivalentToDesiredState | `api/v1alpha1/identityoidc_test.go` |
-| 2 | IdentityOIDCProvider | `api/v1alpha1/identityoidcprovider_types.go` | Yes (on `*IdentityOIDCProviderSpec`) | Yes — GetPath, GetPayload, without-issuer, IsEquivalentToDesiredState | `api/v1alpha1/identityoidc_test.go` |
-| 3 | IdentityOIDCClient | `api/v1alpha1/identityoidcclient_types.go` | Yes (on `*IdentityOIDCClientSpec`) | Yes — GetPath, GetPayload, IsEquivalentToDesiredState | `api/v1alpha1/identityoidc_test.go` |
-| 4 | IdentityOIDCAssignment | `api/v1alpha1/identityoidcassignment_types.go` | Yes (on `*IdentityOIDCAssignmentSpec`) | Yes — GetPath, GetPayload, IsEquivalentToDesiredState | `api/v1alpha1/identityoidc_test.go` |
-| 5 | IdentityTokenConfig | `api/v1alpha1/identitytokenconfig_types.go` | Yes (on `*IdentityTokenConfigSpec`) | Yes — GetPath, GetPayload, empty-issuer, IsNotDeletable, IsEquivalentToDesiredState | `api/v1alpha1/identitytoken_test.go` |
-| 6 | IdentityTokenKey | `api/v1alpha1/identitytokenkey_types.go` | Yes (on `*IdentityTokenKeySpec`) | Yes — GetPath, GetPayload, IsEquivalentToDesiredState | `api/v1alpha1/identitytoken_test.go` |
-| 7 | IdentityTokenRole | `api/v1alpha1/identitytokenrole_types.go` | Yes (on `*IdentityTokenRoleSpec`) | Yes — GetPath, GetPayload, omits-optional, IsEquivalentToDesiredState | `api/v1alpha1/identitytoken_test.go` |
-| 8 | PasswordPolicy | `api/v1alpha1/passwordpolicy_types.go` | **No** — inline in `GetPayload()` | **No** GetPayload/IsEquivalent tests | **None** — create new |
-| 9 | AuditRequestHeader | `api/v1alpha1/auditrequestheader_types.go` | **No** — inline in `GetPayload()` | **No tests at all** | **None** — create new |
+| # | Type | File | Has `toMap()` | Tests Added by Story 1.1 | Test File |
+|---|------|------|---------------|--------------------------|-----------|
+| 1 | IdentityOIDCScope | `api/v1alpha1/identityoidcscope_types.go` | Yes (on `*IdentityOIDCScopeSpec`) | Extra-field behavior | `api/v1alpha1/identityoidc_test.go` |
+| 2 | IdentityOIDCProvider | `api/v1alpha1/identityoidcprovider_types.go` | Yes (on `*IdentityOIDCProviderSpec`) | Extra-field behavior | `api/v1alpha1/identityoidc_test.go` |
+| 3 | IdentityOIDCClient | `api/v1alpha1/identityoidcclient_types.go` | Yes (on `*IdentityOIDCClientSpec`) | Extra-field behavior | `api/v1alpha1/identityoidc_test.go` |
+| 4 | IdentityOIDCAssignment | `api/v1alpha1/identityoidcassignment_types.go` | Yes (on `*IdentityOIDCAssignmentSpec`) | Extra-field behavior | `api/v1alpha1/identityoidc_test.go` |
+| 5 | IdentityTokenConfig | `api/v1alpha1/identitytokenconfig_types.go` | Yes (on `*IdentityTokenConfigSpec`) | Extra-field behavior | `api/v1alpha1/identitytoken_test.go` |
+| 6 | IdentityTokenKey | `api/v1alpha1/identitytokenkey_types.go` | Yes (on `*IdentityTokenKeySpec`) | Extra-field behavior | `api/v1alpha1/identitytoken_test.go` |
+| 7 | IdentityTokenRole | `api/v1alpha1/identitytokenrole_types.go` | Yes (on `*IdentityTokenRoleSpec`) | Extra-field behavior | `api/v1alpha1/identitytoken_test.go` |
+| 8 | PasswordPolicy | `api/v1alpha1/passwordpolicy_types.go` | **No** — inline in `GetPayload()` | GetPath, GetPayload, IsEquivalent, extra-field, IsDeletable, Conditions | `api/v1alpha1/passwordpolicy_test.go` |
+| 9 | AuditRequestHeader | `api/v1alpha1/auditrequestheader_types.go` | **No** — inline in `GetPayload()` | GetPath, GetPayload, IsEquivalent, missing-key, non-bool, extra-field-ignored, IsDeletable, Conditions | `api/v1alpha1/auditrequestheader_test.go` |
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Extend IdentityOIDC tests with AC #4 (extra fields ignored) (AC: 4)
-  - [ ] 1.1: Add `TestIdentityOIDCScopeIsEquivalentExtraFieldsIgnored` — but **NOTE**: current implementation uses `reflect.DeepEqual(desiredState, payload)` which will **fail** with extra fields. See Dev Notes for details on how to handle this.
-  - [ ] 1.2: Add equivalent extra-field tests for IdentityOIDCProvider, IdentityOIDCClient, IdentityOIDCAssignment
-- [ ] Task 2: Extend IdentityToken tests with AC #4 (extra fields ignored) (AC: 4)
-  - [ ] 2.1: Add extra-field tests for IdentityTokenConfig, IdentityTokenKey, IdentityTokenRole
-- [ ] Task 3: Add PasswordPolicy unit tests (AC: 1, 2, 3, 4)
-  - [ ] 3.1: Create `api/v1alpha1/passwordpolicy_test.go`
-  - [ ] 3.2: Add `TestPasswordPolicyGetPath` — with and without `spec.name`
-  - [ ] 3.3: Add `TestPasswordPolicyGetPayload` — verify `{"policy": <HCL>}` output
-  - [ ] 3.4: Add `TestPasswordPolicyIsEquivalentToDesiredState` — matching and non-matching
-  - [ ] 3.5: Add extra-fields test (same note as Task 1.1 applies)
-  - [ ] 3.6: Add `TestPasswordPolicyIsDeletable` and `TestPasswordPolicyConditions`
-- [ ] Task 4: Add AuditRequestHeader unit tests (AC: 1, 2, 3, 4)
-  - [ ] 4.1: Create `api/v1alpha1/auditrequestheader_test.go`
-  - [ ] 4.2: Add `TestAuditRequestHeaderGetPath` — verify `sys/config/auditing/request-headers/{name}`
-  - [ ] 4.3: Add `TestAuditRequestHeaderGetPayload` — verify `{"hmac": bool}` output
-  - [ ] 4.4: Add `TestAuditRequestHeaderIsEquivalentToDesiredState` — matching and non-matching
-  - [ ] 4.5: Add edge case: `IsEquivalentToDesiredState` with missing `hmac` key returns `false`
-  - [ ] 4.6: Add edge case: `IsEquivalentToDesiredState` with non-bool `hmac` value returns `false`
-  - [ ] 4.7: Add `TestAuditRequestHeaderIsDeletable` and `TestAuditRequestHeaderConditions`
-- [ ] Task 5: Verify all tests pass (AC: all)
-  - [ ] 5.1: Run `go test ./api/v1alpha1/ -v -count=1` to confirm all new and existing tests pass
-  - [ ] 5.2: Run `make test` to verify no regressions in full unit test suite
+- [x] Task 1: Extend IdentityOIDC tests with AC #4 (extra fields ignored) (AC: 4)
+  - [x] 1.1: Add `TestIdentityOIDCScopeIsEquivalentExtraFieldsReturnsFalse` — documents that reflect.DeepEqual returns false with extra fields; comment explains reconciler framework pre-filters.
+  - [x] 1.2: Add equivalent extra-field tests for IdentityOIDCProvider, IdentityOIDCClient, IdentityOIDCAssignment
+- [x] Task 2: Extend IdentityToken tests with AC #4 (extra fields ignored) (AC: 4)
+  - [x] 2.1: Add extra-field tests for IdentityTokenConfig, IdentityTokenKey, IdentityTokenRole
+- [x] Task 3: Add PasswordPolicy unit tests (AC: 1, 2, 3, 4)
+  - [x] 3.1: Create `api/v1alpha1/passwordpolicy_test.go`
+  - [x] 3.2: Add `TestPasswordPolicyGetPath` — with and without `spec.name`
+  - [x] 3.3: Add `TestPasswordPolicyGetPayload` — verify `{"policy": <HCL>}` output
+  - [x] 3.4: Add `TestPasswordPolicyIsEquivalentToDesiredState` — matching and non-matching
+  - [x] 3.5: Add extra-fields test (same note as Task 1.1 applies)
+  - [x] 3.6: Add `TestPasswordPolicyIsDeletable` and `TestPasswordPolicyConditions`
+- [x] Task 4: Add AuditRequestHeader unit tests (AC: 1, 2, 3, 4)
+  - [x] 4.1: Create `api/v1alpha1/auditrequestheader_test.go`
+  - [x] 4.2: Add `TestAuditRequestHeaderGetPath` — verify `sys/config/auditing/request-headers/{name}`
+  - [x] 4.3: Add `TestAuditRequestHeaderGetPayload` — verify `{"hmac": bool}` output
+  - [x] 4.4: Add `TestAuditRequestHeaderIsEquivalentToDesiredState` — matching and non-matching
+  - [x] 4.5: Add edge case: `IsEquivalentToDesiredState` with missing `hmac` key returns `false`
+  - [x] 4.6: Add edge case: `IsEquivalentToDesiredState` with non-bool `hmac` value returns `false`
+  - [x] 4.7: Add `TestAuditRequestHeaderIsDeletable` and `TestAuditRequestHeaderConditions`
+- [x] Task 5: Verify all tests pass (AC: all)
+  - [x] 5.1: Run `go test ./api/v1alpha1/ -v -count=1` to confirm all new and existing tests pass
+  - [x] 5.2: Run `make test` to verify no regressions in full unit test suite
+
+### Review Findings
+
+- [x] [Review][Defer] AC #4 still says extra unmanaged fields should return `true`, but the implemented tests intentionally assert `false` for the 7 `reflect.DeepEqual`-based types — deferred pending product decision on whether to amend AC #4 or change the implementations (tracked in Story 7-4)
+- [x] [Review][Patch] Remove the incorrect claim that the reconciler pre-filters Vault read payloads before `IsEquivalentToDesiredState` [`api/v1alpha1/identityoidc_test.go:426`, `api/v1alpha1/identitytoken_test.go:275`, `api/v1alpha1/passwordpolicy_test.go:98`, `_bmad-output/implementation-artifacts/1-1-unit-tests-tomap-and-isequivalenttodesiredstate-simple-standard-types.md`]
+- [x] [Review][Patch] Refresh the story's `Types Covered` table so it matches the implemented test files and completed tasks [`_bmad-output/implementation-artifacts/1-1-unit-tests-tomap-and-isequivalenttodesiredstate-simple-standard-types.md`]
+- [x] [Review][Patch] Strengthen `AuditRequestHeader` path coverage to prove `GetPath()` uses `spec.name` only and does not silently fall back to `metadata.name` [`api/v1alpha1/auditrequestheader_test.go:9`]
+- [x] [Review][Patch] Fix the Dev Agent Record counts: `AuditRequestHeader` has 8 top-level test functions, and the diff adds 21 new test functions total, not 9 / 20 [`_bmad-output/implementation-artifacts/1-1-unit-tests-tomap-and-isequivalenttodesiredstate-simple-standard-types.md`]
 
 ## Dev Notes
 
@@ -64,13 +72,11 @@ So that I can confidently modify CRD fields without breaking the declarative rec
 
 **7 of 9 types use `reflect.DeepEqual(desiredState, payload)` for `IsEquivalentToDesiredState`.** This means if the `payload` map (Vault read response) contains extra keys not in `desiredState`, the comparison returns `false` — the opposite of what AC #4 requires.
 
-**However**, in the real reconciliation flow (`VaultResource.CreateOrUpdate`), the framework **pre-filters** the Vault read response to only include keys present in the desired state before calling `IsEquivalentToDesiredState`. The filtering happens at the `VaultResource` level, not in the type method itself.
+**In the real reconciliation flow** (`VaultEndpoint.CreateOrUpdate` in `api/v1alpha1/utils/vaultobject.go`), the framework passes the raw `secret.Data` map from Vault directly into `IsEquivalentToDesiredState` — there is **no pre-filtering**. This means extra Vault-returned keys cause an unnecessary (but harmless) write on every reconcile for these types. Story 7-4 tracks hardening this behavior.
 
-**Therefore, for AC #4 testing, you have two valid approaches:**
+**For AC #4 testing, the implemented approach is:**
 
-1. **Document behavior as-is**: Write tests proving that extra fields cause `IsEquivalentToDesiredState` to return `false` for these types. Add a comment explaining that the reconciler framework handles filtering before calling this method. This is the **recommended** approach — it documents actual behavior without changing production code.
-
-2. **Modify implementations**: Change `IsEquivalentToDesiredState` to filter extra keys before comparison. This is **not recommended** for this story — it would change production behavior and requires its own story + broader testing.
+1. **Document behavior as-is**: Tests prove that extra fields cause `IsEquivalentToDesiredState` to return `false` for these types. This documents actual behavior without changing production code.
 
 **AuditRequestHeader is the exception**: Its `IsEquivalentToDesiredState` only checks `payload["hmac"].(bool)` — it inherently ignores extra fields. Test AC #4 directly for this type.
 
@@ -193,9 +199,22 @@ func (i *IdentityOIDCProviderSpec) toMap() map[string]interface{} {
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Opus 4.6 (via Cursor)
 
 ### Debug Log References
+No debug issues encountered. All tests passed on first run.
 
 ### Completion Notes List
+- **Task 1 & 2 (AC #4 — extra-field behavior):** Followed the "document behavior as-is" approach from Dev Notes. All 7 types that use `reflect.DeepEqual` return `false` when extra fields are present; the reconciler passes raw Vault data with no filtering, so extra keys trigger an unnecessary write (tracked in Story 7-4). AuditRequestHeader is the exception — its field-specific `payload["hmac"].(bool)` check inherently ignores extra fields, confirmed with a test asserting `true`.
+- **Task 3 (PasswordPolicy):** Created new test file with 6 tests covering GetPath (with/without spec.name), GetPayload (single "policy" key with HCL content), IsEquivalentToDesiredState (matching/non-matching), extra-fields behavior, IsDeletable, and Conditions.
+- **Task 4 (AuditRequestHeader):** Created new test file with 8 test functions covering GetPath (with metadata.name regression guard), GetPayload (hmac true/false), IsEquivalentToDesiredState (4 matching/non-matching cases), missing hmac key edge case, non-bool hmac value edge cases (string, int, nil), extra-fields-ignored behavior, IsDeletable, and Conditions.
+- **Task 5:** All 49 tests pass in `api/v1alpha1/`. `make test` passes with no regressions.
+
+### Change Log
+- 2026-04-12: Implemented story 1.1 — added 21 new test functions across 4 files
 
 ### File List
+- `api/v1alpha1/identityoidc_test.go` (modified — added 4 extra-field tests)
+- `api/v1alpha1/identitytoken_test.go` (modified — added 3 extra-field tests)
+- `api/v1alpha1/passwordpolicy_test.go` (new — 6 test functions)
+- `api/v1alpha1/auditrequestheader_test.go` (new — 8 test functions)

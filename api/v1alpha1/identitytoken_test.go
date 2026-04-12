@@ -272,6 +272,75 @@ func TestIdentityTokenRoleIsEquivalentToDesiredState(t *testing.T) {
 	}
 }
 
+// Tests for AC #4: extra-field handling in IsEquivalentToDesiredState.
+// These types use reflect.DeepEqual(desiredState, payload), so extra keys in
+// the payload cause the comparison to return false. In production the
+// reconciler calls IsEquivalentToDesiredState with the raw Vault read
+// response (no key filtering), meaning extra Vault-returned fields trigger
+// an unnecessary write. Story 7-4 tracks hardening this behavior.
+
+func TestIdentityTokenConfigIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
+	config := &IdentityTokenConfig{
+		Spec: IdentityTokenConfigSpec{
+			IdentityTokenConfigConfig: IdentityTokenConfigConfig{
+				Issuer: "https://example.com",
+			},
+		},
+	}
+
+	payloadWithExtra := map[string]interface{}{
+		"issuer":      "https://example.com",
+		"extra_field": "vault-returned-value",
+	}
+	if config.IsEquivalentToDesiredState(payloadWithExtra) {
+		t.Error("expected payload with extra fields to NOT be equivalent (reflect.DeepEqual compares full maps)")
+	}
+}
+
+func TestIdentityTokenKeyIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
+	key := &IdentityTokenKey{
+		Spec: IdentityTokenKeySpec{
+			IdentityTokenKeyConfig: IdentityTokenKeyConfig{
+				RotationPeriod:   "24h",
+				VerificationTTL:  "24h",
+				AllowedClientIDs: []string{"*"},
+				Algorithm:        "RS256",
+			},
+		},
+	}
+
+	payloadWithExtra := map[string]interface{}{
+		"rotation_period":    "24h",
+		"verification_ttl":   "24h",
+		"allowed_client_ids": []string{"*"},
+		"algorithm":          "RS256",
+		"extra_field":        "vault-returned-value",
+	}
+	if key.IsEquivalentToDesiredState(payloadWithExtra) {
+		t.Error("expected payload with extra fields to NOT be equivalent (reflect.DeepEqual compares full maps)")
+	}
+}
+
+func TestIdentityTokenRoleIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
+	role := &IdentityTokenRole{
+		Spec: IdentityTokenRoleSpec{
+			IdentityTokenRoleConfig: IdentityTokenRoleConfig{
+				Key: "key-001",
+				TTL: "24h",
+			},
+		},
+	}
+
+	payloadWithExtra := map[string]interface{}{
+		"key":         "key-001",
+		"ttl":         "24h",
+		"extra_field": "vault-returned-value",
+	}
+	if role.IsEquivalentToDesiredState(payloadWithExtra) {
+		t.Error("expected payload with extra fields to NOT be equivalent (reflect.DeepEqual compares full maps)")
+	}
+}
+
 func TestIdentityTokenIsDeletable(t *testing.T) {
 	key := &IdentityTokenKey{}
 	if !key.IsDeletable() {
