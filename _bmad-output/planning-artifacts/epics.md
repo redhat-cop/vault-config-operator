@@ -650,11 +650,54 @@ So that the operator doesn't crash or enter infinite retry loops on expected fai
 **When** the reconciler attempts to write
 **Then** the error is handled gracefully with ReconcileFailed condition
 
-### Story 7.4: Drift detection integration tests
+### Story 7.4: Drift detection integration tests (MOVED — was 7.5, renumbered)
+
+**Note:** Original 7.4 was renumbered to 7.5 to insert the new Story 7.4 below.
+
+### Story 7.4: Audit Vault API responses and harden `IsEquivalentToDesiredState` extra-field handling
+
+As an operator developer,
+I want to audit every Vault API read response for all 46 CRD types and ensure `IsEquivalentToDesiredState` correctly ignores extra fields Vault returns,
+So that the operator never enters an unnecessary write loop where it rewrites identical state on every reconcile cycle.
+
+**Background:**
+
+The `VaultEndpoint.CreateOrUpdate()` flow reads from Vault, then passes the raw `secret.Data` map directly to `IsEquivalentToDesiredState(payload)` with no pre-filtering. Types handle extra fields inconsistently:
+- **Entity/EntityAlias:** Explicitly `delete()` known Vault-added keys before `reflect.DeepEqual` — correct
+- **AuditRequestHeader:** Checks only the `hmac` field by type assertion — inherently ignores extras — correct
+- **DatabaseSecretEngineConfig:** Custom field remapping logic — correct
+- **All other types (~38):** Bare `reflect.DeepEqual(desiredState, payload)` — will return `false` if Vault adds any extra fields, causing an unnecessary write every reconcile
+
+Additionally, some Vault endpoints may return duration values as integers (seconds) rather than the string format the operator sends (e.g., `"24h"` written, `86400` read back), which would also cause false drift detection.
+
+**Acceptance Criteria:**
+
+**Given** a running Vault instance at the project's target version (currently 1.19.0)
+**When** each of the 46 CRD types is written to Vault and then read back
+**Then** the exact set of extra fields (keys in read response not in write payload) is documented per type
+
+**Given** the documented extra fields per type
+**When** each type's `IsEquivalentToDesiredState` is called with a payload containing those extra fields
+**Then** it returns `true` (no false drift detected)
+
+**Given** any type where Vault returns values in a different format (e.g., duration as int vs string)
+**When** `IsEquivalentToDesiredState` is called with the Vault-formatted values
+**Then** it returns `true` (type coercion is handled)
+
+**Implementation notes:**
+- Phase 1 (Audit): Deploy Vault via `make deploy-vault`, write test fixtures for all 46 types, read back responses, diff write payload vs read response. Produce a report of extra fields per type and any type coercion issues.
+- Phase 2 (Fix): For types with extra fields, adopt one of the proven patterns: (a) explicit `delete()` of known extras (Entity pattern), (b) field-level comparison (AuditRequestHeader pattern), or (c) filter payload to only desired keys before `DeepEqual`.
+- Phase 3 (Test): Add unit tests verifying each type handles its specific extra fields correctly.
+- Consider a shared helper function (e.g., `filterToDesiredKeys(desired, payload)`) to avoid repeating the pattern in every type.
+- Types that require external services (LDAP, RabbitMQ, databases, cloud providers) may need mock responses for the audit step.
+
+### Story 7.5: Drift detection integration tests
 
 As an operator developer,
 I want integration tests verifying that when `ENABLE_DRIFT_DETECTION=true`, the reconciler periodically re-checks Vault state and corrects drift,
 So that the drift detection feature is validated.
+
+**Dependency:** Story 7.4 (extra-field audit) should be completed first — drift detection relies on `IsEquivalentToDesiredState` returning correct results to detect actual drift vs false positives from extra fields.
 
 **Acceptance Criteria:**
 

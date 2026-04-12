@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-04-11
+last_updated: 2026-04-12
 project: vault-config-operator
 project_key: NOKEY
 tracking_system: file-system
@@ -45,13 +45,13 @@ development_status:
   # --- Phase 1: Test Stabilization ---
 
   # Epic 1: Core Declarative Logic Unit Tests
-  epic-1: backlog
-  1-1-unit-tests-tomap-and-isequivalenttodesiredstate-simple-standard-types: backlog
-  1-2-unit-tests-tomap-and-isequivalenttodesiredstate-engine-mount-types: backlog
-  1-3-unit-tests-tomap-and-isequivalenttodesiredstate-database-engine-types: backlog
-  1-4-unit-tests-tomap-and-isequivalenttodesiredstate-auth-engine-config-types: backlog
-  1-5-unit-tests-tomap-and-isequivalenttodesiredstate-secret-engine-config-role-types: backlog
-  1-6-unit-tests-tomap-and-isequivalenttodesiredstate-remaining-types: backlog
+  epic-1: in-progress
+  1-1-unit-tests-tomap-and-isequivalenttodesiredstate-simple-standard-types: ready-for-dev
+  1-2-unit-tests-tomap-and-isequivalenttodesiredstate-engine-mount-types: ready-for-dev
+  1-3-unit-tests-tomap-and-isequivalenttodesiredstate-database-engine-types: ready-for-dev
+  1-4-unit-tests-tomap-and-isequivalenttodesiredstate-auth-engine-config-types: ready-for-dev
+  1-5-unit-tests-tomap-and-isequivalenttodesiredstate-secret-engine-config-role-types: ready-for-dev
+  1-6-unit-tests-tomap-and-isequivalenttodesiredstate-remaining-types: ready-for-dev
   epic-1-retrospective: optional
 
   # Epic 2: Integration Test Update Scenarios
@@ -97,7 +97,8 @@ development_status:
   7-1-webhook-validation-tests-for-immutable-spec-path-rule: backlog
   7-2-unit-tests-for-prepareinternalvalues-credential-resolution: backlog
   7-3-error-path-integration-tests: backlog
-  7-4-drift-detection-integration-tests: backlog
+  7-4-audit-vault-api-responses-and-harden-isequivalenttodesiredstate-extra-field-handling: backlog
+  7-5-drift-detection-integration-tests: backlog
   epic-7-retrospective: optional
 
   # --- Phase 2: Expansion — Dependency Upgrades + Engine Coverage ---

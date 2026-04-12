@@ -50,6 +50,36 @@ Load config from `{project-root}/_bmad/bmm/config.yaml` and resolve:
   <critical>Do NOT schedule a "next session" or request review pauses unless a HALT condition applies. Only Step 6 decides completion.</critical>
   <critical>User skill level ({user_skill_level}) affects conversation style ONLY, not code updates.</critical>
 
+  <step n="0" goal="Pre-flight checks: clean tree and baseline integration tests">
+    <critical>Story development MUST NOT start if the git working tree is dirty</critical>
+
+    <action>Run `git status --porcelain` in the project root</action>
+    <check if="output is non-empty (modified, staged, or untracked files exist)">
+      <output>🚫 **Cannot start story development — working tree is not clean**
+
+        The following uncommitted changes were detected:
+        {{git_status_output}}
+
+        Please commit, stash, or discard all changes before starting story development.
+      </output>
+      <action>HALT: "Working tree must be clean before starting story development"</action>
+    </check>
+    <output>✅ Working tree is clean — safe to proceed</output>
+
+    <action>Run the integration test suite (`make integration`) to establish a green baseline</action>
+    <check if="integration tests fail">
+      <output>🚫 **Cannot start story development — integration tests are failing**
+
+        Integration test failures detected BEFORE any story changes.
+        Fix the existing failures before starting new work.
+
+        {{test_failure_output}}
+      </output>
+      <action>HALT: "Integration tests must pass before starting story development"</action>
+    </check>
+    <output>✅ Integration tests pass — baseline established</output>
+  </step>
+
   <step n="1" goal="Find next ready story and load it" tag="sprint-status">
     <check if="{{story_path}} is provided">
       <action>Use {{story_path}} directly</action>
@@ -402,6 +432,21 @@ Load config from `{project-root}/_bmad/bmm/config.yaml` and resolve:
         Story status is set to "review" in file, but sprint-status.yaml may be out of sync.
       </output>
     </check>
+
+    <!-- Post-completion integration tests -->
+    <critical>Integration tests MUST pass after story completion before marking for review</critical>
+    <action>Run the full integration test suite (`make integration`) to verify no regressions</action>
+    <check if="integration tests fail">
+      <output>🚫 **Integration tests are failing after story implementation**
+
+        Story implementation has introduced integration test failures.
+        These must be fixed before the story can be marked for review.
+
+        {{test_failure_output}}
+      </output>
+      <action>HALT: "Integration tests must pass after story completion"</action>
+    </check>
+    <output>✅ Integration tests pass — story implementation verified end-to-end</output>
 
     <!-- Final validation gates -->
     <action if="any task is incomplete">HALT - Complete remaining tasks before marking ready for review</action>
