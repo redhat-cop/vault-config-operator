@@ -36,6 +36,7 @@
 
 generated: 2026-04-11
 last_updated: 2026-04-12
+# Phase 1.5 doc epics added 2026-04-12
 project: vault-config-operator
 project_key: NOKEY
 tracking_system: file-system
@@ -100,6 +101,39 @@ development_status:
   7-4-audit-vault-api-responses-and-harden-isequivalenttodesiredstate-extra-field-handling: backlog
   7-5-drift-detection-integration-tests: backlog
   epic-7-retrospective: optional
+
+  # --- Phase 1.5: Documentation Improvement ---
+
+  # Epic D1: Documentation Standards & Missing CertAuth Engine Docs
+  epic-d1: backlog
+  d1-1-create-documentation-template-and-pattern-guide: backlog
+  d1-2-document-certauthengineconfig-and-certauthenginerole: backlog
+  d1-3-fix-broken-links-and-field-naming-inconsistencies: backlog
+  epic-d1-retrospective: optional
+
+  # Epic D2: Auth Engine Documentation — Per-Engine Split & Standardization
+  epic-d2: backlog
+  d2-1-create-auth-engines-directory-structure-and-index-page: backlog
+  d2-2-standardize-kubernetes-auth-engine-docs: backlog
+  d2-3-standardize-ldap-auth-engine-docs: backlog
+  d2-4-standardize-jwt-oidc-auth-engine-docs: backlog
+  d2-5-standardize-gcp-and-azure-auth-engine-docs: backlog
+  epic-d2-retrospective: optional
+
+  # Epic D3: Secret Engine Documentation — Per-Engine Split & Standardization
+  epic-d3: backlog
+  d3-1-create-secret-engines-directory-structure-and-index-page: backlog
+  d3-2-standardize-database-secret-engine-docs: backlog
+  d3-3-standardize-pki-and-rabbitmq-secret-engine-docs: backlog
+  d3-4-standardize-github-quay-kubernetes-and-azure-secret-engine-docs: backlog
+  epic-d3-retrospective: optional
+
+  # Epic D4: Examples Directory Expansion
+  epic-d4: backlog
+  d4-1-create-example-yaml-files-for-each-auth-engine: backlog
+  d4-2-create-example-yaml-files-for-each-secret-engine: backlog
+  d4-3-create-additional-end-to-end-examples: backlog
+  epic-d4-retrospective: optional
 
   # --- Phase 2: Expansion — Dependency Upgrades + Engine Coverage ---
 

@@ -709,6 +709,374 @@ So that the drift detection feature is validated.
 ---
 ---
 
+# Phase 1.5: Documentation Improvement
+
+## Phase 1.5 Overview
+
+Documentation debt must be addressed before Phase 2 introduces up to 20 new engine types. The current `auth-engines.md` (775 lines) and `secret-engines.md` are monoliths that will become unmanageable. This phase splits engine docs into per-engine files, documents the missing CertAuth engine, standardizes all existing engine docs to a consistent pattern, and expands the examples directory.
+
+**Key decision:** Engine docs will be split from monolith files into per-engine files under `docs/auth-engines/` and `docs/secret-engines/` directories. Each engine gets its own file. The original monolith files become index/overview pages linking to individual engine docs.
+
+## Phase 1.5 Requirements Inventory
+
+### Documentation Requirements
+
+DOC1: Create a documentation standard/template that all engine docs must follow (header, config CRD, role CRD, YAML examples, field descriptions, Vault CLI equivalent, credential resolution)
+DOC2: Document the implemented but undocumented CertAuthEngineConfig and CertAuthEngineRole CRDs
+DOC3: Fix broken markdown links and field naming inconsistencies (snake_case vs camelCase) across existing docs
+DOC4: Split `auth-engines.md` into per-engine files under `docs/auth-engines/`
+DOC5: Split `secret-engines.md` into per-engine files under `docs/secret-engines/`
+DOC6: Standardize all auth engine docs (Kubernetes, LDAP, JWT/OIDC, GCP, Azure, Cert) to the template pattern
+DOC7: Standardize all secret engine docs (Database, PKI, RabbitMQ, GitHub, Quay, Kubernetes, Azure) to the template pattern
+DOC8: Create example YAML files for each auth engine under `docs/examples/`
+DOC9: Create example YAML files for each secret engine under `docs/examples/`
+DOC10: Create additional end-to-end examples beyond the existing PostgreSQL one
+
+### Phase 1.5 Non-Functional Requirements
+
+DNFR1: Every engine doc file must follow the standard template
+DNFR2: All YAML examples must be valid and use `redhatcop.redhat.io/v1alpha1` apiVersion
+DNFR3: Field descriptions must use camelCase (CRD field names), not snake_case (Vault API names)
+DNFR4: All internal cross-references between doc files must be updated after the split
+DNFR5: Phase 2 engine implementation epics (11-16) must include documentation as an acceptance criterion
+
+### Phase 1.5 FR Coverage Map
+
+DOC1, DOC3: Epic D1 — Documentation standards, CertAuth docs, and fixes
+DOC2, DOC4: Epic D1 — CertAuth docs and auth-engines split
+DOC5, DOC6: Epic D2 — Auth engine doc standardization (per-engine files)
+DOC4, DOC7: Epic D3 — Secret engine doc standardization (per-engine files)
+DOC8, DOC9, DOC10: Epic D4 — Examples directory expansion
+
+## Phase 1.5 Epic List
+
+### Epic D1: Documentation Standards & Missing CertAuth Engine Docs
+Establish the documentation template pattern, document the missing CertAuthEngine CRDs, and fix existing doc quality issues. This epic sets the foundation that all subsequent doc work follows.
+**FRs covered:** DOC1, DOC2, DOC3
+
+### Epic D2: Auth Engine Documentation — Per-Engine Split & Standardization
+Split `auth-engines.md` into per-engine files under `docs/auth-engines/`, create an index page, and standardize each engine's docs to the template pattern.
+**FRs covered:** DOC4, DOC6
+
+### Epic D3: Secret Engine Documentation — Per-Engine Split & Standardization
+Split `secret-engines.md` into per-engine files under `docs/secret-engines/`, create an index page, and standardize each engine's docs to the template pattern.
+**FRs covered:** DOC5, DOC7
+
+### Epic D4: Examples Directory Expansion
+Create example YAML directories for each engine and add additional end-to-end examples beyond the existing PostgreSQL walkthrough.
+**FRs covered:** DOC8, DOC9, DOC10
+
+---
+
+## Epic D1: Documentation Standards & Missing CertAuth Engine Docs
+
+Establish the documentation template, add the missing CertAuth docs, and fix quality issues. This epic is the foundation — all subsequent doc epics follow the pattern defined here.
+
+**Precondition:** None — can start as soon as Phase 1 is substantially complete.
+
+### Story D1.1: Create documentation template and pattern guide
+
+As a documentation contributor,
+I want a clear template that defines the structure every engine doc file must follow,
+So that all engine docs are consistent and contributors know exactly what to write.
+
+**Acceptance Criteria:**
+
+**Given** the need for consistent engine documentation
+**When** a template file is created at `docs/engine-doc-template.md`
+**Then** it contains the following sections in order:
+  1. Title with link to Vault documentation
+  2. Overview paragraph describing the engine
+  3. Config CRD section: description, full YAML example with all common fields, field descriptions table (camelCase names), Vault CLI equivalent command
+  4. Role/Group CRD section: same structure as config
+  5. Credential resolution section (if applicable): examples for Kubernetes Secret, Vault Secret, and RandomSecret methods
+  6. Links to related docs (auth-section.md, contributing-vault-apis.md)
+
+**Given** the template is created
+**When** reviewed against `identities.md` and `audit-management.md` (the current gold standard docs)
+**Then** the template matches or improves upon their quality
+
+### Story D1.2: Document CertAuthEngineConfig and CertAuthEngineRole
+
+As a user of the vault-config-operator,
+I want documentation for the CertAuthEngineConfig and CertAuthEngineRole CRDs,
+So that I can discover and use the TLS certificate authentication method that the operator already supports.
+
+**Types:** CertAuthEngineConfig, CertAuthEngineRole
+
+**Acceptance Criteria:**
+
+**Given** CertAuthEngineConfig and CertAuthEngineRole are implemented in `api/v1alpha1/` with no documentation
+**When** a new doc file `docs/auth-engines/cert.md` is created following the template from D1.1
+**Then** it contains:
+  - CertAuthEngineConfig: full YAML example, all field descriptions, link to [Vault TLS cert auth docs](https://developer.hashicorp.com/vault/docs/auth/cert)
+  - CertAuthEngineRole: full YAML example, all field descriptions, Vault CLI equivalent
+  - Credential resolution for TLS certificates (certificate and key references)
+
+**Given** the new file exists
+**When** the auth-engines index page references it
+**Then** CertAuth is discoverable alongside all other auth engines
+
+**Implementation notes:** Read `api/v1alpha1/certauthengineconfig_types.go` and `certauthenginerole_types.go` to extract all fields. Check for any existing test YAML fixtures in `test/` that can serve as example references.
+
+### Story D1.3: Fix broken links and field naming inconsistencies
+
+As a documentation reader,
+I want all links to work and field names to consistently use camelCase (matching the CRD spec),
+So that the docs are accurate and navigable.
+
+**Acceptance Criteria:**
+
+**Given** `secret-engines.md` lines 19-20 have broken markdown links with spaces before parentheses (`[AzureSecretEngineConfig] (#azuresecretengineconfig)`)
+**When** the links are fixed
+**Then** all TOC links render correctly
+
+**Given** `auth-engines.md` GCPAuthEngineRole section uses mixed snake_case and camelCase field names
+**When** all field references are updated to camelCase (matching the CRD Go struct json tags)
+**Then** field naming is consistent across all engine docs
+
+**Given** cross-references exist between doc files (e.g., `secret-management.md#RandomSecret`)
+**When** all internal links are audited
+**Then** every link resolves correctly
+
+---
+
+## Epic D2: Auth Engine Documentation — Per-Engine Split & Standardization
+
+Split `auth-engines.md` into per-engine files under `docs/auth-engines/`, create an index page, and standardize each engine doc to the template pattern from D1.1.
+
+**Precondition:** Epic D1 must be complete (template defined, CertAuth documented).
+
+### Story D2.1: Create auth-engines directory structure and index page
+
+As a documentation reader,
+I want an organized directory with an index page listing all auth engines,
+So that I can quickly navigate to the engine I need.
+
+**Acceptance Criteria:**
+
+**Given** the decision to split `auth-engines.md` into per-engine files
+**When** the directory `docs/auth-engines/` is created with an `index.md`
+**Then** the index page contains:
+  - Overview of auth engine support in the operator
+  - Link to `AuthEngineMount` section (generic mount)
+  - Table of all supported auth engines with links to individual files
+  - Reference to auth-section.md for authentication configuration
+
+**Given** the original `auth-engines.md`
+**When** the split is complete
+**Then** `auth-engines.md` is replaced with a redirect/pointer to `docs/auth-engines/index.md` (or becomes the index itself)
+
+### Story D2.2: Standardize Kubernetes auth engine docs
+
+As a user configuring Kubernetes authentication,
+I want comprehensive, well-structured documentation for KubernetesAuthEngineConfig and KubernetesAuthEngineRole,
+So that I can correctly configure the most common auth method.
+
+**File:** `docs/auth-engines/kubernetes.md`
+
+**Acceptance Criteria:**
+
+**Given** the existing KubernetesAuthEngine content in `auth-engines.md`
+**When** it is extracted to `docs/auth-engines/kubernetes.md` and standardized per the template
+**Then** it contains:
+  - Overview linking to Vault Kubernetes auth docs
+  - KubernetesAuthEngineConfig: complete YAML example, field descriptions (camelCase), `kubernetesCACert` behavior table, Vault CLI equivalent
+  - KubernetesAuthEngineRole: complete YAML example, field descriptions, `targetNamespaceSelector` explanation, Vault CLI equivalent
+
+### Story D2.3: Standardize LDAP auth engine docs
+
+As a user configuring LDAP authentication,
+I want well-structured LDAP auth docs that are comprehensive but not overwhelming,
+So that I can configure LDAP auth without drowning in field descriptions.
+
+**File:** `docs/auth-engines/ldap.md`
+
+**Acceptance Criteria:**
+
+**Given** the existing LDAPAuthEngine content (100+ lines of field descriptions)
+**When** it is extracted and standardized per the template
+**Then** field descriptions are organized in a structured table format (field | type | description)
+**And** the three credential resolution methods are clearly documented with examples
+**And** the TLS configuration section is clearly separated
+
+### Story D2.4: Standardize JWT/OIDC auth engine docs
+
+As a user configuring JWT/OIDC authentication,
+I want clear documentation for both JWT and OIDC modes,
+So that I can configure either mode correctly.
+
+**File:** `docs/auth-engines/jwt-oidc.md`
+
+**Acceptance Criteria:**
+
+**Given** the existing JWTOIDCAuthEngine content
+**When** it is extracted and standardized
+**Then** the three credential resolution methods for `OIDCCredentials` are consistently formatted
+**And** the difference between JWT and OIDC role types is clearly explained
+
+### Story D2.5: Standardize GCP and Azure auth engine docs
+
+As a user configuring cloud provider authentication,
+I want consistent docs for GCP and Azure auth,
+So that I can configure cloud auth without confusion.
+
+**Files:** `docs/auth-engines/gcp.md`, `docs/auth-engines/azure.md`
+
+**Acceptance Criteria:**
+
+**Given** the existing GCP and Azure auth engine content
+**When** extracted and standardized
+**Then** GCPAuthEngineRole field descriptions use camelCase consistently (not mixed snake_case)
+**And** Azure credential resolution section is consistently formatted
+**And** both have Vault CLI equivalents for config and role
+
+---
+
+## Epic D3: Secret Engine Documentation — Per-Engine Split & Standardization
+
+Split `secret-engines.md` into per-engine files under `docs/secret-engines/`, create an index page, and standardize each engine doc to the template pattern.
+
+**Precondition:** Epic D1 must be complete (template defined).
+
+### Story D3.1: Create secret-engines directory structure and index page
+
+As a documentation reader,
+I want an organized directory with an index page listing all secret engines,
+So that I can quickly navigate to the engine I need.
+
+**Acceptance Criteria:**
+
+**Given** the decision to split `secret-engines.md` into per-engine files
+**When** the directory `docs/secret-engines/` is created with an `index.md`
+**Then** the index page contains:
+  - Overview of secret engine support in the operator
+  - Link to `SecretEngineMount` section (generic mount)
+  - Table of all supported secret engines with links to individual files
+
+**Given** the original `secret-engines.md`
+**When** the split is complete
+**Then** `secret-engines.md` is replaced with a redirect/pointer to `docs/secret-engines/index.md`
+
+### Story D3.2: Standardize Database secret engine docs
+
+As a user configuring database dynamic secrets,
+I want comprehensive docs covering config, role, and static role with credential resolution,
+So that I can set up the most complex secret engine correctly.
+
+**File:** `docs/secret-engines/database.md`
+
+**Acceptance Criteria:**
+
+**Given** the existing Database content (Config, Role, StaticRole)
+**When** extracted and standardized per the template
+**Then** it contains:
+  - DatabaseSecretEngineConfig: complete YAML with `rootPasswordRotation` example, credential resolution (3 methods), `passwordAuthentication` field
+  - DatabaseSecretEngineRole: complete YAML with `creationStatements`, Vault CLI equivalent
+  - DatabaseSecretEngineStaticRole: complete YAML with `rotationStatements`, credential types
+  - All three have Vault CLI equivalents
+
+### Story D3.3: Standardize PKI and RabbitMQ secret engine docs
+
+As a user configuring PKI certificates or RabbitMQ dynamic credentials,
+I want complete docs with all common fields and examples,
+So that I can configure these engines without guesswork.
+
+**Files:** `docs/secret-engines/pki.md`, `docs/secret-engines/rabbitmq.md`
+
+**Acceptance Criteria:**
+
+**Given** the existing PKI and RabbitMQ content
+**When** extracted and standardized
+**Then** PKI docs include complete YAML examples with all common fields (not just `commonName` and `TTL`)
+**And** RabbitMQ docs include credential resolution section and complete vhost/topic permission examples
+
+### Story D3.4: Standardize GitHub, Quay, Kubernetes, and Azure secret engine docs
+
+As a user configuring any of these secret engines,
+I want consistent, complete documentation following the standard pattern,
+So that switching between engines feels familiar.
+
+**Files:** `docs/secret-engines/github.md`, `docs/secret-engines/quay.md`, `docs/secret-engines/kubernetes.md`, `docs/secret-engines/azure.md`
+
+**Acceptance Criteria:**
+
+**Given** the existing content for GitHub, Quay, Kubernetes, and Azure secret engines
+**When** extracted and standardized per the template
+**Then** each file follows the template (overview, config CRD, role CRD, CLI equivalent, credential resolution)
+**And** Quay includes both Role and StaticRole
+**And** Azure credential resolution section is consistently formatted (fixing the copy-paste "OIDC" references in the current text)
+
+---
+
+## Epic D4: Examples Directory Expansion
+
+Create example YAML directories for each engine and additional end-to-end examples. The `docs/examples/` directory currently only has PostgreSQL examples.
+
+**Precondition:** Epics D2 and D3 should be complete (docs standardized, so examples align with docs).
+
+### Story D4.1: Create example YAML files for each auth engine
+
+As a user learning the operator,
+I want ready-to-use example YAML files for each auth engine,
+So that I can quickly bootstrap my configuration.
+
+**Acceptance Criteria:**
+
+**Given** only `docs/examples/postgresql/` exists today
+**When** example directories are created for each auth engine
+**Then** the following directories exist with complete, valid example CRs:
+  - `docs/examples/auth-kubernetes/` — AuthEngineMount + Config + Role
+  - `docs/examples/auth-ldap/` — Config + Group
+  - `docs/examples/auth-jwt-oidc/` — Config + Role (both JWT and OIDC modes)
+  - `docs/examples/auth-gcp/` — Config + Role (both IAM and GCE types)
+  - `docs/examples/auth-azure/` — Config + Role
+  - `docs/examples/auth-cert/` — Config + Role
+
+**Given** each example directory
+**When** the YAML files are validated
+**Then** all examples use the correct apiVersion, include required fields, and contain helpful comments explaining each field
+
+### Story D4.2: Create example YAML files for each secret engine
+
+As a user learning the operator,
+I want ready-to-use example YAML files for each secret engine,
+So that I can quickly bootstrap my configuration.
+
+**Acceptance Criteria:**
+
+**Given** the existing `docs/examples/postgresql/` as a reference
+**When** example directories are created for each secret engine
+**Then** the following directories exist with complete, valid example CRs:
+  - `docs/examples/secret-database/` — Mount + Config + Role + StaticRole (rename/move existing postgresql)
+  - `docs/examples/secret-pki/` — Mount + Config + Role
+  - `docs/examples/secret-rabbitmq/` — Mount + Config + Role
+  - `docs/examples/secret-github/` — Mount + Config + Role
+  - `docs/examples/secret-quay/` — Mount + Config + Role + StaticRole
+  - `docs/examples/secret-kubernetes/` — Mount + Config + Role
+  - `docs/examples/secret-azure/` — Mount + Config + Role
+
+### Story D4.3: Create additional end-to-end examples
+
+As a user designing a complete Vault configuration,
+I want end-to-end examples beyond the PostgreSQL one,
+So that I can see how different engines and auth methods work together.
+
+**Acceptance Criteria:**
+
+**Given** only one end-to-end example exists (PostgreSQL with Kubernetes auth)
+**When** additional end-to-end examples are created
+**Then** at least two new examples exist:
+  - JWT/OIDC auth + PKI secret engine: complete walkthrough for certificate issuance
+  - Azure auth + Azure secret engine: complete walkthrough for Azure service principal provisioning
+
+**Given** each end-to-end example
+**When** reviewed for completeness
+**Then** it includes: prerequisites, Vault setup, operator CRs, verification commands, and cleanup
+
+---
+---
+
 # Phase 2: Expansion — Dependency Upgrades + Engine Coverage
 
 ## Phase 2 Requirements Inventory
