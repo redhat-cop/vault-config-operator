@@ -7,58 +7,36 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TestSecretEngineMountGetPath(t *testing.T) {
+func TestAuthEngineMountGetPath(t *testing.T) {
 	tests := []struct {
 		name         string
-		mount        *SecretEngineMount
+		mount        *AuthEngineMount
 		expectedPath string
 	}{
 		{
-			name: "with path and name specified",
-			mount: &SecretEngineMount{
+			name: "with spec.name specified",
+			mount: &AuthEngineMount{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "test-mount",
 				},
-				Spec: SecretEngineMountSpec{
-					Path: "custom-path",
+				Spec: AuthEngineMountSpec{
+					Path: "kubernetes",
 					Name: "custom-name",
 				},
 			},
-			expectedPath: "sys/mounts/custom-path/custom-name",
+			expectedPath: "sys/auth/kubernetes/custom-name",
 		},
 		{
-			name: "with path but no name specified",
-			mount: &SecretEngineMount{
+			name: "without spec.name falls back to metadata.name",
+			mount: &AuthEngineMount{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "test-mount",
 				},
-				Spec: SecretEngineMountSpec{
-					Path: "custom-path",
+				Spec: AuthEngineMountSpec{
+					Path: "kubernetes",
 				},
 			},
-			expectedPath: "sys/mounts/custom-path/test-mount",
-		},
-		{
-			name: "with name but no path specified",
-			mount: &SecretEngineMount{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "test-mount",
-				},
-				Spec: SecretEngineMountSpec{
-					Name: "custom-name",
-				},
-			},
-			expectedPath: "sys/mounts/custom-name",
-		},
-		{
-			name: "with neither path nor name specified",
-			mount: &SecretEngineMount{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "test-mount",
-				},
-				Spec: SecretEngineMountSpec{},
-			},
-			expectedPath: "sys/mounts/test-mount",
+			expectedPath: "sys/auth/kubernetes/test-mount",
 		},
 	}
 
@@ -72,16 +50,19 @@ func TestSecretEngineMountGetPath(t *testing.T) {
 	}
 }
 
-func TestMountConfigToMap(t *testing.T) {
-	config := MountConfig{
+func TestAuthMountConfigToMap(t *testing.T) {
+	desc := "my auth engine"
+	config := AuthMountConfig{
 		DefaultLeaseTTL:           "1h",
 		MaxLeaseTTL:               "24h",
-		ForceNoCache:              true,
 		AuditNonHMACRequestKeys:   []string{"key1", "key2"},
 		AuditNonHMACResponseKeys:  []string{"resp1"},
 		ListingVisibility:         "unauth",
 		PassthroughRequestHeaders: []string{"X-Custom"},
 		AllowedResponseHeaders:    []string{"X-Response"},
+		TokenType:                 "default-service",
+		Description:               &desc,
+		Options:                   map[string]string{"version": "2"},
 	}
 
 	result := config.toMap()
@@ -89,16 +70,18 @@ func TestMountConfigToMap(t *testing.T) {
 	expected := map[string]interface{}{
 		"default_lease_ttl":            "1h",
 		"max_lease_ttl":                "24h",
-		"force_no_cache":               true,
 		"audit_non_hmac_request_keys":  []string{"key1", "key2"},
 		"audit_non_hmac_response_keys": []string{"resp1"},
 		"listing_visibility":           "unauth",
 		"passthrough_request_headers":  []string{"X-Custom"},
 		"allowed_response_headers":     []string{"X-Response"},
+		"token_type":                   "default-service",
+		"description":                  &desc,
+		"options":                      map[string]string{"version": "2"},
 	}
 
-	if len(result) != 8 {
-		t.Errorf("expected 8 keys in config map, got %d", len(result))
+	if len(result) != 10 {
+		t.Errorf("expected 10 keys in config map, got %d", len(result))
 	}
 
 	if !reflect.DeepEqual(result, expected) {
@@ -106,46 +89,55 @@ func TestMountConfigToMap(t *testing.T) {
 	}
 }
 
-func TestMountToMap(t *testing.T) {
-	config := MountConfig{
-		DefaultLeaseTTL:   "1h",
-		MaxLeaseTTL:       "24h",
+func TestAuthMountConfigToMapNilDescription(t *testing.T) {
+	config := AuthMountConfig{
 		ListingVisibility: "hidden",
 	}
 
-	mount := Mount{
-		Type:                  "kv",
-		Description:           "KV secrets",
-		Config:                config,
-		Local:                 true,
-		SealWrap:              false,
-		ExternalEntropyAccess: true,
-		Options:               map[string]string{"version": "2"},
+	result := config.toMap()
+
+	// The map value is a *string(nil) — not a bare nil interface.
+	// reflect.ValueOf correctly detects the nil pointer inside the interface.
+	descVal := result["description"]
+	if descVal != nil && !reflect.ValueOf(descVal).IsNil() {
+		t.Errorf("expected nil *string description when pointer is nil, got %v", descVal)
+	}
+}
+
+func TestAuthMountToMap(t *testing.T) {
+	desc := "my auth"
+	config := AuthMountConfig{
+		DefaultLeaseTTL:   "1h",
+		MaxLeaseTTL:       "24h",
+		ListingVisibility: "hidden",
+		Description:       &desc,
+	}
+
+	mount := AuthMount{
+		Type:        "kubernetes",
+		Description: "K8s auth",
+		Config:      config,
+		Local:       true,
+		SealWrap:    false,
 	}
 
 	result := mount.toMap()
 
-	if len(result) != 7 {
-		t.Errorf("expected 7 keys in mount map, got %d", len(result))
+	if len(result) != 5 {
+		t.Errorf("expected 5 keys in mount map, got %d", len(result))
 	}
 
-	if result["type"] != "kv" {
-		t.Errorf("expected type 'kv', got %v", result["type"])
+	if result["type"] != "kubernetes" {
+		t.Errorf("expected type 'kubernetes', got %v", result["type"])
 	}
-	if result["description"] != "KV secrets" {
-		t.Errorf("expected description 'KV secrets', got %v", result["description"])
+	if result["description"] != "K8s auth" {
+		t.Errorf("expected description 'K8s auth', got %v", result["description"])
 	}
 	if result["local"] != true {
 		t.Errorf("expected local true, got %v", result["local"])
 	}
 	if result["seal_wrap"] != false {
 		t.Errorf("expected seal_wrap false, got %v", result["seal_wrap"])
-	}
-	if result["external_entropy_access"] != true {
-		t.Errorf("expected external_entropy_access true, got %v", result["external_entropy_access"])
-	}
-	if !reflect.DeepEqual(result["options"], map[string]string{"version": "2"}) {
-		t.Errorf("expected options map, got %v", result["options"])
 	}
 
 	configMap, ok := result["config"].(map[string]interface{})
@@ -157,39 +149,36 @@ func TestMountToMap(t *testing.T) {
 	}
 }
 
-func TestSecretEngineMountGetPayload(t *testing.T) {
-	mount := &SecretEngineMount{
-		Spec: SecretEngineMountSpec{
-			Mount: Mount{
-				Type:        "kv",
-				Description: "KV store",
-				Config: MountConfig{
+func TestAuthEngineMountGetPayload(t *testing.T) {
+	desc := "tune desc"
+	mount := &AuthEngineMount{
+		Spec: AuthEngineMountSpec{
+			AuthMount: AuthMount{
+				Type:        "ldap",
+				Description: "LDAP auth",
+				Config: AuthMountConfig{
 					DefaultLeaseTTL:   "30m",
 					MaxLeaseTTL:       "1h",
 					ListingVisibility: "hidden",
+					Description:       &desc,
 				},
-				Local:                 false,
-				SealWrap:              true,
-				ExternalEntropyAccess: false,
-				Options:               map[string]string{"version": "2"},
+				Local:    false,
+				SealWrap: true,
 			},
 		},
 	}
 
 	payload := mount.GetPayload()
 
-	// GetPayload returns the full mount spec via Mount.toMap()
-	if payload["type"] != "kv" {
-		t.Errorf("expected type 'kv', got %v", payload["type"])
+	// GetPayload returns the full mount spec via AuthMount.toMap()
+	if payload["type"] != "ldap" {
+		t.Errorf("expected type 'ldap', got %v", payload["type"])
 	}
-	if payload["description"] != "KV store" {
-		t.Errorf("expected description 'KV store', got %v", payload["description"])
+	if payload["description"] != "LDAP auth" {
+		t.Errorf("expected description 'LDAP auth', got %v", payload["description"])
 	}
 	if payload["seal_wrap"] != true {
 		t.Errorf("expected seal_wrap true, got %v", payload["seal_wrap"])
-	}
-	if !reflect.DeepEqual(payload["options"], map[string]string{"version": "2"}) {
-		t.Errorf("expected options in payload, got %v", payload["options"])
 	}
 
 	configMap, ok := payload["config"].(map[string]interface{})
@@ -201,17 +190,20 @@ func TestSecretEngineMountGetPayload(t *testing.T) {
 	}
 }
 
-func TestSecretEngineMountGetTunePayload(t *testing.T) {
-	mount := &SecretEngineMount{
-		Spec: SecretEngineMountSpec{
-			Mount: Mount{
-				Type:        "kv",
-				Description: "KV store",
-				Config: MountConfig{
+func TestAuthEngineMountGetTunePayload(t *testing.T) {
+	desc := "tune desc"
+	mount := &AuthEngineMount{
+		Spec: AuthEngineMountSpec{
+			AuthMount: AuthMount{
+				Type:        "ldap",
+				Description: "LDAP auth",
+				Config: AuthMountConfig{
 					DefaultLeaseTTL:   "30m",
 					MaxLeaseTTL:       "1h",
-					ForceNoCache:      true,
 					ListingVisibility: "hidden",
+					TokenType:         "default-service",
+					Description:       &desc,
+					Options:           map[string]string{"version": "1"},
 				},
 				Local:    false,
 				SealWrap: true,
@@ -221,7 +213,7 @@ func TestSecretEngineMountGetTunePayload(t *testing.T) {
 
 	tunePayload := mount.GetTunePayload()
 
-	// GetTunePayload returns Config.toMap() (no delete of options/description)
+	// GetTunePayload returns only Config.toMap(), not the full mount spec
 	if _, ok := tunePayload["type"]; ok {
 		t.Error("expected tune payload to NOT contain 'type' (mount-level field)")
 	}
@@ -232,68 +224,67 @@ func TestSecretEngineMountGetTunePayload(t *testing.T) {
 	if tunePayload["default_lease_ttl"] != "30m" {
 		t.Errorf("expected default_lease_ttl '30m', got %v", tunePayload["default_lease_ttl"])
 	}
-	if tunePayload["force_no_cache"] != true {
-		t.Errorf("expected force_no_cache true, got %v", tunePayload["force_no_cache"])
+	if tunePayload["token_type"] != "default-service" {
+		t.Errorf("expected token_type 'default-service', got %v", tunePayload["token_type"])
 	}
 
-	// GetTunePayload returns Config.toMap() without the delete calls that
-	// IsEquivalentToDesiredState performs. Since MountConfig.toMap() doesn't
-	// include "options" or "description", the result should be identical.
+	// AuthEngineMount: GetTunePayload and IsEquivalentToDesiredState use the
+	// same map (Config.toMap()), so they should be identical.
 	configMap := mount.Spec.Config.toMap()
 	if !reflect.DeepEqual(tunePayload, configMap) {
 		t.Errorf("GetTunePayload() should equal Config.toMap()")
 	}
 }
 
-func TestSecretEngineMountIsEquivalentToDesiredStateMatching(t *testing.T) {
-	mount := &SecretEngineMount{
-		Spec: SecretEngineMountSpec{
-			Mount: Mount{
-				Config: MountConfig{
+func TestAuthEngineMountIsEquivalentToDesiredStateMatching(t *testing.T) {
+	desc := "my auth"
+	mount := &AuthEngineMount{
+		Spec: AuthEngineMountSpec{
+			AuthMount: AuthMount{
+				Config: AuthMountConfig{
 					DefaultLeaseTTL:           "1h",
 					MaxLeaseTTL:               "24h",
-					ForceNoCache:              false,
 					AuditNonHMACRequestKeys:   []string{"key1"},
 					AuditNonHMACResponseKeys:  []string{"resp1"},
 					ListingVisibility:         "hidden",
 					PassthroughRequestHeaders: []string{"X-Custom"},
 					AllowedResponseHeaders:    []string{"X-Resp"},
+					TokenType:                 "default-service",
+					Description:               &desc,
+					Options:                   map[string]string{"version": "2"},
 				},
 			},
 		},
 	}
 
-	// IsEquivalentToDesiredState deletes "options" and "description" from the
-	// config map before comparison. Since MountConfig.toMap() doesn't include
-	// those keys, the deletes are no-ops — the payload matches after deletion.
-	configMap := mount.Spec.Config.toMap()
-	delete(configMap, "options")
-	delete(configMap, "description")
+	// Payload constructed from Config.toMap() — proves the comparison map
+	// matches its own output (the implementation-level contract).
+	payload := mount.Spec.Config.toMap()
 
-	if !mount.IsEquivalentToDesiredState(configMap) {
+	if !mount.IsEquivalentToDesiredState(payload) {
 		t.Error("expected matching tune config payload to be equivalent")
 	}
 }
 
 // IsEquivalentToDesiredState compares only Config.toMap() (tune config), NOT
-// the full mount spec from GetPayload(). This test proves AC #3: passing the
+// the full mount spec from GetPayload(). This test proves AC #2: passing the
 // full mount spec (which includes type, local, seal_wrap, etc.) must return
 // false.
-func TestSecretEngineMountIsEquivalentRejectsFullMountPayload(t *testing.T) {
-	mount := &SecretEngineMount{
-		Spec: SecretEngineMountSpec{
-			Mount: Mount{
-				Type:        "kv",
-				Description: "KV store",
-				Config: MountConfig{
+func TestAuthEngineMountIsEquivalentRejectsFullMountPayload(t *testing.T) {
+	desc := "my auth"
+	mount := &AuthEngineMount{
+		Spec: AuthEngineMountSpec{
+			AuthMount: AuthMount{
+				Type:        "kubernetes",
+				Description: "K8s auth",
+				Config: AuthMountConfig{
 					DefaultLeaseTTL:   "1h",
 					MaxLeaseTTL:       "24h",
 					ListingVisibility: "hidden",
+					Description:       &desc,
 				},
-				Local:                 false,
-				SealWrap:              true,
-				ExternalEntropyAccess: false,
-				Options:               map[string]string{"version": "2"},
+				Local:    false,
+				SealWrap: true,
 			},
 		},
 	}
@@ -305,14 +296,16 @@ func TestSecretEngineMountIsEquivalentRejectsFullMountPayload(t *testing.T) {
 	}
 }
 
-func TestSecretEngineMountIsEquivalentToDesiredStateNonMatching(t *testing.T) {
-	mount := &SecretEngineMount{
-		Spec: SecretEngineMountSpec{
-			Mount: Mount{
-				Config: MountConfig{
+func TestAuthEngineMountIsEquivalentToDesiredStateNonMatching(t *testing.T) {
+	desc := "my auth"
+	mount := &AuthEngineMount{
+		Spec: AuthEngineMountSpec{
+			AuthMount: AuthMount{
+				Config: AuthMountConfig{
 					DefaultLeaseTTL:   "1h",
 					MaxLeaseTTL:       "24h",
 					ListingVisibility: "hidden",
+					Description:       &desc,
 				},
 			},
 		},
@@ -321,12 +314,14 @@ func TestSecretEngineMountIsEquivalentToDesiredStateNonMatching(t *testing.T) {
 	payload := map[string]interface{}{
 		"default_lease_ttl":            "2h", // changed
 		"max_lease_ttl":                "24h",
-		"force_no_cache":               false,
 		"audit_non_hmac_request_keys":  []string(nil),
 		"audit_non_hmac_response_keys": []string(nil),
 		"listing_visibility":           "hidden",
 		"passthrough_request_headers":  []string(nil),
 		"allowed_response_headers":     []string(nil),
+		"token_type":                   "",
+		"description":                  &desc,
+		"options":                      map[string]string(nil),
 	}
 
 	if mount.IsEquivalentToDesiredState(payload) {
@@ -338,11 +333,11 @@ func TestSecretEngineMountIsEquivalentToDesiredStateNonMatching(t *testing.T) {
 // return false because reflect.DeepEqual compares full maps. The reconciler
 // does NOT pre-filter the tune response for engine mounts. Story 7-4 tracks
 // hardening this behavior.
-func TestSecretEngineMountIsEquivalentToDesiredStateExtraFields(t *testing.T) {
-	mount := &SecretEngineMount{
-		Spec: SecretEngineMountSpec{
-			Mount: Mount{
-				Config: MountConfig{
+func TestAuthEngineMountIsEquivalentToDesiredStateExtraFields(t *testing.T) {
+	mount := &AuthEngineMount{
+		Spec: AuthEngineMountSpec{
+			AuthMount: AuthMount{
+				Config: AuthMountConfig{
 					DefaultLeaseTTL:   "1h",
 					MaxLeaseTTL:       "24h",
 					ListingVisibility: "hidden",
@@ -354,14 +349,16 @@ func TestSecretEngineMountIsEquivalentToDesiredStateExtraFields(t *testing.T) {
 	payload := map[string]interface{}{
 		"default_lease_ttl":            "1h",
 		"max_lease_ttl":                "24h",
-		"force_no_cache":               false,
 		"audit_non_hmac_request_keys":  []string(nil),
 		"audit_non_hmac_response_keys": []string(nil),
 		"listing_visibility":           "hidden",
 		"passthrough_request_headers":  []string(nil),
 		"allowed_response_headers":     []string(nil),
+		"token_type":                   "",
+		"description":                  (*string)(nil),
+		"options":                      map[string]string(nil),
+		"force_no_cache":               false,
 		"plugin_version":               "",
-		"user_lockout_config":          map[string]interface{}{},
 	}
 
 	if mount.IsEquivalentToDesiredState(payload) {
@@ -369,15 +366,15 @@ func TestSecretEngineMountIsEquivalentToDesiredStateExtraFields(t *testing.T) {
 	}
 }
 
-func TestSecretEngineMountIsDeletable(t *testing.T) {
-	mount := &SecretEngineMount{}
+func TestAuthEngineMountIsDeletable(t *testing.T) {
+	mount := &AuthEngineMount{}
 	if !mount.IsDeletable() {
-		t.Error("expected SecretEngineMount to be deletable")
+		t.Error("expected AuthEngineMount to be deletable")
 	}
 }
 
-func TestSecretEngineMountConditions(t *testing.T) {
-	mount := &SecretEngineMount{}
+func TestAuthEngineMountConditions(t *testing.T) {
+	mount := &AuthEngineMount{}
 
 	conditions := []metav1.Condition{
 		{

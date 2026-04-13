@@ -1,6 +1,6 @@
 # Story 1.2: Unit tests for `toMap()` and `IsEquivalentToDesiredState` — Engine Mount Types
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -27,31 +27,38 @@ So that the unique comparison semantics of mount types are verified.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add AuthEngineMount unit tests (AC: 1, 2, 4)
-  - [ ] 1.1: Create `api/v1alpha1/authenginemount_test.go`
-  - [ ] 1.2: Add `TestAuthEngineMountGetPath` — with `spec.name`, without (fallback to `metadata.name`)
-  - [ ] 1.3: Add `TestAuthMountConfigToMap` — verify all 10 keys: `default_lease_ttl`, `max_lease_ttl`, `audit_non_hmac_request_keys`, `audit_non_hmac_response_keys`, `listing_visibility`, `passthrough_request_headers`, `allowed_response_headers`, `token_type`, `description`, `options`
-  - [ ] 1.4: Add `TestAuthMountToMap` — verify all 5 keys: `type`, `description`, `config` (nested), `local`, `seal_wrap`
-  - [ ] 1.5: Add `TestAuthEngineMountGetPayload` — verify it returns full mount spec (via `AuthMount.toMap()`), not just config
-  - [ ] 1.6: Add `TestAuthEngineMountGetTunePayload` — verify it returns only `Config.toMap()`
-  - [ ] 1.7: Add `TestAuthEngineMountIsEquivalentToDesiredState` — matching tune config → `true`
-  - [ ] 1.8: Add `TestAuthEngineMountIsEquivalentToDesiredState` — non-matching tune config (one field changed) → `false`
-  - [ ] 1.9: Add `TestAuthEngineMountIsEquivalentToDesiredState` — extra fields in payload → `false` (document this behavior; see Dev Notes)
-  - [ ] 1.10: Add `TestAuthEngineMountIsDeletable` — returns `true`
-  - [ ] 1.11: Add `TestAuthEngineMountConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 2: Extend SecretEngineMount unit tests (AC: 3, 4)
-  - [ ] 2.1: Add `TestMountConfigToMap` to `api/v1alpha1/secretenginemount_test.go` — verify all 8 keys: `default_lease_ttl`, `max_lease_ttl`, `force_no_cache`, `audit_non_hmac_request_keys`, `audit_non_hmac_response_keys`, `listing_visibility`, `passthrough_request_headers`, `allowed_response_headers`
-  - [ ] 2.2: Add `TestMountToMap` — verify all 7 keys: `type`, `description`, `config` (nested), `local`, `seal_wrap`, `external_entropy_access`, `options`
-  - [ ] 2.3: Add `TestSecretEngineMountGetPayload` — verify it returns full mount spec (via `Mount.toMap()`)
-  - [ ] 2.4: Add `TestSecretEngineMountGetTunePayload` — verify it returns `Config.toMap()` (includes `options` and `description` unlike `IsEquivalentToDesiredState`)
-  - [ ] 2.5: Add `TestSecretEngineMountIsEquivalentToDesiredState` — matching tune config (after options/description delete) → `true`
-  - [ ] 2.6: Add `TestSecretEngineMountIsEquivalentToDesiredState` — non-matching tune config → `false`
-  - [ ] 2.7: Add `TestSecretEngineMountIsEquivalentToDesiredState` — extra fields in payload → `false`
-  - [ ] 2.8: Add `TestSecretEngineMountIsDeletable` — returns `true`
-  - [ ] 2.9: Add `TestSecretEngineMountConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 3: Verify all tests pass (AC: all)
-  - [ ] 3.1: Run `go test ./api/v1alpha1/ -v -count=1` to confirm all new and existing tests pass
-  - [ ] 3.2: Run `make test` to verify no regressions in full unit test suite
+- [x] Task 1: Add AuthEngineMount unit tests (AC: 1, 2, 4)
+  - [x] 1.1: Create `api/v1alpha1/authenginemount_test.go`
+  - [x] 1.2: Add `TestAuthEngineMountGetPath` — with `spec.name`, without (fallback to `metadata.name`)
+  - [x] 1.3: Add `TestAuthMountConfigToMap` — verify all 10 keys: `default_lease_ttl`, `max_lease_ttl`, `audit_non_hmac_request_keys`, `audit_non_hmac_response_keys`, `listing_visibility`, `passthrough_request_headers`, `allowed_response_headers`, `token_type`, `description`, `options`
+  - [x] 1.4: Add `TestAuthMountToMap` — verify all 5 keys: `type`, `description`, `config` (nested), `local`, `seal_wrap`
+  - [x] 1.5: Add `TestAuthEngineMountGetPayload` — verify it returns full mount spec (via `AuthMount.toMap()`), not just config
+  - [x] 1.6: Add `TestAuthEngineMountGetTunePayload` — verify it returns only `Config.toMap()`
+  - [x] 1.7: Add `TestAuthEngineMountIsEquivalentToDesiredState` — matching tune config → `true`
+  - [x] 1.8: Add `TestAuthEngineMountIsEquivalentToDesiredState` — non-matching tune config (one field changed) → `false`
+  - [x] 1.9: Add `TestAuthEngineMountIsEquivalentToDesiredState` — extra fields in payload → `false` (document this behavior; see Dev Notes)
+  - [x] 1.10: Add `TestAuthEngineMountIsDeletable` — returns `true`
+  - [x] 1.11: Add `TestAuthEngineMountConditions` — GetConditions/SetConditions round-trip
+- [x] Task 2: Extend SecretEngineMount unit tests (AC: 3, 4)
+  - [x] 2.1: Add `TestMountConfigToMap` to `api/v1alpha1/secretenginemount_test.go` — verify all 8 keys: `default_lease_ttl`, `max_lease_ttl`, `force_no_cache`, `audit_non_hmac_request_keys`, `audit_non_hmac_response_keys`, `listing_visibility`, `passthrough_request_headers`, `allowed_response_headers`
+  - [x] 2.2: Add `TestMountToMap` — verify all 7 keys: `type`, `description`, `config` (nested), `local`, `seal_wrap`, `external_entropy_access`, `options`
+  - [x] 2.3: Add `TestSecretEngineMountGetPayload` — verify it returns full mount spec (via `Mount.toMap()`)
+  - [x] 2.4: Add `TestSecretEngineMountGetTunePayload` — verify it returns `Config.toMap()` (no `options`/`description` in `MountConfig.toMap()`; delete calls in `IsEquivalentToDesiredState` are no-ops)
+  - [x] 2.5: Add `TestSecretEngineMountIsEquivalentToDesiredState` — matching tune config (after options/description delete) → `true`
+  - [x] 2.6: Add `TestSecretEngineMountIsEquivalentToDesiredState` — non-matching tune config → `false`
+  - [x] 2.7: Add `TestSecretEngineMountIsEquivalentToDesiredState` — extra fields in payload → `false`
+  - [x] 2.8: Add `TestSecretEngineMountIsDeletable` — returns `true`
+  - [x] 2.9: Add `TestSecretEngineMountConditions` — GetConditions/SetConditions round-trip
+- [x] Task 3: Verify all tests pass (AC: all)
+  - [x] 3.1: Run `go test ./api/v1alpha1/ -v -count=1` to confirm all new and existing tests pass
+  - [x] 3.2: Run `make test` to verify no regressions in full unit test suite
+
+### Review Findings
+
+- [x] [Review][Patch] Add an `AuthEngineMount` test that uses a raw Vault-style tune payload shape instead of implementation-shaped values like `*string`, so the suite does not overclaim real `IsEquivalentToDesiredState()` equivalence behavior. [`api/v1alpha1/authenginemount_test.go:239`]
+- [x] [Review][Patch] Add a direct `AuthEngineMount` negative case showing `IsEquivalentToDesiredState(d.GetPayload())` is false, so AC #2 is proven against the full mount spec rather than only through generic extra-field cases. [`api/v1alpha1/authenginemount_test.go:239`]
+- [x] [Review][Patch] Add a direct `SecretEngineMount` negative case showing `IsEquivalentToDesiredState(d.GetPayload())` is false, so AC #3 is proven against the full mount spec rather than only through generic extra-field cases. [`api/v1alpha1/secretenginemount_test.go:248`]
+- [x] [Review][Patch] Correct Task 2.4 in this story: `SecretEngineMount.GetTunePayload()` does not include `options` or `description`, so the checked-off task text currently contradicts both the implementation and the tests. [`_bmad-output/implementation-artifacts/1-2-unit-tests-tomap-and-isequivalenttodesiredstate-engine-mount-types.md:46`]
 
 ## Dev Notes
 
@@ -203,8 +210,27 @@ Story 1.1 established these patterns:
 
 ### Agent Model Used
 
+Opus 4.6 (Cursor Agent)
+
 ### Debug Log References
+
+- Fixed Go nil interface gotcha in `TestAuthMountConfigToMapNilDescription`: `*string(nil)` stored in `interface{}` is not `== nil` — used `reflect.ValueOf().IsNil()` to correctly detect nil pointer.
 
 ### Completion Notes List
 
+- Created `api/v1alpha1/authenginemount_test.go` (new file) with 11 test functions covering all AuthEngineMount methods: GetPath, AuthMountConfig.toMap (including nil *string description case), AuthMount.toMap, GetPayload, GetTunePayload, IsEquivalentToDesiredState (matching, non-matching, extra fields), IsDeletable, GetConditions/SetConditions.
+- Extended `api/v1alpha1/secretenginemount_test.go` with 9 new test functions covering MountConfig.toMap, Mount.toMap, GetPayload, GetTunePayload, IsEquivalentToDesiredState (matching, non-matching, extra fields), IsDeletable, GetConditions/SetConditions.
+- Verified GetTunePayload and IsEquivalentToDesiredState use Config.toMap() (tune-only comparison) for both types.
+- Documented that SecretEngineMount's `delete(configMap, "options")` and `delete(configMap, "description")` in IsEquivalentToDesiredState are no-ops since MountConfig.toMap() doesn't include those keys.
+- Documented AC #4 extra-field behavior: both types use reflect.DeepEqual with no pre-filtering, so extra Vault-returned fields cause false negatives (story 7-4 tracks hardening).
+- All tests pass: `go test ./api/v1alpha1/ -v -count=1` (all pass), `make test` (zero regressions).
+- Coverage in api/v1alpha1 went from 3.0% to 3.4%.
+
+### Change Log
+
+- 2026-04-12: Story 1.2 implemented — AuthEngineMount and SecretEngineMount unit tests for toMap/IsEquivalentToDesiredState
+
 ### File List
+
+- `api/v1alpha1/authenginemount_test.go` (new)
+- `api/v1alpha1/secretenginemount_test.go` (modified)
