@@ -36,6 +36,7 @@
 
 generated: 2026-04-11
 last_updated: 2026-04-13
+# Story 1.4 started 2026-04-13
 # Phase 1.5 doc epics added 2026-04-12
 project: vault-config-operator
 project_key: NOKEY
@@ -50,7 +51,7 @@ development_status:
   1-1-unit-tests-tomap-and-isequivalenttodesiredstate-simple-standard-types: done
   1-2-unit-tests-tomap-and-isequivalenttodesiredstate-engine-mount-types: done
   1-3-unit-tests-tomap-and-isequivalenttodesiredstate-database-engine-types: done
-  1-4-unit-tests-tomap-and-isequivalenttodesiredstate-auth-engine-config-types: ready-for-dev
+  1-4-unit-tests-tomap-and-isequivalenttodesiredstate-auth-engine-config-types: done
   1-5-unit-tests-tomap-and-isequivalenttodesiredstate-secret-engine-config-role-types: ready-for-dev
   1-6-unit-tests-tomap-and-isequivalenttodesiredstate-remaining-types: ready-for-dev
   epic-1-retrospective: optional
