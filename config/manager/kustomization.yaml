@@ -13,4 +13,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: quay.io/raffaelespazzoli/vault-config-operator
-  newTag: latest
+  newTag: latest@sha256:742084eff2e6b599563a9dabaf79ab0e9a9319b7f973b9e763b3c5f14321aa11
