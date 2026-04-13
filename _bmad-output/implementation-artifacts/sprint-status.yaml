@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-04-13
+last_updated: 2026-04-14
 # Story 1.4 started 2026-04-13
 # Phase 1.5 doc epics added 2026-04-12
 project: vault-config-operator
@@ -52,7 +52,7 @@ development_status:
   1-2-unit-tests-tomap-and-isequivalenttodesiredstate-engine-mount-types: done
   1-3-unit-tests-tomap-and-isequivalenttodesiredstate-database-engine-types: done
   1-4-unit-tests-tomap-and-isequivalenttodesiredstate-auth-engine-config-types: done
-  1-5-unit-tests-tomap-and-isequivalenttodesiredstate-secret-engine-config-role-types: ready-for-dev
+  1-5-unit-tests-tomap-and-isequivalenttodesiredstate-secret-engine-config-role-types: done
   1-6-unit-tests-tomap-and-isequivalenttodesiredstate-remaining-types: ready-for-dev
   epic-1-retrospective: optional
 

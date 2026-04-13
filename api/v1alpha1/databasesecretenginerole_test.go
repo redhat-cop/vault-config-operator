@@ -190,8 +190,8 @@ func TestDatabaseSecretEngineRoleIsEquivalentStatementTypeSkew(t *testing.T) {
 
 	payload := map[string]interface{}{
 		"db_name":               "my-db",
-		"default_ttl":          metav1.Duration{Duration: 1 * time.Hour},
-		"max_ttl":              metav1.Duration{Duration: 24 * time.Hour},
+		"default_ttl":           metav1.Duration{Duration: 1 * time.Hour},
+		"max_ttl":               metav1.Duration{Duration: 24 * time.Hour},
 		"creation_statements":   []interface{}{"CREATE ROLE"},
 		"revocation_statements": []interface{}{},
 		"rollback_statements":   []interface{}{},

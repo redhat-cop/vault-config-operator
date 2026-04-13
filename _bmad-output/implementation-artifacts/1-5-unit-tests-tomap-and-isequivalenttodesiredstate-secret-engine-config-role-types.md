@@ -1,6 +1,6 @@
 # Story 1.5: Unit tests for `toMap()` and `IsEquivalentToDesiredState` — Secret Engine Config & Role Types
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -40,136 +40,142 @@ So that field mappings for RabbitMQ, GitHub, Azure, PKI, Quay, and Kubernetes se
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add RabbitMQSecretEngineConfig unit tests (AC: 1, 2, 3, 4, 5)
-  - [ ] 1.1: Create `api/v1alpha1/rabbitmqsecretengineconfig_test.go`
-  - [ ] 1.2: Add `TestRabbitMQSecretEngineConfigGetPath` — verify returns `{spec.path}/config/connection`
-  - [ ] 1.3: Add `TestRMQSEConfigRabbitMQToMap` — verify all 6 keys: `connection_uri`, `verify_connection`, `username`, `password`, `username_template`, `password_policy`; set `retrievedUsername`/`retrievedPassword` directly (same package)
-  - [ ] 1.4: Add `TestRMQSEConfigLeasesToMap` — verify 2 keys: `ttl`, `max_ttl`
-  - [ ] 1.5: Add `TestRabbitMQSecretEngineConfigIsEquivalentMatching` — **critical**: uses `leasesToMap()` NOT `rabbitMQToMap()`, so payload must match lease keys only; matching → `true`
-  - [ ] 1.6: Add `TestRabbitMQSecretEngineConfigIsEquivalentNonMatching` — change one lease field → `false`
-  - [ ] 1.7: Add `TestRabbitMQSecretEngineConfigIsEquivalentExtraFields` — extra keys in payload → `false` (bare DeepEqual on lease map)
-  - [ ] 1.8: Add `TestRabbitMQSecretEngineConfigIsDeletable` — returns `false`
-  - [ ] 1.9: Add `TestRabbitMQSecretEngineConfigConditions` — GetConditions/SetConditions round-trip
-  - [ ] 1.10: Add `TestRabbitMQSecretEngineConfigGetLeasePayload` — verify `GetLeasePayload()` matches `leasesToMap()`
-  - [ ] 1.11: Add `TestRabbitMQSecretEngineConfigGetLeasePath` — verify returns `{spec.path}/config/lease`
-- [ ] Task 2: Add RabbitMQSecretEngineRole unit tests (AC: 1, 2, 3, 4)
-  - [ ] 2.1: Create `api/v1alpha1/rabbitmqsecretenginerole_test.go`
-  - [ ] 2.2: Add `TestRabbitMQSecretEngineRoleGetPath` — with `spec.name`, without (fallback to `metadata.name`); verify path format `CleansePath({path}/roles/{name})`
-  - [ ] 2.3: Add `TestRMQSERoleRabbitMQToMap` — verify all 3 keys: `tags`, `vhosts`, `vhost_topics`; verify `vhosts` and `vhost_topics` are JSON strings (from `convertVhostsToJson`/`convertTopicsToJson`)
-  - [ ] 2.4: Add `TestRabbitMQSecretEngineRoleIsEquivalentMatching` — matching payload → `true`
-  - [ ] 2.5: Add `TestRabbitMQSecretEngineRoleIsEquivalentNonMatching` — one field changed → `false`
-  - [ ] 2.6: Add `TestRabbitMQSecretEngineRoleIsEquivalentExtraFields` — extra keys → `false`
-  - [ ] 2.7: Add `TestRabbitMQSecretEngineRoleIsDeletable` — returns `true`
-  - [ ] 2.8: Add `TestRabbitMQSecretEngineRoleConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 3: Add GitHubSecretEngineConfig unit tests (AC: 1, 2, 3, 4, 5)
-  - [ ] 3.1: Create `api/v1alpha1/githubsecretengineconfig_test.go`
-  - [ ] 3.2: Add `TestGitHubSecretEngineConfigGetPath` — verify returns `{spec.path}/config` (no name segment, no CleansePath)
-  - [ ] 3.3: Add `TestGHConfigToMap` — verify all 3 keys: `app_id`, `prv_key`, `base_url`; set `retrievedSSHKey` directly (same package)
-  - [ ] 3.4: Add `TestGitHubSecretEngineConfigIsEquivalentPrvKeyDeleted` — **critical test**: verify `prv_key` is deleted from desiredState before comparison; a payload without `prv_key` that matches `app_id` and `base_url` → `true`
-  - [ ] 3.5: Add `TestGitHubSecretEngineConfigIsEquivalentMatching` — matching payload (without `prv_key`) → `true`
-  - [ ] 3.6: Add `TestGitHubSecretEngineConfigIsEquivalentNonMatching` — one managed field changed → `false`
-  - [ ] 3.7: Add `TestGitHubSecretEngineConfigIsEquivalentExtraFields` — extra keys → `false`
-  - [ ] 3.8: Add `TestGitHubSecretEngineConfigIsDeletable` — returns `false`
-  - [ ] 3.9: Add `TestGitHubSecretEngineConfigConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 4: Add GitHubSecretEngineRole unit tests (AC: 1, 2, 3, 4)
-  - [ ] 4.1: Create `api/v1alpha1/githubsecretenginerole_test.go`
-  - [ ] 4.2: Add `TestGitHubSecretEngineRoleGetPath` — with `spec.name`, without; verify path format `CleansePath({path}/permissionset/{name})` — **note: uses `permissionset` not `roles`**
-  - [ ] 4.3: Add `TestPermissionSetToMap` — verify all 5 keys: `installation_id`, `org_name`, `repositories`, `repository_ids`, `permissions`; verify `permissions` is `map[string]string`
-  - [ ] 4.4: Add `TestGitHubSecretEngineRoleIsEquivalentMatching` — matching payload → `true`
-  - [ ] 4.5: Add `TestGitHubSecretEngineRoleIsEquivalentNonMatching` — one field changed → `false`
-  - [ ] 4.6: Add `TestGitHubSecretEngineRoleIsEquivalentExtraFields` — extra keys → `false`
-  - [ ] 4.7: Add `TestGitHubSecretEngineRoleIsDeletable` — returns `true`
-  - [ ] 4.8: Add `TestGitHubSecretEngineRoleConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 5: Add AzureSecretEngineConfig unit tests (AC: 1, 2, 3, 4)
-  - [ ] 5.1: Create `api/v1alpha1/azuresecretengineconfig_test.go`
-  - [ ] 5.2: Add `TestAzureSecretEngineConfigGetPath` — verify returns `{spec.path}/config` (no name segment, no CleansePath)
-  - [ ] 5.3: Add `TestAzureSEConfigToMap` — verify all 7 keys: `subscription_id`, `tenant_id`, `client_id`, `client_secret`, `environment`, `password_policy`, `root_password_ttl`; set `retrievedClientID`/`retrievedClientPassword` directly
-  - [ ] 5.4: Add `TestAzureSecretEngineConfigIsEquivalentMatching` — matching payload → `true`
-  - [ ] 5.5: Add `TestAzureSecretEngineConfigIsEquivalentNonMatching` — one field changed → `false`
-  - [ ] 5.6: Add `TestAzureSecretEngineConfigIsEquivalentExtraFields` — extra keys → `false`
-  - [ ] 5.7: Add `TestAzureSecretEngineConfigIsDeletable` — returns `true`
-  - [ ] 5.8: Add `TestAzureSecretEngineConfigConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 6: Add AzureSecretEngineRole unit tests (AC: 1, 2, 3, 4)
-  - [ ] 6.1: Create `api/v1alpha1/azuresecretenginerole_test.go`
-  - [ ] 6.2: Add `TestAzureSecretEngineRoleGetPath` — with `spec.name`, without; verify path format `CleansePath({path}/roles/{name})`
-  - [ ] 6.3: Add `TestAzureSERoleToMap` — verify all 9 keys: `azure_roles`, `azure_groups`, `application_object_id`, `persist_app`, `ttl`, `max_ttl`, `permanently_delete`, `sign_in_audience`, `tags`
-  - [ ] 6.4: Add `TestAzureSecretEngineRoleIsEquivalentMatching` — matching payload → `true`
-  - [ ] 6.5: Add `TestAzureSecretEngineRoleIsEquivalentNonMatching` — one field changed → `false`
-  - [ ] 6.6: Add `TestAzureSecretEngineRoleIsEquivalentExtraFields` — extra keys → `false`
-  - [ ] 6.7: Add `TestAzureSecretEngineRoleIsDeletable` — returns `true`
-  - [ ] 6.8: Add `TestAzureSecretEngineRoleConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 7: Add PKISecretEngineConfig unit tests (AC: 1, 2, 3, 4)
-  - [ ] 7.1: Create `api/v1alpha1/pkisecretengineconfig_test.go`
-  - [ ] 7.2: Add `TestPKISecretEngineConfigGetPath` — verify returns `string(spec.path)` only (no `/config` in code — just the mount path)
-  - [ ] 7.3: Add `TestPKICommonToMap` — verify all 22 keys: `common_name`, `alt_names`, `ip_sans`, `uri_sans`, `other_sans`, `ttl`, `format`, `private_key_format`, `key_type`, `key_bits`, `max_path_length`, `exclude_cn_from_sans`, `permitted_dns_domains`, `ou`, `organization`, `country`, `locality`, `province`, `street_address`, `postal_code`, `serial_number`; verify `type` is NOT in output (commented out)
-  - [ ] 7.4: Add `TestPKIConfigUrlsToMap` — verify 3 keys: `issuing_certificates`, `crl_distribution_points`, `ocsp_servers`
-  - [ ] 7.5: Add `TestPKIConfigCRLToMap` — verify 2 keys: `expiry`, `disable`
-  - [ ] 7.6: Add `TestPKISecretEngineConfigIsEquivalentMatching` — uses `PKICommon.toMap()` only; matching → `true`
-  - [ ] 7.7: Add `TestPKISecretEngineConfigIsEquivalentNonMatching` — one field changed → `false`
-  - [ ] 7.8: Add `TestPKISecretEngineConfigIsEquivalentExtraFields` — extra keys → `false`
-  - [ ] 7.9: Add `TestPKISecretEngineConfigIsDeletable` — returns `false`
-  - [ ] 7.10: Add `TestPKISecretEngineConfigConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 8: Add PKISecretEngineRole unit tests (AC: 1, 2, 3, 4)
-  - [ ] 8.1: Create `api/v1alpha1/pkisecretenginerole_test.go`
-  - [ ] 8.2: Add `TestPKISecretEngineRoleGetPath` — with `spec.name`, without; verify path format `CleansePath({path}/roles/{name})`
-  - [ ] 8.3: Add `TestPKIRoleToMap` — verify all 38 keys: `ttl`, `max_ttl`, `allow_localhost`, `allowed_domains`, `allowed_domains_template`, `allow_bare_domains`, `allow_subdomains`, `allow_glob_domains`, `allow_any_name`, `enforce_hostnames`, `allow_ip_sans`, `allowed_uri_sans`, `allowed_other_sans`, `server_flag`, `client_flag`, `code_signing_flag`, `email_protection_flag`, `key_type`, `key_bits`, `key_usage`, `ext_key_usage`, `ext_key_usage_oids`, `use_csr_common_name`, `use_csr_sans`, `ou`, `organization`, `country`, `locality`, `province`, `street_address`, `postal_code`, `serial_number`, `generate_lease`, `no_store`, `require_cn`, `policy_identifiers`, `basic_constraints_valid_for_non_ca`, `not_before_duration`
-  - [ ] 8.4: Add `TestPKISecretEngineRoleIsEquivalentMatching` — matching payload → `true`
-  - [ ] 8.5: Add `TestPKISecretEngineRoleIsEquivalentNonMatching` — one field changed → `false`
-  - [ ] 8.6: Add `TestPKISecretEngineRoleIsEquivalentExtraFields` — extra keys → `false`
-  - [ ] 8.7: Add `TestPKISecretEngineRoleIsDeletable` — returns `true`
-  - [ ] 8.8: Add `TestPKISecretEngineRoleConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 9: Add QuaySecretEngineConfig unit tests (AC: 1, 2, 3, 4, 5)
-  - [ ] 9.1: Create `api/v1alpha1/quaysecretengineconfig_test.go`
-  - [ ] 9.2: Add `TestQuaySecretEngineConfigGetPath` — verify returns `{spec.path}/config`
-  - [ ] 9.3: Add `TestQuayConfigToMap` — verify all 4 keys: `url`, `token`, `ca_certificate`, `disable_ssl_verification`; set `retrievedToken` directly
-  - [ ] 9.4: Add `TestQuaySecretEngineConfigIsEquivalentPasswordDeleted` — **critical test**: verify `password` is deleted from desiredState before comparison; note that `toMap()` never sets a `password` key (it sets `token`), so this delete has no practical effect on the current `toMap()` output — document this behavior
-  - [ ] 9.5: Add `TestQuaySecretEngineConfigIsEquivalentMatching` — matching payload → `true`
-  - [ ] 9.6: Add `TestQuaySecretEngineConfigIsEquivalentNonMatching` — one field changed → `false`
-  - [ ] 9.7: Add `TestQuaySecretEngineConfigIsEquivalentExtraFields` — extra keys → `false`
-  - [ ] 9.8: Add `TestQuaySecretEngineConfigIsDeletable` — returns `false`
-  - [ ] 9.9: Add `TestQuaySecretEngineConfigConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 10: Add QuaySecretEngineRole unit tests (AC: 1, 2, 3, 4)
-  - [ ] 10.1: Create `api/v1alpha1/quaysecretenginerole_test.go`
-  - [ ] 10.2: Add `TestQuaySecretEngineRoleGetPath` — with `spec.name`, without; verify path format `CleansePath({path}/roles/{name})`
-  - [ ] 10.3: Add `TestQuayRoleToMapAllKeys` — set all optional fields (DefaultPermission, Teams, Repositories) to non-nil; verify 8 keys: `namespace_type`, `namespace_name`, `create_repositories`, `default_permission`, `teams`, `repositories`, `ttl`, `max_ttl`; verify `teams` and `repositories` are JSON strings (from `setMapJson`)
-  - [ ] 10.4: Add `TestQuayRoleToMapMinimalKeys` — set optional fields to nil; verify only 5 keys present: `namespace_type`, `namespace_name`, `create_repositories`, `ttl`, `max_ttl`; verify `default_permission`, `teams`, `repositories` are absent
-  - [ ] 10.5: Add `TestQuaySecretEngineRoleIsEquivalentMatching` — matching payload → `true`
-  - [ ] 10.6: Add `TestQuaySecretEngineRoleIsEquivalentNonMatching` — one field changed → `false`
-  - [ ] 10.7: Add `TestQuaySecretEngineRoleIsEquivalentExtraFields` — extra keys → `false`
-  - [ ] 10.8: Add `TestQuaySecretEngineRoleIsDeletable` — returns `true`
-  - [ ] 10.9: Add `TestQuaySecretEngineRoleConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 11: Add QuaySecretEngineStaticRole unit tests (AC: 1, 2, 3, 4)
-  - [ ] 11.1: Create `api/v1alpha1/quaysecretenginestaticrole_test.go`
-  - [ ] 11.2: Add `TestQuaySecretEngineStaticRoleGetPath` — with `spec.name`, without; verify path format `CleansePath({path}/static-roles/{name})` — **note: uses `static-roles` not `roles`**
-  - [ ] 11.3: Add `TestQuayBaseRoleToMapAllKeys` — set all optional fields; verify 6 keys: `namespace_type`, `namespace_name`, `create_repositories`, `default_permission`, `teams`, `repositories`; verify NO `ttl`/`max_ttl` (unlike QuayRole)
-  - [ ] 11.4: Add `TestQuayBaseRoleToMapMinimalKeys` — set optional fields to nil; verify only 3 keys: `namespace_type`, `namespace_name`, `create_repositories`
-  - [ ] 11.5: Add `TestQuaySecretEngineStaticRoleIsEquivalentMatching` — matching payload → `true`
-  - [ ] 11.6: Add `TestQuaySecretEngineStaticRoleIsEquivalentNonMatching` — one field changed → `false`
-  - [ ] 11.7: Add `TestQuaySecretEngineStaticRoleIsEquivalentExtraFields` — extra keys → `false`
-  - [ ] 11.8: Add `TestQuaySecretEngineStaticRoleIsDeletable` — returns `true`
-  - [ ] 11.9: Add `TestQuaySecretEngineStaticRoleConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 12: Add KubernetesSecretEngineConfig unit tests (AC: 1, 2, 3, 4, 5)
-  - [ ] 12.1: Create `api/v1alpha1/kubernetessecretengineconfig_test.go`
-  - [ ] 12.2: Add `TestKubernetesSecretEngineConfigGetPath` — verify returns `{spec.path}/config`
-  - [ ] 12.3: Add `TestKubeSEConfigToMap` — verify all 4 keys: `kubernetes_host`, `kubernetes_ca_cert`, `service_account_jwt`, `disable_local_ca_jwt`; set `retrievedServiceAccountJWT` directly
-  - [ ] 12.4: Add `TestKubernetesSecretEngineConfigIsEquivalentJWTDeleted` — **critical test**: verify `service_account_jwt` is deleted from desiredState before comparison; a payload without `service_account_jwt` that matches remaining keys → `true`
-  - [ ] 12.5: Add `TestKubernetesSecretEngineConfigIsEquivalentMatching` — matching payload (without JWT) → `true`
-  - [ ] 12.6: Add `TestKubernetesSecretEngineConfigIsEquivalentNonMatching` — one managed field changed → `false`
-  - [ ] 12.7: Add `TestKubernetesSecretEngineConfigIsEquivalentExtraFields` — extra keys → `false`
-  - [ ] 12.8: Add `TestKubernetesSecretEngineConfigIsDeletable` — returns `true`
-  - [ ] 12.9: Add `TestKubernetesSecretEngineConfigConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 13: Add KubernetesSecretEngineRole unit tests (AC: 1, 2, 3, 4)
-  - [ ] 13.1: Create `api/v1alpha1/kubernetessecretenginerole_test.go`
-  - [ ] 13.2: Add `TestKubernetesSecretEngineRoleGetPath` — with `spec.name`, without; verify path format `CleansePath({path}/roles/{name})`
-  - [ ] 13.3: Add `TestKubeSERoleToMap` — verify all 12 keys: `allowed_kubernetes_namespaces`, `allowed_kubernetes_namespace_selector`, `token_max_ttl`, `token_default_ttl`, `token_default_audiences`, `service_account_name`, `kubernetes_role_name`, `kubernetes_role_type`, `generated_role_rules`, `name_template`, `extra_annotations`, `extra_labels`; **verify the field-to-key mapping: `DefaultTTL` → `token_max_ttl`, `MaxTTL` → `token_default_ttl`** (appears swapped — document and test the actual code behavior)
-  - [ ] 13.4: Add `TestKubernetesSecretEngineRoleIsEquivalentMatching` — matching payload → `true`
-  - [ ] 13.5: Add `TestKubernetesSecretEngineRoleIsEquivalentNonMatching` — one field changed → `false`
-  - [ ] 13.6: Add `TestKubernetesSecretEngineRoleIsEquivalentExtraFields` — extra keys → `false`
-  - [ ] 13.7: Add `TestKubernetesSecretEngineRoleIsDeletable` — returns `true`
-  - [ ] 13.8: Add `TestKubernetesSecretEngineRoleConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 14: Verify all tests pass (AC: all)
-  - [ ] 14.1: Run `go test ./api/v1alpha1/ -v -count=1` to confirm all new and existing tests pass
-  - [ ] 14.2: Run `make test` to verify no regressions in full unit test suite
+- [x] Task 1: Add RabbitMQSecretEngineConfig unit tests (AC: 1, 2, 3, 4, 5)
+  - [x] 1.1: Create `api/v1alpha1/rabbitmqsecretengineconfig_test.go`
+  - [x] 1.2: Add `TestRabbitMQSecretEngineConfigGetPath` — verify returns `{spec.path}/config/connection`
+  - [x] 1.3: Add `TestRMQSEConfigRabbitMQToMap` — verify all 6 keys: `connection_uri`, `verify_connection`, `username`, `password`, `username_template`, `password_policy`; set `retrievedUsername`/`retrievedPassword` directly (same package)
+  - [x] 1.4: Add `TestRMQSEConfigLeasesToMap` — verify 2 keys: `ttl`, `max_ttl`
+  - [x] 1.5: Add `TestRabbitMQSecretEngineConfigIsEquivalentMatching` — **critical**: uses `leasesToMap()` NOT `rabbitMQToMap()`, so payload must match lease keys only; matching → `true`
+  - [x] 1.6: Add `TestRabbitMQSecretEngineConfigIsEquivalentNonMatching` — change one lease field → `false`
+  - [x] 1.7: Add `TestRabbitMQSecretEngineConfigIsEquivalentExtraFields` — extra keys in payload → `false` (bare DeepEqual on lease map)
+  - [x] 1.8: Add `TestRabbitMQSecretEngineConfigIsDeletable` — returns `false`
+  - [x] 1.9: Add `TestRabbitMQSecretEngineConfigConditions` — GetConditions/SetConditions round-trip
+  - [x] 1.10: Add `TestRabbitMQSecretEngineConfigGetLeasePayload` — verify `GetLeasePayload()` matches `leasesToMap()`
+  - [x] 1.11: Add `TestRabbitMQSecretEngineConfigGetLeasePath` — verify returns `{spec.path}/config/lease`
+- [x] Task 2: Add RabbitMQSecretEngineRole unit tests (AC: 1, 2, 3, 4)
+  - [x] 2.1: Create `api/v1alpha1/rabbitmqsecretenginerole_test.go`
+  - [x] 2.2: Add `TestRabbitMQSecretEngineRoleGetPath` — with `spec.name`, without (fallback to `metadata.name`); verify path format `CleansePath({path}/roles/{name})`
+  - [x] 2.3: Add `TestRMQSERoleRabbitMQToMap` — verify all 3 keys: `tags`, `vhosts`, `vhost_topics`; verify `vhosts` and `vhost_topics` are JSON strings (from `convertVhostsToJson`/`convertTopicsToJson`)
+  - [x] 2.4: Add `TestRabbitMQSecretEngineRoleIsEquivalentMatching` — matching payload → `true`
+  - [x] 2.5: Add `TestRabbitMQSecretEngineRoleIsEquivalentNonMatching` — one field changed → `false`
+  - [x] 2.6: Add `TestRabbitMQSecretEngineRoleIsEquivalentExtraFields` — extra keys → `false`
+  - [x] 2.7: Add `TestRabbitMQSecretEngineRoleIsDeletable` — returns `true`
+  - [x] 2.8: Add `TestRabbitMQSecretEngineRoleConditions` — GetConditions/SetConditions round-trip
+- [x] Task 3: Add GitHubSecretEngineConfig unit tests (AC: 1, 2, 3, 4, 5)
+  - [x] 3.1: Create `api/v1alpha1/githubsecretengineconfig_test.go`
+  - [x] 3.2: Add `TestGitHubSecretEngineConfigGetPath` — verify returns `{spec.path}/config` (no name segment, no CleansePath)
+  - [x] 3.3: Add `TestGHConfigToMap` — verify all 3 keys: `app_id`, `prv_key`, `base_url`; set `retrievedSSHKey` directly (same package)
+  - [x] 3.4: Add `TestGitHubSecretEngineConfigIsEquivalentPrvKeyDeleted` — **critical test**: verify `prv_key` is deleted from desiredState before comparison; a payload without `prv_key` that matches `app_id` and `base_url` → `true`
+  - [x] 3.5: Add `TestGitHubSecretEngineConfigIsEquivalentMatching` — matching payload (without `prv_key`) → `true`
+  - [x] 3.6: Add `TestGitHubSecretEngineConfigIsEquivalentNonMatching` — one managed field changed → `false`
+  - [x] 3.7: Add `TestGitHubSecretEngineConfigIsEquivalentExtraFields` — extra keys → `false`
+  - [x] 3.8: Add `TestGitHubSecretEngineConfigIsDeletable` — returns `false`
+  - [x] 3.9: Add `TestGitHubSecretEngineConfigConditions` — GetConditions/SetConditions round-trip
+- [x] Task 4: Add GitHubSecretEngineRole unit tests (AC: 1, 2, 3, 4)
+  - [x] 4.1: Create `api/v1alpha1/githubsecretenginerole_test.go`
+  - [x] 4.2: Add `TestGitHubSecretEngineRoleGetPath` — with `spec.name`, without; verify path format `CleansePath({path}/permissionset/{name})` — **note: uses `permissionset` not `roles`**
+  - [x] 4.3: Add `TestPermissionSetToMap` — verify all 5 keys: `installation_id`, `org_name`, `repositories`, `repository_ids`, `permissions`; verify `permissions` is `map[string]string`
+  - [x] 4.4: Add `TestGitHubSecretEngineRoleIsEquivalentMatching` — matching payload → `true`
+  - [x] 4.5: Add `TestGitHubSecretEngineRoleIsEquivalentNonMatching` — one field changed → `false`
+  - [x] 4.6: Add `TestGitHubSecretEngineRoleIsEquivalentExtraFields` — extra keys → `false`
+  - [x] 4.7: Add `TestGitHubSecretEngineRoleIsDeletable` — returns `true`
+  - [x] 4.8: Add `TestGitHubSecretEngineRoleConditions` — GetConditions/SetConditions round-trip
+- [x] Task 5: Add AzureSecretEngineConfig unit tests (AC: 1, 2, 3, 4)
+  - [x] 5.1: Create `api/v1alpha1/azuresecretengineconfig_test.go`
+  - [x] 5.2: Add `TestAzureSecretEngineConfigGetPath` — verify returns `{spec.path}/config` (no name segment, no CleansePath)
+  - [x] 5.3: Add `TestAzureSEConfigToMap` — verify all 7 keys: `subscription_id`, `tenant_id`, `client_id`, `client_secret`, `environment`, `password_policy`, `root_password_ttl`; set `retrievedClientID`/`retrievedClientPassword` directly
+  - [x] 5.4: Add `TestAzureSecretEngineConfigIsEquivalentMatching` — matching payload → `true`
+  - [x] 5.5: Add `TestAzureSecretEngineConfigIsEquivalentNonMatching` — one field changed → `false`
+  - [x] 5.6: Add `TestAzureSecretEngineConfigIsEquivalentExtraFields` — extra keys → `false`
+  - [x] 5.7: Add `TestAzureSecretEngineConfigIsDeletable` — returns `true`
+  - [x] 5.8: Add `TestAzureSecretEngineConfigConditions` — GetConditions/SetConditions round-trip
+- [x] Task 6: Add AzureSecretEngineRole unit tests (AC: 1, 2, 3, 4)
+  - [x] 6.1: Create `api/v1alpha1/azuresecretenginerole_test.go`
+  - [x] 6.2: Add `TestAzureSecretEngineRoleGetPath` — with `spec.name`, without; verify path format `CleansePath({path}/roles/{name})`
+  - [x] 6.3: Add `TestAzureSERoleToMap` — verify all 9 keys: `azure_roles`, `azure_groups`, `application_object_id`, `persist_app`, `ttl`, `max_ttl`, `permanently_delete`, `sign_in_audience`, `tags`
+  - [x] 6.4: Add `TestAzureSecretEngineRoleIsEquivalentMatching` — matching payload → `true`
+  - [x] 6.5: Add `TestAzureSecretEngineRoleIsEquivalentNonMatching` — one field changed → `false`
+  - [x] 6.6: Add `TestAzureSecretEngineRoleIsEquivalentExtraFields` — extra keys → `false`
+  - [x] 6.7: Add `TestAzureSecretEngineRoleIsDeletable` — returns `true`
+  - [x] 6.8: Add `TestAzureSecretEngineRoleConditions` — GetConditions/SetConditions round-trip
+- [x] Task 7: Add PKISecretEngineConfig unit tests (AC: 1, 2, 3, 4)
+  - [x] 7.1: Create `api/v1alpha1/pkisecretengineconfig_test.go`
+  - [x] 7.2: Add `TestPKISecretEngineConfigGetPath` — verify returns `string(spec.path)` only (no `/config` in code — just the mount path)
+  - [x] 7.3: Add `TestPKICommonToMap` — verify all 22 keys: `common_name`, `alt_names`, `ip_sans`, `uri_sans`, `other_sans`, `ttl`, `format`, `private_key_format`, `key_type`, `key_bits`, `max_path_length`, `exclude_cn_from_sans`, `permitted_dns_domains`, `ou`, `organization`, `country`, `locality`, `province`, `street_address`, `postal_code`, `serial_number`; verify `type` is NOT in output (commented out)
+  - [x] 7.4: Add `TestPKIConfigUrlsToMap` — verify 3 keys: `issuing_certificates`, `crl_distribution_points`, `ocsp_servers`
+  - [x] 7.5: Add `TestPKIConfigCRLToMap` — verify 2 keys: `expiry`, `disable`
+  - [x] 7.6: Add `TestPKISecretEngineConfigIsEquivalentMatching` — uses `PKICommon.toMap()` only; matching → `true`
+  - [x] 7.7: Add `TestPKISecretEngineConfigIsEquivalentNonMatching` — one field changed → `false`
+  - [x] 7.8: Add `TestPKISecretEngineConfigIsEquivalentExtraFields` — extra keys → `false`
+  - [x] 7.9: Add `TestPKISecretEngineConfigIsDeletable` — returns `false`
+  - [x] 7.10: Add `TestPKISecretEngineConfigConditions` — GetConditions/SetConditions round-trip
+- [x] Task 8: Add PKISecretEngineRole unit tests (AC: 1, 2, 3, 4)
+  - [x] 8.1: Create `api/v1alpha1/pkisecretenginerole_test.go`
+  - [x] 8.2: Add `TestPKISecretEngineRoleGetPath` — with `spec.name`, without; verify path format `CleansePath({path}/roles/{name})`
+  - [x] 8.3: Add `TestPKIRoleToMap` — verify all 38 keys: `ttl`, `max_ttl`, `allow_localhost`, `allowed_domains`, `allowed_domains_template`, `allow_bare_domains`, `allow_subdomains`, `allow_glob_domains`, `allow_any_name`, `enforce_hostnames`, `allow_ip_sans`, `allowed_uri_sans`, `allowed_other_sans`, `server_flag`, `client_flag`, `code_signing_flag`, `email_protection_flag`, `key_type`, `key_bits`, `key_usage`, `ext_key_usage`, `ext_key_usage_oids`, `use_csr_common_name`, `use_csr_sans`, `ou`, `organization`, `country`, `locality`, `province`, `street_address`, `postal_code`, `serial_number`, `generate_lease`, `no_store`, `require_cn`, `policy_identifiers`, `basic_constraints_valid_for_non_ca`, `not_before_duration`
+  - [x] 8.4: Add `TestPKISecretEngineRoleIsEquivalentMatching` — matching payload → `true`
+  - [x] 8.5: Add `TestPKISecretEngineRoleIsEquivalentNonMatching` — one field changed → `false`
+  - [x] 8.6: Add `TestPKISecretEngineRoleIsEquivalentExtraFields` — extra keys → `false`
+  - [x] 8.7: Add `TestPKISecretEngineRoleIsDeletable` — returns `true`
+  - [x] 8.8: Add `TestPKISecretEngineRoleConditions` — GetConditions/SetConditions round-trip
+- [x] Task 9: Add QuaySecretEngineConfig unit tests (AC: 1, 2, 3, 4, 5)
+  - [x] 9.1: Create `api/v1alpha1/quaysecretengineconfig_test.go`
+  - [x] 9.2: Add `TestQuaySecretEngineConfigGetPath` — verify returns `{spec.path}/config`
+  - [x] 9.3: Add `TestQuayConfigToMap` — verify all 4 keys: `url`, `token`, `ca_certificate`, `disable_ssl_verification`; set `retrievedToken` directly
+  - [x] 9.4: Add `TestQuaySecretEngineConfigIsEquivalentPasswordDeleted` — **critical test**: verify `password` is deleted from desiredState before comparison; note that `toMap()` never sets a `password` key (it sets `token`), so this delete has no practical effect on the current `toMap()` output — document this behavior
+  - [x] 9.5: Add `TestQuaySecretEngineConfigIsEquivalentMatching` — matching payload → `true`
+  - [x] 9.6: Add `TestQuaySecretEngineConfigIsEquivalentNonMatching` — one field changed → `false`
+  - [x] 9.7: Add `TestQuaySecretEngineConfigIsEquivalentExtraFields` — extra keys → `false`
+  - [x] 9.8: Add `TestQuaySecretEngineConfigIsDeletable` — returns `false`
+  - [x] 9.9: Add `TestQuaySecretEngineConfigConditions` — GetConditions/SetConditions round-trip
+- [x] Task 10: Add QuaySecretEngineRole unit tests (AC: 1, 2, 3, 4)
+  - [x] 10.1: Create `api/v1alpha1/quaysecretenginerole_test.go`
+  - [x] 10.2: Add `TestQuaySecretEngineRoleGetPath` — with `spec.name`, without; verify path format `CleansePath({path}/roles/{name})`
+  - [x] 10.3: Add `TestQuayRoleToMapAllKeys` — set all optional fields (DefaultPermission, Teams, Repositories) to non-nil; verify 8 keys: `namespace_type`, `namespace_name`, `create_repositories`, `default_permission`, `teams`, `repositories`, `ttl`, `max_ttl`; verify `teams` and `repositories` are JSON strings (from `setMapJson`)
+  - [x] 10.4: Add `TestQuayRoleToMapMinimalKeys` — set optional fields to nil; verify only 5 keys present: `namespace_type`, `namespace_name`, `create_repositories`, `ttl`, `max_ttl`; verify `default_permission`, `teams`, `repositories` are absent
+  - [x] 10.5: Add `TestQuaySecretEngineRoleIsEquivalentMatching` — matching payload → `true`
+  - [x] 10.6: Add `TestQuaySecretEngineRoleIsEquivalentNonMatching` — one field changed → `false`
+  - [x] 10.7: Add `TestQuaySecretEngineRoleIsEquivalentExtraFields` — extra keys → `false`
+  - [x] 10.8: Add `TestQuaySecretEngineRoleIsDeletable` — returns `true`
+  - [x] 10.9: Add `TestQuaySecretEngineRoleConditions` — GetConditions/SetConditions round-trip
+- [x] Task 11: Add QuaySecretEngineStaticRole unit tests (AC: 1, 2, 3, 4)
+  - [x] 11.1: Create `api/v1alpha1/quaysecretenginestaticrole_test.go`
+  - [x] 11.2: Add `TestQuaySecretEngineStaticRoleGetPath` — with `spec.name`, without; verify path format `CleansePath({path}/static-roles/{name})` — **note: uses `static-roles` not `roles`**
+  - [x] 11.3: Add `TestQuayBaseRoleToMapAllKeys` — set all optional fields; verify 6 keys: `namespace_type`, `namespace_name`, `create_repositories`, `default_permission`, `teams`, `repositories`; verify NO `ttl`/`max_ttl` (unlike QuayRole)
+  - [x] 11.4: Add `TestQuayBaseRoleToMapMinimalKeys` — set optional fields to nil; verify only 3 keys: `namespace_type`, `namespace_name`, `create_repositories`
+  - [x] 11.5: Add `TestQuaySecretEngineStaticRoleIsEquivalentMatching` — matching payload → `true`
+  - [x] 11.6: Add `TestQuaySecretEngineStaticRoleIsEquivalentNonMatching` — one field changed → `false`
+  - [x] 11.7: Add `TestQuaySecretEngineStaticRoleIsEquivalentExtraFields` — extra keys → `false`
+  - [x] 11.8: Add `TestQuaySecretEngineStaticRoleIsDeletable` — returns `true`
+  - [x] 11.9: Add `TestQuaySecretEngineStaticRoleConditions` — GetConditions/SetConditions round-trip
+- [x] Task 12: Add KubernetesSecretEngineConfig unit tests (AC: 1, 2, 3, 4, 5)
+  - [x] 12.1: Create `api/v1alpha1/kubernetessecretengineconfig_test.go`
+  - [x] 12.2: Add `TestKubernetesSecretEngineConfigGetPath` — verify returns `{spec.path}/config`
+  - [x] 12.3: Add `TestKubeSEConfigToMap` — verify all 4 keys: `kubernetes_host`, `kubernetes_ca_cert`, `service_account_jwt`, `disable_local_ca_jwt`; set `retrievedServiceAccountJWT` directly
+  - [x] 12.4: Add `TestKubernetesSecretEngineConfigIsEquivalentJWTDeleted` — **critical test**: verify `service_account_jwt` is deleted from desiredState before comparison; a payload without `service_account_jwt` that matches remaining keys → `true`
+  - [x] 12.5: Add `TestKubernetesSecretEngineConfigIsEquivalentMatching` — matching payload (without JWT) → `true`
+  - [x] 12.6: Add `TestKubernetesSecretEngineConfigIsEquivalentNonMatching` — one managed field changed → `false`
+  - [x] 12.7: Add `TestKubernetesSecretEngineConfigIsEquivalentExtraFields` — extra keys → `false`
+  - [x] 12.8: Add `TestKubernetesSecretEngineConfigIsDeletable` — returns `true`
+  - [x] 12.9: Add `TestKubernetesSecretEngineConfigConditions` — GetConditions/SetConditions round-trip
+- [x] Task 13: Add KubernetesSecretEngineRole unit tests (AC: 1, 2, 3, 4)
+  - [x] 13.1: Create `api/v1alpha1/kubernetessecretenginerole_test.go`
+  - [x] 13.2: Add `TestKubernetesSecretEngineRoleGetPath` — with `spec.name`, without; verify path format `CleansePath({path}/roles/{name})`
+  - [x] 13.3: Add `TestKubeSERoleToMap` — verify all 12 keys: `allowed_kubernetes_namespaces`, `allowed_kubernetes_namespace_selector`, `token_max_ttl`, `token_default_ttl`, `token_default_audiences`, `service_account_name`, `kubernetes_role_name`, `kubernetes_role_type`, `generated_role_rules`, `name_template`, `extra_annotations`, `extra_labels`; **verify the field-to-key mapping: `DefaultTTL` → `token_max_ttl`, `MaxTTL` → `token_default_ttl`** (appears swapped — document and test the actual code behavior)
+  - [x] 13.4: Add `TestKubernetesSecretEngineRoleIsEquivalentMatching` — matching payload → `true`
+  - [x] 13.5: Add `TestKubernetesSecretEngineRoleIsEquivalentNonMatching` — one field changed → `false`
+  - [x] 13.6: Add `TestKubernetesSecretEngineRoleIsEquivalentExtraFields` — extra keys → `false`
+  - [x] 13.7: Add `TestKubernetesSecretEngineRoleIsDeletable` — returns `true`
+  - [x] 13.8: Add `TestKubernetesSecretEngineRoleConditions` — GetConditions/SetConditions round-trip
+- [x] Task 14: Verify all tests pass (AC: all)
+  - [x] 14.1: Run `go test ./api/v1alpha1/ -v -count=1` to confirm all new and existing tests pass
+  - [x] 14.2: Run `make test` to verify no regressions in full unit test suite
+
+### Review Findings
+
+- [x] [Review][Patch] RabbitMQ config is missing the explicit `rabbitMQToMap()`-payload rejection case — **FIXED** `TestRabbitMQSecretEngineConfigIsEquivalentRejectsConnectionPayload`
+- [x] [Review][Patch] GitHub config is missing the negative case where payload still contains `prv_key` — **FIXED** `TestGitHubSecretEngineConfigIsEquivalentPayloadWithPrvKey`
+- [x] [Review][Patch] Kubernetes config is missing the negative case where payload still contains `service_account_jwt` — **FIXED** `TestKubernetesSecretEngineConfigIsEquivalentPayloadWithJWT`
 
 ## Dev Notes
 
@@ -492,8 +498,42 @@ No changes to `controllers/` directory. No decoder methods needed (unit tests on
 
 ### Agent Model Used
 
+Cursor Agent (Opus 4.6)
+
 ### Debug Log References
+
+- Pre-flight: git working tree clean; integration tests had pre-existing infrastructure failures (port 8080 binding conflict) unrelated to this story
+- Unit test baseline: `api/v1alpha1` package passed with 9.8% coverage before changes
+- All new tests pass: `go test ./api/v1alpha1/ -v -count=1` — 100+ new test cases, 0 failures
+- `make test` regression check: all packages pass, coverage increased to 14.6%
+- `go fmt` auto-formatted 6 test files (minor whitespace normalization)
 
 ### Completion Notes List
 
+- Created 13 new test files covering all secret engine config and role types
+- Verified custom `IsEquivalentToDesiredState` behavior for 4 types: RabbitMQSecretEngineConfig (uses leasesToMap not rabbitMQToMap), GitHubSecretEngineConfig (deletes prv_key), QuaySecretEngineConfig (deletes password — no-op since toMap uses token), KubernetesSecretEngineConfig (deletes service_account_jwt)
+- Documented KubernetesSecretEngineRole field-to-key mapping swap: DefaultTTL → token_max_ttl, MaxTTL → token_default_ttl (tested actual code behavior)
+- Verified conditional keys for QuayRole/QuayBaseRole (teams, repositories, default_permission only when non-nil)
+- Verified JSON string encoding for RabbitMQ vhosts/vhost_topics and Quay teams/repositories
+- PKIRole.toMap() verified with all 38 keys; PKICommon.toMap() verified type is NOT in output (commented out)
+- All types tested for: GetPath, toMap, IsEquivalentToDesiredState (matching/non-matching/extra-fields), IsDeletable, GetConditions/SetConditions
+
+### Change Log
+
+- 2026-04-13: Created 13 unit test files for all secret engine config and role types in api/v1alpha1/
+
 ### File List
+
+- api/v1alpha1/rabbitmqsecretengineconfig_test.go (new)
+- api/v1alpha1/rabbitmqsecretenginerole_test.go (new)
+- api/v1alpha1/githubsecretengineconfig_test.go (new)
+- api/v1alpha1/githubsecretenginerole_test.go (new)
+- api/v1alpha1/azuresecretengineconfig_test.go (new)
+- api/v1alpha1/azuresecretenginerole_test.go (new)
+- api/v1alpha1/pkisecretengineconfig_test.go (new)
+- api/v1alpha1/pkisecretenginerole_test.go (new)
+- api/v1alpha1/quaysecretengineconfig_test.go (new)
+- api/v1alpha1/quaysecretenginerole_test.go (new)
+- api/v1alpha1/quaysecretenginestaticrole_test.go (new)
+- api/v1alpha1/kubernetessecretengineconfig_test.go (new)
+- api/v1alpha1/kubernetessecretenginerole_test.go (new)
