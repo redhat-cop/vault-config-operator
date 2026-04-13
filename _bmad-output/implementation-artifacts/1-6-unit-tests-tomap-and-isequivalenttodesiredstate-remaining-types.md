@@ -1,6 +1,6 @@
 # Story 1.6: Unit tests for `toMap()` and `IsEquivalentToDesiredState` — Remaining Types
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -54,88 +54,94 @@ So that the full type portfolio has declarative logic coverage.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add Policy unit tests (AC: 1, 2, 13, 14)
-  - [ ] 1.1: Create `api/v1alpha1/policy_test.go`
-  - [ ] 1.2: Add `TestPolicyGetPath` — 4 variants: with/without `Spec.Name`, with/without `Spec.Type`; verify `CleansePath("sys/policies/<type>/<name>")` when Type set, `CleansePath("sys/policy/<name>")` when Type empty
-  - [ ] 1.3: Add `TestPolicyGetPayload` — verify single key `"policy"` mapped from `Spec.Policy`
-  - [ ] 1.4: Add `TestPolicyIsEquivalentNoType` — **critical test**: when `Spec.Type == ""`, verify `policy` key is renamed to `rules` and `name` is added; a payload `{name: X, rules: Y}` → `true`
-  - [ ] 1.5: Add `TestPolicyIsEquivalentWithType` — when `Spec.Type == "acl"`, verify `policy` key stays, `name` is added; a payload `{name: X, policy: Y}` → `true`
-  - [ ] 1.6: Add `TestPolicyIsEquivalentNameFromSpec` — verify `name` uses `Spec.Name` when set (not metadata name)
-  - [ ] 1.7: Add `TestPolicyIsEquivalentNameFromMetadata` — verify `name` falls back to `d.Name` (metadata) when `Spec.Name` empty
-  - [ ] 1.8: Add `TestPolicyIsEquivalentNonMatching` — change the policy text → `false`
-  - [ ] 1.9: Add `TestPolicyIsEquivalentExtraFields` — extra keys in payload → `false` (bare DeepEqual after mutations)
-  - [ ] 1.10: Add `TestPolicyIsDeletable` — returns `true`
-  - [ ] 1.11: Add `TestPolicyConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 2: Add RandomSecret unit tests (AC: 3, 13, 14)
-  - [ ] 2.1: Create `api/v1alpha1/randomsecret_test.go`
-  - [ ] 2.2: Add `TestRandomSecretGetPath` — with/without `Spec.Name`; verify `CleansePath(path + "/" + name)`
-  - [ ] 2.3: Add `TestRandomSecretGetV1Payload` — set `calculatedSecret` directly (unexported field, same package); verify dynamic key `Spec.SecretKey` → `calculatedSecret` value
-  - [ ] 2.4: Add `TestRandomSecretGetV1PayloadWithRefreshPeriod` — set `RefreshPeriod` with non-zero Duration; verify `ttl` key is present with duration string
-  - [ ] 2.5: Add `TestRandomSecretGetV1PayloadNoRefreshPeriod` — nil `RefreshPeriod`; verify no `ttl` key
-  - [ ] 2.6: Add `TestRandomSecretGetPayloadKVv2` — verify KV v2 wraps inner payload under `"data"` key; uses `IsKVSecretsEngineV2()` (path contains `/data/`)
-  - [ ] 2.7: Add `TestRandomSecretGetPayloadKVv1` — verify KV v1 returns inner payload directly
-  - [ ] 2.8: Add `TestRandomSecretIsEquivalentAlwaysFalse` — verify always returns `false` regardless of payload content
-  - [ ] 2.9: Add `TestRandomSecretIsDeletable` — returns `true`
-  - [ ] 2.10: Add `TestRandomSecretConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 3: Add Audit unit tests (AC: 4, 5, 13, 14)
-  - [ ] 3.1: Create `api/v1alpha1/audit_test.go`
-  - [ ] 3.2: Add `TestAuditGetPath` — verify returns `CleansePath("sys/audit/" + Spec.Path)`
-  - [ ] 3.3: Add `TestAuditGetPayload` — verify 4 keys: `type`, `description`, `local`, `options`; verify `options` is `map[string]string` type
-  - [ ] 3.4: Add `TestAuditIsEquivalentMatching` — matching payload with all 4 fields including `options` as `map[string]string` → `true`
-  - [ ] 3.5: Add `TestAuditIsEquivalentTypeMismatch` — different `type` → `false`
-  - [ ] 3.6: Add `TestAuditIsEquivalentDescriptionMismatch` — different `description` → `false`
-  - [ ] 3.7: Add `TestAuditIsEquivalentLocalMismatch` — different `local` → `false`
-  - [ ] 3.8: Add `TestAuditIsEquivalentOptionsMismatch` — different option value → `false`
-  - [ ] 3.9: Add `TestAuditIsEquivalentOptionsLengthMismatch` — extra option key → `false`
-  - [ ] 3.10: Add `TestAuditIsEquivalentOptionsWrongType` — **critical**: `options` as `map[string]interface{}` (not `map[string]string`) → `false` (type assertion fails)
-  - [ ] 3.11: Add `TestAuditIsEquivalentExtraFields` — extra top-level keys in payload → `true` (Audit only checks its 4 fields, ignores extras)
-  - [ ] 3.12: Add `TestAuditIsDeletable` — returns `true`
-  - [ ] 3.13: Add `TestAuditConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 4: Add Group unit tests (AC: 6, 7, 8, 13, 14)
-  - [ ] 4.1: Create `api/v1alpha1/group_test.go`
-  - [ ] 4.2: Add `TestGroupGetPath` — with/without `Spec.Name`; verify path format `CleansePath("/identity/group/name/" + name)`
-  - [ ] 4.3: Add `TestGroupToMapInternal` — `Type == "internal"`; verify 5 keys: `type`, `metadata`, `policies`, `member_group_ids`, `member_entity_ids`
-  - [ ] 4.4: Add `TestGroupToMapExternal` — `Type == "external"`; verify only 3 keys: `type`, `metadata`, `policies`; verify `member_group_ids` and `member_entity_ids` are absent
-  - [ ] 4.5: Add `TestGroupIsEquivalentMatching` — matching payload with extra `name` key → `true` (`name` is deleted from payload)
-  - [ ] 4.6: Add `TestGroupIsEquivalentNonMatching` — one field changed → `false`
-  - [ ] 4.7: Add `TestGroupIsEquivalentExtraFields` — extra keys beyond `name` in payload → `false` (only `name` is deleted; DeepEqual catches others)
-  - [ ] 4.8: Add `TestGroupGetPayload` — verify delegates to `Spec.toMap()`
-  - [ ] 4.9: Add `TestGroupIsDeletable` — returns `true`
-  - [ ] 4.10: Add `TestGroupConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 5: Add GroupAlias unit tests (AC: 9, 13, 14)
-  - [ ] 5.1: Create `api/v1alpha1/groupalias_test.go`
-  - [ ] 5.2: Add `TestGroupAliasGetPath` — verify returns `CleansePath("/identity/group-alias/id/" + Status.ID)` — **note: path depends on Status.ID, not Spec fields**
-  - [ ] 5.3: Add `TestGroupAliasToMap` — set all 4 `retrieved*` unexported fields directly (same package); verify 4 keys: `name`, `id`, `mount_accessor`, `canonical_id`
-  - [ ] 5.4: Add `TestGroupAliasIsEquivalentMatching` — matching payload with extra Vault keys (`creation_time`, `last_update_time`, `merged_from_canonical_ids`, `metadata`, `mount_path`, `mount_type`) → `true` (all 6 are deleted before comparison)
-  - [ ] 5.5: Add `TestGroupAliasIsEquivalentNonMatching` — one managed field changed → `false`
-  - [ ] 5.6: Add `TestGroupAliasIsEquivalentExtraFields` — extra keys beyond the 6 known Vault keys → `false` (only the 6 specific keys are deleted)
-  - [ ] 5.7: Add `TestGroupAliasGetPayload` — verify delegates to `Spec.toMap()`
-  - [ ] 5.8: Add `TestGroupAliasIsDeletable` — returns `true`
-  - [ ] 5.9: Add `TestGroupAliasConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 6: Add Entity unit tests (AC: 10, 13, 14)
-  - [ ] 6.1: Create `api/v1alpha1/entity_test.go`
-  - [ ] 6.2: Add `TestEntityGetPath` — with/without `Spec.Name`; verify path format `CleansePath("/identity/entity/name/" + name)`
-  - [ ] 6.3: Add `TestEntityToMap` — verify 3 keys: `metadata`, `policies`, `disabled`
-  - [ ] 6.4: Add `TestEntityIsEquivalentMatching` — matching payload with all 10 extra Vault keys (`name`, `id`, `aliases`, `creation_time`, `last_update_time`, `merged_entity_ids`, `direct_group_ids`, `group_ids`, `inherited_group_ids`, `namespace_id`, `bucket_key_hash`) → `true` (all deleted before comparison)
-  - [ ] 6.5: Add `TestEntityIsEquivalentNonMatching` — one managed field changed → `false`
-  - [ ] 6.6: Add `TestEntityIsEquivalentExtraFields` — extra keys beyond the 10 known Vault keys → `false`
-  - [ ] 6.7: Add `TestEntityGetPayload` — verify delegates to `Spec.toMap()`
-  - [ ] 6.8: Add `TestEntityIsDeletable` — returns `true`
-  - [ ] 6.9: Add `TestEntityConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 7: Add EntityAlias unit tests (AC: 11, 12, 13, 14)
-  - [ ] 7.1: Create `api/v1alpha1/entityalias_test.go`
-  - [ ] 7.2: Add `TestEntityAliasGetPath` — verify returns `CleansePath("/identity/entity-alias/id/" + Status.ID)` — **note: path depends on Status.ID**
-  - [ ] 7.3: Add `TestEntityAliasToMapWithCustomMetadata` — set all 4 `retrieved*` fields + non-empty `CustomMetadata`; verify 5 keys: `name`, `id`, `mount_accessor`, `canonical_id`, `custom_metadata`
-  - [ ] 7.4: Add `TestEntityAliasToMapWithoutCustomMetadata` — set `retrieved*` fields, leave `CustomMetadata` empty; verify only 4 keys, `custom_metadata` absent
-  - [ ] 7.5: Add `TestEntityAliasIsEquivalentMatching` — matching payload with extra Vault keys (`creation_time`, `last_update_time`, `merged_from_canonical_ids`, `metadata`, `mount_path`, `mount_type`, `local`, `namespace_id`) → `true` (all 8 deleted before comparison)
-  - [ ] 7.6: Add `TestEntityAliasIsEquivalentNonMatching` — one managed field changed → `false`
-  - [ ] 7.7: Add `TestEntityAliasIsEquivalentExtraFields` — extra keys beyond the 8 known → `false`
-  - [ ] 7.8: Add `TestEntityAliasGetPayload` — verify delegates to `Spec.toMap()`
-  - [ ] 7.9: Add `TestEntityAliasIsDeletable` — returns `true`
-  - [ ] 7.10: Add `TestEntityAliasConditions` — GetConditions/SetConditions round-trip
-- [ ] Task 8: Verify all tests pass (AC: all)
-  - [ ] 8.1: Run `go test ./api/v1alpha1/ -v -count=1` to confirm all new and existing tests pass
-  - [ ] 8.2: Run `make test` to verify no regressions in full unit test suite
+- [x] Task 1: Add Policy unit tests (AC: 1, 2, 13, 14)
+  - [x] 1.1: Create `api/v1alpha1/policy_test.go`
+  - [x] 1.2: Add `TestPolicyGetPath` — 4 variants: with/without `Spec.Name`, with/without `Spec.Type`; verify `CleansePath("sys/policies/<type>/<name>")` when Type set, `CleansePath("sys/policy/<name>")` when Type empty
+  - [x] 1.3: Add `TestPolicyGetPayload` — verify single key `"policy"` mapped from `Spec.Policy`
+  - [x] 1.4: Add `TestPolicyIsEquivalentNoType` — **critical test**: when `Spec.Type == ""`, verify `policy` key is renamed to `rules` and `name` is added; a payload `{name: X, rules: Y}` → `true`
+  - [x] 1.5: Add `TestPolicyIsEquivalentWithType` — when `Spec.Type == "acl"`, verify `policy` key stays, `name` is added; a payload `{name: X, policy: Y}` → `true`
+  - [x] 1.6: Add `TestPolicyIsEquivalentNameFromSpec` — verify `name` uses `Spec.Name` when set (not metadata name)
+  - [x] 1.7: Add `TestPolicyIsEquivalentNameFromMetadata` — verify `name` falls back to `d.Name` (metadata) when `Spec.Name` empty
+  - [x] 1.8: Add `TestPolicyIsEquivalentNonMatching` — change the policy text → `false`
+  - [x] 1.9: Add `TestPolicyIsEquivalentExtraFields` — extra keys in payload → `false` (bare DeepEqual after mutations)
+  - [x] 1.10: Add `TestPolicyIsDeletable` — returns `true`
+  - [x] 1.11: Add `TestPolicyConditions` — GetConditions/SetConditions round-trip
+- [x] Task 2: Add RandomSecret unit tests (AC: 3, 13, 14)
+  - [x] 2.1: Create `api/v1alpha1/randomsecret_test.go`
+  - [x] 2.2: Add `TestRandomSecretGetPath` — with/without `Spec.Name`; verify `CleansePath(path + "/" + name)`
+  - [x] 2.3: Add `TestRandomSecretGetV1Payload` — set `calculatedSecret` directly (unexported field, same package); verify dynamic key `Spec.SecretKey` → `calculatedSecret` value
+  - [x] 2.4: Add `TestRandomSecretGetV1PayloadWithRefreshPeriod` — set `RefreshPeriod` with non-zero Duration; verify `ttl` key is present with duration string
+  - [x] 2.5: Add `TestRandomSecretGetV1PayloadNoRefreshPeriod` — nil `RefreshPeriod`; verify no `ttl` key
+  - [x] 2.6: Add `TestRandomSecretGetPayloadKVv2` — verify KV v2 wraps inner payload under `"data"` key; uses `IsKVSecretsEngineV2()` (path contains `/data/`)
+  - [x] 2.7: Add `TestRandomSecretGetPayloadKVv1` — verify KV v1 returns inner payload directly
+  - [x] 2.8: Add `TestRandomSecretIsEquivalentAlwaysFalse` — verify always returns `false` regardless of payload content
+  - [x] 2.9: Add `TestRandomSecretIsDeletable` — returns `true`
+  - [x] 2.10: Add `TestRandomSecretConditions` — GetConditions/SetConditions round-trip
+- [x] Task 3: Add Audit unit tests (AC: 4, 5, 13, 14)
+  - [x] 3.1: Create `api/v1alpha1/audit_test.go`
+  - [x] 3.2: Add `TestAuditGetPath` — verify returns `CleansePath("sys/audit/" + Spec.Path)`
+  - [x] 3.3: Add `TestAuditGetPayload` — verify 4 keys: `type`, `description`, `local`, `options`; verify `options` is `map[string]string` type
+  - [x] 3.4: Add `TestAuditIsEquivalentMatching` — matching payload with all 4 fields including `options` as `map[string]string` → `true`
+  - [x] 3.5: Add `TestAuditIsEquivalentTypeMismatch` — different `type` → `false`
+  - [x] 3.6: Add `TestAuditIsEquivalentDescriptionMismatch` — different `description` → `false`
+  - [x] 3.7: Add `TestAuditIsEquivalentLocalMismatch` — different `local` → `false`
+  - [x] 3.8: Add `TestAuditIsEquivalentOptionsMismatch` — different option value → `false`
+  - [x] 3.9: Add `TestAuditIsEquivalentOptionsLengthMismatch` — extra option key → `false`
+  - [x] 3.10: Add `TestAuditIsEquivalentOptionsWrongType` — **critical**: `options` as `map[string]interface{}` (not `map[string]string`) → `false` (type assertion fails)
+  - [x] 3.11: Add `TestAuditIsEquivalentExtraFields` — extra top-level keys in payload → `true` (Audit only checks its 4 fields, ignores extras)
+  - [x] 3.12: Add `TestAuditIsDeletable` — returns `true`
+  - [x] 3.13: Add `TestAuditConditions` — GetConditions/SetConditions round-trip
+- [x] Task 4: Add Group unit tests (AC: 6, 7, 8, 13, 14)
+  - [x] 4.1: Create `api/v1alpha1/group_test.go`
+  - [x] 4.2: Add `TestGroupGetPath` — with/without `Spec.Name`; verify path format `CleansePath("/identity/group/name/" + name)`
+  - [x] 4.3: Add `TestGroupToMapInternal` — `Type == "internal"`; verify 5 keys: `type`, `metadata`, `policies`, `member_group_ids`, `member_entity_ids`
+  - [x] 4.4: Add `TestGroupToMapExternal` — `Type == "external"`; verify only 3 keys: `type`, `metadata`, `policies`; verify `member_group_ids` and `member_entity_ids` are absent
+  - [x] 4.5: Add `TestGroupIsEquivalentMatching` — matching payload with extra `name` key → `true` (`name` is deleted from payload)
+  - [x] 4.6: Add `TestGroupIsEquivalentNonMatching` — one field changed → `false`
+  - [x] 4.7: Add `TestGroupIsEquivalentExtraFields` — extra keys beyond `name` in payload → `false` (only `name` is deleted; DeepEqual catches others)
+  - [x] 4.8: Add `TestGroupGetPayload` — verify delegates to `Spec.toMap()`
+  - [x] 4.9: Add `TestGroupIsDeletable` — returns `true`
+  - [x] 4.10: Add `TestGroupConditions` — GetConditions/SetConditions round-trip
+- [x] Task 5: Add GroupAlias unit tests (AC: 9, 13, 14)
+  - [x] 5.1: Create `api/v1alpha1/groupalias_test.go`
+  - [x] 5.2: Add `TestGroupAliasGetPath` — verify returns `CleansePath("/identity/group-alias/id/" + Status.ID)` — **note: path depends on Status.ID, not Spec fields**
+  - [x] 5.3: Add `TestGroupAliasToMap` — set all 4 `retrieved*` unexported fields directly (same package); verify 4 keys: `name`, `id`, `mount_accessor`, `canonical_id`
+  - [x] 5.4: Add `TestGroupAliasIsEquivalentMatching` — matching payload with extra Vault keys (`creation_time`, `last_update_time`, `merged_from_canonical_ids`, `metadata`, `mount_path`, `mount_type`) → `true` (all 6 are deleted before comparison)
+  - [x] 5.5: Add `TestGroupAliasIsEquivalentNonMatching` — one managed field changed → `false`
+  - [x] 5.6: Add `TestGroupAliasIsEquivalentExtraFields` — extra keys beyond the 6 known Vault keys → `false` (only the 6 specific keys are deleted)
+  - [x] 5.7: Add `TestGroupAliasGetPayload` — verify delegates to `Spec.toMap()`
+  - [x] 5.8: Add `TestGroupAliasIsDeletable` — returns `true`
+  - [x] 5.9: Add `TestGroupAliasConditions` — GetConditions/SetConditions round-trip
+- [x] Task 6: Add Entity unit tests (AC: 10, 13, 14)
+  - [x] 6.1: Create `api/v1alpha1/entity_test.go`
+  - [x] 6.2: Add `TestEntityGetPath` — with/without `Spec.Name`; verify path format `CleansePath("/identity/entity/name/" + name)`
+  - [x] 6.3: Add `TestEntityToMap` — verify 3 keys: `metadata`, `policies`, `disabled`
+  - [x] 6.4: Add `TestEntityIsEquivalentMatching` — matching payload with all 10 extra Vault keys (`name`, `id`, `aliases`, `creation_time`, `last_update_time`, `merged_entity_ids`, `direct_group_ids`, `group_ids`, `inherited_group_ids`, `namespace_id`, `bucket_key_hash`) → `true` (all deleted before comparison)
+  - [x] 6.5: Add `TestEntityIsEquivalentNonMatching` — one managed field changed → `false`
+  - [x] 6.6: Add `TestEntityIsEquivalentExtraFields` — extra keys beyond the 10 known Vault keys → `false`
+  - [x] 6.7: Add `TestEntityGetPayload` — verify delegates to `Spec.toMap()`
+  - [x] 6.8: Add `TestEntityIsDeletable` — returns `true`
+  - [x] 6.9: Add `TestEntityConditions` — GetConditions/SetConditions round-trip
+- [x] Task 7: Add EntityAlias unit tests (AC: 11, 12, 13, 14)
+  - [x] 7.1: Create `api/v1alpha1/entityalias_test.go`
+  - [x] 7.2: Add `TestEntityAliasGetPath` — verify returns `CleansePath("/identity/entity-alias/id/" + Status.ID)` — **note: path depends on Status.ID**
+  - [x] 7.3: Add `TestEntityAliasToMapWithCustomMetadata` — set all 4 `retrieved*` fields + non-empty `CustomMetadata`; verify 5 keys: `name`, `id`, `mount_accessor`, `canonical_id`, `custom_metadata`
+  - [x] 7.4: Add `TestEntityAliasToMapWithoutCustomMetadata` — set `retrieved*` fields, leave `CustomMetadata` empty; verify only 4 keys, `custom_metadata` absent
+  - [x] 7.5: Add `TestEntityAliasIsEquivalentMatching` — matching payload with extra Vault keys (`creation_time`, `last_update_time`, `merged_from_canonical_ids`, `metadata`, `mount_path`, `mount_type`, `local`, `namespace_id`) → `true` (all 8 deleted before comparison)
+  - [x] 7.6: Add `TestEntityAliasIsEquivalentNonMatching` — one managed field changed → `false`
+  - [x] 7.7: Add `TestEntityAliasIsEquivalentExtraFields` — extra keys beyond the 8 known → `false`
+  - [x] 7.8: Add `TestEntityAliasGetPayload` — verify delegates to `Spec.toMap()`
+  - [x] 7.9: Add `TestEntityAliasIsDeletable` — returns `true`
+  - [x] 7.10: Add `TestEntityAliasConditions` — GetConditions/SetConditions round-trip
+- [x] Task 8: Verify all tests pass (AC: all)
+  - [x] 8.1: Run `go test ./api/v1alpha1/ -v -count=1` to confirm all new and existing tests pass
+  - [x] 8.2: Run `make test` to verify no regressions in full unit test suite
+
+### Review Findings
+
+- [x] [Review][Patch] Remove the unrelated formatting-only change from `rabbitmqsecretengineconfig_test.go` and keep the story diff scoped to the seven new 1.6 test files [api/v1alpha1/rabbitmqsecretengineconfig_test.go:160]
+- [x] [Review][Patch] Restore `sprint-status.yaml` `last_updated` so it does not move backward when marking story `1.6` for review [_bmad-output/implementation-artifacts/sprint-status.yaml:38]
+- [x] [Review][Defer] Remove `fmt.Print` debug output from `GroupAlias.IsEquivalentToDesiredState` once that pre-existing production issue is taken on [api/v1alpha1/groupalias_types.go:226] — deferred, pre-existing
 
 ## Dev Notes
 
@@ -502,8 +508,36 @@ No changes to `controllers/` directory. No decoder methods needed (unit tests on
 
 ### Agent Model Used
 
+Cursor Agent (Opus 4.6)
+
 ### Debug Log References
+
+- Integration test pre-flight: pre-existing BeforeSuite failure (vault-admin namespace already exists) — not caused by story changes; unit test baseline confirmed green
+- `go fmt` auto-formatted entity_test.go and groupalias_test.go during `make test`
 
 ### Completion Notes List
 
+- Created 7 new test files covering all 7 remaining types: Policy, RandomSecret, Audit, Group, GroupAlias, Entity, EntityAlias
+- Policy: 11 test functions covering 4-variant GetPath, GetPayload, 4-variant IsEquivalent (type/name matrix), name source selection, non-matching, extra fields, IsDeletable, Conditions
+- RandomSecret: 11 test functions covering GetPath, getV1Payload (with/without/zero RefreshPeriod), GetPayload (KV v1/v2), hardcoded false IsEquivalent, IsDeletable, Conditions
+- Audit: 12 test functions covering GetPath, GetPayload (4 keys), field-by-field IsEquivalent (each field mismatch, options length, options wrong type), extra fields IGNORED behavior, IsDeletable, Conditions
+- Group: 10 test functions covering GetPath, toMap internal (5 keys) vs external (3 keys), IsEquivalent with name deletion, non-matching, extra fields, GetPayload delegation, IsDeletable, Conditions
+- GroupAlias: 9 test functions covering GetPath (Status.ID-based), toMap (4 retrieved* fields), IsEquivalent (6 Vault keys deleted), non-matching, extra fields, GetPayload, IsDeletable, Conditions
+- Entity: 9 test functions covering GetPath, toMap (3 keys), IsEquivalent (11 Vault keys deleted), non-matching, extra fields, GetPayload, IsDeletable, Conditions
+- EntityAlias: 11 test functions covering GetPath (Status.ID-based), toMap with/without CustomMetadata (5/4 keys), IsEquivalent (8 Vault keys deleted, with/without custom_metadata), non-matching, extra fields, GetPayload, IsDeletable, Conditions
+- All 73 new test functions pass; `make test` confirms zero regressions
+- api/v1alpha1 coverage increased to 16.9%
+
+### Change Log
+
+- 2026-04-13: Created unit tests for all 7 remaining types (Policy, RandomSecret, Audit, Group, GroupAlias, Entity, EntityAlias) — 7 new test files, 73 test functions
+
 ### File List
+
+- api/v1alpha1/policy_test.go (new)
+- api/v1alpha1/randomsecret_test.go (new)
+- api/v1alpha1/audit_test.go (new)
+- api/v1alpha1/group_test.go (new)
+- api/v1alpha1/groupalias_test.go (new)
+- api/v1alpha1/entity_test.go (new)
+- api/v1alpha1/entityalias_test.go (new)
