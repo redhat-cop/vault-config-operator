@@ -36,6 +36,7 @@
 
 generated: 2026-04-11
 last_updated: 2026-04-14
+# Story 2.0 added 2026-04-14
 # Story 1.4 started 2026-04-13
 # Phase 1.5 doc epics added 2026-04-12
 project: vault-config-operator
@@ -58,6 +59,7 @@ development_status:
 
   # Epic 2: Integration Test Update Scenarios
   epic-2: backlog
+  2-0-stabilize-integration-test-infrastructure: backlog
   2-1-add-update-scenarios-to-vaultsecret-integration-tests: backlog
   2-2-add-update-scenarios-to-randomsecret-integration-tests: backlog
   2-3-add-update-scenarios-to-entity-and-entityalias-integration-tests: backlog

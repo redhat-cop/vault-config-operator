@@ -54,6 +54,7 @@ NFR6: Build tags: unit tests `//go:build !integration`, integration tests `//go:
 
 FR1: Epic 1 — `IsEquivalentToDesiredState` unit tests for all 46 types
 FR2: Epic 1 — `toMap()` unit tests for all 46 types
+FR2.5: Epic 2 — Stabilize integration test infrastructure (idempotent kind-setup, namespace handling, vendored ingress, configurable port)
 FR3: Epic 2 — Update scenario integration tests for 7 currently-tested types
 FR4: Epic 3 — Policy + PasswordPolicy integration tests
 FR5: Epic 3 — SecretEngineMount + AuthEngineMount integration tests
@@ -247,6 +248,46 @@ So that the full type portfolio has declarative logic coverage.
 ## Epic 2: Integration Test Update Scenarios
 
 Add Update scenarios to the 7 types that already have Create/Delete integration tests. This closes the critical gap where the `IsEquivalentToDesiredState` → conditional write flow has never been exercised end-to-end.
+
+### Story 2.0: Stabilize Integration Test Infrastructure
+
+As an operator developer,
+I want the `make integration` pipeline to be idempotent, fast on re-runs, and free from internet-fetch flakiness,
+So that integration tests can be run reliably during development and in CI without spurious failures.
+
+**Scope (items 1–5):**
+
+1. **Write integration test philosophy to `project-context.md`** — Document the three-tier rule (install in Kind / mock / skip) for handling external service dependencies in integration tests.
+
+2. **Make `kind-setup` idempotent** — Instead of always deleting and recreating the Kind cluster, check if a cluster already exists with the correct node image. Only recreate when the cluster is missing or the node image doesn't match. This saves 30-60s on re-runs.
+
+3. **Fix namespace handling in `BeforeSuite` / `AfterSuite`** — Replace `k8sIntegrationClient.Create(ctx, namespace)` with a create-or-get pattern (attempt create, if `AlreadyExists` error then get) so that re-running tests against an existing cluster doesn't fail with "namespace already exists". Add namespace cleanup in `AfterSuite` to delete `vault-admin` and `test-vault-config-operator` namespaces, ensuring a clean slate for the next run.
+
+4. **Vendor the ingress-nginx manifest** — Replace the `curl https://raw.githubusercontent.com/.../deploy.yaml | kubectl create -f -` in the `deploy-ingress` Makefile target with a vendored copy of the manifest in `integration/manifests/ingress-nginx-kind-deploy.yaml`. Switch from `kubectl create` to `kubectl apply` so re-runs don't fail with "already exists" errors. Pin the ingress-nginx version to match the Helm chart version.
+
+5. **Make the Vault host port configurable** — Replace the hardcoded `hostPort: 8200` in `integration/cluster-kind.yaml` and the hardcoded `VAULT_ADDR=http://localhost:8200` in the Makefile with a configurable `VAULT_HOST_PORT` variable (defaulting to 8200). This prevents conflicts when port 8200 is already in use.
+
+**Acceptance Criteria:**
+
+**Given** a fresh machine with no existing Kind cluster
+**When** `make integration` is run
+**Then** the full pipeline completes successfully (same as today)
+
+**Given** a previous `make integration` run completed (Kind cluster + Vault + namespaces still exist)
+**When** `make integration` is run again
+**Then** the pipeline completes successfully without "already exists" errors and without recreating the cluster from scratch
+
+**Given** `VAULT_HOST_PORT=9200` is set in the environment
+**When** `make integration` is run
+**Then** Kind maps Vault to port 9200 and tests connect to `http://localhost:9200`
+
+**Given** the `deploy-ingress` target is executed
+**When** the network is unreachable
+**Then** the ingress-nginx manifest is applied from the vendored local file (no internet fetch)
+
+**Given** the integration test suite `AfterSuite` runs
+**When** tests complete (pass or fail)
+**Then** test namespaces `vault-admin` and `test-vault-config-operator` are deleted from the cluster
 
 ### Story 2.1: Add Update scenarios to VaultSecret integration tests
 

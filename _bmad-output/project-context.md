@@ -131,6 +131,15 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **Unit tests** (`suite_test.go`): build tag `//go:build !integration` — runs with `go test ./...` (default `make test`). Uses controller-runtime `envtest` (local etcd + API server), CRDs loaded from `config/crd/bases`. No real Vault.
 - **Integration tests** (`suite_integration_test.go` + `*_controller_test.go`): build tag `//go:build integration` — requires a live Kind cluster with Vault. Sets `USE_EXISTING_CLUSTER=true`, expects `VAULT_ADDR` and `VAULT_TOKEN` env vars. Registers all controllers against a real manager, creates test namespaces (`vault-admin`, `test-vault-config-operator`).
 
+#### Integration Test Infrastructure Philosophy
+Vault typically acts as an intermediary between vault-config-operator and a secured service (e.g., PostgreSQL, RabbitMQ) or auth provider (e.g., LDAP, Kubernetes). The following rule determines how each external dependency is handled in integration tests:
+
+1. **Install in Kind** — If the service can be installed in the Kind cluster and configured to work with Vault, the test **must** deploy it as a real service (e.g., PostgreSQL via Helm, RabbitMQ via Helm, OpenLDAP via manifests).
+2. **Mock it** — If the service cannot be installed but can be simply mocked (e.g., a static JWKS endpoint for JWT/OIDC auth), the test **should** use a lightweight mock.
+3. **Skip it** — For cloud providers and services that cannot be installed in Kind and are hard to mock (e.g., AWS, Azure, GCP, GitHub App, Quay), the integration test **must not** be run. These types rely on unit test coverage only.
+
+This rule applies to all current and future integration tests. When adding a new type, classify its external dependency into one of these three categories and document the decision in the story file.
+
 #### Integration Test Pattern
 - Uses Ginkgo v2 `Describe`/`Context`/`It` BDD blocks with dot-imported `gomega` matchers.
 - Test fixtures are YAML files in `test/` directory, loaded via `controllertestutils.decoder.Get<TypeName>Instance("../test/<path>.yaml")`.
@@ -259,4 +268,4 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Review quarterly for outdated rules
 - Remove rules that become obvious over time
 
-Last Updated: 2026-04-11
+Last Updated: 2026-04-14
