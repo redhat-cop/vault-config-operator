@@ -162,11 +162,11 @@ func TestRabbitMQSecretEngineConfigIsEquivalentRejectsConnectionPayload(t *testi
 		Spec: RabbitMQSecretEngineConfigSpec{
 			Path: "rabbitmq/engine",
 			RMQSEConfig: RMQSEConfig{
-				ConnectionURI:    "https://rmq.example:15672",
-				VerifyConnection: true,
-				PasswordPolicy:   "default",
-				LeaseTTL:         3600,
-				LeaseMaxTTL:      7200,
+				ConnectionURI:     "https://rmq.example:15672",
+				VerifyConnection:  true,
+				PasswordPolicy:    "default",
+				LeaseTTL:          3600,
+				LeaseMaxTTL:       7200,
 				retrievedUsername: "admin",
 				retrievedPassword: "pass",
 			},
