@@ -1,0 +1,210 @@
+# generated: 2026-04-11
+# last_updated: 2026-04-11
+# project: vault-config-operator
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: {project-root}/_bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-04-11
+last_updated: 2026-04-14
+# Story 2.0 added 2026-04-14
+# Story 1.4 started 2026-04-13
+# Phase 1.5 doc epics added 2026-04-12
+project: vault-config-operator
+project_key: NOKEY
+tracking_system: file-system
+story_location: "{project-root}/_bmad-output/implementation-artifacts"
+
+development_status:
+  # --- Phase 1: Test Stabilization ---
+
+  # Epic 1: Core Declarative Logic Unit Tests
+  epic-1: in-progress
+  1-1-unit-tests-tomap-and-isequivalenttodesiredstate-simple-standard-types: done
+  1-2-unit-tests-tomap-and-isequivalenttodesiredstate-engine-mount-types: done
+  1-3-unit-tests-tomap-and-isequivalenttodesiredstate-database-engine-types: done
+  1-4-unit-tests-tomap-and-isequivalenttodesiredstate-auth-engine-config-types: done
+  1-5-unit-tests-tomap-and-isequivalenttodesiredstate-secret-engine-config-role-types: done
+  1-6-unit-tests-tomap-and-isequivalenttodesiredstate-remaining-types: done
+  epic-1-retrospective: optional
+
+  # Epic 2: Integration Test Update Scenarios
+  epic-2: backlog
+  2-0-stabilize-integration-test-infrastructure: backlog
+  2-1-add-update-scenarios-to-vaultsecret-integration-tests: backlog
+  2-2-add-update-scenarios-to-randomsecret-integration-tests: backlog
+  2-3-add-update-scenarios-to-entity-and-entityalias-integration-tests: backlog
+  2-4-add-update-scenarios-to-pki-and-databasesecretenginestaticrole-integration-tests: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: Foundation Type Integration Tests
+  epic-3: backlog
+  3-1-integration-tests-for-policy-type: backlog
+  3-2-integration-tests-for-passwordpolicy-type: backlog
+  3-3-integration-tests-for-secretenginemount-type: backlog
+  3-4-integration-tests-for-authenginemount-type: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: Auth Engine Integration Tests
+  epic-4: backlog
+  4-1-integration-tests-for-kubernetesauthengineconfig-and-kubernetesauthenginerole: backlog
+  4-2-integration-tests-for-ldapauthengineconfig-and-ldapauthenginegroup: backlog
+  4-3-integration-tests-for-jwtoidcauthengineconfig-and-jwtoidcauthenginerole: backlog
+  epic-4-retrospective: optional
+
+  # Epic 5: Secret Engine Integration Tests
+  epic-5: backlog
+  5-1-integration-tests-for-databasesecretengineconfig-and-databasesecretenginerole: backlog
+  5-2-integration-tests-for-rabbitmq-secret-engine-types: backlog
+  5-3-integration-tests-for-remaining-secret-engine-types: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: Identity & Audit Integration Tests
+  epic-6: backlog
+  6-1-integration-tests-for-group-and-groupalias-types: backlog
+  6-2-integration-tests-for-identity-oidc-types: backlog
+  6-3-integration-tests-for-identity-token-types: backlog
+  6-4-integration-tests-for-audit-types: backlog
+  epic-6-retrospective: optional
+
+  # Epic 7: Hardening — Webhooks, Error Paths & Credential Resolution
+  epic-7: backlog
+  7-1-webhook-validation-tests-for-immutable-spec-path-rule: backlog
+  7-2-unit-tests-for-prepareinternalvalues-credential-resolution: backlog
+  7-3-error-path-integration-tests: backlog
+  7-4-audit-vault-api-responses-and-harden-isequivalenttodesiredstate-extra-field-handling: backlog
+  7-5-drift-detection-integration-tests: backlog
+  epic-7-retrospective: optional
+
+  # --- Phase 1.5: Documentation Improvement ---
+
+  # Epic D1: Documentation Standards & Missing CertAuth Engine Docs
+  epic-d1: backlog
+  d1-1-create-documentation-template-and-pattern-guide: backlog
+  d1-2-document-certauthengineconfig-and-certauthenginerole: backlog
+  d1-3-fix-broken-links-and-field-naming-inconsistencies: backlog
+  epic-d1-retrospective: optional
+
+  # Epic D2: Auth Engine Documentation — Per-Engine Split & Standardization
+  epic-d2: backlog
+  d2-1-create-auth-engines-directory-structure-and-index-page: backlog
+  d2-2-standardize-kubernetes-auth-engine-docs: backlog
+  d2-3-standardize-ldap-auth-engine-docs: backlog
+  d2-4-standardize-jwt-oidc-auth-engine-docs: backlog
+  d2-5-standardize-gcp-and-azure-auth-engine-docs: backlog
+  epic-d2-retrospective: optional
+
+  # Epic D3: Secret Engine Documentation — Per-Engine Split & Standardization
+  epic-d3: backlog
+  d3-1-create-secret-engines-directory-structure-and-index-page: backlog
+  d3-2-standardize-database-secret-engine-docs: backlog
+  d3-3-standardize-pki-and-rabbitmq-secret-engine-docs: backlog
+  d3-4-standardize-github-quay-kubernetes-and-azure-secret-engine-docs: backlog
+  epic-d3-retrospective: optional
+
+  # Epic D4: Examples Directory Expansion
+  epic-d4: backlog
+  d4-1-create-example-yaml-files-for-each-auth-engine: backlog
+  d4-2-create-example-yaml-files-for-each-secret-engine: backlog
+  d4-3-create-additional-end-to-end-examples: backlog
+  epic-d4-retrospective: optional
+
+  # --- Phase 2: Expansion — Dependency Upgrades + Engine Coverage ---
+
+  # Epic 8: Go + Kubernetes Stack Upgrade
+  epic-8: backlog
+  8-1-upgrade-go-from-1-22-to-1-24: backlog
+  8-2-upgrade-controller-runtime-and-k8s-libs: backlog
+  8-3-upgrade-makefile-k8s-coupled-tool-versions: backlog
+  8-4-adapt-ci-pipeline-and-dockerfiles-for-new-versions: backlog
+  epic-8-retrospective: optional
+
+  # Epic 9: Vault API + Peripheral Dependency Upgrades
+  epic-9: backlog
+  9-1-upgrade-vault-api-from-v1-14-to-v1-23: backlog
+  9-2-upgrade-test-dependencies-ginkgo-gomega: backlog
+  9-3-upgrade-peripheral-and-security-dependencies: backlog
+  9-4-evaluate-and-plan-pkg-errors-migration: backlog
+  9-5-upgrade-vault-version-in-integration-test-infrastructure: backlog
+  epic-9-retrospective: optional
+
+  # Epic 10: Operator SDK + Build Tooling Upgrades
+  epic-10: backlog
+  10-1-upgrade-operator-sdk-from-v1-31-to-v1-42: backlog
+  10-2-upgrade-helm-from-v3-11-to-v4: backlog
+  10-3-upgrade-golangci-lint-from-v1-59-to-v2: backlog
+  10-4-upgrade-opm-and-kustomize: backlog
+  epic-10-retrospective: optional
+
+  # Epic 11: High-Priority Missing Secret Engines (AWS, Transit, SSH)
+  epic-11: backlog
+  11-1-aws-secret-engine-config-and-role-crds: backlog
+  11-2-transit-secret-engine-config-and-key-crds: backlog
+  11-3-ssh-secret-engine-config-and-role-crds: backlog
+  epic-11-retrospective: optional
+
+  # Epic 12: Medium-Priority Missing Secret Engines (Consul, GCP, LDAP/AD)
+  epic-12: backlog
+  12-1-consul-secret-engine-config-and-role-crds: backlog
+  12-2-gcp-secret-engine-config-and-role-crds: backlog
+  12-3-ldap-ad-secret-engine-config-and-role-crds: backlog
+  epic-12-retrospective: optional
+
+  # Epic 13: Lower-Priority Missing Secret Engines (Nomad, TOTP, MongoDB Atlas, Terraform Cloud)
+  epic-13: backlog
+  13-1-nomad-secret-engine-config-and-role-crds: backlog
+  13-2-totp-secret-engine-key-crd: backlog
+  13-3-mongodb-atlas-secret-engine-config-and-role-crds: backlog
+  13-4-terraform-cloud-secret-engine-config-and-role-crds: backlog
+  epic-13-retrospective: optional
+
+  # Epic 14: High-Priority Missing Auth Methods (AppRole, AWS)
+  epic-14: backlog
+  14-1-approle-auth-engine-config-and-role-crds: backlog
+  14-2-aws-auth-engine-config-and-role-crds: backlog
+  epic-14-retrospective: optional
+
+  # Epic 15: Medium-Priority Missing Auth Methods (Userpass, GitHub, Okta)
+  epic-15: backlog
+  15-1-userpass-auth-engine-user-crd: backlog
+  15-2-github-auth-engine-config-and-team-org-mapping-crds: backlog
+  15-3-okta-auth-engine-config-and-group-crds: backlog
+  epic-15-retrospective: optional
+
+  # Epic 16: Lower-Priority Missing Auth Methods (RADIUS, AliCloud, OCI, Kerberos, CF)
+  epic-16: backlog
+  16-1-radius-auth-engine-config-and-user-crds: backlog
+  16-2-alicloud-auth-engine-config-and-role-crds: backlog
+  16-3-oci-auth-engine-config-and-role-crds: backlog
+  16-4-kerberos-auth-engine-config-and-ldap-group-crds: backlog
+  16-5-cloud-foundry-auth-engine-config-and-role-crds: backlog
+  epic-16-retrospective: optional

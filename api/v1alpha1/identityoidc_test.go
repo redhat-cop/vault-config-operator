@@ -423,6 +423,104 @@ func TestIdentityOIDCAssignmentIsEquivalentToDesiredState(t *testing.T) {
 	}
 }
 
+// Tests for AC #4: extra-field handling in IsEquivalentToDesiredState.
+// These types use reflect.DeepEqual(desiredState, payload), so extra keys in
+// the payload cause the comparison to return false. In production the
+// reconciler calls IsEquivalentToDesiredState with the raw Vault read
+// response (no key filtering), meaning extra Vault-returned fields trigger
+// an unnecessary write. Story 7-4 tracks hardening this behavior.
+
+func TestIdentityOIDCScopeIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
+	scope := &IdentityOIDCScope{
+		Spec: IdentityOIDCScopeSpec{
+			IdentityOIDCScopeConfig: IdentityOIDCScopeConfig{
+				Template:    "tmpl",
+				Description: "desc",
+			},
+		},
+	}
+
+	payloadWithExtra := map[string]interface{}{
+		"template":    "tmpl",
+		"description": "desc",
+		"extra_field": "vault-returned-value",
+	}
+	if scope.IsEquivalentToDesiredState(payloadWithExtra) {
+		t.Error("expected payload with extra fields to NOT be equivalent (reflect.DeepEqual compares full maps)")
+	}
+}
+
+func TestIdentityOIDCProviderIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
+	provider := &IdentityOIDCProvider{
+		Spec: IdentityOIDCProviderSpec{
+			IdentityOIDCProviderConfig: IdentityOIDCProviderConfig{
+				Issuer:           "https://example.com",
+				AllowedClientIDs: []string{"client1"},
+				ScopesSupported:  []string{"openid"},
+			},
+		},
+	}
+
+	payloadWithExtra := map[string]interface{}{
+		"issuer":             "https://example.com",
+		"allowed_client_ids": []string{"client1"},
+		"scopes_supported":   []string{"openid"},
+		"extra_field":        "vault-returned-value",
+	}
+	if provider.IsEquivalentToDesiredState(payloadWithExtra) {
+		t.Error("expected payload with extra fields to NOT be equivalent (reflect.DeepEqual compares full maps)")
+	}
+}
+
+func TestIdentityOIDCClientIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
+	c := &IdentityOIDCClient{
+		Spec: IdentityOIDCClientSpec{
+			IdentityOIDCClientConfig: IdentityOIDCClientConfig{
+				Key:            "default",
+				RedirectURIs:   []string{"https://example.com/callback"},
+				Assignments:    []string{"allow_all"},
+				ClientType:     "confidential",
+				IDTokenTTL:     "24h",
+				AccessTokenTTL: "24h",
+			},
+		},
+	}
+
+	payloadWithExtra := map[string]interface{}{
+		"key":              "default",
+		"redirect_uris":    []string{"https://example.com/callback"},
+		"assignments":      []string{"allow_all"},
+		"client_type":      "confidential",
+		"id_token_ttl":     "24h",
+		"access_token_ttl": "24h",
+		"client_id":        "generated-id-from-vault",
+		"client_secret":    "generated-secret-from-vault",
+	}
+	if c.IsEquivalentToDesiredState(payloadWithExtra) {
+		t.Error("expected payload with extra fields to NOT be equivalent (reflect.DeepEqual compares full maps)")
+	}
+}
+
+func TestIdentityOIDCAssignmentIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
+	a := &IdentityOIDCAssignment{
+		Spec: IdentityOIDCAssignmentSpec{
+			IdentityOIDCAssignmentConfig: IdentityOIDCAssignmentConfig{
+				EntityIDs: []string{"entity-1"},
+				GroupIDs:  []string{"group-1"},
+			},
+		},
+	}
+
+	payloadWithExtra := map[string]interface{}{
+		"entity_ids":  []string{"entity-1"},
+		"group_ids":   []string{"group-1"},
+		"extra_field": "vault-returned-value",
+	}
+	if a.IsEquivalentToDesiredState(payloadWithExtra) {
+		t.Error("expected payload with extra fields to NOT be equivalent (reflect.DeepEqual compares full maps)")
+	}
+}
+
 func TestIdentityOIDCIsDeletable(t *testing.T) {
 	provider := &IdentityOIDCProvider{}
 	if !provider.IsDeletable() {

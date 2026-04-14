@@ -17,7 +17,7 @@ OPERATOR_SDK_VERSION ?= v1.31.0
 ENVTEST_K8S_VERSION ?= 1.29.0
 
 CONTROLLER_TOOLS_VERSION ?= v0.14.0
-ENVTEST_VERSION ?= release-0.17
+ENVTEST_VERSION ?= release-0.19
 GOLANGCI_LINT_VERSION ?= v1.59.1
 
 # VERSION defines the project version for the bundle.
@@ -247,7 +247,7 @@ $(KUSTOMIZE): $(LOCALBIN)
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
 $(CONTROLLER_GEN): $(LOCALBIN)
-	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen,$(CONTROLLER_TOOLS_VERSION))
+	$(call go-install-tool-compat,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen,$(CONTROLLER_TOOLS_VERSION),go1.22.12)
 
 .PHONY: envtest
 envtest: $(ENVTEST) ## Download setup-envtest locally if necessary.
@@ -270,6 +270,21 @@ package=$(2)@$(3) ;\
 echo "Downloading $${package}" ;\
 rm -f $(1) || true ;\
 GOBIN=$(LOCALBIN) go install $${package} ;\
+mv $(1) $(1)-$(3) ;\
+} ;\
+ln -sf $(1)-$(3) $(1)
+endef
+
+# go-install-tool-compat: like go-install-tool but pins GOTOOLCHAIN for packages
+# incompatible with the system Go version (e.g. controller-gen v0.14 vs Go 1.25+).
+# $4 - Go toolchain version to use (e.g. go1.22.12)
+define go-install-tool-compat
+@[ -f "$(1)-$(3)" ] || { \
+set -e; \
+package=$(2)@$(3) ;\
+echo "Downloading $${package} (using toolchain $(4))" ;\
+rm -f $(1) || true ;\
+GOTOOLCHAIN=$(4) GOBIN=$(LOCALBIN) go install $${package} ;\
 mv $(1) $(1)-$(3) ;\
 } ;\
 ln -sf $(1)-$(3) $(1)
@@ -381,6 +396,7 @@ helmchart-repo-push: helmchart-repo
 
 HELM_TEST_IMG_NAME ?= ${OPERATOR_NAME}
 HELM_TEST_IMG_TAG ?= helmchart-test
+HELM_TEST_SIDECAR_IMG ?= busybox:1.37
 
 # Deploy the helmchart to a kind cluster to test deployment.
 # If the test-metrics sidecar in the prometheus pod is ready, the metrics work and the test is successful.
@@ -388,7 +404,8 @@ HELM_TEST_IMG_TAG ?= helmchart-test
 helmchart-test: kind-setup deploy-vault helmchart
 	$(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker-build
 	docker tag ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
-	$(KIND) load docker-image ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
+	docker pull ${HELM_TEST_SIDECAR_IMG}
+	$(KIND) load docker-image ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} ${HELM_TEST_SIDECAR_IMG}
 	$(HELM) repo add jetstack https://charts.jetstack.io
 	$(HELM) install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.7.1 --set installCRDs=true
 	$(HELM) repo add prometheus-community https://prometheus-community.github.io/helm-charts

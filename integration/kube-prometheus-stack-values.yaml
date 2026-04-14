@@ -44,19 +44,19 @@ prometheus:
 
     ## The test-metrics sidecar will become ready when metrics are available.
     containers: 
-      - image: busybox:latest
+      - image: busybox:1.37
         name: test-metrics
         command: 
         - /bin/sh
         - -c
         - | 
             while true; do
-              out=$(wget -q -O - --post-data="query=controller_runtime_active_workers%7Bnamespace%3D%22vault-config-operator-local%22%7D%0A" localhost:9090/api/v1/query)
-              if [[ -z "$(echo ${out})" || "$(echo $out | grep -F '{"status":"success","data":{"resultType":"vector","result":[]}}')" ]]; then
-                echo "$(date): No Metrics yet..."
-              else
+              out=$(wget -T 5 -q -O - --post-data="query=controller_runtime_active_workers%7Bnamespace%3D%22vault-config-operator-local%22%7D%0A" localhost:9090/api/v1/query 2>/dev/null)
+              if echo "$out" | grep -qF '"result":[{'; then
                 echo "$(date): Metrics is working..."
-                echo "${out}" > /tmp/ready
+                echo "$out" > /tmp/ready
+              else
+                echo "$(date): No Metrics yet..."
               fi
               sleep 5s
             done
