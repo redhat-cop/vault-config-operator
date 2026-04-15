@@ -103,8 +103,11 @@ func (ve *VaultEndpoint) Create(context context.Context) error {
 
 // CreateOrMergeKV reads existing KV secret data and merges the new payload keys into it.
 // This allows multiple resources to contribute different keys to the same Vault secret path.
+// When preserveExistingKeys is true, keys already present in Vault are not overwritten;
+// this protects one-off (non-rotating) secrets from being regenerated when the K8s resource
+// is recreated while the Vault secret still exists (e.g. with kvSecretRetainPolicy: Retain).
 // For KVv2, it expects the payload in {"data": {...}} format.
-func (ve *VaultEndpoint) CreateOrMergeKV(context context.Context, isKVv2 bool) error {
+func (ve *VaultEndpoint) CreateOrMergeKV(context context.Context, isKVv2 bool, preserveExistingKeys bool) error {
 	log := log.FromContext(context)
 	currentPayload, found, err := read(context, ve.vaultObject.GetPath())
 	if err != nil {
@@ -127,6 +130,12 @@ func (ve *VaultEndpoint) CreateOrMergeKV(context context.Context, isKVv2 bool) e
 			return write(context, ve.vaultObject.GetPath(), newPayload)
 		}
 		for k, v := range newData {
+			if preserveExistingKeys {
+				if _, exists := existingData[k]; exists {
+					log.Info("preserving existing key in Vault secret", "key", k, "path", ve.vaultObject.GetPath())
+					continue
+				}
+			}
 			existingData[k] = v
 		}
 		mergedPayload := map[string]interface{}{
@@ -136,6 +145,12 @@ func (ve *VaultEndpoint) CreateOrMergeKV(context context.Context, isKVv2 bool) e
 	}
 	// For KVv1, merge directly
 	for k, v := range newPayload {
+		if preserveExistingKeys {
+			if _, exists := currentPayload[k]; exists {
+				log.Info("preserving existing key in Vault secret", "key", k, "path", ve.vaultObject.GetPath())
+				continue
+			}
+		}
 		currentPayload[k] = v
 	}
 	return write(context, ve.vaultObject.GetPath(), currentPayload)

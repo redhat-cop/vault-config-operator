@@ -36,7 +36,7 @@ The `secretFormat` is a reference to a Vault Password policy, it can also suppli
 
 The `refreshPeriod` specifies the frequency at which this secret will be regenerated. This is an optional field, if not specified the secret will be generated once and then never updated.
 
-With a RandomSecret it is possible to build workflow in which the root password of a resource that we need to protect is never stored anywhere, except in vault. One way to achieve this is to have a random secret seed the root password. Then crete an operator that watches the RandomSecret and retrieves ths generated secret from vault and updates the resource to be protected. Finally configure the Secret Engine object to watch for the RandomSecret updates.
+With a RandomSecret it is possible to build workflow in which the root password of a resource that we need to protect is never stored anywhere, except in vault. One way to achieve this is to have a random secret seed the root password. Then create a configuration (VaultSecret for example) that watches the RandomSecret and retrieves the generated secret from Vault and uses it to configure the root password of the resource be protected. Finally configure the Secret Engine for the reosurce in question to watch for the RandomSecret updates.
 
 This CR is roughly equivalent to this Vault CLI command:
 
@@ -60,6 +60,52 @@ In addition to this, starting with v0.8.30, when a `RandomSecret` is created wit
 and with a corresponding *existing* Vault secret, this Vault secret will *not* be updated:
 this is intended to provide overwrite protection for Kubernetes recreate-after-delete actions
 and again avoid loosing the initially generated secret value.
+
+### Multiple keys on the same Vault path
+
+Vault allows storing multiple key/value pairs at the same path. You can use multiple `RandomSecret`
+resources that point to the same Vault path (via `spec.name`) but with different `secretKey` values
+to manage each key independently:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: RandomSecret
+metadata:
+  name: myapp-password
+spec:
+  authentication:
+    path: kubernetes
+    role: secret-writer
+  path: kv/data
+  name: myapp-credentials
+  secretKey: password
+  secretFormat:
+    passwordPolicyName: complex-password
+  isKVSecretsEngineV2: true
+  kvSecretRetainPolicy: Retain
+---
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: RandomSecret
+metadata:
+  name: myapp-username
+spec:
+  authentication:
+    path: kubernetes
+    role: secret-writer
+  path: kv/data
+  name: myapp-credentials
+  secretKey: username
+  secretFormat:
+    passwordPolicyName: simple-username
+  isKVSecretsEngineV2: true
+  kvSecretRetainPolicy: Retain
+```
+
+Both resources contribute their respective key to the same Vault secret at `kv/myapp-credentials`.
+New keys are merged into existing data without affecting other keys at the same path.
+When combined with `kvSecretRetainPolicy: Retain` and no `refreshPeriod`, each key is individually
+protected from overwrite: if a `RandomSecret` Kubernetes resource is deleted and recreated, the
+existing key value in Vault is preserved rather than being regenerated.
 
 ## VaultSecret
 
