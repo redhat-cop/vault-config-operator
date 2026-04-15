@@ -13,6 +13,13 @@ on:
         required: false
         default: "20m"
 
+# Permissions required by nested workflow
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+  actions: read
+
 jobs:
   shared-operator-workflow:
     name: shared-operator-workflow
