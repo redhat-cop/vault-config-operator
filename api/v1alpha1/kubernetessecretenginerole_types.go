@@ -159,8 +159,8 @@ func (i *KubeSERole) toMap() map[string]interface{} {
 	payload := map[string]interface{}{}
 	payload["allowed_kubernetes_namespaces"] = i.AllowedKubernetesNamespaces
 	payload["allowed_kubernetes_namespace_selector"] = i.AllowedKubernetesNamespaceSelector
-	payload["token_max_ttl"] = i.DefaultTTL
-	payload["token_default_ttl"] = i.MaxTTL
+	payload["token_max_ttl"] = i.MaxTTL
+	payload["token_default_ttl"] = i.DefaultTTL
 	payload["token_default_audiences"] = i.DefaultAudiences
 	payload["service_account_name"] = i.ServiceAccountName
 	payload["kubernetes_role_name"] = i.KubernetesRoleName

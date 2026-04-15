@@ -152,6 +152,20 @@ This rule applies to all current and future integration tests. When adding a new
 - Pure Go `testing.Test*` functions used for utility packages (e.g., `vaultsecretutils/hash_test.go`).
 - Table-driven tests with explicit expected values.
 
+#### Unit Test Payload Construction (Critical — `api/v1alpha1/` Tests)
+- **Never derive expected payloads from the code under test.** Do NOT call `toMap()` or `GetPayload()` to build the "expected" value in a test — this only proves `x == x` and catches zero bugs. Instead, construct an independent Vault-read-shaped fixture with hardcoded values that mirror what the Vault API actually returns.
+- **Bad:** `expected := instance.Spec.Config.toMap(); assert.True(instance.IsEquivalentToDesiredState(expected))`
+- **Good:** `vaultPayload := map[string]interface{}{"plugin_name": "postgresql-database-plugin", "allowed_roles": []interface{}{"*"}, ...}; assert.True(instance.IsEquivalentToDesiredState(vaultPayload))`
+- This rule applies to all `IsEquivalentToDesiredState` matching tests and `toMap()` output verification.
+
+#### Required Negative Test Cases for Custom `IsEquivalentToDesiredState`
+- Any type with custom `IsEquivalentToDesiredState` logic (field deletion, field remapping, alternate map method, field-by-field comparison) **must** have explicit negative tests proving the custom behavior:
+  - **Secret-stripping types** (e.g., GitHubSecretEngineConfig deletes `prv_key`, KubernetesSecretEngineConfig deletes `service_account_jwt`, LDAPAuthEngineConfig deletes `bindpass`, QuaySecretEngineConfig deletes `password`): Add a test where the payload still contains the redacted key — must return `false`.
+  - **Tune-only comparison types** (AuthEngineMount, SecretEngineMount): Add a test proving `IsEquivalentToDesiredState(d.GetPayload())` returns `false` — the full mount spec is not equivalent to the tune config.
+  - **Alternate map method types** (RabbitMQSecretEngineConfig uses `leasesToMap()` not `rabbitMQToMap()`): Add a test proving a `rabbitMQToMap()` payload is rejected.
+  - **Field-remapping types** (DatabaseSecretEngineConfig): Add tests with independently-constructed Vault-read fixtures that include `connection_details` nesting.
+- These negative cases are the highest-value tests — they prove the custom logic is actually exercised, not just that `reflect.DeepEqual` works.
+
 #### Adding Tests for New Types
 - Add a `Get<NewType>Instance` method to `controllers/controllertestutils/decoder.go`.
 - Create YAML fixtures in `test/<feature>/` directory.
