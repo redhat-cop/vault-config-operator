@@ -112,7 +112,6 @@ func (r *RandomSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		//we reschedule the next reconcile at the time in the future corresponding to
 		nextSchedule := time.Until(instance.Status.LastVaultSecretUpdate.Add(instance.Spec.RefreshPeriod.Duration))
 		if nextSchedule > 0 {
-			vaultresourcecontroller.ManageOutcomeWithRequeue(ctx, r.ReconcilerBase, instance, err, nextSchedule)
 			return vaultresourcecontroller.ManageOutcomeWithRequeue(ctx, r.ReconcilerBase, instance, err, nextSchedule)
 		} else {
 			return vaultresourcecontroller.ManageOutcomeWithRequeue(ctx, r.ReconcilerBase, instance, err, time.Second)
@@ -147,7 +146,8 @@ func (r *RandomSecretReconciler) manageCleanUpLogic(context context.Context, ins
 }
 
 func (r *RandomSecretReconciler) manageReconcileLogic(context context.Context, instance *redhatcopv1alpha1.RandomSecret) error {
-	// how to read this if: if the secret has been initialized once and there no refresh period or time ro refresh has not arrived yet, return.
+	// If the secret has been initialized once and there is no refresh period
+	// or time to refresh has not arrived yet, return.
 	if instance.Status.LastVaultSecretUpdate != nil && (instance.Spec.RefreshPeriod == nil || (instance.Spec.RefreshPeriod != nil && !instance.Status.LastVaultSecretUpdate.Add(instance.Spec.RefreshPeriod.Duration).Before(time.Now()))) {
 		return nil
 	}
@@ -157,7 +157,10 @@ func (r *RandomSecretReconciler) manageReconcileLogic(context context.Context, i
 		r.Log.Error(err, "unable to generate new secret", "instance", instance)
 		return err
 	}
-	err = vaultEndpoint.CreateOrMergeKV(context, instance.IsKVSecretsEngineV2())
+	// For one-off secrets (no rotation), preserve existing keys to avoid
+	// overwriting retained Vault secrets when the K8s resource is recreated.
+	preserveExisting := instance.Status.LastVaultSecretUpdate == nil && instance.Spec.RefreshPeriod == nil
+	err = vaultEndpoint.CreateOrMergeKV(context, instance.IsKVSecretsEngineV2(), preserveExisting)
 	if err != nil {
 		r.Log.Error(err, "unable to create/update Vault Secret", "instance", instance)
 		return err
