@@ -103,16 +103,16 @@ func TestKubeSERoleToMap(t *testing.T) {
 	if !ok {
 		t.Fatalf("token_max_ttl should be metav1.Duration, got %T", result["token_max_ttl"])
 	}
-	if tokenMax.Duration != time.Hour {
-		t.Errorf("token_max_ttl = %v, expected 1h (from DefaultTTL)", tokenMax.Duration)
+	if tokenMax.Duration != 24*time.Hour {
+		t.Errorf("token_max_ttl = %v, expected 24h (from MaxTTL)", tokenMax.Duration)
 	}
 
 	tokenDef, ok := result["token_default_ttl"].(metav1.Duration)
 	if !ok {
 		t.Fatalf("token_default_ttl should be metav1.Duration, got %T", result["token_default_ttl"])
 	}
-	if tokenDef.Duration != 24*time.Hour {
-		t.Errorf("token_default_ttl = %v, expected 24h (from MaxTTL)", tokenDef.Duration)
+	if tokenDef.Duration != time.Hour {
+		t.Errorf("token_default_ttl = %v, expected 1h (from DefaultTTL)", tokenDef.Duration)
 	}
 
 	ann, ok := result["extra_annotations"].(map[string]string)
