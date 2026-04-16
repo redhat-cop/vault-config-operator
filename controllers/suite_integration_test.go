@@ -35,7 +35,9 @@ import (
 	controllertestutils "github.com/redhat-cop/vault-config-operator/controllers/controllertestutils"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -80,7 +82,12 @@ var _ = BeforeSuite(func() {
 
 	vaultAddress, isSet := os.LookupEnv("VAULT_ADDR")
 	if !isSet {
-		Expect(os.Setenv("VAULT_ADDR", "http://localhost:8200")).To(Succeed())
+		vaultPort := os.Getenv("VAULT_HOST_PORT")
+		if vaultPort == "" {
+			vaultPort = "8200"
+		}
+		Expect(os.Setenv("VAULT_ADDR", "http://localhost:"+vaultPort)).To(Succeed())
+		vaultAddress = os.Getenv("VAULT_ADDR")
 	}
 
 	_, err := http.Get(os.Getenv("VAULT_ADDR"))
@@ -216,7 +223,14 @@ var _ = BeforeSuite(func() {
 			Name: vaultAdminNamespaceName,
 		},
 	}
-	Expect(k8sIntegrationClient.Create(ctx, vaultAdminNamespace)).Should(Succeed())
+	err = k8sIntegrationClient.Create(ctx, vaultAdminNamespace)
+	if err != nil {
+		if apierrors.IsAlreadyExists(err) {
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: vaultAdminNamespaceName}, vaultAdminNamespace)).Should(Succeed())
+		} else {
+			Expect(err).NotTo(HaveOccurred())
+		}
+	}
 
 	By(fmt.Sprintf("Creating the %v namespace", vaultTestNamespaceName))
 	vaultTestNamespace = &corev1.Namespace{
@@ -227,7 +241,21 @@ var _ = BeforeSuite(func() {
 			},
 		},
 	}
-	Expect(k8sIntegrationClient.Create(ctx, vaultTestNamespace)).Should(Succeed())
+	err = k8sIntegrationClient.Create(ctx, vaultTestNamespace)
+	if err != nil {
+		if apierrors.IsAlreadyExists(err) {
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: vaultTestNamespaceName}, vaultTestNamespace)).Should(Succeed())
+			if vaultTestNamespace.Labels == nil {
+				vaultTestNamespace.Labels = make(map[string]string)
+			}
+			if vaultTestNamespace.Labels["database-engine-admin"] != "true" {
+				vaultTestNamespace.Labels["database-engine-admin"] = "true"
+				Expect(k8sIntegrationClient.Update(ctx, vaultTestNamespace)).Should(Succeed())
+			}
+		} else {
+			Expect(err).NotTo(HaveOccurred())
+		}
+	}
 
 	go func() {
 		defer GinkgoRecover()
@@ -237,6 +265,24 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
+	By("deleting test namespaces")
+	if k8sIntegrationClient != nil {
+		for _, nsName := range []string{vaultAdminNamespaceName, vaultTestNamespaceName} {
+			ns := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsName}}
+			err := k8sIntegrationClient.Delete(ctx, ns, client.PropagationPolicy(metav1.DeletePropagationForeground))
+			if err != nil && !apierrors.IsNotFound(err) {
+				_, _ = fmt.Fprintf(GinkgoWriter, "Warning: failed to delete namespace %s: %v\n", nsName, err)
+			}
+		}
+		By("waiting for test namespace deletion to complete")
+		for _, nsName := range []string{vaultAdminNamespaceName, vaultTestNamespaceName} {
+			Eventually(func() bool {
+				ns := &corev1.Namespace{}
+				err := k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: nsName}, ns)
+				return apierrors.IsNotFound(err)
+			}, "60s", "2s").Should(BeTrue(), fmt.Sprintf("namespace %s was not fully deleted", nsName))
+		}
+	}
 
 	cancel()
 	By("tearing down the test environment")

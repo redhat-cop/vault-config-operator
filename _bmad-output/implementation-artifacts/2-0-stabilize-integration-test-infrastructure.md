@@ -1,6 +1,6 @@
 # Story 2.0: Stabilize Integration Test Infrastructure
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -22,42 +22,48 @@ So that integration tests can be run reliably during development and in CI witho
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Make `kind-setup` idempotent (AC: 1, 2)
-  - [ ] 1.1: Add `KIND_CLUSTER_NAME ?= kind` variable to Makefile (near line 6, alongside other KIND vars)
-  - [ ] 1.2: Replace the unconditional `delete` + `create` in `kind-setup` with a check: query `$(KIND) get clusters` to see if the cluster exists; if it does, verify the node image matches `kindest/node:$(KUBECTL_VERSION)` via `docker inspect`; only recreate if the cluster is missing or the node image doesn't match
-  - [ ] 1.3: Verify `make kind-setup` on fresh machine still creates the cluster successfully
-  - [ ] 1.4: Verify `make kind-setup` on re-run skips cluster recreation when image matches
+- [x] Task 1: Make `kind-setup` idempotent (AC: 1, 2)
+  - [x] 1.1: Add `KIND_CLUSTER_NAME ?= kind` variable to Makefile (near line 6, alongside other KIND vars)
+  - [x] 1.2: Replace the unconditional `delete` + `create` in `kind-setup` with a check: query `$(KIND) get clusters` to see if the cluster exists; if it does, verify the node image matches `kindest/node:$(KUBECTL_VERSION)` via `docker inspect`; only recreate if the cluster is missing or the node image doesn't match
+  - [x] 1.3: Verify `make kind-setup` on fresh machine still creates the cluster successfully
+  - [x] 1.4: Verify `make kind-setup` on re-run skips cluster recreation when image matches
 
-- [ ] Task 2: Fix namespace handling in `BeforeSuite` / `AfterSuite` (AC: 2, 5)
-  - [ ] 2.1: In `controllers/suite_integration_test.go` `BeforeSuite`, replace `k8sIntegrationClient.Create(ctx, vaultAdminNamespace)` (line 219) with a create-or-get pattern: attempt Create, if error is `apierrors.IsAlreadyExists(err)` then Get the existing namespace instead
-  - [ ] 2.2: Apply the same create-or-get pattern to `vaultTestNamespace` creation (line 230), preserving the `database-engine-admin: "true"` label
-  - [ ] 2.3: Add import for `apierrors "k8s.io/apimachinery/pkg/api/errors"` and `"k8s.io/apimachinery/pkg/types"`
-  - [ ] 2.4: In `AfterSuite` (lines 239–245), add namespace deletion for both `vault-admin` and `test-vault-config-operator` before calling `testIntegrationEnv.Stop()` — use `k8sIntegrationClient.Delete(ctx, namespace)` with `client.PropagationPolicy(metav1.DeletePropagationForeground)`; ignore NotFound errors
-  - [ ] 2.5: Fix the `vaultAddress` bug: when `VAULT_ADDR` is not set, `vaultAddress` (line 81) captures the empty string but line 93 `config.Address = vaultAddress` sets an empty Vault client address — after setting the env default (line 83), re-read `vaultAddress = os.Getenv("VAULT_ADDR")` so the Vault client gets the correct address
+- [x] Task 2: Fix namespace handling in `BeforeSuite` / `AfterSuite` (AC: 2, 5)
+  - [x] 2.1: In `controllers/suite_integration_test.go` `BeforeSuite`, replace `k8sIntegrationClient.Create(ctx, vaultAdminNamespace)` (line 219) with a create-or-get pattern: attempt Create, if error is `apierrors.IsAlreadyExists(err)` then Get the existing namespace instead
+  - [x] 2.2: Apply the same create-or-get pattern to `vaultTestNamespace` creation (line 230), preserving the `database-engine-admin: "true"` label
+  - [x] 2.3: Add import for `apierrors "k8s.io/apimachinery/pkg/api/errors"` and `"k8s.io/apimachinery/pkg/types"`
+  - [x] 2.4: In `AfterSuite` (lines 239–245), add namespace deletion for both `vault-admin` and `test-vault-config-operator` before calling `testIntegrationEnv.Stop()` — use `k8sIntegrationClient.Delete(ctx, namespace)` with `client.PropagationPolicy(metav1.DeletePropagationForeground)`; ignore NotFound errors
+  - [x] 2.5: Fix the `vaultAddress` bug: when `VAULT_ADDR` is not set, `vaultAddress` (line 81) captures the empty string but line 93 `config.Address = vaultAddress` sets an empty Vault client address — after setting the env default (line 83), re-read `vaultAddress = os.Getenv("VAULT_ADDR")` so the Vault client gets the correct address
 
-- [ ] Task 3: Vendor the ingress-nginx manifest (AC: 4)
-  - [ ] 3.1: Create directory `integration/manifests/`
-  - [ ] 3.2: Download the current `https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.1/deploy/static/provider/kind/deploy.yaml` (pin to a specific version tag, NOT `main`) and save as `integration/manifests/ingress-nginx-kind-deploy.yaml`
-  - [ ] 3.3: In Makefile `deploy-ingress` target (line 141), replace `curl ... | $(KUBECTL) create -f -` with `$(KUBECTL) apply -f ./integration/manifests/ingress-nginx-kind-deploy.yaml`
-  - [ ] 3.4: Remove the `-n ingress-nginx` flag from the kubectl command (the manifest defines its own namespace)
-  - [ ] 3.5: Verify the vendored manifest version is compatible with the Helm chart in `integration/helm/ingress-nginx/`
+- [x] Task 3: Vendor the ingress-nginx manifest (AC: 4)
+  - [x] 3.1: Create directory `integration/manifests/`
+  - [x] 3.2: Download the current `https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.1/deploy/static/provider/kind/deploy.yaml` (pin to a specific version tag, NOT `main`) and save as `integration/manifests/ingress-nginx-kind-deploy.yaml`
+  - [x] 3.3: In Makefile `deploy-ingress` target (line 141), replace `curl ... | $(KUBECTL) create -f -` with `$(KUBECTL) apply -f ./integration/manifests/ingress-nginx-kind-deploy.yaml`
+  - [x] 3.4: Remove the `-n ingress-nginx` flag from the kubectl command (the manifest defines its own namespace)
+  - [x] 3.5: Verify the vendored manifest version is compatible with the Helm chart in `integration/helm/ingress-nginx/`
 
-- [ ] Task 4: Make Vault host port configurable (AC: 3)
-  - [ ] 4.1: Add `VAULT_HOST_PORT ?= 8200` variable to Makefile (near line 10, alongside VAULT_VERSION)
-  - [ ] 4.2: Replace `integration/cluster-kind.yaml` with a generated file: add a Makefile target or inline `sed`/`envsubst` that templates `$(VAULT_HOST_PORT)` into `hostPort` (line 13 of `cluster-kind.yaml`). **Preferred approach:** use `envsubst` on a template file `integration/cluster-kind.yaml.tpl` or inline the YAML via heredoc in the Makefile target
-  - [ ] 4.3: In Makefile `integration` target (line 135), replace hardcoded `VAULT_ADDR="http://localhost:8200"` with `VAULT_ADDR="http://localhost:$(VAULT_HOST_PORT)"`
-  - [ ] 4.4: In `controllers/suite_integration_test.go` (line 83), replace the hardcoded `http://localhost:8200` default with the value from `VAULT_HOST_PORT` env var (if set), falling back to `http://localhost:8200`
-  - [ ] 4.5: Verify `VAULT_HOST_PORT=9200 make integration` creates Kind with port 9200 and tests connect to `http://localhost:9200`
+- [x] Task 4: Make Vault host port configurable (AC: 3)
+  - [x] 4.1: Add `VAULT_HOST_PORT ?= 8200` variable to Makefile (near line 10, alongside VAULT_VERSION)
+  - [x] 4.2: Replace `integration/cluster-kind.yaml` with a generated file: add a Makefile target or inline `sed`/`envsubst` that templates `$(VAULT_HOST_PORT)` into `hostPort` (line 13 of `cluster-kind.yaml`). **Preferred approach:** use `envsubst` on a template file `integration/cluster-kind.yaml.tpl` or inline the YAML via heredoc in the Makefile target
+  - [x] 4.3: In Makefile `integration` target (line 135), replace hardcoded `VAULT_ADDR="http://localhost:8200"` with `VAULT_ADDR="http://localhost:$(VAULT_HOST_PORT)"`
+  - [x] 4.4: In `controllers/suite_integration_test.go` (line 83), replace the hardcoded `http://localhost:8200` default with the value from `VAULT_HOST_PORT` env var (if set), falling back to `http://localhost:8200`
+  - [x] 4.5: Verify `VAULT_HOST_PORT=9200 make integration` creates Kind with port 9200 and tests connect to `http://localhost:9200`
 
-- [ ] Task 5: Integration test philosophy documentation (AC: all, prerequisite)
-  - [ ] 5.1: Verify `project-context.md` contains the "Integration Test Infrastructure Philosophy" section (three-tier rule: install in Kind / mock / skip) — **ALREADY DONE** (lines 135–141 of `_bmad-output/project-context.md`)
+- [x] Task 5: Integration test philosophy documentation (AC: all, prerequisite)
+  - [x] 5.1: Verify `project-context.md` contains the "Integration Test Infrastructure Philosophy" section (three-tier rule: install in Kind / mock / skip) — **ALREADY DONE** (lines 135–141 of `_bmad-output/project-context.md`)
 
-- [ ] Task 6: End-to-end verification (AC: 1, 2, 3, 4, 5)
-  - [ ] 6.1: Run `make integration` from clean state — verify full pipeline passes
-  - [ ] 6.2: Run `make integration` again immediately — verify no "already exists" errors, cluster is reused
-  - [ ] 6.3: Run `VAULT_HOST_PORT=9200 make integration` — verify Kind uses port 9200
-  - [ ] 6.4: Disconnect network, run `make deploy-ingress` — verify vendored manifest is used
-  - [ ] 6.5: Verify `AfterSuite` deletes namespaces after test run
+- [x] Task 6: End-to-end verification (AC: 1, 2, 3, 4, 5)
+  - [x] 6.1: Run `make integration` from clean state — verify full pipeline passes
+  - [x] 6.2: Run `make integration` again immediately — verify no "already exists" errors, cluster is reused
+  - [x] 6.3: Run `VAULT_HOST_PORT=9200 make integration` — verify Kind uses port 9200
+  - [x] 6.4: Disconnect network, run `make deploy-ingress` — verify vendored manifest is used
+  - [x] 6.5: Verify `AfterSuite` deletes namespaces after test run
+
+### Review Findings
+
+- [x] [Review][Patch] Reused Kind clusters ignore `VAULT_HOST_PORT` changes [`Makefile`:159] — **fixed**: added `CURRENT_PORT` check via `docker inspect` PortBindings alongside the image check
+- [x] [Review][Patch] `vaultTestNamespace` create-or-get path does not preserve the required label [`controllers/suite_integration_test.go`:244] — **fixed**: added label reconciliation after Get on AlreadyExists path
+- [x] [Review][Patch] Namespace cleanup is best-effort instead of guaranteed [`controllers/suite_integration_test.go`:260] — **fixed**: added `Eventually` poll (60s/2s) after issuing deletes to wait for namespaces to be fully removed
 
 ## Dev Notes
 
@@ -312,12 +318,31 @@ This story is unique in that its "tests" are the integration pipeline itself run
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (via Cursor)
 
 ### Debug Log References
 
+- Pre-existing unit test failure: `TestKubeSERoleToMap` in `api/v1alpha1/kubernetessecretenginerole_test.go` has swapped TTL assertions (token_max_ttl vs token_default_ttl). This failure exists on the main branch before any story changes and is unrelated to integration test infrastructure.
+
 ### Completion Notes List
+
+- ✅ Task 1: Made `kind-setup` idempotent — cluster is now reused when node image matches, saving ~3 minutes per re-run. Added `KIND_CLUSTER_NAME` variable for flexibility.
+- ✅ Task 2: Fixed namespace handling — BeforeSuite uses create-or-get pattern (no more "already exists" failures on re-run), AfterSuite deletes test namespaces before teardown, and the `vaultAddress` bug is fixed (Vault client now gets the correct address when `VAULT_ADDR` is not pre-set).
+- ✅ Task 3: Vendored ingress-nginx manifest — pinned to controller-v1.12.1, applied via `kubectl apply` (idempotent), no internet dependency.
+- ✅ Task 4: Made Vault host port configurable — `VAULT_HOST_PORT` variable propagates to Kind config template, Makefile integration target, and Go test suite default.
+- ✅ Task 5: Integration test philosophy documentation verified present in project-context.md.
+- ✅ Task 6: End-to-end verified — clean pipeline passes, re-run is idempotent (no errors, cluster reused), vendored manifest works, namespaces cleaned up by AfterSuite.
 
 ### Change Log
 
+- 2026-04-16: Implemented all 6 tasks for Story 2.0 — Stabilize Integration Test Infrastructure
+
 ### File List
+
+- `Makefile` — Modified: Added `KIND_CLUSTER_NAME`, `VAULT_HOST_PORT` vars; rewrote `kind-setup` (idempotent), `deploy-ingress` (vendored manifest), `integration` (configurable port) targets
+- `controllers/suite_integration_test.go` — Modified: Create-or-get namespace pattern in BeforeSuite; AfterSuite namespace cleanup; vaultAddress bug fix; configurable default port via VAULT_HOST_PORT env var; added apierrors and types imports
+- `integration/cluster-kind.yaml` → `integration/cluster-kind.yaml.tpl` — Renamed/Modified: Converted to template with VAULT_HOST_PORT_PLACEHOLDER for port templating
+- `integration/manifests/ingress-nginx-kind-deploy.yaml` — New: Vendored copy of ingress-nginx Kind deploy manifest (pinned to controller-v1.12.1)
+- `.gitignore` — Modified: Added `integration/cluster-kind.yaml` (generated from template)
+- `_bmad-output/implementation-artifacts/2-0-stabilize-integration-test-infrastructure.md` — Modified: Story status and dev record updates
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Modified: Story 2.0 status tracking
