@@ -132,7 +132,7 @@ test: manifests generate fmt vet envtest ## Run tests.
 
 # note: envtest requires docker, podman will not work
 .PHONY: integration
-integration: kind-setup deploy-vault deploy-ingress vault manifests generate fmt vet envtest ## Run tests.
+integration: kind-setup deploy-vault deploy-ingress deploy-postgresql vault manifests generate fmt vet envtest ## Run tests.
 	export VAULT_TOKEN=$$($(KUBECTL) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
 	export VAULT_ADDR="http://localhost:$(VAULT_HOST_PORT)" ;\
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration
@@ -170,6 +170,15 @@ kind-setup: kind
 	  echo "Creating Kind cluster '$(KIND_CLUSTER_NAME)'..."; \
 	  $(KIND) create cluster --name $(KIND_CLUSTER_NAME) --image docker.io/kindest/node:$(KUBECTL_VERSION) --config=./integration/cluster-kind.yaml; \
 	fi
+
+.PHONY: deploy-postgresql
+deploy-postgresql: kubectl helm
+	$(HELM) repo add bitnami https://charts.bitnami.com/bitnami || true
+	$(HELM) upgrade -i postgresql bitnami/postgresql \
+		-n test-vault-config-operator --create-namespace --atomic \
+		-f ./integration/postgresql-values.yaml
+	$(KUBECTL) wait --for=condition=ready pod -l app.kubernetes.io/instance=postgresql \
+		-n test-vault-config-operator --timeout=$(KUBECTL_WAIT_TIMEOUT)
 
 .PHONY: ldap-setup
 ldap-setup: kind-setup vault
