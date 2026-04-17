@@ -36,6 +36,7 @@
 
 generated: 2026-04-11
 last_updated: 2026-04-17
+# Epic 2 retrospective completed 2026-04-17
 # Story 2.4 review 2026-04-17
 # Story 2.3 done 2026-04-17
 # Story 2.2 done 2026-04-16
@@ -76,7 +77,7 @@ development_status:
   2-2-add-update-scenarios-to-randomsecret-integration-tests: done
   2-3-add-update-scenarios-to-entity-and-entityalias-integration-tests: done
   2-4-add-update-scenarios-to-pki-and-databasesecretenginestaticrole-integration-tests: done
-  epic-2-retrospective: optional
+  epic-2-retrospective: done
 
   # Epic 3: Foundation Type Integration Tests
   epic-3: backlog
