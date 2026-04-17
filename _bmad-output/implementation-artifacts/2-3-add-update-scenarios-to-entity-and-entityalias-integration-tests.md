@@ -1,6 +1,6 @@
 # Story 2.3: Add Update Scenarios to Entity and EntityAlias Integration Tests
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -16,35 +16,56 @@ So that identity update paths are validated.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add update scenario to Entity integration test (AC: 1)
-  - [ ] 1.1: In `controllers/entity_controller_test.go`, add a new `Context("When updating an Entity")` block inside the existing `Describe("Entity controller")`
-  - [ ] 1.2: Create the Entity from `../test/identity/01-entity-sample.yaml`, set namespace to `vaultAdminNamespaceName`, wait for `ReconcileSuccessful=True`
-  - [ ] 1.3: Read the Entity from Vault via `vaultClient.Logical().Read("identity/entity/name/test-entity")` and verify the initial state: `metadata` contains `{"team":"engineering","environment":"test"}`, `policies` contains `["default"]`, `disabled` is `false`
-  - [ ] 1.4: Record the initial `ObservedGeneration` from the `ReconcileSuccessful` condition
-  - [ ] 1.5: `Get()` the latest Entity from the API (fresh ResourceVersion), update `Spec.Policies` to `["default", "kv-reader"]` and add a new metadata key `Spec.Metadata["owner"] = "integration-test"`, then call `k8sIntegrationClient.Update(ctx, instance)`
-  - [ ] 1.6: Use `Eventually` (timeout 120s, interval 2s) to poll Vault at `identity/entity/name/test-entity` until the `policies` field contains both `default` and `kv-reader`
-  - [ ] 1.7: Verify the Vault entity also has `metadata["owner"] == "integration-test"` and the original metadata keys are preserved
-  - [ ] 1.8: Verify the `ReconcileSuccessful` condition's `ObservedGeneration` is greater than the initial value
+- [x] Task 1: Add update scenario to Entity integration test (AC: 1)
+  - [x] 1.1: In `controllers/entity_controller_test.go`, add a new `Context("When updating an Entity")` block inside the existing `Describe("Entity controller")`
+  - [x] 1.2: Create the Entity from `../test/identity/01-entity-sample.yaml`, set namespace to `vaultAdminNamespaceName`, wait for `ReconcileSuccessful=True`
+  - [x] 1.3: Read the Entity from Vault via `vaultClient.Logical().Read("identity/entity/name/test-entity")` and verify the initial state: `metadata` contains `{"team":"engineering","environment":"test"}`, `policies` contains `["default"]`, `disabled` is `false`
+  - [x] 1.4: Record the initial `ObservedGeneration` from the `ReconcileSuccessful` condition
+  - [x] 1.5: `Get()` the latest Entity from the API (fresh ResourceVersion), update `Spec.Policies` to `["default", "kv-reader"]` and add a new metadata key `Spec.Metadata["owner"] = "integration-test"`, then call `k8sIntegrationClient.Update(ctx, instance)`
+  - [x] 1.6: Use `Eventually` (timeout 120s, interval 2s) to poll Vault at `identity/entity/name/test-entity` until the `policies` field contains both `default` and `kv-reader`
+  - [x] 1.7: Verify the Vault entity also has `metadata["owner"] == "integration-test"` and the original metadata keys are preserved
+  - [x] 1.8: Verify the `ReconcileSuccessful` condition's `ObservedGeneration` is greater than the initial value
 
-- [ ] Task 2: Verify Entity cleanup (AC: 1)
-  - [ ] 2.1: Delete the Entity, wait for the object to be removed from K8s
-  - [ ] 2.2: Verify the entity is deleted from Vault by reading `identity/entity/name/test-entity` and confirming 404
+- [x] Task 2: Verify Entity cleanup (AC: 1)
+  - [x] 2.1: Delete the Entity, wait for the object to be removed from K8s
+  - [x] 2.2: Verify the entity is deleted from Vault by reading `identity/entity/name/test-entity` and confirming 404
 
-- [ ] Task 3: Add update scenario to EntityAlias integration test (AC: 2)
-  - [ ] 3.1: In `controllers/entityalias_controller_test.go`, add a new `Context("When updating an EntityAlias")` block inside the existing `Describe("EntityAlias controller")`
-  - [ ] 3.2: Create the Entity from `../test/identity/01-entity-sample.yaml`, wait for `ReconcileSuccessful=True` (EntityAlias depends on Entity)
-  - [ ] 3.3: Create the EntityAlias from `../test/identity/02-entityalias-sample.yaml`, wait for `ReconcileSuccessful=True`
-  - [ ] 3.4: Verify `Status.ID` is not empty
-  - [ ] 3.5: Read the EntityAlias from Vault via `vaultClient.Logical().Read("identity/entity-alias/id/" + created.Status.ID)` and verify the initial `custom_metadata` contains `{"contact":"admin@example.com"}`
-  - [ ] 3.6: Record the initial `ObservedGeneration` from the `ReconcileSuccessful` condition
-  - [ ] 3.7: `Get()` the latest EntityAlias from the API, update `Spec.CustomMetadata` to `{"contact":"admin@example.com", "purpose":"integration-test"}`, call `k8sIntegrationClient.Update(ctx, instance)`
-  - [ ] 3.8: Use `Eventually` (timeout 120s, interval 2s) to poll Vault at `identity/entity-alias/id/{Status.ID}` until `custom_metadata["purpose"]` equals `"integration-test"`
-  - [ ] 3.9: Verify the `ReconcileSuccessful` condition's `ObservedGeneration` is greater than the initial value
+- [x] Task 3: Add update scenario to EntityAlias integration test (AC: 2)
+  - [x] 3.1: In `controllers/entityalias_controller_test.go`, add a new `Context("When updating an EntityAlias")` block inside the existing `Describe("EntityAlias controller")`
+  - [x] 3.2: Create the Entity from `../test/identity/01-entity-sample.yaml`, wait for `ReconcileSuccessful=True` (EntityAlias depends on Entity)
+  - [x] 3.3: Create the EntityAlias from `../test/identity/02-entityalias-sample.yaml`, wait for `ReconcileSuccessful=True`
+  - [x] 3.4: Verify `Status.ID` is not empty
+  - [x] 3.5: Read the EntityAlias from Vault via `vaultClient.Logical().Read("identity/entity-alias/id/" + created.Status.ID)` and verify the initial `custom_metadata` contains `{"contact":"admin@example.com"}`
+  - [x] 3.6: Record the initial `ObservedGeneration` from the `ReconcileSuccessful` condition
+  - [x] 3.7: `Get()` the latest EntityAlias from the API, update `Spec.CustomMetadata` to `{"contact":"admin@example.com", "purpose":"integration-test"}`, call `k8sIntegrationClient.Update(ctx, instance)`
+  - [x] 3.8: Use `Eventually` (timeout 120s, interval 2s) to poll Vault at `identity/entity-alias/id/{Status.ID}` until `custom_metadata["purpose"]` equals `"integration-test"`
+  - [x] 3.9: Verify the `ReconcileSuccessful` condition's `ObservedGeneration` is greater than the initial value
 
-- [ ] Task 4: Verify EntityAlias and Entity cleanup (AC: 2)
-  - [ ] 4.1: Delete the EntityAlias first, wait for removal from K8s
-  - [ ] 4.2: Delete the Entity, wait for removal from K8s
-  - [ ] 4.3: Verify both are cleaned up from Vault (EntityAlias by ID, Entity by name)
+- [x] Task 4: Verify EntityAlias and Entity cleanup (AC: 2)
+  - [x] 4.1: Delete the EntityAlias first, wait for removal from K8s
+  - [x] 4.2: Delete the Entity, wait for removal from K8s
+  - [x] 4.3: Verify both are cleaned up from Vault (EntityAlias by ID, Entity by name)
+
+### Senior Developer Review (AI)
+
+**Review Date:** 2026-04-17
+**Outcome:** Changes Requested
+**Action Items:** 5 patch, 7 defer, 2 dismissed
+
+### Review Follow-ups (AI)
+
+- [x] [Review][Patch] Bare type assertions on Vault map/slice fields will panic — use comma-ok pattern [entity_controller_test.go, entityalias_controller_test.go]
+- [x] [Review][Patch] Policy poll only requires `kv-reader`, not full `{default, kv-reader}` set — violates Task 1.6 [entity_controller_test.go]
+- [x] [Review][Patch] No assertion that `contact` key is preserved in `custom_metadata` after EntityAlias update — violates Task 3.7 [entityalias_controller_test.go]
+- [x] [Review][Patch] K8s delete `Eventually` uses `err != nil` instead of `apierrors.IsNotFound` [entity_controller_test.go, entityalias_controller_test.go]
+- [x] [Review][Patch] ObservedGeneration recording loop overwrites on multiple matching conditions — use break [entity_controller_test.go, entityalias_controller_test.go]
+- [x] [Review][Defer] ObservedGeneration weak — doesn't assert equals current `metadata.generation` (beyond spec) — deferred, pre-existing
+- [x] [Review][Defer] Redundant `Get` call before update (reads twice in sequence) — deferred, pre-existing
+- [x] [Review][Defer] Post-update `disabled` field not re-verified in Vault after update — deferred, beyond spec
+- [x] [Review][Defer] Vault path `identity/entity/name/test-entity` hardcoded rather than derived from CR — deferred, pre-existing pattern
+- [x] [Review][Defer] Duplicated `wait for ReconcileSuccessful` blocks — deferred, pre-existing pattern
+- [x] [Review][Defer] No conflict/retry on `Update` — deferred, pre-existing pattern in codebase
+- [x] [Review][Defer] EntityAlias Vault deletion verified after K8s deletes; timing dependency undocumented — deferred, low risk
 
 ## Dev Notes
 
@@ -350,12 +371,28 @@ Commit `910acbd` resolved GroupAlias debug prints and KubernetesSecretEngineRole
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-sonnet-4-5
 
 ### Debug Log References
 
+None required — implementation followed established update test pattern from Stories 2.1/2.2 without issues.
+
 ### Completion Notes List
+
+- ✅ Added `Context("When updating an Entity")` to `entity_controller_test.go` — creates entity, verifies initial Vault state (metadata, policies, disabled), records ObservedGeneration, gets-before-update, updates Spec.Policies to add "kv-reader" and adds "owner" to Spec.Metadata, polls Vault until "kv-reader" appears, verifies all metadata preserved, verifies ObservedGeneration increased, deletes entity, verifies K8s removal and Vault 404.
+- ✅ Added `Context("When updating an EntityAlias")` to `entityalias_controller_test.go` — creates entity + alias (respecting dependency ordering), verifies Status.ID, verifies initial custom_metadata, records ObservedGeneration, gets-before-update, updates CustomMetadata to add "purpose" key, polls Vault until "purpose"=="integration-test" visible, verifies ObservedGeneration increased, deletes alias then entity (dependency order), verifies both deleted from Vault.
+- ✅ All integration tests pass (exit code 0, 304s runtime for controllers package).
+- ✅ No new imports needed — `vaultClient` is a package-level var in `suite_integration_test.go`, accessible to all controller tests.
+- ✅ No new fixtures needed — reused `test/identity/01-entity-sample.yaml` and `test/identity/02-entityalias-sample.yaml`.
 
 ### Change Log
 
+- 2026-04-17: Added Entity update scenario integration test with Vault state verification (Story 2.3, AC#1)
+- 2026-04-17: Added EntityAlias update scenario integration test with custom_metadata verification (Story 2.3, AC#2)
+
 ### File List
+
+- controllers/entity_controller_test.go
+- controllers/entityalias_controller_test.go
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+- _bmad-output/implementation-artifacts/2-3-add-update-scenarios-to-entity-and-entityalias-integration-tests.md
