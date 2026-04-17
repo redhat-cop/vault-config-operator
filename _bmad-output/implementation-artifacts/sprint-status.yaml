@@ -36,6 +36,8 @@
 
 generated: 2026-04-11
 last_updated: 2026-04-16
+# Story 2.2 done 2026-04-16
+# Story 2.2 review 2026-04-16
 # Story 2.1 done 2026-04-16
 # Story 2.0 done 2026-04-16
 # Story 2.4 ready-for-dev 2026-04-16
@@ -69,7 +71,7 @@ development_status:
   epic-2: in-progress
   2-0-stabilize-integration-test-infrastructure: done
   2-1-add-update-scenarios-to-vaultsecret-integration-tests: done
-  2-2-add-update-scenarios-to-randomsecret-integration-tests: ready-for-dev
+  2-2-add-update-scenarios-to-randomsecret-integration-tests: done
   2-3-add-update-scenarios-to-entity-and-entityalias-integration-tests: ready-for-dev
   2-4-add-update-scenarios-to-pki-and-databasesecretenginestaticrole-integration-tests: ready-for-dev
   epic-2-retrospective: optional

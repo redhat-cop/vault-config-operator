@@ -1,6 +1,6 @@
 # Story 2.2: Add Update Scenarios to RandomSecret Integration Tests
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -16,21 +16,21 @@ So that the RandomSecret update path is validated.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create a test fixture for a RandomSecret with `refreshPeriod` (AC: 1, 2)
-  - [ ] 1.1: Create `test/randomsecret/v2/11-randomsecret-refresh-v2.yaml` — a RandomSecret with `refreshPeriod: 15s`, `secretKey: password`, `passwordPolicyName: simple-password-policy-v2`, `isKVSecretsEngineV2: true`, using the `secret-writer-v2` role at path `test-vault-config-operator/kv-v2/data`
-  - [ ] 1.2: Verify the fixture passes webhook validation by checking the YAML is well-formed and meets the `validateEitherPasswordPolicyReferenceOrInline` constraint
+- [x] Task 1: Create a test fixture for a RandomSecret with `refreshPeriod` (AC: 1, 2)
+  - [x] 1.1: Create `test/randomsecret/v2/11-randomsecret-refresh-v2.yaml` — a RandomSecret with `refreshPeriod: 15s`, `secretKey: password`, `passwordPolicyName: simple-password-policy-v2`, `isKVSecretsEngineV2: true`, using the `secret-writer-v2` role at path `test-vault-config-operator/kv-v2/data`
+  - [x] 1.2: Verify the fixture passes webhook validation by checking the YAML is well-formed and meets the `validateEitherPasswordPolicyReferenceOrInline` constraint
 
-- [ ] Task 2: Add update scenario Context to the RandomSecret integration test (AC: 1, 2)
-  - [ ] 2.1: In `controllers/randomsecret_controller_test.go`, add a new `Context("When updating a RandomSecret with refreshPeriod")` block inside the existing `Describe("Random Secret controller for v2 secrets")`
-  - [ ] 2.2: Create the full dependency chain (PasswordPolicy, Policies, KubernetesAuthEngineRoles, SecretEngineMount) — reuse the same fixture paths as the existing "retain" Context
-  - [ ] 2.3: Create the RandomSecret from the new fixture (`11-randomsecret-refresh-v2.yaml`), wait for `ReconcileSuccessful=True`
-  - [ ] 2.4: Read the Vault secret via `vaultClient.Logical().Read()` at the RandomSecret's path, extract the `password` value from the `data` sub-map (KV v2 returns `{"data": {"password": "..."}}`), and record it as `initialPassword`
-  - [ ] 2.5: Verify `initialPassword` matches the `simple-password-policy-v2` pattern (20-char lowercase: `regexp.MustCompile("^[a-z]{20}$")`)
-  - [ ] 2.6: Record the initial `ObservedGeneration` from the `ReconcileSuccessful` condition
+- [x] Task 2: Add update scenario Context to the RandomSecret integration test (AC: 1, 2)
+  - [x] 2.1: In `controllers/randomsecret_controller_test.go`, add a new `Context("When updating a RandomSecret with refreshPeriod")` block inside the existing `Describe("Random Secret controller for v2 secrets")`
+  - [x] 2.2: Create the full dependency chain (PasswordPolicy, Policies, KubernetesAuthEngineRoles, SecretEngineMount) — reuse the same fixture paths as the existing "retain" Context
+  - [x] 2.3: Create the RandomSecret from the new fixture (`11-randomsecret-refresh-v2.yaml`), wait for `ReconcileSuccessful=True`
+  - [x] 2.4: Read the Vault secret via `vaultClient.Logical().Read()` at the RandomSecret's path, extract the `password` value from the `data` sub-map (KV v2 returns `{"data": {"password": "..."}}`), and record it as `initialPassword`
+  - [x] 2.5: Verify `initialPassword` matches the `simple-password-policy-v2` pattern (20-char lowercase: `regexp.MustCompile("^[a-z]{20}$")`)
+  - [x] 2.6: Record the initial `ObservedGeneration` from the `ReconcileSuccessful` condition
 
-- [ ] Task 3: Perform the spec update and verify Vault reflects the change (AC: 1)
-  - [ ] 3.1: `Get()` the latest RandomSecret from the API (required for fresh ResourceVersion)
-  - [ ] 3.2: Update the spec: clear `Spec.SecretFormat.PasswordPolicyName` and set `Spec.SecretFormat.InlinePasswordPolicy` to a distinguishable policy (10-char uppercase):
+- [x] Task 3: Perform the spec update and verify Vault reflects the change (AC: 1)
+  - [x] 3.1: `Get()` the latest RandomSecret from the API (required for fresh ResourceVersion)
+  - [x] 3.2: Update the spec: clear `Spec.SecretFormat.PasswordPolicyName` and set `Spec.SecretFormat.InlinePasswordPolicy` to a distinguishable policy (10-char uppercase):
     ```
     length = 10
     rule "charset" {
@@ -38,21 +38,26 @@ So that the RandomSecret update path is validated.
       min-chars = 10
     }
     ```
-  - [ ] 3.3: Call `k8sIntegrationClient.Update(ctx, instance)` — this triggers the `needsCreation` predicate (SecretFormat changed) and bumps generation
-  - [ ] 3.4: Use `Eventually` (timeout 60s, interval 2s) to poll the Vault secret until the `password` key value differs from `initialPassword` — the refreshPeriod (15s) must elapse before the reconciler writes
-  - [ ] 3.5: Verify the new password matches the inline policy pattern (10-char uppercase: `regexp.MustCompile("^[A-Z]{10}$")`)
+  - [x] 3.3: Call `k8sIntegrationClient.Update(ctx, instance)` — this triggers the `needsCreation` predicate (SecretFormat changed) and bumps generation
+  - [x] 3.4: Use `Eventually` (timeout 60s, interval 2s) to poll the Vault secret until the `password` key value differs from `initialPassword` — the refreshPeriod (15s) must elapse before the reconciler writes
+  - [x] 3.5: Verify the new password matches the inline policy pattern (10-char uppercase: `regexp.MustCompile("^[A-Z]{10}$")`)
 
-- [ ] Task 4: Verify ObservedGeneration incremented (AC: 2)
-  - [ ] 4.1: Use `Eventually` to poll the RandomSecret CR until `ReconcileSuccessful` condition's `ObservedGeneration` is greater than the initial value recorded in Task 2.6
-  - [ ] 4.2: Verify the condition `Status` is `metav1.ConditionTrue`
+- [x] Task 4: Verify ObservedGeneration incremented (AC: 2)
+  - [x] 4.1: Use `Eventually` to poll the RandomSecret CR until `ReconcileSuccessful` condition's `ObservedGeneration` is greater than the initial value recorded in Task 2.6
+  - [x] 4.2: Verify the condition `Status` is `metav1.ConditionTrue`
 
-- [ ] Task 5: Clean up all resources (AC: 1, 2)
-  - [ ] 5.1: Delete RandomSecret, verify removal from K8s
-  - [ ] 5.2: Delete SecretEngineMount, verify engine disabled in Vault
-  - [ ] 5.3: Delete KubernetesAuthEngineRoles, verify removed from Vault
-  - [ ] 5.4: Delete Policies, verify removed from Vault
-  - [ ] 5.5: Delete PasswordPolicy, verify removed from Vault
-  - [ ] 5.6: Follow the exact cleanup pattern from the existing "retain" Context (delete in reverse dependency order, poll Vault to confirm deletion)
+- [x] Task 5: Clean up all resources (AC: 1, 2)
+  - [x] 5.1: Delete RandomSecret, verify removal from K8s
+  - [x] 5.2: Delete SecretEngineMount, verify engine disabled in Vault
+  - [x] 5.3: Delete KubernetesAuthEngineRoles, verify removed from Vault
+  - [x] 5.4: Delete Policies, verify removed from Vault
+  - [x] 5.5: Delete PasswordPolicy, verify removed from Vault
+  - [x] 5.6: Follow the exact cleanup pattern from the existing "retain" Context (delete in reverse dependency order, poll Vault to confirm deletion)
+
+### Review Findings
+
+- [x] [Review][Patch] Prove the update is refresh-gated rather than merely eventual [controllers/randomsecret_controller_test.go:1178]
+- [x] [Review][Patch] Assert `ReconcileSuccessful.ObservedGeneration` matches the current object generation, not just a larger value [controllers/randomsecret_controller_test.go:1212]
 
 ## Dev Notes
 
@@ -266,12 +271,29 @@ Commit `910acbd` resolved GroupAlias debug prints and KubernetesSecretEngineRole
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (Cursor)
 
 ### Debug Log References
 
+- Initial run: inline password policy failed with `Unsupported file format; Cannot read from password: unrecognized file format suffix ""` — `hclsimple.Decode` uses the filename parameter for format detection, and `d.Spec.SecretKey` ("password") has no `.hcl` extension.
+- Fix: Changed `hclsimple.Decode` first argument from `d.Spec.SecretKey` to `"policy.hcl"` in `randomsecret_types.go:228`. This is a bug fix — the filename is only used for format detection, not file I/O.
+- After fix: all 14 integration tests pass (287s).
+
 ### Completion Notes List
+
+- Created YAML fixture `test/randomsecret/v2/11-randomsecret-refresh-v2.yaml` with `refreshPeriod: 15s`
+- Added third Context block "When updating a RandomSecret with refreshPeriod" to the RandomSecret integration test
+- Test creates full dependency chain, creates RandomSecret, reads initial password, updates SecretFormat from PasswordPolicyName to InlinePasswordPolicy, waits for refresh cycle, verifies new password format, verifies ObservedGeneration incremented, and cleans up all resources
+- Fixed pre-existing bug in `GenerateNewPassword` where `hclsimple.Decode` was passed `d.Spec.SecretKey` as filename (no extension), causing inline password policy parsing to fail
+- AC 1 verified: after updating SecretFormat and waiting for refresh, Vault secret reflects the new 10-char uppercase format
+- AC 2 verified: ObservedGeneration on ReconcileSuccessful condition increments after the update
 
 ### Change Log
 
+- 2026-04-16: Implemented Story 2.2 — added RandomSecret update scenario integration test and fixed inline password policy parsing bug
+
 ### File List
+
+- `test/randomsecret/v2/11-randomsecret-refresh-v2.yaml` (new) — RandomSecret fixture with refreshPeriod
+- `controllers/randomsecret_controller_test.go` (modified) — Added "When updating a RandomSecret with refreshPeriod" Context
+- `api/v1alpha1/randomsecret_types.go` (modified) — Fixed hclsimple.Decode filename parameter for inline policy parsing

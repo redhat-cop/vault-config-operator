@@ -225,7 +225,7 @@ type PasswordPolicyRule struct {
 func (d *RandomSecret) GenerateNewPassword(context context.Context) error {
 	if d.Spec.SecretFormat.InlinePasswordPolicy != "" {
 		policy := &PasswordPolicyFormat{}
-		err := hclsimple.Decode(d.Spec.SecretKey, []byte(d.Spec.SecretFormat.InlinePasswordPolicy), nil, policy)
+		err := hclsimple.Decode("policy.hcl", []byte(d.Spec.SecretFormat.InlinePasswordPolicy), nil, policy)
 		if err != nil {
 			return err
 		}
