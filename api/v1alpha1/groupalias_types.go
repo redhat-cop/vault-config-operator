@@ -19,7 +19,6 @@ package v1alpha1
 import (
 	"context"
 	"errors"
-	"fmt"
 	"reflect"
 
 	vault "github.com/hashicorp/vault/api"
@@ -223,7 +222,5 @@ func (d *GroupAlias) IsEquivalentToDesiredState(payload map[string]interface{}) 
 	delete(payload, "metadata")
 	delete(payload, "mount_path")
 	delete(payload, "mount_type")
-	fmt.Print("desired state", desiredState)
-	fmt.Print("actual state", payload)
 	return reflect.DeepEqual(desiredState, payload)
 }

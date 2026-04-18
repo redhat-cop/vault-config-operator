@@ -35,7 +35,20 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-04-14
+last_updated: 2026-04-17
+# Epic 2 retrospective completed 2026-04-17
+# Story 2.4 review 2026-04-17
+# Story 2.3 done 2026-04-17
+# Story 2.2 done 2026-04-16
+# Story 2.2 review 2026-04-16
+# Story 2.1 done 2026-04-16
+# Story 2.0 done 2026-04-16
+# Story 2.4 ready-for-dev 2026-04-16
+# Story 2.3 ready-for-dev 2026-04-15
+# Story 2.2 ready-for-dev 2026-04-15
+# Story 2.1 ready-for-dev 2026-04-15
+# Story 2.0 ready-for-dev 2026-04-15
+# Epic 1 retrospective completed 2026-04-15
 # Story 2.0 added 2026-04-14
 # Story 1.4 started 2026-04-13
 # Phase 1.5 doc epics added 2026-04-12
@@ -55,16 +68,16 @@ development_status:
   1-4-unit-tests-tomap-and-isequivalenttodesiredstate-auth-engine-config-types: done
   1-5-unit-tests-tomap-and-isequivalenttodesiredstate-secret-engine-config-role-types: done
   1-6-unit-tests-tomap-and-isequivalenttodesiredstate-remaining-types: done
-  epic-1-retrospective: optional
+  epic-1-retrospective: done
 
   # Epic 2: Integration Test Update Scenarios
-  epic-2: backlog
-  2-0-stabilize-integration-test-infrastructure: backlog
-  2-1-add-update-scenarios-to-vaultsecret-integration-tests: backlog
-  2-2-add-update-scenarios-to-randomsecret-integration-tests: backlog
-  2-3-add-update-scenarios-to-entity-and-entityalias-integration-tests: backlog
-  2-4-add-update-scenarios-to-pki-and-databasesecretenginestaticrole-integration-tests: backlog
-  epic-2-retrospective: optional
+  epic-2: in-progress
+  2-0-stabilize-integration-test-infrastructure: done
+  2-1-add-update-scenarios-to-vaultsecret-integration-tests: done
+  2-2-add-update-scenarios-to-randomsecret-integration-tests: done
+  2-3-add-update-scenarios-to-entity-and-entityalias-integration-tests: done
+  2-4-add-update-scenarios-to-pki-and-databasesecretenginestaticrole-integration-tests: done
+  epic-2-retrospective: done
 
   # Epic 3: Foundation Type Integration Tests
   epic-3: backlog

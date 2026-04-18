@@ -321,6 +321,194 @@ var _ = Describe("VaultSecret controller", func() {
 				Expect(len(s)).To(Equal(20))
 			}
 
+			By("Recording the initial ObservedGeneration from VaultSecret conditions")
+			vsLookupKey := types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}
+			Expect(k8sIntegrationClient.Get(ctx, vsLookupKey, created)).Should(Succeed())
+			var initialObservedGeneration int64
+			for _, condition := range created.Status.Conditions {
+				if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+					initialObservedGeneration = condition.ObservedGeneration
+					break
+				}
+			}
+			Expect(initialObservedGeneration).Should(BeNumerically(">", 0))
+
+			By("Verifying initial K8s Secret has both keys with expected pattern")
+			initialSecret := &corev1.Secret{}
+			Expect(k8sIntegrationClient.Get(ctx, lookupKey, initialSecret)).Should(Succeed())
+			Expect(initialSecret.Data).Should(HaveLen(2))
+			Expect(initialSecret.Data).Should(HaveKey("password"))
+			Expect(initialSecret.Data).Should(HaveKey("anotherpassword"))
+
+			// --- Update Test A: spec change WITHOUT syncOnResourceChange (time-based sync) ---
+
+			By("Updating VaultSecret spec without syncOnResourceChange (time-based sync)")
+			Eventually(func() error {
+				if err := k8sIntegrationClient.Get(ctx, vsLookupKey, created); err != nil {
+					return err
+				}
+				shortRefresh := metav1.Duration{Duration: time.Second}
+				created.Spec.RefreshPeriod = &shortRefresh
+				created.Spec.TemplatizedK8sSecret.StringData = map[string]string{
+					"password": "{{ .randomsecret.password }}",
+				}
+				return k8sIntegrationClient.Update(ctx, created)
+			}, timeout, interval).Should(Succeed())
+
+			By("Waiting for K8s Secret to have exactly 1 data key via time-based sync")
+			Eventually(func() int {
+				s := &corev1.Secret{}
+				if err := k8sIntegrationClient.Get(ctx, lookupKey, s); err != nil {
+					return -1
+				}
+				return len(s.Data)
+			}, timeout, interval).Should(Equal(1))
+
+			By("Verifying the remaining key is password with expected pattern")
+			updatedSecret := &corev1.Secret{}
+			Expect(k8sIntegrationClient.Get(ctx, lookupKey, updatedSecret)).Should(Succeed())
+			Expect(updatedSecret.Data).Should(HaveKey("password"))
+			Expect(updatedSecret.Data).ShouldNot(HaveKey("anotherpassword"))
+			updatedVal := string(updatedSecret.Data["password"])
+			Expect(isLowerCaseLetter(updatedVal)).To(BeTrue())
+			Expect(len(updatedVal)).To(Equal(20))
+
+			By("Verifying ObservedGeneration incremented after time-based sync")
+			Eventually(func() bool {
+				if err := k8sIntegrationClient.Get(ctx, vsLookupKey, created); err != nil {
+					return false
+				}
+				for _, condition := range created.Status.Conditions {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful &&
+						condition.Status == metav1.ConditionTrue &&
+						condition.ObservedGeneration > initialObservedGeneration {
+						return true
+					}
+				}
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			// --- Update Test B: spec change WITH syncOnResourceChange (immediate sync) ---
+
+			By("Recording ObservedGeneration baseline for syncOnResourceChange test")
+			Expect(k8sIntegrationClient.Get(ctx, vsLookupKey, created)).Should(Succeed())
+			var genAfterTimeSync int64
+			for _, condition := range created.Status.Conditions {
+				if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+					genAfterTimeSync = condition.ObservedGeneration
+					break
+				}
+			}
+
+			By("Updating VaultSecret spec with syncOnResourceChange enabled (immediate sync)")
+			Eventually(func() error {
+				if err := k8sIntegrationClient.Get(ctx, vsLookupKey, created); err != nil {
+					return err
+				}
+				longRefresh := metav1.Duration{Duration: 10 * time.Minute}
+				created.Spec.RefreshPeriod = &longRefresh
+				created.Spec.TemplatizedK8sSecret.StringData = map[string]string{
+					"password":        "{{ .randomsecret.password }}",
+					"anotherpassword": "{{ .anotherrandomsecret.password }}",
+				}
+				created.Spec.SyncOnResourceChange = true
+				return k8sIntegrationClient.Update(ctx, created)
+			}, timeout, interval).Should(Succeed())
+
+			By("Waiting for K8s Secret to have 2 data keys via syncOnResourceChange")
+			Eventually(func() int {
+				s := &corev1.Secret{}
+				if err := k8sIntegrationClient.Get(ctx, lookupKey, s); err != nil {
+					return -1
+				}
+				return len(s.Data)
+			}, timeout, interval).Should(Equal(2))
+
+			By("Verifying both keys are present with expected pattern after syncOnResourceChange update")
+			syncSecret := &corev1.Secret{}
+			Expect(k8sIntegrationClient.Get(ctx, lookupKey, syncSecret)).Should(Succeed())
+			for _, key := range []string{"password", "anotherpassword"} {
+				Expect(syncSecret.Data).Should(HaveKey(key))
+				s := string(syncSecret.Data[key])
+				Expect(isLowerCaseLetter(s)).To(BeTrue())
+				Expect(len(s)).To(Equal(20))
+			}
+
+			By("Verifying ObservedGeneration incremented after syncOnResourceChange update")
+			Eventually(func() bool {
+				if err := k8sIntegrationClient.Get(ctx, vsLookupKey, created); err != nil {
+					return false
+				}
+				for _, condition := range created.Status.Conditions {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful &&
+						condition.Status == metav1.ConditionTrue &&
+						condition.ObservedGeneration > genAfterTimeSync {
+						return true
+					}
+				}
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			// --- Update Test C: output label change ---
+
+			By("Updating VaultSecret output labels to add a new label")
+			Eventually(func() error {
+				if err := k8sIntegrationClient.Get(ctx, vsLookupKey, created); err != nil {
+					return err
+				}
+				if created.Spec.TemplatizedK8sSecret.Labels == nil {
+					created.Spec.TemplatizedK8sSecret.Labels = make(map[string]string)
+				}
+				created.Spec.TemplatizedK8sSecret.Labels["updated"] = "true"
+				return k8sIntegrationClient.Update(ctx, created)
+			}, timeout, interval).Should(Succeed())
+
+			By("Waiting for K8s Secret to reflect the new label")
+			Eventually(func() bool {
+				s := &corev1.Secret{}
+				if err := k8sIntegrationClient.Get(ctx, lookupKey, s); err != nil {
+					return false
+				}
+				v, ok := s.Labels["updated"]
+				return ok && v == "true"
+			}, timeout, interval).Should(BeTrue())
+
+			By("Verifying existing labels are preserved alongside the new one")
+			labelSecret := &corev1.Secret{}
+			Expect(k8sIntegrationClient.Get(ctx, lookupKey, labelSecret)).Should(Succeed())
+			Expect(labelSecret.Labels).Should(HaveKeyWithValue("app", "test-vault-config-operator"))
+			Expect(labelSecret.Labels).Should(HaveKeyWithValue("updated", "true"))
+
+			// --- Update Test D: output annotation change ---
+
+			By("Updating VaultSecret output annotations to add a new annotation")
+			Eventually(func() error {
+				if err := k8sIntegrationClient.Get(ctx, vsLookupKey, created); err != nil {
+					return err
+				}
+				if created.Spec.TemplatizedK8sSecret.Annotations == nil {
+					created.Spec.TemplatizedK8sSecret.Annotations = make(map[string]string)
+				}
+				created.Spec.TemplatizedK8sSecret.Annotations["reviewed"] = "true"
+				return k8sIntegrationClient.Update(ctx, created)
+			}, timeout, interval).Should(Succeed())
+
+			By("Waiting for K8s Secret to reflect the new annotation")
+			Eventually(func() bool {
+				s := &corev1.Secret{}
+				if err := k8sIntegrationClient.Get(ctx, lookupKey, s); err != nil {
+					return false
+				}
+				v, ok := s.Annotations["reviewed"]
+				return ok && v == "true"
+			}, timeout, interval).Should(BeTrue())
+
+			By("Verifying existing annotations are preserved alongside the new one")
+			annSecret := &corev1.Secret{}
+			Expect(k8sIntegrationClient.Get(ctx, lookupKey, annSecret)).Should(Succeed())
+			Expect(annSecret.Annotations).Should(HaveKeyWithValue("refresh", "every-minute"))
+			Expect(annSecret.Annotations).Should(HaveKeyWithValue("reviewed", "true"))
+
 			By("Deleting the VaultSecret")
 
 			Expect(k8sIntegrationClient.Delete(ctx, instance)).Should(Succeed())

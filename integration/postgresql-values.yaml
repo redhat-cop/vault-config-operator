@@ -1,0 +1,9 @@
+fullnameOverride: my-postgresql-database
+auth:
+  postgresPassword: testpassword123
+  database: testdb
+primary:
+  initdb:
+    scripts:
+      init.sql: |
+        CREATE USER helloworld WITH PASSWORD 'helloworld';

@@ -154,6 +154,156 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 		})
 	})
 
+	Context("When updating a PKISecretEngineRole", func() {
+		It("Should update the role in Vault and reflect updated ObservedGeneration", func() {
+
+			By("Verifying initial Vault state for PKISecretEngineRole")
+			initialSecret, err := vaultClient.Logical().Read("test-vault-config-operator/pki/roles/pki-example")
+			Expect(err).To(BeNil())
+			Expect(initialSecret).NotTo(BeNil())
+			initialDomains, ok := initialSecret.Data["allowed_domains"].([]interface{})
+			Expect(ok).To(BeTrue(), "expected allowed_domains to be []interface{}")
+			Expect(initialDomains).To(ContainElement("internal.io"))
+			Expect(initialDomains).To(ContainElement("pki-vault-demo.svc"))
+			Expect(initialDomains).To(ContainElement("example.com"))
+
+			By("Recording initial ObservedGeneration")
+			lookupKey := types.NamespacedName{Name: "pki-example", Namespace: vaultTestNamespaceName}
+			created := &redhatcopv1alpha1.PKISecretEngineRole{}
+			Expect(k8sIntegrationClient.Get(ctx, lookupKey, created)).Should(Succeed())
+			var initialObservedGeneration int64
+			for _, condition := range created.Status.Conditions {
+				if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+					initialObservedGeneration = condition.ObservedGeneration
+					break
+				}
+			}
+			Expect(initialObservedGeneration).To(BeNumerically(">", 0))
+
+			By("Getting the latest PKISecretEngineRole before update")
+			Expect(k8sIntegrationClient.Get(ctx, lookupKey, created)).Should(Succeed())
+
+			By("Updating the PKISecretEngineRole spec")
+			created.Spec.AllowedDomains = append(created.Spec.AllowedDomains, "test.io")
+			created.Spec.MaxTTL = metav1.Duration{Duration: 4380 * time.Hour}
+			Expect(k8sIntegrationClient.Update(ctx, created)).Should(Succeed())
+
+			By("Waiting for Vault to reflect the updated allowed_domains")
+			Eventually(func() bool {
+				secret, err := vaultClient.Logical().Read("test-vault-config-operator/pki/roles/pki-example")
+				if err != nil || secret == nil {
+					return false
+				}
+				domains, ok := secret.Data["allowed_domains"].([]interface{})
+				if !ok {
+					return false
+				}
+				for _, d := range domains {
+					if d == "test.io" {
+						return true
+					}
+				}
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			By("Verifying max_ttl reflects the updated value")
+			updatedSecret, err := vaultClient.Logical().Read("test-vault-config-operator/pki/roles/pki-example")
+			Expect(err).To(BeNil())
+			Expect(updatedSecret).NotTo(BeNil())
+			maxTTLRaw := updatedSecret.Data["max_ttl"]
+			maxTTLJson, ok := maxTTLRaw.(json.Number)
+			if ok {
+				maxTTLInt, err := maxTTLJson.Int64()
+				Expect(err).To(BeNil())
+				Expect(maxTTLInt).To(Equal(int64(4380 * 3600)))
+			} else {
+				Expect(fmt.Sprintf("%v", maxTTLRaw)).To(ContainSubstring("4380"))
+			}
+
+			By("Verifying ObservedGeneration increased")
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, lookupKey, created)
+				if err != nil {
+					return false
+				}
+				for _, condition := range created.Status.Conditions {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+						return condition.ObservedGeneration > initialObservedGeneration
+					}
+				}
+				return false
+			}, timeout, interval).Should(BeTrue())
+		})
+	})
+
+	Context("When updating a PKISecretEngineConfig CRL config", func() {
+		It("Should update the CRL config in Vault and reflect updated ObservedGeneration", func() {
+
+			By("Reading initial CRL config from Vault")
+			initialCRL, err := vaultClient.Logical().Read("test-vault-config-operator/pki/config/crl")
+			Expect(err).To(BeNil())
+			Expect(initialCRL).NotTo(BeNil())
+			initialDisable := initialCRL.Data["disable"]
+
+			By("Recording initial ObservedGeneration for PKISecretEngineConfig")
+			configLookupKey := types.NamespacedName{Name: "pki", Namespace: vaultTestNamespaceName}
+			configInstance := &redhatcopv1alpha1.PKISecretEngineConfig{}
+			Expect(k8sIntegrationClient.Get(ctx, configLookupKey, configInstance)).Should(Succeed())
+			var initialObservedGeneration int64
+			for _, condition := range configInstance.Status.Conditions {
+				if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+					initialObservedGeneration = condition.ObservedGeneration
+					break
+				}
+			}
+			Expect(initialObservedGeneration).To(BeNumerically(">", 0))
+
+			By("Getting the latest PKISecretEngineConfig before update")
+			Expect(k8sIntegrationClient.Get(ctx, configLookupKey, configInstance)).Should(Succeed())
+
+			By("Updating the PKISecretEngineConfig CRL fields")
+			configInstance.Spec.CRLExpiry.Duration = 48 * time.Hour
+			configInstance.Spec.CRLDisable = true
+			Expect(k8sIntegrationClient.Update(ctx, configInstance)).Should(Succeed())
+
+			By("Waiting for Vault CRL config to reflect the disable=true change")
+			Eventually(func() bool {
+				secret, err := vaultClient.Logical().Read("test-vault-config-operator/pki/config/crl")
+				if err != nil || secret == nil {
+					return false
+				}
+				disable, ok := secret.Data["disable"].(bool)
+				if !ok {
+					return false
+				}
+				return disable
+			}, timeout, interval).Should(BeTrue())
+
+			By("Verifying disable changed from initial value")
+			Expect(initialDisable).To(Equal(false))
+
+			By("Verifying CRL expiry reflects the updated value")
+			updatedCRL, err := vaultClient.Logical().Read("test-vault-config-operator/pki/config/crl")
+			Expect(err).To(BeNil())
+			Expect(updatedCRL).NotTo(BeNil())
+			Expect(fmt.Sprintf("%v", updatedCRL.Data["expiry"])).To(ContainSubstring("48h"))
+
+			By("Verifying ObservedGeneration increased")
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, configLookupKey, configInstance)
+				if err != nil {
+					return false
+				}
+				for _, condition := range configInstance.Status.Conditions {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+						return condition.ObservedGeneration > initialObservedGeneration
+					}
+				}
+				return false
+			}, timeout, interval).Should(BeTrue())
+		})
+	})
+
 	Context("When deleting a PKISecretEngineRole", func() {
 		It("It should be deleted from Vault", func() {
 

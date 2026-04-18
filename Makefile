@@ -4,8 +4,10 @@ HELM_REPO_DEST ?= /tmp/gh-pages
 OPERATOR_NAME ?=$(shell basename -z `pwd`)
 HELM_VERSION ?= v3.11.0
 KIND_VERSION ?= v0.27.0
+KIND_CLUSTER_NAME ?= kind
 KUBECTL_VERSION ?= v1.29.0
 KUSTOMIZE_VERSION ?= v5.4.3
+VAULT_HOST_PORT ?= 8200
 # Note changes to the vault version should also match image tags within the integration/vault-values.yaml and config/local-development/vault-values.yaml files
 VAULT_VERSION ?= 1.19.0
 # The vault version should also match the appVersion in the vault helm chart
@@ -130,15 +132,15 @@ test: manifests generate fmt vet envtest ## Run tests.
 
 # note: envtest requires docker, podman will not work
 .PHONY: integration
-integration: kind-setup deploy-vault deploy-ingress vault manifests generate fmt vet envtest ## Run tests.
+integration: kind-setup deploy-vault deploy-ingress deploy-postgresql vault manifests generate fmt vet envtest ## Run tests.
 	export VAULT_TOKEN=$$($(KUBECTL) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
-	export VAULT_ADDR="http://localhost:8200" ;\
+	export VAULT_ADDR="http://localhost:$(VAULT_HOST_PORT)" ;\
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration
 
 .PHONY: deploy-ingress
 deploy-ingress: kubectl helm
 	$(HELM) upgrade -i ingress-nginx ./integration/helm/ingress-nginx -n vault --atomic --create-namespace
-	curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml | $(KUBECTL) create -f - -n ingress-nginx
+	$(KUBECTL) apply -f ./integration/manifests/ingress-nginx-kind-deploy.yaml
 	$(KUBECTL) rollout status deployment ingress-nginx-controller -n ingress-nginx -w
 	$(KUBECTL) wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=${KUBECTL_WAIT_TIMEOUT}
 
@@ -153,8 +155,30 @@ deploy-vault: kubectl helm
 
 .PHONY: kind-setup
 kind-setup: kind
-	$(KIND) delete cluster
-	$(KIND) create cluster --image docker.io/kindest/node:$(KUBECTL_VERSION) --config=./integration/cluster-kind.yaml
+	@sed 's/VAULT_HOST_PORT_PLACEHOLDER/$(VAULT_HOST_PORT)/' ./integration/cluster-kind.yaml.tpl > ./integration/cluster-kind.yaml
+	@if $(KIND) get clusters 2>/dev/null | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
+	  CURRENT_IMAGE=$$(docker inspect $(KIND_CLUSTER_NAME)-control-plane --format='{{.Config.Image}}' 2>/dev/null || echo ""); \
+	  CURRENT_PORT=$$(docker inspect $(KIND_CLUSTER_NAME)-control-plane --format='{{(index (index .HostConfig.PortBindings "80/tcp") 0).HostPort}}' 2>/dev/null || echo ""); \
+	  if [ "$$CURRENT_IMAGE" = "docker.io/kindest/node:$(KUBECTL_VERSION)" ] && [ "$$CURRENT_PORT" = "$(VAULT_HOST_PORT)" ]; then \
+	    echo "Kind cluster '$(KIND_CLUSTER_NAME)' already exists with correct image and port, skipping recreation"; \
+	  else \
+	    echo "Kind cluster '$(KIND_CLUSTER_NAME)' exists but config mismatch (image=$$CURRENT_IMAGE, port=$$CURRENT_PORT), recreating..."; \
+	    $(KIND) delete cluster --name $(KIND_CLUSTER_NAME); \
+	    $(KIND) create cluster --name $(KIND_CLUSTER_NAME) --image docker.io/kindest/node:$(KUBECTL_VERSION) --config=./integration/cluster-kind.yaml; \
+	  fi \
+	else \
+	  echo "Creating Kind cluster '$(KIND_CLUSTER_NAME)'..."; \
+	  $(KIND) create cluster --name $(KIND_CLUSTER_NAME) --image docker.io/kindest/node:$(KUBECTL_VERSION) --config=./integration/cluster-kind.yaml; \
+	fi
+
+.PHONY: deploy-postgresql
+deploy-postgresql: kubectl helm
+	$(HELM) repo add bitnami https://charts.bitnami.com/bitnami || true
+	$(HELM) upgrade -i postgresql bitnami/postgresql \
+		-n test-vault-config-operator --create-namespace --atomic \
+		-f ./integration/postgresql-values.yaml
+	$(KUBECTL) wait --for=condition=ready pod -l app.kubernetes.io/instance=postgresql \
+		-n test-vault-config-operator --timeout=$(KUBECTL_WAIT_TIMEOUT)
 
 .PHONY: ldap-setup
 ldap-setup: kind-setup vault
