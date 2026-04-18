@@ -45,5 +45,7 @@ resources:
 - redhatcop_v1alpha1_identitytokenconfig.yaml
 - redhatcop_v1alpha1_identitytokenkey.yaml
 - redhatcop_v1alpha1_identitytokenrole.yaml
+- redhatcop_v1alpha1_awssecretenginerole.yaml
+- redhatcop_v1alpha1_awssecretengineconfig.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
 
