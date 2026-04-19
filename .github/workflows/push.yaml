@@ -15,7 +15,7 @@ on:
 
 # Permissions required by nested workflow
 permissions:
-  contents: read
+  contents: write
   id-token: write
   packages: write
   actions: read
