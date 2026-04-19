@@ -1,6 +1,6 @@
 # Story 3.1: Integration Tests for Policy Type
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -18,23 +18,23 @@ So that the most fundamental Vault resource type has end-to-end test coverage.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create test fixtures (AC: 1, 2)
-  - [ ] 1.1: Create `test/policy/simple-policy.yaml` — a minimal Policy CR with a simple HCL policy (no accessor placeholders), using `authentication.role: policy-admin`, no `spec.type` field (legacy `sys/policy/<name>` path)
-  - [ ] 1.2: Create `test/policy/acl-policy-with-accessor.yaml` — a Policy CR with `spec.type: acl` and HCL containing `${auth/kubernetes/@accessor}` placeholders, using `authentication.role: policy-admin` (tests both typed path and `PrepareInternalValues`)
+- [x] Task 1: Create test fixtures (AC: 1, 2)
+  - [x] 1.1: Create `test/policy/simple-policy.yaml` — a minimal Policy CR with a simple HCL policy (no accessor placeholders), using `authentication.role: policy-admin`, no `spec.type` field (legacy `sys/policy/<name>` path)
+  - [x] 1.2: Create `test/policy/acl-policy-with-accessor.yaml` — a Policy CR with `spec.type: acl` and HCL containing `${auth/kubernetes/@accessor}` placeholders, using `authentication.role: policy-admin` (tests both typed path and `PrepareInternalValues`)
 
-- [ ] Task 2: Create integration test file (AC: 1, 2, 3)
-  - [ ] 2.1: Create `controllers/policy_controller_test.go` with `//go:build integration` tag, package `controllers`, standard Ginkgo imports
-  - [ ] 2.2: Add `Describe("Policy controller")` with `timeout := 120s`, `interval := 2s`
-  - [ ] 2.3: Add `Context("When creating a simple Policy")` — loads `simple-policy.yaml` via `decoder.GetPolicyInstance`, sets namespace to `vaultAdminNamespaceName`, creates it, polls for `ReconcileSuccessful=True`
-  - [ ] 2.4: After reconcile success, read the policy from Vault via `vaultClient.Logical().Read("sys/policy/<name>")`, verify `secret != nil` and `secret.Data["rules"]` matches the HCL text from the fixture
-  - [ ] 2.5: Add `Context("When creating a Policy with accessor placeholder")` — loads `acl-policy-with-accessor.yaml`, sets namespace to `vaultAdminNamespaceName`, creates it, polls for `ReconcileSuccessful=True`
-  - [ ] 2.6: After reconcile success, read the policy from Vault via `vaultClient.Logical().Read("sys/policies/acl/<name>")`, verify the policy text does NOT contain `${auth/kubernetes/@accessor}` (placeholder was resolved) and DOES contain an actual accessor string (e.g., `auth_kubernetes_`)
-  - [ ] 2.7: Add `Context("When deleting Policies")` — delete both Policy CRs, use `Eventually` to poll for deletion from K8s (NotFound error), then verify the policies no longer exist in Vault (read returns nil or 404)
-  - [ ] 2.8: Verify the finalizer was cleared by checking the deletion completes (the `Eventually` for NotFound implicitly confirms this — if the finalizer was stuck, the object would remain)
+- [x] Task 2: Create integration test file (AC: 1, 2, 3)
+  - [x] 2.1: Create `controllers/policy_controller_test.go` with `//go:build integration` tag, package `controllers`, standard Ginkgo imports
+  - [x] 2.2: Add `Describe("Policy controller")` with `timeout := 120s`, `interval := 2s`
+  - [x] 2.3: Add `Context("When creating a simple Policy")` — loads `simple-policy.yaml` via `decoder.GetPolicyInstance`, sets namespace to `vaultAdminNamespaceName`, creates it, polls for `ReconcileSuccessful=True`
+  - [x] 2.4: After reconcile success, read the policy from Vault via `vaultClient.Logical().Read("sys/policy/<name>")`, verify `secret != nil` and `secret.Data["rules"]` matches the HCL text from the fixture
+  - [x] 2.5: Add `Context("When creating a Policy with accessor placeholder")` — loads `acl-policy-with-accessor.yaml`, sets namespace to `vaultAdminNamespaceName`, creates it, polls for `ReconcileSuccessful=True`
+  - [x] 2.6: After reconcile success, read the policy from Vault via `vaultClient.Logical().Read("sys/policies/acl/<name>")`, verify the policy text does NOT contain `${auth/kubernetes/@accessor}` (placeholder was resolved) and DOES contain an actual accessor string (e.g., `auth_kubernetes_`)
+  - [x] 2.7: Add `Context("When deleting Policies")` — delete both Policy CRs, use `Eventually` to poll for deletion from K8s (NotFound error), then verify the policies no longer exist in Vault (read returns nil or 404)
+  - [x] 2.8: Verify the finalizer was cleared by checking the deletion completes (the `Eventually` for NotFound implicitly confirms this — if the finalizer was stuck, the object would remain)
 
-- [ ] Task 3: End-to-end verification (AC: 1, 2, 3)
-  - [ ] 3.1: Run `make integration` and verify the new Policy tests pass alongside all existing tests
-  - [ ] 3.2: Verify no regressions in other tests that use Policy as a dependency (VaultSecret, RandomSecret, PKI, Database tests all create Policy CRs)
+- [x] Task 3: End-to-end verification (AC: 1, 2, 3)
+  - [x] 3.1: Run `make integration` and verify the new Policy tests pass alongside all existing tests
+  - [x] 3.2: Verify no regressions in other tests that use Policy as a dependency (VaultSecret, RandomSecret, PKI, Database tests all create Policy CRs)
 
 ## Dev Notes
 
@@ -366,12 +366,30 @@ Codebase is clean post-Epic 2. No pending changes affect this story.
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (Cursor)
 
 ### Debug Log References
 
+None — clean implementation with no failures.
+
 ### Completion Notes List
+
+- Created two test fixtures covering both Policy API paths: legacy `sys/policy/<name>` (no type) and modern `sys/policies/acl/<name>` (type: acl)
+- ACL fixture includes `${auth/kubernetes/@accessor}` placeholder to test `PrepareInternalValues` accessor resolution
+- Integration test verifies all 3 acceptance criteria: create with Vault state verification, accessor placeholder resolution, and delete with Vault cleanup
+- Test structure follows established patterns from Entity test (simplest standalone reference) with Describe/Context/It hierarchy
+- Both Vault API response shapes verified: `rules` key for legacy path, `policy` key for typed ACL path
+- Delete context confirms finalizer cleanup by polling for K8s NotFound, then verifying Vault state is clean
+- All existing integration tests continue to pass with zero regressions
 
 ### Change Log
 
+- 2026-04-18: Implemented Story 3.1 — created test fixtures and integration test for Policy type
+
 ### File List
+
+- `test/policy/simple-policy.yaml` (new) — Simple HCL policy fixture, no accessor, no type
+- `test/policy/acl-policy-with-accessor.yaml` (new) — Typed ACL policy fixture with accessor placeholder
+- `controllers/policy_controller_test.go` (new) — Integration test: create, verify Vault state, delete
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — Story status updates
+- `_bmad-output/implementation-artifacts/3-1-integration-tests-for-policy-type.md` (modified) — Story file updates

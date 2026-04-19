@@ -1,0 +1,13 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Policy
+metadata:
+  name: test-acl-policy
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  type: acl
+  policy: |
+    path "{{identity.entity.aliases.${auth/kubernetes/@accessor}.metadata.service_account_namespace}}/kv/*" {
+      capabilities = ["read", "list"]
+    }
