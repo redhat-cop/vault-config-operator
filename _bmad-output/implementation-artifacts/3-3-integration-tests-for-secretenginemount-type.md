@@ -1,6 +1,6 @@
 # Story 3.3: Integration Tests for SecretEngineMount Type
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -20,27 +20,32 @@ So that the foundation for all secret engine types is verified end-to-end.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create test fixtures (AC: 1, 2, 3)
-  - [ ] 1.1: Create `test/secretenginemount/simple-kv-mount.yaml` — a minimal SecretEngineMount CR with `metadata.name: test-kv-mount`, `type: kv`, `options: {version: "2"}`, using `authentication.role: policy-admin`, no `spec.path` (mounts at `sys/mounts/test-kv-mount`)
-  - [ ] 1.2: Create `test/secretenginemount/tuned-kv-mount.yaml` — a SecretEngineMount CR with `metadata.name: test-tuned-kv-mount`, `type: kv`, `options: {version: "2"}`, `config.maxLeaseTTL: "8760h"`, `config.listingVisibility: "unauth"`, using `authentication.role: policy-admin`, no `spec.path`
-  - [ ] 1.3: Create `test/secretenginemount/named-kv-mount.yaml` — a SecretEngineMount CR with `metadata.name: test-named-sem-metadata`, `spec.name: test-named-kv-mount`, `type: kv`, `options: {version: "2"}`, using `authentication.role: policy-admin`, no `spec.path` (mounts at `sys/mounts/test-named-kv-mount`)
+- [x] Task 1: Create test fixtures (AC: 1, 2, 3)
+  - [x] 1.1: Create `test/secretenginemount/simple-kv-mount.yaml` — a minimal SecretEngineMount CR with `metadata.name: test-kv-mount`, `type: kv`, `options: {version: "2"}`, using `authentication.role: policy-admin`, no `spec.path` (mounts at `sys/mounts/test-kv-mount`)
+  - [x] 1.2: Create `test/secretenginemount/tuned-kv-mount.yaml` — a SecretEngineMount CR with `metadata.name: test-tuned-kv-mount`, `type: kv`, `options: {version: "2"}`, `config.maxLeaseTTL: "8760h"`, `config.listingVisibility: "unauth"`, using `authentication.role: policy-admin`, no `spec.path`
+  - [x] 1.3: Create `test/secretenginemount/named-kv-mount.yaml` — a SecretEngineMount CR with `metadata.name: test-named-sem-metadata`, `spec.name: test-named-kv-mount`, `type: kv`, `options: {version: "2"}`, using `authentication.role: policy-admin`, no `spec.path` (mounts at `sys/mounts/test-named-kv-mount`)
 
-- [ ] Task 2: Create integration test file (AC: 1, 2, 3, 4)
-  - [ ] 2.1: Create `controllers/secretenginemount_controller_test.go` with `//go:build integration` tag, package `controllers`, standard Ginkgo imports
-  - [ ] 2.2: Add `Describe("SecretEngineMount controller")` with `timeout := 120 * time.Second`, `interval := 2 * time.Second`
-  - [ ] 2.3: Add `Context("When creating a simple SecretEngineMount")` — load `simple-kv-mount.yaml` via `decoder.GetSecretEngineMountInstance`, set namespace to `vaultAdminNamespaceName`, create it, poll for `ReconcileSuccessful=True`
-  - [ ] 2.4: After reconcile success, verify the mount exists in Vault by reading `sys/mounts` and checking for the key matching the mount path (key format: `test-kv-mount/`)
-  - [ ] 2.5: Verify `status.accessor` is populated (non-empty string) on the CR after reconcile
-  - [ ] 2.6: Add `Context("When creating a SecretEngineMount with tune config")` — load `tuned-kv-mount.yaml`, set namespace, create, poll for `ReconcileSuccessful=True`
-  - [ ] 2.7: After reconcile success, read the tune config from Vault via `vaultClient.Logical().Read("sys/mounts/test-tuned-kv-mount/tune")`, verify `secret.Data["max_lease_ttl"]` matches the configured value (Vault returns duration as integer seconds: 31536000 for "8760h") and `secret.Data["listing_visibility"]` equals `"unauth"`
-  - [ ] 2.8: Add `Context("When creating a SecretEngineMount with spec.name override")` — load `named-kv-mount.yaml`, set namespace, create, poll for `ReconcileSuccessful=True`
-  - [ ] 2.9: After reconcile success, verify the mount exists at `test-named-kv-mount/` in `sys/mounts` (not `test-named-sem-metadata/`)
-  - [ ] 2.10: Add `Context("When deleting SecretEngineMounts")` — delete all three SecretEngineMount CRs, use `Eventually` to poll for K8s deletion (NotFound error), then verify the mounts no longer exist in `sys/mounts` output
-  - [ ] 2.11: Verify the finalizer was cleared by confirming deletion completes (the `Eventually` for NotFound confirms this)
+- [x] Task 2: Create integration test file (AC: 1, 2, 3, 4)
+  - [x] 2.1: Create `controllers/secretenginemount_controller_test.go` with `//go:build integration` tag, package `controllers`, standard Ginkgo imports
+  - [x] 2.2: Add `Describe("SecretEngineMount controller")` with `timeout := 120 * time.Second`, `interval := 2 * time.Second`
+  - [x] 2.3: Add `Context("When creating a simple SecretEngineMount")` — load `simple-kv-mount.yaml` via `decoder.GetSecretEngineMountInstance`, set namespace to `vaultAdminNamespaceName`, create it, poll for `ReconcileSuccessful=True`
+  - [x] 2.4: After reconcile success, verify the mount exists in Vault by reading `sys/mounts` and checking for the key matching the mount path (key format: `test-kv-mount/`)
+  - [x] 2.5: Verify `status.accessor` is populated (non-empty string) on the CR after reconcile
+  - [x] 2.6: Add `Context("When creating a SecretEngineMount with tune config")` — load `tuned-kv-mount.yaml`, set namespace, create, poll for `ReconcileSuccessful=True`
+  - [x] 2.7: After reconcile success, read the tune config from Vault via `vaultClient.Logical().Read("sys/mounts/test-tuned-kv-mount/tune")`, verify `secret.Data["max_lease_ttl"]` matches the configured value (Vault returns duration as integer seconds: 31536000 for "8760h") and `secret.Data["listing_visibility"]` equals `"unauth"`
+  - [x] 2.8: Add `Context("When creating a SecretEngineMount with spec.name override")` — load `named-kv-mount.yaml`, set namespace, create, poll for `ReconcileSuccessful=True`
+  - [x] 2.9: After reconcile success, verify the mount exists at `test-named-kv-mount/` in `sys/mounts` (not `test-named-sem-metadata/`)
+  - [x] 2.10: Add `Context("When deleting SecretEngineMounts")` — delete all three SecretEngineMount CRs, use `Eventually` to poll for K8s deletion (NotFound error), then verify the mounts no longer exist in `sys/mounts` output
+  - [x] 2.11: Verify the finalizer was cleared by confirming deletion completes (the `Eventually` for NotFound confirms this)
 
-- [ ] Task 3: End-to-end verification (AC: 1, 2, 3, 4)
-  - [ ] 3.1: Run `make integration` and verify the new SecretEngineMount tests pass alongside all existing tests
-  - [ ] 3.2: Verify no regressions in other tests that use SecretEngineMount as a dependency (VaultSecret, RandomSecret, PKI, Database, VaultSecret v2 tests all create SecretEngineMount CRs)
+- [x] Task 3: End-to-end verification (AC: 1, 2, 3, 4)
+  - [x] 3.1: Run `make integration` and verify the new SecretEngineMount tests pass alongside all existing tests
+  - [x] 3.2: Verify no regressions in other tests that use SecretEngineMount as a dependency (VaultSecret, RandomSecret, PKI, Database, VaultSecret v2 tests all create SecretEngineMount CRs)
+
+### Review Findings
+
+- [x] [Review][Patch] Make `max_lease_ttl` assertion resilient to Vault client decoding shape [`controllers/secretenginemount_controller_test.go:120`]
+- [x] [Review][Patch] Verify `status.accessor` matches the Vault mount accessor, not just non-empty [`controllers/secretenginemount_controller_test.go:82`]
 
 ## Dev Notes
 
@@ -500,12 +505,32 @@ Codebase is clean post-Epic 2. No pending changes affect this story.
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (Cursor)
 
 ### Debug Log References
 
+None — clean implementation with no failures.
+
 ### Completion Notes List
+
+- Created three test fixtures covering all SecretEngineMount acceptance criteria: simple KV mount, tuned KV mount with maxLeaseTTL/listingVisibility, and spec.name override mount
+- Integration test verifies all 4 acceptance criteria: engine enable with mount existence in sys/mounts, tune config verification via json.Number type assertion for TTL seconds, spec.name override path routing, and delete with Vault unmount cleanup
+- Accessor verification confirms status.accessor is populated after reconcile — unique to VaultEngineResource types
+- Tune config asserts max_lease_ttl as json.Number (31536000 seconds = 8760h) and listing_visibility as string "unauth"
+- spec.name override test explicitly verifies both presence at spec.name path AND absence at metadata.name path
+- Delete context confirms finalizer cleanup via K8s NotFound poll, then verifies all three mounts are absent from sys/mounts
+- AfterAll cleanup guard ensures resources are cleaned up even if earlier specs fail
+- All existing integration tests continue to pass with zero regressions
 
 ### Change Log
 
+- 2026-04-19: Implemented Story 3.3 — created test fixtures and integration test for SecretEngineMount type
+
 ### File List
+
+- `test/secretenginemount/simple-kv-mount.yaml` (new) — Minimal KV v2 mount fixture, no path, no tune
+- `test/secretenginemount/tuned-kv-mount.yaml` (new) — KV v2 mount with maxLeaseTTL and listingVisibility
+- `test/secretenginemount/named-kv-mount.yaml` (new) — KV v2 mount with spec.name override
+- `controllers/secretenginemount_controller_test.go` (new) — Integration test: create, verify mount + accessor + tune, spec.name, delete
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — Story status updates
+- `_bmad-output/implementation-artifacts/3-3-integration-tests-for-secretenginemount-type.md` (modified) — Story file updates
