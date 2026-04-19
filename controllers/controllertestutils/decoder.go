@@ -202,6 +202,21 @@ func (d *decoder) GetEntityInstance(filename string) (*redhatcopv1alpha1.Entity,
 	return nil, errDecode
 }
 
+func (d *decoder) GetAuthEngineMountInstance(filename string) (*redhatcopv1alpha1.AuthEngineMount, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.AuthEngineMount{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.AuthEngineMount)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
 func (d *decoder) GetEntityAliasInstance(filename string) (*redhatcopv1alpha1.EntityAlias, error) {
 	obj, groupKindVersion, err := d.decodeFile(filename)
 	if err != nil {
