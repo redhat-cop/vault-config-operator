@@ -1,6 +1,6 @@
 # Story 3.2: Integration Tests for PasswordPolicy Type
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -20,25 +20,31 @@ So that the password policy lifecycle is verified end-to-end.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create test fixtures (AC: 1, 3)
-  - [ ] 1.1: Create `test/passwordpolicy/simple-password-policy.yaml` — a PasswordPolicy CR with `metadata.name: test-simple-password-policy`, using `authentication.role: policy-admin`, with HCL generating 20-char lowercase passwords (same policy pattern used across the codebase)
-  - [ ] 1.2: Create `test/passwordpolicy/named-password-policy.yaml` — a PasswordPolicy CR with `metadata.name: test-named-pp-metadata` and `spec.name: test-named-password-policy`, using `authentication.role: policy-admin`, with HCL generating 10-char uppercase+digit passwords (different policy to distinguish from fixture 1)
+- [x] Task 1: Create test fixtures (AC: 1, 3)
+  - [x] 1.1: Create `test/passwordpolicy/simple-password-policy.yaml` — a PasswordPolicy CR with `metadata.name: test-simple-password-policy`, using `authentication.role: policy-admin`, with HCL generating 20-char lowercase passwords (same policy pattern used across the codebase)
+  - [x] 1.2: Create `test/passwordpolicy/named-password-policy.yaml` — a PasswordPolicy CR with `metadata.name: test-named-pp-metadata` and `spec.name: test-named-password-policy`, using `authentication.role: policy-admin`, with HCL generating 10-char uppercase+digit passwords (different policy to distinguish from fixture 1)
 
-- [ ] Task 2: Create integration test file (AC: 1, 2, 3, 4)
-  - [ ] 2.1: Create `controllers/passwordpolicy_controller_test.go` with `//go:build integration` tag, package `controllers`, standard Ginkgo imports
-  - [ ] 2.2: Add `Describe("PasswordPolicy controller")` with `timeout := 120 * time.Second`, `interval := 2 * time.Second`
-  - [ ] 2.3: Add `Context("When creating a simple PasswordPolicy")` — load `simple-password-policy.yaml` via `decoder.GetPasswordPolicyInstance`, set namespace to `vaultAdminNamespaceName`, create it, poll for `ReconcileSuccessful=True`
-  - [ ] 2.4: After reconcile success, read the policy from Vault via `vaultClient.Logical().Read("sys/policies/password/test-simple-password-policy")`, verify `secret != nil` and `secret.Data["policy"]` contains the HCL text (use `ContainSubstring` for the charset rule)
-  - [ ] 2.5: Verify password generation by calling `vaultClient.Logical().Read("sys/policies/password/test-simple-password-policy/generate")`, assert `secret.Data["password"]` matches `^[a-z]{20}$` regex pattern
-  - [ ] 2.6: Add `Context("When creating a PasswordPolicy with spec.name override")` — load `named-password-policy.yaml`, set namespace, create, poll for `ReconcileSuccessful=True`
-  - [ ] 2.7: After reconcile success, read from Vault at `sys/policies/password/test-named-password-policy` (the `spec.name` path, NOT the `metadata.name`), verify `secret != nil` and `secret.Data["policy"]` contains the HCL text
-  - [ ] 2.8: Verify password generation by calling `vaultClient.Logical().Read("sys/policies/password/test-named-password-policy/generate")`, assert the password matches the fixture's policy constraints
-  - [ ] 2.9: Add `Context("When deleting PasswordPolicies")` — delete both PasswordPolicy CRs, use `Eventually` to poll for K8s deletion (NotFound error), then verify Vault read returns nil for both paths
-  - [ ] 2.10: Verify the finalizer was cleared by confirming deletion completes (the `Eventually` for NotFound confirms this — if the finalizer was stuck, the object would remain)
+- [x] Task 2: Create integration test file (AC: 1, 2, 3, 4)
+  - [x] 2.1: Create `controllers/passwordpolicy_controller_test.go` with `//go:build integration` tag, package `controllers`, standard Ginkgo imports
+  - [x] 2.2: Add `Describe("PasswordPolicy controller")` with `timeout := 120 * time.Second`, `interval := 2 * time.Second`
+  - [x] 2.3: Add `Context("When creating a simple PasswordPolicy")` — load `simple-password-policy.yaml` via `decoder.GetPasswordPolicyInstance`, set namespace to `vaultAdminNamespaceName`, create it, poll for `ReconcileSuccessful=True`
+  - [x] 2.4: After reconcile success, read the policy from Vault via `vaultClient.Logical().Read("sys/policies/password/test-simple-password-policy")`, verify `secret != nil` and `secret.Data["policy"]` contains the HCL text (use `ContainSubstring` for the charset rule)
+  - [x] 2.5: Verify password generation by calling `vaultClient.Logical().Read("sys/policies/password/test-simple-password-policy/generate")`, assert `secret.Data["password"]` matches `^[a-z]{20}$` regex pattern
+  - [x] 2.6: Add `Context("When creating a PasswordPolicy with spec.name override")` — load `named-password-policy.yaml`, set namespace, create, poll for `ReconcileSuccessful=True`
+  - [x] 2.7: After reconcile success, read from Vault at `sys/policies/password/test-named-password-policy` (the `spec.name` path, NOT the `metadata.name`), verify `secret != nil` and `secret.Data["policy"]` contains the HCL text
+  - [x] 2.8: Verify password generation by calling `vaultClient.Logical().Read("sys/policies/password/test-named-password-policy/generate")`, assert the password matches the fixture's policy constraints
+  - [x] 2.9: Add `Context("When deleting PasswordPolicies")` — delete both PasswordPolicy CRs, use `Eventually` to poll for K8s deletion (NotFound error), then verify Vault read returns nil for both paths
+  - [x] 2.10: Verify the finalizer was cleared by confirming deletion completes (the `Eventually` for NotFound confirms this — if the finalizer was stuck, the object would remain)
 
-- [ ] Task 3: End-to-end verification (AC: 1, 2, 3, 4)
-  - [ ] 3.1: Run `make integration` and verify the new PasswordPolicy tests pass alongside all existing tests
-  - [ ] 3.2: Verify no regressions in other tests that use PasswordPolicy as a dependency (VaultSecret, RandomSecret, DatabaseSecretEngineStaticRole tests all create PasswordPolicy CRs)
+- [x] Task 3: End-to-end verification (AC: 1, 2, 3, 4)
+  - [x] 3.1: Run `make integration` and verify the new PasswordPolicy tests pass alongside all existing tests
+  - [x] 3.2: Verify no regressions in other tests that use PasswordPolicy as a dependency (VaultSecret, RandomSecret, DatabaseSecretEngineStaticRole tests all create PasswordPolicy CRs)
+
+### Review Findings
+
+- [x] [Review][Patch] Assert the `metadata.name` Vault path is absent for the `spec.name` override case [`controllers/passwordpolicy_controller_test.go:106`]
+- [x] [Review][Patch] Replace unsafe `secret.Data["password"].(string)` assertions with checked type assertions so test failures do not panic [`controllers/passwordpolicy_controller_test.go:74`]
+- [x] [Review][Patch] Guard the delete-phase shared instances before dereferencing them so an earlier setup failure does not cascade into a nil-pointer panic [`controllers/passwordpolicy_controller_test.go:126`]
 
 ## Dev Notes
 
@@ -329,12 +335,30 @@ Codebase is clean post-Epic 2. No pending changes affect this story.
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+No issues encountered. Clean implementation following the established Epic 3 pattern from Story 3.1.
+
 ### Completion Notes List
+
+- Implemented full PasswordPolicy integration test lifecycle: create → verify Vault state → generate password → spec.name override → delete → verify Vault cleanup
+- Two test fixtures created: simple policy (20-char lowercase) and named policy with spec.name override (10-char uppercase+digit)
+- Followed the Ordered Describe pattern from Story 3.1 (Policy tests) with AfterAll cleanup safety net
+- Password generation verification uses regex matching (not exact value) since generate endpoint returns random passwords
+- Both fixtures use `test-` prefix to avoid name collisions with existing PasswordPolicy CRs in other tests
+- All 4 Acceptance Criteria satisfied: create+reconcile, password generation, spec.name override, delete+cleanup
+- Full integration suite passes with zero regressions
+- Addressed code review follow-ups: explicit negative assertion for the `metadata.name` path, checked password response typing, and delete-phase nil guards for ordered test state
 
 ### Change Log
 
+- 2026-04-19: Implemented Story 3.2 — PasswordPolicy integration tests (create, verify, generate, spec.name override, delete)
+- 2026-04-19: Resolved code review findings and revalidated with full integration suite
+
 ### File List
+
+- `test/passwordpolicy/simple-password-policy.yaml` (new) — Simple HCL password policy fixture, 20-char lowercase
+- `test/passwordpolicy/named-password-policy.yaml` (new) — Password policy with spec.name override, 10-char uppercase+digit
+- `controllers/passwordpolicy_controller_test.go` (new) — Integration test: create, Vault state verification, password generation, spec.name override, delete cleanup

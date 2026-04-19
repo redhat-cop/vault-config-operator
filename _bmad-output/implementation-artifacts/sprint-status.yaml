@@ -36,6 +36,8 @@
 
 generated: 2026-04-11
 last_updated: 2026-04-19
+# Story 3.2 done 2026-04-19
+# Story 3.2 review 2026-04-19
 # Story 3.1 done 2026-04-19
 # Story 3.1 review 2026-04-18
 # Story 3.4 ready-for-dev 2026-04-18
@@ -88,7 +90,7 @@ development_status:
   # Epic 3: Foundation Type Integration Tests
   epic-3: in-progress
   3-1-integration-tests-for-policy-type: done
-  3-2-integration-tests-for-passwordpolicy-type: ready-for-dev
+  3-2-integration-tests-for-passwordpolicy-type: done
   3-3-integration-tests-for-secretenginemount-type: ready-for-dev
   3-4-integration-tests-for-authenginemount-type: ready-for-dev
   epic-3-retrospective: optional
