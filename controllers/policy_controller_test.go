@@ -24,6 +24,15 @@ var _ = Describe("Policy controller", Ordered, func() {
 	var simplePolicyInstance *redhatcopv1alpha1.Policy
 	var aclPolicyInstance *redhatcopv1alpha1.Policy
 
+	AfterAll(func() {
+		if simplePolicyInstance != nil {
+			k8sIntegrationClient.Delete(ctx, simplePolicyInstance) //nolint:errcheck
+		}
+		if aclPolicyInstance != nil {
+			k8sIntegrationClient.Delete(ctx, aclPolicyInstance) //nolint:errcheck
+		}
+	})
+
 	Context("When creating a simple Policy", func() {
 		It("Should create the policy in Vault at sys/policy/<name>", func() {
 
@@ -56,6 +65,7 @@ var _ = Describe("Policy controller", Ordered, func() {
 			Expect(err).To(BeNil())
 			Expect(secret).NotTo(BeNil())
 			Expect(secret.Data["rules"]).To(ContainSubstring("secret/data/test/*"))
+			Expect(secret.Data["rules"]).To(ContainSubstring(`capabilities = ["create", "read", "update", "delete", "list"]`))
 		})
 	})
 
@@ -92,7 +102,8 @@ var _ = Describe("Policy controller", Ordered, func() {
 			Expect(secret).NotTo(BeNil())
 
 			By("Verifying accessor placeholder was resolved")
-			policyText := secret.Data["policy"].(string)
+			policyText, ok := secret.Data["policy"].(string)
+			Expect(ok).To(BeTrue(), "expected secret.Data[\"policy\"] to be a string")
 			Expect(policyText).NotTo(ContainSubstring("${auth/kubernetes/@accessor}"))
 			Expect(policyText).To(ContainSubstring("auth_kubernetes_"))
 		})

@@ -1,6 +1,6 @@
 # Story 3.1: Integration Tests for Policy Type
 
-Status: review
+Status: done
 
 ## Story
 
@@ -35,6 +35,11 @@ So that the most fundamental Vault resource type has end-to-end test coverage.
 - [x] Task 3: End-to-end verification (AC: 1, 2, 3)
   - [x] 3.1: Run `make integration` and verify the new Policy tests pass alongside all existing tests
   - [x] 3.2: Verify no regressions in other tests that use Policy as a dependency (VaultSecret, RandomSecret, PKI, Database tests all create Policy CRs)
+
+### Review Findings
+
+- [x] [Review][Patch] Ensure Policy resources are cleaned up even when an earlier `Ordered` spec fails [controllers/policy_controller_test.go:27-34] — added `AfterAll` cleanup guard
+- [x] [Review][Patch] Strengthen Vault policy assertions so malformed HCL cannot pass on a single substring match [controllers/policy_controller_test.go:67-68,105-106] — added capabilities assertion and safe type assertion
 
 ## Dev Notes
 
