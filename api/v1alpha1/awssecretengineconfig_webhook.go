@@ -37,7 +37,7 @@ func (r *AWSSecretEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) error 
 
 // TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
-//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-AWSSecretEngineConfig,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=AWSSecretEngineConfigs,verbs=create;update,versions=v1alpha1,name=mAWSSecretEngineConfig.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-AWSSecretEngineConfig,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=AWSSecretEngineConfigs,verbs=create;update,versions=v1alpha1,name=mawssecretengineconfig.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &AWSSecretEngineConfig{}
 
@@ -49,7 +49,7 @@ func (r *AWSSecretEngineConfig) Default() {
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-AWSSecretEngineConfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=AWSSecretEngineConfigs,verbs=create;update,versions=v1alpha1,name=vAWSSecretEngineConfig.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-AWSSecretEngineConfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=AWSSecretEngineConfigs,verbs=create;update,versions=v1alpha1,name=vawssecretengineconfig.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Validator = &AWSSecretEngineConfig{}
 
