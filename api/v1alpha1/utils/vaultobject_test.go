@@ -18,18 +18,18 @@ type mockVaultObject struct {
 	payload map[string]interface{}
 }
 
-func (m *mockVaultObject) GetPath() string                                          { return m.path }
-func (m *mockVaultObject) GetPayload() map[string]interface{}                       { return m.payload }
+func (m *mockVaultObject) GetPath() string                                    { return m.path }
+func (m *mockVaultObject) GetPayload() map[string]interface{}                 { return m.payload }
 func (m *mockVaultObject) IsEquivalentToDesiredState(_ map[string]interface{}) bool { return false }
-func (m *mockVaultObject) IsInitialized() bool                                      { return true }
-func (m *mockVaultObject) IsValid() (bool, error)                                   { return true, nil }
-func (m *mockVaultObject) IsDeletable() bool                                        { return true }
+func (m *mockVaultObject) IsInitialized() bool                                { return true }
+func (m *mockVaultObject) IsValid() (bool, error)                             { return true, nil }
+func (m *mockVaultObject) IsDeletable() bool                                  { return true }
 func (m *mockVaultObject) PrepareInternalValues(_ context.Context, _ client.Object) error {
 	return nil
 }
 func (m *mockVaultObject) PrepareTLSConfig(_ context.Context, _ client.Object) error { return nil }
-func (m *mockVaultObject) GetKubeAuthConfiguration() *KubeAuthConfiguration          { return nil }
-func (m *mockVaultObject) GetVaultConnection() *VaultConnection                      { return nil }
+func (m *mockVaultObject) GetKubeAuthConfiguration() *KubeAuthConfiguration        { return nil }
+func (m *mockVaultObject) GetVaultConnection() *VaultConnection                    { return nil }
 
 // fakeVaultStore holds in-memory KV data and serves Vault-compatible HTTP responses.
 type fakeVaultStore struct {
