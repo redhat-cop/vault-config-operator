@@ -255,6 +255,7 @@ func (r *AWSSecretEngineConfig) setInternalCredentials(context context.Context) 
 		accessKey := secret.Data[r.Spec.AWSCredentials.UsernameKey].(string)
 		secretKey := secret.Data[r.Spec.AWSCredentials.PasswordKey].(string)
 		r.setAccessKeyAndSecretKey(accessKey+":"+secretKey, accessKey, secretKey)
+		log.V(1).Info("Using AWS credentials from random secret", "randomSecretName", randomSecret.Name)
 		return nil
 	}
 	if r.Spec.AWSCredentials.Secret != nil {
@@ -280,6 +281,7 @@ func (r *AWSSecretEngineConfig) setInternalCredentials(context context.Context) 
 			return err
 		}
 		r.setAccessKeyAndSecretKey(string(accessKey)+":"+string(secretKey), string(accessKey), string(secretKey))
+		log.V(1).Info("Using AWS credentials from secret", "secretName", r.Spec.AWSCredentials.Secret.Name)
 		return nil
 	}
 	if r.Spec.AWSCredentials.VaultSecret != nil {
@@ -295,7 +297,13 @@ func (r *AWSSecretEngineConfig) setInternalCredentials(context context.Context) 
 		accessKey := secret.Data[r.Spec.AWSCredentials.UsernameKey].(string)
 		secretKey := secret.Data[r.Spec.AWSCredentials.PasswordKey].(string)
 		r.setAccessKeyAndSecretKey(accessKey+":"+secretKey, accessKey, secretKey)
-		log.V(1).Info("", "accessKey", accessKey, "secretKey", secretKey)
+		log.V(1).Info("Using AWS credentials from Vault Secret", "vaultSecretPath", r.Spec.AWSCredentials.VaultSecret.Path)
+		return nil
+	}
+	// Plugin Workload Identity Federation (WIF) does not use access key and secret key.
+	// So, we can consider it valid as long as the identity token audience is set.
+	if r.Spec.IdentityTokenAudience != "" {
+		log.V(1).Info("Using Plugin Workload Identity Federation authentication", "identityTokenAudience", r.Spec.IdentityTokenAudience)
 		return nil
 	}
 	return errors.New("no aws credentials source specified")
