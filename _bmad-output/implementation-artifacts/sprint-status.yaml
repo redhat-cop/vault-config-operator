@@ -35,7 +35,19 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-04-17
+last_updated: 2026-04-20
+# Epic 3 retrospective completed 2026-04-20
+# Story 3.4 done 2026-04-19
+# Story 3.4 review 2026-04-19
+# Story 3.3 review 2026-04-19
+# Story 3.2 done 2026-04-19
+# Story 3.2 review 2026-04-19
+# Story 3.1 done 2026-04-19
+# Story 3.1 review 2026-04-18
+# Story 3.4 ready-for-dev 2026-04-18
+# Story 3.3 ready-for-dev 2026-04-17
+# Story 3.2 ready-for-dev 2026-04-17
+# Story 3.1 ready-for-dev 2026-04-17
 # Epic 2 retrospective completed 2026-04-17
 # Story 2.4 review 2026-04-17
 # Story 2.3 done 2026-04-17
@@ -61,7 +73,7 @@ development_status:
   # --- Phase 1: Test Stabilization ---
 
   # Epic 1: Core Declarative Logic Unit Tests
-  epic-1: in-progress
+  epic-1: done
   1-1-unit-tests-tomap-and-isequivalenttodesiredstate-simple-standard-types: done
   1-2-unit-tests-tomap-and-isequivalenttodesiredstate-engine-mount-types: done
   1-3-unit-tests-tomap-and-isequivalenttodesiredstate-database-engine-types: done
@@ -71,7 +83,7 @@ development_status:
   epic-1-retrospective: done
 
   # Epic 2: Integration Test Update Scenarios
-  epic-2: in-progress
+  epic-2: done
   2-0-stabilize-integration-test-infrastructure: done
   2-1-add-update-scenarios-to-vaultsecret-integration-tests: done
   2-2-add-update-scenarios-to-randomsecret-integration-tests: done
@@ -80,12 +92,12 @@ development_status:
   epic-2-retrospective: done
 
   # Epic 3: Foundation Type Integration Tests
-  epic-3: backlog
-  3-1-integration-tests-for-policy-type: backlog
-  3-2-integration-tests-for-passwordpolicy-type: backlog
-  3-3-integration-tests-for-secretenginemount-type: backlog
-  3-4-integration-tests-for-authenginemount-type: backlog
-  epic-3-retrospective: optional
+  epic-3: done
+  3-1-integration-tests-for-policy-type: done
+  3-2-integration-tests-for-passwordpolicy-type: done
+  3-3-integration-tests-for-secretenginemount-type: done
+  3-4-integration-tests-for-authenginemount-type: done
+  epic-3-retrospective: done
 
   # Epic 4: Auth Engine Integration Tests
   epic-4: backlog

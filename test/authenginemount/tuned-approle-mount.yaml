@@ -1,0 +1,13 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AuthEngineMount
+metadata:
+  name: test-aem-tuned
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  type: approle
+  path: test-auth-mount
+  config:
+    maxLeaseTTL: "8760h"
+    listingVisibility: "unauth"

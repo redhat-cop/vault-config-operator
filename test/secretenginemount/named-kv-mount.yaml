@@ -1,0 +1,12 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: SecretEngineMount
+metadata:
+  name: test-named-sem-metadata
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  name: test-named-kv-mount
+  type: kv
+  options:
+    version: "2"

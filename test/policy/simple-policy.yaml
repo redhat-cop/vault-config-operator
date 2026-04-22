@@ -1,0 +1,12 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Policy
+metadata:
+  name: test-simple-policy
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  policy: |
+    path "secret/data/test/*" {
+      capabilities = ["create", "read", "update", "delete", "list"]
+    }

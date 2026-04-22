@@ -1,0 +1,14 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: SecretEngineMount
+metadata:
+  name: test-tuned-kv-mount
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  type: kv
+  config:
+    maxLeaseTTL: "8760h"
+    listingVisibility: "unauth"
+  options:
+    version: "2"

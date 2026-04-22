@@ -1,0 +1,11 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AuthEngineMount
+metadata:
+  name: test-aem-metadata
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  name: test-aem-named
+  type: approle
+  path: test-auth-mount

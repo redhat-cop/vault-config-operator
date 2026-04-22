@@ -148,6 +148,12 @@ This rule applies to all current and future integration tests. When adding a new
 - Standard timeout: `120s`, poll interval: `2s`.
 - Tests create the resource, wait for successful reconcile, then delete and wait for deletion.
 
+#### Ordered Lifecycle Tests (Required for Cross-Context State)
+- When an integration test's `Describe` block shares state across `Context` blocks (e.g., create in one Context, delete in a later Context using the same instance variables), the `Describe` **must** be annotated with Ginkgo's `Ordered` decorator: `Describe("My controller", Ordered, func() { ... })`.
+- Without `Ordered`, Ginkgo v2 may randomize spec execution order, causing delete specs to run before create specs and fail for the wrong reason.
+- Self-contained specs that create, verify, and delete within a single `It` block do not need `Ordered`.
+- Prefer self-contained specs when practical; use `Ordered` cross-Context patterns when the test intentionally separates lifecycle phases (create, update, delete) into distinct readable Contexts.
+
 #### Unit Tests (non-Ginkgo)
 - Pure Go `testing.Test*` functions used for utility packages (e.g., `vaultsecretutils/hash_test.go`).
 - Table-driven tests with explicit expected values.
