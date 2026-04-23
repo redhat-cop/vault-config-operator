@@ -207,7 +207,7 @@ These rules govern the interaction between `kubebuilder:default`, `omitempty`, a
 3. **Enumerated values — use `+kubebuilder:validation:Enum`:** If a field accepts a limited set of discrete values, add `+kubebuilder:validation:Enum:={"val1","val2",...}` to reject invalid input at admission time.
 4. **Numeric ranges — use `+kubebuilder:validation:Minimum` / `+kubebuilder:validation:Maximum`:** If a numeric field has a meaningful valid range, add minimum/maximum markers. For string length constraints, use `+kubebuilder:validation:MinLength` / `+kubebuilder:validation:MaxLength`.
 5. **Pattern-constrained strings — use `+kubebuilder:validation:Pattern`:** If a string field has a clearly identifiable format expressible as a regex (e.g., DNS names, paths, versions), add `+kubebuilder:validation:Pattern:=<regex>`.
-6. **Mandatory fields without defaults — use `+kubebuilder:validation:Required`:** If a field has no sensible default but must be provided by the user, mark it `+kubebuilder:validation:Required` and do NOT add a `+kubebuilder:default` marker.
+6. **Mandatory fields without defaults — use `+kubebuilder:validation:Required`:** If a field has no sensible default but must be provided by the user, mark it `+kubebuilder:validation:Required` and do NOT add a `+kubebuilder:default` marker — exception: Spec struct fields are implicitly required.
 
 #### JSON Tag Conventions
 - CRD fields use camelCase json tags: `json:"fieldName,omitempty"`.
