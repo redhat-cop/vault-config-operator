@@ -35,7 +35,10 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-04-20
+last_updated: 2026-04-23
+# Story 4.3 ready-for-dev 2026-04-23
+# Story 4.2 ready-for-dev 2026-04-23
+# Story 4.1 ready-for-dev 2026-04-23
 # Epic 3 retrospective completed 2026-04-20
 # Story 3.4 done 2026-04-19
 # Story 3.4 review 2026-04-19
@@ -100,10 +103,10 @@ development_status:
   epic-3-retrospective: done
 
   # Epic 4: Auth Engine Integration Tests
-  epic-4: backlog
-  4-1-integration-tests-for-kubernetesauthengineconfig-and-kubernetesauthenginerole: backlog
-  4-2-integration-tests-for-ldapauthengineconfig-and-ldapauthenginegroup: backlog
-  4-3-integration-tests-for-jwtoidcauthengineconfig-and-jwtoidcauthenginerole: backlog
+  epic-4: in-progress
+  4-1-integration-tests-for-kubernetesauthengineconfig-and-kubernetesauthenginerole: ready-for-dev
+  4-2-integration-tests-for-ldapauthengineconfig-and-ldapauthenginegroup: ready-for-dev
+  4-3-integration-tests-for-jwtoidcauthengineconfig-and-jwtoidcauthenginerole: ready-for-dev
   epic-4-retrospective: optional
 
   # Epic 5: Secret Engine Integration Tests
