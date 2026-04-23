@@ -439,3 +439,10 @@ data:
     member: cn=Investing,ou=Groups,dc=example,dc=com
     member: cn=Lending,ou=Groups,dc=example,dc=com
     member: cn=Mortgages,ou=Groups,dc=example,dc=com
+
+    dn: cn=admins-group,ou=Groups,dc=example,dc=com
+    changetype: add
+    objectClass: groupOfNames
+    objectClass: top
+    cn: admins-group
+    member: uid=trevor,ou=Users,dc=example,dc=com

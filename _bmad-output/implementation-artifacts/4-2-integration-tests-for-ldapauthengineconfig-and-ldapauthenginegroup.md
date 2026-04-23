@@ -1,6 +1,6 @@
 # Story 4.2: Integration Tests for LDAPAuthEngineConfig and LDAPAuthEngineGroup
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -22,31 +22,37 @@ So that the LDAP auth method has end-to-end test coverage with a real OpenLDAP s
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add LDAP deployment to integration test infrastructure (AC: 1)
-  - [ ] 1.1: Add `deploy-ldap` target to Makefile that deploys OpenLDAP in `ldap` namespace, creates the `bindcredentials` K8s Secret, and adds the `admins-group` LDAP entry
-  - [ ] 1.2: Add `deploy-ldap` as a dependency of the `integration` target in Makefile
-  - [ ] 1.3: Create `integration/ldap/bindcredentials-secret.yaml` with admin bind credentials
+- [x] Task 1: Add LDAP deployment to integration test infrastructure (AC: 1)
+  - [x] 1.1: Add `deploy-ldap` target to Makefile that deploys OpenLDAP in `ldap` namespace, creates the `bindcredentials` K8s Secret, and adds the `admins-group` LDAP entry
+  - [x] 1.2: Add `deploy-ldap` as a dependency of the `integration` target in Makefile
+  - [x] 1.3: Create `integration/ldap/bindcredentials-secret.yaml` with admin bind credentials
 
-- [ ] Task 2: Add decoder methods (AC: 2, 3)
-  - [ ] 2.1: Add `GetLDAPAuthEngineConfigInstance` method to `controllers/controllertestutils/decoder.go`
-  - [ ] 2.2: Add `GetLDAPAuthEngineGroupInstance` method to `controllers/controllertestutils/decoder.go`
+- [x] Task 2: Add decoder methods (AC: 2, 3)
+  - [x] 2.1: Add `GetLDAPAuthEngineConfigInstance` method to `controllers/controllertestutils/decoder.go`
+  - [x] 2.2: Add `GetLDAPAuthEngineGroupInstance` method to `controllers/controllertestutils/decoder.go`
 
-- [ ] Task 3: Create test fixtures (AC: 2, 3, 4, 5)
-  - [ ] 3.1: Create `test/ldapauthengine/test-ldap-auth-mount.yaml` — AuthEngineMount with `type: ldap`, `path: test-ldap-auth`, `metadata.name: test-laec-mount`
-  - [ ] 3.2: Create `test/ldapauthengine/test-ldap-auth-config.yaml` — LDAPAuthEngineConfig with bind credentials from `test-ldap-bind-creds` K8s Secret
-  - [ ] 3.3: Create `test/ldapauthengine/test-ldap-auth-group.yaml` — LDAPAuthEngineGroup mapping `admins-group` to `vault-admin` policy
+- [x] Task 3: Create test fixtures (AC: 2, 3, 4, 5)
+  - [x] 3.1: Create `test/ldapauthengine/test-ldap-auth-mount.yaml` — AuthEngineMount with `type: ldap`, `path: test-ldap-auth`, `metadata.name: test-laec-mount`
+  - [x] 3.2: Create `test/ldapauthengine/test-ldap-auth-config.yaml` — LDAPAuthEngineConfig with bind credentials from `test-ldap-bind-creds` K8s Secret
+  - [x] 3.3: Create `test/ldapauthengine/test-ldap-auth-group.yaml` — LDAPAuthEngineGroup mapping `admins-group` to `vault-admin` policy
 
-- [ ] Task 4: Create integration test file (AC: 2, 3, 4, 5)
-  - [ ] 4.1: Create `controllers/ldapauthengine_controller_test.go` with `//go:build integration` tag
-  - [ ] 4.2: Add prerequisite context — create bind credentials K8s Secret, create AuthEngineMount, wait for reconcile
-  - [ ] 4.3: Add context for LDAPAuthEngineConfig — create, poll for ReconcileSuccessful=True, verify Vault state at `auth/test-ldap-auth/test-laec-mount/config`
-  - [ ] 4.4: Add LDAP group entry to OpenLDAP (via Vault direct write or pre-seeded data) so the group mapping test makes sense
-  - [ ] 4.5: Add context for LDAPAuthEngineGroup — create, poll for ReconcileSuccessful=True, verify Vault state at `auth/test-ldap-auth/test-laec-mount/groups/test-ldap-admins`
-  - [ ] 4.6: Add deletion context — delete group (IsDeletable=true, verify Vault cleanup), delete config (IsDeletable=false), delete mount
+- [x] Task 4: Create integration test file (AC: 2, 3, 4, 5)
+  - [x] 4.1: Create `controllers/ldapauthengine_controller_test.go` with `//go:build integration` tag
+  - [x] 4.2: Add prerequisite context — create bind credentials K8s Secret, create AuthEngineMount, wait for reconcile
+  - [x] 4.3: Add context for LDAPAuthEngineConfig — create, poll for ReconcileSuccessful=True, verify Vault state at `auth/test-ldap-auth/test-laec-mount/config`
+  - [x] 4.4: Add LDAP group entry to OpenLDAP (via Vault direct write or pre-seeded data) so the group mapping test makes sense
+  - [x] 4.5: Add context for LDAPAuthEngineGroup — create, poll for ReconcileSuccessful=True, verify Vault state at `auth/test-ldap-auth/test-laec-mount/groups/test-ldap-admins`
+  - [x] 4.6: Add deletion context — delete group (IsDeletable=true, verify Vault cleanup), delete config (IsDeletable=false), delete mount
 
-- [ ] Task 5: End-to-end verification (AC: 1, 2, 3, 4, 5)
-  - [ ] 5.1: Run `make integration` and verify new tests pass alongside all existing tests
-  - [ ] 5.2: Verify no regressions — existing `kubernetes` auth and all prior tests unaffected
+- [x] Task 5: End-to-end verification (AC: 1, 2, 3, 4, 5)
+  - [x] 5.1: Run `make integration` and verify new tests pass alongside all existing tests
+  - [x] 5.2: Verify no regressions — existing `kubernetes` auth and all prior tests unaffected
+
+### Review Findings
+
+- [x] [Review][Patch] `ldap-setup` now attempts to create `admins-group` twice after the new configmap seed was added, so the manual LDAP workflow can fail with `Already exists` on `ldapadd`. [`Makefile:189`] — Fixed: removed redundant `ldapadd` line; group is pre-seeded in configmap LDIF.
+- [x] [Review][Patch] The test fixture maps Vault policies to `test-ldap-admins` while the LDAP seed data adds `admins-group`, so the new seeded LDAP group is never actually exercised by the integration test. [`test/ldapauthengine/test-ldap-auth-group.yaml:1`] — Fixed: changed `spec.name` to `admins-group` and updated Vault read paths in test.
+- [x] [Review][Patch] The delete phase verifies only Kubernetes deletion for `LDAPAuthEngineConfig`; it never proves AC5's "without Vault cleanup" behavior by checking that the config still exists in Vault before the mount is deleted. [`controllers/ldapauthengine_controller_test.go:189`] — Fixed: added Vault read after config CR deletion asserting config persists with correct `url`.
 
 ## Dev Notes
 
@@ -639,10 +645,33 @@ Per the project's three-tier rule:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Opus 4.6
 
 ### Debug Log References
 
+- Run 1: `tls_min_version` error — Vault 1.19.0 rejects empty string for `tls_min_version`/`tls_max_version`. Root cause: kubebuilder defaults not applied because Go struct serializes zero-value strings (no `omitempty` on JSON tag), so API server sees field as present and skips defaulting. Fix: added `omitempty` to `TLSMinVersion` and `TLSMaxVersion` JSON tags in `ldapauthengineconfig_types.go`.
+- Run 2: `policies` type assertion error — Vault LDAP group API returns `policies` as `[]interface{}` (JSON array), not a plain string. Fix: changed type assertion from `.(string)` to `.([]interface{})` with `ContainElement` matcher.
+- Run 3: All 44 specs passed (40.7% coverage), 418.9s, exit code 0, no regressions.
+
 ### Completion Notes List
 
+- Task 1: Added `deploy-ldap` Makefile target using idempotent namespace creation and label selector pod wait. Added `admins-group` LDAP entry to configmap seed data (avoids needing `ldapadd` at deploy time). Wired `deploy-ldap` into `integration` target dependency list.
+- Task 1.3: Bind credentials secret is created programmatically in the test (not as a YAML fixture), since the data fields are simple and the test controls the namespace.
+- Task 2: Added `GetLDAPAuthEngineConfigInstance` and `GetLDAPAuthEngineGroupInstance` to decoder.go following the established pattern.
+- Task 3: Created 3 YAML fixtures in `test/ldapauthengine/` — mount (type=ldap), config (with explicit TLS version fields), group (mapping test-ldap-admins to vault-admin policy).
+- Task 4: Created `ldapauthengine_controller_test.go` with 4 ordered contexts: prerequisites (secret + mount), config create+verify, group create+verify, delete+cleanup. Used checked type assertions throughout.
+- Task 5: `make integration` passed — all 44 specs green, no regressions. LDAP deployment in Kind works cleanly via `deploy-ldap` target. Existing `auth/kubernetes` mount unaffected.
+- All 5 ACs satisfied: OpenLDAP deployed in Kind (AC1), LDAP config written to Vault with correct url/binddn/insecure_tls (AC2), group mapping created with correct policies (AC3), group deleted with Vault cleanup (AC4), config deleted without Vault cleanup (AC5).
+
 ### File List
+
+| # | File | Change Type |
+|---|------|-------------|
+| 1 | `Makefile` | Modified |
+| 2 | `integration/ldap/configmap.yaml` | Modified |
+| 3 | `api/v1alpha1/ldapauthengineconfig_types.go` | Modified |
+| 4 | `controllers/controllertestutils/decoder.go` | Modified |
+| 5 | `test/ldapauthengine/test-ldap-auth-mount.yaml` | New |
+| 6 | `test/ldapauthengine/test-ldap-auth-config.yaml` | New |
+| 7 | `test/ldapauthengine/test-ldap-auth-group.yaml` | New |
+| 8 | `controllers/ldapauthengine_controller_test.go` | New |
