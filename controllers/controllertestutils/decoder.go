@@ -97,6 +97,21 @@ func (d *decoder) GetKubernetesAuthEngineRoleInstance(filename string) (*redhatc
 	return nil, errDecode
 }
 
+func (d *decoder) GetKubernetesAuthEngineConfigInstance(filename string) (*redhatcopv1alpha1.KubernetesAuthEngineConfig, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.KubernetesAuthEngineConfig{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.KubernetesAuthEngineConfig)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
 func (d *decoder) GetSecretEngineMountInstance(filename string) (*redhatcopv1alpha1.SecretEngineMount, error) {
 	obj, groupKindVersion, err := d.decodeFile(filename)
 	if err != nil {

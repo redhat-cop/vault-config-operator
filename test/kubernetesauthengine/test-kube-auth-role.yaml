@@ -1,0 +1,16 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KubernetesAuthEngineRole
+metadata:
+  name: test-kaer-role
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  path: test-k8s-auth/test-kaec-mount
+  policies:
+    - vault-admin
+  targetServiceAccounts:
+    - default
+  targetNamespaces:
+    targetNamespaces:
+      - vault-admin
