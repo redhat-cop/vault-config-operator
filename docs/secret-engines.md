@@ -18,6 +18,8 @@
   - [KubernetesSecretEngineRole](#kubernetessecretenginerole)
   - [AzureSecretEngineConfig] (#azuresecretengineconfig) 
   - [AzureSecretEngineRole] (#azuresecretenginerole)
+  - [AWSSecretEngineConfig] (#awssecretengineconfig) 
+  - [AWSSecretEngineRole] (#awssecretenginerole)
 
 
 ## SecretEngineMount
@@ -739,3 +741,267 @@ spec:
  The `signInAudience` field - Specifies the security principal types that are allowed to sign in to the application. Valid values are: AzureADMyOrg, AzureADMultipleOrgs, AzureADandPersonalMicrosoftAccount, PersonalMicrosoftAccount.
 
  The `tags` field - A comma-separated string of Azure tags to attach to an application.
+
+## AWSSecretEngineConfig
+
+The `AWSSecretEngineConfig` CRD allows a user to create an [AWS Secret Engine configuration](https://developer.hashicorp.com/vault/api-docs/secret/aws#configure-root-credentials). 
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AWSSecretEngineConfig
+metadata:
+  labels:
+    app.kubernetes.io/name: awssecretengineconfig
+    app.kubernetes.io/instance: awssecretengineconfig-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: awssecretengineconfig-sample
+spec:
+  authentication:
+    path: vault-admin
+    role: vault-admin
+  connection:
+    address: 'https://vault.example.com'
+  path: aws
+  awsCredentials:
+    secret: 
+      name: aws-credentials
+    usernameKey: accessKey
+    passwordKey: secretKey
+```
+
+The previous example is equivalent to 
+
+```sh
+vault write aws/config/root \
+    access_key=xxx \
+    secret_key=xxx \
+    region=us-east-1
+```
+
+The `maxRetries` field - (Optional) Number of max retries the client should use for recoverable errors. The default (-1) falls back to the AWS SDK's default behavior.
+
+The `roleArn` field - (Optional) Role ARN to assume for plugin workload identity federation (Enterprise). Required with identity_token_audience.
+
+The `identityTokenAudience` field - (Optional) The audience claim value for plugin identity tokens (Enterprise). Must match an allowed audience configured for the target IAM OIDC identity provider.
+
+The `IdentityTokenTTL` field - (Optional) The TTL of generated tokens (Enterprise). Defaults to 1 hour. Uses duration format strings.
+
+The `region` field - (Optional) Specifies the AWS region. If not set it will use the AWS_REGION env var, AWS_DEFAULT_REGION env var, or us-east-1 in that order.
+
+The `iamEndpoint` field - (Optional) Specifies a custom HTTP IAM endpoint to use.
+
+The `stsEndpoint` field - (Optional) Specifies a custom HTTP STS endpoint to use.
+
+The `stsRegion` field - (Optional) Specifies a custom STS region to use (should match sts_endpoint).
+
+The `STSFallbackEndpoints` field - (Optional) Specifies an ordered list of fallback STS endpoints to use.
+
+The `stsFallbackRegions` field - (Optional) Specifies an ordered list of fallback STS regions to use (should match fallback endpoints).
+
+The `usernameTemplate` field - (Optional) Template describing how dynamic usernames are generated.
+
+The `rotationPeriod` field - (Optional) The amount of time, in seconds, Vault should wait before rotating the root credential (Enterprise). A zero value tells Vault not to rotate the root credential.
+
+The `rotationSchedule` field - (Optional) The schedule, in cron-style time format, defining the schedule on which Vault should rotate the root token (Enterprise).
+
+The `rotationWindow` field - (Optional) The maximum amount of time, in seconds, allowed to complete a rotation when a scheduled token rotation occurs (Enterprise).
+
+The `disableAutomatedRotation` field - (Optional) Cancels all upcoming rotations of the root credential until unset (Enterprise).
+
+The `awsCredentials` field - The OAuth Client Secret from the provider for OIDC roles.
+The access key and secret can be retrived a three different ways:
+
+1. From a Kubernetes secret, specifying the `azureCredentials` field as follows:
+```yaml
+  awsCredentials:
+    secret: 
+      name: aws-credentials
+    usernameKey: accessKey
+    passwordKey: secretKey
+```
+The secret must be of [basic auth type](https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret). 
+
+Example Secret : 
+```bash
+kubectl create secret generic aad-credentials --from-literal=clientid="123456-1234-1234-1234-123456789" --from-literal=clientsecret="saffsfsdfsfsdgsdgsdgsdgghdfhdhdgsjgjgjfj" -n vault-admin
+```
+If the secret is updated this connection will also be updated.
+
+2. From a [Vault secret](https://developer.hashicorp.com/vault/docs/secrets/kv), specifying the `azureCredentials` field as follows:
+```yaml
+  awsCredentials:
+    vaultSecret: 
+      path: secret/foo
+    usernameKey: accessKey
+    passwordKey: secretKey
+```
+3. From a [RandomSecret](secret-management.md#RandomSecret), specifying the `awsCredentials` field as follows: 
+```yaml
+  awsCredentials:
+    randomSecret: 
+      name: aws-credentials
+    usernameKey: accessKey
+    passwordKey: secretKey
+```
+When the RandomSecret generates a new secret, this connection will also be updated.
+
+Alternatively, the `identityTokenAudience` and `roleArn` can be set to enable [Plugin Workload Identity Federation](https://developer.hashicorp.com/vault/docs/secrets/aws#plugin-workload-identity-federation-wif)
+
+## AWSSecretEngineRole
+
+The `AWSSecretEngineRole` CRD allows a user to create a [AWS Secret Engine Role](https://developer.hashicorp.com/vault/api-docs/secret/aws#create-update-role)
+
+The `credentialType` field - Specifies the type of credential to be used when retrieving credentials from the role. Must be one of iam_user, assumed_role, federation_token, or session_token.
+
+The `roleArns` field - Specifies the ARNs of the AWS roles this Vault role is allowed to assume. Required when credential_type is `assumed_role` and prohibited otherwise.
+
+The `policyArns` field - Specifies a list of AWS managed policy ARNs. The behavior depends on the credential type. With `iam_user`, the policies will be attached to IAM users when they are requested. With `assumed_role` and `federation_token`, the policy ARNs will act as a filter on what the credentials can do.
+
+The `policyDocument` field - The IAM policy document for the role. The behavior depends on the credential type. With `iam_user`, the policy document will be attached to the IAM user generated.
+
+The `iamGroups` field - A list of IAM group names. IAM users generated against this vault role will be added to these IAM Groups. For a credential type of `assumed_role` or `federation_token`, the policies sent to the corresponding AWS call will be the policies from each group in `iam_groups` combined with the `policy_document` and `policy_arns` parameters.
+
+The `iamTags` field - A list of strings representing a key/value pair to be used as a tag for any `iam_user` user that is created by this role. Format is a key and value separated by an = (e.g. test_key=value).
+	
+The `defaultStsTtl` field - The default TTL for STS credentials. When a TTL is not specified when STS credentials are requested, and a default TTL is specified on the role, then this default TTL will be used. Valid only when `credentialType` is one of `assumed_role` or `federation_token`.
+	
+The `maxStsTtl` field - The max allowed TTL for STS credentials (credentials TTL are capped to max_sts_ttl). Valid only when `credentialType` is one of `assumed_role` or `federation_token`.
+	
+The `sessionTags` field - The set of key-value pairs to be included as tags for the STS session. Format is key=value. Valid only when `credentialType` is set to `assumed_role`.
+
+The `externalId` field - The external ID to use when assuming the role. Valid only when `credentialType` is set to `assumed_role`.
+
+The `userPath` field - The path for the user name. Valid only when `credentialType` is `iam_user`. Default is `/`
+
+The `permissionsBoundaryArn` field - The ARN of the AWS Permissions Boundary to attach to IAM users created in the role. Valid only when `credentialType` is `iam_user`. If not specified, then no permissions boundary policy will be attached.
+	
+The `mfaSerialNumber` field - The ARN or hardware device number of the device configured to the IAM user for multi-factor authentication. Only required if the IAM user has an MFA device set up in AWS.
+
+### IAM User
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AWSSecretEngineRole
+metadata:
+  labels:
+    app.kubernetes.io/name: awssecretenginerole
+    app.kubernetes.io/instance: awssecretenginerole-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: awssecretenginerole-sample-iam-user
+spec:
+  authentication:
+    path: vault-admin
+    role: vault-admin
+  connection:
+    address: 'https://vault.example.com'
+  path: aws
+  name: "iam-user-role"
+  credentialType: iam_user
+  policyArns:
+    - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+    - arn:aws:iam::aws:policy/IAMReadOnlyAccess
+  iamGroups:
+    - group1
+    - group2
+  policyDocument: |
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": "ec2:*",
+          "Resource": "*"
+        }
+      ]
+    }
+```
+
+### Federation Token
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AWSSecretEngineRole
+metadata:
+  labels:
+    app.kubernetes.io/name: awssecretenginerole
+    app.kubernetes.io/instance: awssecretenginerole-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: awssecretenginerole-sample-federation-token
+spec:
+  authentication:
+    path: vault-admin
+    role: vault-admin
+  connection:
+    address: 'https://vault.example.com'
+  path: aws
+  name: "federation-token-role"
+  credentialType: federation_token
+  policyDocument: |
+    {
+      "Version": "2012-10-17",
+      "Statement": {
+        "Effect": "Allow",
+        "Action": [
+          "ec2:*",
+          "sts:GetFederationToken"
+        ],
+        "Resource": "*"
+      }
+    }
+```
+
+### Session Token
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AWSSecretEngineRole
+metadata:
+  labels:
+    app.kubernetes.io/name: awssecretenginerole
+    app.kubernetes.io/instance: awssecretenginerole-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: awssecretenginerole-sample-session-token
+spec:
+  authentication:
+    path: vault-admin
+    role: vault-admin
+  connection:
+    address: 'https://vault.example.com'
+  path: aws
+  name: "session-token-role"
+  credentialType: session_token
+```
+
+### Assume Role
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AWSSecretEngineRole
+metadata:
+  labels:
+    app.kubernetes.io/name: awssecretenginerole
+    app.kubernetes.io/instance: awssecretenginerole-sample
+    app.kubernetes.io/part-of: vault-config-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vault-config-operator
+  name: awssecretenginerole-sample-assume-role
+spec:
+  authentication:
+    path: vault-admin
+    role: vault-admin
+  connection:
+    address: 'https://vault.example.com'
+  path: aws
+  name: "assume-role"
+  credentialType: assumed_role
+  roleArns:
+    - arn:aws:iam::ACCOUNT-ID-WITHOUT-HYPHENS:role/RoleNameToAssume
+```

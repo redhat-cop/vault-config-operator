@@ -80,6 +80,8 @@ Currently this operator covers the following Vault APIs:
 10. [QuaySecretEngineStaticRole](./docs/secret-engines.md#QuaySecretEngineStaticRole) Configures a Quay server to produce credentials for a Robot account using a fixed username and generated credentials, see the also the [vault-plugin-secrets-quay](https://github.com/redhat-cop/vault-plugin-secrets-quay)
 11. [RabbitMQSecretEngineConfig](./docs/secret-engines.md#rabbitmqsecretengineconfig) Configures a [RabbitMQ Secret Engine](https://www.vaultproject.io/docs/secrets/rabbitmq#rabbitmq-secrets-engine)
 12. [RabbitMQSecretEngineRole](./docs/secret-engines.md#rabbitmqsecretenginerole) Configures a [RabbitMQ Secret Engine Role](https://www.vaultproject.io/docs/secrets/rabbitmq#rabbitmq-secrets-engine)
+13. [AWSSecretEngineConfig](./docs/secret-engines.md#awssecretengineconfig) Configures an [AWS Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/aws)
+14. [AWSSecretEngineRole](./docs/secret-engines.md#awssecretenginerole) Configures an [AWS Secret Engine Role](https://developer.hashicorp.com/vault/docs/secrets/aws)
 
 ## Secret Management
 
