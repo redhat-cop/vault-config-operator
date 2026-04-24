@@ -11,7 +11,7 @@ on:
       kubectl-wait-timeout:
         description: "kubectl wait timeout used for integration and helmchart-test targets in the Makefile (e.g. 5m)"
         required: false
-        default: "20m"
+        default: "40m"
 
 # Permissions required by nested workflow
 permissions:
@@ -35,4 +35,4 @@ jobs:
       RUN_HELMCHART_TEST: true
       GO_VERSION: ~1.22
       OPERATOR_SDK_VERSION: v1.31.0
-      KUBECTL_WAIT_TIMEOUT: ${{ github.event.inputs['kubectl-wait-timeout'] != '' && github.event.inputs['kubectl-wait-timeout'] || vars.KUBECTL_WAIT_TIMEOUT != '' && vars.KUBECTL_WAIT_TIMEOUT || '20m' }}
+      KUBECTL_WAIT_TIMEOUT: ${{ github.event.inputs['kubectl-wait-timeout'] != '' && github.event.inputs['kubectl-wait-timeout'] || vars.KUBECTL_WAIT_TIMEOUT != '' && vars.KUBECTL_WAIT_TIMEOUT || '40m' }}
