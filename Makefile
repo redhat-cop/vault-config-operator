@@ -190,7 +190,7 @@ deploy-ldap: kubectl
 deploy-keycloak: kubectl
 	$(KUBECTL) create namespace keycloak --dry-run=client -o yaml | $(KUBECTL) apply -f -
 	$(KUBECTL) apply -f ./integration/keycloak -n keycloak
-	$(KUBECTL) wait --for=condition=ready -n keycloak pod -l app=keycloak --timeout=$(KUBECTL_WAIT_TIMEOUT)
+	$(KUBECTL) wait --for=condition=ready -n keycloak pod -l app=keycloak --timeout=$(KUBECTL_WAIT_TIMEOUT) || { echo "=== Keycloak pod failed to become ready ==="; $(KUBECTL) describe pod -n keycloak -l app=keycloak; echo "=== Keycloak logs ==="; $(KUBECTL) logs -n keycloak -l app=keycloak --tail=100; exit 1; }
 
 .PHONY: ldap-setup
 ldap-setup: kind-setup vault
