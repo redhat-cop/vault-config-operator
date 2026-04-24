@@ -1,0 +1,16 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: JWTOIDCAuthEngineConfig
+metadata:
+  name: test-joaec-config
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  path: test-jwt-oidc-auth/test-joaec-mount
+  OIDCDiscoveryURL: "http://keycloak.keycloak.svc.cluster.local:8080/realms/test-realm"
+  OIDCClientID: "vault-oidc"
+  OIDCCredentials:
+    secret:
+      name: test-oidc-creds
+    usernameKey: oidc_client_id
+    passwordKey: oidc_client_secret

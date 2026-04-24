@@ -132,10 +132,10 @@ test: manifests generate fmt vet envtest ## Run tests.
 
 # note: envtest requires docker, podman will not work
 .PHONY: integration
-integration: kind-setup deploy-vault deploy-ingress deploy-postgresql vault manifests generate fmt vet envtest ## Run tests.
+integration: kind-setup deploy-vault deploy-ingress deploy-postgresql deploy-ldap deploy-keycloak vault manifests generate fmt vet envtest ## Run tests.
 	export VAULT_TOKEN=$$($(KUBECTL) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
 	export VAULT_ADDR="http://localhost:$(VAULT_HOST_PORT)" ;\
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration -timeout 30m
 
 .PHONY: deploy-ingress
 deploy-ingress: kubectl helm
@@ -180,6 +180,18 @@ deploy-postgresql: kubectl helm
 	$(KUBECTL) wait --for=condition=ready pod -l app.kubernetes.io/instance=postgresql \
 		-n test-vault-config-operator --timeout=$(KUBECTL_WAIT_TIMEOUT)
 
+.PHONY: deploy-ldap
+deploy-ldap: kubectl
+	$(KUBECTL) create namespace ldap --dry-run=client -o yaml | $(KUBECTL) apply -f -
+	$(KUBECTL) apply -f ./integration/ldap -n ldap
+	$(KUBECTL) wait --for=condition=ready -n ldap pod -l app=ldap --timeout=$(KUBECTL_WAIT_TIMEOUT)
+
+.PHONY: deploy-keycloak
+deploy-keycloak: kubectl
+	$(KUBECTL) create namespace keycloak --dry-run=client -o yaml | $(KUBECTL) apply -f -
+	$(KUBECTL) apply -f ./integration/keycloak -n keycloak
+	$(KUBECTL) wait --for=condition=ready -n keycloak pod -l app=keycloak --timeout=$(KUBECTL_WAIT_TIMEOUT) || { echo "=== Keycloak pod failed to become ready ==="; $(KUBECTL) describe pod -n keycloak -l app=keycloak; echo "=== Keycloak logs ==="; $(KUBECTL) logs -n keycloak -l app=keycloak --tail=100; exit 1; }
+
 .PHONY: ldap-setup
 ldap-setup: kind-setup vault
 ## Deploy LDAP Instance in ldap namespace
@@ -192,9 +204,7 @@ ldap-setup: kind-setup vault
 	export VAULT_SKIP_VERIFY=true
 	$(KUBECTL) apply -f ./test/ldapauthengine/ldap-auth-engine-mount.yaml
 	$(KUBECTL) apply -f ./test/ldapauthengine/ldap-auth-engine-config.yaml
-## Create new Group in LDAP
-	ldapadd -x -H ldap://localhost:8555 -D "cn=admin,dc=example,dc=com" -w admin -f ./integration/ldap/group.ldif
-## Create new Group in Vault LDAP Auth Engine
+## Create new Group in Vault LDAP Auth Engine (admins-group is pre-seeded in configmap LDIF)
 	$(KUBECTL) apply -f ./test/ldapauthengine/ldap-auth-engine-group.yaml
 ## Login with LDAP user (check database.ldiff for its membership)
 	$(VAULT) login -method=ldap -path=ldap/test/ username=trevor password=admin

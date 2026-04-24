@@ -1,0 +1,10 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AuthEngineMount
+metadata:
+  name: test-laec-mount
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  type: ldap
+  path: test-ldap-auth

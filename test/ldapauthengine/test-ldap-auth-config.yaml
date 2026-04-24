@@ -1,0 +1,22 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: LDAPAuthEngineConfig
+metadata:
+  name: test-laec-config
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  path: test-ldap-auth/test-laec-mount
+  url: "ldap://ldap.ldap.svc.cluster.local"
+  bindDN: "cn=admin,dc=example,dc=com"
+  userDN: "ou=Users,dc=example,dc=com"
+  userAttr: "cn"
+  groupDN: "ou=Groups,dc=example,dc=com"
+  groupFilter: "(|(memberUid={{.Username}})(member={{.UserDN}})(uniqueMember={{.UserDN}}))"
+  userFilter: "({{.UserAttr}}={{.Username}})"
+  insecureTLS: true
+  bindCredentials:
+    secret:
+      name: test-ldap-bind-creds
+    usernameKey: username
+    passwordKey: password

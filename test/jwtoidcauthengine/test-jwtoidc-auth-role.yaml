@@ -1,0 +1,19 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: JWTOIDCAuthEngineRole
+metadata:
+  name: test-joaer-role
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  path: test-jwt-oidc-auth/test-joaec-mount
+  name: "test-oidc-role"
+  roleType: "oidc"
+  userClaim: "email"
+  allowedRedirectURIs:
+    - "http://localhost:8250/oidc/callback"
+  tokenPolicies:
+    - "default"
+  OIDCScopes:
+    - "openid"
+    - "email"

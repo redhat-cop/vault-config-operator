@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-realm
+data:
+  test-realm-realm.json: |
+    {
+      "realm": "test-realm",
+      "enabled": true,
+      "sslRequired": "none",
+      "clients": [
+        {
+          "clientId": "vault-oidc",
+          "enabled": true,
+          "clientAuthenticatorType": "client-secret",
+          "secret": "test-client-secret",
+          "protocol": "openid-connect",
+          "standardFlowEnabled": true,
+          "directAccessGrantsEnabled": true,
+          "redirectUris": ["http://localhost:8250/oidc/callback", "*"],
+          "webOrigins": ["*"],
+          "publicClient": false
+        }
+      ]
+    }

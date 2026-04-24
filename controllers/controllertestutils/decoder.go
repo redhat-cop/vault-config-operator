@@ -97,6 +97,21 @@ func (d *decoder) GetKubernetesAuthEngineRoleInstance(filename string) (*redhatc
 	return nil, errDecode
 }
 
+func (d *decoder) GetKubernetesAuthEngineConfigInstance(filename string) (*redhatcopv1alpha1.KubernetesAuthEngineConfig, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.KubernetesAuthEngineConfig{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.KubernetesAuthEngineConfig)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
 func (d *decoder) GetSecretEngineMountInstance(filename string) (*redhatcopv1alpha1.SecretEngineMount, error) {
 	obj, groupKindVersion, err := d.decodeFile(filename)
 	if err != nil {
@@ -211,6 +226,66 @@ func (d *decoder) GetAuthEngineMountInstance(filename string) (*redhatcopv1alpha
 	kind := reflect.TypeOf(redhatcopv1alpha1.AuthEngineMount{}).Name()
 	if groupKindVersion.Kind == kind {
 		o := obj.(*redhatcopv1alpha1.AuthEngineMount)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetLDAPAuthEngineConfigInstance(filename string) (*redhatcopv1alpha1.LDAPAuthEngineConfig, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.LDAPAuthEngineConfig{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.LDAPAuthEngineConfig)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetLDAPAuthEngineGroupInstance(filename string) (*redhatcopv1alpha1.LDAPAuthEngineGroup, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.LDAPAuthEngineGroup{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.LDAPAuthEngineGroup)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetJWTOIDCAuthEngineConfigInstance(filename string) (*redhatcopv1alpha1.JWTOIDCAuthEngineConfig, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.JWTOIDCAuthEngineConfig{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.JWTOIDCAuthEngineConfig)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetJWTOIDCAuthEngineRoleInstance(filename string) (*redhatcopv1alpha1.JWTOIDCAuthEngineRole, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.JWTOIDCAuthEngineRole{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.JWTOIDCAuthEngineRole)
 		return o, nil
 	}
 
