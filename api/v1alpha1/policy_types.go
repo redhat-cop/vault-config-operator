@@ -34,7 +34,7 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 var _ vaultutils.VaultObject = &Policy{}
-var _ vaultutils.ConditionsAware = &PKISecretEngineRole{}
+var _ vaultutils.ConditionsAware = &Policy{}
 
 func (d *Policy) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection

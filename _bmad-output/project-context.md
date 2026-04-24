@@ -140,6 +140,11 @@ Vault typically acts as an intermediary between vault-config-operator and a secu
 
 This rule applies to all current and future integration tests. When adding a new type, classify its external dependency into one of these three categories and document the decision in the story file.
 
+#### Non-Deletable Type Delete Verification
+- When a type has `IsDeletable() == false` (e.g., auth engine configs like KubernetesAuthEngineConfig, LDAPAuthEngineConfig, JWTOIDCAuthEngineConfig), the delete test **must** verify that the Vault configuration **persists** after the CR is deleted from Kubernetes — not just that K8s deletion succeeds.
+- After deleting the CR and confirming K8s `NotFound`, read the Vault path and assert the config data is still present (e.g., verify a key field like `url` or `kubernetes_host` still has the expected value).
+- This proves the `IsDeletable=false` contract: CR deletion removes the Kubernetes object but intentionally leaves the Vault state intact until the parent mount is deleted.
+
 #### Integration Test Pattern
 - Uses Ginkgo v2 `Describe`/`Context`/`It` BDD blocks with dot-imported `gomega` matchers.
 - Test fixtures are YAML files in `test/` directory, loaded via `controllertestutils.decoder.Get<TypeName>Instance("../test/<path>.yaml")`.

@@ -36,6 +36,7 @@
 
 generated: 2026-04-11
 last_updated: 2026-04-23
+# Epic 4 retrospective completed 2026-04-23
 # Story 4.3 done 2026-04-23
 # Story 4.3 review 2026-04-23
 # Story 4.3 in-progress 2026-04-23
@@ -111,11 +112,11 @@ development_status:
   epic-3-retrospective: done
 
   # Epic 4: Auth Engine Integration Tests
-  epic-4: in-progress
+  epic-4: done
   4-1-integration-tests-for-kubernetesauthengineconfig-and-kubernetesauthenginerole: done
   4-2-integration-tests-for-ldapauthengineconfig-and-ldapauthenginegroup: done
   4-3-integration-tests-for-jwtoidcauthengineconfig-and-jwtoidcauthenginerole: done
-  epic-4-retrospective: optional
+  epic-4-retrospective: done
 
   # Epic 5: Secret Engine Integration Tests
   epic-5: backlog
@@ -140,6 +141,17 @@ development_status:
   7-4-audit-vault-api-responses-and-harden-isequivalenttodesiredstate-extra-field-handling: backlog
   7-5-drift-detection-integration-tests: backlog
   epic-7-retrospective: optional
+
+  # Epic 7.5: CRD Field Annotation Refactor
+  epic-7-5: backlog
+  7-5-1-ldap-auth-engine-types-annotation-refactor: backlog
+  7-5-2-jwtoidc-auth-engine-types-annotation-refactor: backlog
+  7-5-3-kubernetes-auth-and-secret-engine-types-annotation-refactor: backlog
+  7-5-4-azure-and-gcp-auth-secret-engine-types-annotation-refactor: backlog
+  7-5-5-pki-secret-engine-types-annotation-refactor: backlog
+  7-5-6-identity-and-remaining-types-annotation-refactor: backlog
+  7-5-7-validation-marker-sweep-enum-pattern-minlength-maxlength: backlog
+  epic-7-5-retrospective: optional
 
   # --- Phase 1.5: Documentation Improvement ---
 
