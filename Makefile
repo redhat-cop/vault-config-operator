@@ -135,7 +135,7 @@ test: manifests generate fmt vet envtest ## Run tests.
 integration: kind-setup deploy-vault deploy-ingress deploy-postgresql deploy-ldap deploy-keycloak vault manifests generate fmt vet envtest ## Run tests.
 	export VAULT_TOKEN=$$($(KUBECTL) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
 	export VAULT_ADDR="http://localhost:$(VAULT_HOST_PORT)" ;\
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration -timeout 30m
 
 .PHONY: deploy-ingress
 deploy-ingress: kubectl helm
