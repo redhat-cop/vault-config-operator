@@ -1,6 +1,6 @@
 # Story 4.3: Integration Tests for JWTOIDCAuthEngineConfig and JWTOIDCAuthEngineRole
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -22,31 +22,35 @@ So that JWT/OIDC authentication is verified end-to-end with a real Keycloak OIDC
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add Keycloak deployment to integration test infrastructure (AC: 1)
-  - [ ] 1.1: Create `integration/keycloak/deployment.yaml` with Keycloak Deployment + Service in dev mode with realm import
-  - [ ] 1.2: Create `integration/keycloak/configmap.yaml` with realm JSON (realm `test-realm`, client `vault-oidc`, secret `test-client-secret`)
-  - [ ] 1.3: Add `deploy-keycloak` target to Makefile that deploys Keycloak to `keycloak` namespace and waits for pod readiness
-  - [ ] 1.4: Add `deploy-keycloak` as a dependency of the `integration` target in Makefile (after `deploy-vault`, before test run)
+- [x] Task 1: Add Keycloak deployment to integration test infrastructure (AC: 1)
+  - [x] 1.1: Create `integration/keycloak/deployment.yaml` with Keycloak Deployment + Service in dev mode with realm import
+  - [x] 1.2: Create `integration/keycloak/configmap.yaml` with realm JSON (realm `test-realm`, client `vault-oidc`, secret `test-client-secret`)
+  - [x] 1.3: Add `deploy-keycloak` target to Makefile that deploys Keycloak to `keycloak` namespace and waits for pod readiness
+  - [x] 1.4: Add `deploy-keycloak` as a dependency of the `integration` target in Makefile (after `deploy-vault`, before test run)
 
-- [ ] Task 2: Add decoder methods (AC: 2, 3)
-  - [ ] 2.1: Add `GetJWTOIDCAuthEngineConfigInstance` method to `controllers/controllertestutils/decoder.go`
-  - [ ] 2.2: Add `GetJWTOIDCAuthEngineRoleInstance` method to `controllers/controllertestutils/decoder.go`
+- [x] Task 2: Add decoder methods (AC: 2, 3)
+  - [x] 2.1: Add `GetJWTOIDCAuthEngineConfigInstance` method to `controllers/controllertestutils/decoder.go`
+  - [x] 2.2: Add `GetJWTOIDCAuthEngineRoleInstance` method to `controllers/controllertestutils/decoder.go`
 
-- [ ] Task 3: Create test fixtures (AC: 2, 3, 4, 5)
-  - [ ] 3.1: Create `test/jwtoidcauthengine/test-jwtoidc-auth-mount.yaml` — AuthEngineMount with `type: oidc`, `path: test-jwt-oidc-auth`, `metadata.name: test-joaec-mount`
-  - [ ] 3.2: Create `test/jwtoidcauthengine/test-jwtoidc-auth-config.yaml` — JWTOIDCAuthEngineConfig with OIDC credentials from K8s Secret, `OIDCDiscoveryURL` pointing at Keycloak
-  - [ ] 3.3: Create `test/jwtoidcauthengine/test-jwtoidc-auth-role.yaml` — JWTOIDCAuthEngineRole with `roleType: oidc`, `userClaim: email`, `tokenPolicies: [default]`
+- [x] Task 3: Create test fixtures (AC: 2, 3, 4, 5)
+  - [x] 3.1: Create `test/jwtoidcauthengine/test-jwtoidc-auth-mount.yaml` — AuthEngineMount with `type: oidc`, `path: test-jwt-oidc-auth`, `metadata.name: test-joaec-mount`
+  - [x] 3.2: Create `test/jwtoidcauthengine/test-jwtoidc-auth-config.yaml` — JWTOIDCAuthEngineConfig with OIDC credentials from K8s Secret, `OIDCDiscoveryURL` pointing at Keycloak
+  - [x] 3.3: Create `test/jwtoidcauthengine/test-jwtoidc-auth-role.yaml` — JWTOIDCAuthEngineRole with `roleType: oidc`, `userClaim: email`, `tokenPolicies: [default]`
 
-- [ ] Task 4: Create integration test file (AC: 2, 3, 4, 5)
-  - [ ] 4.1: Create `controllers/jwtoidcauthengine_controller_test.go` with `//go:build integration` tag
-  - [ ] 4.2: Add prerequisite context — create OIDC credentials K8s Secret, create AuthEngineMount (type=oidc), wait for reconcile
-  - [ ] 4.3: Add context for JWTOIDCAuthEngineConfig — create, poll for ReconcileSuccessful=True, verify Vault state at `auth/test-jwt-oidc-auth/test-joaec-mount/config`
-  - [ ] 4.4: Add context for JWTOIDCAuthEngineRole — create, poll for ReconcileSuccessful=True, verify Vault state at `auth/test-jwt-oidc-auth/test-joaec-mount/role/test-oidc-role`
-  - [ ] 4.5: Add deletion context — delete role (IsDeletable=true, verify Vault cleanup), delete config (IsDeletable=false), delete mount, delete secret
+- [x] Task 4: Create integration test file (AC: 2, 3, 4, 5)
+  - [x] 4.1: Create `controllers/jwtoidcauthengine_controller_test.go` with `//go:build integration` tag
+  - [x] 4.2: Add prerequisite context — create OIDC credentials K8s Secret, create AuthEngineMount (type=oidc), wait for reconcile
+  - [x] 4.3: Add context for JWTOIDCAuthEngineConfig — create, poll for ReconcileSuccessful=True, verify Vault state at `auth/test-jwt-oidc-auth/test-joaec-mount/config`
+  - [x] 4.4: Add context for JWTOIDCAuthEngineRole — create, poll for ReconcileSuccessful=True, verify Vault state at `auth/test-jwt-oidc-auth/test-joaec-mount/role/test-oidc-role`
+  - [x] 4.5: Add deletion context — delete role (IsDeletable=true, verify Vault cleanup), delete config (IsDeletable=false), delete mount, delete secret
 
-- [ ] Task 5: End-to-end verification (AC: 1, 2, 3, 4, 5)
-  - [ ] 5.1: Run `make integration` and verify new tests pass alongside all existing tests
-  - [ ] 5.2: Verify no regressions — existing `kubernetes` auth and all prior tests unaffected
+- [x] Task 5: End-to-end verification (AC: 1, 2, 3, 4, 5)
+  - [x] 5.1: Run `make integration` and verify new tests pass alongside all existing tests
+  - [x] 5.2: Verify no regressions — existing `kubernetes` auth and all prior tests unaffected
+
+### Review Findings
+
+- [x] [Review][Patch] Verify the JWT/OIDC config remains in Vault after deleting the non-deletable config CR [controllers/jwtoidcauthengine_controller_test.go:206]
 
 ## Dev Notes
 
@@ -804,10 +808,36 @@ Per the project's three-tier rule:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4 (via Cursor)
 
 ### Debug Log References
 
+- Keycloak 26.2 requires realm import files to be named `{realm-name}-realm.json` (not `{realm-name}.json`) — fixed ConfigMap filename from `test-realm.json` to `test-realm-realm.json`
+- Keycloak 26.2 serves health endpoints on management port 9000, not the application port 8080 — fixed readiness probe port from 8080 to 9000
+- Initial `make integration` attempts hit wrong kubeconfig context (OpenShift instead of Kind) — resolved by switching to `kind-kind` context
+
 ### Completion Notes List
 
+- Deployed Keycloak 26.2 in Kind cluster as real OIDC provider (Tier 1: Install in Kind)
+- Keycloak realm `test-realm` with confidential client `vault-oidc` auto-imported on startup
+- JWTOIDCAuthEngineConfig integration test verifies: CR creation → ReconcileSuccessful=True → Vault state at `auth/test-jwt-oidc-auth/test-joaec-mount/config` with correct `oidc_discovery_url` and `oidc_client_id`
+- JWTOIDCAuthEngineRole integration test verifies: CR creation → ReconcileSuccessful=True → Vault state at `auth/test-jwt-oidc-auth/test-joaec-mount/role/test-oidc-role` with correct `role_type`, `user_claim`, `token_policies`, `oidc_scopes`, `allowed_redirect_uris`
+- Deletion test verifies: role cleanup from Vault (IsDeletable=true), config K8s-only deletion (IsDeletable=false), mount cleanup
+- All checked type assertions use two-value form per Epic 3 retro rule
+- Coverage increased from 40.7% to 42.0%
+- All existing tests pass — no regressions
+
+### Change Log
+
+- 2026-04-23: Implemented Story 4.3 — Added Keycloak integration infrastructure, decoder methods, test fixtures, and integration tests for JWTOIDCAuthEngineConfig and JWTOIDCAuthEngineRole
+
 ### File List
+
+- integration/keycloak/deployment.yaml (new) — Keycloak Deployment + Service manifest
+- integration/keycloak/configmap.yaml (new) — Keycloak realm import JSON as ConfigMap
+- Makefile (modified) — Added `deploy-keycloak` target; added `deploy-keycloak` to `integration` dependencies
+- controllers/controllertestutils/decoder.go (modified) — Added `GetJWTOIDCAuthEngineConfigInstance` and `GetJWTOIDCAuthEngineRoleInstance`
+- test/jwtoidcauthengine/test-jwtoidc-auth-mount.yaml (new) — AuthEngineMount prerequisite (type=oidc)
+- test/jwtoidcauthengine/test-jwtoidc-auth-config.yaml (new) — JWTOIDCAuthEngineConfig with OIDC credentials from K8s Secret
+- test/jwtoidcauthengine/test-jwtoidc-auth-role.yaml (new) — JWTOIDCAuthEngineRole with roleType=oidc
+- controllers/jwtoidcauthengine_controller_test.go (new) — Integration test file

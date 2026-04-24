@@ -1,0 +1,10 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AuthEngineMount
+metadata:
+  name: test-joaec-mount
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  type: oidc
+  path: test-jwt-oidc-auth

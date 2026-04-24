@@ -36,6 +36,9 @@
 
 generated: 2026-04-11
 last_updated: 2026-04-23
+# Story 4.3 done 2026-04-23
+# Story 4.3 review 2026-04-23
+# Story 4.3 in-progress 2026-04-23
 # Story 4.2 review 2026-04-23
 # Story 4.2 in-progress 2026-04-23
 # Story 4.1 done 2026-04-23
@@ -111,7 +114,7 @@ development_status:
   epic-4: in-progress
   4-1-integration-tests-for-kubernetesauthengineconfig-and-kubernetesauthenginerole: done
   4-2-integration-tests-for-ldapauthengineconfig-and-ldapauthenginegroup: done
-  4-3-integration-tests-for-jwtoidcauthengineconfig-and-jwtoidcauthenginerole: ready-for-dev
+  4-3-integration-tests-for-jwtoidcauthengineconfig-and-jwtoidcauthenginerole: done
   epic-4-retrospective: optional
 
   # Epic 5: Secret Engine Integration Tests

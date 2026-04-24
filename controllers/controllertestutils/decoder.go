@@ -262,6 +262,36 @@ func (d *decoder) GetLDAPAuthEngineGroupInstance(filename string) (*redhatcopv1a
 	return nil, errDecode
 }
 
+func (d *decoder) GetJWTOIDCAuthEngineConfigInstance(filename string) (*redhatcopv1alpha1.JWTOIDCAuthEngineConfig, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.JWTOIDCAuthEngineConfig{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.JWTOIDCAuthEngineConfig)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetJWTOIDCAuthEngineRoleInstance(filename string) (*redhatcopv1alpha1.JWTOIDCAuthEngineRole, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.JWTOIDCAuthEngineRole{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.JWTOIDCAuthEngineRole)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
 func (d *decoder) GetEntityAliasInstance(filename string) (*redhatcopv1alpha1.EntityAlias, error) {
 	obj, groupKindVersion, err := d.decodeFile(filename)
 	if err != nil {
