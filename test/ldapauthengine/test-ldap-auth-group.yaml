@@ -1,0 +1,11 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: LDAPAuthEngineGroup
+metadata:
+  name: test-laeg-group
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  name: "admins-group"
+  path: "test-ldap-auth/test-laec-mount"
+  policies: "vault-admin"

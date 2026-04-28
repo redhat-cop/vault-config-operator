@@ -142,7 +142,7 @@ type RabbitMQSecretEngineRoleList struct {
 	Items           []RabbitMQSecretEngineRole `json:"items"`
 }
 
-var _ vaultutils.ConditionsAware = &RabbitMQSecretEngineConfig{}
+var _ vaultutils.ConditionsAware = &RabbitMQSecretEngineRole{}
 
 func (d *RabbitMQSecretEngineRole) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection

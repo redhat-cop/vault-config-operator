@@ -1,0 +1,12 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KubernetesAuthEngineConfig
+metadata:
+  name: test-kaec-mount
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  path: test-k8s-auth
+  kubernetesHost: "https://kubernetes.default.svc:443"
+  disableLocalCAJWT: true
+  useOperatorPodCA: false

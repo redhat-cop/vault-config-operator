@@ -70,6 +70,9 @@ FR14: Epic 7 — Webhook validation tests
 FR15: Epic 7 — Error path integration tests
 FR16: Epic 7 — PrepareInternalValues unit tests
 FR17: Epic 7 — Drift detection integration tests
+CRD1: Epic 7.5 — Remove redundant zero-value `kubebuilder:default` markers; ensure `omitempty` on zero-default fields
+CRD2: Epic 7.5 — Remove `omitempty` from non-zero `kubebuilder:default` fields
+CRD3: Epic 7.5 — Add `Enum`, `Pattern`, `MinLength`/`MaxLength`, `Required` validation markers
 
 ## Epic List
 
@@ -100,6 +103,10 @@ Integration test coverage for identity management types (Group, GroupAlias, OIDC
 ### Epic 7: Hardening — Webhooks, Error Paths & Credential Resolution
 Webhook validation tests, error/failure scenario tests, `PrepareInternalValues` unit tests, and drift detection tests.
 **FRs covered:** FR14, FR15, FR16, FR17
+
+### Epic 7.5: CRD Field Annotation Refactor
+Refactor all CRD `*_types.go` files to comply with the CRD Field Default & Validation Rules: remove redundant zero-value defaults (~120 fields), fix non-zero defaults with `omitempty` (~50 fields), add `Enum`/`Pattern`/`MinLength`/`MaxLength` validation markers. 7 stories across 31 files.
+**FRs covered:** CRD1, CRD2, CRD3
 
 ---
 
@@ -1178,6 +1185,16 @@ PNFR4: New types must include unit tests for toMap() and IsEquivalentToDesiredSt
 PNFR5: New types must include integration tests (create, update, delete scenarios) from day one
 PNFR6: New types must have admission webhooks with immutable spec.path validation
 
+### CRD Annotation Refactor Requirements
+
+CRD1: Remove redundant `kubebuilder:default` markers for fields whose default value matches Go's zero value (`""`, `false`, `0`, `"0s"`); ensure `omitempty` is present on their JSON tags
+CRD2: Remove `omitempty` from JSON tags of fields with non-zero `kubebuilder:default` values, ensuring the field is always present in serialized JSON
+CRD3: Add `+kubebuilder:validation:Enum`, `+kubebuilder:validation:Pattern`, `+kubebuilder:validation:MinLength`/`MaxLength`, and `+kubebuilder:validation:Required` markers where applicable to strengthen admission-time validation
+
+### CRD Annotation Refactor FR Coverage Map
+
+CRD1, CRD2, CRD3: Epic 7.5 — CRD field annotation refactor
+
 ### Phase 2 FR Coverage Map
 
 DU1, DU10, DU11: Epic 8 — Go + Kubernetes stack upgrade (Go version, Dockerfile, CI)
@@ -1196,6 +1213,10 @@ AE3-AE5: Epic 15 — Medium-priority missing auth methods (Userpass, GitHub, Okt
 AE6-AE10: Epic 16 — Lower-priority missing auth methods (RADIUS, AliCloud, OCI, Kerberos, CF)
 
 ## Phase 2 Epic List
+
+### Epic 7.5: CRD Field Annotation Refactor
+Refactor all CRD `*_types.go` files to comply with the CRD Field Default & Validation Rules defined in project-context.md: remove redundant zero-value `kubebuilder:default` markers, remove `omitempty` from non-zero defaults, and add `Enum`/`Pattern`/`MinLength`/`MaxLength`/`Required` validation markers where applicable. ~120 Rule 1 violations (zero-value defaults to remove) and ~50 Rule 2 violations (non-zero defaults with omitempty to fix) across 31 files.
+**FRs covered:** CRD1, CRD2, CRD3
 
 ### Epic 8: Go + Kubernetes Stack Upgrade
 Upgrade Go 1.22→1.24, controller-runtime v0.17→v0.23, K8s libs v0.29→v0.35, and all coupled tools (controller-gen, envtest, kubectl, Kind). Update Dockerfile, CI workflows, and Makefile version variables.
@@ -1232,6 +1253,184 @@ Implement CRD types for Userpass, GitHub, and Okta auth methods.
 ### Epic 16: Lower-Priority Missing Auth Methods (RADIUS, AliCloud, OCI, Kerberos, CF)
 Implement CRD types for remaining auth methods with lower community demand.
 **FRs covered:** AE6, AE7, AE8, AE9, AE10
+
+---
+
+## Epic 7.5: CRD Field Annotation Refactor
+
+Refactor all CRD `*_types.go` files to comply with the CRD Field Default & Validation Rules codified in `project-context.md`. This epic addresses ~170 field annotation violations across 31 files, ensuring consistent defaulting semantics and stronger admission-time validation.
+
+**Precondition:** Phase 1 test stabilization (Epics 1-7) should be substantially complete, providing a safety net for CRD schema changes.
+
+**Key principles:**
+1. Remove redundant `kubebuilder:default` for zero-value defaults — Go already initializes to zero; `omitempty` keeps YAML clean
+2. Remove `omitempty` from non-zero defaults — field must always be serialized to avoid fragile defaulting chains
+3. Add `Enum`, `Pattern`, `MinLength`/`MaxLength`, `Required` validation markers where field semantics warrant it
+4. Run `make manifests generate` after each story — CRD schemas will change
+5. Run `make test` and `make integration` to verify no regressions
+
+### Story 7.5.1: LDAP Auth Engine Types — Annotation Refactor
+
+As an operator developer,
+I want the LDAPAuthEngineConfig and LDAPAuthEngineGroup field annotations to follow the CRD Field Default & Validation Rules,
+So that defaulting and validation behavior is correct and explicit.
+
+**Scope:** `ldapauthengineconfig_types.go` (32 Rule 1 + 2 Rule 2 = 34 fields), `ldapauthenginegroup_types.go` (1 Rule 1 field). Largest single file in the refactor.
+
+**Acceptance Criteria:**
+
+1. **Given** the `LDAPConfig` struct fields with `+kubebuilder:default=""` or `+kubebuilder:default=false` or `+kubebuilder:default=0` **When** the markers are removed and `omitempty` is ensured on their JSON tags **Then** `make manifests generate test` passes
+2. **Given** `TLSMinVersion` and `TLSMaxVersion` with `+kubebuilder:default="tls12"` and `omitempty` **When** `omitempty` is removed from their JSON tags **Then** the fields are always present in serialized JSON
+3. **Given** `URL`, `RequestTimeout`, `UserAttr`, `DenyNullBind` already have non-zero defaults without `omitempty` **When** reviewed **Then** confirmed as already compliant (no change needed)
+4. **Given** `TLSMinVersion`/`TLSMaxVersion` accept `tls10`, `tls11`, `tls12`, `tls13` **When** `+kubebuilder:validation:Enum` is added **Then** invalid values are rejected at admission
+5. **Given** `LDAPAuthEngineGroup.Policies` has `+kubebuilder:default=""` **When** the marker is removed **Then** the field relies on Go zero value
+6. **Given** all changes **When** `make integration` is run **Then** LDAP integration tests (Story 4.2) pass
+
+**Tasks:**
+- [ ] 1.1: Remove `+kubebuilder:default` from all zero-value fields in `LDAPConfig` (~32 fields); ensure `omitempty` on JSON tags
+- [ ] 1.2: Remove `omitempty` from `TLSMinVersion`, `TLSMaxVersion` JSON tags
+- [ ] 1.3: Add `+kubebuilder:validation:Enum:={"tls10","tls11","tls12","tls13"}` to `TLSMinVersion`, `TLSMaxVersion`
+- [ ] 1.4: Add `+kubebuilder:validation:Enum` to `TokenType` if applicable (service, batch, default)
+- [ ] 1.5: Remove `+kubebuilder:default=""` from `LDAPAuthEngineGroup.Policies`
+- [ ] 1.6: Run `make manifests generate fmt vet test` and `make integration`
+
+### Story 7.5.2: JWT/OIDC Auth Engine Types — Annotation Refactor
+
+As an operator developer,
+I want the JWTOIDCAuthEngineConfig and JWTOIDCAuthEngineRole field annotations to follow the CRD Field Default & Validation Rules,
+So that the 30+ affected fields have correct defaulting and validation semantics.
+
+**Scope:** `jwtoidcauthengineconfig_types.go` (~10 Rule 1 + 1 Rule 2), `jwtoidcauthenginerole_types.go` (~20 Rule 1 + 1 Rule 2). Second-largest file set.
+
+**Acceptance Criteria:**
+
+1. **Given** all `+kubebuilder:default=""` / `false` / `0` fields **When** markers are removed and `omitempty` ensured **Then** schema is correct
+2. **Given** `NamespaceInState` (default `true`, `omitempty`) **When** `omitempty` is removed **Then** field always serialized
+3. **Given** `BoundClaimsType` (default `"string"`, `omitempty`) **When** `omitempty` is removed **Then** field always serialized
+4. **Given** `OIDCResponseMode` has documented values (`query`, `form_post`) **When** `+kubebuilder:validation:Enum` is added **Then** invalid values rejected
+5. **Given** all changes **When** `make manifests generate fmt vet test` passes **Then** no regressions
+
+**Tasks:**
+- [ ] 2.1: Remove `+kubebuilder:default` from zero-value fields in `JWTOIDCConfig` (~10 fields)
+- [ ] 2.2: Remove `+kubebuilder:default` from zero-value fields in `JWTOIDCRole` (~20 fields)
+- [ ] 2.3: Remove `omitempty` from `NamespaceInState` and `BoundClaimsType`
+- [ ] 2.4: Add `+kubebuilder:validation:Enum` to `OIDCResponseMode`, `BoundClaimsType`
+- [ ] 2.5: Run `make manifests generate fmt vet test`
+
+### Story 7.5.3: Kubernetes Auth & Secret Engine Types — Annotation Refactor
+
+As an operator developer,
+I want the Kubernetes auth engine and secret engine types to follow the CRD Field Default & Validation Rules,
+So that defaulting semantics are consistent with the rest of the codebase.
+
+**Scope:** `kubernetesauthengineconfig_types.go` (2 R1 + 2 R2), `kubernetesauthenginerole_types.go` (6 R1 + 2 R2), `kubernetessecretengineconfig_types.go` (1 R1), `kubernetessecretenginerole_types.go` (2 R1 + 1 R2).
+
+**Acceptance Criteria:**
+
+1. **Given** zero-value defaults on `DisableISSValidation`, `DisableLocalCAJWT`, token fields **When** markers removed **Then** correct
+2. **Given** `KubernetesHost` and `UseOperatorPodCA` have non-zero defaults with `omitempty` **When** `omitempty` removed **Then** always serialized
+3. **Given** `AliasNameSource`, `TokenType`, `KubernetesRoleType` with non-zero defaults and `omitempty` **When** `omitempty` removed **Then** always serialized
+4. **Given** all changes **When** `make integration` passes **Then** Kubernetes auth tests (Story 4.1) unaffected
+
+**Tasks:**
+- [ ] 3.1: Refactor `kubernetesauthengineconfig_types.go` (4 fields)
+- [ ] 3.2: Refactor `kubernetesauthenginerole_types.go` (8 fields)
+- [ ] 3.3: Refactor `kubernetessecretengineconfig_types.go` (1 field)
+- [ ] 3.4: Refactor `kubernetessecretenginerole_types.go` (3 fields)
+- [ ] 3.5: Run `make manifests generate fmt vet test` and `make integration`
+
+### Story 7.5.4: Azure & GCP Auth/Secret Engine Types — Annotation Refactor
+
+As an operator developer,
+I want the Azure and GCP engine types to follow the CRD Field Default & Validation Rules,
+So that these cloud provider types have consistent annotation patterns.
+
+**Scope:** `azureauthengineconfig_types.go` (1 R1 + 1 R2), `azureauthenginerole_types.go` (8 R1), `azuresecretengineconfig_types.go` (2 R1 + 2 R2), `azuresecretenginerole_types.go` (9 R1), `gcpauthengineconfig_types.go` (1 R1 + 4 R2), `gcpauthenginerole_types.go` (8 R1).
+
+**Acceptance Criteria:**
+
+1. **Given** zero-value defaults across Azure/GCP role and config types **When** markers removed **Then** correct
+2. **Given** `Environment` fields (both Azure configs) with non-zero defaults and `omitempty` **When** `omitempty` removed and `Enum` added **Then** validated at admission
+3. **Given** GCP alias/metadata fields with non-zero defaults and `omitempty` **When** `omitempty` removed **Then** always serialized
+4. **Given** `GCEalias` accepts `instance_id` or `role_id` **When** `+kubebuilder:validation:Enum` added **Then** invalid values rejected
+5. **Given** all changes **When** `make manifests generate fmt vet test` passes **Then** no regressions
+
+**Tasks:**
+- [ ] 4.1: Refactor `azureauthengineconfig_types.go` (2 fields)
+- [ ] 4.2: Refactor `azureauthenginerole_types.go` (8 fields)
+- [ ] 4.3: Refactor `azuresecretengineconfig_types.go` (4 fields)
+- [ ] 4.4: Refactor `azuresecretenginerole_types.go` (9 fields)
+- [ ] 4.5: Refactor `gcpauthengineconfig_types.go` (5 fields)
+- [ ] 4.6: Refactor `gcpauthenginerole_types.go` (8 fields)
+- [ ] 4.7: Add `+kubebuilder:validation:Enum` to `Environment`, `GCEalias`, `GCEmetadata`
+- [ ] 4.8: Run `make manifests generate fmt vet test`
+
+### Story 7.5.5: PKI Secret Engine Types — Annotation Refactor
+
+As an operator developer,
+I want the PKI secret engine config and role types to follow the CRD Field Default & Validation Rules,
+So that the many non-zero defaults in PKI types are correctly annotated.
+
+**Scope:** `pkisecretengineconfig_types.go` (0 R1 + 9 R2), `pkisecretenginerole_types.go` (2 R1 + 6 R2). Heavy on Rule 2 violations.
+
+**Acceptance Criteria:**
+
+1. **Given** non-zero defaults (`Type`, `PrivateKeyType`, `Format`, `KeyType`, `KeyBits`, `MaxPathLength`, `CRLExpiry`, `CertificateKey`) with `omitempty` **When** `omitempty` removed **Then** always serialized
+2. **Given** role fields (`UseCSRCommonName`, `UseCSRSans`, `NotBeforeDuration`, `KeyType`, `KeyBits`) with `omitempty` **When** `omitempty` removed **Then** always serialized
+3. **Given** `TTL`, `MaxTTL` in role with `+kubebuilder:default="0s"` **When** markers removed **Then** Go zero Duration used
+4. **Given** all changes **When** `make manifests generate fmt vet test` passes **Then** no regressions
+
+**Tasks:**
+- [ ] 5.1: Refactor `pkisecretengineconfig_types.go` (9 fields — remove `omitempty`)
+- [ ] 5.2: Refactor `pkisecretenginerole_types.go` (8 fields — 2 remove default, 6 remove `omitempty`)
+- [ ] 5.3: Run `make manifests generate fmt vet test`
+
+### Story 7.5.6: Identity & Remaining Types — Annotation Refactor
+
+As an operator developer,
+I want all remaining CRD types to follow the CRD Field Default & Validation Rules,
+So that the entire codebase is consistent.
+
+**Scope:** Covers the remaining files: `identityoidcclient_types.go` (4 R2), `identitytokenkey_types.go` (3 R2), `identitytokenrole_types.go` (1 R2), `group_types.go` (1 R2), `githubsecretengineconfig_types.go` (1 R2), `entity_types.go` (1 R1), `auditrequestheader_types.go` (1 R1), `certauthengineconfig_types.go` (2 R1 + 2 R2), `certauthenginerole_types.go` (5 R1 + 1 R2), `databasesecretengineconfig_types.go` (2 R2), `databasesecretenginerole_types.go` (2 R1), `randomsecret_types.go` (1 R1 + 1 R2), `vaultsecret_types.go` (1 R1 + 3 R2), `secretenginemount_types.go` (4 R1 + 1 R2), `authenginemount_types.go` (1 R2), `quaysecretengineconfig_types.go` (1 R1), `quaysecretenginerole_types.go` (1 R2).
+
+**Acceptance Criteria:**
+
+1. **Given** all remaining zero-value defaults **When** markers removed **Then** correct
+2. **Given** all remaining non-zero defaults with `omitempty` **When** `omitempty` removed **Then** correct
+3. **Given** all changes **When** `make manifests generate fmt vet test` passes **Then** no regressions
+4. **Given** all `*_types.go` files **When** audited post-refactor **Then** zero Rule 1 or Rule 2 violations remain
+
+**Tasks:**
+- [ ] 6.1: Refactor identity types (3 files, ~8 fields)
+- [ ] 6.2: Refactor cert auth engine types (2 files, ~10 fields)
+- [ ] 6.3: Refactor database engine types (2 files, ~4 fields)
+- [ ] 6.4: Refactor mount types (2 files, ~5 fields)
+- [ ] 6.5: Refactor remaining types: entity, audit, group, github, quay, randomsecret, vaultsecret (~12 fields)
+- [ ] 6.6: Run `make manifests generate fmt vet test` and `make integration`
+- [ ] 6.7: Final audit — grep all `*_types.go` for remaining violations; confirm zero
+
+### Story 7.5.7: Validation Marker Sweep — Enum, Pattern, MinLength/MaxLength
+
+As an operator developer,
+I want validation markers (`Enum`, `Pattern`, `MinLength`/`MaxLength`) added to fields across all CRD types where the accepted values are clearly constrained,
+So that invalid values are rejected at admission time rather than failing at Vault API call time.
+
+**Scope:** Cross-cutting — applies to fields identified during Stories 7.5.1-7.5.6 that have enumerated values, format constraints, or range constraints. This story is the dedicated pass for adding new validation markers beyond what was incidentally added in earlier stories.
+
+**Acceptance Criteria:**
+
+1. **Given** TLS version fields (`tls10`-`tls13`) **When** `Enum` markers exist **Then** invalid strings rejected at admission
+2. **Given** token type fields (service/batch/default) across all auth role types **When** `Enum` markers added **Then** consistent validation
+3. **Given** key type fields (rsa/ec/ed25519) in PKI and identity types **When** `Enum` already present **Then** confirmed complete
+4. **Given** cloud environment fields (Azure) **When** `Enum` added with known cloud names **Then** typos caught early
+5. **Given** all changes **When** `make manifests generate fmt vet test` passes **Then** no regressions
+
+**Tasks:**
+- [ ] 7.1: Audit all CRD fields for missing `Enum` markers where comments document accepted values
+- [ ] 7.2: Add `Enum` markers to TLS, token type, environment, alias, format, and role type fields
+- [ ] 7.3: Identify and add `Pattern` markers where regex constraints are clearly useful (e.g., `Name` field patterns)
+- [ ] 7.4: Identify and add `Minimum`/`Maximum` markers for numeric range constraints (e.g., `KeyBits`, cache sizes)
+- [ ] 7.5: Run `make manifests generate fmt vet test`
 
 ---
 

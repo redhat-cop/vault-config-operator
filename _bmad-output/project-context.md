@@ -4,7 +4,7 @@ user_name: 'Raffa'
 date: '2026-04-11'
 sections_completed: ['technology_stack', 'language_rules', 'framework_rules', 'testing_rules', 'code_quality', 'workflow_rules', 'critical_rules']
 status: 'complete'
-rule_count: 47
+rule_count: 53
 optimized_for_llm: true
 ---
 
@@ -140,6 +140,11 @@ Vault typically acts as an intermediary between vault-config-operator and a secu
 
 This rule applies to all current and future integration tests. When adding a new type, classify its external dependency into one of these three categories and document the decision in the story file.
 
+#### Non-Deletable Type Delete Verification
+- When a type has `IsDeletable() == false` (e.g., auth engine configs like KubernetesAuthEngineConfig, LDAPAuthEngineConfig, JWTOIDCAuthEngineConfig), the delete test **must** verify that the Vault configuration **persists** after the CR is deleted from Kubernetes — not just that K8s deletion succeeds.
+- After deleting the CR and confirming K8s `NotFound`, read the Vault path and assert the config data is still present (e.g., verify a key field like `url` or `kubernetes_host` still has the expected value).
+- This proves the `IsDeletable=false` contract: CR deletion removes the Kubernetes object but intentionally leaves the Vault state intact until the parent mount is deleted.
+
 #### Integration Test Pattern
 - Uses Ginkgo v2 `Describe`/`Context`/`It` BDD blocks with dot-imported `gomega` matchers.
 - Test fixtures are YAML files in `test/` directory, loaded via `controllertestutils.decoder.Get<TypeName>Instance("../test/<path>.yaml")`.
@@ -199,8 +204,19 @@ This rule applies to all current and future integration tests. When adding a new
 - The root type must have `//+kubebuilder:object:root=true` and `//+kubebuilder:subresource:status`.
 - RBAC markers on reconciler functions — one set per controller file.
 
+#### CRD Field Default & Validation Rules
+These rules govern the interaction between `kubebuilder:default`, `omitempty`, and validation markers on CRD spec fields. The Kubernetes API server applies `kubebuilder:default` only when a field is **absent** from the submitted JSON; Go's `omitempty` tag omits fields at their zero value during serialization. Mismatched combinations create fragile defaulting chains.
+
+1. **Zero-value defaults — no `kubebuilder:default`, use `omitempty`:** If a field's sensible default is the Go zero value (`""` for string, `false` for bool, `0` for int), do NOT add a `+kubebuilder:default` marker — Go already initializes the field to that value. Add `omitempty` to the JSON tag to keep serialized YAML clean.
+2. **Non-zero defaults — use `kubebuilder:default`, no `omitempty`:** If a field has a meaningful non-zero default (e.g., `"tls12"`, `true`, `2048`), add `+kubebuilder:default=<value>` and do NOT use `omitempty` on the JSON tag. This ensures the field is always present in serialized JSON, preventing ambiguity between "user didn't set it" and "user wants the zero value."
+3. **Enumerated values — use `+kubebuilder:validation:Enum`:** If a field accepts a limited set of discrete values, add `+kubebuilder:validation:Enum:={"val1","val2",...}` to reject invalid input at admission time.
+4. **Numeric ranges — use `+kubebuilder:validation:Minimum` / `+kubebuilder:validation:Maximum`:** If a numeric field has a meaningful valid range, add minimum/maximum markers. For string length constraints, use `+kubebuilder:validation:MinLength` / `+kubebuilder:validation:MaxLength`.
+5. **Pattern-constrained strings — use `+kubebuilder:validation:Pattern`:** If a string field has a clearly identifiable format expressible as a regex (e.g., DNS names, paths, versions), add `+kubebuilder:validation:Pattern:=<regex>`.
+6. **Mandatory fields without defaults — use `+kubebuilder:validation:Required`:** If a field has no sensible default but must be provided by the user, mark it `+kubebuilder:validation:Required` and do NOT add a `+kubebuilder:default` marker — exception: Spec struct fields are implicitly required.
+
 #### JSON Tag Conventions
 - CRD fields use camelCase json tags: `json:"fieldName,omitempty"`.
+- `omitempty` on JSON tags must follow the CRD Field Default & Validation Rules above — only use `omitempty` for fields with zero-value or no defaults.
 - `toMap()` converts to snake_case keys matching Vault API expectations.
 - Unexported internal fields use `json:"-"` to exclude from serialization.
 - `Path` is a custom type `vaultutils.Path` (string alias), serialized as `json:"path,omitempty"`.
@@ -288,4 +304,4 @@ This rule applies to all current and future integration tests. When adding a new
 - Review quarterly for outdated rules
 - Remove rules that become obvious over time
 
-Last Updated: 2026-04-14
+Last Updated: 2026-04-23
