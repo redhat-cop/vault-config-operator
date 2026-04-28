@@ -35,7 +35,11 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-04-23
+last_updated: 2026-04-28
+# Story 5.3 ready-for-dev 2026-04-28
+# Story 5.2 ready-for-dev 2026-04-28
+# Story 5.1 ready-for-dev 2026-04-28
+# Epic 5 in-progress 2026-04-28
 # Epic 4 retrospective completed 2026-04-23
 # Story 4.3 done 2026-04-23
 # Story 4.3 review 2026-04-23
@@ -119,10 +123,10 @@ development_status:
   epic-4-retrospective: done
 
   # Epic 5: Secret Engine Integration Tests
-  epic-5: backlog
-  5-1-integration-tests-for-databasesecretengineconfig-and-databasesecretenginerole: backlog
-  5-2-integration-tests-for-rabbitmq-secret-engine-types: backlog
-  5-3-integration-tests-for-remaining-secret-engine-types: backlog
+  epic-5: in-progress
+  5-1-integration-tests-for-databasesecretengineconfig-and-databasesecretenginerole: ready-for-dev
+  5-2-integration-tests-for-rabbitmq-secret-engine-types: ready-for-dev
+  5-3-integration-tests-for-remaining-secret-engine-types: ready-for-dev
   epic-5-retrospective: optional
 
   # Epic 6: Identity & Audit Integration Tests
