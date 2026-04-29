@@ -187,6 +187,21 @@ func (d *decoder) GetDatabaseSecretEngineConfigInstance(filename string) (*redha
 	return nil, errDecode
 }
 
+func (d *decoder) GetDatabaseSecretEngineRoleInstance(filename string) (*redhatcopv1alpha1.DatabaseSecretEngineRole, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.DatabaseSecretEngineRole{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.DatabaseSecretEngineRole)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
 func (d *decoder) GetDatabaseSecretEngineStaticRoleInstance(filename string) (*redhatcopv1alpha1.DatabaseSecretEngineStaticRole, error) {
 	obj, groupKindVersion, err := d.decodeFile(filename)
 	if err != nil {

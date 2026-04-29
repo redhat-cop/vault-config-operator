@@ -1,6 +1,6 @@
 # Story 5.1: Integration Tests for DatabaseSecretEngineConfig and DatabaseSecretEngineRole
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -24,25 +24,30 @@ So that the most complex secret engine (with credential resolution and `IsEquiva
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add decoder method for DatabaseSecretEngineRole (AC: 2, 3, 4)
-  - [ ] 1.1: Add `GetDatabaseSecretEngineRoleInstance` to `controllers/controllertestutils/decoder.go`
+- [x] Task 1: Add decoder method for DatabaseSecretEngineRole (AC: 2, 3, 4)
+  - [x] 1.1: Add `GetDatabaseSecretEngineRoleInstance` to `controllers/controllertestutils/decoder.go`
 
-- [ ] Task 2: Create test fixtures (AC: 1, 2)
-  - [ ] 2.1: Create `test/databasesecretengine/test-db-mount.yaml` — SecretEngineMount with `type: database`, `path: test-dbse`, unique metadata name
-  - [ ] 2.2: Create `test/databasesecretengine/test-db-config.yaml` — DatabaseSecretEngineConfig with PostgreSQL connection and K8s Secret credentials
-  - [ ] 2.3: Create `test/databasesecretengine/test-db-role.yaml` — DatabaseSecretEngineRole with `dBName` referencing the config, creation statements, TTLs
+- [x] Task 2: Create test fixtures (AC: 1, 2)
+  - [x] 2.1: Create `test/databasesecretengine/test-db-mount.yaml` — SecretEngineMount with `type: database`, `path: test-dbse`, unique metadata name
+  - [x] 2.2: Create `test/databasesecretengine/test-db-config.yaml` — DatabaseSecretEngineConfig with PostgreSQL connection and K8s Secret credentials
+  - [x] 2.3: Create `test/databasesecretengine/test-db-role.yaml` — DatabaseSecretEngineRole with `dBName` referencing the config, creation statements, TTLs
 
-- [ ] Task 3: Create integration test file (AC: 1, 2, 3, 4, 5)
-  - [ ] 3.1: Create `controllers/databasesecretengine_controller_test.go` with `//go:build integration` tag
-  - [ ] 3.2: Add prerequisite context — create PostgreSQL root credentials K8s Secret, create SecretEngineMount (type=database), wait for reconcile, verify `sys/mounts`
-  - [ ] 3.3: Add context for DatabaseSecretEngineConfig — create, poll for ReconcileSuccessful=True, verify Vault state at `{mount}/config/{name}` including `connection_details` nested fields
-  - [ ] 3.4: Add context for DatabaseSecretEngineRole — create, poll for ReconcileSuccessful=True, verify Vault state at `{mount}/roles/{name}`
-  - [ ] 3.5: Add update context for DatabaseSecretEngineRole — update `maxTTL`, verify Vault reflects change, verify ObservedGeneration increased
-  - [ ] 3.6: Add deletion context — delete role (IsDeletable=true, verify Vault cleanup), delete config (IsDeletable=true, verify Vault cleanup), delete mount, delete secret
+- [x] Task 3: Create integration test file (AC: 1, 2, 3, 4, 5)
+  - [x] 3.1: Create `controllers/databasesecretengine_controller_test.go` with `//go:build integration` tag
+  - [x] 3.2: Add prerequisite context — create PostgreSQL root credentials K8s Secret, create SecretEngineMount (type=database), wait for reconcile, verify `sys/mounts`
+  - [x] 3.3: Add context for DatabaseSecretEngineConfig — create, poll for ReconcileSuccessful=True, verify Vault state at `{mount}/config/{name}` including `connection_details` nested fields
+  - [x] 3.4: Add context for DatabaseSecretEngineRole — create, poll for ReconcileSuccessful=True, verify Vault state at `{mount}/roles/{name}`
+  - [x] 3.5: Add update context for DatabaseSecretEngineRole — update `maxTTL`, verify Vault reflects change, verify ObservedGeneration increased
+  - [x] 3.6: Add deletion context — delete role (IsDeletable=true, verify Vault cleanup), delete config (IsDeletable=true, verify Vault cleanup), delete mount, delete secret
 
-- [ ] Task 4: End-to-end verification (AC: 1, 2, 3, 4, 5)
-  - [ ] 4.1: Run `make integration` and verify new tests pass alongside all existing tests
-  - [ ] 4.2: Verify no regressions — existing DatabaseSecretEngineStaticRole tests and all prior tests unaffected
+- [x] Task 4: End-to-end verification (AC: 1, 2, 3, 4, 5)
+  - [x] 4.1: Run `make integration` and verify new tests pass alongside all existing tests
+  - [x] 4.2: Verify no regressions — existing DatabaseSecretEngineStaticRole tests and all prior tests unaffected
+
+### Review Findings
+
+- [x] [Review][Patch] Missing non-zero baseline check for `ObservedGeneration` increase [`controllers/databasesecretengine_controller_test.go:201`]
+- [x] [Review][Patch] Role create test verifies `creation_statements` length but not statement content, weakening AC2's "correct field values" check [`controllers/databasesecretengine_controller_test.go:178`]
 
 ## Dev Notes
 
@@ -707,10 +712,30 @@ Per the project's three-tier rule:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4 (via Cursor)
 
 ### Debug Log References
 
+- `go vet` caught `ObservedGeneration` not being a direct field on `DatabaseSecretEngineRoleStatus` — fixed to read from `metav1.Condition.ObservedGeneration` instead
+- `go vet` caught `MaxTTL` type mismatch (string vs `metav1.Duration`) — fixed to use `metav1.Duration{Duration: 48 * time.Hour}`
+
 ### Completion Notes List
 
+- Added `GetDatabaseSecretEngineRoleInstance` decoder method following existing pattern
+- Created 3 YAML fixtures with `test-db-` prefix for name collision prevention
+- Integration test covers full CRUD lifecycle: prerequisite setup (K8s Secret + SecretEngineMount), config create with `connection_details` nested field verification, role create with `json.Number` TTL verification, role update with ObservedGeneration check via condition, and deletion with Vault cleanup verification for both IsDeletable=true types
+- All 5 Acceptance Criteria verified end-to-end against real PostgreSQL in Kind
+- Coverage increased from 42.0% to 42.7%
+- Zero regressions — all existing tests pass
+
+### Change Log
+
+- 2026-04-28: Story 5.1 implementation complete — DatabaseSecretEngineConfig and DatabaseSecretEngineRole integration tests
+
 ### File List
+
+- `controllers/controllertestutils/decoder.go` (modified) — Added `GetDatabaseSecretEngineRoleInstance` method
+- `test/databasesecretengine/test-db-mount.yaml` (new) — SecretEngineMount fixture (type=database, path=test-dbse)
+- `test/databasesecretengine/test-db-config.yaml` (new) — DatabaseSecretEngineConfig fixture with PostgreSQL connection
+- `test/databasesecretengine/test-db-role.yaml` (new) — DatabaseSecretEngineRole fixture with creation statements and TTLs
+- `controllers/databasesecretengine_controller_test.go` (new) — Integration test covering create, reconcile, update, delete with Vault state verification

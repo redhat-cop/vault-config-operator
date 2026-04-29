@@ -1,0 +1,14 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: DatabaseSecretEngineRole
+metadata:
+  name: test-db-role
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  path: test-dbse/test-db-mount
+  dBName: test-db-config
+  defaultTTL: 1h
+  maxTTL: 24h
+  creationStatements:
+    - "CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}';"

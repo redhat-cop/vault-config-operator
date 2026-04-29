@@ -36,6 +36,8 @@
 
 generated: 2026-04-11
 last_updated: 2026-04-28
+# Story 5.1 done 2026-04-28
+# Story 5.1 review 2026-04-28
 # Story 5.3 ready-for-dev 2026-04-28
 # Story 5.2 ready-for-dev 2026-04-28
 # Story 5.1 ready-for-dev 2026-04-28
@@ -124,7 +126,7 @@ development_status:
 
   # Epic 5: Secret Engine Integration Tests
   epic-5: in-progress
-  5-1-integration-tests-for-databasesecretengineconfig-and-databasesecretenginerole: ready-for-dev
+  5-1-integration-tests-for-databasesecretengineconfig-and-databasesecretenginerole: done
   5-2-integration-tests-for-rabbitmq-secret-engine-types: ready-for-dev
   5-3-integration-tests-for-remaining-secret-engine-types: ready-for-dev
   epic-5-retrospective: optional
