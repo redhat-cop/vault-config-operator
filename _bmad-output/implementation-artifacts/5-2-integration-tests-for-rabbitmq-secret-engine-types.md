@@ -1,6 +1,6 @@
 # Story 5.2: Integration Tests for RabbitMQ Secret Engine Types
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -12,7 +12,7 @@ So that the RabbitMQ secret engine lifecycle — with its custom reconcile flow,
 
 ## Acceptance Criteria
 
-1. **Given** RabbitMQ is deployed in the Kind cluster via `deploy-rabbitmq` (Bitnami Helm) **And** a K8s Secret with RabbitMQ admin credentials exists **And** a SecretEngineMount (type=rabbitmq) has been created and reconciled **When** a RabbitMQSecretEngineConfig CR is created targeting the rabbitmq mount with `connectionURI` pointing at RabbitMQ **Then** the connection is configured in Vault at `{mount-path}/config/connection` with `connection_uri` and `username` verified, and ReconcileSuccessful=True
+1. **Given** RabbitMQ is deployed in the Kind cluster via `deploy-rabbitmq` **And** a K8s Secret with RabbitMQ admin credentials exists **And** a SecretEngineMount (type=rabbitmq) has been created and reconciled **When** a RabbitMQSecretEngineConfig CR is created targeting the rabbitmq mount with `connectionURI` pointing at RabbitMQ and `verifyConnection: true` **Then** ReconcileSuccessful=True (which proves Vault successfully connected to RabbitMQ; note: Vault's RabbitMQ `/config/connection` endpoint is write-only — GET returns 405 — so direct field verification is not possible)
 
 2. **Given** the RabbitMQSecretEngineConfig CR has `leaseTTL` and `leaseMaxTTL` set **When** the reconciler processes it **Then** the lease config exists in Vault at `{mount-path}/config/lease` with `ttl` and `max_ttl` values matching the spec
 
@@ -22,35 +22,40 @@ So that the RabbitMQ secret engine lifecycle — with its custom reconcile flow,
 
 5. **Given** the RabbitMQSecretEngineRole CR is deleted (IsDeletable=true) **When** the reconciler processes the deletion **Then** the role is removed from Vault and the CR is deleted from K8s
 
-6. **Given** the RabbitMQSecretEngineConfig CR is deleted (IsDeletable=false) **When** the reconciler processes the deletion **Then** the CR is deleted from K8s **But** the Vault connection config persists (no Vault cleanup because IsDeletable=false)
+6. **Given** the RabbitMQSecretEngineConfig CR is deleted (IsDeletable=false) **When** the reconciler processes the deletion **Then** the CR is deleted from K8s **But** the Vault config persists (verified via the readable `{mount-path}/config/lease` endpoint; no Vault cleanup because IsDeletable=false)
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Deploy RabbitMQ infrastructure in Kind (AC: 1)
-  - [ ] 1.1: Create `integration/rabbitmq-values.yaml` — Bitnami RabbitMQ Helm values (management plugin enabled, admin credentials, service name override)
-  - [ ] 1.2: Add `deploy-rabbitmq` Makefile target — Helm install to `test-vault-config-operator` namespace, wait for pod readiness
-  - [ ] 1.3: Wire `deploy-rabbitmq` into the `integration` target dependency chain
+- [x] Task 1: Deploy RabbitMQ infrastructure in Kind (AC: 1)
+  - [x] 1.1: Create `integration/rabbitmq/deployment.yaml` — Official RabbitMQ 3-management image deployment and service (adapted from Bitnami Helm to plain manifests due to Bitnami paywall)
+  - [x] 1.2: Add `deploy-rabbitmq` Makefile target — kubectl apply manifests to `test-vault-config-operator` namespace, wait for pod readiness
+  - [x] 1.3: Wire `deploy-rabbitmq` into the `integration` target dependency chain
 
-- [ ] Task 2: Add decoder methods (AC: 1, 3)
-  - [ ] 2.1: Add `GetRabbitMQSecretEngineConfigInstance` to `controllers/controllertestutils/decoder.go`
-  - [ ] 2.2: Add `GetRabbitMQSecretEngineRoleInstance` to `controllers/controllertestutils/decoder.go`
+- [x] Task 2: Add decoder methods (AC: 1, 3)
+  - [x] 2.1: Add `GetRabbitMQSecretEngineConfigInstance` to `controllers/controllertestutils/decoder.go`
+  - [x] 2.2: Add `GetRabbitMQSecretEngineRoleInstance` to `controllers/controllertestutils/decoder.go`
 
-- [ ] Task 3: Create test fixtures (AC: 1, 2, 3)
-  - [ ] 3.1: Create `test/rabbitmqsecretengine/test-rmq-mount.yaml` — SecretEngineMount with `type: rabbitmq`, unique path prefix
-  - [ ] 3.2: Create `test/rabbitmqsecretengine/test-rmq-config.yaml` — RabbitMQSecretEngineConfig with real RabbitMQ connection, `verifyConnection: true`, lease TTLs, K8s Secret credentials
-  - [ ] 3.3: Create `test/rabbitmqsecretengine/test-rmq-role.yaml` — RabbitMQSecretEngineRole with tags and vhost permissions
+- [x] Task 3: Create test fixtures (AC: 1, 2, 3)
+  - [x] 3.1: Create `test/rabbitmqsecretengine/test-rmq-mount.yaml` — SecretEngineMount with `type: rabbitmq`, unique path prefix
+  - [x] 3.2: Create `test/rabbitmqsecretengine/test-rmq-config.yaml` — RabbitMQSecretEngineConfig with real RabbitMQ connection, `verifyConnection: true`, lease TTLs, K8s Secret credentials
+  - [x] 3.3: Create `test/rabbitmqsecretengine/test-rmq-role.yaml` — RabbitMQSecretEngineRole with tags and vhost permissions
 
-- [ ] Task 4: Create integration test file (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] 4.1: Create `controllers/rabbitmqsecretengine_controller_test.go` with `//go:build integration` tag
-  - [ ] 4.2: Add prerequisite context — create RabbitMQ admin credentials K8s Secret, create SecretEngineMount (type=rabbitmq), wait for reconcile, verify `sys/mounts`
-  - [ ] 4.3: Add context for RabbitMQSecretEngineConfig — create, poll for ReconcileSuccessful=True, verify Vault state at both `{mount}/config/connection` and `{mount}/config/lease`
-  - [ ] 4.4: Add context for RabbitMQSecretEngineRole — create, poll for ReconcileSuccessful=True, verify Vault state at `{mount}/roles/{name}`
-  - [ ] 4.5: Add update context for RabbitMQSecretEngineRole — update `tags`, verify Vault reflects change, verify ObservedGeneration increased
-  - [ ] 4.6: Add deletion context — delete role (IsDeletable=true, verify Vault cleanup), delete config (IsDeletable=false, verify Vault persistence), delete mount, delete secret
+- [x] Task 4: Create integration test file (AC: 1, 2, 3, 4, 5, 6)
+  - [x] 4.1: Create `controllers/rabbitmqsecretengine_controller_test.go` with `//go:build integration` tag
+  - [x] 4.2: Add prerequisite context — create RabbitMQ admin credentials K8s Secret, create SecretEngineMount (type=rabbitmq), wait for reconcile, verify `sys/mounts`
+  - [x] 4.3: Add context for RabbitMQSecretEngineConfig — create, poll for ReconcileSuccessful=True, verify Vault lease config at `{mount}/config/lease` (connection config is write-only in Vault's RabbitMQ engine — GET returns 405)
+  - [x] 4.4: Add context for RabbitMQSecretEngineRole — create, poll for ReconcileSuccessful=True, verify Vault state at `{mount}/roles/{name}`
+  - [x] 4.5: Add update context for RabbitMQSecretEngineRole — update `tags`, verify Vault reflects change, verify ObservedGeneration increased
+  - [x] 4.6: Add deletion context — delete role (IsDeletable=true, verify Vault cleanup), delete config (IsDeletable=false, verify Vault persistence via lease endpoint), delete mount, delete secret
 
-- [ ] Task 5: End-to-end verification (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] 5.1: Run `make integration` and verify new tests pass alongside all existing tests
-  - [ ] 5.2: Verify no regressions — existing tests unaffected
+- [x] Task 5: End-to-end verification (AC: 1, 2, 3, 4, 5, 6)
+  - [x] 5.1: Run `make integration` and verify new tests pass alongside all existing tests (58 specs, 0 failures)
+  - [x] 5.2: Verify no regressions — existing tests unaffected, coverage increased from 42.7% to 44.5%
+
+### Review Findings
+
+- [x] [Review][Patch] Align story ACs and Dev Notes with the write-only RabbitMQ connection endpoint [`_bmad-output/implementation-artifacts/5-2-integration-tests-for-rabbitmq-secret-engine-types.md`]
+- [x] [Review][Patch] Verify RabbitMQ role `vhosts` payload, not just `tags` [`controllers/rabbitmqsecretengine_controller_test.go`]
 
 ## Dev Notes
 
@@ -754,10 +759,34 @@ Per the project's three-tier rule:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Cursor (Opus 4.6)
 
 ### Debug Log References
 
+- Initial `make integration` run failed: Bitnami RabbitMQ Helm chart image `docker.io/bitnami/rabbitmq:4.1.3-debian-12-r1` not found (Bitnami paywall since August 2025). Resolved by switching to manifest-based deployment using official `rabbitmq:3-management` Docker image.
+- Second `make integration` run failed: Vault RabbitMQ secret engine `/config/connection` endpoint returns HTTP 405 (Method Not Allowed) on GET — write-only endpoint. Resolved by removing connection config read verification and using lease config (`/config/lease`) for persistence verification instead.
+
 ### Completion Notes List
 
+- Deployed RabbitMQ in Kind via plain K8s manifests (Deployment + Service) using official `rabbitmq:3-management` image, following the same pattern as LDAP and Keycloak deployments
+- Added `deploy-rabbitmq` Makefile target and wired it into the `integration` dependency chain
+- Added two decoder methods: `GetRabbitMQSecretEngineConfigInstance` and `GetRabbitMQSecretEngineRoleInstance`
+- Created three test fixtures in `test/rabbitmqsecretengine/`: mount, config, and role
+- Integration test covers full lifecycle: prerequisites → config create (with lease verification) → role create → role update → deletion (role cleanup + config persistence)
+- Key discovery: Vault's RabbitMQ secret engine `/config/connection` is write-only (GET returns 405). Connection config verification relies on ReconcileSuccessful=True with `verifyConnection: true`. Lease config (`/config/lease`) is readable and used for persistence verification.
+- All 58 integration test specs pass with 0 failures, coverage increased from 42.7% to 44.5%
+
 ### File List
+
+- `integration/rabbitmq/deployment.yaml` — New: RabbitMQ Deployment and Service manifests
+- `Makefile` — Modified: Added `deploy-rabbitmq` target, wired into `integration` dependency chain
+- `controllers/controllertestutils/decoder.go` — Modified: Added `GetRabbitMQSecretEngineConfigInstance` and `GetRabbitMQSecretEngineRoleInstance`
+- `test/rabbitmqsecretengine/test-rmq-mount.yaml` — New: SecretEngineMount fixture (type=rabbitmq)
+- `test/rabbitmqsecretengine/test-rmq-config.yaml` — New: RabbitMQSecretEngineConfig fixture
+- `test/rabbitmqsecretengine/test-rmq-role.yaml` — New: RabbitMQSecretEngineRole fixture
+- `controllers/rabbitmqsecretengine_controller_test.go` — New: Integration tests for RabbitMQ secret engine types
+
+### Change Log
+
+- 2026-04-28: Story implementation started
+- 2026-04-29: Story implementation completed — all tasks done, all integration tests passing

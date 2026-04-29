@@ -307,6 +307,36 @@ func (d *decoder) GetJWTOIDCAuthEngineRoleInstance(filename string) (*redhatcopv
 	return nil, errDecode
 }
 
+func (d *decoder) GetRabbitMQSecretEngineConfigInstance(filename string) (*redhatcopv1alpha1.RabbitMQSecretEngineConfig, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.RabbitMQSecretEngineConfig{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.RabbitMQSecretEngineConfig)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetRabbitMQSecretEngineRoleInstance(filename string) (*redhatcopv1alpha1.RabbitMQSecretEngineRole, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.RabbitMQSecretEngineRole{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.RabbitMQSecretEngineRole)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
 func (d *decoder) GetEntityAliasInstance(filename string) (*redhatcopv1alpha1.EntityAlias, error) {
 	obj, groupKindVersion, err := d.decodeFile(filename)
 	if err != nil {

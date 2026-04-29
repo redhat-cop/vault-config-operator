@@ -1,0 +1,16 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: RabbitMQSecretEngineRole
+metadata:
+  name: test-rmq-role
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  path: test-rmqse/test-rmq-mount
+  tags: "administrator"
+  vhosts:
+  - vhostName: "/"
+    permissions:
+      read: ".*"
+      write: ".*"
+      configure: ".*"

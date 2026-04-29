@@ -132,7 +132,7 @@ test: manifests generate fmt vet envtest ## Run tests.
 
 # note: envtest requires docker, podman will not work
 .PHONY: integration
-integration: kind-setup deploy-vault deploy-ingress deploy-postgresql deploy-ldap deploy-keycloak vault manifests generate fmt vet envtest ## Run tests.
+integration: kind-setup deploy-vault deploy-ingress deploy-postgresql deploy-rabbitmq deploy-ldap deploy-keycloak vault manifests generate fmt vet envtest ## Run tests.
 	export VAULT_TOKEN=$$($(KUBECTL) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
 	export VAULT_ADDR="http://localhost:$(VAULT_HOST_PORT)" ;\
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration -timeout 30m
@@ -179,6 +179,12 @@ deploy-postgresql: kubectl helm
 		-f ./integration/postgresql-values.yaml
 	$(KUBECTL) wait --for=condition=ready pod -l app.kubernetes.io/instance=postgresql \
 		-n test-vault-config-operator --timeout=$(KUBECTL_WAIT_TIMEOUT)
+
+.PHONY: deploy-rabbitmq
+deploy-rabbitmq: kubectl
+	$(KUBECTL) create namespace test-vault-config-operator --dry-run=client -o yaml | $(KUBECTL) apply -f -
+	$(KUBECTL) apply -f ./integration/rabbitmq -n test-vault-config-operator
+	$(KUBECTL) wait --for=condition=ready -n test-vault-config-operator pod -l app=rabbitmq --timeout=$(KUBECTL_WAIT_TIMEOUT)
 
 .PHONY: deploy-ldap
 deploy-ldap: kubectl
