@@ -173,8 +173,11 @@ var _ = Describe("RabbitMQSecretEngine controllers", Ordered, func() {
 			Expect(ok).To(BeTrue(), "expected tags to be a string")
 			Expect(tags).To(Equal("administrator"))
 
-			vhosts, ok := secret.Data["vhosts"].(string)
-			Expect(ok).To(BeTrue(), "expected vhosts to be a JSON string")
+			vhostsRaw := secret.Data["vhosts"]
+			Expect(vhostsRaw).NotTo(BeNil(), "expected vhosts to be present")
+			vhostsJSON, err := json.Marshal(vhostsRaw)
+			Expect(err).To(BeNil())
+			vhosts := string(vhostsJSON)
 			Expect(vhosts).To(ContainSubstring("configure"))
 			Expect(vhosts).To(ContainSubstring("read"))
 			Expect(vhosts).To(ContainSubstring("write"))
