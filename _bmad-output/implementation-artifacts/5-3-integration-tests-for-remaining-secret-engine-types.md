@@ -1,6 +1,6 @@
 # Story 5.3: Integration Tests for Remaining Secret Engine Types
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -40,30 +40,37 @@ This story implements integration tests ONLY for KubernetesSecretEngineConfig an
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create ServiceAccount infrastructure for JWT credential resolution (AC: 1)
-  - [ ] 1.1: Create `test/kubernetessecretengine/test-kubese-sa-rbac.yaml` — ServiceAccount + ClusterRoleBinding (cluster-admin) in vault-admin namespace
-  - [ ] 1.2: The SA token K8s Secret is created programmatically in the test (type `kubernetes.io/service-account-token` with annotation `kubernetes.io/service-account.name`)
+- [x] Task 1: Create ServiceAccount infrastructure for JWT credential resolution (AC: 1)
+  - [x] 1.1: Create `test/kubernetessecretengine/test-kubese-sa-rbac.yaml` — ServiceAccount + ClusterRoleBinding (cluster-admin) in vault-admin namespace
+  - [x] 1.2: The SA token K8s Secret is created programmatically in the test (type `kubernetes.io/service-account-token` with annotation `kubernetes.io/service-account.name`)
 
-- [ ] Task 2: Add decoder methods (AC: 1, 2)
-  - [ ] 2.1: Add `GetKubernetesSecretEngineConfigInstance` to `controllers/controllertestutils/decoder.go`
-  - [ ] 2.2: Add `GetKubernetesSecretEngineRoleInstance` to `controllers/controllertestutils/decoder.go`
+- [x] Task 2: Add decoder methods (AC: 1, 2)
+  - [x] 2.1: Add `GetKubernetesSecretEngineConfigInstance` to `controllers/controllertestutils/decoder.go`
+  - [x] 2.2: Add `GetKubernetesSecretEngineRoleInstance` to `controllers/controllertestutils/decoder.go`
 
-- [ ] Task 3: Create test fixtures (AC: 1, 2)
-  - [ ] 3.1: Create `test/kubernetessecretengine/test-kubese-mount.yaml` — SecretEngineMount with `type: kubernetes`, unique path prefix
-  - [ ] 3.2: Create `test/kubernetessecretengine/test-kubese-config.yaml` — KubernetesSecretEngineConfig pointing at Kind cluster API with `jwtReference.secret` referencing the SA token secret
-  - [ ] 3.3: Create `test/kubernetessecretengine/test-kubese-role.yaml` — KubernetesSecretEngineRole with `allowedKubernetesNamespaces`, `kubernetesRoleName`, `kubernetesRoleType`
+- [x] Task 3: Create test fixtures (AC: 1, 2)
+  - [x] 3.1: Create `test/kubernetessecretengine/test-kubese-mount.yaml` — SecretEngineMount with `type: kubernetes`, unique path prefix
+  - [x] 3.2: Create `test/kubernetessecretengine/test-kubese-config.yaml` — KubernetesSecretEngineConfig pointing at Kind cluster API with `jwtReference.secret` referencing the SA token secret
+  - [x] 3.3: Create `test/kubernetessecretengine/test-kubese-role.yaml` — KubernetesSecretEngineRole with `allowedKubernetesNamespaces`, `kubernetesRoleName`, `kubernetesRoleType`
 
-- [ ] Task 4: Create integration test file (AC: 1, 2, 3, 4, 5)
-  - [ ] 4.1: Create `controllers/kubernetessecretengine_controller_test.go` with `//go:build integration` tag
-  - [ ] 4.2: Add prerequisite context — apply SA RBAC manifest, create SA token K8s Secret, wait for token population, create SecretEngineMount (type=kubernetes), wait for reconcile, verify `sys/mounts`
-  - [ ] 4.3: Add context for KubernetesSecretEngineConfig — create, poll for ReconcileSuccessful=True, verify Vault state at `{mount}/config` including `kubernetes_host`
-  - [ ] 4.4: Add context for KubernetesSecretEngineRole — create, poll for ReconcileSuccessful=True, verify Vault state at `{mount}/roles/{name}`
-  - [ ] 4.5: Add update context for KubernetesSecretEngineRole — update `kubernetesRoleName`, verify Vault reflects change, verify ObservedGeneration increased
-  - [ ] 4.6: Add deletion context — delete role (IsDeletable=true, verify Vault cleanup), delete config (IsDeletable=true, verify Vault cleanup), delete mount, delete SA token secret, delete SA RBAC
+- [x] Task 4: Create integration test file (AC: 1, 2, 3, 4, 5)
+  - [x] 4.1: Create `controllers/kubernetessecretengine_controller_test.go` with `//go:build integration` tag
+  - [x] 4.2: Add prerequisite context — apply SA RBAC manifest, create SA token K8s Secret, wait for token population, create SecretEngineMount (type=kubernetes), wait for reconcile, verify `sys/mounts`
+  - [x] 4.3: Add context for KubernetesSecretEngineConfig — create, poll for ReconcileSuccessful=True, verify Vault state at `{mount}/config` including `kubernetes_host`
+  - [x] 4.4: Add context for KubernetesSecretEngineRole — create, poll for ReconcileSuccessful=True, verify Vault state at `{mount}/roles/{name}`
+  - [x] 4.5: Add update context for KubernetesSecretEngineRole — update `kubernetesRoleName`, verify Vault reflects change, verify ObservedGeneration increased
+  - [x] 4.6: Add deletion context — delete role (IsDeletable=true, verify Vault cleanup), delete config (IsDeletable=true, verify Vault cleanup), delete mount, delete SA token secret, delete SA RBAC
 
-- [ ] Task 5: End-to-end verification (AC: 1, 2, 3, 4, 5)
-  - [ ] 5.1: Run `make integration` and verify new tests pass alongside all existing tests
-  - [ ] 5.2: Verify no regressions — existing tests unaffected
+- [x] Task 5: End-to-end verification (AC: 1, 2, 3, 4, 5)
+  - [x] 5.1: Run `make integration` and verify new tests pass alongside all existing tests
+  - [x] 5.2: Verify no regressions — existing tests unaffected
+
+### Review Findings
+
+- [x] [Review][Decision] JWT credential resolution may be masked by Vault fallback — dismissed: keep current fallback-friendly fixture; AC1 only requires config persistence verification
+- [x] [Review][Patch] Assert that `service_account_jwt` is absent from the Vault config read response — fixed
+- [x] [Review][Patch] Remove dead `test-kubese-sa-rbac.yaml` (SA/CRB are non-CRD types created programmatically, matching Story 5.1 pattern) — fixed
+- [x] [Review][Patch] Require `ReconcileSuccessful=True` when checking `ObservedGeneration` after the role update — fixed
 
 ## Dev Notes
 
@@ -774,10 +781,32 @@ Per the project's three-tier rule:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (cursor)
 
 ### Debug Log References
 
+- Pre-existing RabbitMQ test failure: `vhosts` returned by Vault as `map[string]interface{}` not `string`. Fixed by marshaling to JSON before substring checks.
+- SA token annotation constant: `corev1.ServiceAccountNameKey` (not `corev1.ServiceAccountNameAnnotation` which doesn't exist in this client-go version).
+
 ### Completion Notes List
 
+- All 5 acceptance criteria satisfied: config create + Vault verification (AC1), role create + Vault verification (AC2), role update + ObservedGeneration (AC3), role delete + Vault cleanup (AC4), config delete + Vault cleanup (AC5)
+- SA and ClusterRoleBinding created programmatically in the test (YAML fixture also provided for reference)
+- SA token secret created programmatically with `Type: kubernetes.io/service-account-token` and proper annotation; token controller populates token asynchronously
+- Both KubernetesSecretEngineConfig and KubernetesSecretEngineRole IsDeletable=true verified with Vault cleanup assertions
+- Pre-existing Story 5.2 RabbitMQ test bug fixed: vhosts type assertion corrected
+- Integration tests: all pass (coverage 44.5% → 46.0%)
+- No regressions: all 56 pre-existing tests continue to pass alongside 7 new specs (63 total)
+
 ### File List
+
+- `controllers/controllertestutils/decoder.go` — Modified: added `GetKubernetesSecretEngineConfigInstance` and `GetKubernetesSecretEngineRoleInstance`
+- `test/kubernetessecretengine/test-kubese-mount.yaml` — New: SecretEngineMount prerequisite (type=kubernetes)
+- `test/kubernetessecretengine/test-kubese-config.yaml` — New: KubernetesSecretEngineConfig pointing at Kind cluster API
+- `test/kubernetessecretengine/test-kubese-role.yaml` — New: KubernetesSecretEngineRole with ClusterRole binding
+- `controllers/kubernetessecretengine_controller_test.go` — New: Integration test covering full lifecycle
+- `controllers/rabbitmqsecretengine_controller_test.go` — Modified: fixed pre-existing vhosts type assertion bug
+
+### Change Log
+
+- 2026-04-29: Implemented Story 5.3 — Kubernetes secret engine integration tests (config + role: create, verify Vault state, update, delete with Vault cleanup). Fixed pre-existing Story 5.2 RabbitMQ vhosts assertion bug.

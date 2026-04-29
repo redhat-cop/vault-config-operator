@@ -337,6 +337,36 @@ func (d *decoder) GetRabbitMQSecretEngineRoleInstance(filename string) (*redhatc
 	return nil, errDecode
 }
 
+func (d *decoder) GetKubernetesSecretEngineConfigInstance(filename string) (*redhatcopv1alpha1.KubernetesSecretEngineConfig, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.KubernetesSecretEngineConfig{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.KubernetesSecretEngineConfig)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetKubernetesSecretEngineRoleInstance(filename string) (*redhatcopv1alpha1.KubernetesSecretEngineRole, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.KubernetesSecretEngineRole{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.KubernetesSecretEngineRole)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
 func (d *decoder) GetEntityAliasInstance(filename string) (*redhatcopv1alpha1.EntityAlias, error) {
 	obj, groupKindVersion, err := d.decodeFile(filename)
 	if err != nil {
