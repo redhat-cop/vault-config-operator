@@ -187,6 +187,21 @@ func (d *decoder) GetDatabaseSecretEngineConfigInstance(filename string) (*redha
 	return nil, errDecode
 }
 
+func (d *decoder) GetDatabaseSecretEngineRoleInstance(filename string) (*redhatcopv1alpha1.DatabaseSecretEngineRole, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.DatabaseSecretEngineRole{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.DatabaseSecretEngineRole)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
 func (d *decoder) GetDatabaseSecretEngineStaticRoleInstance(filename string) (*redhatcopv1alpha1.DatabaseSecretEngineStaticRole, error) {
 	obj, groupKindVersion, err := d.decodeFile(filename)
 	if err != nil {
@@ -286,6 +301,66 @@ func (d *decoder) GetJWTOIDCAuthEngineRoleInstance(filename string) (*redhatcopv
 	kind := reflect.TypeOf(redhatcopv1alpha1.JWTOIDCAuthEngineRole{}).Name()
 	if groupKindVersion.Kind == kind {
 		o := obj.(*redhatcopv1alpha1.JWTOIDCAuthEngineRole)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetRabbitMQSecretEngineConfigInstance(filename string) (*redhatcopv1alpha1.RabbitMQSecretEngineConfig, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.RabbitMQSecretEngineConfig{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.RabbitMQSecretEngineConfig)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetRabbitMQSecretEngineRoleInstance(filename string) (*redhatcopv1alpha1.RabbitMQSecretEngineRole, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.RabbitMQSecretEngineRole{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.RabbitMQSecretEngineRole)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetKubernetesSecretEngineConfigInstance(filename string) (*redhatcopv1alpha1.KubernetesSecretEngineConfig, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.KubernetesSecretEngineConfig{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.KubernetesSecretEngineConfig)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetKubernetesSecretEngineRoleInstance(filename string) (*redhatcopv1alpha1.KubernetesSecretEngineRole, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.KubernetesSecretEngineRole{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.KubernetesSecretEngineRole)
 		return o, nil
 	}
 

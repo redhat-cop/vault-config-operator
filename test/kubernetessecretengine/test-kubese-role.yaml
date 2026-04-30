@@ -1,0 +1,13 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KubernetesSecretEngineRole
+metadata:
+  name: test-kubese-role
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  path: test-kubese/test-kubese-mount
+  allowedKubernetesNamespaces:
+  - default
+  kubernetesRoleName: "edit"
+  kubernetesRoleType: "ClusterRole"

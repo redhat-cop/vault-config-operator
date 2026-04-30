@@ -1,0 +1,18 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: RabbitMQSecretEngineConfig
+metadata:
+  name: test-rmq-config
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  path: test-rmqse/test-rmq-mount
+  connectionURI: "http://my-rabbitmq.test-vault-config-operator.svc:15672"
+  rootCredentials:
+    secret:
+      name: test-rmq-creds
+    passwordKey: password
+  username: admin
+  verifyConnection: true
+  leaseTTL: 3600
+  leaseMaxTTL: 86400

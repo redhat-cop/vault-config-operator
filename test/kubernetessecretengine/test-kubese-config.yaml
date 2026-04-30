@@ -1,0 +1,13 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KubernetesSecretEngineConfig
+metadata:
+  name: test-kubese-config
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  path: test-kubese/test-kubese-mount
+  kubernetesHost: "https://kubernetes.default.svc:443"
+  jwtReference:
+    secret:
+      name: test-kubese-sa-token

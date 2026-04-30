@@ -1,0 +1,10 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: SecretEngineMount
+metadata:
+  name: test-db-mount
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  type: database
+  path: test-dbse
