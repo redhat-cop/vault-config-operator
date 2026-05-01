@@ -35,7 +35,12 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-04-29
+last_updated: 2026-05-01
+# Story 6.4 ready-for-dev 2026-05-01
+# Story 6.3 ready-for-dev 2026-04-30
+# Story 6.2 ready-for-dev 2026-04-30
+# Story 6.1 ready-for-dev 2026-04-30
+# Epic 6 in-progress 2026-04-30
 # Epic 5 done + retrospective completed 2026-04-29
 # Story 5.3 done 2026-04-29
 # Story 5.3 review 2026-04-29
@@ -138,11 +143,11 @@ development_status:
   epic-5-retrospective: done
 
   # Epic 6: Identity & Audit Integration Tests
-  epic-6: backlog
-  6-1-integration-tests-for-group-and-groupalias-types: backlog
-  6-2-integration-tests-for-identity-oidc-types: backlog
-  6-3-integration-tests-for-identity-token-types: backlog
-  6-4-integration-tests-for-audit-types: backlog
+  epic-6: in-progress
+  6-1-integration-tests-for-group-and-groupalias-types: ready-for-dev
+  6-2-integration-tests-for-identity-oidc-types: ready-for-dev
+  6-3-integration-tests-for-identity-token-types: ready-for-dev
+  6-4-integration-tests-for-audit-types: ready-for-dev
   epic-6-retrospective: optional
 
   # Epic 7: Hardening — Webhooks, Error Paths & Credential Resolution
