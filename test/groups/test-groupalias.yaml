@@ -1,0 +1,10 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GroupAlias
+metadata:
+  name: test-groupalias
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  authEngineMountPath: kubernetes
+  groupName: test-group

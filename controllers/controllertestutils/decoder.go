@@ -381,3 +381,33 @@ func (d *decoder) GetEntityAliasInstance(filename string) (*redhatcopv1alpha1.En
 
 	return nil, errDecode
 }
+
+func (d *decoder) GetGroupInstance(filename string) (*redhatcopv1alpha1.Group, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.Group{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.Group)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetGroupAliasInstance(filename string) (*redhatcopv1alpha1.GroupAlias, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.GroupAlias{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.GroupAlias)
+		return o, nil
+	}
+
+	return nil, errDecode
+}

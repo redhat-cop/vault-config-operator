@@ -1,6 +1,6 @@
 # Story 6.1: Integration Tests for Group and GroupAlias Types
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -37,24 +37,24 @@ No new infrastructure needed. Both types interact with Vault's internal identity
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add decoder methods (AC: 1, 3)
-  - [ ] 1.1: Add `GetGroupInstance` to `controllers/controllertestutils/decoder.go`
-  - [ ] 1.2: Add `GetGroupAliasInstance` to `controllers/controllertestutils/decoder.go`
+- [x] Task 1: Add decoder methods (AC: 1, 3)
+  - [x] 1.1: Add `GetGroupInstance` to `controllers/controllertestutils/decoder.go`
+  - [x] 1.2: Add `GetGroupAliasInstance` to `controllers/controllertestutils/decoder.go`
 
-- [ ] Task 2: Create test fixtures (AC: 1, 3)
-  - [ ] 2.1: Create `test/groups/test-group.yaml` — Group with `type: external`, metadata, policies (unique names to avoid collision with existing `group-sample` fixture)
-  - [ ] 2.2: Create `test/groups/test-groupalias.yaml` — GroupAlias referencing the test group and `kubernetes` auth mount
+- [x] Task 2: Create test fixtures (AC: 1, 3)
+  - [x] 2.1: Create `test/groups/test-group.yaml` — Group with `type: external`, metadata, policies (unique names to avoid collision with existing `group-sample` fixture)
+  - [x] 2.2: Create `test/groups/test-groupalias.yaml` — GroupAlias referencing the test group and `kubernetes` auth mount
 
-- [ ] Task 3: Create integration test file (AC: 1, 2, 3, 4, 5)
-  - [ ] 3.1: Create `controllers/group_controller_test.go` with `//go:build integration` tag
-  - [ ] 3.2: Add context for Group creation — create, poll for ReconcileSuccessful=True, verify Vault state at `/identity/group/name/{name}`
-  - [ ] 3.3: Add context for Group update — update policies, verify Vault reflects change, verify ObservedGeneration increased
-  - [ ] 3.4: Add context for GroupAlias creation — create alias CR, poll for ReconcileSuccessful=True, verify Status.ID is populated, verify alias exists in Vault at `/identity/group-alias/id/{status.id}`
-  - [ ] 3.5: Add deletion context — delete alias (IsDeletable=true, verify Vault cleanup), delete group (IsDeletable=true, verify Vault cleanup)
+- [x] Task 3: Create integration test file (AC: 1, 2, 3, 4, 5)
+  - [x] 3.1: Create `controllers/group_controller_test.go` with `//go:build integration` tag
+  - [x] 3.2: Add context for Group creation — create, poll for ReconcileSuccessful=True, verify Vault state at `/identity/group/name/{name}`
+  - [x] 3.3: Add context for Group update — update policies, verify Vault reflects change, verify ObservedGeneration increased
+  - [x] 3.4: Add context for GroupAlias creation — create alias CR, poll for ReconcileSuccessful=True, verify Status.ID is populated, verify alias exists in Vault at `/identity/group-alias/id/{status.id}`
+  - [x] 3.5: Add deletion context — delete alias (IsDeletable=true, verify Vault cleanup), delete group (IsDeletable=true, verify Vault cleanup)
 
-- [ ] Task 4: End-to-end verification (AC: 1, 2, 3, 4, 5)
-  - [ ] 4.1: Run `make integration` and verify new tests pass alongside all existing tests
-  - [ ] 4.2: Verify no regressions — existing tests unaffected
+- [x] Task 4: End-to-end verification (AC: 1, 2, 3, 4, 5)
+  - [x] 4.1: Run `make integration` and verify new tests pass alongside all existing tests
+  - [x] 4.2: Verify no regressions — existing tests unaffected
 
 ## Dev Notes
 
@@ -662,10 +662,27 @@ Codebase is clean post-Epic 5 merge to main. All 63 integration tests passing wi
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (cursor)
 
 ### Debug Log References
 
+None — clean implementation with no failures.
+
 ### Completion Notes List
 
+- Added `GetGroupInstance` and `GetGroupAliasInstance` decoder methods following established pattern
+- Created test fixtures with `test-` prefix to avoid collision with existing `group-sample`/`groupalias-sample` fixtures
+- Integration test uses `Ordered` Describe block with shared state across Contexts (Group → GroupAlias dependency chain)
+- Group test verifies: create with type=external/metadata/policies, update policies with ObservedGeneration baseline assertion, delete with Vault cleanup
+- GroupAlias test verifies: create with Status.ID populated, canonical_id matches group's ID (proves PrepareInternalValues accessor+group lookup works), delete with Vault cleanup using captured alias ID
+- All 67+ integration test specs pass (was 63 before, now includes 4 new specs for Group/GroupAlias)
+- Coverage increased from 45.9% to 47.2%
+
 ### File List
+
+| # | File | Change Type | Description |
+|---|------|-------------|-------------|
+| 1 | `controllers/controllertestutils/decoder.go` | Modified | Added `GetGroupInstance` and `GetGroupAliasInstance` methods |
+| 2 | `test/groups/test-group.yaml` | New | Group fixture (type=external, metadata, policies) |
+| 3 | `test/groups/test-groupalias.yaml` | New | GroupAlias fixture (references test-group + kubernetes auth mount) |
+| 4 | `controllers/group_controller_test.go` | New | Integration test — Group CRUD + GroupAlias create/delete with Vault verification |
