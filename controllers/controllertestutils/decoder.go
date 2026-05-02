@@ -471,3 +471,48 @@ func (d *decoder) GetIdentityOIDCProviderInstance(filename string) (*redhatcopv1
 
 	return nil, errDecode
 }
+
+func (d *decoder) GetIdentityTokenConfigInstance(filename string) (*redhatcopv1alpha1.IdentityTokenConfig, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.IdentityTokenConfig{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.IdentityTokenConfig)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetIdentityTokenKeyInstance(filename string) (*redhatcopv1alpha1.IdentityTokenKey, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.IdentityTokenKey{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.IdentityTokenKey)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetIdentityTokenRoleInstance(filename string) (*redhatcopv1alpha1.IdentityTokenRole, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.IdentityTokenRole{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.IdentityTokenRole)
+		return o, nil
+	}
+
+	return nil, errDecode
+}

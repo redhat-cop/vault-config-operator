@@ -229,6 +229,15 @@ var _ = BeforeSuite(func() {
 	err = (&IdentityOIDCProviderReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCProvider")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
+	err = (&IdentityTokenConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityTokenConfig")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&IdentityTokenKeyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityTokenKey")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&IdentityTokenRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityTokenRole")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
 	By(fmt.Sprintf("Creating the %v namespace", vaultAdminNamespaceName))
 	vaultAdminNamespace = &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{

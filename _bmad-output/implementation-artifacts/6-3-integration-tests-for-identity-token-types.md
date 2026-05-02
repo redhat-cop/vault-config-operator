@@ -1,6 +1,6 @@
 # Story 6.3: Integration Tests for Identity Token Types
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -42,27 +42,27 @@ No new infrastructure needed. All types interact with Vault's internal identity 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Register controllers in suite_integration_test.go (AC: 1, 2, 3)
-  - [ ] 1.1: Add `IdentityTokenConfigReconciler` registration
-  - [ ] 1.2: Add `IdentityTokenKeyReconciler` registration
-  - [ ] 1.3: Add `IdentityTokenRoleReconciler` registration
+- [x] Task 1: Register controllers in suite_integration_test.go (AC: 1, 2, 3)
+  - [x] 1.1: Add `IdentityTokenConfigReconciler` registration
+  - [x] 1.2: Add `IdentityTokenKeyReconciler` registration
+  - [x] 1.3: Add `IdentityTokenRoleReconciler` registration
 
-- [ ] Task 2: Add decoder methods (AC: 1, 2, 3)
-  - [ ] 2.1: Add `GetIdentityTokenConfigInstance` to `controllers/controllertestutils/decoder.go`
-  - [ ] 2.2: Add `GetIdentityTokenKeyInstance` to `controllers/controllertestutils/decoder.go`
-  - [ ] 2.3: Add `GetIdentityTokenRoleInstance` to `controllers/controllertestutils/decoder.go`
+- [x] Task 2: Add decoder methods (AC: 1, 2, 3)
+  - [x] 2.1: Add `GetIdentityTokenConfigInstance` to `controllers/controllertestutils/decoder.go`
+  - [x] 2.2: Add `GetIdentityTokenKeyInstance` to `controllers/controllertestutils/decoder.go`
+  - [x] 2.3: Add `GetIdentityTokenRoleInstance` to `controllers/controllertestutils/decoder.go`
 
-- [ ] Task 3: Create integration test file (AC: 1, 2, 3, 4, 5, 6, 7)
-  - [ ] 3.1: Create `controllers/identitytoken_controller_test.go` with `//go:build integration` tag
-  - [ ] 3.2: Add context for IdentityTokenConfig creation — create, poll for ReconcileSuccessful=True, verify Vault state
-  - [ ] 3.3: Add context for IdentityTokenKey creation — create, poll for ReconcileSuccessful=True, verify Vault state
-  - [ ] 3.4: Add context for IdentityTokenRole creation — create, poll for ReconcileSuccessful=True, verify Vault state
-  - [ ] 3.5: Add context for IdentityTokenKey update — change algorithm, verify Vault reflects change, verify ObservedGeneration increased
-  - [ ] 3.6: Add deletion context — delete Role (IsDeletable=true, verify Vault cleanup), delete Key (IsDeletable=true, verify Vault cleanup), delete Config (IsDeletable=false, verify Vault persists)
+- [x] Task 3: Create integration test file (AC: 1, 2, 3, 4, 5, 6, 7)
+  - [x] 3.1: Create `controllers/identitytoken_controller_test.go` with `//go:build integration` tag
+  - [x] 3.2: Add context for IdentityTokenConfig creation — create, poll for ReconcileSuccessful=True, verify Vault state
+  - [x] 3.3: Add context for IdentityTokenKey creation — create, poll for ReconcileSuccessful=True, verify Vault state
+  - [x] 3.4: Add context for IdentityTokenRole creation — create, poll for ReconcileSuccessful=True, verify Vault state
+  - [x] 3.5: Add context for IdentityTokenKey update — change algorithm, verify Vault reflects change, verify ObservedGeneration increased
+  - [x] 3.6: Add deletion context — delete Role (IsDeletable=true, verify Vault cleanup), delete Key (IsDeletable=true, verify Vault cleanup), delete Config (IsDeletable=false, verify Vault persists)
 
-- [ ] Task 4: End-to-end verification (AC: 1, 2, 3, 4, 5, 6, 7)
-  - [ ] 4.1: Run `make integration` and verify new tests pass alongside all existing tests
-  - [ ] 4.2: Verify no regressions — existing tests unaffected
+- [x] Task 4: End-to-end verification (AC: 1, 2, 3, 4, 5, 6, 7)
+  - [x] 4.1: Run `make integration` and verify new tests pass alongside all existing tests
+  - [x] 4.2: Verify no regressions — existing tests unaffected
 
 ## Dev Notes
 
@@ -564,10 +564,32 @@ Codebase is clean post-Epic 5 merge to main. All integration tests passing.
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4 (claude-sonnet-4-20250514)
 
 ### Debug Log References
 
+None — clean implementation with no issues encountered.
+
 ### Completion Notes List
 
+- Registered 3 Identity Token controllers (Config, Key, Role) in suite_integration_test.go after the IdentityOIDCProvider registration block
+- Added 3 decoder methods (GetIdentityTokenConfigInstance, GetIdentityTokenKeyInstance, GetIdentityTokenRoleInstance) to decoder.go following established pattern
+- Created identitytoken_controller_test.go with Ordered Describe block covering:
+  - IdentityTokenConfig create: verify ReconcileSuccessful=True, Vault config exists at identity/oidc/config (singleton, no field assertion on issuer per dev notes)
+  - IdentityTokenKey create: verify ReconcileSuccessful=True, Vault key at identity/oidc/key/test-key with algorithm=RS256 and allowed_client_ids=["*"]
+  - IdentityTokenRole create: verify ReconcileSuccessful=True, Vault role at identity/oidc/role/test-role with key=test-key
+  - IdentityTokenKey update: change algorithm RS256→ES256, verify Vault reflects change, verify ObservedGeneration strictly increased (baseline pattern from Epic 5 retro)
+  - Deletion in reverse dependency order: Role (IsDeletable=true, Vault cleanup verified), Key (IsDeletable=true, Vault cleanup verified), Config (IsDeletable=false, Vault config persists after K8s CR deletion)
+- Used checked type assertions (two-value form) per project convention
+- All integration tests pass (exit code 0), coverage increased from 50.1% to 52.2%
+- No regressions in existing test suite
+
 ### File List
+
+- `controllers/suite_integration_test.go` — Modified: added 3 controller registrations (IdentityTokenConfig, IdentityTokenKey, IdentityTokenRole)
+- `controllers/controllertestutils/decoder.go` — Modified: added 3 decoder methods (GetIdentityTokenConfigInstance, GetIdentityTokenKeyInstance, GetIdentityTokenRoleInstance)
+- `controllers/identitytoken_controller_test.go` — New: integration tests for Identity Token lifecycle (create Config→Key→Role, update Key, delete Role→Key→Config with mixed IsDeletable behavior)
+
+### Change Log
+
+- 2026-05-02: Story 6.3 implemented — Integration tests for IdentityTokenConfig, IdentityTokenKey, and IdentityTokenRole covering full lifecycle (create, reconcile, update, delete) with dependency chain and mixed IsDeletable behavior verification
