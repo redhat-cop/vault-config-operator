@@ -36,6 +36,7 @@
 
 generated: 2026-04-11
 last_updated: 2026-05-02
+# Epic 6 done + retrospective completed 2026-05-02
 # Story 6.4 done 2026-05-02
 # Story 6.4 review 2026-05-02
 # Story 6.4 in-progress 2026-05-02
@@ -152,15 +153,16 @@ development_status:
   epic-5-retrospective: done
 
   # Epic 6: Identity & Audit Integration Tests
-  epic-6: in-progress
+  epic-6: done
   6-1-integration-tests-for-group-and-groupalias-types: done
   6-2-integration-tests-for-identity-oidc-types: done
   6-3-integration-tests-for-identity-token-types: done
   6-4-integration-tests-for-audit-types: done
-  epic-6-retrospective: optional
+  epic-6-retrospective: done
 
   # Epic 7: Hardening — Webhooks, Error Paths & Credential Resolution
   epic-7: backlog
+  7-0-refactor-randomsecret-test-shared-fixtures: backlog
   7-1-webhook-validation-tests-for-immutable-spec-path-rule: backlog
   7-2-unit-tests-for-prepareinternalvalues-credential-resolution: backlog
   7-3-error-path-integration-tests: backlog
