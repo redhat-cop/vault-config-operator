@@ -217,6 +217,18 @@ var _ = BeforeSuite(func() {
 	err = (&EntityAliasReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "EntityAlias")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
+	err = (&IdentityOIDCScopeReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCScope")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&IdentityOIDCAssignmentReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCAssignment")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&IdentityOIDCClientReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCClient")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&IdentityOIDCProviderReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCProvider")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
 	By(fmt.Sprintf("Creating the %v namespace", vaultAdminNamespaceName))
 	vaultAdminNamespace = &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{

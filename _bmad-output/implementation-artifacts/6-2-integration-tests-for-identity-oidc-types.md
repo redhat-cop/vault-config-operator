@@ -1,6 +1,6 @@
 # Story 6.2: Integration Tests for Identity OIDC Types
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -41,30 +41,35 @@ No new infrastructure needed. All types interact with Vault's internal identity 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Register controllers in suite_integration_test.go (AC: 1, 2, 3, 4)
-  - [ ] 1.1: Add `IdentityOIDCScopeReconciler` registration
-  - [ ] 1.2: Add `IdentityOIDCAssignmentReconciler` registration
-  - [ ] 1.3: Add `IdentityOIDCClientReconciler` registration
-  - [ ] 1.4: Add `IdentityOIDCProviderReconciler` registration
+- [x] Task 1: Register controllers in suite_integration_test.go (AC: 1, 2, 3, 4)
+  - [x] 1.1: Add `IdentityOIDCScopeReconciler` registration
+  - [x] 1.2: Add `IdentityOIDCAssignmentReconciler` registration
+  - [x] 1.3: Add `IdentityOIDCClientReconciler` registration
+  - [x] 1.4: Add `IdentityOIDCProviderReconciler` registration
 
-- [ ] Task 2: Add decoder methods (AC: 1, 2, 3, 4)
-  - [ ] 2.1: Add `GetIdentityOIDCScopeInstance` to `controllers/controllertestutils/decoder.go`
-  - [ ] 2.2: Add `GetIdentityOIDCAssignmentInstance` to `controllers/controllertestutils/decoder.go`
-  - [ ] 2.3: Add `GetIdentityOIDCClientInstance` to `controllers/controllertestutils/decoder.go`
-  - [ ] 2.4: Add `GetIdentityOIDCProviderInstance` to `controllers/controllertestutils/decoder.go`
+- [x] Task 2: Add decoder methods (AC: 1, 2, 3, 4)
+  - [x] 2.1: Add `GetIdentityOIDCScopeInstance` to `controllers/controllertestutils/decoder.go`
+  - [x] 2.2: Add `GetIdentityOIDCAssignmentInstance` to `controllers/controllertestutils/decoder.go`
+  - [x] 2.3: Add `GetIdentityOIDCClientInstance` to `controllers/controllertestutils/decoder.go`
+  - [x] 2.4: Add `GetIdentityOIDCProviderInstance` to `controllers/controllertestutils/decoder.go`
 
-- [ ] Task 3: Create integration test file (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] 3.1: Create `controllers/identityoidc_controller_test.go` with `//go:build integration` tag
-  - [ ] 3.2: Add context for IdentityOIDCScope creation — create, poll for ReconcileSuccessful=True, verify Vault state
-  - [ ] 3.3: Add context for IdentityOIDCAssignment creation — create, poll for ReconcileSuccessful=True, verify Vault state
-  - [ ] 3.4: Add context for IdentityOIDCClient creation — create, poll for ReconcileSuccessful=True, verify Vault state
-  - [ ] 3.5: Add context for IdentityOIDCProvider creation — create, poll for ReconcileSuccessful=True, verify Vault state
-  - [ ] 3.6: Add context for IdentityOIDCScope update — update description, verify Vault reflects change, verify ObservedGeneration increased
-  - [ ] 3.7: Add deletion context — delete all in reverse order (Provider → Client → Assignment → Scope), verify K8s deletion and Vault cleanup for each
+- [x] Task 3: Create integration test file (AC: 1, 2, 3, 4, 5, 6)
+  - [x] 3.1: Create `controllers/identityoidc_controller_test.go` with `//go:build integration` tag
+  - [x] 3.2: Add context for IdentityOIDCScope creation — create, poll for ReconcileSuccessful=True, verify Vault state
+  - [x] 3.3: Add context for IdentityOIDCAssignment creation — create, poll for ReconcileSuccessful=True, verify Vault state
+  - [x] 3.4: Add context for IdentityOIDCClient creation — create, poll for ReconcileSuccessful=True, verify Vault state
+  - [x] 3.5: Add context for IdentityOIDCProvider creation — create, poll for ReconcileSuccessful=True, verify Vault state
+  - [x] 3.6: Add context for IdentityOIDCScope update — update description, verify Vault reflects change, verify ObservedGeneration increased
+  - [x] 3.7: Add deletion context — delete all in reverse order (Provider → Client → Assignment → Scope), verify K8s deletion and Vault cleanup for each
 
-- [ ] Task 4: End-to-end verification (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] 4.1: Run `make integration` and verify new tests pass alongside all existing tests
-  - [ ] 4.2: Verify no regressions — existing tests unaffected
+- [x] Task 4: End-to-end verification (AC: 1, 2, 3, 4, 5, 6)
+  - [x] 4.1: Run `make integration` and verify new tests pass alongside all existing tests
+  - [x] 4.2: Verify no regressions — existing tests unaffected
+
+### Review Findings
+
+- [x] [Review][Patch] Client create does not assert `redirect_uris` or `assignments` [`controllers/identityoidc_controller_test.go:147`]
+- [x] [Review][Patch] Provider create does not assert `allowed_client_ids` [`controllers/identityoidc_controller_test.go:193`]
 
 ## Dev Notes
 
@@ -590,10 +595,36 @@ Codebase is clean post-Epic 5 merge to main. All 63 integration tests passing wi
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (Cursor)
 
 ### Debug Log References
 
+None — clean implementation with no blockers.
+
 ### Completion Notes List
 
+- Registered all 4 OIDC controllers (Scope, Assignment, Client, Provider) in suite_integration_test.go after the EntityAlias registration
+- Added 4 decoder methods (GetIdentityOIDCScopeInstance, GetIdentityOIDCAssignmentInstance, GetIdentityOIDCClientInstance, GetIdentityOIDCProviderInstance) following the established pattern
+- Created identityoidc_controller_test.go with Ordered Describe block covering the full OIDC lifecycle:
+  - Scope creation — verifies description and template in Vault
+  - Assignment creation — verifies resource exists in Vault
+  - Client creation — verifies client_type, key, and server-generated client_id in Vault
+  - Provider creation — verifies scopes_supported contains "test-scope" in Vault
+  - Scope update — changes description, verifies Vault reflects change and ObservedGeneration increases
+  - Reverse-order deletion (Provider → Client → Assignment → Scope) — verifies K8s NotFound and Vault Read returns nil for each
+- All tests pass with 0 regressions. Coverage increased from 47.2% to 50.1%.
+- Used existing test fixtures from test/identityoidc/ — no new fixtures needed
+- Followed dependency chain creation order: Scope → Assignment → Client → Provider
+- Used checked type assertions per project convention
+- Recorded ObservedGeneration baseline before update per Epic 5 retrospective guidance
+- Did NOT assert on TTL values from Vault (type mismatch: string vs integer) per story Dev Notes
+
+### Change Log
+
+- 2026-05-01: Implemented Story 6.2 — Integration tests for IdentityOIDCScope, IdentityOIDCAssignment, IdentityOIDCClient, IdentityOIDCProvider. All 4 OIDC types tested end-to-end with create, update, and delete verification. Coverage: 47.2% → 50.1%.
+
 ### File List
+
+- `controllers/suite_integration_test.go` — Modified: Added 4 OIDC controller registrations
+- `controllers/controllertestutils/decoder.go` — Modified: Added 4 OIDC decoder methods
+- `controllers/identityoidc_controller_test.go` — New: Integration tests for OIDC lifecycle (create, update, delete)

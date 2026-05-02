@@ -36,6 +36,8 @@
 
 generated: 2026-04-11
 last_updated: 2026-05-01
+# Story 6.2 done 2026-05-01
+# Story 6.2 review 2026-05-01
 # Story 6.1 done 2026-05-01
 # Story 6.1 review 2026-05-01
 # Story 6.4 ready-for-dev 2026-05-01
@@ -147,7 +149,7 @@ development_status:
   # Epic 6: Identity & Audit Integration Tests
   epic-6: in-progress
   6-1-integration-tests-for-group-and-groupalias-types: done
-  6-2-integration-tests-for-identity-oidc-types: ready-for-dev
+  6-2-integration-tests-for-identity-oidc-types: done
   6-3-integration-tests-for-identity-token-types: ready-for-dev
   6-4-integration-tests-for-audit-types: ready-for-dev
   epic-6-retrospective: optional

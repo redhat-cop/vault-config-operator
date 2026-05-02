@@ -411,3 +411,63 @@ func (d *decoder) GetGroupAliasInstance(filename string) (*redhatcopv1alpha1.Gro
 
 	return nil, errDecode
 }
+
+func (d *decoder) GetIdentityOIDCScopeInstance(filename string) (*redhatcopv1alpha1.IdentityOIDCScope, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.IdentityOIDCScope{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.IdentityOIDCScope)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetIdentityOIDCAssignmentInstance(filename string) (*redhatcopv1alpha1.IdentityOIDCAssignment, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.IdentityOIDCAssignment{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.IdentityOIDCAssignment)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetIdentityOIDCClientInstance(filename string) (*redhatcopv1alpha1.IdentityOIDCClient, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.IdentityOIDCClient{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.IdentityOIDCClient)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetIdentityOIDCProviderInstance(filename string) (*redhatcopv1alpha1.IdentityOIDCProvider, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.IdentityOIDCProvider{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.IdentityOIDCProvider)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
