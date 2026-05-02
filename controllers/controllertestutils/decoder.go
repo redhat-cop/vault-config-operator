@@ -516,3 +516,33 @@ func (d *decoder) GetIdentityTokenRoleInstance(filename string) (*redhatcopv1alp
 
 	return nil, errDecode
 }
+
+func (d *decoder) GetAuditInstance(filename string) (*redhatcopv1alpha1.Audit, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.Audit{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.Audit)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetAuditRequestHeaderInstance(filename string) (*redhatcopv1alpha1.AuditRequestHeader, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.AuditRequestHeader{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.AuditRequestHeader)
+		return o, nil
+	}
+
+	return nil, errDecode
+}

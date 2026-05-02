@@ -1,0 +1,13 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Audit
+metadata:
+  name: test-audit
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  path: test-audit
+  type: file
+  description: "test audit device"
+  options:
+    file_path: stdout

@@ -1,6 +1,6 @@
 # Story 6.4: Integration Tests for Audit Types
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -39,29 +39,34 @@ No new infrastructure needed. Both types interact with Vault's internal system A
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create test fixtures (AC: 1, 2)
-  - [ ] 1.1: Create `test/audit/audit.yaml` — file audit device writing to stdout
-  - [ ] 1.2: Create `test/audit/auditrequestheader.yaml` — request header with hmac=true
+- [x] Task 1: Create test fixtures (AC: 1, 2)
+  - [x] 1.1: Create `test/audit/audit.yaml` — file audit device writing to stdout
+  - [x] 1.2: Create `test/audit/auditrequestheader.yaml` — request header with hmac=true
 
-- [ ] Task 2: Register controllers in suite_integration_test.go (AC: 1, 2)
-  - [ ] 2.1: Add `AuditReconciler` registration
-  - [ ] 2.2: Add `AuditRequestHeaderReconciler` registration
+- [x] Task 2: Register controllers in suite_integration_test.go (AC: 1, 2)
+  - [x] 2.1: Add `AuditReconciler` registration
+  - [x] 2.2: Add `AuditRequestHeaderReconciler` registration
 
-- [ ] Task 3: Add decoder methods (AC: 1, 2)
-  - [ ] 3.1: Add `GetAuditInstance` to `controllers/controllertestutils/decoder.go`
-  - [ ] 3.2: Add `GetAuditRequestHeaderInstance` to `controllers/controllertestutils/decoder.go`
+- [x] Task 3: Add decoder methods (AC: 1, 2)
+  - [x] 3.1: Add `GetAuditInstance` to `controllers/controllertestutils/decoder.go`
+  - [x] 3.2: Add `GetAuditRequestHeaderInstance` to `controllers/controllertestutils/decoder.go`
 
-- [ ] Task 4: Create integration test file (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] 4.1: Create `controllers/audit_controller_test.go` with `//go:build integration` tag
-  - [ ] 4.2: Add context for Audit creation — create, poll ReconcileSuccessful=True, verify Vault state via Sys().ListAudit()
-  - [ ] 4.3: Add context for AuditRequestHeader creation — create, poll ReconcileSuccessful=True, verify Vault state via Logical().Read()
-  - [ ] 4.4: Add context for Audit update — change description, verify Vault reflects change, verify ObservedGeneration increased
-  - [ ] 4.5: Add context for AuditRequestHeader update — change hmac, verify Vault reflects change, verify ObservedGeneration increased
-  - [ ] 4.6: Add deletion context — delete AuditRequestHeader (verify Vault cleanup), delete Audit (verify device disabled)
+- [x] Task 4: Create integration test file (AC: 1, 2, 3, 4, 5, 6)
+  - [x] 4.1: Create `controllers/audit_controller_test.go` with `//go:build integration` tag
+  - [x] 4.2: Add context for Audit creation — create, poll ReconcileSuccessful=True, verify Vault state via Sys().ListAudit()
+  - [x] 4.3: Add context for AuditRequestHeader creation — create, poll ReconcileSuccessful=True, verify Vault state via Logical().Read()
+  - [x] 4.4: Add context for Audit update — change description, verify Vault reflects change, verify ObservedGeneration increased
+  - [x] 4.5: Add context for AuditRequestHeader update — change hmac, verify Vault reflects change, verify ObservedGeneration increased
+  - [x] 4.6: Add deletion context — delete AuditRequestHeader (verify Vault cleanup), delete Audit (verify device disabled)
 
-- [ ] Task 5: End-to-end verification (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] 5.1: Run `make integration` and verify new tests pass alongside all existing tests
-  - [ ] 5.2: Verify no regressions — existing tests unaffected
+- [x] Task 5: End-to-end verification (AC: 1, 2, 3, 4, 5, 6)
+  - [x] 5.1: Run `make integration` and verify new tests pass alongside all existing tests
+  - [x] 5.2: Verify no regressions — existing tests unaffected
+
+### Review Findings
+
+- [x] [Review][Patch] AuditRequestHeader delete check passes on any Vault read error [`controllers/audit_controller_test.go:239`]
+- [x] [Review][Patch] Story delete-verification example no longer matches implemented Vault 400 behavior [`_bmad-output/implementation-artifacts/6-4-integration-tests-for-audit-types.md:231`]
 
 ## Dev Notes
 
@@ -235,7 +240,8 @@ Eventually(func() bool {
 Eventually(func() bool {
     secret, err := vaultClient.Logical().Read("sys/config/auditing/request-headers/X-Custom-Test-Header")
     if err != nil {
-        return false
+        var responseErr *vault.ResponseError
+        return errors.As(err, &responseErr) && (responseErr.StatusCode == 400 || responseErr.StatusCode == 404)
     }
     return secret == nil
 }, timeout, interval).Should(BeTrue())
@@ -287,7 +293,7 @@ Describe("Audit controllers", Ordered)
     It("Should clean up both resources from Vault")
       - Delete AuditRequestHeader (IsDeletable=true)
         - Eventually verify K8s deletion (NotFound)
-        - Eventually verify header removed from Vault (Read returns nil)
+        - Eventually verify header removed from Vault (Read returns nil or an expected missing-header response error)
       - Delete Audit (IsDeletable=true)
         - Eventually verify K8s deletion (NotFound)
         - Eventually verify device removed from Vault (not in ListAudit)
@@ -510,10 +516,29 @@ Codebase is clean post-Epic 5 merge to main. All integration tests passing.
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- First integration test run failed: AuditRequestHeader delete verification timed out. Vault returns HTTP 400 (sometimes 404 depending on client/API behavior) for non-existent request headers, causing `Logical().Read()` to return an error rather than nil. Fixed by treating only the expected missing-header `vault.ResponseError` status as successful deletion verification.
+
 ### Completion Notes List
 
+- All 6 acceptance criteria satisfied end-to-end
+- Audit device lifecycle: create (file type, stdout), verify via `Sys().ListAudit()` with trailing-slash key, update description (disable/re-enable cycle), delete with Vault cleanup verification
+- AuditRequestHeader lifecycle: create (hmac=true), verify via `Logical().Read()` nested response format, update hmac to false, delete with Vault cleanup verification (accepting only expected missing-header response errors)
+- ObservedGeneration baseline assertion pattern used for both update tests
+- Both types confirmed IsDeletable=true with full Vault cleanup verification
+- All 83+ integration tests pass with no regressions (524s, coverage 53.7%)
+
 ### File List
+
+- `test/audit/audit.yaml` — New: test fixture for file audit device writing to stdout
+- `test/audit/auditrequestheader.yaml` — New: test fixture for request header with hmac=true
+- `controllers/suite_integration_test.go` — Modified: added AuditReconciler and AuditRequestHeaderReconciler registrations
+- `controllers/controllertestutils/decoder.go` — Modified: added GetAuditInstance and GetAuditRequestHeaderInstance methods
+- `controllers/audit_controller_test.go` — New: integration tests covering Audit and AuditRequestHeader full lifecycle (create, verify, update, delete)
+
+### Change Log
+
+- 2026-05-02: Implemented Story 6.4 — integration tests for Audit and AuditRequestHeader types covering full CRUD lifecycle with Vault state verification

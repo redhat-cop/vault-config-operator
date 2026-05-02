@@ -1,0 +1,10 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AuditRequestHeader
+metadata:
+  name: test-audit-request-header
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  name: X-Custom-Test-Header
+  hmac: true
