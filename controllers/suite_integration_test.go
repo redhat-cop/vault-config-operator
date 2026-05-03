@@ -217,6 +217,33 @@ var _ = BeforeSuite(func() {
 	err = (&EntityAliasReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "EntityAlias")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
+	err = (&IdentityOIDCScopeReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCScope")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&IdentityOIDCAssignmentReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCAssignment")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&IdentityOIDCClientReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCClient")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&IdentityOIDCProviderReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCProvider")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&IdentityTokenConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityTokenConfig")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&IdentityTokenKeyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityTokenKey")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&IdentityTokenRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityTokenRole")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&AuditReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "Audit")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&AuditRequestHeaderReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AuditRequestHeader")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
 	By(fmt.Sprintf("Creating the %v namespace", vaultAdminNamespaceName))
 	vaultAdminNamespace = &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{

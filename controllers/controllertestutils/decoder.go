@@ -381,3 +381,168 @@ func (d *decoder) GetEntityAliasInstance(filename string) (*redhatcopv1alpha1.En
 
 	return nil, errDecode
 }
+
+func (d *decoder) GetGroupInstance(filename string) (*redhatcopv1alpha1.Group, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.Group{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.Group)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetGroupAliasInstance(filename string) (*redhatcopv1alpha1.GroupAlias, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.GroupAlias{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.GroupAlias)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetIdentityOIDCScopeInstance(filename string) (*redhatcopv1alpha1.IdentityOIDCScope, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.IdentityOIDCScope{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.IdentityOIDCScope)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetIdentityOIDCAssignmentInstance(filename string) (*redhatcopv1alpha1.IdentityOIDCAssignment, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.IdentityOIDCAssignment{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.IdentityOIDCAssignment)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetIdentityOIDCClientInstance(filename string) (*redhatcopv1alpha1.IdentityOIDCClient, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.IdentityOIDCClient{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.IdentityOIDCClient)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetIdentityOIDCProviderInstance(filename string) (*redhatcopv1alpha1.IdentityOIDCProvider, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.IdentityOIDCProvider{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.IdentityOIDCProvider)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetIdentityTokenConfigInstance(filename string) (*redhatcopv1alpha1.IdentityTokenConfig, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.IdentityTokenConfig{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.IdentityTokenConfig)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetIdentityTokenKeyInstance(filename string) (*redhatcopv1alpha1.IdentityTokenKey, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.IdentityTokenKey{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.IdentityTokenKey)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetIdentityTokenRoleInstance(filename string) (*redhatcopv1alpha1.IdentityTokenRole, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.IdentityTokenRole{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.IdentityTokenRole)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetAuditInstance(filename string) (*redhatcopv1alpha1.Audit, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.Audit{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.Audit)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
+
+func (d *decoder) GetAuditRequestHeaderInstance(filename string) (*redhatcopv1alpha1.AuditRequestHeader, error) {
+	obj, groupKindVersion, err := d.decodeFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	kind := reflect.TypeOf(redhatcopv1alpha1.AuditRequestHeader{}).Name()
+	if groupKindVersion.Kind == kind {
+		o := obj.(*redhatcopv1alpha1.AuditRequestHeader)
+		return o, nil
+	}
+
+	return nil, errDecode
+}
