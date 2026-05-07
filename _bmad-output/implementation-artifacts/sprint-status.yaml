@@ -35,7 +35,14 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-05-02
+last_updated: 2026-05-07
+# Story 7.5 ready-for-dev 2026-05-07
+# Story 7.4 ready-for-dev 2026-05-07
+# Story 7.3 ready-for-dev 2026-05-06
+# Story 7.2 ready-for-dev 2026-05-06
+# Story 7.1 ready-for-dev 2026-05-06
+# Story 7.0 ready-for-dev 2026-05-06
+# Epic 7 in-progress 2026-05-06
 # Epic 6 done + retrospective completed 2026-05-02
 # Story 6.4 done 2026-05-02
 # Story 6.4 review 2026-05-02
@@ -161,13 +168,13 @@ development_status:
   epic-6-retrospective: done
 
   # Epic 7: Hardening — Webhooks, Error Paths & Credential Resolution
-  epic-7: backlog
-  7-0-refactor-randomsecret-test-shared-fixtures: backlog
-  7-1-webhook-validation-tests-for-immutable-spec-path-rule: backlog
-  7-2-unit-tests-for-prepareinternalvalues-credential-resolution: backlog
-  7-3-error-path-integration-tests: backlog
-  7-4-audit-vault-api-responses-and-harden-isequivalenttodesiredstate-extra-field-handling: backlog
-  7-5-drift-detection-integration-tests: backlog
+  epic-7: in-progress
+  7-0-refactor-randomsecret-test-shared-fixtures: ready-for-dev
+  7-1-webhook-validation-tests-for-immutable-spec-path-rule: ready-for-dev
+  7-2-unit-tests-for-prepareinternalvalues-credential-resolution: ready-for-dev
+  7-3-error-path-integration-tests: ready-for-dev
+  7-4-audit-vault-api-responses-and-harden-isequivalenttodesiredstate-extra-field-handling: ready-for-dev
+  7-5-drift-detection-integration-tests: ready-for-dev
   epic-7-retrospective: optional
 
   # Epic 7.5: CRD Field Annotation Refactor
