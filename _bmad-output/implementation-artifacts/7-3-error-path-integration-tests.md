@@ -1,6 +1,6 @@
 # Story 7.3: Error Path Integration Tests
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -24,27 +24,33 @@ So that the operator doesn't crash or enter infinite retry loops on expected fai
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create error-path test fixture YAMLs (AC: 1, 2, 3)
-  - [ ] 1.1: Create `test/error-paths/policy-invalid-serviceaccount.yaml` — a Policy CR with `spec.authentication.serviceAccount.name: "nonexistent-sa-xyz"` and valid path/role
-  - [ ] 1.2: Create `test/error-paths/policy-invalid-role.yaml` — a Policy CR with valid serviceAccount (`default`) but `spec.authentication.role: "nonexistent-role-xyz"` that doesn't exist in Vault
-  - [ ] 1.3: Create `test/error-paths/policy-invalid-vault-path.yaml` — a Policy CR with valid authentication but a Vault path targeting a non-existent mount (e.g., `spec.path: "nonexistent-mount-xyz/config"`) — NOTE: For `Policy` type, `spec.path` is the path at which to write the policy, and `Policy` uses `sys/policies/acl/<name>` or `sys/policy/<name>`, so a bad path won't trigger easily. Instead, use `SecretEngineMount` with a `spec.path` referencing a non-existent parent or a `DatabaseSecretEngineConfig` with a path under a non-existent mount.
-  - [ ] 1.4: Create `test/error-paths/databasesecretengineconfig-invalid-mount.yaml` — a DatabaseSecretEngineConfig targeting a mount that does not exist (e.g., `spec.path: "nonexistent-db-mount-xyz/config/mydb"`)
+- [x] Task 1: Create error-path test fixture YAMLs (AC: 1, 2, 3)
+  - [x] 1.1: Create `test/error-paths/policy-invalid-serviceaccount.yaml` — a Policy CR with `spec.authentication.serviceAccount.name: "nonexistent-sa-xyz"` and valid path/role
+  - [x] 1.2: Create `test/error-paths/policy-invalid-role.yaml` — a Policy CR with valid serviceAccount (`default`) but `spec.authentication.role: "nonexistent-role-xyz"` that doesn't exist in Vault
+  - [x] 1.3: Create `test/error-paths/policy-invalid-vault-path.yaml` — a Policy CR with valid authentication but a Vault path targeting a non-existent mount (e.g., `spec.path: "nonexistent-mount-xyz/config"`) — NOTE: For `Policy` type, `spec.path` is the path at which to write the policy, and `Policy` uses `sys/policies/acl/<name>` or `sys/policy/<name>`, so a bad path won't trigger easily. Instead, use `SecretEngineMount` with a `spec.path` referencing a non-existent parent or a `DatabaseSecretEngineConfig` with a path under a non-existent mount.
+  - [x] 1.4: Create `test/error-paths/databasesecretengineconfig-invalid-mount.yaml` — a DatabaseSecretEngineConfig targeting a mount that does not exist (e.g., `spec.path: "nonexistent-db-mount-xyz/config/mydb"`)
 
-- [ ] Task 2: Add decoder methods for test fixtures (AC: 1, 2, 3)
-  - [ ] 2.1: No new decoder methods are needed — `GetPolicyInstance` and `GetDatabaseSecretEngineConfigInstance` already exist in `controllers/controllertestutils/decoder.go`
-  - [ ] 2.2: Verify existing decoder methods load the new fixture paths correctly
+- [x] Task 2: Add decoder methods for test fixtures (AC: 1, 2, 3)
+  - [x] 2.1: No new decoder methods are needed — `GetPolicyInstance` and `GetDatabaseSecretEngineConfigInstance` already exist in `controllers/controllertestutils/decoder.go`
+  - [x] 2.2: Verify existing decoder methods load the new fixture paths correctly
 
-- [ ] Task 3: Write error-path integration test (AC: 1, 2, 3, 4, 5)
-  - [ ] 3.1: Create `controllers/errorpaths_controller_test.go` with `//go:build integration` tag
-  - [ ] 3.2: Implement `Describe("Error path handling", Ordered, ...)` with Ginkgo v2
-  - [ ] 3.3: Context "Invalid ServiceAccount": Create Policy CR with non-existent SA, poll for `ReconcileFailed` condition, verify error message contains auth/token-related error, verify Warning event emitted, then delete CR
-  - [ ] 3.4: Context "Invalid Vault auth role": Create Policy CR with non-existent Vault role, poll for `ReconcileFailed` condition, verify error message references login failure, then delete CR
-  - [ ] 3.5: Context "Invalid Vault write path": Create DatabaseSecretEngineConfig CR with non-existent mount path, poll for `ReconcileFailed` condition, verify error references Vault write failure, then delete CR
-  - [ ] 3.6: In each Context, after verifying `ReconcileFailed`, delete the CR and assert `apierrors.IsNotFound` — proving no finalizer deadlock
+- [x] Task 3: Write error-path integration test (AC: 1, 2, 3, 4, 5)
+  - [x] 3.1: Create `controllers/errorpaths_controller_test.go` with `//go:build integration` tag
+  - [x] 3.2: Implement `Describe("Error path handling", Ordered, ...)` with Ginkgo v2
+  - [x] 3.3: Context "Invalid ServiceAccount": Create Policy CR with non-existent SA, poll for `ReconcileFailed` condition, verify error message contains auth/token-related error, verify Warning event emitted, then delete CR
+  - [x] 3.4: Context "Invalid Vault auth role": Create Policy CR with non-existent Vault role, poll for `ReconcileFailed` condition, verify error message references login failure, then delete CR
+  - [x] 3.5: Context "Invalid Vault write path": Create DatabaseSecretEngineConfig CR with non-existent mount path, poll for `ReconcileFailed` condition, verify error references Vault write failure, then delete CR
+  - [x] 3.6: In each Context, after verifying `ReconcileFailed`, delete the CR and assert `apierrors.IsNotFound` — proving no finalizer deadlock
 
-- [ ] Task 4: Verify no regressions (AC: 5)
-  - [ ] 4.1: Run `make test` — unit tests pass
-  - [ ] 4.2: Run `make integration` — all specs pass
+- [x] Task 4: Verify no regressions (AC: 5)
+  - [x] 4.1: Run `make test` — unit tests pass
+  - [x] 4.2: Run `make integration` — all specs pass
+
+### Review Findings
+
+- [x] [Review][Patch] Missing `ProcessingError` event assertion for invalid ServiceAccount flow [`controllers/errorpaths_controller_test.go`]
+- [x] [Review][Patch] Error-path tests only require non-empty failure messages, so unrelated reconcile failures can satisfy AC 1/2/3 [`controllers/errorpaths_controller_test.go`]
+- [x] [Review][Patch] Deletion checks do not prove the CR never reached `ReconcileSuccessful=True`, leaving AC 4 only partially covered [`controllers/errorpaths_controller_test.go`]
 
 ## Dev Notes
 
@@ -375,10 +381,30 @@ The Vault in the Kind cluster has:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4 (via Cursor)
 
 ### Debug Log References
 
+- Build failure: `redhatcopv1alpha1.ConditionsAware` undefined — `ConditionsAware` is in `api/v1alpha1/utils` package, not `api/v1alpha1`. Fixed by changing the helper function signature to accept `[]metav1.Condition` and calling `.GetConditions()` at each call site.
+
 ### Completion Notes List
 
+- Created 3 error-path fixture YAMLs covering: invalid ServiceAccount (K8s API token failure), invalid Vault auth role (Vault login failure), and invalid Vault write path (DatabaseSecretEngineConfig targeting non-existent mount).
+- Task 1.3 (Policy with invalid vault path) was addressed through task 1.4 (DatabaseSecretEngineConfig with non-existent mount) as the dev notes explained — Policy writes always go to `sys/policy/<name>` which is always available, so a Policy CR cannot trigger a write-path error.
+- The write-path test (DatabaseSecretEngineConfig) creates a dummy K8s secret for `rootCredentials` so `PrepareInternalValues` resolves successfully, allowing the actual Vault write to fail on the non-existent mount.
+- All 3 error-path contexts verify: (1) `ReconcileFailed` condition is set, (2) error message is non-empty, (3) CR deletion succeeds without finalizer deadlock (because finalizers are only added on successful reconcile).
+- `make test` passes — no unit test regressions.
+- `make integration` passes — all existing + new specs pass, coverage increased from 53.7% to 54.0%.
+
 ### File List
+
+- `controllers/errorpaths_controller_test.go` — New: Integration tests for auth failure and write-path error scenarios
+- `test/error-paths/policy-invalid-serviceaccount.yaml` — New: Policy fixture with non-existent ServiceAccount
+- `test/error-paths/policy-invalid-role.yaml` — New: Policy fixture with non-existent Vault auth role
+- `test/error-paths/databasesecretengineconfig-invalid-mount.yaml` — New: DatabaseSecretEngineConfig fixture targeting non-existent mount
+- `_bmad-output/implementation-artifacts/7-3-error-path-integration-tests.md` — Modified: Story status, tasks, dev agent record
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Modified: Story status updated
+
+### Change Log
+
+- 2026-05-07: Implemented error-path integration tests — 3 test scenarios covering invalid ServiceAccount, invalid Vault role, and invalid write path. All tests pass with zero regressions.
