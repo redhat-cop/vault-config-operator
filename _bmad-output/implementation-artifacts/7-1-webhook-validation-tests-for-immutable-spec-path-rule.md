@@ -1,6 +1,6 @@
 # Story 7.1: Webhook Validation Tests for Immutable `spec.path` Rule
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -24,22 +24,22 @@ So that the most critical webhook validation is tested.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create table-driven `ValidateUpdate` test for 26 standard types (AC: 1, 2, 3)
-  - [ ] 1.1: Create `api/v1alpha1/webhook_validate_update_test.go` with `//go:build !integration` tag (unit tests)
-  - [ ] 1.2: Define test table struct: `{ name, newObj webhook.Validator, oldObj runtime.Object, expectErr bool, errSubstring string }`
-  - [ ] 1.3: Add rejection entries (path changed) for all 26 types
-  - [ ] 1.4: Add allowance entries (path unchanged, other field changed) for all 26 types
-  - [ ] 1.5: Implement test loop calling `ValidateUpdate(old)` and asserting error/nil
+- [x] Task 1: Create table-driven `ValidateUpdate` test for 26 standard types (AC: 1, 2, 3)
+  - [x] 1.1: Create `api/v1alpha1/webhook_validate_update_test.go` (no build tag — matches existing pattern in api/v1alpha1/)
+  - [x] 1.2: Define test table struct: `{ name, newObj webhook.Validator, oldObj runtime.Object, expectErr bool, errSubstring string }`
+  - [x] 1.3: Add rejection entries (path changed) for all 26 types
+  - [x] 1.4: Add allowance entries (path unchanged, other field changed) for all 26 types
+  - [x] 1.5: Implement test loop calling `ValidateUpdate(old)` and asserting error/nil
 
-- [ ] Task 2: Test `RabbitMQSecretEngineConfig` custom Handle (AC: 4)
-  - [ ] 2.1: In the same file, add a dedicated test for `RabbitMQSecretEngineConfigValidation.Handle`
-  - [ ] 2.2: Construct `admission.Request` with `Operation: "UPDATE"`, old and new objects marshaled to `req.Object.Raw` / `req.OldObject.Raw`
-  - [ ] 2.3: Test rejection (path changed → `admission.Errored`)
-  - [ ] 2.4: Test allowance (path unchanged → `admission.Allowed`)
+- [x] Task 2: Test `RabbitMQSecretEngineConfig` custom Handle (AC: 4)
+  - [x] 2.1: In the same file, add a dedicated test for `RabbitMQSecretEngineConfigValidation.Handle`
+  - [x] 2.2: Construct `admission.Request` with `Operation: "UPDATE"`, old and new objects marshaled to `req.Object.Raw` / `req.OldObject.Raw`
+  - [x] 2.3: Test rejection (path changed → `admission.Errored`)
+  - [x] 2.4: Test allowance (path unchanged → `admission.Allowed`)
 
-- [ ] Task 3: Verify no regressions (AC: 5)
-  - [ ] 3.1: Run `make test` — all unit tests pass
-  - [ ] 3.2: Run `make fmt && make vet` — no formatting or static analysis issues
+- [x] Task 3: Verify no regressions (AC: 5)
+  - [x] 3.1: Run `make test` — all unit tests pass
+  - [x] 3.2: Run `make fmt && make vet` — no formatting or static analysis issues
 
 ## Dev Notes
 
@@ -257,10 +257,29 @@ No recent changes to `api/v1alpha1/*_webhook.go` files outside Epic 6 scope. Cod
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (Cursor Agent)
 
 ### Debug Log References
 
+None — all tests passed on first attempt.
+
 ### Completion Notes List
 
+- Created `api/v1alpha1/webhook_validate_update_test.go` with 54 test cases total
+- Task 1: Table-driven `TestValidateUpdateRejectsPathChange` with 52 cases covering all 26 standard types (26 rejection + 26 allowance)
+  - Rejection tests verify `ValidateUpdate` returns error containing "spec.path cannot be updated" when `Spec.Path` changes
+  - Allowance tests verify `ValidateUpdate` does NOT return a path-immutability error when only non-path fields change
+  - Special handling for AuthEngineMount/SecretEngineMount (config-only changes allowed), CertAuthEngineConfig (keeps Spec.Name same), PKISecretEngineConfig (keeps Type/PrivateKeyType same), RandomSecret (keeps SecretKey same)
+  - For types that call `isValid()` after path check, allowance tests tolerate non-path-related validation errors
+- Task 2: `TestRabbitMQSecretEngineConfigHandleRejectsPathChange` with 2 cases testing the custom `Handle` method via `admission.Request` construction
+  - Rejection: verifies `Allowed=false` and `StatusBadRequest` when path changes
+  - Allowance: verifies `Allowed=true` when path unchanged
+- Task 3: `make test` passes (0 regressions), `make fmt && make vet` clean
+- Coverage in `api/v1alpha1` improved from 16.9% to 19.7%
+- No build tag used — matches existing test pattern in `api/v1alpha1/` directory
+
 ### File List
+
+| # | File | Change Type | Description |
+|---|------|-------------|-------------|
+| 1 | `api/v1alpha1/webhook_validate_update_test.go` | New | Table-driven ValidateUpdate tests for 26 standard types + RabbitMQSecretEngineConfig Handle test |
