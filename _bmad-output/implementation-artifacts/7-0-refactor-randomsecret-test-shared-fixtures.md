@@ -1,6 +1,6 @@
 # Story 7.0: Refactor RandomSecret Test Shared Fixtures
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -24,32 +24,36 @@ So that future test modifications only change one place and new KV v2 test scena
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create shared helper file (AC: 1, 2, 5)
-  - [ ] 1.1: Create `controllers/integration_test_helpers_test.go` with `//go:build integration` tag
-  - [ ] 1.2: Implement `waitForReconcileSuccess` generic helper
-  - [ ] 1.3: Implement `SetupKVv2Stack` helper (creates PasswordPolicy, Policies, KubernetesAuthEngineRoles, SecretEngineMount; returns a struct with all created instances)
-  - [ ] 1.4: Implement `TeardownKVv2Stack` helper (deletes all resources + waits for Vault cleanup)
-  - [ ] 1.5: Implement `SetupKVv2StackWithReader` variant that also creates the secret-reader policy and role (needed by retain and VaultSecret v2 tests)
+- [x] Task 1: Create shared helper file (AC: 1, 2, 5)
+  - [x] 1.1: Create `controllers/integration_test_helpers_test.go` with `//go:build integration` tag
+  - [x] 1.2: Implement `waitForReconcileSuccess` generic helper
+  - [x] 1.3: Implement `SetupKVv2Stack` helper (creates PasswordPolicy, Policies, KubernetesAuthEngineRoles, SecretEngineMount; returns a struct with all created instances)
+  - [x] 1.4: Implement `TeardownKVv2Stack` helper (deletes all resources + waits for Vault cleanup)
+  - [x] 1.5: Implement `SetupKVv2StackWithReader` variant that also creates the secret-reader policy and role (needed by retain and VaultSecret v2 tests)
 
-- [ ] Task 2: Refactor `randomsecret_controller_test.go` (AC: 1, 2, 3, 5)
-  - [ ] 2.1: Replace bootstrap block in "retain policy" Context with `SetupKVv2StackWithReader` call
-  - [ ] 2.2: Replace bootstrap block in "multi-key" Context with `SetupKVv2Stack` call
-  - [ ] 2.3: Replace bootstrap block in "multi-key recreate" Context with `SetupKVv2Stack` call
-  - [ ] 2.4: Replace bootstrap block in "refreshPeriod" Context with `SetupKVv2Stack` call
-  - [ ] 2.5: Replace teardown blocks in all 4 Contexts with `TeardownKVv2Stack` calls
-  - [ ] 2.6: Replace inline `Eventually ReconcileSuccessful` checks for RandomSecret/VaultSecret resources with `waitForReconcileSuccess`
+- [x] Task 2: Refactor `randomsecret_controller_test.go` (AC: 1, 2, 3, 5)
+  - [x] 2.1: Replace bootstrap block in "retain policy" Context with `SetupKVv2StackWithReader` call
+  - [x] 2.2: Replace bootstrap block in "multi-key" Context with `SetupKVv2Stack` call
+  - [x] 2.3: Replace bootstrap block in "multi-key recreate" Context with `SetupKVv2Stack` call
+  - [x] 2.4: Replace bootstrap block in "refreshPeriod" Context with `SetupKVv2Stack` call
+  - [x] 2.5: Replace teardown blocks in all 4 Contexts with `TeardownKVv2Stack` calls
+  - [x] 2.6: Replace inline `Eventually ReconcileSuccessful` checks for RandomSecret/VaultSecret resources with `waitForReconcileSuccess`
 
-- [ ] Task 3: Refactor `vaultsecret_controller_v2_test.go` (AC: 1, 2, 3, 5)
-  - [ ] 3.1: Replace bootstrap block with `SetupKVv2StackWithReader` call
-  - [ ] 3.2: Replace teardown block with `TeardownKVv2Stack` call
-  - [ ] 3.3: Replace inline `Eventually ReconcileSuccessful` checks with `waitForReconcileSuccess`
+- [x] Task 3: Refactor `vaultsecret_controller_v2_test.go` (AC: 1, 2, 3, 5)
+  - [x] 3.1: Replace bootstrap block with `SetupKVv2StackWithReader` call
+  - [x] 3.2: Replace teardown block with `TeardownKVv2Stack` call
+  - [x] 3.3: Replace inline `Eventually ReconcileSuccessful` checks with `waitForReconcileSuccess`
 
-- [ ] Task 4: Remove dead fixture (AC: 4)
-  - [ ] 4.1: Delete `test/randomsecret/v2/08-passwordpolicy-simple-password-policy-v2.yaml`
+- [x] Task 4: Remove dead fixture (AC: 4)
+  - [x] 4.1: Delete `test/randomsecret/v2/08-passwordpolicy-simple-password-policy-v2.yaml`
 
-- [ ] Task 5: Verify no regressions (AC: 3)
-  - [ ] 5.1: Run `make test` — unit tests pass
-  - [ ] 5.2: Run `make integration` — all 83+ specs pass with zero regressions
+- [x] Task 5: Verify no regressions (AC: 3)
+  - [x] 5.1: Run `make test` — unit tests pass
+  - [x] 5.2: Run `make integration` — all 83+ specs pass with zero regressions
+
+### Review Findings
+
+- [x] [Review][Patch] Replace the remaining inline `Eventually(... ReconcileSuccessful ...)` block for `VaultSecret` creation with `waitForReconcileSuccess` to fully satisfy AC 5 and Task 3.3 [`controllers/vaultsecret_controller_v2_test.go:68`]
 
 ## Dev Notes
 
@@ -272,10 +276,24 @@ Codebase clean on main. All integration tests passing post-Epic 6 merge.
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (Cursor)
 
 ### Debug Log References
 
+- Initial `waitForVaultCleanup` helper incorrectly checked the `err` return from `vaultClient.Logical().Read()`. When a SecretEngineMount is deleted, reading from its former path returns HTTP 400 with nil secret. The original code intentionally ignores the error and only checks if `secret == nil`. Fixed by using `_` for the error return.
+
 ### Completion Notes List
 
+- Created `controllers/integration_test_helpers_test.go` (~170 lines) with shared helpers: `waitForReconcileSuccess`, `waitForVaultCleanup`, `SetupKVv2Stack`, `SetupKVv2StackWithReader`, `TeardownKVv2Stack`, `KVv2Stack` struct, and fixture path constants.
+- Refactored `randomsecret_controller_test.go` from 1718 lines to ~380 lines (~78% reduction) by replacing 4x bootstrap blocks and 4x teardown blocks with helper calls, plus replacing inline reconcile-success checks with `waitForReconcileSuccess`.
+- Refactored `vaultsecret_controller_v2_test.go` from 491 lines to ~150 lines (~69% reduction) using the same shared helpers.
+- Deleted dead fixture `test/randomsecret/v2/08-passwordpolicy-simple-password-policy-v2.yaml` (byte-for-byte duplicate, never referenced).
+- All 83 integration specs pass with zero regressions. Coverage maintained at 53.7%.
+- Unit tests pass clean.
+
 ### File List
+
+- `controllers/integration_test_helpers_test.go` — NEW — Shared KV v2 bootstrap/teardown helpers + waitForReconcileSuccess + fixture path constants
+- `controllers/randomsecret_controller_test.go` — MODIFIED — Replaced 4x bootstrap + 4x teardown blocks with helper calls (~1340 lines removed)
+- `controllers/vaultsecret_controller_v2_test.go` — MODIFIED — Replaced 1x bootstrap + 1x teardown blocks with helper calls (~340 lines removed)
+- `test/randomsecret/v2/08-passwordpolicy-simple-password-policy-v2.yaml` — DELETED — Dead duplicate fixture

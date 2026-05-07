@@ -36,6 +36,7 @@
 
 generated: 2026-04-11
 last_updated: 2026-05-07
+# Story 7.0 done 2026-05-07
 # Story 7.5 ready-for-dev 2026-05-07
 # Story 7.4 ready-for-dev 2026-05-07
 # Story 7.3 ready-for-dev 2026-05-06
@@ -169,7 +170,7 @@ development_status:
 
   # Epic 7: Hardening — Webhooks, Error Paths & Credential Resolution
   epic-7: in-progress
-  7-0-refactor-randomsecret-test-shared-fixtures: ready-for-dev
+  7-0-refactor-randomsecret-test-shared-fixtures: done
   7-1-webhook-validation-tests-for-immutable-spec-path-rule: ready-for-dev
   7-2-unit-tests-for-prepareinternalvalues-credential-resolution: ready-for-dev
   7-3-error-path-integration-tests: ready-for-dev
