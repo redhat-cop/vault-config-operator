@@ -1,9 +1,12 @@
 package v1alpha1
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -319,5 +322,125 @@ func TestLDAPAuthEngineConfigConditions(t *testing.T) {
 	}
 	if got[0].Status != metav1.ConditionTrue {
 		t.Errorf("expected condition status True, got %v", got[0].Status)
+	}
+}
+
+func TestLDAPAuthEngineConfig_PrepareInternalValues(t *testing.T) {
+	const ns = "test-ns"
+
+	tests := []struct {
+		name     string
+		setup    func(t *testing.T) (*LDAPAuthEngineConfig, context.Context)
+		wantUser string
+		wantPass string
+	}{
+		{
+			name: "secret branch with BindDN uses BindDN and password from secret",
+			setup: func(t *testing.T) (*LDAPAuthEngineConfig, context.Context) {
+				t.Helper()
+				sec := newK8sSecret(ns, "ldap-bind", map[string][]byte{
+					"password": []byte("bind-secret"),
+				})
+				kube := newFakeKubeClient(sec)
+				handler := newFakeVaultHandler()
+				vc, ts := newFakeVaultClient(t, handler)
+				t.Cleanup(ts.Close)
+				instance := &LDAPAuthEngineConfig{
+					ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: "ldap-config"},
+					Spec: LDAPAuthEngineConfigSpec{
+						Path: vaultutils.Path("ldap"),
+						LDAPConfig: LDAPConfig{
+							URL:    "ldap://ldap.example.com",
+							BindDN: "cn=admin,dc=example,dc=com",
+						},
+						BindCredentials: vaultutils.RootCredentialConfig{
+							Secret:      &corev1.LocalObjectReference{Name: "ldap-bind"},
+							UsernameKey: "username",
+							PasswordKey: "password",
+						},
+					},
+				}
+				return instance, pivContext(kube, vc)
+			},
+			wantUser: "cn=admin,dc=example,dc=com",
+			wantPass: "bind-secret",
+		},
+		{
+			name: "secret branch without BindDN username and password from secret",
+			setup: func(t *testing.T) (*LDAPAuthEngineConfig, context.Context) {
+				t.Helper()
+				sec := newK8sSecret(ns, "ldap-bind", map[string][]byte{
+					"username": []byte("cn=reader,dc=example,dc=com"),
+					"password": []byte("reader-secret"),
+				})
+				kube := newFakeKubeClient(sec)
+				handler := newFakeVaultHandler()
+				vc, ts := newFakeVaultClient(t, handler)
+				t.Cleanup(ts.Close)
+				instance := &LDAPAuthEngineConfig{
+					ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: "ldap-config"},
+					Spec: LDAPAuthEngineConfigSpec{
+						Path: vaultutils.Path("ldap"),
+						LDAPConfig: LDAPConfig{
+							URL: "ldap://ldap.example.com",
+						},
+						BindCredentials: vaultutils.RootCredentialConfig{
+							Secret:      &corev1.LocalObjectReference{Name: "ldap-bind"},
+							UsernameKey: "username",
+							PasswordKey: "password",
+						},
+					},
+				}
+				return instance, pivContext(kube, vc)
+			},
+			wantUser: "cn=reader,dc=example,dc=com",
+			wantPass: "reader-secret",
+		},
+		{
+			name: "vault secret username and password from vault",
+			setup: func(t *testing.T) (*LDAPAuthEngineConfig, context.Context) {
+				t.Helper()
+				kube := newFakeKubeClient()
+				handler := newFakeVaultHandler()
+				handler.setGet("secret/ldap-creds", map[string]interface{}{
+					"username": "cn=vault,dc=example,dc=com",
+					"password": "vault-bind-pass",
+				})
+				vc, ts := newFakeVaultClient(t, handler)
+				t.Cleanup(ts.Close)
+				instance := &LDAPAuthEngineConfig{
+					ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: "ldap-config"},
+					Spec: LDAPAuthEngineConfigSpec{
+						Path: vaultutils.Path("ldap"),
+						LDAPConfig: LDAPConfig{
+							URL: "ldap://ldap.example.com",
+						},
+						BindCredentials: vaultutils.RootCredentialConfig{
+							VaultSecret: &vaultutils.VaultSecretReference{Path: "secret/ldap-creds"},
+							UsernameKey: "username",
+							PasswordKey: "password",
+						},
+					},
+				}
+				return instance, pivContext(kube, vc)
+			},
+			wantUser: "cn=vault,dc=example,dc=com",
+			wantPass: "vault-bind-pass",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			instance, ctx := tt.setup(t)
+			if err := instance.PrepareInternalValues(ctx, instance); err != nil {
+				t.Fatalf("PrepareInternalValues: %v", err)
+			}
+			if instance.Spec.LDAPConfig.retrievedUsername != tt.wantUser {
+				t.Errorf("retrievedUsername = %q, want %q", instance.Spec.LDAPConfig.retrievedUsername, tt.wantUser)
+			}
+			if instance.Spec.LDAPConfig.retrievedPassword != tt.wantPass {
+				t.Errorf("retrievedPassword = %q, want %q", instance.Spec.LDAPConfig.retrievedPassword, tt.wantPass)
+			}
+		})
 	}
 }

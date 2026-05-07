@@ -1,10 +1,13 @@
 package v1alpha1
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
 )
 
 func TestKubernetesAuthEngineConfigGetPath(t *testing.T) {
@@ -178,5 +181,50 @@ func TestKubernetesAuthEngineConfigConditions(t *testing.T) {
 	}
 	if got[0].Status != metav1.ConditionTrue {
 		t.Errorf("expected condition status True, got %v", got[0].Status)
+	}
+}
+
+func TestKubernetesAuthEngineConfig_PrepareInternalValues_NilTokenReviewerNoOp(t *testing.T) {
+	config := &KubernetesAuthEngineConfig{
+		ObjectMeta: metav1.ObjectMeta{Name: "k8scfg", Namespace: "vault-ns"},
+		Spec: KubernetesAuthEngineConfigSpec{
+			Path:                        "kubernetes",
+			TokenReviewerServiceAccount: nil,
+			KAECConfig: KAECConfig{
+				KubernetesHost: "https://kubernetes.default.svc:443",
+			},
+		},
+	}
+	ctx := context.Background()
+	if err := config.PrepareInternalValues(ctx, config); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	if config.Spec.retrievedTokenReviewerJWT != "" {
+		t.Fatalf("retrievedTokenReviewerJWT: got %q want empty", config.Spec.retrievedTokenReviewerJWT)
+	}
+}
+
+func TestKubernetesAuthEngineConfig_PrepareInternalValues_NonNilSAErrorPropagated(t *testing.T) {
+	config := &KubernetesAuthEngineConfig{
+		ObjectMeta: metav1.ObjectMeta{Name: "k8scfg", Namespace: "vault-ns"},
+		Spec: KubernetesAuthEngineConfigSpec{
+			Path: "kubernetes",
+			TokenReviewerServiceAccount: &corev1.LocalObjectReference{
+				Name: "my-service-account",
+			},
+			KAECConfig: KAECConfig{
+				KubernetesHost: "https://kubernetes.default.svc:443",
+			},
+		},
+	}
+	unreachable := &rest.Config{Host: "https://127.0.0.1:1"}
+	ctx := pivContextWithRestConfig(newFakeKubeClient(), nil, unreachable)
+
+	err := config.PrepareInternalValues(ctx, config)
+	if err == nil {
+		t.Fatal("expected error when TokenReviewerServiceAccount is set but token request fails")
+	}
+	if config.Spec.retrievedTokenReviewerJWT != "" {
+		t.Fatalf("retrievedTokenReviewerJWT should be empty on error, got %q", config.Spec.retrievedTokenReviewerJWT)
 	}
 }

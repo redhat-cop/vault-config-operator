@@ -36,6 +36,7 @@
 
 generated: 2026-04-11
 last_updated: 2026-05-07
+# Story 7.2 review 2026-05-07
 # Story 7.1 done 2026-05-07
 # Story 7.0 done 2026-05-07
 # Story 7.5 ready-for-dev 2026-05-07
@@ -173,7 +174,7 @@ development_status:
   epic-7: in-progress
   7-0-refactor-randomsecret-test-shared-fixtures: done
   7-1-webhook-validation-tests-for-immutable-spec-path-rule: done
-  7-2-unit-tests-for-prepareinternalvalues-credential-resolution: ready-for-dev
+  7-2-unit-tests-for-prepareinternalvalues-credential-resolution: done
   7-3-error-path-integration-tests: ready-for-dev
   7-4-audit-vault-api-responses-and-harden-isequivalenttodesiredstate-extra-field-handling: ready-for-dev
   7-5-drift-detection-integration-tests: ready-for-dev

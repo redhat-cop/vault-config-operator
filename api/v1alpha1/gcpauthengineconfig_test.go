@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -163,5 +165,68 @@ func TestGCPAuthEngineConfigConditions(t *testing.T) {
 	}
 	if got[0].Status != metav1.ConditionTrue {
 		t.Errorf("expected condition status True, got %v", got[0].Status)
+	}
+}
+
+func TestGCPAuthEngineConfig_PrepareInternalValues_DefaultNoOp(t *testing.T) {
+	defaultCreds := vaultutils.RootCredentialConfig{
+		UsernameKey: "serviceaccount",
+		PasswordKey: "credentials",
+	}
+	config := &GCPAuthEngineConfig{
+		ObjectMeta: metav1.ObjectMeta{Namespace: "ns-gcp-auth"},
+		Spec: GCPAuthEngineConfigSpec{
+			GCPCredentials: defaultCreds,
+			GCPConfig: GCPConfig{
+				IAMalias:    "unique_id",
+				IAMmetadata: "default",
+			},
+		},
+	}
+	kube := newFakeKubeClient()
+	vc, ts := newFakeVaultClient(t, newFakeVaultHandler())
+	defer ts.Close()
+	ctx := pivContext(kube, vc)
+	if err := config.PrepareInternalValues(ctx, config); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	if config.Spec.retrievedServiceAccount != "" || config.Spec.retrievedCredentials != "" {
+		t.Errorf("expected empty retrieved GCP credentials, got sa=%q creds=%q",
+			config.Spec.retrievedServiceAccount, config.Spec.retrievedCredentials)
+	}
+}
+
+func TestGCPAuthEngineConfig_PrepareInternalValues_FromK8sSecret(t *testing.T) {
+	ns := "ns-gcp-auth"
+	sec := newK8sSecret(ns, "gcp-creds", map[string][]byte{
+		"serviceaccount": []byte("sa@proj.iam.gserviceaccount.com"),
+		"credentials":    []byte(`{"type":"service_account"}`),
+	})
+	kube := newFakeKubeClient(sec)
+	vc, ts := newFakeVaultClient(t, newFakeVaultHandler())
+	defer ts.Close()
+	ctx := pivContext(kube, vc)
+	config := &GCPAuthEngineConfig{
+		ObjectMeta: metav1.ObjectMeta{Namespace: ns},
+		Spec: GCPAuthEngineConfigSpec{
+			GCPCredentials: vaultutils.RootCredentialConfig{
+				Secret:      &corev1.LocalObjectReference{Name: "gcp-creds"},
+				UsernameKey: "serviceaccount",
+				PasswordKey: "credentials",
+			},
+			GCPConfig: GCPConfig{
+				ServiceAccount: "",
+				IAMalias:       "unique_id",
+			},
+		},
+	}
+	if err := config.PrepareInternalValues(ctx, config); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	if config.Spec.retrievedServiceAccount != "sa@proj.iam.gserviceaccount.com" {
+		t.Errorf("retrievedServiceAccount = %q", config.Spec.retrievedServiceAccount)
+	}
+	if config.Spec.retrievedCredentials != `{"type":"service_account"}` {
+		t.Errorf("retrievedCredentials = %q", config.Spec.retrievedCredentials)
 	}
 }

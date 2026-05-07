@@ -1,10 +1,13 @@
 package v1alpha1
 
 import (
+	"context"
 	"reflect"
 	"testing"
 	"time"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -624,6 +627,239 @@ func TestToInterfaceArray(t *testing.T) {
 			}
 			if result == nil {
 				t.Error("toInterfaceArray should return empty slice, not nil")
+			}
+		})
+	}
+}
+
+func TestDatabaseSecretEngineConfig_PrepareInternalValues(t *testing.T) {
+	const ns = "test-ns"
+
+	tests := []struct {
+		name     string
+		setup    func(t *testing.T) (*DatabaseSecretEngineConfig, context.Context)
+		wantUser string
+		wantPass string
+	}{
+		{
+			name: "secret branch username and password from K8s secret",
+			setup: func(t *testing.T) (*DatabaseSecretEngineConfig, context.Context) {
+				t.Helper()
+				sec := newK8sSecret(ns, "db-cred", map[string][]byte{
+					"username": []byte("db-user"),
+					"password": []byte("db-pass"),
+				})
+				kube := newFakeKubeClient(sec)
+				handler := newFakeVaultHandler()
+				vc, ts := newFakeVaultClient(t, handler)
+				t.Cleanup(ts.Close)
+				instance := &DatabaseSecretEngineConfig{
+					ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: "db-config"},
+					Spec: DatabaseSecretEngineConfigSpec{
+						Path: "database",
+						DBSEConfig: DBSEConfig{
+							PluginName: "postgresql-database-plugin",
+						},
+						RootCredentials: vaultutils.RootCredentialConfig{
+							Secret:      &corev1.LocalObjectReference{Name: "db-cred"},
+							UsernameKey: "username",
+							PasswordKey: "password",
+						},
+					},
+				}
+				return instance, pivContext(kube, vc)
+			},
+			wantUser: "db-user",
+			wantPass: "db-pass",
+		},
+		{
+			name: "secret branch spec username takes precedence",
+			setup: func(t *testing.T) (*DatabaseSecretEngineConfig, context.Context) {
+				t.Helper()
+				sec := newK8sSecret(ns, "db-cred", map[string][]byte{
+					"username": []byte("from-secret"),
+					"password": []byte("db-pass"),
+				})
+				kube := newFakeKubeClient(sec)
+				handler := newFakeVaultHandler()
+				vc, ts := newFakeVaultClient(t, handler)
+				t.Cleanup(ts.Close)
+				instance := &DatabaseSecretEngineConfig{
+					ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: "db-config"},
+					Spec: DatabaseSecretEngineConfigSpec{
+						Path: "database",
+						DBSEConfig: DBSEConfig{
+							PluginName: "postgresql-database-plugin",
+							Username:   "spec-user",
+						},
+						RootCredentials: vaultutils.RootCredentialConfig{
+							Secret:      &corev1.LocalObjectReference{Name: "db-cred"},
+							UsernameKey: "username",
+							PasswordKey: "password",
+						},
+					},
+				}
+				return instance, pivContext(kube, vc)
+			},
+			wantUser: "spec-user",
+			wantPass: "db-pass",
+		},
+		{
+			name: "vault secret KV v1 username and password from vault",
+			setup: func(t *testing.T) (*DatabaseSecretEngineConfig, context.Context) {
+				t.Helper()
+				kube := newFakeKubeClient()
+				handler := newFakeVaultHandler()
+				handler.setGet("secret/creds", map[string]interface{}{
+					"username": "vault-user",
+					"password": "vault-pass",
+				})
+				vc, ts := newFakeVaultClient(t, handler)
+				t.Cleanup(ts.Close)
+				instance := &DatabaseSecretEngineConfig{
+					ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: "db-config"},
+					Spec: DatabaseSecretEngineConfigSpec{
+						Path: "database",
+						DBSEConfig: DBSEConfig{
+							PluginName: "postgresql-database-plugin",
+						},
+						RootCredentials: vaultutils.RootCredentialConfig{
+							VaultSecret: &vaultutils.VaultSecretReference{Path: "secret/creds"},
+							UsernameKey: "username",
+							PasswordKey: "password",
+						},
+					},
+				}
+				return instance, pivContext(kube, vc)
+			},
+			wantUser: "vault-user",
+			wantPass: "vault-pass",
+		},
+		{
+			name: "vault secret spec username takes precedence",
+			setup: func(t *testing.T) (*DatabaseSecretEngineConfig, context.Context) {
+				t.Helper()
+				kube := newFakeKubeClient()
+				handler := newFakeVaultHandler()
+				handler.setGet("secret/creds", map[string]interface{}{
+					"username": "vault-user",
+					"password": "vault-pass",
+				})
+				vc, ts := newFakeVaultClient(t, handler)
+				t.Cleanup(ts.Close)
+				instance := &DatabaseSecretEngineConfig{
+					ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: "db-config"},
+					Spec: DatabaseSecretEngineConfigSpec{
+						Path: "database",
+						DBSEConfig: DBSEConfig{
+							PluginName: "postgresql-database-plugin",
+							Username:   "override-user",
+						},
+						RootCredentials: vaultutils.RootCredentialConfig{
+							VaultSecret: &vaultutils.VaultSecretReference{Path: "secret/creds"},
+							UsernameKey: "username",
+							PasswordKey: "password",
+						},
+					},
+				}
+				return instance, pivContext(kube, vc)
+			},
+			wantUser: "override-user",
+			wantPass: "vault-pass",
+		},
+		{
+			name: "random secret KV v1 password from secret key",
+			setup: func(t *testing.T) (*DatabaseSecretEngineConfig, context.Context) {
+				t.Helper()
+				randomSecret := &RandomSecret{
+					ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: "my-random"},
+					Spec: RandomSecretSpec{
+						Path:                vaultutils.Path("secret/random"),
+						SecretKey:           "api_key",
+						IsKVSecretsEngineV2: false,
+					},
+				}
+				kube := newFakeKubeClient(randomSecret)
+				handler := newFakeVaultHandler()
+				handler.setGet("secret/random/my-random", map[string]interface{}{
+					"api_key": "rand-secret-value",
+				})
+				vc, ts := newFakeVaultClient(t, handler)
+				t.Cleanup(ts.Close)
+				instance := &DatabaseSecretEngineConfig{
+					ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: "db-config"},
+					Spec: DatabaseSecretEngineConfigSpec{
+						Path: "database",
+						DBSEConfig: DBSEConfig{
+							PluginName: "postgresql-database-plugin",
+							Username:   "db-admin",
+						},
+						RootCredentials: vaultutils.RootCredentialConfig{
+							RandomSecret: &corev1.LocalObjectReference{Name: "my-random"},
+							UsernameKey:  "username",
+							PasswordKey:  "password",
+						},
+					},
+				}
+				return instance, pivContext(kube, vc)
+			},
+			wantUser: "db-admin",
+			wantPass: "rand-secret-value",
+		},
+		{
+			name: "random secret KV v2 nested data password",
+			setup: func(t *testing.T) (*DatabaseSecretEngineConfig, context.Context) {
+				t.Helper()
+				randomSecret := &RandomSecret{
+					ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: "my-random"},
+					Spec: RandomSecretSpec{
+						Path:                vaultutils.Path("secret/random"),
+						SecretKey:           "password",
+						IsKVSecretsEngineV2: true,
+					},
+				}
+				kube := newFakeKubeClient(randomSecret)
+				handler := newFakeVaultHandler()
+				handler.setGet("secret/random/my-random", map[string]interface{}{
+					"data": map[string]interface{}{
+						"password": "kv2-pw",
+					},
+				})
+				vc, ts := newFakeVaultClient(t, handler)
+				t.Cleanup(ts.Close)
+				instance := &DatabaseSecretEngineConfig{
+					ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: "db-config"},
+					Spec: DatabaseSecretEngineConfigSpec{
+						Path: "database",
+						DBSEConfig: DBSEConfig{
+							PluginName: "postgresql-database-plugin",
+							Username:   "kv2-user",
+						},
+						RootCredentials: vaultutils.RootCredentialConfig{
+							RandomSecret: &corev1.LocalObjectReference{Name: "my-random"},
+							UsernameKey:  "username",
+							PasswordKey:  "password",
+						},
+					},
+				}
+				return instance, pivContext(kube, vc)
+			},
+			wantUser: "kv2-user",
+			wantPass: "kv2-pw",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			instance, ctx := tt.setup(t)
+			if err := instance.PrepareInternalValues(ctx, instance); err != nil {
+				t.Fatalf("PrepareInternalValues: %v", err)
+			}
+			if instance.Spec.DBSEConfig.retrievedUsername != tt.wantUser {
+				t.Errorf("retrievedUsername = %q, want %q", instance.Spec.DBSEConfig.retrievedUsername, tt.wantUser)
+			}
+			if instance.Spec.DBSEConfig.retrievedPassword != tt.wantPass {
+				t.Errorf("retrievedPassword = %q, want %q", instance.Spec.DBSEConfig.retrievedPassword, tt.wantPass)
 			}
 		})
 	}

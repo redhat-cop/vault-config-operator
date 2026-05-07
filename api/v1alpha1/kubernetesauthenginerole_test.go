@@ -1,9 +1,13 @@
 package v1alpha1
 
 import (
+	"context"
 	"reflect"
+	"sort"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -242,5 +246,85 @@ func TestKubernetesAuthEngineRoleConditions(t *testing.T) {
 	}
 	if got[0].Status != metav1.ConditionTrue {
 		t.Errorf("expected condition status True, got %v", got[0].Status)
+	}
+}
+
+func baseKubernetesAuthEngineRole() *KubernetesAuthEngineRole {
+	return &KubernetesAuthEngineRole{
+		ObjectMeta: metav1.ObjectMeta{Name: "kar", Namespace: "default"},
+		Spec: KubernetesAuthEngineRoleSpec{
+			Path: "kubernetes",
+			VRole: VRole{
+				TargetServiceAccounts: []string{"default"},
+				Policies:              []string{"p1"},
+			},
+		},
+	}
+}
+
+func TestKubernetesAuthEngineRole_PrepareInternalValues_ExplicitNamespaces(t *testing.T) {
+	role := baseKubernetesAuthEngineRole()
+	role.Spec.TargetNamespaces = vaultutils.TargetNamespaceConfig{
+		TargetNamespaces: []string{"ns1", "ns2"},
+	}
+	ctx := pivContext(newFakeKubeClient(), nil)
+
+	if err := role.PrepareInternalValues(ctx, role); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	if !reflect.DeepEqual(role.Spec.namespaces, []string{"ns1", "ns2"}) {
+		t.Fatalf("namespaces: got %v", role.Spec.namespaces)
+	}
+}
+
+func TestKubernetesAuthEngineRole_PrepareInternalValues_LabelSelector(t *testing.T) {
+	nsA := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{Name: "labeled-a", Labels: map[string]string{"env": "test"}},
+	}
+	nsB := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{Name: "labeled-b", Labels: map[string]string{"env": "test"}},
+	}
+	kube := newFakeKubeClient(nsA, nsB)
+	role := baseKubernetesAuthEngineRole()
+	role.Spec.TargetNamespaces = vaultutils.TargetNamespaceConfig{
+		TargetNamespaceSelector: &metav1.LabelSelector{
+			MatchLabels: map[string]string{"env": "test"},
+		},
+	}
+	handler := newFakeVaultHandler()
+	vc, ts := newFakeVaultClient(t, handler)
+	defer ts.Close()
+	ctx := pivContext(kube, vc)
+
+	if err := role.PrepareInternalValues(ctx, role); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	got := append([]string(nil), role.Spec.namespaces...)
+	sort.Strings(got)
+	want := []string{"labeled-a", "labeled-b"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("namespaces: got %v want %v", got, want)
+	}
+}
+
+func TestKubernetesAuthEngineRole_PrepareInternalValues_LabelSelectorNoMatch(t *testing.T) {
+	ns := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{Name: "other-ns", Labels: map[string]string{"env": "prod"}},
+	}
+	kube := newFakeKubeClient(ns)
+	role := baseKubernetesAuthEngineRole()
+	role.Spec.TargetNamespaces = vaultutils.TargetNamespaceConfig{
+		TargetNamespaceSelector: &metav1.LabelSelector{
+			MatchLabels: map[string]string{"env": "staging"},
+		},
+	}
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, "kubeClient", kube)
+
+	if err := role.PrepareInternalValues(ctx, role); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	if !reflect.DeepEqual(role.Spec.namespaces, []string{"__no_namespace__"}) {
+		t.Fatalf("namespaces: got %v", role.Spec.namespaces)
 	}
 }

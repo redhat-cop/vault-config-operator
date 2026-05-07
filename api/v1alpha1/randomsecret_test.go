@@ -1,8 +1,10 @@
 package v1alpha1
 
 import (
+	"context"
 	"testing"
 	"time"
+	"unicode"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -201,5 +203,62 @@ func TestRandomSecretConditions(t *testing.T) {
 	got := rs.GetConditions()
 	if len(got) != 1 || got[0].Type != "Ready" {
 		t.Error("expected RandomSecret conditions to be set and retrieved")
+	}
+}
+
+func TestRandomSecret_PrepareInternalValues_InlinePasswordPolicy(t *testing.T) {
+	inline := `
+length = 10
+rule "charset" {
+  charset = "abcdefghijklmnopqrstuvwxyz"
+  min-chars = 1
+}
+`
+	rs := &RandomSecret{
+		ObjectMeta: metav1.ObjectMeta{Name: "rs", Namespace: "default"},
+		Spec: RandomSecretSpec{
+			SecretFormat: VaultPasswordPolicy{
+				InlinePasswordPolicy: inline,
+			},
+		},
+	}
+	if err := rs.PrepareInternalValues(context.Background(), rs); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	if rs.Spec.calculatedSecret == "" {
+		t.Fatal("calculatedSecret empty")
+	}
+	if len(rs.Spec.calculatedSecret) != 10 {
+		t.Fatalf("len: got %d want 10", len(rs.Spec.calculatedSecret))
+	}
+	for _, r := range rs.Spec.calculatedSecret {
+		if !unicode.IsLower(r) || r > 'z' || r < 'a' {
+			t.Fatalf("unexpected rune in password: %q", rs.Spec.calculatedSecret)
+		}
+	}
+}
+
+func TestRandomSecret_PrepareInternalValues_PasswordPolicyFromVault(t *testing.T) {
+	rs := &RandomSecret{
+		ObjectMeta: metav1.ObjectMeta{Name: "rs", Namespace: "default"},
+		Spec: RandomSecretSpec{
+			SecretFormat: VaultPasswordPolicy{
+				PasswordPolicyName: "my-policy",
+			},
+		},
+	}
+	handler := newFakeVaultHandler()
+	handler.setGet("sys/policies/password/my-policy/generate", map[string]interface{}{
+		"password": "generated-pw-123",
+	})
+	vc, ts := newFakeVaultClient(t, handler)
+	defer ts.Close()
+	ctx := pivContext(newFakeKubeClient(), vc)
+
+	if err := rs.PrepareInternalValues(ctx, rs); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	if rs.Spec.calculatedSecret != "generated-pw-123" {
+		t.Fatalf("calculatedSecret: got %q", rs.Spec.calculatedSecret)
 	}
 }
