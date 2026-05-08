@@ -177,7 +177,7 @@ func (rabbitMQ *RabbitMQSecretEngineRole) GetPayload() map[string]interface{} {
 }
 func (rabbitMQ *RabbitMQSecretEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := rabbitMQ.Spec.RMQSERole.rabbitMQToMap()
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (rabbitMQ *RabbitMQSecretEngineRole) IsInitialized() bool {

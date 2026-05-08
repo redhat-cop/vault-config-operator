@@ -169,8 +169,7 @@ func TestPolicyIsEquivalentNonMatching(t *testing.T) {
 	}
 }
 
-// Policy uses reflect.DeepEqual after mutations, so any extra keys in the
-// payload beyond the expected set cause the comparison to return false.
+// Payload keys not present in desiredState are filtered before comparison.
 func TestPolicyIsEquivalentExtraFields(t *testing.T) {
 	policyText := `path "secret/*" { capabilities = ["read"] }`
 	policy := &Policy{
@@ -185,8 +184,8 @@ func TestPolicyIsEquivalentExtraFields(t *testing.T) {
 		"rules":       policyText,
 		"extra_field": "unexpected",
 	}
-	if policy.IsEquivalentToDesiredState(payload) {
-		t.Error("expected payload with extra fields to NOT be equivalent (reflect.DeepEqual compares full maps)")
+	if !policy.IsEquivalentToDesiredState(payload) {
+		t.Error("expected true: extra keys not in desiredState are filtered from payload")
 	}
 }
 

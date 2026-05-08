@@ -213,8 +213,8 @@ func TestKubernetesAuthEngineRoleIsEquivalentExtraFields(t *testing.T) {
 	payload := role.Spec.VRole.toMap()
 	payload["extra_vault_field"] = "unexpected"
 
-	if role.IsEquivalentToDesiredState(payload) {
-		t.Error("expected payload with extra fields to NOT be equivalent (bare DeepEqual)")
+	if !role.IsEquivalentToDesiredState(payload) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 

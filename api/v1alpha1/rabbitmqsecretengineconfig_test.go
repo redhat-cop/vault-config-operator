@@ -155,8 +155,8 @@ func TestRabbitMQSecretEngineConfigIsEquivalentExtraFields(t *testing.T) {
 		"extra_key": "x",
 	}
 
-	if rabbitMQ.IsEquivalentToDesiredState(payload) {
-		t.Error("expected false when payload has extra keys (bare DeepEqual)")
+	if !rabbitMQ.IsEquivalentToDesiredState(payload) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 

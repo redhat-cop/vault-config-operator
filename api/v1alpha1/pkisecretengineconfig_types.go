@@ -438,7 +438,7 @@ func (p *PKISecretEngineConfig) GetConfigCrlPayload() map[string]interface{} {
 
 func (p *PKISecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := p.Spec.PKICommon.toMap()
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (p *PKISecretEngineConfig) IsInitialized() bool {

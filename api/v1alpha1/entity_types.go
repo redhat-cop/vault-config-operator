@@ -159,16 +159,5 @@ func (d *Entity) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 
 func (d *Entity) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.toMap()
-	delete(payload, "name")
-	delete(payload, "id")
-	delete(payload, "aliases")
-	delete(payload, "creation_time")
-	delete(payload, "last_update_time")
-	delete(payload, "merged_entity_ids")
-	delete(payload, "direct_group_ids")
-	delete(payload, "group_ids")
-	delete(payload, "inherited_group_ids")
-	delete(payload, "namespace_id")
-	delete(payload, "bucket_key_hash")
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

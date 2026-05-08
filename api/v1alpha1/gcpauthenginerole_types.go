@@ -245,7 +245,7 @@ func (r *GCPAuthEngineRole) GetPayload() map[string]interface{} {
 
 func (r *GCPAuthEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := r.Spec.GCPRole.toMap()
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (r *GCPAuthEngineRole) IsInitialized() bool {

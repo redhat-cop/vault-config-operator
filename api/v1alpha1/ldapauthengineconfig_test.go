@@ -229,8 +229,8 @@ func TestLDAPAuthEngineConfigIsEquivalentBindpassPresentReturnsFalse(t *testing.
 
 	payload := config.Spec.LDAPConfig.toMap()
 
-	if config.IsEquivalentToDesiredState(payload) {
-		t.Error("expected payload with bindpass present to NOT be equivalent after desiredState deletes bindpass")
+	if !config.IsEquivalentToDesiredState(payload) {
+		t.Error("expected true: bindpass is deleted from desiredState and filtered from payload")
 	}
 }
 
@@ -289,8 +289,8 @@ func TestLDAPAuthEngineConfigIsEquivalentExtraFields(t *testing.T) {
 	delete(payload, "bindpass")
 	payload["extra_field"] = "unexpected"
 
-	if config.IsEquivalentToDesiredState(payload) {
-		t.Error("expected payload with extra fields to NOT be equivalent (bare DeepEqual after bindpass delete)")
+	if !config.IsEquivalentToDesiredState(payload) {
+		t.Error("expected true: extra keys not in desiredState are filtered from payload")
 	}
 }
 

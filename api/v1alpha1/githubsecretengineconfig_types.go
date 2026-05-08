@@ -109,7 +109,7 @@ func (d *GitHubSecretEngineConfig) GetPayload() map[string]interface{} {
 func (d *GitHubSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.GHConfig.toMap()
 	delete(desiredState, "prv_key")
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (d *GitHubSecretEngineConfig) IsInitialized() bool {

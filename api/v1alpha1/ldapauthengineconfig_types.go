@@ -75,7 +75,7 @@ func (d *LDAPAuthEngineConfig) GetPayload() map[string]interface{} {
 func (d *LDAPAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.LDAPConfig.toMap()
 	delete(desiredState, "bindpass")
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 var _ vaultutils.VaultObject = &LDAPAuthEngineConfig{}

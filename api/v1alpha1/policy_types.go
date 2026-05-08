@@ -64,7 +64,7 @@ func (d *Policy) IsEquivalentToDesiredState(payload map[string]interface{}) bool
 		desiredState["rules"] = desiredState["policy"]
 		delete(desiredState, "policy")
 	}
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (d *Policy) IsInitialized() bool {

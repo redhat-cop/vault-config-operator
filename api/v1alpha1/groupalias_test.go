@@ -106,8 +106,7 @@ func TestGroupAliasIsEquivalentNonMatching(t *testing.T) {
 	}
 }
 
-// GroupAlias only deletes 6 specific Vault keys. Any other extra keys
-// cause reflect.DeepEqual to return false.
+// Payload keys not present in desiredState are filtered before comparison.
 func TestGroupAliasIsEquivalentExtraFields(t *testing.T) {
 	ga := &GroupAlias{
 		Spec: GroupAliasSpec{
@@ -125,8 +124,8 @@ func TestGroupAliasIsEquivalentExtraFields(t *testing.T) {
 		"canonical_id":   "canonical-id-1",
 		"unknown_field":  "unexpected",
 	}
-	if ga.IsEquivalentToDesiredState(payload) {
-		t.Error("expected extra keys beyond the 6 known Vault keys to cause DeepEqual to return false")
+	if !ga.IsEquivalentToDesiredState(payload) {
+		t.Error("expected true: extra keys not in desiredState are filtered from payload")
 	}
 }
 

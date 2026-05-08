@@ -152,5 +152,5 @@ func (d *IdentityOIDCScope) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfi
 
 func (d *IdentityOIDCScope) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.toMap()
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

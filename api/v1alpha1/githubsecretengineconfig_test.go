@@ -134,8 +134,8 @@ func TestGitHubSecretEngineConfigIsEquivalentExtraFields(t *testing.T) {
 		"extra_field": "from-vault",
 	}
 
-	if config.IsEquivalentToDesiredState(payload) {
-		t.Error("expected false when payload has extra keys (bare reflect.DeepEqual after prv_key deletion)")
+	if !config.IsEquivalentToDesiredState(payload) {
+		t.Error("expected true: extra keys not in desiredState are filtered from payload")
 	}
 }
 
@@ -157,8 +157,8 @@ func TestGitHubSecretEngineConfigIsEquivalentPayloadWithPrvKey(t *testing.T) {
 		"prv_key":  "test-ssh-key",
 	}
 
-	if config.IsEquivalentToDesiredState(payload) {
-		t.Error("expected false: desired state deletes prv_key, so payload still containing prv_key has an extra key")
+	if !config.IsEquivalentToDesiredState(payload) {
+		t.Error("expected true: prv_key is deleted from desiredState and filtered from payload")
 	}
 }
 

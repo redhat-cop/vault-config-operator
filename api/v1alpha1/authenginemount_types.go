@@ -182,7 +182,7 @@ func (d *AuthEngineMount) GetPayload() map[string]interface{} {
 }
 func (d *AuthEngineMount) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	configMap := d.Spec.Config.toMap()
-	return reflect.DeepEqual(configMap, payload)
+	return reflect.DeepEqual(configMap, filterPayloadToDesiredKeys(configMap, payload))
 }
 
 func (d *AuthEngineMount) IsInitialized() bool {

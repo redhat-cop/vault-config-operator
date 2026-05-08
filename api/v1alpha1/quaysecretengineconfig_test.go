@@ -82,8 +82,8 @@ func TestQuaySecretEngineConfigIsEquivalentPasswordDeleted(t *testing.T) {
 		"disable_ssl_verification": true,
 		"password":                 "extra",
 	}
-	if config.IsEquivalentToDesiredState(payloadWithPassword) {
-		t.Error("expected false when payload contains password key")
+	if !config.IsEquivalentToDesiredState(payloadWithPassword) {
+		t.Error("expected true: password is deleted from desiredState and filtered from payload")
 	}
 }
 
@@ -154,8 +154,8 @@ func TestQuaySecretEngineConfigIsEquivalentExtraFields(t *testing.T) {
 		"extra_field":              "from-vault",
 	}
 
-	if config.IsEquivalentToDesiredState(payload) {
-		t.Error("expected false when payload has extra keys")
+	if !config.IsEquivalentToDesiredState(payload) {
+		t.Error("expected true: extra keys not in desiredState are filtered from payload")
 	}
 }
 

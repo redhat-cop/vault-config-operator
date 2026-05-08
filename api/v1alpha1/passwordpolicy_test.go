@@ -95,10 +95,8 @@ rule "charset" {
 	}
 }
 
-// PasswordPolicy uses reflect.DeepEqual(GetPayload(), payload), so extra keys
-// in the payload cause the comparison to return false. The reconciler passes
-// the raw Vault read response with no key filtering. Story 7-4 tracks
-// hardening this behavior.
+// Extra keys in the Vault response should be ignored; filterPayloadToDesiredKeys
+// restricts comparison to desired-state keys only.
 func TestPasswordPolicyIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 	policy := &PasswordPolicy{
 		Spec: PasswordPolicySpec{
@@ -110,8 +108,8 @@ func TestPasswordPolicyIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 		"policy":      "length = 20",
 		"extra_field": "vault-returned-value",
 	}
-	if policy.IsEquivalentToDesiredState(payloadWithExtra) {
-		t.Error("expected payload with extra fields to NOT be equivalent (reflect.DeepEqual compares full maps)")
+	if !policy.IsEquivalentToDesiredState(payloadWithExtra) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 

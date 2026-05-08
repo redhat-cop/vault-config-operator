@@ -141,8 +141,8 @@ func TestKubernetesSecretEngineConfigIsEquivalentExtraFields(t *testing.T) {
 		"extra_field":          "from-vault",
 	}
 
-	if config.IsEquivalentToDesiredState(payload) {
-		t.Error("expected false when payload has extra keys")
+	if !config.IsEquivalentToDesiredState(payload) {
+		t.Error("expected true: extra keys not in desiredState are filtered from payload")
 	}
 }
 
@@ -166,8 +166,8 @@ func TestKubernetesSecretEngineConfigIsEquivalentPayloadWithJWT(t *testing.T) {
 		"service_account_jwt":  "jwt-token-123",
 	}
 
-	if config.IsEquivalentToDesiredState(payload) {
-		t.Error("expected false: desired state deletes service_account_jwt, so payload still containing it has an extra key")
+	if !config.IsEquivalentToDesiredState(payload) {
+		t.Error("expected true: service_account_jwt is deleted from desiredState and filtered from payload")
 	}
 }
 

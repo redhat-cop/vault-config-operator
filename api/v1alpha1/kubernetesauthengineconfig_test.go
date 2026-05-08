@@ -134,8 +134,8 @@ func TestKubernetesAuthEngineConfigIsEquivalentNonMatching(t *testing.T) {
 	}
 }
 
-// Extra fields cause IsEquivalentToDesiredState to return false because
-// reflect.DeepEqual compares full maps (bare DeepEqual, no filtering).
+// Responses may include keys beyond KAECConfig.toMap(); extra keys are ignored
+// via filterPayloadToDesiredKeys before comparison.
 func TestKubernetesAuthEngineConfigIsEquivalentExtraFields(t *testing.T) {
 	config := &KubernetesAuthEngineConfig{
 		Spec: KubernetesAuthEngineConfigSpec{
@@ -148,8 +148,8 @@ func TestKubernetesAuthEngineConfigIsEquivalentExtraFields(t *testing.T) {
 	payload := config.Spec.KAECConfig.toMap()
 	payload["extra_field"] = "unexpected"
 
-	if config.IsEquivalentToDesiredState(payload) {
-		t.Error("expected payload with extra fields to NOT be equivalent (bare DeepEqual)")
+	if !config.IsEquivalentToDesiredState(payload) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 

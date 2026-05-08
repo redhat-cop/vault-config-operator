@@ -73,7 +73,7 @@ func (d *PKISecretEngineRole) GetPayload() map[string]interface{} {
 }
 func (d *PKISecretEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.PKIRole.toMap()
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (d *PKISecretEngineRole) IsInitialized() bool {

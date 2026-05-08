@@ -176,6 +176,5 @@ func (d *Group) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 
 func (d *Group) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.toMap()
-	delete(payload, "name")
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

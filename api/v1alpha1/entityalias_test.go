@@ -163,8 +163,7 @@ func TestEntityAliasIsEquivalentNonMatching(t *testing.T) {
 	}
 }
 
-// EntityAlias only deletes 8 specific Vault keys. Any other extra keys
-// cause reflect.DeepEqual to return false.
+// Payload keys not present in desiredState are filtered before comparison.
 func TestEntityAliasIsEquivalentExtraFields(t *testing.T) {
 	ea := &EntityAlias{
 		Spec: EntityAliasSpec{
@@ -182,8 +181,8 @@ func TestEntityAliasIsEquivalentExtraFields(t *testing.T) {
 		"canonical_id":   "canonical-id-1",
 		"unknown_field":  "unexpected",
 	}
-	if ea.IsEquivalentToDesiredState(payload) {
-		t.Error("expected extra keys beyond the 8 known Vault keys to cause DeepEqual to return false")
+	if !ea.IsEquivalentToDesiredState(payload) {
+		t.Error("expected true: extra keys not in desiredState are filtered from payload")
 	}
 }
 

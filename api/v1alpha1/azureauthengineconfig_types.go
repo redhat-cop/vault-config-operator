@@ -161,7 +161,7 @@ func (r *AzureAuthEngineConfig) GetPayload() map[string]interface{} {
 
 func (r *AzureAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := r.Spec.AzureConfig.toMap()
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (r *AzureAuthEngineConfig) IsInitialized() bool {

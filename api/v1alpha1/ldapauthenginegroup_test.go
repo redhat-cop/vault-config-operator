@@ -88,8 +88,8 @@ func TestLDAPAuthEngineGroupIsEquivalentExtraFields(t *testing.T) {
 	payload := group.toMap()
 	payload["extra_field"] = "unexpected"
 
-	if group.IsEquivalentToDesiredState(payload) {
-		t.Error("expected payload with extra fields to NOT be equivalent (bare DeepEqual)")
+	if !group.IsEquivalentToDesiredState(payload) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 

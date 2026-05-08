@@ -126,8 +126,8 @@ func TestAzureAuthEngineConfigIsEquivalentExtraFields(t *testing.T) {
 	payload := config.Spec.AzureConfig.toMap()
 	payload["extra_field"] = "unexpected"
 
-	if config.IsEquivalentToDesiredState(payload) {
-		t.Error("expected payload with extra fields to NOT be equivalent (bare DeepEqual)")
+	if !config.IsEquivalentToDesiredState(payload) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 

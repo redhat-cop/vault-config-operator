@@ -167,8 +167,8 @@ func TestAzureSecretEngineRoleIsEquivalentExtraFields(t *testing.T) {
 	payload := role.Spec.AzureSERole.toMap()
 	payload["extra_vault_field"] = "some-value"
 
-	if role.IsEquivalentToDesiredState(payload) {
-		t.Error("expected payload with extra fields to NOT be equivalent (bare reflect.DeepEqual)")
+	if !role.IsEquivalentToDesiredState(payload) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 

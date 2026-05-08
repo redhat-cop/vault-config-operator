@@ -172,8 +172,8 @@ func TestPKISecretEngineRoleIsEquivalentExtraFields(t *testing.T) {
 	}
 	payload := config.Spec.PKIRole.toMap()
 	payload["vault_extra"] = true
-	if config.IsEquivalentToDesiredState(payload) {
-		t.Error("expected false when payload has extra keys")
+	if !config.IsEquivalentToDesiredState(payload) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 
