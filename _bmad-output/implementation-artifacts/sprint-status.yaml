@@ -35,7 +35,9 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-05-07
+last_updated: 2026-05-08
+# Story 7.5 review 2026-05-08
+# Story 7.5 in-progress 2026-05-08
 # Story 7.4 in-progress 2026-05-07
 # Story 7.3 done 2026-05-07
 # Story 7.3 review 2026-05-07
@@ -181,7 +183,7 @@ development_status:
   7-2-unit-tests-for-prepareinternalvalues-credential-resolution: done
   7-3-error-path-integration-tests: done
   7-4-audit-vault-api-responses-and-harden-isequivalenttodesiredstate-extra-field-handling: done
-  7-5-drift-detection-integration-tests: ready-for-dev
+  7-5-drift-detection-integration-tests: done # Story 7.5 done 2026-05-08
   epic-7-retrospective: optional
 
   # Epic 7.5: CRD Field Annotation Refactor

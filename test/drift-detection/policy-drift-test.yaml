@@ -1,0 +1,12 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Policy
+metadata:
+  name: test-drift-policy
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  policy: |
+    path "secret/data/drift-test/*" {
+      capabilities = ["create", "read", "update", "delete", "list"]
+    }

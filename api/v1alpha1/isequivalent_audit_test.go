@@ -75,7 +75,7 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 				p := map[string]interface{}{
 					"bound_service_account_names": []string{"default"}, "bound_service_account_namespaces": []string(nil),
 					"alias_name_source": "",
-					"token_ttl": 0, "token_max_ttl": 0, "token_policies": []string(nil),
+					"token_ttl":         0, "token_max_ttl": 0, "token_policies": []string(nil),
 					"token_bound_cidrs": []string(nil), "token_explicit_max_ttl": 0,
 					"token_no_default_policy": false, "token_num_uses": 0,
 					"token_period": 0, "token_type": "",
@@ -314,7 +314,7 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 					"generate_lease": false, "no_store": false,
 					"require_cn": true, "policy_identifiers": []string(nil),
 					"basic_constraints_valid_for_non_ca": false,
-					"not_before_duration": metav1.Duration{},
+					"not_before_duration":                metav1.Duration{},
 				}
 				return m, p
 			},
@@ -693,17 +693,17 @@ func TestAuditNegativeCases_WrongManagedFieldValues(t *testing.T) {
 // []string, etc.). For the comparison to work, Vault must return the same Go types.
 //
 // In practice:
-// 1. String fields (TTLs, URLs, names): Vault returns strings, toMap() produces strings. Match.
-// 2. Boolean fields: Vault returns bool, toMap() produces bool. Match.
-// 3. Integer fields: This is the only risk area — Vault JSON returns float64 for numbers.
-//    However, the operator's integer fields (e.g., RabbitMQ LeaseTTL/LeaseMaxTTL as int,
-//    CertAuthEngineConfig OCSPCacheSize/RoleCacheSize as int) are written via the Vault API
-//    as integers and read back via json.Unmarshal into interface{} as float64.
-//    The filterPayloadToDesiredKeys preserves the payload value's type, and reflect.DeepEqual
-//    correctly distinguishes int(3600) != float64(3600). This means if Vault returns float64
-//    for an int field, drift WILL be detected and a reconcile write will occur — which is
-//    acceptable (idempotent) and self-correcting. The write re-establishes the int type on
-//    the next read through the reconciler's typed deserialization.
+//  1. String fields (TTLs, URLs, names): Vault returns strings, toMap() produces strings. Match.
+//  2. Boolean fields: Vault returns bool, toMap() produces bool. Match.
+//  3. Integer fields: This is the only risk area — Vault JSON returns float64 for numbers.
+//     However, the operator's integer fields (e.g., RabbitMQ LeaseTTL/LeaseMaxTTL as int,
+//     CertAuthEngineConfig OCSPCacheSize/RoleCacheSize as int) are written via the Vault API
+//     as integers and read back via json.Unmarshal into interface{} as float64.
+//     The filterPayloadToDesiredKeys preserves the payload value's type, and reflect.DeepEqual
+//     correctly distinguishes int(3600) != float64(3600). This means if Vault returns float64
+//     for an int field, drift WILL be detected and a reconcile write will occur — which is
+//     acceptable (idempotent) and self-correcting. The write re-establishes the int type on
+//     the next read through the reconciler's typed deserialization.
 //
 // The test below demonstrates this behavior explicitly.
 func TestAC3_TypeCoercionNotNeeded(t *testing.T) {
