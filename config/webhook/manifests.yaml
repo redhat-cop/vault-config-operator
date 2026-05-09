@@ -30,7 +30,7 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-redhatcop-redhat-io-v1alpha1-AWSSecretEngineConfig
+      path: /mutate-redhatcop-redhat-io-v1alpha1-awssecretengineconfig
   failurePolicy: Fail
   name: mawssecretengineconfig.kb.io
   rules:
@@ -899,7 +899,7 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-redhatcop-redhat-io-v1alpha1-AWSSecretEngineConfig
+      path: /validate-redhatcop-redhat-io-v1alpha1-awssecretengineconfig
   failurePolicy: Fail
   name: vawssecretengineconfig.kb.io
   rules:
