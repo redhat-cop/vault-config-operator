@@ -75,7 +75,7 @@ func (d *KubernetesAuthEngineConfig) GetPayload() map[string]interface{} {
 }
 func (d *KubernetesAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.KAECConfig.toMap()
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 var _ vaultutils.VaultObject = &KubernetesAuthEngineConfig{}

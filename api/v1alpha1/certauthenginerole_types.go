@@ -265,7 +265,7 @@ func (r *CertAuthEngineRole) GetPayload() map[string]interface{} {
 func (r *CertAuthEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := r.Spec.CertAuthEngineRoleInternal.toMap()
 
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (r *CertAuthEngineRole) IsInitialized() bool {

@@ -334,10 +334,8 @@ func TestSecretEngineMountIsEquivalentToDesiredStateNonMatching(t *testing.T) {
 	}
 }
 
-// Extra fields in the Vault tune response cause IsEquivalentToDesiredState to
-// return false because reflect.DeepEqual compares full maps. The reconciler
-// does NOT pre-filter the tune response for engine mounts. Story 7-4 tracks
-// hardening this behavior.
+// Vault tune responses may include keys beyond Config.toMap(); extra keys are
+// ignored via filterPayloadToDesiredKeys before comparison.
 func TestSecretEngineMountIsEquivalentToDesiredStateExtraFields(t *testing.T) {
 	mount := &SecretEngineMount{
 		Spec: SecretEngineMountSpec{
@@ -364,8 +362,8 @@ func TestSecretEngineMountIsEquivalentToDesiredStateExtraFields(t *testing.T) {
 		"user_lockout_config":          map[string]interface{}{},
 	}
 
-	if mount.IsEquivalentToDesiredState(payload) {
-		t.Error("expected payload with extra fields to NOT be equivalent (reflect.DeepEqual compares full maps)")
+	if !mount.IsEquivalentToDesiredState(payload) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 

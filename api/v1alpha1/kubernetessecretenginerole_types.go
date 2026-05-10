@@ -76,7 +76,7 @@ func (d *KubernetesSecretEngineRole) GetPayload() map[string]interface{} {
 }
 func (d *KubernetesSecretEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.KubeSERole.toMap()
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (d *KubernetesSecretEngineRole) IsInitialized() bool {

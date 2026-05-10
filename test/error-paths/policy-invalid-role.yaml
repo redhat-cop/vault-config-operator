@@ -1,0 +1,14 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Policy
+metadata:
+  name: test-error-path-invalid-role
+spec:
+  authentication:
+    path: kubernetes
+    role: nonexistent-role-xyz
+    serviceAccount:
+      name: default
+  policy: |
+    path "secret/data/error-test/*" {
+      capabilities = ["read"]
+    }

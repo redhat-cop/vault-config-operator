@@ -119,8 +119,7 @@ func TestEntityIsEquivalentNonMatching(t *testing.T) {
 	}
 }
 
-// Entity only deletes 11 specific Vault keys. Any other extra keys
-// cause reflect.DeepEqual to return false.
+// Payload keys not present in desiredState are filtered before comparison.
 func TestEntityIsEquivalentExtraFields(t *testing.T) {
 	entity := &Entity{
 		Spec: EntitySpec{
@@ -138,8 +137,8 @@ func TestEntityIsEquivalentExtraFields(t *testing.T) {
 		"disabled":      false,
 		"unknown_field": "unexpected",
 	}
-	if entity.IsEquivalentToDesiredState(payload) {
-		t.Error("expected extra keys beyond the 11 known Vault keys to cause DeepEqual to return false")
+	if !entity.IsEquivalentToDesiredState(payload) {
+		t.Error("expected true: extra keys not in desiredState are filtered from payload")
 	}
 }
 

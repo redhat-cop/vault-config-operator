@@ -78,7 +78,7 @@ func (d *DatabaseSecretEngineRole) GetPayload() map[string]interface{} {
 }
 func (d *DatabaseSecretEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.DBSERole.toMap()
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (d *DatabaseSecretEngineRole) IsInitialized() bool {

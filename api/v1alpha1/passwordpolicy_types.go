@@ -47,7 +47,8 @@ func (d *PasswordPolicy) GetPayload() map[string]interface{} {
 	}
 }
 func (d *PasswordPolicy) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
-	return reflect.DeepEqual(d.GetPayload(), payload)
+	desiredState := d.GetPayload()
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (d *PasswordPolicy) IsInitialized() bool {

@@ -158,7 +158,7 @@ func (d *AzureSecretEngineConfig) GetPayload() map[string]interface{} {
 
 func (r *AzureSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := r.Spec.AzureSEConfig.toMap()
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (r *AzureSecretEngineConfig) IsInitialized() bool {

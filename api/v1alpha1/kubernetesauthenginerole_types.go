@@ -82,7 +82,7 @@ func (d *KubernetesAuthEngineRole) GetPayload() map[string]interface{} {
 }
 func (d *KubernetesAuthEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.VRole.toMap()
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (d *KubernetesAuthEngineRole) IsInitialized() bool {

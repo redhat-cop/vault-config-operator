@@ -64,7 +64,7 @@ func (d *SecretEngineMount) IsEquivalentToDesiredState(payload map[string]interf
 	configMap := d.Spec.Config.toMap()
 	delete(configMap, "options")
 	delete(configMap, "description")
-	return reflect.DeepEqual(configMap, payload)
+	return reflect.DeepEqual(configMap, filterPayloadToDesiredKeys(configMap, payload))
 }
 
 func (d *SecretEngineMount) IsInitialized() bool {

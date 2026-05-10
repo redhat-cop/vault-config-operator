@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -124,8 +126,8 @@ func TestAzureAuthEngineConfigIsEquivalentExtraFields(t *testing.T) {
 	payload := config.Spec.AzureConfig.toMap()
 	payload["extra_field"] = "unexpected"
 
-	if config.IsEquivalentToDesiredState(payload) {
-		t.Error("expected payload with extra fields to NOT be equivalent (bare DeepEqual)")
+	if !config.IsEquivalentToDesiredState(payload) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 
@@ -157,5 +159,69 @@ func TestAzureAuthEngineConfigConditions(t *testing.T) {
 	}
 	if got[0].Status != metav1.ConditionTrue {
 		t.Errorf("expected condition status True, got %v", got[0].Status)
+	}
+}
+
+func TestAzureAuthEngineConfig_PrepareInternalValues_DefaultNoOp(t *testing.T) {
+	defaultCreds := vaultutils.RootCredentialConfig{
+		PasswordKey: "clientsecret",
+		UsernameKey: "clientid",
+	}
+	config := &AzureAuthEngineConfig{
+		ObjectMeta: metav1.ObjectMeta{Namespace: "ns-azure-auth"},
+		Spec: AzureAuthEngineConfigSpec{
+			AzureCredentials: defaultCreds,
+			AzureConfig: AzureConfig{
+				TenantID: "tenant-1",
+				Resource: "https://management.azure.com/",
+			},
+		},
+	}
+	kube := newFakeKubeClient()
+	vc, ts := newFakeVaultClient(t, newFakeVaultHandler())
+	defer ts.Close()
+	ctx := pivContext(kube, vc)
+	if err := config.PrepareInternalValues(ctx, config); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	if config.Spec.retrievedClientID != "" || config.Spec.retrievedClientPassword != "" {
+		t.Errorf("expected empty retrieved credentials, got clientID=%q clientPassword=%q",
+			config.Spec.retrievedClientID, config.Spec.retrievedClientPassword)
+	}
+}
+
+func TestAzureAuthEngineConfig_PrepareInternalValues_FromK8sSecret(t *testing.T) {
+	ns := "ns-azure-auth"
+	sec := newK8sSecret(ns, "az-creds", map[string][]byte{
+		"clientid":     []byte("cid-from-secret"),
+		"clientsecret": []byte("pwd-from-k8s"),
+	})
+	kube := newFakeKubeClient(sec)
+	vc, ts := newFakeVaultClient(t, newFakeVaultHandler())
+	defer ts.Close()
+	ctx := pivContext(kube, vc)
+	config := &AzureAuthEngineConfig{
+		ObjectMeta: metav1.ObjectMeta{Namespace: ns},
+		Spec: AzureAuthEngineConfigSpec{
+			AzureCredentials: vaultutils.RootCredentialConfig{
+				Secret:      &corev1.LocalObjectReference{Name: "az-creds"},
+				UsernameKey: "clientid",
+				PasswordKey: "clientsecret",
+			},
+			AzureConfig: AzureConfig{
+				TenantID: "tenant-1",
+				Resource: "https://management.azure.com/",
+				ClientID: "",
+			},
+		},
+	}
+	if err := config.PrepareInternalValues(ctx, config); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	if config.Spec.retrievedClientID != "cid-from-secret" {
+		t.Errorf("retrievedClientID = %q, want cid-from-secret", config.Spec.retrievedClientID)
+	}
+	if config.Spec.retrievedClientPassword != "pwd-from-k8s" {
+		t.Errorf("retrievedClientPassword = %q, want pwd-from-k8s", config.Spec.retrievedClientPassword)
 	}
 }

@@ -162,8 +162,8 @@ func TestGCPAuthEngineRoleIsEquivalentExtraFields(t *testing.T) {
 	payload := role.Spec.GCPRole.toMap()
 	payload["extra_field"] = "unexpected"
 
-	if role.IsEquivalentToDesiredState(payload) {
-		t.Error("expected payload with extra fields to NOT be equivalent (bare DeepEqual)")
+	if !role.IsEquivalentToDesiredState(payload) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 

@@ -152,8 +152,7 @@ func TestGroupIsEquivalentNonMatching(t *testing.T) {
 	}
 }
 
-// Group only deletes "name" from the payload. Any other extra keys cause
-// reflect.DeepEqual to return false.
+// Payload keys not present in desiredState are filtered before comparison.
 func TestGroupIsEquivalentExtraFields(t *testing.T) {
 	group := &Group{
 		Spec: GroupSpec{
@@ -176,8 +175,8 @@ func TestGroupIsEquivalentExtraFields(t *testing.T) {
 		"member_entity_ids": []string{"entity-1"},
 		"extra_field":       "unexpected",
 	}
-	if group.IsEquivalentToDesiredState(payload) {
-		t.Error("expected extra keys beyond 'name' to cause DeepEqual to return false")
+	if !group.IsEquivalentToDesiredState(payload) {
+		t.Error("expected true: extra keys not in desiredState are filtered from payload")
 	}
 }
 

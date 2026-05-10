@@ -120,6 +120,10 @@ func TestIsDriftDetectionEnabled(t *testing.T) {
 }
 
 func TestPeriodicReconcilePredicate_Update(t *testing.T) {
+	origSyncPeriod := SyncPeriod
+	SetSyncPeriod(5 * time.Minute)
+	defer SetSyncPeriod(origSyncPeriod)
+
 	predicate := NewPeriodicReconcilePredicate(5 * time.Minute)
 
 	tests := []struct {

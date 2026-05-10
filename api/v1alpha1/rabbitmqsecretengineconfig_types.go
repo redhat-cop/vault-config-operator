@@ -178,7 +178,7 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) GetPayload() map[string]interface{} 
 
 func (rabbitMQ *RabbitMQSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := rabbitMQ.Spec.RMQSEConfig.leasesToMap()
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (rabbitMQ *RabbitMQSecretEngineConfig) IsInitialized() bool {

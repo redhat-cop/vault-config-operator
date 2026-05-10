@@ -1,9 +1,12 @@
 package v1alpha1
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -152,8 +155,8 @@ func TestRabbitMQSecretEngineConfigIsEquivalentExtraFields(t *testing.T) {
 		"extra_key": "x",
 	}
 
-	if rabbitMQ.IsEquivalentToDesiredState(payload) {
-		t.Error("expected false when payload has extra keys (bare DeepEqual)")
+	if !rabbitMQ.IsEquivalentToDesiredState(payload) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 
@@ -241,5 +244,94 @@ func TestRabbitMQSecretEngineConfigGetLeasePath(t *testing.T) {
 	want := "rabbitmq/engine/config/lease"
 	if got != want {
 		t.Errorf("GetLeasePath() = %q, want %q", got, want)
+	}
+}
+
+func TestRabbitMQSecretEngineConfig_PrepareInternalValues(t *testing.T) {
+	const ns = "test-ns"
+
+	tests := []struct {
+		name     string
+		setup    func(t *testing.T) (*RabbitMQSecretEngineConfig, context.Context)
+		wantUser string
+		wantPass string
+	}{
+		{
+			name: "secret branch username and password from K8s secret",
+			setup: func(t *testing.T) (*RabbitMQSecretEngineConfig, context.Context) {
+				t.Helper()
+				sec := newK8sSecret(ns, "rmq-cred", map[string][]byte{
+					"username": []byte("rmq-user"),
+					"password": []byte("rmq-pass"),
+				})
+				kube := newFakeKubeClient(sec)
+				handler := newFakeVaultHandler()
+				vc, ts := newFakeVaultClient(t, handler)
+				t.Cleanup(ts.Close)
+				instance := &RabbitMQSecretEngineConfig{
+					ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: "rmq-config"},
+					Spec: RabbitMQSecretEngineConfigSpec{
+						Path: "rabbitmq/engine",
+						RMQSEConfig: RMQSEConfig{
+							ConnectionURI: "https://rmq.example:15672",
+						},
+						RootCredentials: vaultutils.RootCredentialConfig{
+							Secret:      &corev1.LocalObjectReference{Name: "rmq-cred"},
+							UsernameKey: "username",
+							PasswordKey: "password",
+						},
+					},
+				}
+				return instance, pivContext(kube, vc)
+			},
+			wantUser: "rmq-user",
+			wantPass: "rmq-pass",
+		},
+		{
+			name: "vault secret KV v1 username and password from vault",
+			setup: func(t *testing.T) (*RabbitMQSecretEngineConfig, context.Context) {
+				t.Helper()
+				kube := newFakeKubeClient()
+				handler := newFakeVaultHandler()
+				handler.setGet("secret/rabbit-creds", map[string]interface{}{
+					"username": "vault-rmq",
+					"password": "vault-rmq-secret",
+				})
+				vc, ts := newFakeVaultClient(t, handler)
+				t.Cleanup(ts.Close)
+				instance := &RabbitMQSecretEngineConfig{
+					ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: "rmq-config"},
+					Spec: RabbitMQSecretEngineConfigSpec{
+						Path: "rabbitmq/engine",
+						RMQSEConfig: RMQSEConfig{
+							ConnectionURI: "https://rmq.example:15672",
+						},
+						RootCredentials: vaultutils.RootCredentialConfig{
+							VaultSecret: &vaultutils.VaultSecretReference{Path: "secret/rabbit-creds"},
+							UsernameKey: "username",
+							PasswordKey: "password",
+						},
+					},
+				}
+				return instance, pivContext(kube, vc)
+			},
+			wantUser: "vault-rmq",
+			wantPass: "vault-rmq-secret",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			instance, ctx := tt.setup(t)
+			if err := instance.PrepareInternalValues(ctx, instance); err != nil {
+				t.Fatalf("PrepareInternalValues: %v", err)
+			}
+			if instance.Spec.RMQSEConfig.retrievedUsername != tt.wantUser {
+				t.Errorf("retrievedUsername = %q, want %q", instance.Spec.RMQSEConfig.retrievedUsername, tt.wantUser)
+			}
+			if instance.Spec.RMQSEConfig.retrievedPassword != tt.wantPass {
+				t.Errorf("retrievedPassword = %q, want %q", instance.Spec.RMQSEConfig.retrievedPassword, tt.wantPass)
+			}
+		})
 	}
 }

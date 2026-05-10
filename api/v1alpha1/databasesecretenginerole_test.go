@@ -149,8 +149,8 @@ func TestDatabaseSecretEngineRoleIsEquivalentNonMatching(t *testing.T) {
 	}
 }
 
-// DatabaseSecretEngineRole uses bare reflect.DeepEqual without filtering, so
-// extra keys in the payload cause a mismatch.
+// Extra keys in the Vault response should be ignored; filterPayloadToDesiredKeys
+// restricts comparison to desired-state keys only.
 func TestDatabaseSecretEngineRoleIsEquivalentExtraFields(t *testing.T) {
 	role := &DatabaseSecretEngineRole{
 		Spec: DatabaseSecretEngineRoleSpec{
@@ -167,8 +167,8 @@ func TestDatabaseSecretEngineRoleIsEquivalentExtraFields(t *testing.T) {
 	payload := role.Spec.DBSERole.toMap()
 	payload["extra_vault_field"] = "some-value"
 
-	if role.IsEquivalentToDesiredState(payload) {
-		t.Error("expected payload with extra fields to NOT be equivalent (bare reflect.DeepEqual, no filtering)")
+	if !role.IsEquivalentToDesiredState(payload) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 

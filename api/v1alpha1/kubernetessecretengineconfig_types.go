@@ -119,7 +119,7 @@ func (d *KubernetesSecretEngineConfig) GetPayload() map[string]interface{} {
 func (d *KubernetesSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.KubeSEConfig.toMap()
 	delete(desiredState, "service_account_jwt")
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (d *KubernetesSecretEngineConfig) IsInitialized() bool {

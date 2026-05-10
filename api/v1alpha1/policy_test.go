@@ -1,7 +1,9 @@
 package v1alpha1
 
 import (
+	"net/http"
 	"reflect"
+	"strings"
 	"testing"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -167,8 +169,7 @@ func TestPolicyIsEquivalentNonMatching(t *testing.T) {
 	}
 }
 
-// Policy uses reflect.DeepEqual after mutations, so any extra keys in the
-// payload beyond the expected set cause the comparison to return false.
+// Payload keys not present in desiredState are filtered before comparison.
 func TestPolicyIsEquivalentExtraFields(t *testing.T) {
 	policyText := `path "secret/*" { capabilities = ["read"] }`
 	policy := &Policy{
@@ -183,8 +184,8 @@ func TestPolicyIsEquivalentExtraFields(t *testing.T) {
 		"rules":       policyText,
 		"extra_field": "unexpected",
 	}
-	if policy.IsEquivalentToDesiredState(payload) {
-		t.Error("expected payload with extra fields to NOT be equivalent (reflect.DeepEqual compares full maps)")
+	if !policy.IsEquivalentToDesiredState(payload) {
+		t.Error("expected true: extra keys not in desiredState are filtered from payload")
 	}
 }
 
@@ -272,5 +273,121 @@ func TestPolicyIsEquivalentAllVariants(t *testing.T) {
 					got, tt.want, desiredState, tt.payload, reflect.DeepEqual(desiredState, tt.payload))
 			}
 		})
+	}
+}
+
+func TestPolicy_PrepareInternalValues_NoPlaceholderFastPath(t *testing.T) {
+	want := `path "secret/*" { capabilities = ["read"] }`
+	policy := &Policy{
+		ObjectMeta: metav1.ObjectMeta{Name: "p", Namespace: "default"},
+		Spec:       PolicySpec{Policy: want},
+	}
+	kube := newFakeKubeClient()
+	handler := newFakeVaultHandler()
+	vc, ts := newFakeVaultClient(t, handler)
+	defer ts.Close()
+	ctx := pivContext(kube, vc)
+
+	if err := policy.PrepareInternalValues(ctx, policy); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	if policy.Spec.Policy != want {
+		t.Fatalf("policy text changed: got %q want %q", policy.Spec.Policy, want)
+	}
+}
+
+func TestPolicy_PrepareInternalValues_ReplaceKubernetesAccessor(t *testing.T) {
+	policy := &Policy{
+		ObjectMeta: metav1.ObjectMeta{Name: "p", Namespace: "default"},
+		Spec:       PolicySpec{Policy: `grant "${auth/kubernetes/@accessor}"`},
+	}
+	handler := newFakeVaultHandler()
+	handler.setGet("sys/auth", map[string]interface{}{
+		"kubernetes/": map[string]interface{}{
+			"accessor": "auth_kubernetes_abc123",
+			"type":     "kubernetes",
+		},
+	})
+	vc, ts := newFakeVaultClient(t, handler)
+	defer ts.Close()
+	ctx := pivContext(newFakeKubeClient(), vc)
+
+	if err := policy.PrepareInternalValues(ctx, policy); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	want := `grant "auth_kubernetes_abc123"`
+	if policy.Spec.Policy != want {
+		t.Fatalf("policy: got %q want %q", policy.Spec.Policy, want)
+	}
+}
+
+func TestPolicy_PrepareInternalValues_MultipleAuthEngines(t *testing.T) {
+	policy := &Policy{
+		ObjectMeta: metav1.ObjectMeta{Name: "p", Namespace: "default"},
+		Spec:       PolicySpec{Policy: `a:${auth/kubernetes/@accessor} b:${auth/ldap/@accessor}`},
+	}
+	handler := newFakeVaultHandler()
+	handler.setGet("sys/auth", map[string]interface{}{
+		"kubernetes/": map[string]interface{}{"accessor": "acc-k8s", "type": "kubernetes"},
+		"ldap/":       map[string]interface{}{"accessor": "acc-ldap", "type": "ldap"},
+	})
+	vc, ts := newFakeVaultClient(t, handler)
+	defer ts.Close()
+	ctx := pivContext(newFakeKubeClient(), vc)
+
+	if err := policy.PrepareInternalValues(ctx, policy); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	want := `a:acc-k8s b:acc-ldap`
+	if policy.Spec.Policy != want {
+		t.Fatalf("policy: got %q want %q", policy.Spec.Policy, want)
+	}
+}
+
+func TestPolicy_PrepareInternalValues_ReadErrorSwallowedPlaceholdersUnchanged(t *testing.T) {
+	original := `grant "${auth/kubernetes/@accessor}"`
+	policy := &Policy{
+		ObjectMeta: metav1.ObjectMeta{Name: "p", Namespace: "default"},
+		Spec:       PolicySpec{Policy: original},
+	}
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	})
+	vc, ts := newFakeVaultClient(t, handler)
+	defer ts.Close()
+	ctx := pivContext(newFakeKubeClient(), vc)
+
+	err := policy.PrepareInternalValues(ctx, policy)
+	if err != nil {
+		t.Fatalf("expected nil error on sys/auth read failure, got: %v", err)
+	}
+	if policy.Spec.Policy != original {
+		t.Fatalf("policy text should be unchanged on read error: got %q want %q", policy.Spec.Policy, original)
+	}
+}
+
+func TestPolicy_PrepareInternalValues_NilSecretReturnsError(t *testing.T) {
+	policy := &Policy{
+		ObjectMeta: metav1.ObjectMeta{Name: "p", Namespace: "default"},
+		Spec:       PolicySpec{Policy: `use ${auth/kubernetes/@accessor}`},
+	}
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path[len("/v1/"):]
+		if r.Method == http.MethodGet && path == "sys/auth" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	})
+	vc, ts := newFakeVaultClient(t, handler)
+	defer ts.Close()
+	ctx := pivContext(newFakeKubeClient(), vc)
+
+	err := policy.PrepareInternalValues(ctx, policy)
+	if err == nil {
+		t.Fatal("expected error when sys/auth returns 204 (nil secret)")
+	}
+	if !strings.Contains(err.Error(), "unexpectedly returned null") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }

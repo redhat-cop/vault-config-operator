@@ -1,8 +1,11 @@
 package v1alpha1
 
 import (
+	"strings"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -131,8 +134,8 @@ func TestGitHubSecretEngineConfigIsEquivalentExtraFields(t *testing.T) {
 		"extra_field": "from-vault",
 	}
 
-	if config.IsEquivalentToDesiredState(payload) {
-		t.Error("expected false when payload has extra keys (bare reflect.DeepEqual after prv_key deletion)")
+	if !config.IsEquivalentToDesiredState(payload) {
+		t.Error("expected true: extra keys not in desiredState are filtered from payload")
 	}
 }
 
@@ -154,8 +157,8 @@ func TestGitHubSecretEngineConfigIsEquivalentPayloadWithPrvKey(t *testing.T) {
 		"prv_key":  "test-ssh-key",
 	}
 
-	if config.IsEquivalentToDesiredState(payload) {
-		t.Error("expected false: desired state deletes prv_key, so payload still containing prv_key has an extra key")
+	if !config.IsEquivalentToDesiredState(payload) {
+		t.Error("expected true: prv_key is deleted from desiredState and filtered from payload")
 	}
 }
 
@@ -187,5 +190,97 @@ func TestGitHubSecretEngineConfigConditions(t *testing.T) {
 	}
 	if got[0].Status != metav1.ConditionTrue {
 		t.Errorf("expected condition status True, got %v", got[0].Status)
+	}
+}
+
+func TestGitHubSecretEngineConfig_PrepareInternalValues_FromSSHAuthSecret(t *testing.T) {
+	ns := "ns-github"
+	sec := newTypedK8sSecret(ns, "gh-ssh", corev1.SecretTypeSSHAuth, map[string][]byte{
+		corev1.SSHAuthPrivateKey: []byte("-----BEGIN OPENSSH PRIVATE KEY-----\nabc\n"),
+	})
+	kube := newFakeKubeClient(sec)
+	hc := newFakeVaultHandler()
+	vc, ts := newFakeVaultClient(t, hc)
+	defer ts.Close()
+	ctx := pivContext(kube, vc)
+	config := &GitHubSecretEngineConfig{
+		ObjectMeta: metav1.ObjectMeta{Namespace: ns},
+		Spec: GitHubSecretEngineConfigSpec{
+			Path: "github",
+			GHConfig: GHConfig{
+				ApplicationID: 42,
+			},
+			SSHKeyReference: SSHKeyConfig{
+				Secret: &corev1.LocalObjectReference{Name: "gh-ssh"},
+			},
+		},
+	}
+	if err := config.PrepareInternalValues(ctx, config); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	want := "-----BEGIN OPENSSH PRIVATE KEY-----\nabc\n"
+	if config.Spec.retrievedSSHKey != want {
+		t.Errorf("retrievedSSHKey = %q, want %q", config.Spec.retrievedSSHKey, want)
+	}
+}
+
+func TestGitHubSecretEngineConfig_PrepareInternalValues_WrongSecretType(t *testing.T) {
+	ns := "ns-github"
+	sec := newTypedK8sSecret(ns, "gh-wrong-type", corev1.SecretTypeOpaque, map[string][]byte{
+		corev1.SSHAuthPrivateKey: []byte("should-not-read"),
+	})
+	kube := newFakeKubeClient(sec)
+	vc, ts := newFakeVaultClient(t, newFakeVaultHandler())
+	defer ts.Close()
+	ctx := pivContext(kube, vc)
+	config := &GitHubSecretEngineConfig{
+		ObjectMeta: metav1.ObjectMeta{Namespace: ns},
+		Spec: GitHubSecretEngineConfigSpec{
+			Path: "github",
+			GHConfig: GHConfig{
+				ApplicationID: 1,
+			},
+			SSHKeyReference: SSHKeyConfig{
+				Secret: &corev1.LocalObjectReference{Name: "gh-wrong-type"},
+			},
+		},
+	}
+	err := config.PrepareInternalValues(ctx, config)
+	if err == nil {
+		t.Fatal("expected error for non-SSH-auth secret type")
+	}
+	if !strings.Contains(err.Error(), "secret must be of type") {
+		t.Errorf("error = %q, want substring 'secret must be of type'", err.Error())
+	}
+}
+
+func TestGitHubSecretEngineConfig_PrepareInternalValues_FromVaultSecret(t *testing.T) {
+	ns := "ns-github"
+	vaultPath := "secret/data/github-ssh"
+	handler := newFakeVaultHandler()
+	handler.setGet(vaultPath, map[string]interface{}{
+		"key": "private-key-from-vault",
+	})
+	kube := newFakeKubeClient()
+	vc, ts := newFakeVaultClient(t, handler)
+	defer ts.Close()
+	ctx := pivContext(kube, vc)
+	config := &GitHubSecretEngineConfig{
+		ObjectMeta: metav1.ObjectMeta{Namespace: ns},
+		Spec: GitHubSecretEngineConfigSpec{
+			Path: "github",
+			GHConfig: GHConfig{
+				ApplicationID: 99,
+			},
+			SSHKeyReference: SSHKeyConfig{
+				VaultSecret: &vaultutils.VaultSecretReference{Path: vaultPath},
+			},
+		},
+	}
+	if err := config.PrepareInternalValues(ctx, config); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	if config.Spec.retrievedSSHKey != "private-key-from-vault" {
+		t.Errorf("retrievedSSHKey = %q", config.Spec.retrievedSSHKey)
 	}
 }

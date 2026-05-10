@@ -167,5 +167,5 @@ func (d *IdentityTokenKey) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfig
 
 func (d *IdentityTokenKey) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.toMap()
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

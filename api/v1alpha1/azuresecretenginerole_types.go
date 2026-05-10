@@ -166,7 +166,7 @@ func (d *AzureSecretEngineRole) GetVaultConnection() *vaultutils.VaultConnection
 
 func (d *AzureSecretEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.AzureSERole.toMap()
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (d *AzureSecretEngineRole) IsInitialized() bool {

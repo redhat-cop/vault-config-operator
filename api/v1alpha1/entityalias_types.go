@@ -228,13 +228,5 @@ func (d *EntityAlias) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfigurati
 
 func (d *EntityAlias) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.toMap()
-	delete(payload, "creation_time")
-	delete(payload, "last_update_time")
-	delete(payload, "merged_from_canonical_ids")
-	delete(payload, "metadata")
-	delete(payload, "mount_path")
-	delete(payload, "mount_type")
-	delete(payload, "local")
-	delete(payload, "namespace_id")
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

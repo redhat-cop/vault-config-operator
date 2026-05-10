@@ -423,13 +423,6 @@ func TestIdentityOIDCAssignmentIsEquivalentToDesiredState(t *testing.T) {
 	}
 }
 
-// Tests for AC #4: extra-field handling in IsEquivalentToDesiredState.
-// These types use reflect.DeepEqual(desiredState, payload), so extra keys in
-// the payload cause the comparison to return false. In production the
-// reconciler calls IsEquivalentToDesiredState with the raw Vault read
-// response (no key filtering), meaning extra Vault-returned fields trigger
-// an unnecessary write. Story 7-4 tracks hardening this behavior.
-
 func TestIdentityOIDCScopeIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 	scope := &IdentityOIDCScope{
 		Spec: IdentityOIDCScopeSpec{
@@ -445,8 +438,8 @@ func TestIdentityOIDCScopeIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 		"description": "desc",
 		"extra_field": "vault-returned-value",
 	}
-	if scope.IsEquivalentToDesiredState(payloadWithExtra) {
-		t.Error("expected payload with extra fields to NOT be equivalent (reflect.DeepEqual compares full maps)")
+	if !scope.IsEquivalentToDesiredState(payloadWithExtra) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 
@@ -467,8 +460,8 @@ func TestIdentityOIDCProviderIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 		"scopes_supported":   []string{"openid"},
 		"extra_field":        "vault-returned-value",
 	}
-	if provider.IsEquivalentToDesiredState(payloadWithExtra) {
-		t.Error("expected payload with extra fields to NOT be equivalent (reflect.DeepEqual compares full maps)")
+	if !provider.IsEquivalentToDesiredState(payloadWithExtra) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 
@@ -496,8 +489,8 @@ func TestIdentityOIDCClientIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 		"client_id":        "generated-id-from-vault",
 		"client_secret":    "generated-secret-from-vault",
 	}
-	if c.IsEquivalentToDesiredState(payloadWithExtra) {
-		t.Error("expected payload with extra fields to NOT be equivalent (reflect.DeepEqual compares full maps)")
+	if !c.IsEquivalentToDesiredState(payloadWithExtra) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 
@@ -516,8 +509,8 @@ func TestIdentityOIDCAssignmentIsEquivalentExtraFieldsReturnsFalse(t *testing.T)
 		"group_ids":   []string{"group-1"},
 		"extra_field": "vault-returned-value",
 	}
-	if a.IsEquivalentToDesiredState(payloadWithExtra) {
-		t.Error("expected payload with extra fields to NOT be equivalent (reflect.DeepEqual compares full maps)")
+	if !a.IsEquivalentToDesiredState(payloadWithExtra) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 

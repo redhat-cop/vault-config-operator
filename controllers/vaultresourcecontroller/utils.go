@@ -195,7 +195,9 @@ func ManageOutcome(context context.Context, r ReconcilerBase, obj client.Object,
 // 2. Optional periodic reconciliation for drift detection when enabled via ENABLE_DRIFT_DETECTION
 type PeriodicReconcilePredicate struct {
 	predicate.Funcs
-	// ReconcileInterval defines how often to allow reconciliation even without spec changes
+	// ReconcileInterval is the interval passed at construction time.
+	// NOTE: Update() reads the package-level SyncPeriod variable so that
+	// runtime calls to SetSyncPeriod() take effect without re-creating predicates.
 	ReconcileInterval time.Duration
 }
 
@@ -242,7 +244,7 @@ func (p PeriodicReconcilePredicate) Update(e event.UpdateEvent) bool {
 			if condition.Type == ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
 				// If we have a successful reconcile condition, check if the interval has elapsed
 				timeSinceLastReconcile := time.Since(condition.LastTransitionTime.Time)
-				if timeSinceLastReconcile >= p.ReconcileInterval {
+				if timeSinceLastReconcile >= SyncPeriod {
 					return true
 				}
 				break

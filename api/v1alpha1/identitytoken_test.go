@@ -272,13 +272,6 @@ func TestIdentityTokenRoleIsEquivalentToDesiredState(t *testing.T) {
 	}
 }
 
-// Tests for AC #4: extra-field handling in IsEquivalentToDesiredState.
-// These types use reflect.DeepEqual(desiredState, payload), so extra keys in
-// the payload cause the comparison to return false. In production the
-// reconciler calls IsEquivalentToDesiredState with the raw Vault read
-// response (no key filtering), meaning extra Vault-returned fields trigger
-// an unnecessary write. Story 7-4 tracks hardening this behavior.
-
 func TestIdentityTokenConfigIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 	config := &IdentityTokenConfig{
 		Spec: IdentityTokenConfigSpec{
@@ -292,8 +285,8 @@ func TestIdentityTokenConfigIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 		"issuer":      "https://example.com",
 		"extra_field": "vault-returned-value",
 	}
-	if config.IsEquivalentToDesiredState(payloadWithExtra) {
-		t.Error("expected payload with extra fields to NOT be equivalent (reflect.DeepEqual compares full maps)")
+	if !config.IsEquivalentToDesiredState(payloadWithExtra) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 
@@ -316,8 +309,8 @@ func TestIdentityTokenKeyIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 		"algorithm":          "RS256",
 		"extra_field":        "vault-returned-value",
 	}
-	if key.IsEquivalentToDesiredState(payloadWithExtra) {
-		t.Error("expected payload with extra fields to NOT be equivalent (reflect.DeepEqual compares full maps)")
+	if !key.IsEquivalentToDesiredState(payloadWithExtra) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 
@@ -336,8 +329,8 @@ func TestIdentityTokenRoleIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 		"ttl":         "24h",
 		"extra_field": "vault-returned-value",
 	}
-	if role.IsEquivalentToDesiredState(payloadWithExtra) {
-		t.Error("expected payload with extra fields to NOT be equivalent (reflect.DeepEqual compares full maps)")
+	if !role.IsEquivalentToDesiredState(payloadWithExtra) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 

@@ -91,7 +91,7 @@ func (q *QuaySecretEngineRole) GetPayload() map[string]interface{} {
 }
 func (q *QuaySecretEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := q.Spec.QuayRole.toMap()
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (q *QuaySecretEngineRole) IsInitialized() bool {

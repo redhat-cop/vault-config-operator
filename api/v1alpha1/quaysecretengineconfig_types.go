@@ -74,7 +74,7 @@ func (q *QuaySecretEngineConfig) GetPayload() map[string]interface{} {
 func (q *QuaySecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := q.Spec.QuayConfig.toMap()
 	delete(desiredState, "password")
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (q *QuaySecretEngineConfig) IsInitialized() bool {

@@ -108,7 +108,7 @@ func (d *GitHubSecretEngineRole) GetPayload() map[string]interface{} {
 }
 func (d *GitHubSecretEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.PermissionSet.toMap()
-	return reflect.DeepEqual(desiredState, payload)
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (d *GitHubSecretEngineRole) IsInitialized() bool {

@@ -72,7 +72,8 @@ func (d *LDAPAuthEngineGroup) GetPayload() map[string]interface{} {
 }
 
 func (d *LDAPAuthEngineGroup) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
-	return reflect.DeepEqual(d.GetPayload(), payload)
+	desiredState := d.GetPayload()
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (d *LDAPAuthEngineGroup) IsInitialized() bool {
