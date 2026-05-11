@@ -25,10 +25,10 @@ var _ = Describe("EntityAlias controller", func() {
 		It("Should create an EntityAlias in Vault", func() {
 
 			By("Creating a new Entity first")
-			entityInstance, err := decoder.GetEntityInstance("../test/identity/01-entity-sample.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/identity/01-entity-sample.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			entityInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, entityInstance)).Should(Succeed())
+			entityInstance := &redhatcopv1alpha1.Entity{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, entityInstance)).Should(Succeed())
 
 			entityLookupKey := types.NamespacedName{Name: entityInstance.Name, Namespace: entityInstance.Namespace}
 			entityCreated := &redhatcopv1alpha1.Entity{}
@@ -49,10 +49,10 @@ var _ = Describe("EntityAlias controller", func() {
 			}, timeout, interval).Should(BeTrue())
 
 			By("Creating a new EntityAlias")
-			entityAliasInstance, err := decoder.GetEntityAliasInstance("../test/identity/02-entityalias-sample.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/identity/02-entityalias-sample.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			entityAliasInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, entityAliasInstance)).Should(Succeed())
+			entityAliasInstance := &redhatcopv1alpha1.EntityAlias{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, entityAliasInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: entityAliasInstance.Name, Namespace: entityAliasInstance.Namespace}
 			created := &redhatcopv1alpha1.EntityAlias{}
@@ -98,10 +98,10 @@ var _ = Describe("EntityAlias controller", func() {
 		It("Should update the EntityAlias in Vault and reflect updated ObservedGeneration", func() {
 
 			By("Creating a new Entity first")
-			entityInstance, err := decoder.GetEntityInstance("../test/identity/01-entity-sample.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/identity/01-entity-sample.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			entityInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, entityInstance)).Should(Succeed())
+			entityInstance := &redhatcopv1alpha1.Entity{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, entityInstance)).Should(Succeed())
 
 			entityLookupKey := types.NamespacedName{Name: entityInstance.Name, Namespace: entityInstance.Namespace}
 			entityCreated := &redhatcopv1alpha1.Entity{}
@@ -121,10 +121,10 @@ var _ = Describe("EntityAlias controller", func() {
 			}, timeout, interval).Should(BeTrue())
 
 			By("Creating a new EntityAlias")
-			entityAliasInstance, err := decoder.GetEntityAliasInstance("../test/identity/02-entityalias-sample.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/identity/02-entityalias-sample.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			entityAliasInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, entityAliasInstance)).Should(Succeed())
+			entityAliasInstance := &redhatcopv1alpha1.EntityAlias{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, entityAliasInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: entityAliasInstance.Name, Namespace: entityAliasInstance.Namespace}
 			created := &redhatcopv1alpha1.EntityAlias{}

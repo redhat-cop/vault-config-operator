@@ -38,11 +38,10 @@ var _ = Describe("PasswordPolicy controller", Ordered, func() {
 		It("Should create the password policy in Vault and generate valid passwords", func() {
 
 			By("Loading and creating the simple PasswordPolicy fixture")
-			var err error
-			simplePPInstance, err = decoder.GetPasswordPolicyInstance("../test/passwordpolicy/simple-password-policy.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/passwordpolicy/simple-password-policy.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			simplePPInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, simplePPInstance)).Should(Succeed())
+			simplePPInstance = &redhatcopv1alpha1.PasswordPolicy{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, simplePPInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: simplePPInstance.Name, Namespace: simplePPInstance.Namespace}
 			created := &redhatcopv1alpha1.PasswordPolicy{}
@@ -83,11 +82,10 @@ var _ = Describe("PasswordPolicy controller", Ordered, func() {
 		It("Should create the policy at the spec.name path in Vault", func() {
 
 			By("Loading and creating the named PasswordPolicy fixture")
-			var err error
-			namedPPInstance, err = decoder.GetPasswordPolicyInstance("../test/passwordpolicy/named-password-policy.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/passwordpolicy/named-password-policy.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			namedPPInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, namedPPInstance)).Should(Succeed())
+			namedPPInstance = &redhatcopv1alpha1.PasswordPolicy{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, namedPPInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: namedPPInstance.Name, Namespace: namedPPInstance.Namespace}
 			created := &redhatcopv1alpha1.PasswordPolicy{}

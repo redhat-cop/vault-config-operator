@@ -38,11 +38,10 @@ var _ = Describe("Group and GroupAlias controllers", Ordered, func() {
 		It("Should create the group in Vault with correct settings", func() {
 
 			By("Loading and creating the Group fixture")
-			var err error
-			groupInstance, err = decoder.GetGroupInstance("../test/groups/test-group.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/groups/test-group.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			groupInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, groupInstance)).Should(Succeed())
+			groupInstance = &redhatcopv1alpha1.Group{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, groupInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: groupInstance.Name, Namespace: groupInstance.Namespace}
 			created := &redhatcopv1alpha1.Group{}
@@ -152,11 +151,10 @@ var _ = Describe("Group and GroupAlias controllers", Ordered, func() {
 			Expect(groupInstance).NotTo(BeNil(), "expected group to be created before alias phase")
 
 			By("Loading and creating the GroupAlias fixture")
-			var err error
-			aliasInstance, err = decoder.GetGroupAliasInstance("../test/groups/test-groupalias.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/groups/test-groupalias.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			aliasInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, aliasInstance)).Should(Succeed())
+			aliasInstance = &redhatcopv1alpha1.GroupAlias{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, aliasInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: aliasInstance.Name, Namespace: aliasInstance.Namespace}
 			created := &redhatcopv1alpha1.GroupAlias{}

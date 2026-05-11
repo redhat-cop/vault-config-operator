@@ -47,17 +47,14 @@ var _ = Describe("Error path handling", Ordered, func() {
 		It("Should set ReconcileFailed condition and allow clean deletion", func() {
 
 			By("Loading the Policy fixture with non-existent ServiceAccount")
-			instance, err := decoder.GetPolicyInstance("../test/error-paths/policy-invalid-serviceaccount.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/error-paths/policy-invalid-serviceaccount.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			instance.Namespace = vaultAdminNamespaceName
-
-			By("Creating the CR")
-			Expect(k8sIntegrationClient.Create(ctx, instance)).Should(Succeed())
-
-			lookupKey := types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}
-			fetched := &redhatcopv1alpha1.Policy{}
+			instance := &redhatcopv1alpha1.Policy{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, instance)).Should(Succeed())
 
 			By("Waiting for ReconcileFailed condition")
+			lookupKey := types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}
+			fetched := &redhatcopv1alpha1.Policy{}
 			Eventually(func() bool {
 				err := k8sIntegrationClient.Get(ctx, lookupKey, fetched)
 				if err != nil {
@@ -104,12 +101,10 @@ var _ = Describe("Error path handling", Ordered, func() {
 		It("Should set ReconcileFailed condition and allow clean deletion", func() {
 
 			By("Loading the Policy fixture with non-existent Vault role")
-			instance, err := decoder.GetPolicyInstance("../test/error-paths/policy-invalid-role.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/error-paths/policy-invalid-role.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			instance.Namespace = vaultAdminNamespaceName
-
-			By("Creating the CR")
-			Expect(k8sIntegrationClient.Create(ctx, instance)).Should(Succeed())
+			instance := &redhatcopv1alpha1.Policy{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, instance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}
 			fetched := &redhatcopv1alpha1.Policy{}
@@ -163,12 +158,10 @@ var _ = Describe("Error path handling", Ordered, func() {
 			Expect(k8sIntegrationClient.Create(ctx, dummySecret)).Should(Succeed())
 
 			By("Loading the DatabaseSecretEngineConfig fixture with non-existent mount")
-			instance, err := decoder.GetDatabaseSecretEngineConfigInstance("../test/error-paths/databasesecretengineconfig-invalid-mount.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/error-paths/databasesecretengineconfig-invalid-mount.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			instance.Namespace = vaultAdminNamespaceName
-
-			By("Creating the CR")
-			Expect(k8sIntegrationClient.Create(ctx, instance)).Should(Succeed())
+			instance := &redhatcopv1alpha1.DatabaseSecretEngineConfig{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, instance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}
 			fetched := &redhatcopv1alpha1.DatabaseSecretEngineConfig{}

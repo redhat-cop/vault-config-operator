@@ -68,11 +68,10 @@ var _ = Describe("Drift detection", Ordered, func() {
 		BeforeAll(func() {
 			cleanupDrift = enableDriftDetection(5 * time.Second)
 
-			var err error
-			policyInstance, err = decoder.GetPolicyInstance("../test/drift-detection/policy-drift-test.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/drift-detection/policy-drift-test.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			policyInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, policyInstance)).Should(Succeed())
+			policyInstance = &redhatcopv1alpha1.Policy{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, policyInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: policyInstance.Name, Namespace: policyInstance.Namespace}
 			created := &redhatcopv1alpha1.Policy{}
@@ -190,11 +189,10 @@ var _ = Describe("Drift detection", Ordered, func() {
 		BeforeAll(func() {
 			cleanupDrift = enableDriftDetection(5 * time.Second)
 
-			var err error
-			mountInstance, err = decoder.GetSecretEngineMountInstance("../test/drift-detection/secretenginemount-drift-test.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/drift-detection/secretenginemount-drift-test.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			mountInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, mountInstance)).Should(Succeed())
+			mountInstance = &redhatcopv1alpha1.SecretEngineMount{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, mountInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: mountInstance.Name, Namespace: mountInstance.Namespace}
 			created := &redhatcopv1alpha1.SecretEngineMount{}

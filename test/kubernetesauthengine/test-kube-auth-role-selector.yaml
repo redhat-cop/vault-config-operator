@@ -7,8 +7,6 @@ spec:
     path: kubernetes
     role: policy-admin
   path: test-k8s-auth/test-kaec-mount
-  aliasNameSource: "serviceaccount_uid"
-  tokenType: "default"
   policies:
     - vault-admin
   targetServiceAccounts:

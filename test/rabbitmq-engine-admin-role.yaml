@@ -9,8 +9,6 @@ spec:
     role: policy-admin
     # serviceAccount: {"name": "default"}
   path: kubernetes
-  aliasNameSource: "serviceaccount_uid"
-  tokenType: "default"
   policies:
     - rabbitmq-engine-admin
   targetServiceAccounts: ["default"]

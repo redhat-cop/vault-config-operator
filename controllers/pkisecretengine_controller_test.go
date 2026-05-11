@@ -25,10 +25,10 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 	Context("When preparing a PKI Secren Engine", func() {
 		It("Should create a PKI Secret Engine when created", func() {
 			By("By creating new Policies")
-			pInstance, err := decoder.GetPolicyInstance("../test/pkisecretengine/pki-secret-engine-admin-policy.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/pkisecretengine/pki-secret-engine-admin-policy.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			pInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, pInstance)).Should(Succeed())
+			pInstance := &redhatcopv1alpha1.Policy{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, pInstance)).Should(Succeed())
 
 			pLookupKey := types.NamespacedName{Name: pInstance.Name, Namespace: pInstance.Namespace}
 			pCreated := &redhatcopv1alpha1.Policy{}
@@ -48,10 +48,10 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
-			kaerInstance, err := decoder.GetKubernetesAuthEngineRoleInstance("../test/pkisecretengine/pki-secret-engine-kube-auth-role.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/pkisecretengine/pki-secret-engine-kube-auth-role.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			kaerInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, kaerInstance)).Should(Succeed())
+			kaerInstance := &redhatcopv1alpha1.KubernetesAuthEngineRole{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, kaerInstance)).Should(Succeed())
 
 			kaerLookupKey := types.NamespacedName{Name: kaerInstance.Name, Namespace: kaerInstance.Namespace}
 			kaerCreated := &redhatcopv1alpha1.KubernetesAuthEngineRole{}
@@ -73,10 +73,10 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 
 			By("By creating a new SecretEngineMount")
 
-			semInstance, err := decoder.GetSecretEngineMountInstance("../test/pkisecretengine/pki-secret-engine.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/pkisecretengine/pki-secret-engine.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			semInstance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, semInstance)).Should(Succeed())
+			semInstance := &redhatcopv1alpha1.SecretEngineMount{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, semInstance)).Should(Succeed())
 
 			semLookupKey := types.NamespacedName{Name: semInstance.Name, Namespace: semInstance.Namespace}
 			semCreated := &redhatcopv1alpha1.SecretEngineMount{}
@@ -101,10 +101,10 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 	Context("When creating a PKISecretEngineConfig", func() {
 		It("Should configure the PKI for the specific pki path when created", func() {
 
-			rsInstance, err := decoder.GetPKISecretEngineConfigInstance("../test/pkisecretengine/pki-secret-engine-config.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/pkisecretengine/pki-secret-engine-config.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			rsInstance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, rsInstance)).Should(Succeed())
+			rsInstance := &redhatcopv1alpha1.PKISecretEngineConfig{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, rsInstance)).Should(Succeed())
 
 			rslookupKey := types.NamespacedName{Name: rsInstance.Name, Namespace: rsInstance.Namespace}
 			rsCreated := &redhatcopv1alpha1.PKISecretEngineConfig{}
@@ -129,10 +129,10 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 	Context("When creating a PKISecretEngineRole", func() {
 		It("Should configure the PKI role for the specific pki path when created", func() {
 
-			rsInstance, err := decoder.GetPKISecretEngineRoleInstance("../test/pkisecretengine/pki-secret-engine-role.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/pkisecretengine/pki-secret-engine-role.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			rsInstance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, rsInstance)).Should(Succeed())
+			rsInstance := &redhatcopv1alpha1.PKISecretEngineRole{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, rsInstance)).Should(Succeed())
 
 			rslookupKey := types.NamespacedName{Name: rsInstance.Name, Namespace: rsInstance.Namespace}
 			rsCreated := &redhatcopv1alpha1.PKISecretEngineRole{}

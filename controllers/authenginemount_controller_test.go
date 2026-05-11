@@ -43,11 +43,10 @@ var _ = Describe("AuthEngineMount controller", Ordered, func() {
 		It("Should enable the auth method in Vault and populate the accessor", func() {
 
 			By("Loading and creating the simple AuthEngineMount fixture")
-			var err error
-			simpleInstance, err = decoder.GetAuthEngineMountInstance("../test/authenginemount/simple-approle-mount.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/authenginemount/simple-approle-mount.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			simpleInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, simpleInstance)).Should(Succeed())
+			simpleInstance = &redhatcopv1alpha1.AuthEngineMount{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, simpleInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: simpleInstance.Name, Namespace: simpleInstance.Namespace}
 			created := &redhatcopv1alpha1.AuthEngineMount{}
@@ -90,11 +89,10 @@ var _ = Describe("AuthEngineMount controller", Ordered, func() {
 		It("Should apply the tune config in Vault", func() {
 
 			By("Loading and creating the tuned AuthEngineMount fixture")
-			var err error
-			tunedInstance, err = decoder.GetAuthEngineMountInstance("../test/authenginemount/tuned-approle-mount.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/authenginemount/tuned-approle-mount.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			tunedInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, tunedInstance)).Should(Succeed())
+			tunedInstance = &redhatcopv1alpha1.AuthEngineMount{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, tunedInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: tunedInstance.Name, Namespace: tunedInstance.Namespace}
 			created := &redhatcopv1alpha1.AuthEngineMount{}
@@ -137,11 +135,10 @@ var _ = Describe("AuthEngineMount controller", Ordered, func() {
 		It("Should mount at the spec.name path", func() {
 
 			By("Loading and creating the named AuthEngineMount fixture")
-			var err error
-			namedInstance, err = decoder.GetAuthEngineMountInstance("../test/authenginemount/named-approle-mount.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/authenginemount/named-approle-mount.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			namedInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, namedInstance)).Should(Succeed())
+			namedInstance = &redhatcopv1alpha1.AuthEngineMount{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, namedInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: namedInstance.Name, Namespace: namedInstance.Namespace}
 			created := &redhatcopv1alpha1.AuthEngineMount{}

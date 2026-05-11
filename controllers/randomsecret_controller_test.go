@@ -32,10 +32,13 @@ var _ = Describe("Random Secret controller for v2 secrets", func() {
 
 			By("Creating new RandomSecret")
 
-			rsInstance, err := decoder.GetRandomSecretInstance("../test/randomsecret/v2/08-randomsecret-retain-v2.yaml")
+			var rsInstance *redhatcopv1alpha1.RandomSecret
+			var instance *redhatcopv1alpha1.VaultSecret
+
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/randomsecret/v2/08-randomsecret-retain-v2.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			rsInstance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, rsInstance)).Should(Succeed())
+			rsInstance = &redhatcopv1alpha1.RandomSecret{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, rsInstance)).Should(Succeed())
 
 			rslookupKey := types.NamespacedName{Name: rsInstance.Name, Namespace: rsInstance.Namespace}
 			rsCreated := &redhatcopv1alpha1.RandomSecret{}
@@ -46,10 +49,10 @@ var _ = Describe("Random Secret controller for v2 secrets", func() {
 
 			ctx := context.Background()
 
-			instance, err := decoder.GetVaultSecretInstance("../test/vaultsecret/v2/08-vaultsecret-randomsecret-retain-v2.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/vaultsecret/v2/08-vaultsecret-randomsecret-retain-v2.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			instance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, instance)).Should(Succeed())
+			instance = &redhatcopv1alpha1.VaultSecret{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, instance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}
 			created := &redhatcopv1alpha1.VaultSecret{}
@@ -131,10 +134,10 @@ var _ = Describe("Random Secret controller for v2 secrets", func() {
 			// BEGIN
 			By("Creating new RandomSecret (again)")
 
-			rsInstance, err = decoder.GetRandomSecretInstance("../test/randomsecret/v2/08-randomsecret-retain-v2.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/randomsecret/v2/08-randomsecret-retain-v2.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			rsInstance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, rsInstance)).Should(Succeed())
+			rsInstance = &redhatcopv1alpha1.RandomSecret{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, rsInstance)).Should(Succeed())
 
 			rsCreated = &redhatcopv1alpha1.RandomSecret{}
 
@@ -144,10 +147,10 @@ var _ = Describe("Random Secret controller for v2 secrets", func() {
 
 			ctx = context.Background()
 
-			instance, err = decoder.GetVaultSecretInstance("../test/vaultsecret/v2/08-vaultsecret-randomsecret-retain-v2.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/vaultsecret/v2/08-vaultsecret-randomsecret-retain-v2.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			instance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, instance)).Should(Succeed())
+			instance = &redhatcopv1alpha1.VaultSecret{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, instance)).Should(Succeed())
 
 			lookupKey = types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}
 			created = &redhatcopv1alpha1.VaultSecret{}
@@ -227,10 +230,10 @@ var _ = Describe("Random Secret controller for v2 secrets", func() {
 
 			By("Creating first RandomSecret with password key")
 
-			rsPasswordInstance, err := decoder.GetRandomSecretInstance("../test/randomsecret/v2/09-randomsecret-multikey-password-v2.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/randomsecret/v2/09-randomsecret-multikey-password-v2.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			rsPasswordInstance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, rsPasswordInstance)).Should(Succeed())
+			rsPasswordInstance := &redhatcopv1alpha1.RandomSecret{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, rsPasswordInstance)).Should(Succeed())
 
 			rsPasswordLookupKey := types.NamespacedName{Name: rsPasswordInstance.Name, Namespace: rsPasswordInstance.Namespace}
 			rsPasswordCreated := &redhatcopv1alpha1.RandomSecret{}
@@ -259,10 +262,10 @@ var _ = Describe("Random Secret controller for v2 secrets", func() {
 
 			By("Creating second RandomSecret with username key at same path")
 
-			rsUsernameInstance, err := decoder.GetRandomSecretInstance("../test/randomsecret/v2/10-randomsecret-multikey-username-v2.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/randomsecret/v2/10-randomsecret-multikey-username-v2.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			rsUsernameInstance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, rsUsernameInstance)).Should(Succeed())
+			rsUsernameInstance := &redhatcopv1alpha1.RandomSecret{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, rsUsernameInstance)).Should(Succeed())
 
 			rsUsernameLookupKey := types.NamespacedName{Name: rsUsernameInstance.Name, Namespace: rsUsernameInstance.Namespace}
 			rsUsernameCreated := &redhatcopv1alpha1.RandomSecret{}
@@ -348,10 +351,10 @@ var _ = Describe("Random Secret controller for v2 secrets", func() {
 
 			By("Creating first RandomSecret with password key")
 
-			rsPasswordInstance, err := decoder.GetRandomSecretInstance("../test/randomsecret/v2/09-randomsecret-multikey-password-v2.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/randomsecret/v2/09-randomsecret-multikey-password-v2.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			rsPasswordInstance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, rsPasswordInstance)).Should(Succeed())
+			rsPasswordInstance := &redhatcopv1alpha1.RandomSecret{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, rsPasswordInstance)).Should(Succeed())
 
 			rsPasswordLookupKey := types.NamespacedName{Name: rsPasswordInstance.Name, Namespace: rsPasswordInstance.Namespace}
 			rsPasswordCreated := &redhatcopv1alpha1.RandomSecret{}
@@ -360,10 +363,10 @@ var _ = Describe("Random Secret controller for v2 secrets", func() {
 
 			By("Creating second RandomSecret with username key at same path")
 
-			rsUsernameInstance, err := decoder.GetRandomSecretInstance("../test/randomsecret/v2/10-randomsecret-multikey-username-v2.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/randomsecret/v2/10-randomsecret-multikey-username-v2.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			rsUsernameInstance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, rsUsernameInstance)).Should(Succeed())
+			rsUsernameInstance := &redhatcopv1alpha1.RandomSecret{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, rsUsernameInstance)).Should(Succeed())
 
 			rsUsernameLookupKey := types.NamespacedName{Name: rsUsernameInstance.Name, Namespace: rsUsernameInstance.Namespace}
 			rsUsernameCreated := &redhatcopv1alpha1.RandomSecret{}
@@ -412,10 +415,10 @@ var _ = Describe("Random Secret controller for v2 secrets", func() {
 
 			By("Recreating the password RandomSecret K8s resource")
 
-			rsPasswordInstance, err = decoder.GetRandomSecretInstance("../test/randomsecret/v2/09-randomsecret-multikey-password-v2.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/randomsecret/v2/09-randomsecret-multikey-password-v2.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			rsPasswordInstance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, rsPasswordInstance)).Should(Succeed())
+			rsPasswordInstance = &redhatcopv1alpha1.RandomSecret{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, rsPasswordInstance)).Should(Succeed())
 
 			rsPasswordCreated = &redhatcopv1alpha1.RandomSecret{}
 
@@ -481,10 +484,10 @@ var _ = Describe("Random Secret controller for v2 secrets", func() {
 
 			By("Creating new RandomSecret with refreshPeriod")
 
-			rsInstance, err := decoder.GetRandomSecretInstance("../test/randomsecret/v2/11-randomsecret-refresh-v2.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/randomsecret/v2/11-randomsecret-refresh-v2.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			rsInstance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, rsInstance)).Should(Succeed())
+			rsInstance := &redhatcopv1alpha1.RandomSecret{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, rsInstance)).Should(Succeed())
 
 			rsLookupKey := types.NamespacedName{Name: rsInstance.Name, Namespace: rsInstance.Namespace}
 			rsCreated := &redhatcopv1alpha1.RandomSecret{}

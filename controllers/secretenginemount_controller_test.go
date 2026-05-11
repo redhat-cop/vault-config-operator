@@ -42,11 +42,10 @@ var _ = Describe("SecretEngineMount controller", Ordered, func() {
 		It("Should enable the engine in Vault and populate the accessor", func() {
 
 			By("Loading and creating the simple SecretEngineMount fixture")
-			var err error
-			simpleInstance, err = decoder.GetSecretEngineMountInstance("../test/secretenginemount/simple-kv-mount.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/secretenginemount/simple-kv-mount.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			simpleInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, simpleInstance)).Should(Succeed())
+			simpleInstance = &redhatcopv1alpha1.SecretEngineMount{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, simpleInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: simpleInstance.Name, Namespace: simpleInstance.Namespace}
 			created := &redhatcopv1alpha1.SecretEngineMount{}
@@ -92,11 +91,10 @@ var _ = Describe("SecretEngineMount controller", Ordered, func() {
 		It("Should apply the tune config in Vault", func() {
 
 			By("Loading and creating the tuned SecretEngineMount fixture")
-			var err error
-			tunedInstance, err = decoder.GetSecretEngineMountInstance("../test/secretenginemount/tuned-kv-mount.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/secretenginemount/tuned-kv-mount.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			tunedInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, tunedInstance)).Should(Succeed())
+			tunedInstance = &redhatcopv1alpha1.SecretEngineMount{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, tunedInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: tunedInstance.Name, Namespace: tunedInstance.Namespace}
 			created := &redhatcopv1alpha1.SecretEngineMount{}
@@ -132,11 +130,10 @@ var _ = Describe("SecretEngineMount controller", Ordered, func() {
 		It("Should mount at the spec.name path", func() {
 
 			By("Loading and creating the named SecretEngineMount fixture")
-			var err error
-			namedInstance, err = decoder.GetSecretEngineMountInstance("../test/secretenginemount/named-kv-mount.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/secretenginemount/named-kv-mount.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			namedInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, namedInstance)).Should(Succeed())
+			namedInstance = &redhatcopv1alpha1.SecretEngineMount{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, namedInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: namedInstance.Name, Namespace: namedInstance.Namespace}
 			created := &redhatcopv1alpha1.SecretEngineMount{}

@@ -1,6 +1,6 @@
 # Story 7.5.3a: Unstructured Fixture Creation for CRD Defaulting
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -19,27 +19,32 @@ So that CRD server-side defaulting applies correctly and test fixtures don't nee
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `CreateFromYAML` method to the decoder (AC: 1)
-  - [ ] 1.1: Implement `CreateFromYAML(ctx, client, filename, namespace) (string, error)` in `controllers/controllertestutils/decoder.go` — reads YAML, decodes to `unstructured.Unstructured`, sets namespace, creates via client, returns the object name
-  - [ ] 1.2: Write a unit test for `CreateFromYAML` that verifies unstructured creation preserves only YAML-present fields
-- [ ] Task 2: Refactor `KubernetesAuthEngine` integration tests to use `CreateFromYAML` (AC: 2)
-  - [ ] 2.1: Refactor `kubernetesauthengine_controller_test.go` — replace `decoder.GetXxx` + `Create` with `CreateFromYAML` + typed `Get` for config and role fixtures
-  - [ ] 2.2: Verify Kubernetes auth engine tests pass with `make integration` (run only the relevant test if possible, otherwise full suite)
-- [ ] Task 3: Refactor shared test helpers to use `CreateFromYAML` (AC: 2)
-  - [ ] 3.1: Refactor `SetupKVv2Stack` and `SetupKVv2StackWithReader` in `integration_test_helpers_test.go` — replace `decoder.GetXxx` + `Create` with `CreateFromYAML` + typed `Get` for all `KubernetesAuthEngineRole` fixtures
-  - [ ] 3.2: Apply same pattern to `PasswordPolicy`, `Policy`, `SecretEngineMount` fixtures in these helpers (consistency)
-- [ ] Task 4: Refactor remaining integration tests to use `CreateFromYAML` (AC: 2)
-  - [ ] 4.1: Refactor `databasesecretenginestaticrole_controller_test.go`
-  - [ ] 4.2: Refactor `pkisecretengine_controller_test.go`
-  - [ ] 4.3: Refactor `vaultsecret_controller_test.go`
-  - [ ] 4.4: Refactor `kubernetessecretengine_controller_test.go`
-  - [ ] 4.5: Refactor all other controller test files that use typed decoder + Create pattern
-- [ ] Task 5: Revert explicit default values from test fixtures (AC: 3)
-  - [ ] 5.1: Revert `aliasNameSource`/`tokenType` additions from 13 KubernetesAuthEngineRole fixtures (Story 7.5.3)
-  - [ ] 5.2: Revert `boundClaimsType: "string"` from JWT/OIDC role fixture (Story 7.5.2)
-  - [ ] 5.3: Revert `tlsMinVersion`/`tlsMaxVersion` from LDAP config fixture (Story 7.5.1) — verify these are revertible (field must be absent from YAML for CRD default to apply)
-- [ ] Task 6: Run `make manifests generate fmt vet test` (AC: 2)
-- [ ] Task 7: Run `make integration` — full suite must pass (AC: 1, 2, 3)
+- [x] Task 1: Add `CreateFromYAML` method to the decoder (AC: 1)
+  - [x] 1.1: Implement `CreateFromYAML(ctx, client, filename, namespace) (string, error)` in `controllers/controllertestutils/decoder.go` — reads YAML, decodes to `unstructured.Unstructured`, sets namespace, creates via client, returns the object name
+  - [x] 1.2: Write a unit test for `CreateFromYAML` that verifies unstructured creation preserves only YAML-present fields
+- [x] Task 2: Refactor `KubernetesAuthEngine` integration tests to use `CreateFromYAML` (AC: 2)
+  - [x] 2.1: Refactor `kubernetesauthengine_controller_test.go` — replace `decoder.GetXxx` + `Create` with `CreateFromYAML` + typed `Get` for config and role fixtures
+  - [x] 2.2: Verify Kubernetes auth engine tests pass with `make integration` (run only the relevant test if possible, otherwise full suite)
+- [x] Task 3: Refactor shared test helpers to use `CreateFromYAML` (AC: 2)
+  - [x] 3.1: Refactor `SetupKVv2Stack` and `SetupKVv2StackWithReader` in `integration_test_helpers_test.go` — replace `decoder.GetXxx` + `Create` with `CreateFromYAML` + typed `Get` for all `KubernetesAuthEngineRole` fixtures
+  - [x] 3.2: Apply same pattern to `PasswordPolicy`, `Policy`, `SecretEngineMount` fixtures in these helpers (consistency)
+- [x] Task 4: Refactor remaining integration tests to use `CreateFromYAML` (AC: 2)
+  - [x] 4.1: Refactor `databasesecretenginestaticrole_controller_test.go`
+  - [x] 4.2: Refactor `pkisecretengine_controller_test.go`
+  - [x] 4.3: Refactor `vaultsecret_controller_test.go`
+  - [x] 4.4: Refactor `kubernetessecretengine_controller_test.go`
+  - [x] 4.5: Refactor all other controller test files that use typed decoder + Create pattern
+- [x] Task 5: Revert explicit default values from test fixtures (AC: 3)
+  - [x] 5.1: Revert `aliasNameSource`/`tokenType` additions from 13 KubernetesAuthEngineRole fixtures (Story 7.5.3)
+  - [x] 5.2: Revert `boundClaimsType: "string"` from JWT/OIDC role fixture (Story 7.5.2)
+  - [x] 5.3: Revert `tlsMinVersion`/`tlsMaxVersion` from LDAP config fixture (Story 7.5.1) — verify these are revertible (field must be absent from YAML for CRD default to apply)
+- [x] Task 6: Run `make manifests generate fmt vet test` (AC: 2)
+- [x] Task 7: Run `make integration` — full suite must pass (AC: 1, 2, 3)
+
+### Review Findings
+
+- [x] [Review][Decision] Typed create path in drift-detection "disabled" test is an intentional exception — `controllers/driftdetection_controller_test.go` keeps the old `decoder.GetPolicyInstance(...)` + typed `Create(...)` pattern in the "Drift detection disabled" policy setup because it must override `metadata.name` before create, which `CreateFromYAML` does not support. This is a documented exception, not a gap. Resolution: option 2 (keep exception, clarify docs).
+- [x] [Review][Patch] Update the integration-test guidance to describe the new fixture creation pattern [`_bmad-output/project-context.md:150`]
 
 ## Dev Notes
 
@@ -216,10 +221,85 @@ The typed `Get` retrieves the object WITH server-applied defaults, so `roleInsta
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Integration tests passed on baseline (pre-change) in 579s
+- `make manifests generate fmt vet test` passed after all changes
+- Integration tests passed on final (post-change) in 577s — no regressions
+- One `driftdetection_controller_test.go` create pattern intentionally left as typed decoder (uses `policyInstance.Name` override incompatible with CreateFromYAML)
+
 ### Completion Notes List
 
+- Added `CreateFromYAML(ctx, client, filename, namespace) (string, error)` to `controllers/controllertestutils/decoder.go` using `unstructured.Unstructured` + `utilyaml.NewYAMLOrJSONDecoder`
+- Created 3 unit tests for `CreateFromYAML`: field preservation, file-not-found, and invalid-YAML error cases
+- Refactored all 24 integration test files to use `CreateFromYAML` + typed `Get` for resource creation (replacing `decoder.GetXxx` + typed `Create`)
+- Refactored `SetupKVv2Stack` and `SetupKVv2StackWithReader` shared helpers
+- Reverted `aliasNameSource`/`tokenType` from 13 KubernetesAuthEngineRole YAML fixtures (Story 7.5.3 workaround)
+- Reverted `boundClaimsType` from JWT/OIDC role fixture (Story 7.5.2 workaround)
+- Reverted `TLSMinVersion`/`TLSMaxVersion` from LDAP config fixture (Story 7.5.1 workaround)
+- Delete patterns left unchanged — typed decoder is appropriate for delete (no CRD defaulting concern)
+- `config/samples/redhatcop_v1alpha1_kubernetesauthenginerole.yaml` left unchanged per story instructions (user-facing documentation sample)
+
+### Change Log
+
+- 2026-05-11: Story 7.5.3a implemented — unstructured fixture creation for CRD defaulting
+
 ### File List
+
+**New:**
+- `controllers/controllertestutils/decoder_test.go` — Unit tests for CreateFromYAML
+
+**Modified (decoder):**
+- `controllers/controllertestutils/decoder.go` — Added CreateFromYAML method with unstructured YAML parsing
+
+**Modified (integration tests — CreateFromYAML refactor):**
+- `controllers/kubernetesauthengine_controller_test.go`
+- `controllers/kubernetessecretengine_controller_test.go`
+- `controllers/integration_test_helpers_test.go`
+- `controllers/databasesecretenginestaticrole_controller_test.go`
+- `controllers/databasesecretengine_controller_test.go`
+- `controllers/pkisecretengine_controller_test.go`
+- `controllers/vaultsecret_controller_test.go`
+- `controllers/vaultsecret_controller_v2_test.go`
+- `controllers/randomsecret_controller_test.go`
+- `controllers/ldapauthengine_controller_test.go`
+- `controllers/jwtoidcauthengine_controller_test.go`
+- `controllers/rabbitmqsecretengine_controller_test.go`
+- `controllers/policy_controller_test.go`
+- `controllers/passwordpolicy_controller_test.go`
+- `controllers/secretenginemount_controller_test.go`
+- `controllers/authenginemount_controller_test.go`
+- `controllers/entity_controller_test.go`
+- `controllers/entityalias_controller_test.go`
+- `controllers/group_controller_test.go`
+- `controllers/identityoidc_controller_test.go`
+- `controllers/identitytoken_controller_test.go`
+- `controllers/audit_controller_test.go`
+- `controllers/driftdetection_controller_test.go`
+- `controllers/errorpaths_controller_test.go`
+
+**Modified (fixture reverts — Story 7.5.3 aliasNameSource/tokenType):**
+- `test/kubernetesauthengine/test-kube-auth-role.yaml`
+- `test/kubernetesauthengine/test-kube-auth-role-selector.yaml`
+- `test/database-engine-admin-role.yaml`
+- `test/kv-engine-admin-role.yaml`
+- `test/kube-auth-engine-role.yaml`
+- `test/secret-writer-role.yaml`
+- `test/rabbitmq-engine-admin-role.yaml`
+- `test/databasesecretengine/database-secret-engine-auth-role.yaml`
+- `test/pkisecretengine/pki-secret-engine-kube-auth-role.yaml`
+- `test/vaultsecret/kubernetesauthenginerole-secret-reader.yaml`
+- `test/vaultsecret/v2/00-kubernetesauthenginerole-secret-reader-v2.yaml`
+- `test/randomsecret/v2/02-kubernetesauthenginerole-kv-engine-admin-v2.yaml`
+- `test/randomsecret/v2/05-kubernetesauthenginerole-secret-writer-v2.yaml`
+
+**Modified (fixture reverts — Story 7.5.2 boundClaimsType):**
+- `test/jwtoidcauthengine/test-jwtoidc-auth-role.yaml`
+
+**Modified (fixture reverts — Story 7.5.1 TLSMinVersion/TLSMaxVersion):**
+- `test/ldapauthengine/test-ldap-auth-config.yaml`
+
+**Modified (sprint tracking):**
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`

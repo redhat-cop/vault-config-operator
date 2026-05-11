@@ -9,7 +9,6 @@ spec:
   path: test-jwt-oidc-auth/test-joaec-mount
   name: "test-oidc-role"
   roleType: "oidc"
-  boundClaimsType: "string"
   userClaim: "email"
   allowedRedirectURIs:
     - "http://localhost:8250/oidc/callback"

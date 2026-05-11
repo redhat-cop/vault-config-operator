@@ -14,8 +14,6 @@ spec:
   groupDN: "ou=Groups,dc=example,dc=com"
   groupFilter: "(|(memberUid={{.Username}})(member={{.UserDN}})(uniqueMember={{.UserDN}}))"
   userFilter: "({{.UserAttr}}={{.Username}})"
-  TLSMinVersion: "tls12"
-  TLSMaxVersion: "tls12"
   insecureTLS: true
   bindCredentials:
     secret:

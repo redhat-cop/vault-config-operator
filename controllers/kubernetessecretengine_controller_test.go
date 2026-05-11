@@ -109,11 +109,10 @@ var _ = Describe("KubernetesSecretEngine controllers", Ordered, func() {
 			}, timeout, interval).Should(BeTrue())
 
 			By("Loading and creating the SecretEngineMount fixture")
-			var err error
-			mountInstance, err = decoder.GetSecretEngineMountInstance("../test/kubernetessecretengine/test-kubese-mount.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/kubernetessecretengine/test-kubese-mount.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			mountInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, mountInstance)).Should(Succeed())
+			mountInstance = &redhatcopv1alpha1.SecretEngineMount{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, mountInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: mountInstance.Name, Namespace: mountInstance.Namespace}
 			created := &redhatcopv1alpha1.SecretEngineMount{}
@@ -145,11 +144,10 @@ var _ = Describe("KubernetesSecretEngine controllers", Ordered, func() {
 		It("Should write the Kubernetes config to Vault", func() {
 
 			By("Loading and creating the KubernetesSecretEngineConfig fixture")
-			var err error
-			configInstance, err = decoder.GetKubernetesSecretEngineConfigInstance("../test/kubernetessecretengine/test-kubese-config.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/kubernetessecretengine/test-kubese-config.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			configInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, configInstance)).Should(Succeed())
+			configInstance = &redhatcopv1alpha1.KubernetesSecretEngineConfig{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, configInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: configInstance.Name, Namespace: configInstance.Namespace}
 			created := &redhatcopv1alpha1.KubernetesSecretEngineConfig{}
@@ -190,11 +188,10 @@ var _ = Describe("KubernetesSecretEngine controllers", Ordered, func() {
 		It("Should create the role in Vault with correct settings", func() {
 
 			By("Loading and creating the KubernetesSecretEngineRole fixture")
-			var err error
-			roleInstance, err = decoder.GetKubernetesSecretEngineRoleInstance("../test/kubernetessecretengine/test-kubese-role.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/kubernetessecretengine/test-kubese-role.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			roleInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, roleInstance)).Should(Succeed())
+			roleInstance = &redhatcopv1alpha1.KubernetesSecretEngineRole{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, roleInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: roleInstance.Name, Namespace: roleInstance.Namespace}
 			created := &redhatcopv1alpha1.KubernetesSecretEngineRole{}

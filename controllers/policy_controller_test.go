@@ -37,11 +37,10 @@ var _ = Describe("Policy controller", Ordered, func() {
 		It("Should create the policy in Vault at sys/policy/<name>", func() {
 
 			By("Loading and creating the simple Policy fixture")
-			var err error
-			simplePolicyInstance, err = decoder.GetPolicyInstance("../test/policy/simple-policy.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/policy/simple-policy.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			simplePolicyInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, simplePolicyInstance)).Should(Succeed())
+			simplePolicyInstance = &redhatcopv1alpha1.Policy{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, simplePolicyInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: simplePolicyInstance.Name, Namespace: simplePolicyInstance.Namespace}
 			created := &redhatcopv1alpha1.Policy{}
@@ -73,11 +72,10 @@ var _ = Describe("Policy controller", Ordered, func() {
 		It("Should resolve accessor and create at sys/policies/acl/<name>", func() {
 
 			By("Loading and creating the ACL Policy fixture with accessor placeholder")
-			var err error
-			aclPolicyInstance, err = decoder.GetPolicyInstance("../test/policy/acl-policy-with-accessor.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/policy/acl-policy-with-accessor.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			aclPolicyInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, aclPolicyInstance)).Should(Succeed())
+			aclPolicyInstance = &redhatcopv1alpha1.Policy{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, aclPolicyInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: aclPolicyInstance.Name, Namespace: aclPolicyInstance.Namespace}
 			created := &redhatcopv1alpha1.Policy{}
