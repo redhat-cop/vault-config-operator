@@ -1,6 +1,6 @@
 # Story 7.5.3: Kubernetes Auth & Secret Engine Types — Annotation Refactor
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -20,31 +20,31 @@ So that defaulting semantics are consistent with the rest of the codebase.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Remove `+kubebuilder:default` from zero-value fields in `KAECConfig` (AC: 1)
-  - [ ] 1.1: Remove `+kubebuilder:default=false` from `DisableISSValidation` (line 143); JSON tag already has `omitempty`
-  - [ ] 1.2: Remove `+kubebuilder:default=false` from `DisableLocalCAJWT` (line 148); JSON tag already has `omitempty`
-- [ ] Task 2: Remove `omitempty` from non-zero default fields in `KAECConfig` (AC: 2)
-  - [ ] 2.1: Change `json:"kubernetesHost,omitempty"` → `json:"kubernetesHost"` (line 126)
-  - [ ] 2.2: Change `json:"useOperatorPodCA,omitempty"` → `json:"useOperatorPodCA"` (line 156)
-- [ ] Task 3: Remove `+kubebuilder:default` from zero-value fields in `VRole` (AC: 1)
-  - [ ] 3.1: Remove `+kubebuilder:default:=0` from `TokenTTL` (line 165); JSON tag already has `omitempty`
-  - [ ] 3.2: Remove `+kubebuilder:default:=0` from `TokenMaxTTL` (line 177); JSON tag already has `omitempty`
-  - [ ] 3.3: Remove `+kubebuilder:default:=0` from `TokenExplicitMaxTTL` (line 188); JSON tag already has `omitempty`
-  - [ ] 3.4: Remove `+kubebuilder:default:=false` from `TokenNoDefaultPolicy` (line 192); JSON tag already has `omitempty`
-  - [ ] 3.5: Remove `+kubebuilder:default:=0` from `TokenNumUses` (line 198); JSON tag already has `omitempty`
-  - [ ] 3.6: Remove `+kubebuilder:default:=0` from `TokenPeriod` (line 203); JSON tag already has `omitempty`
-- [ ] Task 4: Remove `omitempty` from non-zero default fields in `VRole` (AC: 3)
-  - [ ] 4.1: Change `json:"aliasNameSource,omitempty"` → `json:"aliasNameSource"` (line 161)
-  - [ ] 4.2: Change `json:"tokenType,omitempty"` → `json:"tokenType"` (line 209)
-- [ ] Task 5: Remove `+kubebuilder:default` from zero-value fields in `KubeSEConfig` (AC: 1)
-  - [ ] 5.1: Remove `+kubebuilder:default=false` from `DisableLocalCAJWT` (line 191); JSON tag already has `omitempty`
-- [ ] Task 6: Remove `+kubebuilder:default` from zero-value fields in `KubeSERole` (AC: 1)
-  - [ ] 6.1: Remove `+kubebuilder:default="0s"` from `DefaultTTL` (line 114); JSON tag already has `omitempty`
-  - [ ] 6.2: Remove `+kubebuilder:default="0s"` from `MaxTTL` (line 119); JSON tag already has `omitempty`
-- [ ] Task 7: Remove `omitempty` from non-zero default fields in `KubeSERole` (AC: 4)
-  - [ ] 7.1: Change `json:"kubernetesRoleType,omitempty"` → `json:"kubernetesRoleType"` (line 139)
-- [ ] Task 8: Run `make manifests generate fmt vet test` (AC: 1, 2, 3, 4)
-- [ ] Task 9: Run `make integration` — Kubernetes auth and secret engine tests must pass (AC: 5)
+- [x] Task 1: Remove `+kubebuilder:default` from zero-value fields in `KAECConfig` (AC: 1)
+  - [x] 1.1: Remove `+kubebuilder:default=false` from `DisableISSValidation` (line 143); JSON tag already has `omitempty`
+  - [x] 1.2: Remove `+kubebuilder:default=false` from `DisableLocalCAJWT` (line 148); JSON tag already has `omitempty`
+- [x] Task 2: Remove `omitempty` from non-zero default fields in `KAECConfig` (AC: 2)
+  - [x] 2.1: Change `json:"kubernetesHost,omitempty"` → `json:"kubernetesHost"` (line 126)
+  - [x] 2.2: Change `json:"useOperatorPodCA,omitempty"` → `json:"useOperatorPodCA"` (line 156)
+- [x] Task 3: Remove `+kubebuilder:default` from zero-value fields in `VRole` (AC: 1)
+  - [x] 3.1: Remove `+kubebuilder:default:=0` from `TokenTTL` (line 165); JSON tag already has `omitempty`
+  - [x] 3.2: Remove `+kubebuilder:default:=0` from `TokenMaxTTL` (line 177); JSON tag already has `omitempty`
+  - [x] 3.3: Remove `+kubebuilder:default:=0` from `TokenExplicitMaxTTL` (line 188); JSON tag already has `omitempty`
+  - [x] 3.4: Remove `+kubebuilder:default:=false` from `TokenNoDefaultPolicy` (line 192); JSON tag already has `omitempty`
+  - [x] 3.5: Remove `+kubebuilder:default:=0` from `TokenNumUses` (line 198); JSON tag already has `omitempty`
+  - [x] 3.6: Remove `+kubebuilder:default:=0` from `TokenPeriod` (line 203); JSON tag already has `omitempty`
+- [x] Task 4: Remove `omitempty` from non-zero default fields in `VRole` (AC: 3)
+  - [x] 4.1: Change `json:"aliasNameSource,omitempty"` → `json:"aliasNameSource"` (line 161)
+  - [x] 4.2: Change `json:"tokenType,omitempty"` → `json:"tokenType"` (line 209)
+- [x] Task 5: Remove `+kubebuilder:default` from zero-value fields in `KubeSEConfig` (AC: 1)
+  - [x] 5.1: Remove `+kubebuilder:default=false` from `DisableLocalCAJWT` (line 191); JSON tag already has `omitempty`
+- [x] Task 6: Remove `+kubebuilder:default` from zero-value fields in `KubeSERole` (AC: 1)
+  - [x] 6.1: Remove `+kubebuilder:default="0s"` from `DefaultTTL` (line 114); JSON tag already has `omitempty`
+  - [x] 6.2: Remove `+kubebuilder:default="0s"` from `MaxTTL` (line 119); JSON tag already has `omitempty`
+- [x] Task 7: Remove `omitempty` from non-zero default fields in `KubeSERole` (AC: 4)
+  - [x] 7.1: Change `json:"kubernetesRoleType,omitempty"` → `json:"kubernetesRoleType"` (line 139)
+- [x] Task 8: Run `make manifests generate fmt vet test` (AC: 1, 2, 3, 4)
+- [x] Task 9: Run `make integration` — Kubernetes auth and secret engine tests must pass (AC: 5)
 
 ## Dev Notes
 
@@ -366,10 +366,49 @@ KubernetesHost string `json:"kubernetesHost"`
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4 (claude-sonnet-4-20250514)
 
 ### Debug Log References
 
+- Integration test run 1 failed: R2 `omitempty` removal on `aliasNameSource`/`tokenType` caused empty strings to bypass CRD defaulting and trigger Enum validation rejection across all KubernetesAuthEngineRole test fixtures
+- Integration test run 2 failed: infrastructure flakiness (namespace vault-admin stuck terminating from run 1)
+- Integration test run 3: all 90 tests passed (575.815s, 54.0% coverage)
+
 ### Completion Notes List
 
+- R1: Removed 11 redundant zero-value `+kubebuilder:default` markers across 4 type files (3 bool false, 6 int 0, 2 Duration "0s")
+- R2: Removed `omitempty` from 5 non-zero default fields (kubernetesHost, useOperatorPodCA, aliasNameSource, tokenType, kubernetesRoleType) so they always serialize
+- CRD schemas regenerated: `default:` entries removed for R1 fields; `kubernetesHost` now in CRD `required` list
+- Updated 13 YAML test fixtures to explicitly set `aliasNameSource: "serviceaccount_uid"` and `tokenType: "default"` — required because removing `omitempty` causes Go marshalling to send empty strings which bypass CRD server-side defaulting
+- Updated config sample for consistency
+- All unit tests pass (make test), all 90 integration tests pass (make integration)
+- No Go logic changes — purely annotation + JSON tag + test fixture refactor
+
 ### File List
+
+- api/v1alpha1/kubernetesauthengineconfig_types.go (modified — R1: 2 defaults removed, R2: 2 omitempty removed)
+- api/v1alpha1/kubernetesauthenginerole_types.go (modified — R1: 6 defaults removed, R2: 2 omitempty removed)
+- api/v1alpha1/kubernetessecretengineconfig_types.go (modified — R1: 1 default removed)
+- api/v1alpha1/kubernetessecretenginerole_types.go (modified — R1: 2 defaults removed, R2: 1 omitempty removed)
+- config/crd/bases/redhatcop.redhat.io_kubernetesauthengineconfigs.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_kubernetesauthengineroles.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_kubernetessecretengineconfigs.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_kubernetessecretengineroles.yaml (regenerated)
+- test/kubernetesauthengine/test-kube-auth-role.yaml (modified — added aliasNameSource, tokenType)
+- test/kubernetesauthengine/test-kube-auth-role-selector.yaml (modified — added aliasNameSource, tokenType)
+- test/database-engine-admin-role.yaml (modified — added aliasNameSource, tokenType)
+- test/kv-engine-admin-role.yaml (modified — added aliasNameSource, tokenType)
+- test/kube-auth-engine-role.yaml (modified — added aliasNameSource, tokenType)
+- test/secret-writer-role.yaml (modified — added aliasNameSource, tokenType)
+- test/rabbitmq-engine-admin-role.yaml (modified — added aliasNameSource, tokenType)
+- test/databasesecretengine/database-secret-engine-auth-role.yaml (modified — added aliasNameSource, tokenType)
+- test/pkisecretengine/pki-secret-engine-kube-auth-role.yaml (modified — added aliasNameSource, tokenType)
+- test/vaultsecret/kubernetesauthenginerole-secret-reader.yaml (modified — added aliasNameSource, tokenType)
+- test/vaultsecret/v2/00-kubernetesauthenginerole-secret-reader-v2.yaml (modified — added aliasNameSource, tokenType)
+- test/randomsecret/v2/02-kubernetesauthenginerole-kv-engine-admin-v2.yaml (modified — added aliasNameSource, tokenType)
+- test/randomsecret/v2/05-kubernetesauthenginerole-secret-writer-v2.yaml (modified — added aliasNameSource, tokenType)
+- config/samples/redhatcop_v1alpha1_kubernetesauthenginerole.yaml (modified — added aliasNameSource, tokenType)
+
+### Review Findings
+
+- [x] [Review][Decision] Preserve server-default semantics for typed clients after removing `omitempty` from non-zero default fields — dismissed by user as an intentional contract change for programmatic clients. Removing `omitempty` from `kubernetesHost`, `useOperatorPodCA`, `aliasNameSource`, `tokenType`, and `kubernetesRoleType` now causes zero-valued typed Go objects to serialize explicit empty/false values instead of omitting the keys. In this repo, integration fixtures are loaded through the typed decoder in `controllers/controllertestutils/decoder.go` and then created with `k8sIntegrationClient.Create(...)`, which is why the role fixtures had to be patched to set `aliasNameSource` and `tokenType` explicitly. The role mutating webhooks do not backfill defaults, and the auth config mutating webhook only reacts to `UseOperatorPodCA` after that value has already been decoded, so programmatic clients that previously relied on CRD defaulting now either fail validation for enum-backed role fields or silently change auth-config behavior.

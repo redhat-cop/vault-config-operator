@@ -158,11 +158,10 @@ type VRole struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"serviceaccount_uid", "serviceaccount_name"}
 	// +kubebuilder:default="serviceaccount_uid"
-	AliasNameSource string `json:"aliasNameSource,omitempty"`
+	AliasNameSource string `json:"aliasNameSource"`
 
 	// TokenTTL The incremental lifetime for generated tokens. This current value of this will be referenced at renewal time.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=0
 	TokenTTL int `json:"tokenTTL,omitempty"`
 
 	// Policies is a list of policy names to be bound to this role.
@@ -173,7 +172,6 @@ type VRole struct {
 
 	// TokenMaxTTL The maximum lifetime for generated tokens. This current value of this will be referenced at renewal time.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=0
 	TokenMaxTTL int `json:"tokenMaxTTL,omitempty"`
 
 	// TokenBoundCIDRs List of CIDR blocks; if set, specifies blocks of IP addresses which can authenticate successfully, and ties the resulting token to these blocks as well.
@@ -184,29 +182,25 @@ type VRole struct {
 
 	// TokenExplicitMaxTTL If set, will encode an explicit max TTL onto the token. This is a hard cap even if token_ttl and token_max_ttl would otherwise allow a renewal.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=0
 	TokenExplicitMaxTTL int `json:"tokenExplicitMaxTTL,omitempty"`
 
 	// TokenNoDefaultPolicy If set, the default policy will not be set on generated tokens; otherwise it will be added to the policies set in token_policies
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=false
 	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty"`
 
 	// TokenNumUses The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited. If you require the token to have the ability to create child tokens, you will need to set this value to 0.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=0
 	TokenNumUses int `json:"tokenNumUses,omitempty"`
 
 	// TokenPeriod The period, if any, to set on the token.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=0
 	TokenPeriod int `json:"tokenPeriod,omitempty"`
 
 	// TokenType The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens). For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"service","batch","default","default-service","default-batch"}
 	// +kubebuilder:default="default"
-	TokenType string `json:"tokenType,omitempty"`
+	TokenType string `json:"tokenType"`
 
 	// this field is for internal use and will not be serialized
 	namespaces []string `json:"-"`

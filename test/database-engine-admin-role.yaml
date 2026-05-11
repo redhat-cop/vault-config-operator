@@ -7,7 +7,9 @@ spec:
   authentication: 
     path: kubernetes
     role: policy-admin
-  path: kubernetes  
+  path: kubernetes
+  aliasNameSource: "serviceaccount_uid"
+  tokenType: "default"
   policies:
     - database-engine-admin
   targetNamespaces:

@@ -1339,6 +1339,26 @@ So that defaulting semantics are consistent with the rest of the codebase.
 - [ ] 3.4: Refactor `kubernetessecretenginerole_types.go` (3 fields)
 - [ ] 3.5: Run `make manifests generate fmt vet test` and `make integration`
 
+### Story 7.5.3a: Unstructured Fixture Creation for CRD Defaulting
+
+As an operator developer,
+I want integration test fixtures to be created using unstructured objects that preserve YAML field semantics,
+So that CRD server-side defaulting applies correctly and test fixtures don't need explicit values for defaulted fields.
+
+**Scope:** `controllers/controllertestutils/decoder.go`, all integration test files, 14+ YAML test fixtures.
+
+**Acceptance Criteria:**
+
+1. **Given** a YAML fixture omitting fields with `+kubebuilder:default` **When** created via `CreateFromYAML` **Then** CRD defaults apply and validation passes
+2. **Given** all integration tests use `CreateFromYAML` **When** `make integration` runs **Then** no regressions
+3. **Given** explicit default values added in Stories 7.5.1–7.5.3 **When** reverted from fixtures **Then** tests still pass via CRD defaulting
+
+**Tasks:**
+- [ ] 3a.1: Add `CreateFromYAML` method to decoder using `unstructured.Unstructured`
+- [ ] 3a.2: Refactor all integration tests to use `CreateFromYAML` + typed Get pattern
+- [ ] 3a.3: Revert explicit default values from fixtures added in Stories 7.5.1, 7.5.2, 7.5.3
+- [ ] 3a.4: Run `make integration` — full suite must pass
+
 ### Story 7.5.4: Azure & GCP Auth/Secret Engine Types — Annotation Refactor
 
 As an operator developer,

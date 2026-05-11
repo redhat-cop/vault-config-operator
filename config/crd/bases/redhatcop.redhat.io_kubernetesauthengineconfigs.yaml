@@ -137,12 +137,10 @@ spec:
                     type: string
                 type: object
               disableISSValidation:
-                default: false
                 description: DisableISSValidation Disable JWT issuer validation. Allows
                   to skip ISS validation.
                 type: boolean
               disableLocalCAJWT:
-                default: false
                 description: DisableLocalCAJWT Disable defaulting to the local CA
                   cert and service account JWT when running in a Kubernetes pod.
                 type: boolean
@@ -206,6 +204,8 @@ spec:
                   In this case if this field is set to true the operator pod's CA is injected. This is the original behavior before the introduction of this field
                   If tis field is set to false, the os ca bundle of where vault is running will be used.
                 type: boolean
+            required:
+            - kubernetesHost
             type: object
           status:
             description: KubernetesAuthEngineConfigStatus defines the observed state
