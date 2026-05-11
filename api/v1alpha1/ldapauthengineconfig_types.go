@@ -211,9 +211,8 @@ type LDAPConfig struct {
 
 	// CaseSensitiveNames If set, user and group names assigned to policies within the backend will be case sensitive.
 	// Otherwise, names will be normalized to lower case. Case will still be preserved when sending the username to the LDAP server at login time; this is only for matching local user/group definitions.
-	// +kubebuilder:validation:Required
-	// +kubebuilder:default=false
-	CaseSensitiveNames bool `json:"caseSensitiveNames"`
+	// +kubebuilder:validation:Optional
+	CaseSensitiveNames bool `json:"caseSensitiveNames,omitempty"`
 
 	// RequestTimeout Timeout, in seconds, for the connection when making requests against the server before returning back an error.
 	// +kubebuilder:validation:Optional
@@ -222,49 +221,44 @@ type LDAPConfig struct {
 
 	// StartTLS If true, issues a StartTLS command after establishing an unencrypted connection.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=false
-	StartTLS bool `json:"startTLS"`
+	StartTLS bool `json:"startTLS,omitempty"`
 
 	// TLSMinVersion Minimum TLS version to use. Accepted values are tls10, tls11, tls12 or tls13
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="tls12"
-	TLSMinVersion string `json:"TLSMinVersion,omitempty"`
+	// +kubebuilder:validation:Enum={"tls10","tls11","tls12","tls13"}
+	TLSMinVersion string `json:"TLSMinVersion"`
 
 	// TLSMaxVersion Maximum TLS version to use. Accepted values are tls10, tls11, tls12 or tls13
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="tls12"
-	TLSMaxVersion string `json:"TLSMaxVersion,omitempty"`
+	// +kubebuilder:validation:Enum={"tls10","tls11","tls12","tls13"}
+	TLSMaxVersion string `json:"TLSMaxVersion"`
 
 	// InsecureTLS If true, skips LDAP server SSL certificate verification - insecure, use with caution!
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=false
-	InsecureTLS bool `json:"insecureTLS"`
+	InsecureTLS bool `json:"insecureTLS,omitempty"`
 
 	// Certificate CA certificate to use when verifying LDAP server certificate, must be x509 PEM encoded.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	Certificate string `json:"certificate,omitempty"`
 
 	// ClientTLSCert Client certificate to provide to the LDAP server, must be x509 PEM encoded
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	ClientTLSCert string `json:"clientTLSCert,omitempty"`
 
 	// ClientTLSKey Client certificate key to provide to the LDAP server, must be x509 PEM encoded
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	ClientTLSKey string `json:"clientTLSKey,omitempty"`
 
 	// BindDN - Username used to connect to the LDAP service on the specified LDAP Server.
 	// If in the form accountname@domain.com, the username is transformed into a proper LDAP bind DN, for example, CN=accountname,CN=users,DC=domain,DC=com, when accessing the LDAP server.
 	// If username is provided it takes precedence over the username retrieved from the referenced secrets
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	BindDN string `json:"bindDN,omitempty"`
 
 	// UserDN Base DN under which to perform user search. Example: ou=Users,dc=example,dc=com
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	UserDN string `json:"userDN,omitempty"`
 
 	// UserAttr Attribute on user attribute object matching the username passed when authenticating. Examples: sAMAccountName, cn, uid
@@ -274,8 +268,7 @@ type LDAPConfig struct {
 
 	// DiscoverDN Use anonymous bind to discover the bind DN of a user.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=false
-	DiscoverDN bool `json:"discoverDN"`
+	DiscoverDN bool `json:"discoverDN,omitempty"`
 
 	// DenyNullBind This option prevents users from bypassing authentication when providing an empty password
 	// +kubebuilder:validation:Optional
@@ -285,88 +278,73 @@ type LDAPConfig struct {
 	// UPNDomain  The userPrincipalDomain used to construct the UPN string for the authenticating user.
 	// The constructed UPN will appear as [username]@UPNDomain. Example: example.com, which will cause vault to bind as username@example.com
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	UPNDomain string `json:"UPNDomain,omitempty"`
 
 	// UserFilter An optional LDAP user search filter. The template can access the following context variables: UserAttr, Username.
 	// The default is ({{.UserAttr}}={{.Username}}), or ({{.UserAttr}}={{.Username@.upndomain}}) if upndomain is set.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	UserFilter string `json:"userFilter,omitempty"`
 
 	// AnonymousGroupSearch Use anonymous binds when performing LDAP group searches (note: even when true, the initial credentials will still be used for the initial connection test).
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=false
-	AnonymousGroupSearch bool `json:"anonymousGroupSearch"`
+	AnonymousGroupSearch bool `json:"anonymousGroupSearch,omitempty"`
 
 	// GroupFilter Go template used when constructing the group membership query. The template can access the following context variables: [UserDN, Username].
 	// The default is (|(memberUid={{.Username}})(member={{.UserDN}})(uniqueMember={{.UserDN}})), which is compatible with several common directory schemas.
 	// To support nested group resolution for Active Directory, instead use the following query: (&(objectClass=group)(member:1.2.840.113556.1.4.1941:={{.UserDN}}))
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	GroupFilter string `json:"groupFilter,omitempty"`
 
 	// GroupDN LDAP search base to use for group membership search. This can be the root containing either groups or users. Example: ou=Groups,dc=example,dc=com
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	GroupDN string `json:"groupDN,omitempty"`
 
 	// GroupAttr LDAP attribute to follow on objects returned by groupfilter in order to enumerate user group membership.
 	// Examples: for groupfilter queries returning group objects, use: cn. For queries returning user objects, use: memberOf. The default is cn.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	GroupAttr string `json:"groupAttr,omitempty"`
 
 	// UsernameAsAlias If set to true, forces the auth method to use the username passed by the user as the alias name.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=false
-	UsernameAsAlias bool `json:"usernameAsAlias"`
+	UsernameAsAlias bool `json:"usernameAsAlias,omitempty"`
 
 	// TokenTTL The incremental lifetime for generated tokens. This current value of this will be referenced at renewal time.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	TokenTTL string `json:"tokenTTL,omitempty"`
 
 	// TokenMaxTTL The maximum lifetime for generated tokens. This current value of this will be referenced at renewal time
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	TokenMaxTTL string `json:"tokenMaxTTL,omitempty"`
 
 	// TokenPolicies List of policies to encode onto generated tokens. Depending on the auth method, this list may be supplemented by user/group/other values.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	TokenPolicies string `json:"tokenPolicies,omitempty"`
 
 	// TokenBoundCIDRs List of CIDR blocks; if set, specifies blocks of IP addresses which can authenticate successfully, and ties the resulting token to these blocks as well.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	TokenBoundCIDRs string `json:"tokenBoundCIDRs,omitempty"`
 
 	// TonenExplicitMaxTTL If set, will encode an explicit max TTL onto the token. This is a hard cap even if token_ttl and token_max_ttl would otherwise allow a renewal.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty"`
 
 	// TokenNoDefaultPolicy If set, the default policy will not be set on generated tokens; otherwise it will be added to the policies set in token_policies.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=false
-	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy"`
+	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty"`
 
 	// TokenNumUses The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited.
 	// If you require the token to have the ability to create child tokens, you will need to set this value to 0.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=0
-	TokenNumUses int64 `json:"tokenNumUses"`
+	TokenNumUses int64 `json:"tokenNumUses,omitempty"`
 
 	// TokenPeriod The period, if any, to set on the token
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=0
-	TokenPeriod int64 `json:"tokenPeriod"`
+	TokenPeriod int64 `json:"tokenPeriod,omitempty"`
 
 	// The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens).
 	// For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
+	// +kubebuilder:validation:Enum={"service","batch","default","default-service","default-batch"}
 	TokenType string `json:"tokenType,omitempty"`
 
 	retrievedPassword string `json:"-"`

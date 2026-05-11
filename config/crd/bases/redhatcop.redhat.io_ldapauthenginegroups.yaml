@@ -138,7 +138,6 @@ spec:
                 pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
                 type: string
               policies:
-                default: ""
                 description: Comma-separated list of policies associated to the group
                 type: string
             type: object
