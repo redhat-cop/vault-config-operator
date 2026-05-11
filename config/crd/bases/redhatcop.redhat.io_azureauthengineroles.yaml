@@ -205,31 +205,26 @@ spec:
                 type: array
                 x-kubernetes-list-type: set
               tokenExplicitMaxTTL:
-                default: ""
                 description: |-
                   If set, will encode an explicit max TTL onto the token.
                   This is a hard cap even if token_ttl and token_max_ttl would otherwise allow a renewal.
                 type: string
               tokenMaxTTL:
-                default: ""
                 description: |-
                   The maximum lifetime for generated tokens.
                   This current value of this will be referenced at renewal time.
                 type: string
               tokenNoDefaultPolicy:
-                default: false
                 description: If set, the default policy will not be set on generated
                   tokens; otherwise it will be added to the policies set in token_policies.
                 type: boolean
               tokenNumUses:
-                default: 0
                 description: |-
                   The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited.
                   If you require the token to have the ability to create child tokens, you will need to set this value to 0.
                 format: int64
                 type: integer
               tokenPeriod:
-                default: 0
                 description: The maximum allowed period value when a periodic token
                   is requested from this role.
                 format: int64
@@ -244,13 +239,11 @@ spec:
                 type: array
                 x-kubernetes-list-type: set
               tokenTTL:
-                default: ""
                 description: |-
                   The incremental lifetime for generated tokens.
                   This current value of this will be referenced at renewal time.
                 type: string
               tokenType:
-                default: ""
                 description: |-
                   The type of token that should be generated.
                   Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens).

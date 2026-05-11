@@ -45,6 +45,9 @@ spec:
                 description: |-
                   Must be either instance_id or role_id. If instance_id is specified, the GCE instance ID will be used for alias names during login.
                   If role_id is specified, the ID of the Vault role will be used. Only used if role type is gce.
+                enum:
+                - instance_id
+                - role_id
                 type: string
               GCEmetadata:
                 default: default
@@ -234,7 +237,6 @@ spec:
                 pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
                 type: string
               serviceAccount:
-                default: ""
                 description: |-
                   Service Account Name. A service account is a special kind of account typically used by an application or compute workload, such as a Compute Engine instance, rather than a person.
                   A service account is identified by its email address, which is unique to the account.

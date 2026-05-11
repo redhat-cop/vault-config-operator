@@ -36,6 +36,8 @@
 
 generated: 2026-04-11
 last_updated: 2026-05-11
+# Story 7.5.4 review 2026-05-11
+# Story 7.5.4 in-progress 2026-05-11
 # Story 7.5.3a done 2026-05-11
 # Story 7.5.3a review 2026-05-11
 # Story 7.5.3a in-progress 2026-05-11
@@ -214,7 +216,7 @@ development_status:
   7-5-2-jwtoidc-auth-engine-types-annotation-refactor: done
   7-5-3-kubernetes-auth-and-secret-engine-types-annotation-refactor: done
   7-5-3a-unstructured-fixture-creation-for-crd-defaulting: done
-  7-5-4-azure-and-gcp-auth-secret-engine-types-annotation-refactor: ready-for-dev
+  7-5-4-azure-and-gcp-auth-secret-engine-types-annotation-refactor: done
   7-5-5-pki-secret-engine-types-annotation-refactor: ready-for-dev
   7-5-6-identity-and-remaining-types-annotation-refactor: ready-for-dev
   7-5-7-validation-marker-sweep-enum-pattern-minlength-maxlength: ready-for-dev

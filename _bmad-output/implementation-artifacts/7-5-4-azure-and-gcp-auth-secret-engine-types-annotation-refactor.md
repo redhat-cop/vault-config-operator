@@ -1,6 +1,6 @@
 # Story 7.5.4: Azure & GCP Auth/Secret Engine Types — Annotation Refactor
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -20,53 +20,53 @@ So that these cloud provider types have consistent annotation patterns.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Refactor `azureauthengineconfig_types.go` — `AzureConfig` struct (AC: 1, 2)
-  - [ ] 1.1: Remove `+kubebuilder:default=""` from `ClientID` (line 106); JSON tag already has `omitempty`
-  - [ ] 1.2: Remove `omitempty` from `Environment` JSON tag (line 100): `json:"environment,omitempty"` → `json:"environment"`
-  - [ ] 1.3: Add `// +kubebuilder:validation:Enum={"AzurePublicCloud","AzureUSGovernmentCloud","AzureChinaCloud","AzureGermanCloud"}` to `Environment`
-- [ ] Task 2: Refactor `azureauthenginerole_types.go` — `AzureRole` struct (AC: 1)
-  - [ ] 2.1: Remove `+kubebuilder:default=""` from `TokenTTL` (line 122); JSON tag already has `omitempty`
-  - [ ] 2.2: Remove `+kubebuilder:default=""` from `TokenMaxTTL` (line 128); JSON tag already has `omitempty`
-  - [ ] 2.3: Remove `+kubebuilder:default=""` from `TokenExplicitMaxTTL` (line 156); JSON tag already has `omitempty`
-  - [ ] 2.4: Remove `+kubebuilder:default=false` from `TokenNoDefaultPolicy` (line 161); add `omitempty` to JSON tag: `json:"tokenNoDefaultPolicy"` → `json:"tokenNoDefaultPolicy,omitempty"`
-  - [ ] 2.5: Remove `+kubebuilder:default=0` from `TokenNumUses` (line 167); add `omitempty` to JSON tag: `json:"tokenNumUses"` → `json:"tokenNumUses,omitempty"`
-  - [ ] 2.6: Remove `+kubebuilder:default=0` from `TokenPeriod` (line 172); add `omitempty` to JSON tag: `json:"tokenPeriod"` → `json:"tokenPeriod,omitempty"`
-  - [ ] 2.7: Remove `+kubebuilder:default=""` from `TokenType` (line 180); JSON tag already has `omitempty`
-- [ ] Task 3: Refactor `azuresecretengineconfig_types.go` — `AzureSEConfig` struct (AC: 1, 2)
-  - [ ] 3.1: Remove `+kubebuilder:default=""` from `ClientID` (line 100); JSON tag already has `omitempty`
-  - [ ] 3.2: Remove `+kubebuilder:default=""` from `PasswordPolicy` (line 111); JSON tag already has `omitempty`
-  - [ ] 3.3: Remove `omitempty` from `Environment` JSON tag (line 107): `json:"environment,omitempty"` → `json:"environment"`
-  - [ ] 3.4: Remove `omitempty` from `RootPasswordTTL` JSON tag (line 117): `json:"rootPasswordTTL,omitempty"` → `json:"rootPasswordTTL"`
-  - [ ] 3.5: Add `// +kubebuilder:validation:Enum={"AzurePublicCloud","AzureUSGovernmentCloud","AzureChinaCloud","AzureGermanCloud"}` to `Environment`
-- [ ] Task 4: Refactor `azuresecretenginerole_types.go` — `AzureSERole` struct (AC: 1)
-  - [ ] 4.1: Remove `+kubebuilder:default=""` from `AzureRoles` (line 86); JSON tag already has `omitempty`
-  - [ ] 4.2: Remove `+kubebuilder:default=""` from `AzureGroups` (line 92); JSON tag already has `omitempty`
-  - [ ] 4.3: Remove `+kubebuilder:default=""` from `ApplicationObjectID` (line 98); JSON tag already has `omitempty`
-  - [ ] 4.4: Remove `+kubebuilder:default=false` from `PersistApp` (line 104); add `omitempty` to JSON tag: `json:"persistApp"` → `json:"persistApp,omitempty"`
-  - [ ] 4.5: Remove `+kubebuilder:default=""` from `TTL` (line 110); JSON tag already has `omitempty`
-  - [ ] 4.6: Remove `+kubebuilder:default=""` from `MaxTTL` (line 116); JSON tag already has `omitempty`
-  - [ ] 4.7: Remove `+kubebuilder:default=""` from `PermanentlyDelete` (line 122); JSON tag already has `omitempty`
-  - [ ] 4.8: Remove `+kubebuilder:default=""` from `SignInAudience` (line 128); JSON tag already has `omitempty`
-  - [ ] 4.9: Remove `+kubebuilder:default=""` from `Tags` (line 133); JSON tag already has `omitempty`
-- [ ] Task 5: Refactor `gcpauthengineconfig_types.go` — `GCPConfig` struct (AC: 1, 3, 4)
-  - [ ] 5.1: Remove `+kubebuilder:default=""` from `ServiceAccount` (line 92); JSON tag already has `omitempty`
-  - [ ] 5.2: Remove `omitempty` from `IAMalias` JSON tag (line 100): `json:"IAMalias,omitempty"` → `json:"IAMalias"`
-  - [ ] 5.3: Remove `omitempty` from `IAMmetadata` JSON tag (line 110): `json:"IAMmetadata,omitempty"` → `json:"IAMmetadata"`
-  - [ ] 5.4: Remove `omitempty` from `GCEalias` JSON tag (line 116): `json:"GCEalias,omitempty"` → `json:"GCEalias"`
-  - [ ] 5.5: Remove `omitempty` from `GCEmetadata` JSON tag (line 125): `json:"GCEmetadata,omitempty"` → `json:"GCEmetadata"`
-  - [ ] 5.6: Add `// +kubebuilder:validation:Enum={"instance_id","role_id"}` to `GCEalias`
-- [ ] Task 6: Refactor `gcpauthenginerole_types.go` — `GCPRole` struct (AC: 1)
-  - [ ] 6.1: Remove `+kubebuilder:default=false` from `AddGroupAliases` (line 100); add `omitempty` to JSON tag: `json:"addGroupAliases"` → `json:"addGroupAliases,omitempty"`
-  - [ ] 6.2: Remove `+kubebuilder:default=""` from `TokenTTL` (line 105); JSON tag already has `omitempty`
-  - [ ] 6.3: Remove `+kubebuilder:default=""` from `TokenMaxTTL` (line 110); JSON tag already has `omitempty`
-  - [ ] 6.4: Remove `+kubebuilder:default=""` from `TokenExplicitMaxTTL` (line 137); JSON tag already has `omitempty`
-  - [ ] 6.5: Remove `+kubebuilder:default=false` from `TokenNoDefaultPolicy` (line 142); add `omitempty` to JSON tag: `json:"tokenNoDefaultPolicy"` → `json:"tokenNoDefaultPolicy,omitempty"`
-  - [ ] 6.6: Remove `+kubebuilder:default=0` from `TokenNumUses` (line 148); add `omitempty` to JSON tag: `json:"tokenNumUses"` → `json:"tokenNumUses,omitempty"`
-  - [ ] 6.7: Remove `+kubebuilder:default=0` from `TokenPeriod` (line 153); add `omitempty` to JSON tag: `json:"tokenPeriod"` → `json:"tokenPeriod,omitempty"`
-  - [ ] 6.8: Remove `+kubebuilder:default=""` from `TokenType` (line 161); JSON tag already has `omitempty`
-  - [ ] 6.9: Remove `+kubebuilder:default=""` from `MaxJWTExp` (line 171); JSON tag already has `omitempty`
-  - [ ] 6.10: Remove `+kubebuilder:default=false` from `AllowGCEInference` (line 176); add `omitempty` to JSON tag: `json:"allowGCEInference"` → `json:"allowGCEInference,omitempty"`
-- [ ] Task 7: Run `make manifests generate fmt vet test` (AC: 1, 2, 3, 4, 5)
+- [x] Task 1: Refactor `azureauthengineconfig_types.go` — `AzureConfig` struct (AC: 1, 2)
+  - [x] 1.1: Remove `+kubebuilder:default=""` from `ClientID` (line 106); JSON tag already has `omitempty`
+  - [x] 1.2: Remove `omitempty` from `Environment` JSON tag (line 100): `json:"environment,omitempty"` → `json:"environment"`
+  - [x] 1.3: Add `// +kubebuilder:validation:Enum={"AzurePublicCloud","AzureUSGovernmentCloud","AzureChinaCloud","AzureGermanCloud"}` to `Environment`
+- [x] Task 2: Refactor `azureauthenginerole_types.go` — `AzureRole` struct (AC: 1)
+  - [x] 2.1: Remove `+kubebuilder:default=""` from `TokenTTL` (line 122); JSON tag already has `omitempty`
+  - [x] 2.2: Remove `+kubebuilder:default=""` from `TokenMaxTTL` (line 128); JSON tag already has `omitempty`
+  - [x] 2.3: Remove `+kubebuilder:default=""` from `TokenExplicitMaxTTL` (line 156); JSON tag already has `omitempty`
+  - [x] 2.4: Remove `+kubebuilder:default=false` from `TokenNoDefaultPolicy` (line 161); add `omitempty` to JSON tag: `json:"tokenNoDefaultPolicy"` → `json:"tokenNoDefaultPolicy,omitempty"`
+  - [x] 2.5: Remove `+kubebuilder:default=0` from `TokenNumUses` (line 167); add `omitempty` to JSON tag: `json:"tokenNumUses"` → `json:"tokenNumUses,omitempty"`
+  - [x] 2.6: Remove `+kubebuilder:default=0` from `TokenPeriod` (line 172); add `omitempty` to JSON tag: `json:"tokenPeriod"` → `json:"tokenPeriod,omitempty"`
+  - [x] 2.7: Remove `+kubebuilder:default=""` from `TokenType` (line 180); JSON tag already has `omitempty`
+- [x] Task 3: Refactor `azuresecretengineconfig_types.go` — `AzureSEConfig` struct (AC: 1, 2)
+  - [x] 3.1: Remove `+kubebuilder:default=""` from `ClientID` (line 100); JSON tag already has `omitempty`
+  - [x] 3.2: Remove `+kubebuilder:default=""` from `PasswordPolicy` (line 111); JSON tag already has `omitempty`
+  - [x] 3.3: Remove `omitempty` from `Environment` JSON tag (line 107): `json:"environment,omitempty"` → `json:"environment"`
+  - [x] 3.4: Remove `omitempty` from `RootPasswordTTL` JSON tag (line 117): `json:"rootPasswordTTL,omitempty"` → `json:"rootPasswordTTL"`
+  - [x] 3.5: Add `// +kubebuilder:validation:Enum={"AzurePublicCloud","AzureUSGovernmentCloud","AzureChinaCloud","AzureGermanCloud"}` to `Environment`
+- [x] Task 4: Refactor `azuresecretenginerole_types.go` — `AzureSERole` struct (AC: 1)
+  - [x] 4.1: Remove `+kubebuilder:default=""` from `AzureRoles` (line 86); JSON tag already has `omitempty`
+  - [x] 4.2: Remove `+kubebuilder:default=""` from `AzureGroups` (line 92); JSON tag already has `omitempty`
+  - [x] 4.3: Remove `+kubebuilder:default=""` from `ApplicationObjectID` (line 98); JSON tag already has `omitempty`
+  - [x] 4.4: Remove `+kubebuilder:default=false` from `PersistApp` (line 104); add `omitempty` to JSON tag: `json:"persistApp"` → `json:"persistApp,omitempty"`
+  - [x] 4.5: Remove `+kubebuilder:default=""` from `TTL` (line 110); JSON tag already has `omitempty`
+  - [x] 4.6: Remove `+kubebuilder:default=""` from `MaxTTL` (line 116); JSON tag already has `omitempty`
+  - [x] 4.7: Remove `+kubebuilder:default=""` from `PermanentlyDelete` (line 122); JSON tag already has `omitempty`
+  - [x] 4.8: Remove `+kubebuilder:default=""` from `SignInAudience` (line 128); JSON tag already has `omitempty`
+  - [x] 4.9: Remove `+kubebuilder:default=""` from `Tags` (line 133); JSON tag already has `omitempty`
+- [x] Task 5: Refactor `gcpauthengineconfig_types.go` — `GCPConfig` struct (AC: 1, 3, 4)
+  - [x] 5.1: Remove `+kubebuilder:default=""` from `ServiceAccount` (line 92); JSON tag already has `omitempty`
+  - [x] 5.2: Remove `omitempty` from `IAMalias` JSON tag (line 100): `json:"IAMalias,omitempty"` → `json:"IAMalias"`
+  - [x] 5.3: Remove `omitempty` from `IAMmetadata` JSON tag (line 110): `json:"IAMmetadata,omitempty"` → `json:"IAMmetadata"`
+  - [x] 5.4: Remove `omitempty` from `GCEalias` JSON tag (line 116): `json:"GCEalias,omitempty"` → `json:"GCEalias"`
+  - [x] 5.5: Remove `omitempty` from `GCEmetadata` JSON tag (line 125): `json:"GCEmetadata,omitempty"` → `json:"GCEmetadata"`
+  - [x] 5.6: Add `// +kubebuilder:validation:Enum={"instance_id","role_id"}` to `GCEalias`
+- [x] Task 6: Refactor `gcpauthenginerole_types.go` — `GCPRole` struct (AC: 1)
+  - [x] 6.1: Remove `+kubebuilder:default=false` from `AddGroupAliases` (line 100); add `omitempty` to JSON tag: `json:"addGroupAliases"` → `json:"addGroupAliases,omitempty"`
+  - [x] 6.2: Remove `+kubebuilder:default=""` from `TokenTTL` (line 105); JSON tag already has `omitempty`
+  - [x] 6.3: Remove `+kubebuilder:default=""` from `TokenMaxTTL` (line 110); JSON tag already has `omitempty`
+  - [x] 6.4: Remove `+kubebuilder:default=""` from `TokenExplicitMaxTTL` (line 137); JSON tag already has `omitempty`
+  - [x] 6.5: Remove `+kubebuilder:default=false` from `TokenNoDefaultPolicy` (line 142); add `omitempty` to JSON tag: `json:"tokenNoDefaultPolicy"` → `json:"tokenNoDefaultPolicy,omitempty"`
+  - [x] 6.6: Remove `+kubebuilder:default=0` from `TokenNumUses` (line 148); add `omitempty` to JSON tag: `json:"tokenNumUses"` → `json:"tokenNumUses,omitempty"`
+  - [x] 6.7: Remove `+kubebuilder:default=0` from `TokenPeriod` (line 153); add `omitempty` to JSON tag: `json:"tokenPeriod"` → `json:"tokenPeriod,omitempty"`
+  - [x] 6.8: Remove `+kubebuilder:default=""` from `TokenType` (line 161); JSON tag already has `omitempty`
+  - [x] 6.9: Remove `+kubebuilder:default=""` from `MaxJWTExp` (line 171); JSON tag already has `omitempty`
+  - [x] 6.10: Remove `+kubebuilder:default=false` from `AllowGCEInference` (line 176); add `omitempty` to JSON tag: `json:"allowGCEInference"` → `json:"allowGCEInference,omitempty"`
+- [x] Task 7: Run `make manifests generate fmt vet test` (AC: 1, 2, 3, 4, 5)
 
 ## Dev Notes
 
@@ -493,10 +493,41 @@ GCEalias string `json:"GCEalias"`
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (Cursor)
 
 ### Debug Log References
 
+None — clean execution, no errors encountered.
+
 ### Completion Notes List
 
+- All 6 type files refactored: removed 30 redundant `+kubebuilder:default` markers (R1), fixed 7 `omitempty` tags on non-zero default fields (R2), added 3 `+kubebuilder:validation:Enum` markers
+- `Environment` fields (both Azure configs): added `Enum={"AzurePublicCloud","AzureUSGovernmentCloud","AzureChinaCloud","AzureGermanCloud"}`, removed `omitempty`
+- `GCEalias` field: added `Enum={"instance_id","role_id"}`, removed `omitempty`
+- `IAMalias`, `IAMmetadata`, `GCEmetadata`: removed `omitempty` only (non-zero defaults), no Enum added per story spec
+- Bool fields (`TokenNoDefaultPolicy`, `PersistApp`, `AddGroupAliases`, `AllowGCEInference`): removed `+kubebuilder:default=false`, added `omitempty`
+- Int64 fields (`TokenNumUses`, `TokenPeriod`): removed `+kubebuilder:default=0`, added `omitempty`
+- No Go logic changes — annotation-only refactor
+- `make manifests generate fmt vet test` passes (unit tests 25.4% coverage, all green)
+- `make integration` passes (577s, 54% coverage, all green)
+- No `toMap()`, `IsEquivalentToDesiredState()`, or any Go code logic modified
+- Excluded fields per story spec: `CustomEndpoint` (pointer-to-JSON), `BoundServiceAccounts`/`BoundProjects` (slice defaults)
+
 ### File List
+
+| # | File | Status | Description |
+|---|------|--------|-------------|
+| 1 | `api/v1alpha1/azureauthengineconfig_types.go` | Modified | R1: removed default from ClientID; R2: removed omitempty from Environment; added Enum to Environment |
+| 2 | `api/v1alpha1/azureauthenginerole_types.go` | Modified | R1: removed defaults from 7 fields (TokenTTL, TokenMaxTTL, TokenExplicitMaxTTL, TokenNoDefaultPolicy, TokenNumUses, TokenPeriod, TokenType); added omitempty to bool/int64 fields |
+| 3 | `api/v1alpha1/azuresecretengineconfig_types.go` | Modified | R1: removed defaults from ClientID, PasswordPolicy; R2: removed omitempty from Environment, RootPasswordTTL; added Enum to Environment |
+| 4 | `api/v1alpha1/azuresecretenginerole_types.go` | Modified | R1: removed defaults from 9 fields; added omitempty to PersistApp |
+| 5 | `api/v1alpha1/gcpauthengineconfig_types.go` | Modified | R1: removed default from ServiceAccount; R2: removed omitempty from IAMalias, IAMmetadata, GCEalias, GCEmetadata; added Enum to GCEalias |
+| 6 | `api/v1alpha1/gcpauthenginerole_types.go` | Modified | R1: removed defaults from 10 fields; added omitempty to AddGroupAliases, TokenNoDefaultPolicy, TokenNumUses, TokenPeriod, AllowGCEInference |
+| 7 | `config/crd/bases/redhatcop.redhat.io_azureauthengineconfigs.yaml` | Regenerated | CRD schema: removed default for clientID, added enum for environment |
+| 8 | `config/crd/bases/redhatcop.redhat.io_azureauthengineroles.yaml` | Regenerated | CRD schema: removed defaults for 7 token fields |
+| 9 | `config/crd/bases/redhatcop.redhat.io_azuresecretengineconfigs.yaml` | Regenerated | CRD schema: removed defaults for clientID/passwordPolicy, added enum for environment |
+| 10 | `config/crd/bases/redhatcop.redhat.io_azuresecretengineroles.yaml` | Regenerated | CRD schema: removed defaults for 9 fields |
+| 11 | `config/crd/bases/redhatcop.redhat.io_gcpauthengineconfigs.yaml` | Regenerated | CRD schema: removed default for serviceAccount, added enum for GCEalias |
+| 12 | `config/crd/bases/redhatcop.redhat.io_gcpauthengineroles.yaml` | Regenerated | CRD schema: removed defaults for 10 fields |
+| 13 | `_bmad-output/implementation-artifacts/sprint-status.yaml` | Modified | Story status updated to review |
+| 14 | `_bmad-output/implementation-artifacts/7-5-4-azure-and-gcp-auth-secret-engine-types-annotation-refactor.md` | Modified | Story file updated with completion |

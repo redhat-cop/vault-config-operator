@@ -97,24 +97,23 @@ type AzureSEConfig struct {
 	// Currently read permissions to query compute resources are required.
 	// This value can also be provided with the AZURE_CLIENT_ID environment variable.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	ClientID string `json:"clientID,omitempty"`
 
 	// The Azure cloud environment. Valid values: AzurePublicCloud, AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud.
 	// This value can also be provided with the AZURE_ENVIRONMENT environment variable
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="AzurePublicCloud"
-	Environment string `json:"environment,omitempty"`
+	// +kubebuilder:validation:Enum={"AzurePublicCloud","AzureUSGovernmentCloud","AzureChinaCloud","AzureGermanCloud"}
+	Environment string `json:"environment"`
 
 	// Specifies a password policy to use when creating dynamic credentials. Defaults to generating an alphanumeric password if not set.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	PasswordPolicy string `json:"passwordPolicy,omitempty"`
 
 	// Specifies how long the root password is valid for in Azure when rotate-root generates a new client secret. Uses duration format strings.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="182d"
-	RootPasswordTTL string `json:"rootPasswordTTL,omitempty"`
+	RootPasswordTTL string `json:"rootPasswordTTL"`
 
 	retrievedClientID string `json:"-"`
 

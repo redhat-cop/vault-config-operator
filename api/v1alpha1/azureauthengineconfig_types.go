@@ -97,13 +97,13 @@ type AzureConfig struct {
 	//This value can also be provided with the AZURE_ENVIRONMENT environment variable
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="AzurePublicCloud"
-	Environment string `json:"environment,omitempty"`
+	// +kubebuilder:validation:Enum={"AzurePublicCloud","AzureUSGovernmentCloud","AzureChinaCloud","AzureGermanCloud"}
+	Environment string `json:"environment"`
 
 	//The client id for credentials to query the Azure APIs.
 	//Currently read permissions to query compute resources are required.
 	//This value can also be provided with the AZURE_CLIENT_ID environment variable.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	ClientID string `json:"clientID,omitempty"`
 
 	//The maximum number of attempts a failed operation will be retried before producing an error.

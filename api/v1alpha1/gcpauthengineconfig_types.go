@@ -89,7 +89,6 @@ type GCPConfig struct {
 	// Applications use service accounts to make authorized API calls by authenticating as either the service account itself, or as Google Workspace or Cloud Identity users through domain-wide delegation.
 	// When an application authenticates as a service account, it has access to all resources that the service account has permission to access.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	ServiceAccount string `json:"serviceAccount,omitempty"`
 
 	// Must be either unique_id or role_id.
@@ -97,7 +96,7 @@ type GCPConfig struct {
 	// If role_id is specified, the ID of the Vault role will be used. Only used if role type is iam.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="default"
-	IAMalias string `json:"IAMalias,omitempty"`
+	IAMalias string `json:"IAMalias"`
 
 	// The metadata to include on the token returned by the login endpoint. This metadata will be added to both audit logs, and on the iam_alias.
 	// By default, it includes project_id, role, service_account_id, and service_account_email.
@@ -107,13 +106,14 @@ type GCPConfig struct {
 	// Only used if role type is iam.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="default"
-	IAMmetadata string `json:"IAMmetadata,omitempty"`
+	IAMmetadata string `json:"IAMmetadata"`
 
 	// Must be either instance_id or role_id. If instance_id is specified, the GCE instance ID will be used for alias names during login.
 	// If role_id is specified, the ID of the Vault role will be used. Only used if role type is gce.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="role_id"
-	GCEalias string `json:"GCEalias,omitempty"`
+	// +kubebuilder:validation:Enum={"instance_id","role_id"}
+	GCEalias string `json:"GCEalias"`
 
 	// The metadata to include on the token returned by the login endpoint. This metadata will be added to both audit logs, and on the gce_alias.
 	// By default, it includes instance_creation_timestamp, instance_id, instance_name, project_id, project_number, role, service_account_id, service_account_email, and zone.
@@ -122,7 +122,7 @@ type GCPConfig struct {
 	// Only used if role type is gce.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="default"
-	GCEmetadata string `json:"GCEmetadata,omitempty"`
+	GCEmetadata string `json:"GCEmetadata"`
 
 	// Specifies overrides to service endpoints used when making API requests.
 	// This allows specific requests made during authentication to target alternative service endpoints for use in Private Google Access environments.

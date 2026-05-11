@@ -83,54 +83,45 @@ type AzureSERole struct {
 	// List of Azure roles to be assigned to the generated service principal.
 	// The array must be in JSON format, properly escaped as a string. See roles docs for details on role definition.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	AzureRoles string `json:"azureRoles,omitempty"`
 
 	// List of Azure groups that the generated service principal will be assigned to.
 	// The array must be in JSON format, properly escaped as a string. See groups docs for more details.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	AzureGroups string `json:"azureGroups,omitempty"`
 
 	// Application Object ID for an existing service principal that will be used instead of creating dynamic service principals.
 	// If present, azure_roles will be ignored. See roles docs for details on role definition.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	ApplicationObjectID string `json:"applicationObjectID,omitempty"`
 
 	// If set to true, persists the created service principal and application for the lifetime of the role.
 	// Useful for when the Service Principal needs to maintain ownership of objects it creates
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=false
-	PersistApp bool `json:"persistApp"`
+	PersistApp bool `json:"persistApp,omitempty"`
 
 	// Specifies the default TTL for service principals generated using this role.
 	// Accepts time suffixed strings ("1h") or an integer number of seconds. Defaults to the system/engine default TTL time.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	TTL string `json:"TTL,omitempty"`
 
 	// Specifies the maximum TTL for service principals generated using this role.
 	// Accepts time suffixed strings ("1h") or an integer number of seconds. Defaults to the system/engine max TTL time.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	MaxTTL string `json:"maxTTL,omitempty"`
 
 	// Specifies whether to permanently delete Applications and Service Principals that are dynamically created by Vault.
 	// If application_object_id is present, permanently_delete must be false.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	PermanentlyDelete string `json:"permanentlyDelete,omitempty"`
 
 	// Specifies the security principal types that are allowed to sign in to the application.
 	// Valid values are: AzureADMyOrg, AzureADMultipleOrgs, AzureADandPersonalMicrosoftAccount, PersonalMicrosoftAccount.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	SignInAudience string `json:"signInAudience,omitempty"`
 
 	// A comma-separated string of Azure tags to attach to an application.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	Tags string `json:"tags,omitempty"`
 }
 
