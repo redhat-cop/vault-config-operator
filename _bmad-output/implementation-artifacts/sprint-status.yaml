@@ -36,6 +36,9 @@
 
 generated: 2026-04-11
 last_updated: 2026-05-11
+# Story 7.5.2 done 2026-05-11
+# Story 7.5.2 review 2026-05-11
+# Story 7.5.2 in-progress 2026-05-11
 # Story 7.5.1 done 2026-05-11
 # Story 7.5.1 review 2026-05-11
 # Story 7.5.1 in-progress 2026-05-11
@@ -201,7 +204,7 @@ development_status:
   # Epic 7.5: CRD Field Annotation Refactor
   epic-7-5: in-progress
   7-5-1-ldap-auth-engine-types-annotation-refactor: done
-  7-5-2-jwtoidc-auth-engine-types-annotation-refactor: ready-for-dev
+  7-5-2-jwtoidc-auth-engine-types-annotation-refactor: done
   7-5-3-kubernetes-auth-and-secret-engine-types-annotation-refactor: ready-for-dev
   7-5-4-azure-and-gcp-auth-secret-engine-types-annotation-refactor: ready-for-dev
   7-5-5-pki-secret-engine-types-annotation-refactor: ready-for-dev

@@ -86,25 +86,22 @@ type JWTOIDCAuthEngineConfigList struct {
 type JWTOIDCConfig struct {
 	// The OIDC Discovery URL, without any .well-known component (base path). Cannot be used with "jwks_url" or "jwt_validation_pubkeys"
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
-	OIDCDiscoveryURL string `json:"OIDCDiscoveryURL"`
+	OIDCDiscoveryURL string `json:"OIDCDiscoveryURL,omitempty"`
 
 	// The CA certificate or chain of certificates, in PEM format, to use to validate connections to the OIDC Discovery URL.
 	// If not set, system certificates are used
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	OIDCDiscoveryCAPEM string `json:"OIDCDiscoveryCAPEM,omitempty"`
 
 	// The OAuth Client ID from the provider for OIDC roles.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	OIDCClientID string `json:"OIDCClientID,omitempty"`
 
 	// The response mode to be used in the OAuth2 request.
 	// Allowed values are "query" and "form_post". Defaults to "query".
 	// If using Vault namespaces, and oidc_response_mode is "form_post", then "namespace_in_state" should be set to false
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
+	// +kubebuilder:validation:Enum={"query","form_post"}
 	OIDCResponseMode string `json:"OIDCResponseMode,omitempty"`
 
 	// The response types to request. Allowed values are "code" and "id_token". Defaults to "code".
@@ -117,13 +114,11 @@ type JWTOIDCConfig struct {
 	// JWKS URL to use to authenticate signatures.
 	// Cannot be used with "oidc_discovery_url" or "jwt_validation_pubkeys"
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	JWKSURL string `json:"JWKSURL,omitempty"`
 
 	// The CA certificate or chain of certificates, in PEM format, to use to validate connections to the JWKS URL.
 	// If not set, system certificates are used.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	JWKSCAPEM string `json:"JWKSCAPEM,omitempty"`
 
 	// A list of PEM-encoded public keys to use to authenticate signatures locally. Cannot be used with "jwks_url" or "oidc_discovery_url"
@@ -134,7 +129,6 @@ type JWTOIDCConfig struct {
 
 	// The value against which to match the iss claim in a JWT
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	BoundIssuer string `json:"boundIssuer,omitempty"`
 
 	// A list of supported signing algorithms. Defaults to [RS256] for OIDC roles. Defaults to all available algorithms for JWT roles
@@ -145,13 +139,11 @@ type JWTOIDCConfig struct {
 
 	// The default role to use if none is provided during login
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	DefaultRole string `json:"defaultRole,omitempty"`
 
 	// Configuration options for provider-specific handling. Providers with specific handling include: Azure, Google.
 	// The options are described in each provider's section in OIDC Provider Setup
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default={}
 	ProviderConfig *apiextensionsv1.JSON `json:"providerConfig,omitempty"`
 
 	// Pass namespace in the OIDC state parameter instead of as a separate query parameter.
@@ -160,7 +152,7 @@ type JWTOIDCConfig struct {
 	// Defaults to true for new configs
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=true
-	NamespaceInState bool `json:"namespaceInState,omitempty"`
+	NamespaceInState bool `json:"namespaceInState"`
 
 	retrievedClientID string `json:"-"`
 

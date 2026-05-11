@@ -99,7 +99,6 @@ spec:
                 type: array
                 x-kubernetes-list-type: set
               boundClaims:
-                default: {}
                 description: |-
                   If set, a map of claims (keys) to match against respective claim values (values)
                   The expected value may be a single string or a list of strings
@@ -112,21 +111,21 @@ spec:
                   Configures the interpretation of the bound_claims values.
                   If "string" (the default), the values will treated as string literals and must match exactly.
                   If set to "glob", the values will be interpreted as globs, with * matching any number of characters
+                enum:
+                - string
+                - glob
                 type: string
               boundSubject:
-                default: ""
                 description: If set, requires that the sub claim matches this value.
                 type: string
               claimMappings:
                 additionalProperties:
                   type: string
-                default: {}
                 description: |-
                   If set, a map of claims (keys) to be copied to specified metadata fields (values)
                   Keys support JSON pointer syntax for referencing claims
                 type: object
               clockSkewLeeway:
-                default: 0
                 description: |-
                   The amount of leeway to add to all claims to account for clock skew, in seconds.
                   Defaults to 60 seconds if set to 0 and can be disabled if set to -1.
@@ -188,7 +187,6 @@ spec:
                     type: string
                 type: object
               expirationLeeway:
-                default: 0
                 description: |-
                   The amount of leeway to add to expiration (exp) claims to account for clock skew, in seconds.
                   Defaults to 150 seconds if set to 0 and can be disabled if set to -1.
@@ -196,13 +194,11 @@ spec:
                 format: int64
                 type: integer
               groupsClaim:
-                default: ""
                 description: |-
                   The claim to use to uniquely identify the set of groups to which the user belongs; this will be used as the names for the Identity group aliases created due to a successful login.
                   The claim value must be a list of strings. Supports JSON pointer syntax for referencing claims
                 type: string
               maxage:
-                default: 0
                 description: |-
                   Specifies the allowable elapsed time in seconds since the last time the user was actively authenticated with the OIDC provider
                   If set, the max_age request parameter will be included in the authentication request
@@ -214,7 +210,6 @@ spec:
                 description: Name of the role
                 type: string
               notBeforeLeeway:
-                default: 0
                 description: |-
                   he amount of leeway to add to not before (nbf) claims to account for clock skew, in seconds
                   Defaults to 150 seconds if set to 0 and can be disabled if set to -1.
@@ -229,7 +224,6 @@ spec:
                 pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
                 type: string
               roleType:
-                default: ""
                 description: Type of role, either "oidc" (default) or "jwt"
                 type: string
               tokenBoundCIDRs:
@@ -241,31 +235,26 @@ spec:
                 type: array
                 x-kubernetes-list-type: set
               tokenExplicitMaxTTL:
-                default: ""
                 description: |-
                   If set, will encode an explicit max TTL onto the token.
                   This is a hard cap even if token_ttl and token_max_ttl would otherwise allow a renewal.
                 type: string
               tokenMaxTTL:
-                default: ""
                 description: |-
                   The maximum lifetime for generated tokens.
                   This current value of this will be referenced at renewal time
                 type: string
               tokenNoDefaultPolicy:
-                default: false
                 description: If set, the default policy will not be set on generated
                   tokens; otherwise it will be added to the policies set in token_policies
                 type: boolean
               tokenNumUses:
-                default: 0
                 description: |-
                   The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited.
                   If you require the token to have the ability to create child tokens, you will need to set this value to 0
                 format: int64
                 type: integer
               tokenPeriod:
-                default: 0
                 description: The period, if any, to set on the token
                 format: int64
                 type: integer
@@ -279,16 +268,20 @@ spec:
                 type: array
                 x-kubernetes-list-type: set
               tokenTTL:
-                default: ""
                 description: |-
                   The incremental lifetime for generated tokens
                   This current value of this will be referenced at renewal time
                 type: string
               tokenType:
-                default: ""
                 description: |-
                   The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens).
                   For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time.
+                enum:
+                - service
+                - batch
+                - default
+                - default-service
+                - default-batch
                 type: string
               userClaim:
                 description: |-
@@ -296,13 +289,11 @@ spec:
                   The claim value must be a string
                 type: string
               userClaimJSONPointer:
-                default: false
                 description: |-
                   Specifies if the user_claim value uses JSON pointer syntax for referencing claims.
                   By default, the user_claim value will not use JSON pointer.
                 type: boolean
               verboseOIDCLogging:
-                default: false
                 description: |-
                   Log received OIDC tokens and claims when debug-level logging is active
                   Not recommended in production since sensitive information may be present in OIDC responses

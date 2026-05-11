@@ -124,6 +124,7 @@ var _ = Describe("JWTOIDCAuthEngine controllers", Ordered, func() {
 			Expect(secret).NotTo(BeNil())
 			Expect(secret.Data["oidc_discovery_url"]).To(Equal("http://keycloak.keycloak.svc.cluster.local:8080/realms/test-realm"))
 			Expect(secret.Data["oidc_client_id"]).To(Equal("vault-oidc"))
+			Expect(secret.Data["namespace_in_state"]).To(BeTrue(), "expected namespace_in_state to be true (AC2: non-zero default always serialized)")
 		})
 	})
 
