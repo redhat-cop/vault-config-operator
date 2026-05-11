@@ -35,7 +35,15 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-05-08
+last_updated: 2026-05-10
+# Story 7.5.7 ready-for-dev 2026-05-10
+# Story 7.5.6 ready-for-dev 2026-05-10
+# Story 7.5.5 ready-for-dev 2026-05-10
+# Story 7.5.4 ready-for-dev 2026-05-10
+# Story 7.5.3 ready-for-dev 2026-05-10
+# Story 7.5.2 ready-for-dev 2026-05-10
+# Story 7.5.1 ready-for-dev 2026-05-10
+# Epic 7.5 in-progress 2026-05-10
 # Epic 7 retrospective completed 2026-05-08
 # Story 7.5 review 2026-05-08
 # Story 7.5 in-progress 2026-05-08
@@ -188,14 +196,14 @@ development_status:
   epic-7-retrospective: done
 
   # Epic 7.5: CRD Field Annotation Refactor
-  epic-7-5: backlog
-  7-5-1-ldap-auth-engine-types-annotation-refactor: backlog
-  7-5-2-jwtoidc-auth-engine-types-annotation-refactor: backlog
-  7-5-3-kubernetes-auth-and-secret-engine-types-annotation-refactor: backlog
-  7-5-4-azure-and-gcp-auth-secret-engine-types-annotation-refactor: backlog
-  7-5-5-pki-secret-engine-types-annotation-refactor: backlog
-  7-5-6-identity-and-remaining-types-annotation-refactor: backlog
-  7-5-7-validation-marker-sweep-enum-pattern-minlength-maxlength: backlog
+  epic-7-5: in-progress
+  7-5-1-ldap-auth-engine-types-annotation-refactor: ready-for-dev
+  7-5-2-jwtoidc-auth-engine-types-annotation-refactor: ready-for-dev
+  7-5-3-kubernetes-auth-and-secret-engine-types-annotation-refactor: ready-for-dev
+  7-5-4-azure-and-gcp-auth-secret-engine-types-annotation-refactor: ready-for-dev
+  7-5-5-pki-secret-engine-types-annotation-refactor: ready-for-dev
+  7-5-6-identity-and-remaining-types-annotation-refactor: ready-for-dev
+  7-5-7-validation-marker-sweep-enum-pattern-minlength-maxlength: ready-for-dev
   epic-7-5-retrospective: optional
 
   # --- Phase 1.5: Documentation Improvement ---
