@@ -36,6 +36,7 @@
 
 generated: 2026-04-11
 last_updated: 2026-05-12
+# Epic 7.5 done + retrospective completed 2026-05-12
 # Story 7.5.6 review 2026-05-12
 # Story 7.5.6 in-progress 2026-05-12
 # Story 7.5.5 done 2026-05-11
@@ -216,7 +217,7 @@ development_status:
   epic-7-retrospective: done
 
   # Epic 7.5: CRD Field Annotation Refactor
-  epic-7-5: in-progress
+  epic-7-5: done
   7-5-1-ldap-auth-engine-types-annotation-refactor: done
   7-5-2-jwtoidc-auth-engine-types-annotation-refactor: done
   7-5-3-kubernetes-auth-and-secret-engine-types-annotation-refactor: done
@@ -225,7 +226,21 @@ development_status:
   7-5-5-pki-secret-engine-types-annotation-refactor: done
   7-5-6-identity-and-remaining-types-annotation-refactor: done
   7-5-7-validation-marker-sweep-enum-pattern-minlength-maxlength: done
-  epic-7-5-retrospective: optional
+  epic-7-5-retrospective: done
+
+  # --- Phase 1.8: Code Modernization & Technical Debt ---
+
+  # Epic R1: Code Modernization & Technical Debt Reduction
+  epic-R1: backlog
+  R1-1-correctness-fixes-context-keys-pki-bug-webhook-loggers-tostring: backlog
+  R1-2a-fix-unchecked-error-returns-errcheck: backlog
+  R1-2b-remove-deprecated-rand-seed: backlog
+  R1-2c-lint-green-gate-verify-full-compliance: backlog
+  R1-3-dependency-modernization-drop-deprecated-replace-handrolled: backlog
+  R1-4-test-decoder-generics-rewrite: backlog
+  R1-5-reconciler-struct-deduplication: backlog
+  R1-6-interface-to-any-sweep: backlog
+  epic-R1-retrospective: optional
 
   # --- Phase 1.5: Documentation Improvement ---
 
