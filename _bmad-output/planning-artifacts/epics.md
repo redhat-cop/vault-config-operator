@@ -768,6 +768,8 @@ Fix correctness bugs, resolve all lint findings to a verified green baseline, mo
 
 **Scope exclusion:** The ~30 cookie-cutter controller files (each following an identical Get → prepareContext → NewVaultXxxResource → Reconcile pattern) are explicitly excluded. That refactoring changes the operator's registration pattern and deserves its own architectural spike and epic.
 
+**Release-warning follow-up:** Community Operators PR `#9655` surfaced addressable bundle metadata warnings for missing examples, empty owned CRD descriptions, and missing `spec.minKubeVersion`. Those are included here as Stories R1.7-R1.9. The deprecated `operatorhub` validator warning and the FBC migration recommendation are explicitly out of scope for this epic.
+
 **Lint baseline (golangci-lint v1.64.8, 21 findings):**
 - 13x SA1029 (string context keys) → R1.1
 - 5x errcheck (unchecked error returns) → R1.2a
@@ -781,10 +783,11 @@ Fix correctness bugs, resolve all lint findings to a verified green baseline, mo
 2. Lint compliance as a verified gate — `golangci-lint run --max-issues-per-linter=100 --max-same-issues=100 ./...` must exit 0 before structural refactoring
 3. Dependency modernization — drop deprecated/unmaintained packages in favor of stdlib
 4. Structural deduplication — reduce copy-paste surface to prevent future bugs
-5. Every story must pass `make manifests generate fmt vet test` and `make integration`
+5. Bundle metadata should validate cleanly for supported APIs before the next Community Operators release submission
+6. Every story must pass `make manifests generate fmt vet test` and `make integration` unless the story is metadata-only, in which case `make bundle` is the minimum required verification
 
 **Story ordering:**
-- R1.1 → R1.2a → R1.2b → R1.3 → R1.2c (lint gate) → R1.4 → R1.5 → R1.6
+- R1.1 → R1.2a → R1.2b → R1.3 → R1.2c (lint gate) → R1.7 → R1.8 → R1.9 → R1.4 → R1.5 → R1.6
 - R1.2c depends on R1.1 + R1.2a + R1.2b + R1.3 all being complete
 - R1.6 (`interface{}` → `any`) must be merged last (touches every file)
 
@@ -999,6 +1002,72 @@ So that the codebase uses idiomatic modern Go.
 - [ ] 6.4: Run `make integration`
 
 **Dev notes:** This story should be the **last** one merged in the epic — it touches nearly every file and will conflict with anything else in flight. Schedule it when the branch is quiet.
+
+### Story R1.7: Bundle Example Annotations for `Entity` and `EntityAlias`
+
+As an operator maintainer,
+I want the bundle metadata to include valid examples for the `Entity` and `EntityAlias` APIs,
+So that Community Operators validation no longer warns that those provided APIs lack example annotations.
+
+**Scope:** 2 API kinds, sample manifests, and bundle metadata generation.
+
+**Acceptance Criteria:**
+
+1. **Given** Community Operators validation warns that `redhatcop.redhat.io/v1alpha1, Kind=Entity` and `Kind=EntityAlias` do not have example annotations **When** the example source-of-truth is updated and the bundle is regenerated **Then** the generated CSV contains valid examples for both APIs
+2. **Given** the repository already contains `config/samples/redhatcop_v1alpha1_entity.yaml` and `config/samples/redhatcop_v1alpha1_entityalias.yaml` **When** those examples are normalized to current schema expectations **Then** they are suitable for reuse in bundle metadata
+3. **Given** `make bundle` runs successfully **When** `operator-sdk bundle validate ./bundle` is executed by the target **Then** the "provided API should have an example annotation" warnings for `Entity` and `EntityAlias` are no longer emitted
+4. **Given** the examples are added to bundle metadata **When** future CRD schema changes happen **Then** the source file for those examples is obvious and documented in the story notes or implementation comments
+
+**Tasks:**
+- [ ] 7.1: Confirm how this repo wants to source bundle examples (`alm-examples` or equivalent generated bundle metadata)
+- [ ] 7.2: Update `config/samples/redhatcop_v1alpha1_entity.yaml` to be a valid minimal-but-realistic example for bundle consumption
+- [ ] 7.3: Update `config/samples/redhatcop_v1alpha1_entityalias.yaml` to be a valid minimal-but-realistic example for bundle consumption
+- [ ] 7.4: Regenerate bundle metadata with `make bundle`
+- [ ] 7.5: Verify the bundle validate step no longer warns about missing examples for `Entity` and `EntityAlias`
+
+### Story R1.8: Populate Owned CRD Descriptions for Community Operators Bundle
+
+As an operator maintainer,
+I want the generated CSV to contain non-empty owned CRD descriptions for the flagged APIs,
+So that the Community Operators bundle presents complete metadata instead of warnings.
+
+**Scope:** `AzureSecretEngineConfig`, `Entity`, and `EntityAlias` owned CRD metadata in the generated CSV.
+
+**Acceptance Criteria:**
+
+1. **Given** Community Operators validation warns that owned CRDs `azuresecretengineconfigs.redhatcop.redhat.io`, `entities.redhatcop.redhat.io`, and `entityaliases.redhatcop.redhat.io` have empty descriptions **When** the description source-of-truth is fixed and the bundle is regenerated **Then** each owned CRD entry in the CSV contains a non-empty, human-readable description
+2. **Given** CRD descriptions can come from API type comments, markers, or CSV base metadata depending on generator behavior **When** the fix is implemented **Then** the project uses a stable source-of-truth rather than hand-editing generated bundle output
+3. **Given** `make bundle` is run after the metadata fix **When** bundle validation completes **Then** those empty-description warnings are no longer emitted
+4. **Given** the affected APIs already have sample and CRD material in the repo **When** descriptions are updated **Then** the wording matches the CRD purpose and does not regress existing generated manifests
+
+**Tasks:**
+- [ ] 8.1: Trace where owned CRD descriptions in the CSV are sourced for this repo (`api/v1alpha1/*_types.go` comments vs `config/manifests/bases/`)
+- [ ] 8.2: Add or correct description source text for `AzureSecretEngineConfig`
+- [ ] 8.3: Add or correct description source text for `Entity`
+- [ ] 8.4: Add or correct description source text for `EntityAlias`
+- [ ] 8.5: Regenerate bundle metadata with `make bundle`
+- [ ] 8.6: Verify the bundle validate step no longer warns about empty owned CRD descriptions for the three flagged APIs
+
+### Story R1.9: Declare CSV `minKubeVersion`
+
+As an operator maintainer,
+I want the generated CSV to declare an explicit minimum supported Kubernetes version,
+So that release metadata reflects the tested support floor instead of implying support for every possible cluster version.
+
+**Scope:** ClusterServiceVersion metadata only.
+
+**Acceptance Criteria:**
+
+1. **Given** Community Operators validation warns that `csv.Spec.minKubeVersion` is not informed **When** a support floor is selected from the project's real test and toolchain constraints **Then** the CSV declares an explicit `spec.minKubeVersion`
+2. **Given** the project currently tests against a concrete envtest/Kubernetes toolchain baseline **When** the chosen minimum version is documented in the story implementation **Then** future maintainers can understand why that floor was selected
+3. **Given** `config/manifests/bases/vault-config-operator.clusterserviceversion.yaml` is the CSV base **When** bundle metadata is regenerated **Then** the generated bundle preserves the declared `minKubeVersion`
+4. **Given** `make bundle` runs after the update **When** bundle validation completes **Then** the missing `minKubeVersion` warning is no longer emitted
+
+**Tasks:**
+- [ ] 9.1: Determine the supported Kubernetes/OpenShift floor from current test/toolchain assumptions and release targets
+- [ ] 9.2: Add `spec.minKubeVersion` to `config/manifests/bases/vault-config-operator.clusterserviceversion.yaml`
+- [ ] 9.3: Regenerate bundle metadata with `make bundle`
+- [ ] 9.4: Verify the bundle validate step no longer warns about missing `csv.Spec.minKubeVersion`
 
 ---
 ---

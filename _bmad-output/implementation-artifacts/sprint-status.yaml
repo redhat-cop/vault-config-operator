@@ -240,6 +240,9 @@ development_status:
   R1-4-test-decoder-generics-rewrite: backlog
   R1-5-reconciler-struct-deduplication: backlog
   R1-6-interface-to-any-sweep: backlog
+  R1-7-bundle-example-annotations-for-entity-and-entityalias: backlog
+  R1-8-populate-owned-crd-descriptions-for-community-operators-bundle: backlog
+  R1-9-declare-csv-min-kube-version: backlog
   epic-R1-retrospective: optional
 
   # --- Phase 1.5: Documentation Improvement ---
