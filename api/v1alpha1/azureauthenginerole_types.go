@@ -160,10 +160,12 @@ type AzureRole struct {
 	// The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited.
 	// If you require the token to have the ability to create child tokens, you will need to set this value to 0.
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=0
 	TokenNumUses int64 `json:"tokenNumUses,omitempty"`
 
 	// The maximum allowed period value when a periodic token is requested from this role.
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=0
 	TokenPeriod int64 `json:"tokenPeriod,omitempty"`
 
 	// The type of token that should be generated.
@@ -171,6 +173,7 @@ type AzureRole struct {
 	// For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time.
 	// For machine based authentication cases, you should use batch type tokens.
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum={"service","batch","default","default-service","default-batch"}
 	TokenType string `json:"tokenType,omitempty"`
 }
 

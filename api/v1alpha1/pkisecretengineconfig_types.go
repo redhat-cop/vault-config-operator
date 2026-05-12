@@ -108,6 +108,7 @@ type PKICommon struct {
 
 	// Specifies the format for marshaling the private key. Defaults to der which will return either base64-encoded DER or PEM-encoded DER, depending on the value of format. The other option is pkcs8 which will return the key marshalled as PEM-encoded PKCS8.
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum={"der","pkcs8"}
 	PrivateKeyFormat string `json:"privateKeyFormat,omitempty"`
 
 	// Specifies the desired key type; must be rsa or ec.
@@ -124,6 +125,7 @@ type PKICommon struct {
 	// Specifies the maximum path length to encode in the generated certificate. -1 means no limit. Unless the signing certificate has a maximum path length set, in which case the path length is set to one less than that of the signing certificate. A limit of 0 means a literal path length of zero.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=-1
+	// +kubebuilder:validation:Minimum=-1
 	MaxPathLength int `json:"maxPathLength"`
 
 	// If set, the given common_name will not be included in DNS or Email Subject Alternate Names (as appropriate). Useful if the CN is not a hostname or email address, but is instead some human-readable identifier.

@@ -1,6 +1,6 @@
 # Story 7.5.7: Validation Marker Sweep — Enum, Pattern, MinLength/MaxLength
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -20,34 +20,34 @@ So that invalid values are rejected at admission time rather than failing at Vau
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `TokenType` Enum to remaining auth role types and mount tune (AC: 1)
-  - [ ] 1.1: `certauthenginerole_types.go` — Add `// +kubebuilder:validation:Enum={"service","batch","default","default-service","default-batch"}` to `TokenType`
-  - [ ] 1.2: `azureauthenginerole_types.go` — Add same Enum to `TokenType`
-  - [ ] 1.3: `gcpauthenginerole_types.go` — Add same Enum to `TokenType`
-  - [ ] 1.4: `authenginemount_types.go` — Add same Enum to `AuthMountConfig.TokenType`
-- [ ] Task 2: Add other Enum markers for closed-value-set fields (AC: 2)
-  - [ ] 2.1: `gcpauthenginerole_types.go` — Add `// +kubebuilder:validation:Enum={"iam","gce"}` to `GCPRole.Type`
-  - [ ] 2.2: `jwtoidcauthenginerole_types.go` — Add `// +kubebuilder:validation:Enum={"oidc","jwt"}` to `JWTOIDCRole.RoleType`
-  - [ ] 2.3: `pkisecretengineconfig_types.go` — Add `// +kubebuilder:validation:Enum={"der","pkcs8"}` to `PKICommon.PrivateKeyFormat`
-  - [ ] 2.4: `azuresecretenginerole_types.go` — Add `// +kubebuilder:validation:Enum={"AzureADMyOrg","AzureADMultipleOrgs","AzureADandPersonalMicrosoftAccount","PersonalMicrosoftAccount"}` to `AzureSERole.SignInAudience`
-- [ ] Task 3: Add `Minimum`/`Maximum` markers for numeric fields (AC: 3)
-  - [ ] 3.1: `certauthengineconfig_types.go` — `OCSPCacheSize`: `Minimum=0`; `RoleCacheSize`: `Minimum=-1`
-  - [ ] 3.2: `certauthenginerole_types.go` — `OCSPMaxRetries`: `Minimum=0`; `TokenNumUses`: `Minimum=0`
-  - [ ] 3.3: `vaultsecret_types.go` — `RefreshThreshold`: `Minimum=1`, `Maximum=100`
-  - [ ] 3.4: `githubsecretengineconfig_types.go` — `ApplicationID`: `Minimum=1`
-  - [ ] 3.5: `pkisecretengineconfig_types.go` — `MaxPathLength`: `Minimum=-1`
-  - [ ] 3.6: `kubernetesauthenginerole_types.go` — `Minimum=0` on `TokenTTL`, `TokenMaxTTL`, `TokenExplicitMaxTTL`, `TokenPeriod`, `TokenNumUses`
-  - [ ] 3.7: `gcpauthenginerole_types.go` — `Minimum=0` on `TokenNumUses`, `TokenPeriod`
-  - [ ] 3.8: `azureauthenginerole_types.go` — `Minimum=0` on `TokenNumUses`, `TokenPeriod`
-  - [ ] 3.9: `ldapauthengineconfig_types.go` — `Minimum=0` on `TokenNumUses`, `TokenPeriod`
-  - [ ] 3.10: `jwtoidcauthenginerole_types.go` — `Minimum=0` on `TokenNumUses`, `TokenPeriod`, `MaxAge`
-- [ ] Task 4: Audit existing Enum markers for completeness (AC: 4)
-  - [ ] 4.1: Confirm `PKIRole.KeyType` Enum `{"rsa","ec"}` — decide whether to add `"any"` for CSR signing use case
-  - [ ] 4.2: Confirm all other existing Enums are complete (no-op if complete)
-- [ ] Task 5: Pattern marker audit (AC: 5)
-  - [ ] 5.1: Confirm no safe Pattern additions needed beyond existing `Name` DNS-label and `ConnectionURI` patterns
-- [ ] Task 6: Run `make manifests generate fmt vet test` (AC: 5)
-- [ ] Task 7: Run `make integration` — all integration tests must pass
+- [x] Task 1: Add `TokenType` Enum to remaining auth role types and mount tune (AC: 1)
+  - [x] 1.1: `certauthenginerole_types.go` — Add `// +kubebuilder:validation:Enum={"service","batch","default","default-service","default-batch"}` to `TokenType`
+  - [x] 1.2: `azureauthenginerole_types.go` — Add same Enum to `TokenType`
+  - [x] 1.3: `gcpauthenginerole_types.go` — Add same Enum to `TokenType`
+  - [x] 1.4: `authenginemount_types.go` — Add same Enum to `AuthMountConfig.TokenType`
+- [x] Task 2: Add other Enum markers for closed-value-set fields (AC: 2)
+  - [x] 2.1: `gcpauthenginerole_types.go` — Add `// +kubebuilder:validation:Enum={"iam","gce"}` to `GCPRole.Type`
+  - [x] 2.2: `jwtoidcauthenginerole_types.go` — Add `// +kubebuilder:validation:Enum={"oidc","jwt"}` to `JWTOIDCRole.RoleType`
+  - [x] 2.3: `pkisecretengineconfig_types.go` — Add `// +kubebuilder:validation:Enum={"der","pkcs8"}` to `PKICommon.PrivateKeyFormat`
+  - [x] 2.4: `azuresecretenginerole_types.go` — Add `// +kubebuilder:validation:Enum={"AzureADMyOrg","AzureADMultipleOrgs","AzureADandPersonalMicrosoftAccount","PersonalMicrosoftAccount"}` to `AzureSERole.SignInAudience`
+- [x] Task 3: Add `Minimum`/`Maximum` markers for numeric fields (AC: 3)
+  - [x] 3.1: `certauthengineconfig_types.go` — `OCSPCacheSize`: `Minimum=0`; `RoleCacheSize`: `Minimum=-1`
+  - [x] 3.2: `certauthenginerole_types.go` — `OCSPMaxRetries`: `Minimum=0`; `TokenNumUses`: `Minimum=0`
+  - [x] 3.3: `vaultsecret_types.go` — `RefreshThreshold`: `Minimum=1`, `Maximum=100`
+  - [x] 3.4: `githubsecretengineconfig_types.go` — `ApplicationID`: `Minimum=1`
+  - [x] 3.5: `pkisecretengineconfig_types.go` — `MaxPathLength`: `Minimum=-1`
+  - [x] 3.6: `kubernetesauthenginerole_types.go` — `Minimum=0` on `TokenTTL`, `TokenMaxTTL`, `TokenExplicitMaxTTL`, `TokenPeriod`, `TokenNumUses`
+  - [x] 3.7: `gcpauthenginerole_types.go` — `Minimum=0` on `TokenNumUses`, `TokenPeriod`
+  - [x] 3.8: `azureauthenginerole_types.go` — `Minimum=0` on `TokenNumUses`, `TokenPeriod`
+  - [x] 3.9: `ldapauthengineconfig_types.go` — `Minimum=0` on `TokenNumUses`, `TokenPeriod`
+  - [x] 3.10: `jwtoidcauthenginerole_types.go` — `Minimum=0` on `TokenNumUses`, `TokenPeriod`, `MaxAge`
+- [x] Task 4: Audit existing Enum markers for completeness (AC: 4)
+  - [x] 4.1: Confirm `PKIRole.KeyType` Enum `{"rsa","ec"}` — extended to `{"rsa","ec","any"}` per Vault docs
+  - [x] 4.2: Confirm all other existing Enums are complete (no-op — all complete)
+- [x] Task 5: Pattern marker audit (AC: 5)
+  - [x] 5.1: Confirm no safe Pattern additions needed beyond existing `Name` DNS-label and `ConnectionURI` patterns
+- [x] Task 6: Run `make manifests generate fmt vet test` (AC: 5)
+- [x] Task 7: Run `make integration` — all integration tests must pass
 
 ## Dev Notes
 
@@ -384,10 +384,39 @@ TokenNumUses int64 `json:"tokenNumUses,omitempty"`
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+None — clean implementation with no failures.
+
 ### Completion Notes List
 
+- Added 8 Enum markers across 6 files (4 TokenType + GCPRole.Type + JWTOIDCRole.RoleType + PKICommon.PrivateKeyFormat + AzureSERole.SignInAudience)
+- Added 22 Minimum/Maximum markers across 10 files covering cache sizes, retry counts, percentages, app IDs, path lengths, and token tuning fields
+- Extended PKIRole.KeyType Enum from `{"rsa","ec"}` to `{"rsa","ec","any"}` per field comment indicating "any" is valid for CSR signing
+- Pattern audit confirmed no safe additions needed
+- All existing Enum markers confirmed complete
+- `make manifests generate fmt vet test` passes cleanly
+- `make integration` passes cleanly with no regressions (576s)
+
+### Change Log
+
+- 2026-05-12: Implemented story 7.5.7 — Added validation markers (Enum, Minimum/Maximum) to 13 CRD type files
+
 ### File List
+
+- api/v1alpha1/certauthenginerole_types.go (modified — Enum on TokenType, Minimum on OCSPMaxRetries + TokenNumUses)
+- api/v1alpha1/certauthengineconfig_types.go (modified — Minimum on OCSPCacheSize + RoleCacheSize)
+- api/v1alpha1/azureauthenginerole_types.go (modified — Enum on TokenType, Minimum on TokenNumUses + TokenPeriod)
+- api/v1alpha1/gcpauthenginerole_types.go (modified — Enum on Type + TokenType, Minimum on TokenNumUses + TokenPeriod)
+- api/v1alpha1/authenginemount_types.go (modified — Enum on TokenType)
+- api/v1alpha1/jwtoidcauthenginerole_types.go (modified — Enum on RoleType, Minimum on TokenNumUses + TokenPeriod + MaxAge)
+- api/v1alpha1/pkisecretengineconfig_types.go (modified — Enum on PrivateKeyFormat, Minimum on MaxPathLength)
+- api/v1alpha1/pkisecretenginerole_types.go (modified — Extended KeyType Enum with "any")
+- api/v1alpha1/azuresecretenginerole_types.go (modified — Enum on SignInAudience)
+- api/v1alpha1/vaultsecret_types.go (modified — Minimum=1 + Maximum=100 on RefreshThreshold)
+- api/v1alpha1/githubsecretengineconfig_types.go (modified — Minimum=1 on ApplicationID)
+- api/v1alpha1/kubernetesauthenginerole_types.go (modified — Minimum=0 on 5 token tuning fields)
+- api/v1alpha1/ldapauthengineconfig_types.go (modified — Minimum=0 on TokenNumUses + TokenPeriod)
+- config/crd/bases/*.yaml (regenerated by make manifests)

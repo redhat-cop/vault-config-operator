@@ -93,11 +93,13 @@ type CertAuthEngineConfigInternal struct {
 	// The size of the OCSP response LRU cache. Note that this cache is used for all configured certificates.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=100
+	// +kubebuilder:validation:Minimum=0
 	OCSPCacheSize int `json:"ocspCacheSize"`
 
 	// The size of the role cache. Use -1 to disable role caching.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=200
+	// +kubebuilder:validation:Minimum=-1
 	RoleCacheSize int `json:"roleCacheSize"`
 }
 

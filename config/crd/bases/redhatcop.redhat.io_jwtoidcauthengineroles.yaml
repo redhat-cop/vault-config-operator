@@ -205,6 +205,7 @@ spec:
                   See AuthRequest for additional details
                   Accepts an integer number of seconds, or a Go duration format string
                 format: int64
+                minimum: 0
                 type: integer
               name:
                 description: Name of the role
@@ -225,6 +226,9 @@ spec:
                 type: string
               roleType:
                 description: Type of role, either "oidc" (default) or "jwt"
+                enum:
+                - oidc
+                - jwt
                 type: string
               tokenBoundCIDRs:
                 description: |-
@@ -253,10 +257,12 @@ spec:
                   The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited.
                   If you require the token to have the ability to create child tokens, you will need to set this value to 0
                 format: int64
+                minimum: 0
                 type: integer
               tokenPeriod:
                 description: The period, if any, to set on the token
                 format: int64
+                minimum: 0
                 type: integer
               tokenPolicies:
                 description: |-

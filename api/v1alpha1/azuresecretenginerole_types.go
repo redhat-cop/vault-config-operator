@@ -118,6 +118,7 @@ type AzureSERole struct {
 	// Specifies the security principal types that are allowed to sign in to the application.
 	// Valid values are: AzureADMyOrg, AzureADMultipleOrgs, AzureADandPersonalMicrosoftAccount, PersonalMicrosoftAccount.
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum={"AzureADMyOrg","AzureADMultipleOrgs","AzureADandPersonalMicrosoftAccount","PersonalMicrosoftAccount"}
 	SignInAudience string `json:"signInAudience,omitempty"`
 
 	// A comma-separated string of Azure tags to attach to an application.

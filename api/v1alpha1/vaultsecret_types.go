@@ -37,6 +37,8 @@ type VaultSecretSpec struct {
 	// The default is 90, meaning the secret would refresh after 90% of the time has passed from the vault secret's lease duration.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=90
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=100
 	RefreshThreshold int `json:"refreshThreshold"`
 	// SyncOnResourceChange if set to true, the operator will immediately resync the secret from Vault
 	// whenever the VaultSecret spec or metadata changes, bypassing the time-based refresh gate.

@@ -207,6 +207,7 @@ spec:
                 description: The number of retries attempted before giving up on an
                   OCSP request. 0 will disable retries.
                 format: int64
+                minimum: 0
                 type: integer
               ocspQueryAllServers:
                 description: If set to true, rather than accepting the first successful
@@ -267,6 +268,7 @@ spec:
                   The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited.
                   If you require the token to have the ability to create child tokens, you will need to set this value to 0.
                 format: int64
+                minimum: 0
                 type: integer
               tokenPeriod:
                 description: The maximum allowed period value when a periodic token
@@ -289,6 +291,12 @@ spec:
                   Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens).
                   For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time.
                   For machine based authentication cases, you should use batch type tokens.
+                enum:
+                - service
+                - batch
+                - default
+                - default-service
+                - default-batch
                 type: string
             type: object
           status:

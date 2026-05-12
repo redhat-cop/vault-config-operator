@@ -1,5 +1,5 @@
 # generated: 2026-04-11
-# last_updated: 2026-04-11
+# last_updated: 2026-05-12
 # project: vault-config-operator
 # project_key: NOKEY
 # tracking_system: file-system
@@ -224,7 +224,7 @@ development_status:
   7-5-4-azure-and-gcp-auth-secret-engine-types-annotation-refactor: done
   7-5-5-pki-secret-engine-types-annotation-refactor: done
   7-5-6-identity-and-remaining-types-annotation-refactor: done
-  7-5-7-validation-marker-sweep-enum-pattern-minlength-maxlength: ready-for-dev
+  7-5-7-validation-marker-sweep-enum-pattern-minlength-maxlength: done
   epic-7-5-retrospective: optional
 
   # --- Phase 1.5: Documentation Improvement ---

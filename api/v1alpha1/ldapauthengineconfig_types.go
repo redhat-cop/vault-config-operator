@@ -335,10 +335,12 @@ type LDAPConfig struct {
 	// TokenNumUses The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited.
 	// If you require the token to have the ability to create child tokens, you will need to set this value to 0.
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=0
 	TokenNumUses int64 `json:"tokenNumUses,omitempty"`
 
 	// TokenPeriod The period, if any, to set on the token
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=0
 	TokenPeriod int64 `json:"tokenPeriod,omitempty"`
 
 	// The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens).

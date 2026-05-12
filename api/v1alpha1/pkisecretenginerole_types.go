@@ -171,7 +171,7 @@ type PKIRole struct {
 
 	// Specifies the type of key to generate for generated private keys and the type of key expected for submitted CSRs. Currently, rsa and ec are supported, or when signing CSRs any can be specified to allow keys of either type and with any bit size (subject to > 1024 bits for RSA keys).
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Enum:={"rsa","ec"}
+	// +kubebuilder:validation:Enum:={"rsa","ec","any"}
 	// +kubebuilder:default="rsa"
 	KeyType string `json:"keyType"`
 

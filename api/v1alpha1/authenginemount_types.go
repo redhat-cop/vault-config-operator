@@ -133,6 +133,7 @@ type AuthMountConfig struct {
 
 	// TokenType undocumented
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum={"service","batch","default","default-service","default-batch"}
 	TokenType string `json:"tokenType,omitempty"`
 
 	// Description another description...

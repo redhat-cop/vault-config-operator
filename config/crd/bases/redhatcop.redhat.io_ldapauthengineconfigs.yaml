@@ -341,10 +341,12 @@ spec:
                   TokenNumUses The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited.
                   If you require the token to have the ability to create child tokens, you will need to set this value to 0.
                 format: int64
+                minimum: 0
                 type: integer
               tokenPeriod:
                 description: TokenPeriod The period, if any, to set on the token
                 format: int64
+                minimum: 0
                 type: integer
               tokenPolicies:
                 description: TokenPolicies List of policies to encode onto generated

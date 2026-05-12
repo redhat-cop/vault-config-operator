@@ -145,6 +145,7 @@ spec:
                 default: 100
                 description: The size of the OCSP response LRU cache. Note that this
                   cache is used for all configured certificates.
+                minimum: 0
                 type: integer
               path:
                 description: |-
@@ -156,6 +157,7 @@ spec:
               roleCacheSize:
                 default: 200
                 description: The size of the role cache. Use -1 to disable role caching.
+                minimum: -1
                 type: integer
             type: object
           status:

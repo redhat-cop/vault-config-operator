@@ -54,6 +54,7 @@ type JWTOIDCRole struct {
 
 	// Type of role, either "oidc" (default) or "jwt"
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum={"oidc","jwt"}
 	RoleType string `json:"roleType,omitempty"`
 
 	// List of aud claims to match against. Any match is sufficient. Required for "jwt" roles, optional for "oidc" roles
@@ -142,6 +143,7 @@ type JWTOIDCRole struct {
 	// See AuthRequest for additional details
 	// Accepts an integer number of seconds, or a Go duration format string
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=0
 	MaxAge int64 `json:"maxage,omitempty"`
 
 	// The incremental lifetime for generated tokens
@@ -179,10 +181,12 @@ type JWTOIDCRole struct {
 	// The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited.
 	// If you require the token to have the ability to create child tokens, you will need to set this value to 0
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=0
 	TokenNumUses int64 `json:"tokenNumUses,omitempty"`
 
 	// The period, if any, to set on the token
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=0
 	TokenPeriod int64 `json:"tokenPeriod,omitempty"`
 
 	// The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens).
