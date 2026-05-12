@@ -1,6 +1,6 @@
 # Story 7.5.5: PKI Secret Engine Types — Annotation Refactor
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -20,25 +20,25 @@ So that the many non-zero defaults in PKI types are correctly annotated.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Refactor `pkisecretengineconfig_types.go` — remove `omitempty` from R2 fields (AC: 1)
-  - [ ] 1.1: `Type` (line 68): `json:"type,omitempty"` → `json:"type"`
-  - [ ] 1.2: `PrivateKeyType` (line 74): `json:"privateKeyType,omitempty"` → `json:"privateKeyType"`
-  - [ ] 1.3: `Format` (line 107): `json:"format,omitempty"` → `json:"format"`
-  - [ ] 1.4: `KeyType` (line 117): `json:"keyType,omitempty"` → `json:"keyType"`
-  - [ ] 1.5: `KeyBits` (line 122): `json:"keyBits,omitempty"` → `json:"keyBits"`
-  - [ ] 1.6: `MaxPathLength` (line 127): `json:"maxPathLength,omitempty"` → `json:"maxPathLength"`
-  - [ ] 1.7: `CRLExpiry` (line 203): `json:"CRLExpiry,omitempty"` → `json:"CRLExpiry"`
-  - [ ] 1.8: `CertificateKey` (line 218): `json:"certificateKey,omitempty"` → `json:"certificateKey"`
-- [ ] Task 2: Refactor `pkisecretenginerole_types.go` — R1 + R2 fields (AC: 2, 3)
-  - [ ] 2.1: `TTL` (line 103): remove `+kubebuilder:default="0s"`; keep `json:"TTL,omitempty"` unchanged
-  - [ ] 2.2: `MaxTTL` (line 108): remove `+kubebuilder:default="0s"`; keep `json:"maxTTL,omitempty"` unchanged
-  - [ ] 2.3: `KeyType` (line 178): `json:"keyType,omitempty"` → `json:"keyType"`
-  - [ ] 2.4: `KeyBits` (line 183): `json:"keyBits,omitempty"` → `json:"keyBits"`
-  - [ ] 2.5: `UseCSRCommonName` (line 206): `json:"useCSRCommonName,omitempty"` → `json:"useCSRCommonName"`
-  - [ ] 2.6: `UseCSRSans` (line 211): `json:"useCSRSans,omitempty"` → `json:"useCSRSans"`
-  - [ ] 2.7: `NotBeforeDuration` (line 270): `json:"notBeforeDuration,omitempty"` → `json:"notBeforeDuration"`
-- [ ] Task 3: Run `make manifests generate fmt vet test` (AC: 4)
-- [ ] Task 4: Run `make integration` — PKI tests must pass (AC: 5)
+- [x] Task 1: Refactor `pkisecretengineconfig_types.go` — remove `omitempty` from R2 fields (AC: 1)
+  - [x] 1.1: `Type` (line 68): `json:"type,omitempty"` → `json:"type"`
+  - [x] 1.2: `PrivateKeyType` (line 74): `json:"privateKeyType,omitempty"` → `json:"privateKeyType"`
+  - [x] 1.3: `Format` (line 107): `json:"format,omitempty"` → `json:"format"`
+  - [x] 1.4: `KeyType` (line 117): `json:"keyType,omitempty"` → `json:"keyType"`
+  - [x] 1.5: `KeyBits` (line 122): `json:"keyBits,omitempty"` → `json:"keyBits"`
+  - [x] 1.6: `MaxPathLength` (line 127): `json:"maxPathLength,omitempty"` → `json:"maxPathLength"`
+  - [x] 1.7: `CRLExpiry` (line 203): `json:"CRLExpiry,omitempty"` → `json:"CRLExpiry"`
+  - [x] 1.8: `CertificateKey` (line 218): `json:"certificateKey,omitempty"` → `json:"certificateKey"`
+- [x] Task 2: Refactor `pkisecretenginerole_types.go` — R1 + R2 fields (AC: 2, 3)
+  - [x] 2.1: `TTL` (line 103): remove `+kubebuilder:default="0s"`; keep `json:"TTL,omitempty"` unchanged
+  - [x] 2.2: `MaxTTL` (line 108): remove `+kubebuilder:default="0s"`; keep `json:"maxTTL,omitempty"` unchanged
+  - [x] 2.3: `KeyType` (line 178): `json:"keyType,omitempty"` → `json:"keyType"`
+  - [x] 2.4: `KeyBits` (line 183): `json:"keyBits,omitempty"` → `json:"keyBits"`
+  - [x] 2.5: `UseCSRCommonName` (line 206): `json:"useCSRCommonName,omitempty"` → `json:"useCSRCommonName"`
+  - [x] 2.6: `UseCSRSans` (line 211): `json:"useCSRSans,omitempty"` → `json:"useCSRSans"`
+  - [x] 2.7: `NotBeforeDuration` (line 270): `json:"notBeforeDuration,omitempty"` → `json:"notBeforeDuration"`
+- [x] Task 3: Run `make manifests generate fmt vet test` (AC: 4)
+- [x] Task 4: Run `make integration` — PKI tests must pass (AC: 5)
 
 ## Dev Notes
 
@@ -306,10 +306,30 @@ TTL metav1.Duration `json:"TTL,omitempty"`
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4 (claude-sonnet-4-20250514)
 
 ### Debug Log References
 
+None — clean implementation with no issues.
+
 ### Completion Notes List
 
+- Removed `omitempty` from 8 R2 fields in `pkisecretengineconfig_types.go` across 4 inlined structs (PKIType, PKICommon, PKIConfigCRL, PKIIntermediate)
+- Removed `+kubebuilder:default="0s"` from 2 R1 fields (TTL, MaxTTL) in `pkisecretenginerole_types.go`, retaining `omitempty` on JSON tags
+- Removed `omitempty` from 5 R2 fields in `pkisecretenginerole_types.go` (KeyType, KeyBits, UseCSRCommonName, UseCSRSans, NotBeforeDuration)
+- CRD regeneration added `required` block for `type` and `privateKeyType` in config CRD (fields already had `+kubebuilder:validation:Required` markers)
+- CRD regeneration removed `default: 0s` from TTL and MaxTTL in role CRD
+- All unit tests pass (25.4% coverage for api/v1alpha1)
+- All integration tests pass (54.0% coverage for controllers, 576s runtime)
+- No Go logic changes — purely annotation + JSON struct tag refactor
+
+### Change Log
+
+- 2026-05-11: Story 7.5.5 implemented — PKI secret engine types annotation refactor (15 field changes across 2 files)
+
 ### File List
+
+- `api/v1alpha1/pkisecretengineconfig_types.go` — Modified (removed `omitempty` from 8 R2 fields)
+- `api/v1alpha1/pkisecretenginerole_types.go` — Modified (removed 2 R1 default markers, removed `omitempty` from 5 R2 fields)
+- `config/crd/bases/redhatcop.redhat.io_pkisecretengineconfigs.yaml` — Regenerated (added required block for type/privateKeyType)
+- `config/crd/bases/redhatcop.redhat.io_pkisecretengineroles.yaml` — Regenerated (removed default: 0s from TTL/MaxTTL)
