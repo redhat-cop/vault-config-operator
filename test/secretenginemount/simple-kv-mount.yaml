@@ -7,5 +7,7 @@ spec:
     path: kubernetes
     role: policy-admin
   type: kv
+  config:
+    listingVisibility: "hidden"
   options:
     version: "2"

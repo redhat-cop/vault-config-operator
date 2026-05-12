@@ -67,7 +67,7 @@ type GHConfig struct {
 	// GitHubAPIBaseURL the base URL for API requests (defaults to the public GitHub API).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="https://api.github.com"
-	GitHubAPIBaseURL string `json:"gitHubAPIBaseURL,omitempty"`
+	GitHubAPIBaseURL string `json:"gitHubAPIBaseURL"`
 
 	retrievedSSHKey string `json:"-"`
 }

@@ -132,7 +132,6 @@ type CertAuthEngineRoleInternal struct {
 
 	// If enabled, validate certificates' revocation status using OCSP.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=false
 	OCSPEnabled bool `json:"ocspEnabled,omitempty"`
 
 	// Any additional OCSP responder certificates needed to verify OCSP responses.
@@ -147,7 +146,6 @@ type CertAuthEngineRoleInternal struct {
 
 	// If true and an OCSP response cannot be fetched or is of an unknown status, the login will proceed as if the certificate has not been revoked.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=false
 	OCSPFailOpen bool `json:"ocspFailOpen,omitempty"`
 
 	// If greater than 0, specifies the maximum age of an OCSP thisUpdate field.
@@ -158,11 +156,10 @@ type CertAuthEngineRoleInternal struct {
 	// The number of retries attempted before giving up on an OCSP request. 0 will disable retries.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=4
-	OCSPMaxRetries int64 `json:"ocspMaxRetries,omitempty"`
+	OCSPMaxRetries int64 `json:"ocspMaxRetries"`
 
 	// If set to true, rather than accepting the first successful OCSP response, query all servers and consider the certificate valid only if all servers agree.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=false
 	OCSPQueryAllServers bool `json:"ocspQueryAllServers,omitempty"`
 
 	// The display_name to set on tokens issued when authenticating against this CA certificate.
@@ -194,13 +191,11 @@ type CertAuthEngineRoleInternal struct {
 
 	// If set, the default policy will not be set on generated tokens; otherwise it will be added to the policies set in tokenPolicies.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=false
 	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty"`
 
 	// The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited.
 	// If you require the token to have the ability to create child tokens, you will need to set this value to 0.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=0
 	TokenNumUses int64 `json:"tokenNumUses,omitempty"`
 
 	// The maximum allowed period value when a periodic token is requested from this role.

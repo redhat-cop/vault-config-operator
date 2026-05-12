@@ -72,8 +72,7 @@ type RandomSecretSpec struct {
 	calculatedSecret string `json:"-"`
 
 	// IsKVSecretsEngineV2 indicates if the KV Secrets engine is V2 or not. Default is false to indicate the payload to send is for KV Secret Engine V1.
-	// +kubebuilder:validation:Required
-	// +kubebuilder:default=false
+	// +kubebuilder:validation:Optional
 	IsKVSecretsEngineV2 bool `json:"isKVSecretsEngineV2,omitempty"`
 
 	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
@@ -86,7 +85,7 @@ type RandomSecretSpec struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"Delete","Retain"}
 	// +kubebuilder:default:="Delete"
-	KvSecretRetainPolicy string `json:"kvSecretRetainPolicy,omitempty"`
+	KvSecretRetainPolicy string `json:"kvSecretRetainPolicy"`
 }
 
 const ttlKey string = "ttl"

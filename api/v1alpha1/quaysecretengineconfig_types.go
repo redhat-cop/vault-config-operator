@@ -161,7 +161,6 @@ type QuayConfig struct {
 
 	// DisableSslVerification Disable SSL verification when communicating with Quay.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=false
 	DisableSslVerification bool `json:"disableSslVerification,omitempty"`
 
 	retrievedToken string `json:"-"`

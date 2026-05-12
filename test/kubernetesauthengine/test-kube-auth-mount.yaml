@@ -7,4 +7,6 @@ spec:
     path: kubernetes
     role: policy-admin
   type: kubernetes
+  config:
+    listingVisibility: "hidden"
   path: test-k8s-auth

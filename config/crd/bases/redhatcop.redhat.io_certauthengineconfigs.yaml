@@ -128,12 +128,10 @@ spec:
                     type: string
                 type: object
               disableBinding:
-                default: false
                 description: If set, during renewal, skips the matching of presented
                   client identity with the client identity used during login.
                 type: boolean
               enableIdentityAliasMetadata:
-                default: false
                 description: If set, metadata of the certificate including the metadata
                   corresponding to allowedMetadataExtensions will be stored in the
                   alias.

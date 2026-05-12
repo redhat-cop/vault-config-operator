@@ -233,7 +233,7 @@ type DBSEConfig struct {
 	// +kubebuilder:default={"*"}
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	AllowedRoles []string `json:"allowedRoles,omitempty"`
+	AllowedRoles []string `json:"allowedRoles"`
 
 	// RootRotationStatements Specifies the database statements to be executed to rotate the root user's credentials. See the plugin's API page for more information on support and formatting for this parameter.
 	// +kubebuilder:validation:Optional
@@ -245,7 +245,7 @@ type DBSEConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"password","scram-sha-256"}
 	// +kubebuilder:default:="password"
-	PasswordAuthentication string `json:"passwordAuthentication,omitempty"`
+	PasswordAuthentication string `json:"passwordAuthentication"`
 
 	// PasswordPolicy The name of the password policy to use when generating passwords for this database. If not specified, this will use a default policy defined as: 20 characters with at least 1 uppercase, 1 lowercase, 1 number, and 1 dash character.
 	// +kubebuilder:validation:Optional

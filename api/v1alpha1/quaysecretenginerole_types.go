@@ -162,7 +162,7 @@ type QuayBaseRole struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"organization","user"}
 	// +kubebuilder:default="organization"
-	NamespaceType NamespaceType `json:"namespaceType,omitempty"`
+	NamespaceType NamespaceType `json:"namespaceType"`
 
 	// NamespaceName Name of the Quay account.
 	// +kubebuilder:validation:Required
@@ -171,7 +171,7 @@ type QuayBaseRole struct {
 	// CreateRepositories Access to create Quay repositories.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=false
-	CreateRepositories *bool `json:"createRepositories,omitempty"`
+	CreateRepositories *bool `json:"createRepositories"`
 
 	// Teams Permissions granted to the Robot Account to Teams.
 	// +kubebuilder:validation:Optional

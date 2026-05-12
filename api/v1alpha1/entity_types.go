@@ -61,7 +61,6 @@ type EntityConfig struct {
 
 	// Disabled Whether the entity is disabled. Disabled entities' associated tokens cannot be used, but are not revoked.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=false
 	Disabled bool `json:"disabled,omitempty"`
 }
 

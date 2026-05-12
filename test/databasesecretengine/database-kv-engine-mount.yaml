@@ -7,6 +7,8 @@ spec:
     path: kubernetes
     role: database-engine-admin
   type: kv
+  config:
+    listingVisibility: "hidden"
   path: test-vault-config-operator
   options:
     version: "2"

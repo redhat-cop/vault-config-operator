@@ -50,13 +50,13 @@ type IdentityTokenKeyConfig struct {
 	// Uses duration format strings.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:="24h"
-	RotationPeriod string `json:"rotationPeriod,omitempty"`
+	RotationPeriod string `json:"rotationPeriod"`
 
 	// VerificationTTL controls how long the public portion of a signing key will be
 	// available for verification after being rotated. Uses duration format strings.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:="24h"
-	VerificationTTL string `json:"verificationTTL,omitempty"`
+	VerificationTTL string `json:"verificationTTL"`
 
 	// AllowedClientIDs is a list of role client IDs allowed to use this key for signing.
 	// If empty, no roles are allowed. If "*", all roles are allowed.
@@ -69,7 +69,7 @@ type IdentityTokenKeyConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"RS256","RS384","RS512","ES256","ES384","ES512","EdDSA"}
 	// +kubebuilder:default:="RS256"
-	Algorithm string `json:"algorithm,omitempty"`
+	Algorithm string `json:"algorithm"`
 }
 
 // IdentityTokenKeyStatus defines the observed state of IdentityTokenKey

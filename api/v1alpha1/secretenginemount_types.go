@@ -140,17 +140,14 @@ type Mount struct {
 
 	// Local Specifies if the secrets engine is a local mount only. Local mounts are not replicated nor (if a secondary) removed by replication.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=false
 	Local bool `json:"local,omitempty"`
 
 	// SealWrap Enable seal wrapping for the mount, causing values stored by the mount to be wrapped by the seal's encryption capability.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=false
 	SealWrap bool `json:"sealWrap,omitempty"`
 
 	// ExternalEntropyAccess Enable the secrets engine to access Vault's external entropy source.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=false
 	ExternalEntropyAccess bool `json:"externalEntropyAccess,omitempty"`
 
 	// Options Specifies mount type specific options that are passed to the backend.
@@ -172,8 +169,7 @@ type MountConfig struct {
 
 	// ForceNoCache Disable caching.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=false
-	ForceNoCache bool `json:"forceNoCache"`
+	ForceNoCache bool `json:"forceNoCache,omitempty"`
 
 	// AuditNonHMACRequestKeys list of keys that will not be HMAC'd by audit devices in the request data object.
 	// +kubebuilder:validation:Optional
@@ -191,7 +187,7 @@ type MountConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"unauth","hidden"}
 	// +kubebuilder:default:="hidden"
-	ListingVisibility string `json:"listingVisibility,omitempty"`
+	ListingVisibility string `json:"listingVisibility"`
 
 	// PassthroughRequestHeaders list of headers to whitelist and pass from the request to the plugin.
 	// +kubebuilder:validation:Optional

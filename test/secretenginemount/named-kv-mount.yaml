@@ -8,5 +8,7 @@ spec:
     role: policy-admin
   name: test-named-kv-mount
   type: kv
+  config:
+    listingVisibility: "hidden"
   options:
     version: "2"

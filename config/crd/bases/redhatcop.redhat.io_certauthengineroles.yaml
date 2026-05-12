@@ -194,12 +194,10 @@ spec:
                   Provided as base64 encoded PEM data.
                 type: string
               ocspEnabled:
-                default: false
                 description: If enabled, validate certificates' revocation status
                   using OCSP.
                 type: boolean
               ocspFailOpen:
-                default: false
                 description: If true and an OCSP response cannot be fetched or is
                   of an unknown status, the login will proceed as if the certificate
                   has not been revoked.
@@ -211,7 +209,6 @@ spec:
                 format: int64
                 type: integer
               ocspQueryAllServers:
-                default: false
                 description: If set to true, rather than accepting the first successful
                   OCSP response, query all servers and consider the certificate valid
                   only if all servers agree.
@@ -262,12 +259,10 @@ spec:
                   value of this will be referenced at renewal time.
                 type: string
               tokenNoDefaultPolicy:
-                default: false
                 description: If set, the default policy will not be set on generated
                   tokens; otherwise it will be added to the policies set in tokenPolicies.
                 type: boolean
               tokenNumUses:
-                default: 0
                 description: |-
                   The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited.
                   If you require the token to have the ability to create child tokens, you will need to set this value to 0.

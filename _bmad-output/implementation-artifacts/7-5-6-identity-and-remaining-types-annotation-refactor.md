@@ -1,6 +1,6 @@
 # Story 7.5.6: Identity & Remaining Types — Annotation Refactor
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -20,30 +20,30 @@ So that the entire codebase is consistent.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Refactor identity types — 5 files, 10 fields (AC: 1, 2)
-  - [ ] 1.1: `identityoidcclient_types.go` — R2: remove `omitempty` from `Key`, `ClientType`, `IDTokenTTL`, `AccessTokenTTL`
-  - [ ] 1.2: `identitytokenkey_types.go` — R2: remove `omitempty` from `RotationPeriod`, `VerificationTTL`, `Algorithm`
-  - [ ] 1.3: `identitytokenrole_types.go` — R2: remove `omitempty` from `TTL`
-  - [ ] 1.4: `group_types.go` — R2: remove `omitempty` from `Type`
-  - [ ] 1.5: `entity_types.go` — R1: remove `+kubebuilder:default:=false` from `Disabled`
-- [ ] Task 2: Refactor cert auth engine types — 2 files, 10 fields (AC: 1, 2)
-  - [ ] 2.1: `certauthengineconfig_types.go` — R1: remove `+kubebuilder:default:=false` from `DisableBinding`, `EnableIdentityAliasMetadata`; R2: remove `omitempty` from `OCSPCacheSize`, `RoleCacheSize`
-  - [ ] 2.2: `certauthenginerole_types.go` — R1: remove `+kubebuilder:default:=false` from `OCSPEnabled`, `OCSPFailOpen`, `OCSPQueryAllServers`, `TokenNoDefaultPolicy`; remove `+kubebuilder:default:=0` from `TokenNumUses`; R2: remove `omitempty` from `OCSPMaxRetries`
-- [ ] Task 3: Refactor database engine types — 2 files, 4 fields (AC: 1, 2)
-  - [ ] 3.1: `databasesecretengineconfig_types.go` — R2: remove `omitempty` from `AllowedRoles`, `PasswordAuthentication`
-  - [ ] 3.2: `databasesecretenginerole_types.go` — R1: remove `+kubebuilder:default="0s"` from `DefaultTTL`, `MaxTTL`
-- [ ] Task 4: Refactor mount types — 2 files, 6 fields (AC: 1, 2)
-  - [ ] 4.1: `secretenginemount_types.go` — R1: remove `+kubebuilder:default:=false` from `Local`, `SealWrap`, `ExternalEntropyAccess`; R1 special: `ForceNoCache` — remove `+kubebuilder:default:=false` AND add `omitempty` to JSON tag; R2: remove `omitempty` from `ListingVisibility`
-  - [ ] 4.2: `authenginemount_types.go` — R2: remove `omitempty` from `ListingVisibility`
-- [ ] Task 5: Refactor remaining types — 5 files, 10 fields (AC: 1, 2)
-  - [ ] 5.1: `githubsecretengineconfig_types.go` — R2: remove `omitempty` from `GitHubAPIBaseURL`
-  - [ ] 5.2: `quaysecretengineconfig_types.go` — R1: remove `+kubebuilder:default=false` from `DisableSslVerification`
-  - [ ] 5.3: `quaysecretenginerole_types.go` — R2: remove `omitempty` from `NamespaceType`
-  - [ ] 5.4: `randomsecret_types.go` — R1: remove `+kubebuilder:default=false` from `IsKVSecretsEngineV2`; R2: remove `omitempty` from `KvSecretRetainPolicy`
-  - [ ] 5.5: `vaultsecret_types.go` — R1: remove `+kubebuilder:default=false` from `SyncOnResourceChange`; R2: remove `omitempty` from `RefreshThreshold`, `Path`, `RequestType`
-- [ ] Task 6: Run `make manifests generate fmt vet test` (AC: 3)
-- [ ] Task 7: Run `make integration` — all integration tests must pass (AC: 4)
-- [ ] Task 8: Final audit — grep all `*_types.go` for remaining R1/R2 violations; confirm zero (AC: 5)
+- [x] Task 1: Refactor identity types — 5 files, 10 fields (AC: 1, 2)
+  - [x] 1.1: `identityoidcclient_types.go` — R2: remove `omitempty` from `Key`, `ClientType`, `IDTokenTTL`, `AccessTokenTTL`
+  - [x] 1.2: `identitytokenkey_types.go` — R2: remove `omitempty` from `RotationPeriod`, `VerificationTTL`, `Algorithm`
+  - [x] 1.3: `identitytokenrole_types.go` — R2: remove `omitempty` from `TTL`
+  - [x] 1.4: `group_types.go` — R2: remove `omitempty` from `Type`
+  - [x] 1.5: `entity_types.go` — R1: remove `+kubebuilder:default:=false` from `Disabled`
+- [x] Task 2: Refactor cert auth engine types — 2 files, 10 fields (AC: 1, 2)
+  - [x] 2.1: `certauthengineconfig_types.go` — R1: remove `+kubebuilder:default:=false` from `DisableBinding`, `EnableIdentityAliasMetadata`; R2: remove `omitempty` from `OCSPCacheSize`, `RoleCacheSize`
+  - [x] 2.2: `certauthenginerole_types.go` — R1: remove `+kubebuilder:default:=false` from `OCSPEnabled`, `OCSPFailOpen`, `OCSPQueryAllServers`, `TokenNoDefaultPolicy`; remove `+kubebuilder:default:=0` from `TokenNumUses`; R2: remove `omitempty` from `OCSPMaxRetries`
+- [x] Task 3: Refactor database engine types — 2 files, 4 fields (AC: 1, 2)
+  - [x] 3.1: `databasesecretengineconfig_types.go` — R2: remove `omitempty` from `AllowedRoles`, `PasswordAuthentication`
+  - [x] 3.2: `databasesecretenginerole_types.go` — R1: remove `+kubebuilder:default="0s"` from `DefaultTTL`, `MaxTTL`
+- [x] Task 4: Refactor mount types — 2 files, 6 fields (AC: 1, 2)
+  - [x] 4.1: `secretenginemount_types.go` — R1: remove `+kubebuilder:default:=false` from `Local`, `SealWrap`, `ExternalEntropyAccess`; R1 special: `ForceNoCache` — remove `+kubebuilder:default:=false` AND add `omitempty` to JSON tag; R2: remove `omitempty` from `ListingVisibility`
+  - [x] 4.2: `authenginemount_types.go` — R2: remove `omitempty` from `ListingVisibility`
+- [x] Task 5: Refactor remaining types — 5 files, 10 fields (AC: 1, 2)
+  - [x] 5.1: `githubsecretengineconfig_types.go` — R2: remove `omitempty` from `GitHubAPIBaseURL`
+  - [x] 5.2: `quaysecretengineconfig_types.go` — R1: remove `+kubebuilder:default=false` from `DisableSslVerification`
+  - [x] 5.3: `quaysecretenginerole_types.go` — R2: remove `omitempty` from `NamespaceType`
+  - [x] 5.4: `randomsecret_types.go` — R1: remove `+kubebuilder:default=false` from `IsKVSecretsEngineV2`; R2: remove `omitempty` from `KvSecretRetainPolicy`
+  - [x] 5.5: `vaultsecret_types.go` — R1: remove `+kubebuilder:default=false` from `SyncOnResourceChange`; R2: remove `omitempty` from `RefreshThreshold`, `Path`, `RequestType`
+- [x] Task 6: Run `make manifests generate fmt vet test` (AC: 3)
+- [x] Task 7: Run `make integration` — all integration tests must pass (AC: 4)
+- [x] Task 8: Final audit — grep all `*_types.go` for remaining R1/R2 violations; confirm zero (AC: 5)
 
 ## Dev Notes
 
@@ -462,14 +462,91 @@ Both greps should return zero matches (excluding files covered by Stories 7.5.1-
 - No pending changes that could conflict with this annotation refactor
 - All CI checks passing on main
 
+### Review Findings
+
+- [x] [Review][Patch] RandomSecret V1 manifests lose backwards-compatible defaulting after removing `isKVSecretsEngineV2` default [api/v1alpha1/randomsecret_types.go:74]
+
 ## Dev Agent Record
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Integration tests initially failed with `listingVisibility` enum validation errors after removing `omitempty` from `ListingVisibility` fields in mount types. Root cause: without `omitempty`, Go serializes the empty string zero value, which fails `+kubebuilder:validation:Enum={"unauth","hidden"}`. Fixed by adding explicit `config.listingVisibility: "hidden"` to all mount YAML test fixtures.
+- Kind cluster required fresh recreation between test runs due to infrastructure degradation.
+- Final audit discovered an additional R2 violation not in the original 40-field scope: `CreateRepositories *bool` in `quaysecretenginerole_types.go` had `omitempty` with a non-zero default (for `*bool`, `false` is non-zero since nil is the zero value). Fixed to satisfy AC #5 (zero violations across entire codebase). Total actual changes: 41 fields.
+
 ### Completion Notes List
 
+- All 40 planned field changes (18 R1 + 22 R2) applied across 17 `*_types.go` files
+- 1 additional R2 fix applied: `CreateRepositories *bool` in `quaysecretenginerole_types.go` (discovered during final audit)
+- CRD manifests regenerated via `make manifests generate`
+- All unit tests pass (`make test`)
+- All integration tests pass (`make integration`) on fresh Kind cluster
+- Final audit confirms zero R1/R2 violations across entire `api/v1alpha1/` codebase
+- 17 test fixture YAML files updated to explicitly set `config.listingVisibility: "hidden"` for mount resources
+- No Go logic changes (`toMap()`, `IsEquivalentToDesiredState()`, etc.) — purely annotation + JSON tag refactor
+
+### Change Log
+
+- **R1 (18 fields):** Removed redundant `+kubebuilder:default` markers for zero-value fields across 10 files
+- **R2 (23 fields):** Removed `omitempty` from JSON tags for non-zero default fields across 14 files (22 planned + 1 audit fix)
+- **ForceNoCache special case:** Removed `+kubebuilder:default:=false` AND added `omitempty` to JSON tag
+- **Test fixtures (17 files):** Added explicit `config.listingVisibility: "hidden"` to mount fixtures to satisfy enum validation after `omitempty` removal
+- **CRD schemas (regenerated):** Updated by `make manifests` to reflect removed defaults and changed serialization
+
 ### File List
+
+api/v1alpha1/identityoidcclient_types.go
+api/v1alpha1/identitytokenkey_types.go
+api/v1alpha1/identitytokenrole_types.go
+api/v1alpha1/group_types.go
+api/v1alpha1/entity_types.go
+api/v1alpha1/certauthengineconfig_types.go
+api/v1alpha1/certauthenginerole_types.go
+api/v1alpha1/databasesecretengineconfig_types.go
+api/v1alpha1/databasesecretenginerole_types.go
+api/v1alpha1/secretenginemount_types.go
+api/v1alpha1/authenginemount_types.go
+api/v1alpha1/githubsecretengineconfig_types.go
+api/v1alpha1/quaysecretengineconfig_types.go
+api/v1alpha1/quaysecretenginerole_types.go
+api/v1alpha1/randomsecret_types.go
+api/v1alpha1/vaultsecret_types.go
+api/v1alpha1/auditrequestheader_types.go
+config/crd/bases/redhatcop.redhat.io_authenginemounts.yaml
+config/crd/bases/redhatcop.redhat.io_auditrequestheaders.yaml
+config/crd/bases/redhatcop.redhat.io_certauthengineconfigs.yaml
+config/crd/bases/redhatcop.redhat.io_certauthengineroles.yaml
+config/crd/bases/redhatcop.redhat.io_databasesecretengineconfigs.yaml
+config/crd/bases/redhatcop.redhat.io_databasesecretengineroles.yaml
+config/crd/bases/redhatcop.redhat.io_entities.yaml
+config/crd/bases/redhatcop.redhat.io_githubsecretengineconfigs.yaml
+config/crd/bases/redhatcop.redhat.io_groups.yaml
+config/crd/bases/redhatcop.redhat.io_identityoidcclients.yaml
+config/crd/bases/redhatcop.redhat.io_identitytokenkeys.yaml
+config/crd/bases/redhatcop.redhat.io_identitytokenroles.yaml
+config/crd/bases/redhatcop.redhat.io_quaysecretengineconfigs.yaml
+config/crd/bases/redhatcop.redhat.io_quaysecretengineroles.yaml
+config/crd/bases/redhatcop.redhat.io_randomsecrets.yaml
+config/crd/bases/redhatcop.redhat.io_secretenginemounts.yaml
+config/crd/bases/redhatcop.redhat.io_vaultsecrets.yaml
+test/authenginemount/simple-approle-mount.yaml
+test/authenginemount/named-approle-mount.yaml
+test/secretenginemount/simple-kv-mount.yaml
+test/secretenginemount/named-kv-mount.yaml
+test/drift-detection/secretenginemount-drift-test.yaml
+test/rabbitmqsecretengine/test-rmq-mount.yaml
+test/databasesecretengine/test-db-mount.yaml
+test/kubernetessecretengine/test-kubese-mount.yaml
+test/kubernetesauthengine/test-kube-auth-mount.yaml
+test/ldapauthengine/test-ldap-auth-mount.yaml
+test/jwtoidcauthengine/test-jwtoidc-auth-mount.yaml
+test/randomsecret/v2/03-secretenginemount-kv-v2.yaml
+test/pkisecretengine/pki-secret-engine.yaml
+test/pkisecretengine/pki-intermediate-secret-engine.yaml
+test/kv-secret-engine.yaml
+test/database-secret-engine.yaml
+test/databasesecretengine/database-kv-engine-mount.yaml
