@@ -39,11 +39,10 @@ var _ = Describe("Audit controllers", Ordered, func() {
 		It("Should enable a file audit device in Vault", func() {
 
 			By("Loading and creating the Audit fixture")
-			var err error
-			auditInstance, err = decoder.GetAuditInstance("../test/audit/audit.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/audit/audit.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			auditInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, auditInstance)).Should(Succeed())
+			auditInstance = &redhatcopv1alpha1.Audit{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, auditInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: auditInstance.Name, Namespace: auditInstance.Namespace}
 			created := &redhatcopv1alpha1.Audit{}
@@ -77,11 +76,10 @@ var _ = Describe("Audit controllers", Ordered, func() {
 		It("Should configure the request header in Vault", func() {
 
 			By("Loading and creating the AuditRequestHeader fixture")
-			var err error
-			headerInstance, err = decoder.GetAuditRequestHeaderInstance("../test/audit/auditrequestheader.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/audit/auditrequestheader.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			headerInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, headerInstance)).Should(Succeed())
+			headerInstance = &redhatcopv1alpha1.AuditRequestHeader{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, headerInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: headerInstance.Name, Namespace: headerInstance.Namespace}
 			created := &redhatcopv1alpha1.AuditRequestHeader{}

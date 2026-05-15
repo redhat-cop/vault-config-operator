@@ -108,6 +108,10 @@ Webhook validation tests, error/failure scenario tests, `PrepareInternalValues` 
 Refactor all CRD `*_types.go` files to comply with the CRD Field Default & Validation Rules: remove redundant zero-value defaults (~120 fields), fix non-zero defaults with `omitempty` (~50 fields), add `Enum`/`Pattern`/`MinLength`/`MaxLength` validation markers. 7 stories across 31 files.
 **FRs covered:** CRD1, CRD2, CRD3
 
+### Epic R1: Code Modernization & Technical Debt Reduction
+Fix correctness bugs (stringly-typed context keys, PKI write-path, webhook logger copy-paste errors), resolve all lint findings (unchecked error returns, deprecated `rand.Seed`), modernize deprecated dependencies (`pkg/errors`, `ioutil`, dead `multierror`), replace hand-rolled stdlib equivalents (`AddOrReplaceCondition`), rewrite 30+ identical test decoder methods using Go generics, and deduplicate 4 near-identical reconciler struct implementations. 9 stories.
+**FRs covered:** R1-R9
+
 ---
 
 ## Epic 1: Core Declarative Logic Unit Tests
@@ -755,6 +759,317 @@ So that the drift detection feature is validated.
 **Then** the reconciler detects the drift via `IsEquivalentToDesiredState` returning false and writes the correct state back to Vault
 
 ---
+
+## Epic R1: Code Modernization & Technical Debt Reduction
+
+Fix correctness bugs, resolve all lint findings to a verified green baseline, modernize deprecated dependencies, and reduce structural duplication in the reconciler and test infrastructure. This epic should be completed before Phase 2 expansion to ensure new CRD types are built on a clean, deduplicated codebase.
+
+**Precondition:** Phase 1 test stabilization (Epics 1-7.5) must be complete — the test safety net is needed for safe refactoring.
+
+**Scope exclusion:** The ~30 cookie-cutter controller files (each following an identical Get → prepareContext → NewVaultXxxResource → Reconcile pattern) are explicitly excluded. That refactoring changes the operator's registration pattern and deserves its own architectural spike and epic.
+
+**Release-warning follow-up:** Community Operators PR `#9655` surfaced addressable bundle metadata warnings for missing examples, empty owned CRD descriptions, and missing `spec.minKubeVersion`. Those are included here as Stories R1.7-R1.9. The deprecated `operatorhub` validator warning and the FBC migration recommendation are explicitly out of scope for this epic.
+
+**Lint baseline (golangci-lint v1.64.8, 21 findings):**
+- 13x SA1029 (string context keys) → R1.1
+- 5x errcheck (unchecked error returns) → R1.2a
+- 1x SA1019 deprecated `rand.Seed` → R1.2b
+- 1x SA1019 deprecated `ioutil` → R1.3
+- 1x errcheck `AddToScheme` in decoder → R1.2a
+- R1.2c is the verification gate confirming all 21 are resolved
+
+**Key principles:**
+1. Correctness fixes first — bugs that can cause runtime panics or silent data corruption
+2. Lint compliance as a verified gate — `golangci-lint run --max-issues-per-linter=100 --max-same-issues=100 ./...` must exit 0 before structural refactoring
+3. Dependency modernization — drop deprecated/unmaintained packages in favor of stdlib
+4. Structural deduplication — reduce copy-paste surface to prevent future bugs
+5. Bundle metadata should validate cleanly for supported APIs before the next Community Operators release submission
+6. Every story must pass `make manifests generate fmt vet test` and `make integration` unless the story is metadata-only, in which case `make bundle` is the minimum required verification
+
+**Story ordering:**
+- R1.1 → R1.2a → R1.2b → R1.3 → R1.2c (lint gate) → R1.7 → R1.8 → R1.9 → R1.4 → R1.5 → R1.6
+- R1.2c depends on R1.1 + R1.2a + R1.2b + R1.3 all being complete
+- R1.6 (`interface{}` → `any`) must be merged last (touches every file)
+
+### Story R1.1: Correctness Fixes — Context Keys, PKI Bug, Webhook Loggers, Unsafe ToString
+
+As an operator developer,
+I want correctness bugs fixed that can cause runtime panics or silent data corruption,
+So that the operator is reliable before further refactoring.
+
+**Scope:** 4 bug categories across ~25 files.
+
+**Acceptance Criteria:**
+
+1. **Given** context values are passed using bare string keys (`"kubeClient"`, `"restConfig"`, `"vaultConnection"`, `"vaultClient"`) **When** replaced with typed context key constants and accessor functions **Then** a typo in a key name causes a compile error instead of a runtime panic
+2. **Given** `VaultPKIEngineEndpoint.CreateOrUpdateConfig` accepts a `configPath` argument but always writes to `GetConfigCrlPath()` **When** the write path is changed to use the `configPath` argument **Then** `CreateOrUpdateConfigUrls` writes to the URLs endpoint (not the CRL endpoint)
+3. **Given** `secretenginemount_webhook.go` `Default()` uses `authenginemountlog`, `databasesecretengineconfig_webhook.go` `Default()` uses `authenginemountlog`, and `azureauthengineconfig_webhook.go` `ValidateUpdate` uses `jwtoidcauthengineconfiglog` **When** each is replaced with the correct per-file logger variable **Then** log output attributes to the correct webhook
+4. **Given** `utils.ToString(name interface{})` panics if `name` is not a string **When** replaced with a safe conversion (type switch or `fmt.Sprint`) **Then** non-string values produce a string instead of a panic
+5. **Given** all changes **When** `make manifests generate fmt vet test` and `make integration` pass **Then** no regressions
+
+**Tasks:**
+- [ ] 1.1: Define typed context key type and constants in `api/v1alpha1/utils/` (e.g., `contextKey` type with `KubeClientKey`, `RestConfigKey`, `VaultConnectionKey`, `VaultClientKey`)
+- [ ] 1.2: Add context accessor functions (`KubeClientFromContext`, `RestConfigFromContext`, `VaultConnectionFromContext`, `VaultClientFromContext`) and setter functions
+- [ ] 1.3: Migrate all `context.WithValue(ctx, "...")` calls in `controllers/commons.go`, `controllers/vaultsecret_controller.go`, `controllers/vaultresourcecontroller/advanced-funcmap.go`, and test helpers
+- [ ] 1.4: Migrate all `context.Value("...")` calls in `api/v1alpha1/utils/` and `api/v1alpha1/*_types.go` files (~25 call sites)
+- [ ] 1.5: Fix PKI `CreateOrUpdateConfig` in `api/v1alpha1/utils/vautlpkiengineobject.go` to write to `configPath` instead of hardcoded `GetConfigCrlPath()`
+- [ ] 1.6: Fix logger variables in 3 webhook files
+- [ ] 1.7: Replace `ToString` with safe conversion
+- [ ] 1.8: Run `make manifests generate fmt vet test` and `make integration`
+
+### Story R1.2a: Fix Unchecked Error Returns (errcheck violations)
+
+As an operator developer,
+I want all error return values properly checked,
+So that silent failures don't go undetected (especially the production `ConfigureTLS` call).
+
+**Scope:** 5 errcheck violations across 4 files (1 production, 4 test infrastructure).
+
+**Lint findings (golangci-lint v1.64.8, errcheck linter):**
+
+| # | File | Line | Call | Severity |
+|---|------|------|------|----------|
+| 1 | `api/v1alpha1/utils/commons.go` | 181 | `config.ConfigureTLS(&tlsConfig)` | **Production** — TLS misconfiguration silently ignored |
+| 2 | `api/v1alpha1/utils/vaultobject_test.go` | 69 | `json.NewEncoder(w).Encode(resp)` | Test helper |
+| 3 | `api/v1alpha1/prepareinternalvalues_test_helpers_test.go` | 60 | `json.NewEncoder(w).Encode(resp)` | Test helper |
+| 4 | `api/v1alpha1/prepareinternalvalues_test_helpers_test.go` | 69 | `json.NewEncoder(w).Encode(resp)` | Test helper |
+| 5 | `controllers/controllertestutils/decoder.go` | 29 | `redhatcopv1alpha1.AddToScheme(scheme)` | Test infra init |
+
+**Acceptance Criteria:**
+
+1. **Given** `config.ConfigureTLS(&tlsConfig)` in `commons.go:181` **When** error is captured and handled **Then** TLS configuration failures are logged and returned to the caller instead of silently ignored
+2. **Given** `json.NewEncoder(w).Encode(resp)` in test HTTP handlers **When** error return is handled (e.g., `if err := ...; err != nil { t.Fatal(err) }` or `_ =` with comment) **Then** errcheck is satisfied
+3. **Given** `AddToScheme(scheme)` in `decoder.go` init **When** error is checked (e.g., `if err := ...; err != nil { panic(err) }`) **Then** errcheck is satisfied
+4. **Given** all fixes **When** `golangci-lint run --disable-all --enable=errcheck ./...` is run **Then** zero findings
+5. **Given** all fixes **When** `make test` and `make integration` pass **Then** no regressions
+
+**Tasks:**
+- [ ] 2a.1: Handle `ConfigureTLS` error in `commons.go` — return error to caller
+- [ ] 2a.2: Handle `json.Encode` errors in `vaultobject_test.go` and `prepareinternalvalues_test_helpers_test.go`
+- [ ] 2a.3: Handle `AddToScheme` error in `decoder.go` init (panic is acceptable in init)
+- [ ] 2a.4: Run `golangci-lint run --disable-all --enable=errcheck ./...` — zero findings
+- [ ] 2a.5: Run `make test` and `make integration`
+
+### Story R1.2b: Remove Deprecated `rand.Seed` (SA1019)
+
+As an operator developer,
+I want the deprecated `rand.Seed` call removed from the random secret password generator,
+So that the code uses the modern Go 1.20+ automatic seeding and the SA1019 lint finding is resolved.
+
+**Scope:** 1 file, 1 call site.
+
+**Lint finding (golangci-lint v1.64.8, staticcheck SA1019):**
+
+| File | Line | Call | Issue |
+|------|------|------|-------|
+| `api/v1alpha1/randomsecret_types.go` | 303 | `rand.Seed(time.Now().UnixNano())` | Deprecated since Go 1.20 — automatic seeding is the default |
+
+**Acceptance Criteria:**
+
+1. **Given** `rand.Seed(time.Now().UnixNano())` on line 303 of `randomsecret_types.go` **When** removed **Then** Go 1.20+ automatic seeding provides equivalent behavior
+2. **Given** the `time` import was only used for `rand.Seed` **When** removed **Then** unused import is also cleaned up (or retained if used elsewhere)
+3. **Given** `randStringBytes` still uses `rand.Intn` from `math/rand` **When** the seed call is removed **Then** password generation behavior is unchanged (Go auto-seeds from crypto-quality entropy)
+4. **Given** all fixes **When** `golangci-lint run --disable-all --enable=staticcheck ./...` shows zero SA1019 findings (excluding the `ioutil` finding addressed in R1.3) **Then** lint is clean
+5. **Given** all fixes **When** `make test` and existing `RandomSecret` unit/integration tests pass **Then** no regressions
+
+**Tasks:**
+- [ ] 2b.1: Remove `rand.Seed(time.Now().UnixNano())` from `randomsecret_types.go`
+- [ ] 2b.2: Clean up `time` import if no longer needed
+- [ ] 2b.3: Run `golangci-lint run --disable-all --enable=staticcheck ./...` — zero SA1019 (excluding ioutil, covered by R1.3)
+- [ ] 2b.4: Run `make test` and `make integration`
+
+### Story R1.2c: Lint Green Gate — Verify Full Lint Compliance
+
+As an operator developer,
+I want confirmation that ALL lint findings are resolved after Stories R1.1, R1.2a, R1.2b, and R1.3 are complete,
+So that we have a verified clean baseline before structural refactoring stories (R1.4–R1.6).
+
+**Scope:** Verification-only story. No new code changes expected — this is a gate.
+
+**Lint baseline (21 findings from `golangci-lint run --max-issues-per-linter=100 --max-same-issues=100 ./...`):**
+
+| Category | Count | Resolved by |
+|----------|-------|-------------|
+| SA1029 string context keys | 13 | R1.1 |
+| errcheck unchecked returns | 5 | R1.2a |
+| SA1019 deprecated `rand.Seed` | 1 | R1.2b |
+| SA1019 deprecated `ioutil` | 1 | R1.3 |
+| errcheck `AddToScheme` in decoder | 1 | R1.2a (or R1.4 if decoder rewrite happens first) |
+
+**Acceptance Criteria:**
+
+1. **Given** Stories R1.1, R1.2a, R1.2b, and R1.3 are all complete **When** `golangci-lint run --max-issues-per-linter=100 --max-same-issues=100 ./...` is run **Then** exit code 0, zero findings
+2. **Given** `go vet ./...` **When** run **Then** exit code 0
+3. **Given** `gofmt -l ./...` **When** run on non-generated files **Then** no output (all formatted)
+4. **Given** the full lint and vet pass **When** `make test` and `make integration` are run **Then** all tests pass
+
+**Tasks:**
+- [ ] 2c.1: Run full lint suite and confirm zero findings
+- [ ] 2c.2: Run `go vet ./...` and confirm clean
+- [ ] 2c.3: Run `make test` and `make integration`
+- [ ] 2c.4: Document the lint command in the epic as the ongoing quality gate for future stories
+
+### Story R1.3: Dependency Modernization — Drop Deprecated Packages & Replace Hand-Rolled Stdlib Equivalents
+
+As an operator developer,
+I want deprecated and unnecessary dependencies removed and hand-rolled utilities replaced with stdlib equivalents,
+So that the codebase uses maintained, idiomatic Go patterns.
+
+**Scope:** 6 changes across ~8 files.
+
+**Acceptance Criteria:**
+
+1. **Given** `github.com/pkg/errors` is used only in `advanced-funcmap.go` for `errors.Errorf(warn)` **When** replaced with `fmt.Errorf("%s", warn)` and the import removed **Then** the dependency can be dropped from `go.mod`
+2. **Given** `io/ioutil.ReadFile` in `controllertestutils/decoder.go` **When** replaced with `os.ReadFile` and the `ioutil` import removed **Then** deprecated API is eliminated
+3. **Given** `VaultSecret.isValid()` creates an empty `multierror.Error{}` and returns `nil` **When** simplified to `return nil` **Then** dead code is removed; if `randomsecret_types.go` is the only remaining `multierror` user, evaluate migration to `errors.Join()`
+4. **Given** `AddOrReplaceCondition` in `api/v1alpha1/utils/commons.go` duplicates `apimeta.SetStatusCondition` from `k8s.io/apimachinery/pkg/api/meta` **When** all call sites are migrated to the stdlib function **Then** the hand-rolled version can be removed
+5. **Given** `ValidateEitherFromVaultSecretOrFromSecret` and `ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret` in `commons.go` are near-duplicates **When** consolidated into a single function **Then** code duplication is eliminated
+6. **Given** filename `vautlpkiengineobject.go` contains a typo **When** renamed to `vaultpkiengineobject.go` **Then** naming is consistent
+7. **Given** all changes **When** `make manifests generate fmt vet test` and `make integration` pass **Then** no regressions
+
+**Tasks:**
+- [ ] 3.1: Replace `errors.Errorf` with `fmt.Errorf` in `advanced-funcmap.go`; remove `pkg/errors` import; run `go mod tidy`
+- [ ] 3.2: Replace `ioutil.ReadFile` with `os.ReadFile` in `decoder.go`; remove `ioutil` import
+- [ ] 3.3: Simplify `VaultSecret.isValid()` to `return nil`; evaluate `multierror` → `errors.Join` for `RandomSecret.isValid()`
+- [ ] 3.4: Migrate `AddOrReplaceCondition` call sites to `apimeta.SetStatusCondition`; remove hand-rolled function
+- [ ] 3.5: Consolidate the two `ValidateEither...` functions into one
+- [ ] 3.6: Rename `vautlpkiengineobject.go` → `vaultpkiengineobject.go`; update all imports
+- [ ] 3.7: Remove leftover PKI debug logging (`"Finaliter?"`, `"Try to:"`) in `vaultpkiengineresourcereconciler.go`
+- [ ] 3.8: Run `make manifests generate fmt vet test` and `make integration`
+
+### Story R1.4: Test Decoder Generics Rewrite
+
+As an operator developer,
+I want the 30+ identical `Get<Type>Instance` methods in `controllertestutils/decoder.go` replaced with a single generic function,
+So that adding a new CRD type no longer requires copying another decode method.
+
+**Scope:** `controllers/controllertestutils/decoder.go` (~577 lines → ~80 lines), plus all test files that call the typed methods.
+
+**Acceptance Criteria:**
+
+1. **Given** a generic decode function `DecodeInstance[T runtime.Object]` **When** called with any CRD type and a valid YAML file **Then** it returns the typed instance
+2. **Given** a YAML file with a mismatched kind **When** `DecodeInstance` is called **Then** it returns `errDecode`
+3. **Given** all test call sites migrated from `d.GetPolicyInstance(f)` to `DecodeInstance[*Policy](d, f)` (or equivalent) **When** `make test` is run **Then** all existing tests pass
+4. **Given** the rewrite **When** line count is compared **Then** ~500 lines of duplicate code are eliminated
+
+**Tasks:**
+- [ ] 4.1: Implement generic `DecodeInstance[T]` function in `decoder.go`
+- [ ] 4.2: Remove all 30+ `Get<Type>Instance` methods
+- [ ] 4.3: Update all test call sites across `controllers/*_test.go` files
+- [ ] 4.4: Run `make test` — all unit and envtest tests pass
+- [ ] 4.5: Run `make integration` — all integration tests pass
+
+### Story R1.5: Reconciler Struct Deduplication
+
+As an operator developer,
+I want the duplicated `Reconcile()` and `manageCleanUpLogic()` methods across the 4 reconciler types extracted into a shared skeleton,
+So that the finalizer/deletion/outcome flow is defined once and bug fixes apply everywhere.
+
+**Scope:** `controllers/vaultresourcecontroller/` — 4 files: `vaultresourcereconciler.go`, `vaultengineresourcereconciler.go`, `vaultauditresourcereconciler.go`, `vaultpkiengineresourcereconciler.go`.
+
+**Acceptance Criteria:**
+
+1. **Given** the deletion flow (check timestamp → check finalizer → cleanup → remove finalizer → update) is identical across all 4 types **When** extracted into a shared helper accepting cleanup and reconcile functions **Then** the flow is defined once
+2. **Given** `manageCleanUpLogic` is identical except for the endpoint's `DeleteIfExists` call **When** parameterized on a `deleteFunc` **Then** cleanup logic is defined once
+3. **Given** all 4 reconciler types use the shared skeleton **When** each type's `Reconcile()` method is compared **Then** only the type-specific `manageReconcileLogic` and endpoint constructor differ
+4. **Given** all changes **When** `make test` and `make integration` pass **Then** no regressions
+
+**Tasks:**
+- [ ] 5.1: Design the shared reconcile skeleton interface (e.g., `reconcileWithEndpoint(ctx, instance, cleanupFn, reconcileFn)`)
+- [ ] 5.2: Extract `manageCleanUpLogic` into a shared function parameterized on `deleteFunc`
+- [ ] 5.3: Extract the `Reconcile()` deletion/finalizer/outcome skeleton into a shared function
+- [ ] 5.4: Refactor `VaultResource`, `VaultEngineResource`, `VaultAuditResource`, `VaultPKIEngineResource` to use the shared skeleton
+- [ ] 5.5: Run `make test` and `make integration`
+
+### Story R1.6: `interface{}` to `any` Sweep
+
+As an operator developer,
+I want all occurrences of `interface{}` replaced with the `any` alias (Go 1.18+),
+So that the codebase uses idiomatic modern Go.
+
+**Scope:** All `.go` files in `api/` and `controllers/` (hundreds of occurrences). Mechanical rename with no behavioral change.
+
+**Acceptance Criteria:**
+
+1. **Given** the codebase uses Go 1.22 **When** all `interface{}` occurrences are replaced with `any` **Then** the code compiles identically
+2. **Given** the rename is purely mechanical **When** `make test` is run **Then** all tests pass unchanged
+3. **Given** no `interface{}` remains in non-generated files **When** searched **Then** zero matches (excluding `zz_generated.deepcopy.go` which is auto-generated)
+
+**Tasks:**
+- [ ] 6.1: Run mechanical `interface{}` → `any` replacement across `api/v1alpha1/` (excluding `zz_generated.deepcopy.go`)
+- [ ] 6.2: Run mechanical replacement across `controllers/`
+- [ ] 6.3: Run `make manifests generate fmt vet test`
+- [ ] 6.4: Run `make integration`
+
+**Dev notes:** This story should be the **last** one merged in the epic — it touches nearly every file and will conflict with anything else in flight. Schedule it when the branch is quiet.
+
+### Story R1.7: Bundle Example Annotations for `Entity` and `EntityAlias`
+
+As an operator maintainer,
+I want the bundle metadata to include valid examples for the `Entity` and `EntityAlias` APIs,
+So that Community Operators validation no longer warns that those provided APIs lack example annotations.
+
+**Scope:** 2 API kinds, sample manifests, and bundle metadata generation.
+
+**Acceptance Criteria:**
+
+1. **Given** Community Operators validation warns that `redhatcop.redhat.io/v1alpha1, Kind=Entity` and `Kind=EntityAlias` do not have example annotations **When** the example source-of-truth is updated and the bundle is regenerated **Then** the generated CSV contains valid examples for both APIs
+2. **Given** the repository already contains `config/samples/redhatcop_v1alpha1_entity.yaml` and `config/samples/redhatcop_v1alpha1_entityalias.yaml` **When** those examples are normalized to current schema expectations **Then** they are suitable for reuse in bundle metadata
+3. **Given** `make bundle` runs successfully **When** `operator-sdk bundle validate ./bundle` is executed by the target **Then** the "provided API should have an example annotation" warnings for `Entity` and `EntityAlias` are no longer emitted
+4. **Given** the examples are added to bundle metadata **When** future CRD schema changes happen **Then** the source file for those examples is obvious and documented in the story notes or implementation comments
+
+**Tasks:**
+- [ ] 7.1: Confirm how this repo wants to source bundle examples (`alm-examples` or equivalent generated bundle metadata)
+- [ ] 7.2: Update `config/samples/redhatcop_v1alpha1_entity.yaml` to be a valid minimal-but-realistic example for bundle consumption
+- [ ] 7.3: Update `config/samples/redhatcop_v1alpha1_entityalias.yaml` to be a valid minimal-but-realistic example for bundle consumption
+- [ ] 7.4: Regenerate bundle metadata with `make bundle`
+- [ ] 7.5: Verify the bundle validate step no longer warns about missing examples for `Entity` and `EntityAlias`
+
+### Story R1.8: Populate Owned CRD Descriptions for Community Operators Bundle
+
+As an operator maintainer,
+I want the generated CSV to contain non-empty owned CRD descriptions for the flagged APIs,
+So that the Community Operators bundle presents complete metadata instead of warnings.
+
+**Scope:** `AzureSecretEngineConfig`, `Entity`, and `EntityAlias` owned CRD metadata in the generated CSV.
+
+**Acceptance Criteria:**
+
+1. **Given** Community Operators validation warns that owned CRDs `azuresecretengineconfigs.redhatcop.redhat.io`, `entities.redhatcop.redhat.io`, and `entityaliases.redhatcop.redhat.io` have empty descriptions **When** the description source-of-truth is fixed and the bundle is regenerated **Then** each owned CRD entry in the CSV contains a non-empty, human-readable description
+2. **Given** CRD descriptions can come from API type comments, markers, or CSV base metadata depending on generator behavior **When** the fix is implemented **Then** the project uses a stable source-of-truth rather than hand-editing generated bundle output
+3. **Given** `make bundle` is run after the metadata fix **When** bundle validation completes **Then** those empty-description warnings are no longer emitted
+4. **Given** the affected APIs already have sample and CRD material in the repo **When** descriptions are updated **Then** the wording matches the CRD purpose and does not regress existing generated manifests
+
+**Tasks:**
+- [ ] 8.1: Trace where owned CRD descriptions in the CSV are sourced for this repo (`api/v1alpha1/*_types.go` comments vs `config/manifests/bases/`)
+- [ ] 8.2: Add or correct description source text for `AzureSecretEngineConfig`
+- [ ] 8.3: Add or correct description source text for `Entity`
+- [ ] 8.4: Add or correct description source text for `EntityAlias`
+- [ ] 8.5: Regenerate bundle metadata with `make bundle`
+- [ ] 8.6: Verify the bundle validate step no longer warns about empty owned CRD descriptions for the three flagged APIs
+
+### Story R1.9: Declare CSV `minKubeVersion`
+
+As an operator maintainer,
+I want the generated CSV to declare an explicit minimum supported Kubernetes version,
+So that release metadata reflects the tested support floor instead of implying support for every possible cluster version.
+
+**Scope:** ClusterServiceVersion metadata only.
+
+**Acceptance Criteria:**
+
+1. **Given** Community Operators validation warns that `csv.Spec.minKubeVersion` is not informed **When** a support floor is selected from the project's real test and toolchain constraints **Then** the CSV declares an explicit `spec.minKubeVersion`
+2. **Given** the project currently tests against a concrete envtest/Kubernetes toolchain baseline **When** the chosen minimum version is documented in the story implementation **Then** future maintainers can understand why that floor was selected
+3. **Given** `config/manifests/bases/vault-config-operator.clusterserviceversion.yaml` is the CSV base **When** bundle metadata is regenerated **Then** the generated bundle preserves the declared `minKubeVersion`
+4. **Given** `make bundle` runs after the update **When** bundle validation completes **Then** the missing `minKubeVersion` warning is no longer emitted
+
+**Tasks:**
+- [ ] 9.1: Determine the supported Kubernetes/OpenShift floor from current test/toolchain assumptions and release targets
+- [ ] 9.2: Add `spec.minKubeVersion` to `config/manifests/bases/vault-config-operator.clusterserviceversion.yaml`
+- [ ] 9.3: Regenerate bundle metadata with `make bundle`
+- [ ] 9.4: Verify the bundle validate step no longer warns about missing `csv.Spec.minKubeVersion`
+
+---
 ---
 
 # Phase 1.5: Documentation Improvement
@@ -1338,6 +1653,26 @@ So that defaulting semantics are consistent with the rest of the codebase.
 - [ ] 3.3: Refactor `kubernetessecretengineconfig_types.go` (1 field)
 - [ ] 3.4: Refactor `kubernetessecretenginerole_types.go` (3 fields)
 - [ ] 3.5: Run `make manifests generate fmt vet test` and `make integration`
+
+### Story 7.5.3a: Unstructured Fixture Creation for CRD Defaulting
+
+As an operator developer,
+I want integration test fixtures to be created using unstructured objects that preserve YAML field semantics,
+So that CRD server-side defaulting applies correctly and test fixtures don't need explicit values for defaulted fields.
+
+**Scope:** `controllers/controllertestutils/decoder.go`, all integration test files, 14+ YAML test fixtures.
+
+**Acceptance Criteria:**
+
+1. **Given** a YAML fixture omitting fields with `+kubebuilder:default` **When** created via `CreateFromYAML` **Then** CRD defaults apply and validation passes
+2. **Given** all integration tests use `CreateFromYAML` **When** `make integration` runs **Then** no regressions
+3. **Given** explicit default values added in Stories 7.5.1–7.5.3 **When** reverted from fixtures **Then** tests still pass via CRD defaulting
+
+**Tasks:**
+- [ ] 3a.1: Add `CreateFromYAML` method to decoder using `unstructured.Unstructured`
+- [ ] 3a.2: Refactor all integration tests to use `CreateFromYAML` + typed Get pattern
+- [ ] 3a.3: Revert explicit default values from fixtures added in Stories 7.5.1, 7.5.2, 7.5.3
+- [ ] 3a.4: Run `make integration` — full suite must pass
 
 ### Story 7.5.4: Azure & GCP Auth/Secret Engine Types — Annotation Refactor
 

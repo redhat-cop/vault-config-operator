@@ -119,13 +119,11 @@ type AzureRole struct {
 	// The incremental lifetime for generated tokens.
 	//This current value of this will be referenced at renewal time.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	TokenTTL string `json:"tokenTTL,omitempty"`
 
 	// The maximum lifetime for generated tokens.
 	// This current value of this will be referenced at renewal time.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	TokenMaxTTL string `json:"tokenMaxTTL,omitempty"`
 
 	// List of token policies to encode onto generated tokens.
@@ -153,31 +151,29 @@ type AzureRole struct {
 	// If set, will encode an explicit max TTL onto the token.
 	// This is a hard cap even if token_ttl and token_max_ttl would otherwise allow a renewal.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty"`
 
 	// If set, the default policy will not be set on generated tokens; otherwise it will be added to the policies set in token_policies.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=false
-	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy"`
+	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty"`
 
 	// The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited.
 	// If you require the token to have the ability to create child tokens, you will need to set this value to 0.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=0
-	TokenNumUses int64 `json:"tokenNumUses"`
+	// +kubebuilder:validation:Minimum=0
+	TokenNumUses int64 `json:"tokenNumUses,omitempty"`
 
 	// The maximum allowed period value when a periodic token is requested from this role.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=0
-	TokenPeriod int64 `json:"tokenPeriod"`
+	// +kubebuilder:validation:Minimum=0
+	TokenPeriod int64 `json:"tokenPeriod,omitempty"`
 
 	// The type of token that should be generated.
 	// Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens).
 	// For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time.
 	// For machine based authentication cases, you should use batch type tokens.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
+	// +kubebuilder:validation:Enum={"service","batch","default","default-service","default-batch"}
 	TokenType string `json:"tokenType,omitempty"`
 }
 

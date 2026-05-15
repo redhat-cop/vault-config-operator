@@ -62,12 +62,13 @@ type GitHubSecretEngineConfigSpec struct {
 type GHConfig struct {
 	// ApplicationID the Application ID of the GitHub App.
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Minimum=1
 	ApplicationID int64 `json:"applicationID,omitempty"`
 
 	// GitHubAPIBaseURL the base URL for API requests (defaults to the public GitHub API).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="https://api.github.com"
-	GitHubAPIBaseURL string `json:"gitHubAPIBaseURL,omitempty"`
+	GitHubAPIBaseURL string `json:"gitHubAPIBaseURL"`
 
 	retrievedSSHKey string `json:"-"`
 }

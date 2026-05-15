@@ -147,8 +147,11 @@ This rule applies to all current and future integration tests. When adding a new
 
 #### Integration Test Pattern
 - Uses Ginkgo v2 `Describe`/`Context`/`It` BDD blocks with dot-imported `gomega` matchers.
-- Test fixtures are YAML files in `test/` directory, loaded via `controllertestutils.decoder.Get<TypeName>Instance("../test/<path>.yaml")`.
-- The decoder (`controllertestutils/decoder.go`) deserializes YAML files into typed CRD objects. Each type needs a `Get<TypeName>Instance` method added to the decoder.
+- Test fixtures are YAML files in `test/` directory.
+- **Fixture creation** uses `decoder.CreateFromYAML(ctx, client, "../test/<path>.yaml", namespace)` which decodes YAML into an `unstructured.Unstructured` object (preserving only YAML-present fields) and creates it via the API server. This allows CRD server-side defaulting to apply for absent fields. The method returns the object name.
+- **Typed references** after creation are obtained via a subsequent `client.Get` into a typed struct (e.g., `&redhatcopv1alpha1.KubernetesAuthEngineRole{}`). The typed object will have server-applied defaults populated.
+- **Exception:** when a test must override `metadata.name` before creation (e.g., the drift-detection "disabled" test reuses a fixture with a different name), the old typed pattern (`decoder.Get<TypeName>Instance` + mutate + typed `Create`) is acceptable.
+- The typed `Get<TypeName>Instance` decoder methods still exist and are used for delete operations and for the exception case above.
 - Reconcile success is verified by polling the CR status for `ReconcileSuccessful` condition with `Eventually(func() bool {...}, timeout, interval).Should(BeTrue())`.
 - Standard timeout: `120s`, poll interval: `2s`.
 - Tests create the resource, wait for successful reconcile, then delete and wait for deletion.

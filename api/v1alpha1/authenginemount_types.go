@@ -112,7 +112,7 @@ type AuthMountConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"unauth","hidden"}
 	// +kubebuilder:default:="hidden"
-	ListingVisibility string `json:"listingVisibility,omitempty"`
+	ListingVisibility string `json:"listingVisibility"`
 
 	// PassthroughRequestHeaders list of headers to whitelist and pass from the request to the plugin.
 	// +kubebuilder:validation:Optional
@@ -133,6 +133,7 @@ type AuthMountConfig struct {
 
 	// TokenType undocumented
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum={"service","batch","default","default-service","default-batch"}
 	TokenType string `json:"tokenType,omitempty"`
 
 	// Description another description...

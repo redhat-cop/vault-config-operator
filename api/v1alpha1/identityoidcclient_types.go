@@ -50,7 +50,7 @@ type IdentityOIDCClientConfig struct {
 	// This cannot be modified after creation. If not supplied, defaults to the built-in default key.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:="default"
-	Key string `json:"key,omitempty"`
+	Key string `json:"key"`
 
 	// RedirectURIs is the list of redirection URI values used by the client.
 	// One of these values must exactly match the redirect_uri parameter value used in each authentication request.
@@ -71,19 +71,19 @@ type IdentityOIDCClientConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"confidential","public"}
 	// +kubebuilder:default:="confidential"
-	ClientType string `json:"clientType,omitempty"`
+	ClientType string `json:"clientType"`
 
 	// IDTokenTTL is the time-to-live for ID tokens obtained by the client.
 	// Accepts duration format strings. The value should be less than the verification_ttl on the key.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:="24h"
-	IDTokenTTL string `json:"idTokenTTL,omitempty"`
+	IDTokenTTL string `json:"idTokenTTL"`
 
 	// AccessTokenTTL is the time-to-live for access tokens obtained by the client.
 	// Accepts duration format strings.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:="24h"
-	AccessTokenTTL string `json:"accessTokenTTL,omitempty"`
+	AccessTokenTTL string `json:"accessTokenTTL"`
 }
 
 // IdentityOIDCClientStatus defines the observed state of IdentityOIDCClient

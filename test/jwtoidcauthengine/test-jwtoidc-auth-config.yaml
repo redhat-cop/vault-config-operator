@@ -9,6 +9,7 @@ spec:
   path: test-jwt-oidc-auth/test-joaec-mount
   OIDCDiscoveryURL: "http://keycloak.keycloak.svc.cluster.local:8080/realms/test-realm"
   OIDCClientID: "vault-oidc"
+  namespaceInState: true
   OIDCCredentials:
     secret:
       name: test-oidc-creds

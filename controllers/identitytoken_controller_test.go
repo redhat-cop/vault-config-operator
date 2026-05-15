@@ -41,11 +41,10 @@ var _ = Describe("Identity Token controllers", Ordered, func() {
 		It("Should configure the OIDC issuer in Vault", func() {
 
 			By("Loading and creating the IdentityTokenConfig fixture")
-			var err error
-			configInstance, err = decoder.GetIdentityTokenConfigInstance("../test/identitytoken/identitytokenconfig.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/identitytoken/identitytokenconfig.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			configInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, configInstance)).Should(Succeed())
+			configInstance = &redhatcopv1alpha1.IdentityTokenConfig{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, configInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: configInstance.Name, Namespace: configInstance.Namespace}
 			created := &redhatcopv1alpha1.IdentityTokenConfig{}
@@ -76,11 +75,10 @@ var _ = Describe("Identity Token controllers", Ordered, func() {
 		It("Should create the key in Vault with correct settings", func() {
 
 			By("Loading and creating the IdentityTokenKey fixture")
-			var err error
-			keyInstance, err = decoder.GetIdentityTokenKeyInstance("../test/identitytoken/identitytokenkey.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/identitytoken/identitytokenkey.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			keyInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, keyInstance)).Should(Succeed())
+			keyInstance = &redhatcopv1alpha1.IdentityTokenKey{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, keyInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: keyInstance.Name, Namespace: keyInstance.Namespace}
 			created := &redhatcopv1alpha1.IdentityTokenKey{}
@@ -118,11 +116,10 @@ var _ = Describe("Identity Token controllers", Ordered, func() {
 		It("Should create the role in Vault referencing the key", func() {
 
 			By("Loading and creating the IdentityTokenRole fixture")
-			var err error
-			roleInstance, err = decoder.GetIdentityTokenRoleInstance("../test/identitytoken/identitytokenrole.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/identitytoken/identitytokenrole.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			roleInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, roleInstance)).Should(Succeed())
+			roleInstance = &redhatcopv1alpha1.IdentityTokenRole{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, roleInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: roleInstance.Name, Namespace: roleInstance.Namespace}
 			created := &redhatcopv1alpha1.IdentityTokenRole{}

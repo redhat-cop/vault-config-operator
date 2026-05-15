@@ -7,4 +7,6 @@ spec:
     path: kubernetes
     role: policy-admin
   type: oidc
+  config:
+    listingVisibility: "hidden"
   path: test-jwt-oidc-auth

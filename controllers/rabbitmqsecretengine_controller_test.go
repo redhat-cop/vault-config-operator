@@ -59,11 +59,10 @@ var _ = Describe("RabbitMQSecretEngine controllers", Ordered, func() {
 			Expect(k8sIntegrationClient.Create(ctx, rmqSecret)).Should(Succeed())
 
 			By("Loading and creating the SecretEngineMount fixture")
-			var err error
-			mountInstance, err = decoder.GetSecretEngineMountInstance("../test/rabbitmqsecretengine/test-rmq-mount.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/rabbitmqsecretengine/test-rmq-mount.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			mountInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, mountInstance)).Should(Succeed())
+			mountInstance = &redhatcopv1alpha1.SecretEngineMount{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, mountInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: mountInstance.Name, Namespace: mountInstance.Namespace}
 			created := &redhatcopv1alpha1.SecretEngineMount{}
@@ -95,11 +94,10 @@ var _ = Describe("RabbitMQSecretEngine controllers", Ordered, func() {
 		It("Should write the RabbitMQ connection and lease config to Vault", func() {
 
 			By("Loading and creating the RabbitMQSecretEngineConfig fixture")
-			var err error
-			configInstance, err = decoder.GetRabbitMQSecretEngineConfigInstance("../test/rabbitmqsecretengine/test-rmq-config.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/rabbitmqsecretengine/test-rmq-config.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			configInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, configInstance)).Should(Succeed())
+			configInstance = &redhatcopv1alpha1.RabbitMQSecretEngineConfig{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, configInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: configInstance.Name, Namespace: configInstance.Namespace}
 			created := &redhatcopv1alpha1.RabbitMQSecretEngineConfig{}
@@ -141,11 +139,10 @@ var _ = Describe("RabbitMQSecretEngine controllers", Ordered, func() {
 		It("Should create the role in Vault with correct settings", func() {
 
 			By("Loading and creating the RabbitMQSecretEngineRole fixture")
-			var err error
-			roleInstance, err = decoder.GetRabbitMQSecretEngineRoleInstance("../test/rabbitmqsecretengine/test-rmq-role.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/rabbitmqsecretengine/test-rmq-role.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			roleInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, roleInstance)).Should(Succeed())
+			roleInstance = &redhatcopv1alpha1.RabbitMQSecretEngineRole{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, roleInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: roleInstance.Name, Namespace: roleInstance.Namespace}
 			created := &redhatcopv1alpha1.RabbitMQSecretEngineRole{}

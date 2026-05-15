@@ -111,12 +111,10 @@ type KubeSERole struct {
 
 	// DeafulTTL Specifies the TTL for the leases associated with this role. Accepts time suffixed strings ("1h") or an integer number of seconds. Defaults to system/engine default TTL time.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default="0s"
 	DefaultTTL metav1.Duration `json:"defaultTTL,omitempty"`
 
 	// MaxTTL Specifies the maximum TTL for the leases associated with this role. Accepts time suffixed strings ("1h") or an integer number of seconds. Defaults to system/mount default TTL time; this value is allowed to be less than the mount max TTL (or, if not set, the system max TTL), but it is not allowed to be longer. See also The TTL General Case.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default="0s"
 	MaxTTL metav1.Duration `json:"maxTTL,omitempty"`
 
 	// DefaultAudiences The default intended audiences for generated Kubernetes tokens, specified by a comma separated string. e.g "custom-audience-0,custom-audience-1".
@@ -136,7 +134,7 @@ type KubeSERole struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="Role"
 	// +kubebuilder:validation:Enum={"Role","ClusterRole"}
-	KubernetesRoleType string `json:"kubernetesRoleType,omitempty"`
+	KubernetesRoleType string `json:"kubernetesRoleType"`
 
 	// GenerateRoleRules The Role or ClusterRole rules to use when generating a role. Accepts either JSON or YAML formatted rules. If set, the entire chain of Kubernetes objects will be generated when credentials are requested. The value should be a rules key with an array of PolicyRule objects, as illustrated in the Kubernetes RBAC documentation and Sample Payload 3 below.
 	// +kubebuilder:validation:Optional

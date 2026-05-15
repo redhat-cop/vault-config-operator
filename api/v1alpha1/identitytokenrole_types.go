@@ -63,7 +63,7 @@ type IdentityTokenRoleConfig struct {
 	// Uses duration format strings.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:="24h"
-	TTL string `json:"ttl,omitempty"`
+	TTL string `json:"ttl"`
 }
 
 // IdentityTokenRoleStatus defines the observed state of IdentityTokenRole

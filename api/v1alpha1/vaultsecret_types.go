@@ -37,12 +37,13 @@ type VaultSecretSpec struct {
 	// The default is 90, meaning the secret would refresh after 90% of the time has passed from the vault secret's lease duration.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=90
-	RefreshThreshold int `json:"refreshThreshold,omitempty"`
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=100
+	RefreshThreshold int `json:"refreshThreshold"`
 	// SyncOnResourceChange if set to true, the operator will immediately resync the secret from Vault
 	// whenever the VaultSecret spec or metadata changes, bypassing the time-based refresh gate.
 	// By default this is false, meaning changes to the resource will only take effect at the next scheduled refresh.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=false
 	SyncOnResourceChange bool `json:"syncOnResourceChange,omitempty"`
 	// VaultSecretDefinitions are the secrets in Vault.
 	// +kubebuilder:validation:Required
@@ -125,13 +126,13 @@ type VaultSecretDefinition struct {
 	// Path is the path of the secret.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=kubernetes
-	Path vaultutils.Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path"`
 
 	// RequestType the type of request needed to retrieve a secret. Normally a GET, but some secret engnes require a POST.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=GET
 	// +kubebuilder:validation:Enum={"GET","POST"}
-	RequestType string `json:"requestType,omitempty"`
+	RequestType string `json:"requestType"`
 
 	// RequestPayload for POST type of requests, this field contains the payload of the request. Not used for GET requests.
 	// +kubebuilder:validation:Optional

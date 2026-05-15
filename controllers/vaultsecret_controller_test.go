@@ -30,10 +30,10 @@ var _ = Describe("VaultSecret controller", func() {
 
 			By("Creating a new PasswordPolicy")
 
-			passwordPolicySimplePasswordInstance, err := decoder.GetPasswordPolicyInstance("../test/password-policy.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/password-policy.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			passwordPolicySimplePasswordInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, passwordPolicySimplePasswordInstance)).Should(Succeed())
+			passwordPolicySimplePasswordInstance := &redhatcopv1alpha1.PasswordPolicy{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, passwordPolicySimplePasswordInstance)).Should(Succeed())
 
 			pplookupKey := types.NamespacedName{Name: passwordPolicySimplePasswordInstance.Name, Namespace: passwordPolicySimplePasswordInstance.Namespace}
 			ppCreated := &redhatcopv1alpha1.PasswordPolicy{}
@@ -55,10 +55,10 @@ var _ = Describe("VaultSecret controller", func() {
 
 			By("Creating new Policies")
 
-			policyKVEngineAdminInstance, err := decoder.GetPolicyInstance("../test/kv-engine-admin-policy.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/kv-engine-admin-policy.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			policyKVEngineAdminInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, policyKVEngineAdminInstance)).Should(Succeed())
+			policyKVEngineAdminInstance := &redhatcopv1alpha1.Policy{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, policyKVEngineAdminInstance)).Should(Succeed())
 
 			pLookupKey := types.NamespacedName{Name: policyKVEngineAdminInstance.Name, Namespace: policyKVEngineAdminInstance.Namespace}
 			pCreated := &redhatcopv1alpha1.Policy{}
@@ -78,10 +78,10 @@ var _ = Describe("VaultSecret controller", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
-			policySecretWriterInstance, err := decoder.GetPolicyInstance("../test/secret-writer-policy.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/secret-writer-policy.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			policySecretWriterInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, policySecretWriterInstance)).Should(Succeed())
+			policySecretWriterInstance := &redhatcopv1alpha1.Policy{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, policySecretWriterInstance)).Should(Succeed())
 
 			pLookupKey = types.NamespacedName{Name: policySecretWriterInstance.Name, Namespace: policySecretWriterInstance.Namespace}
 			pCreated = &redhatcopv1alpha1.Policy{}
@@ -101,10 +101,10 @@ var _ = Describe("VaultSecret controller", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
-			policySecretReaderInstance, err := decoder.GetPolicyInstance("../test/vaultsecret/policy-secret-reader.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/vaultsecret/policy-secret-reader.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			policySecretReaderInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, policySecretReaderInstance)).Should(Succeed())
+			policySecretReaderInstance := &redhatcopv1alpha1.Policy{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, policySecretReaderInstance)).Should(Succeed())
 
 			pLookupKey = types.NamespacedName{Name: policySecretReaderInstance.Name, Namespace: policySecretReaderInstance.Namespace}
 			pCreated = &redhatcopv1alpha1.Policy{}
@@ -126,10 +126,10 @@ var _ = Describe("VaultSecret controller", func() {
 
 			By("Creating new KubernetesAuthEngineRoles")
 
-			kaerKVEngineAdminInstance, err := decoder.GetKubernetesAuthEngineRoleInstance("../test/kv-engine-admin-role.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/kv-engine-admin-role.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			kaerKVEngineAdminInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, kaerKVEngineAdminInstance)).Should(Succeed())
+			kaerKVEngineAdminInstance := &redhatcopv1alpha1.KubernetesAuthEngineRole{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, kaerKVEngineAdminInstance)).Should(Succeed())
 
 			kaerLookupKey := types.NamespacedName{Name: kaerKVEngineAdminInstance.Name, Namespace: kaerKVEngineAdminInstance.Namespace}
 			kaerCreated := &redhatcopv1alpha1.KubernetesAuthEngineRole{}
@@ -149,10 +149,10 @@ var _ = Describe("VaultSecret controller", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
-			kaerSecretWriterInstance, err := decoder.GetKubernetesAuthEngineRoleInstance("../test/secret-writer-role.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/secret-writer-role.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			kaerSecretWriterInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, kaerSecretWriterInstance)).Should(Succeed())
+			kaerSecretWriterInstance := &redhatcopv1alpha1.KubernetesAuthEngineRole{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, kaerSecretWriterInstance)).Should(Succeed())
 
 			kaerLookupKey = types.NamespacedName{Name: kaerSecretWriterInstance.Name, Namespace: kaerSecretWriterInstance.Namespace}
 			kaerCreated = &redhatcopv1alpha1.KubernetesAuthEngineRole{}
@@ -172,10 +172,10 @@ var _ = Describe("VaultSecret controller", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
-			kaerSecretReaderInstance, err := decoder.GetKubernetesAuthEngineRoleInstance("../test/vaultsecret/kubernetesauthenginerole-secret-reader.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/vaultsecret/kubernetesauthenginerole-secret-reader.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			kaerSecretReaderInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, kaerSecretReaderInstance)).Should(Succeed())
+			kaerSecretReaderInstance := &redhatcopv1alpha1.KubernetesAuthEngineRole{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, kaerSecretReaderInstance)).Should(Succeed())
 
 			kaerLookupKey = types.NamespacedName{Name: kaerSecretReaderInstance.Name, Namespace: kaerSecretReaderInstance.Namespace}
 			kaerCreated = &redhatcopv1alpha1.KubernetesAuthEngineRole{}
@@ -197,10 +197,10 @@ var _ = Describe("VaultSecret controller", func() {
 
 			By("Creating a new SecretEngineMount")
 
-			semInstance, err := decoder.GetSecretEngineMountInstance("../test/kv-secret-engine.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/kv-secret-engine.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			semInstance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, semInstance)).Should(Succeed())
+			semInstance := &redhatcopv1alpha1.SecretEngineMount{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, semInstance)).Should(Succeed())
 
 			semLookupKey := types.NamespacedName{Name: semInstance.Name, Namespace: semInstance.Namespace}
 			semCreated := &redhatcopv1alpha1.SecretEngineMount{}
@@ -222,10 +222,10 @@ var _ = Describe("VaultSecret controller", func() {
 
 			By("Creating new RandomSecrets")
 
-			rsInstance, err := decoder.GetRandomSecretInstance("../test/random-secret.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/random-secret.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			rsInstance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, rsInstance)).Should(Succeed())
+			rsInstance := &redhatcopv1alpha1.RandomSecret{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, rsInstance)).Should(Succeed())
 
 			rslookupKey := types.NamespacedName{Name: rsInstance.Name, Namespace: rsInstance.Namespace}
 			rsCreated := &redhatcopv1alpha1.RandomSecret{}
@@ -245,10 +245,10 @@ var _ = Describe("VaultSecret controller", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
-			rsInstanceAnotherPassword, err := decoder.GetRandomSecretInstance("../test/vaultsecret/randomsecret-another-password.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/vaultsecret/randomsecret-another-password.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			rsInstanceAnotherPassword.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, rsInstanceAnotherPassword)).Should(Succeed())
+			rsInstanceAnotherPassword := &redhatcopv1alpha1.RandomSecret{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, rsInstanceAnotherPassword)).Should(Succeed())
 
 			rslookupKey = types.NamespacedName{Name: rsInstanceAnotherPassword.Name, Namespace: rsInstanceAnotherPassword.Namespace}
 			rsCreated = &redhatcopv1alpha1.RandomSecret{}
@@ -270,10 +270,10 @@ var _ = Describe("VaultSecret controller", func() {
 
 			By("Creating a new VaultSecret")
 
-			instance, err := decoder.GetVaultSecretInstance("../test/vaultsecret/vaultsecret-randomsecret.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/vaultsecret/vaultsecret-randomsecret.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			instance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, instance)).Should(Succeed())
+			instance := &redhatcopv1alpha1.VaultSecret{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, instance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}
 			created := &redhatcopv1alpha1.VaultSecret{}

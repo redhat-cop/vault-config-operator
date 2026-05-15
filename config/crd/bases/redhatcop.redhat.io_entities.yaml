@@ -127,7 +127,6 @@ spec:
                     type: string
                 type: object
               disabled:
-                default: false
                 description: Disabled Whether the entity is disabled. Disabled entities'
                   associated tokens cannot be used, but are not revoked.
                 type: boolean

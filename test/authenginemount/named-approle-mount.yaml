@@ -8,4 +8,6 @@ spec:
     role: policy-admin
   name: test-aem-named
   type: approle
+  config:
+    listingVisibility: "hidden"
   path: test-auth-mount

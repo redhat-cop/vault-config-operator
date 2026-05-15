@@ -44,20 +44,28 @@ spec:
                 default: tls12
                 description: TLSMaxVersion Maximum TLS version to use. Accepted values
                   are tls10, tls11, tls12 or tls13
+                enum:
+                - tls10
+                - tls11
+                - tls12
+                - tls13
                 type: string
               TLSMinVersion:
                 default: tls12
                 description: TLSMinVersion Minimum TLS version to use. Accepted values
                   are tls10, tls11, tls12 or tls13
+                enum:
+                - tls10
+                - tls11
+                - tls12
+                - tls13
                 type: string
               UPNDomain:
-                default: ""
                 description: |-
                   UPNDomain  The userPrincipalDomain used to construct the UPN string for the authenticating user.
                   The constructed UPN will appear as [username]@UPNDomain. Example: example.com, which will cause vault to bind as username@example.com
                 type: string
               anonymousGroupSearch:
-                default: false
                 description: 'AnonymousGroupSearch Use anonymous binds when performing
                   LDAP group searches (note: even when true, the initial credentials
                   will still be used for the initial connection test).'
@@ -152,30 +160,25 @@ spec:
                     type: object
                 type: object
               bindDN:
-                default: ""
                 description: |-
                   BindDN - Username used to connect to the LDAP service on the specified LDAP Server.
                   If in the form accountname@domain.com, the username is transformed into a proper LDAP bind DN, for example, CN=accountname,CN=users,DC=domain,DC=com, when accessing the LDAP server.
                   If username is provided it takes precedence over the username retrieved from the referenced secrets
                 type: string
               caseSensitiveNames:
-                default: false
                 description: |-
                   CaseSensitiveNames If set, user and group names assigned to policies within the backend will be case sensitive.
                   Otherwise, names will be normalized to lower case. Case will still be preserved when sending the username to the LDAP server at login time; this is only for matching local user/group definitions.
                 type: boolean
               certificate:
-                default: ""
                 description: Certificate CA certificate to use when verifying LDAP
                   server certificate, must be x509 PEM encoded.
                 type: string
               clientTLSCert:
-                default: ""
                 description: ClientTLSCert Client certificate to provide to the LDAP
                   server, must be x509 PEM encoded
                 type: string
               clientTLSKey:
-                default: ""
                 description: ClientTLSKey Client certificate key to provide to the
                   LDAP server, must be x509 PEM encoded
                 type: string
@@ -239,31 +242,26 @@ spec:
                   authentication when providing an empty password
                 type: boolean
               discoverDN:
-                default: false
                 description: DiscoverDN Use anonymous bind to discover the bind DN
                   of a user.
                 type: boolean
               groupAttr:
-                default: ""
                 description: |-
                   GroupAttr LDAP attribute to follow on objects returned by groupfilter in order to enumerate user group membership.
                   Examples: for groupfilter queries returning group objects, use: cn. For queries returning user objects, use: memberOf. The default is cn.
                 type: string
               groupDN:
-                default: ""
                 description: 'GroupDN LDAP search base to use for group membership
                   search. This can be the root containing either groups or users.
                   Example: ou=Groups,dc=example,dc=com'
                 type: string
               groupFilter:
-                default: ""
                 description: |-
                   GroupFilter Go template used when constructing the group membership query. The template can access the following context variables: [UserDN, Username].
                   The default is (|(memberUid={{.Username}})(member={{.UserDN}})(uniqueMember={{.UserDN}})), which is compatible with several common directory schemas.
                   To support nested group resolution for Active Directory, instead use the following query: (&(objectClass=group)(member:1.2.840.113556.1.4.1941:={{.UserDN}}))
                 type: string
               insecureTLS:
-                default: false
                 description: InsecureTLS If true, skips LDAP server SSL certificate
                   verification - insecure, use with caution!
                 type: boolean
@@ -281,7 +279,6 @@ spec:
                   error.
                 type: string
               startTLS:
-                default: false
                 description: StartTLS If true, issues a StartTLS command after establishing
                   an unencrypted connection.
                 type: boolean
@@ -321,56 +318,55 @@ spec:
                     type: string
                 type: object
               tokenBoundCIDRs:
-                default: ""
                 description: TokenBoundCIDRs List of CIDR blocks; if set, specifies
                   blocks of IP addresses which can authenticate successfully, and
                   ties the resulting token to these blocks as well.
                 type: string
               tokenExplicitMaxTTL:
-                default: ""
                 description: TonenExplicitMaxTTL If set, will encode an explicit max
                   TTL onto the token. This is a hard cap even if token_ttl and token_max_ttl
                   would otherwise allow a renewal.
                 type: string
               tokenMaxTTL:
-                default: ""
                 description: TokenMaxTTL The maximum lifetime for generated tokens.
                   This current value of this will be referenced at renewal time
                 type: string
               tokenNoDefaultPolicy:
-                default: false
                 description: TokenNoDefaultPolicy If set, the default policy will
                   not be set on generated tokens; otherwise it will be added to the
                   policies set in token_policies.
                 type: boolean
               tokenNumUses:
-                default: 0
                 description: |-
                   TokenNumUses The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited.
                   If you require the token to have the ability to create child tokens, you will need to set this value to 0.
                 format: int64
+                minimum: 0
                 type: integer
               tokenPeriod:
-                default: 0
                 description: TokenPeriod The period, if any, to set on the token
                 format: int64
+                minimum: 0
                 type: integer
               tokenPolicies:
-                default: ""
                 description: TokenPolicies List of policies to encode onto generated
                   tokens. Depending on the auth method, this list may be supplemented
                   by user/group/other values.
                 type: string
               tokenTTL:
-                default: ""
                 description: TokenTTL The incremental lifetime for generated tokens.
                   This current value of this will be referenced at renewal time.
                 type: string
               tokenType:
-                default: ""
                 description: |-
                   The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens).
                   For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time.
+                enum:
+                - service
+                - batch
+                - default
+                - default-service
+                - default-batch
                 type: string
               url:
                 default: ldap://127.0.0.1
@@ -385,23 +381,19 @@ spec:
                   cn, uid'
                 type: string
               userDN:
-                default: ""
                 description: 'UserDN Base DN under which to perform user search. Example:
                   ou=Users,dc=example,dc=com'
                 type: string
               userFilter:
-                default: ""
                 description: |-
                   UserFilter An optional LDAP user search filter. The template can access the following context variables: UserAttr, Username.
                   The default is ({{.UserAttr}}={{.Username}}), or ({{.UserAttr}}={{.Username@.upndomain}}) if upndomain is set.
                 type: string
               usernameAsAlias:
-                default: false
                 description: UsernameAsAlias If set to true, forces the auth method
                   to use the username passed by the user as the alias name.
                 type: boolean
             required:
-            - caseSensitiveNames
             - url
             type: object
           status:

@@ -1,14 +1,20 @@
 package controllertestutils
 
 import (
+	"bytes"
+	"context"
 	"errors"
 	"io/ioutil"
+	"os"
 	"reflect"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
+	utilyaml "k8s.io/apimachinery/pkg/util/yaml"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type decoder struct {
@@ -26,6 +32,28 @@ func init() {
 
 func NewDecoder() *decoder {
 	return new(decoder)
+}
+
+// CreateFromYAML reads a YAML fixture into an unstructured object (preserving only
+// YAML-present fields), sets the namespace, and creates it via the API server.
+// This allows CRD server-side defaulting to apply for absent fields.
+func (d *decoder) CreateFromYAML(ctx context.Context, c client.Client, filename string, namespace string) (string, error) {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return "", err
+	}
+
+	obj := &unstructured.Unstructured{}
+	if err := utilyaml.NewYAMLOrJSONDecoder(bytes.NewReader(data), 4096).Decode(obj); err != nil {
+		return "", err
+	}
+
+	obj.SetNamespace(namespace)
+	if err := c.Create(ctx, obj); err != nil {
+		return "", err
+	}
+
+	return obj.GetName(), nil
 }
 
 func (d *decoder) decodeFile(filename string) (runtime.Object, *schema.GroupVersionKind, error) {

@@ -60,11 +60,10 @@ var _ = Describe("DatabaseSecretEngine controllers", Ordered, func() {
 			Expect(k8sIntegrationClient.Create(ctx, pgSecret)).Should(Succeed())
 
 			By("Loading and creating the SecretEngineMount fixture")
-			var err error
-			mountInstance, err = decoder.GetSecretEngineMountInstance("../test/databasesecretengine/test-db-mount.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/databasesecretengine/test-db-mount.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			mountInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, mountInstance)).Should(Succeed())
+			mountInstance = &redhatcopv1alpha1.SecretEngineMount{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, mountInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: mountInstance.Name, Namespace: mountInstance.Namespace}
 			created := &redhatcopv1alpha1.SecretEngineMount{}
@@ -96,11 +95,10 @@ var _ = Describe("DatabaseSecretEngine controllers", Ordered, func() {
 		It("Should write the database config to Vault", func() {
 
 			By("Loading and creating the DatabaseSecretEngineConfig fixture")
-			var err error
-			configInstance, err = decoder.GetDatabaseSecretEngineConfigInstance("../test/databasesecretengine/test-db-config.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/databasesecretengine/test-db-config.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			configInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, configInstance)).Should(Succeed())
+			configInstance = &redhatcopv1alpha1.DatabaseSecretEngineConfig{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, configInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: configInstance.Name, Namespace: configInstance.Namespace}
 			created := &redhatcopv1alpha1.DatabaseSecretEngineConfig{}
@@ -143,11 +141,10 @@ var _ = Describe("DatabaseSecretEngine controllers", Ordered, func() {
 		It("Should create the role in Vault with correct database settings", func() {
 
 			By("Loading and creating the DatabaseSecretEngineRole fixture")
-			var err error
-			roleInstance, err = decoder.GetDatabaseSecretEngineRoleInstance("../test/databasesecretengine/test-db-role.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/databasesecretengine/test-db-role.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			roleInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, roleInstance)).Should(Succeed())
+			roleInstance = &redhatcopv1alpha1.DatabaseSecretEngineRole{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, roleInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: roleInstance.Name, Namespace: roleInstance.Namespace}
 			created := &redhatcopv1alpha1.DatabaseSecretEngineRole{}

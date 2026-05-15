@@ -76,47 +76,41 @@ func waitForVaultCleanup(vaultPath string, timeout, interval time.Duration) {
 func SetupKVv2Stack(ctx context.Context, timeout, interval time.Duration) *KVv2Stack {
 	stack := &KVv2Stack{}
 
-	passwordPolicyInstance, err := decoder.GetPasswordPolicyInstance(fixturePasswordPolicyV2)
+	name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, fixturePasswordPolicyV2, vaultAdminNamespaceName)
 	Expect(err).To(BeNil())
-	passwordPolicyInstance.Namespace = vaultAdminNamespaceName
-	Expect(k8sIntegrationClient.Create(ctx, passwordPolicyInstance)).Should(Succeed())
-	stack.PasswordPolicy = passwordPolicyInstance
-	waitForReconcileSuccess(ctx, types.NamespacedName{Name: passwordPolicyInstance.Name, Namespace: passwordPolicyInstance.Namespace}, &redhatcopv1alpha1.PasswordPolicy{}, timeout, interval)
+	stack.PasswordPolicy = &redhatcopv1alpha1.PasswordPolicy{}
+	Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, stack.PasswordPolicy)).Should(Succeed())
+	waitForReconcileSuccess(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, &redhatcopv1alpha1.PasswordPolicy{}, timeout, interval)
 
-	policyKVEngineAdmin, err := decoder.GetPolicyInstance(fixturePolicyKVEngineAdminV2)
+	name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, fixturePolicyKVEngineAdminV2, vaultAdminNamespaceName)
 	Expect(err).To(BeNil())
-	policyKVEngineAdmin.Namespace = vaultAdminNamespaceName
-	Expect(k8sIntegrationClient.Create(ctx, policyKVEngineAdmin)).Should(Succeed())
-	stack.PolicyKVEngineAdmin = policyKVEngineAdmin
-	waitForReconcileSuccess(ctx, types.NamespacedName{Name: policyKVEngineAdmin.Name, Namespace: policyKVEngineAdmin.Namespace}, &redhatcopv1alpha1.Policy{}, timeout, interval)
+	stack.PolicyKVEngineAdmin = &redhatcopv1alpha1.Policy{}
+	Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, stack.PolicyKVEngineAdmin)).Should(Succeed())
+	waitForReconcileSuccess(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, &redhatcopv1alpha1.Policy{}, timeout, interval)
 
-	policySecretWriter, err := decoder.GetPolicyInstance(fixturePolicySecretWriterV2)
+	name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, fixturePolicySecretWriterV2, vaultAdminNamespaceName)
 	Expect(err).To(BeNil())
-	policySecretWriter.Namespace = vaultAdminNamespaceName
-	Expect(k8sIntegrationClient.Create(ctx, policySecretWriter)).Should(Succeed())
-	stack.PolicySecretWriter = policySecretWriter
-	waitForReconcileSuccess(ctx, types.NamespacedName{Name: policySecretWriter.Name, Namespace: policySecretWriter.Namespace}, &redhatcopv1alpha1.Policy{}, timeout, interval)
+	stack.PolicySecretWriter = &redhatcopv1alpha1.Policy{}
+	Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, stack.PolicySecretWriter)).Should(Succeed())
+	waitForReconcileSuccess(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, &redhatcopv1alpha1.Policy{}, timeout, interval)
 
-	roleKVEngineAdmin, err := decoder.GetKubernetesAuthEngineRoleInstance(fixtureRoleKVEngineAdminV2)
+	name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, fixtureRoleKVEngineAdminV2, vaultAdminNamespaceName)
 	Expect(err).To(BeNil())
-	roleKVEngineAdmin.Namespace = vaultAdminNamespaceName
-	Expect(k8sIntegrationClient.Create(ctx, roleKVEngineAdmin)).Should(Succeed())
-	stack.RoleKVEngineAdmin = roleKVEngineAdmin
-	waitForReconcileSuccess(ctx, types.NamespacedName{Name: roleKVEngineAdmin.Name, Namespace: roleKVEngineAdmin.Namespace}, &redhatcopv1alpha1.KubernetesAuthEngineRole{}, timeout, interval)
+	stack.RoleKVEngineAdmin = &redhatcopv1alpha1.KubernetesAuthEngineRole{}
+	Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, stack.RoleKVEngineAdmin)).Should(Succeed())
+	waitForReconcileSuccess(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, &redhatcopv1alpha1.KubernetesAuthEngineRole{}, timeout, interval)
 
-	roleSecretWriter, err := decoder.GetKubernetesAuthEngineRoleInstance(fixtureRoleSecretWriterV2)
+	name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, fixtureRoleSecretWriterV2, vaultAdminNamespaceName)
 	Expect(err).To(BeNil())
-	roleSecretWriter.Namespace = vaultAdminNamespaceName
-	Expect(k8sIntegrationClient.Create(ctx, roleSecretWriter)).Should(Succeed())
-	stack.RoleSecretWriter = roleSecretWriter
-	waitForReconcileSuccess(ctx, types.NamespacedName{Name: roleSecretWriter.Name, Namespace: roleSecretWriter.Namespace}, &redhatcopv1alpha1.KubernetesAuthEngineRole{}, timeout, interval)
+	stack.RoleSecretWriter = &redhatcopv1alpha1.KubernetesAuthEngineRole{}
+	Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, stack.RoleSecretWriter)).Should(Succeed())
+	waitForReconcileSuccess(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, &redhatcopv1alpha1.KubernetesAuthEngineRole{}, timeout, interval)
 
-	semInstance, err := decoder.GetSecretEngineMountInstance(fixtureSEMKVv2)
+	name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, fixtureSEMKVv2, vaultTestNamespaceName)
 	Expect(err).To(BeNil())
-	semInstance.Namespace = vaultTestNamespaceName
-	Expect(k8sIntegrationClient.Create(ctx, semInstance)).Should(Succeed())
-	stack.SecretEngineMount = semInstance
-	waitForReconcileSuccess(ctx, types.NamespacedName{Name: semInstance.Name, Namespace: semInstance.Namespace}, &redhatcopv1alpha1.SecretEngineMount{}, timeout, interval)
+	stack.SecretEngineMount = &redhatcopv1alpha1.SecretEngineMount{}
+	Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, stack.SecretEngineMount)).Should(Succeed())
+	waitForReconcileSuccess(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, &redhatcopv1alpha1.SecretEngineMount{}, timeout, interval)
 
 	return stack
 }
@@ -124,61 +118,53 @@ func SetupKVv2Stack(ctx context.Context, timeout, interval time.Duration) *KVv2S
 func SetupKVv2StackWithReader(ctx context.Context, timeout, interval time.Duration) *KVv2Stack {
 	stack := &KVv2Stack{}
 
-	passwordPolicyInstance, err := decoder.GetPasswordPolicyInstance(fixturePasswordPolicyV2)
+	name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, fixturePasswordPolicyV2, vaultAdminNamespaceName)
 	Expect(err).To(BeNil())
-	passwordPolicyInstance.Namespace = vaultAdminNamespaceName
-	Expect(k8sIntegrationClient.Create(ctx, passwordPolicyInstance)).Should(Succeed())
-	stack.PasswordPolicy = passwordPolicyInstance
-	waitForReconcileSuccess(ctx, types.NamespacedName{Name: passwordPolicyInstance.Name, Namespace: passwordPolicyInstance.Namespace}, &redhatcopv1alpha1.PasswordPolicy{}, timeout, interval)
+	stack.PasswordPolicy = &redhatcopv1alpha1.PasswordPolicy{}
+	Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, stack.PasswordPolicy)).Should(Succeed())
+	waitForReconcileSuccess(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, &redhatcopv1alpha1.PasswordPolicy{}, timeout, interval)
 
-	policyKVEngineAdmin, err := decoder.GetPolicyInstance(fixturePolicyKVEngineAdminV2)
+	name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, fixturePolicyKVEngineAdminV2, vaultAdminNamespaceName)
 	Expect(err).To(BeNil())
-	policyKVEngineAdmin.Namespace = vaultAdminNamespaceName
-	Expect(k8sIntegrationClient.Create(ctx, policyKVEngineAdmin)).Should(Succeed())
-	stack.PolicyKVEngineAdmin = policyKVEngineAdmin
-	waitForReconcileSuccess(ctx, types.NamespacedName{Name: policyKVEngineAdmin.Name, Namespace: policyKVEngineAdmin.Namespace}, &redhatcopv1alpha1.Policy{}, timeout, interval)
+	stack.PolicyKVEngineAdmin = &redhatcopv1alpha1.Policy{}
+	Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, stack.PolicyKVEngineAdmin)).Should(Succeed())
+	waitForReconcileSuccess(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, &redhatcopv1alpha1.Policy{}, timeout, interval)
 
-	policySecretWriter, err := decoder.GetPolicyInstance(fixturePolicySecretWriterV2)
+	name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, fixturePolicySecretWriterV2, vaultAdminNamespaceName)
 	Expect(err).To(BeNil())
-	policySecretWriter.Namespace = vaultAdminNamespaceName
-	Expect(k8sIntegrationClient.Create(ctx, policySecretWriter)).Should(Succeed())
-	stack.PolicySecretWriter = policySecretWriter
-	waitForReconcileSuccess(ctx, types.NamespacedName{Name: policySecretWriter.Name, Namespace: policySecretWriter.Namespace}, &redhatcopv1alpha1.Policy{}, timeout, interval)
+	stack.PolicySecretWriter = &redhatcopv1alpha1.Policy{}
+	Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, stack.PolicySecretWriter)).Should(Succeed())
+	waitForReconcileSuccess(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, &redhatcopv1alpha1.Policy{}, timeout, interval)
 
-	policySecretReader, err := decoder.GetPolicyInstance(fixturePolicySecretReaderV2)
+	name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, fixturePolicySecretReaderV2, vaultAdminNamespaceName)
 	Expect(err).To(BeNil())
-	policySecretReader.Namespace = vaultAdminNamespaceName
-	Expect(k8sIntegrationClient.Create(ctx, policySecretReader)).Should(Succeed())
-	stack.PolicySecretReader = policySecretReader
-	waitForReconcileSuccess(ctx, types.NamespacedName{Name: policySecretReader.Name, Namespace: policySecretReader.Namespace}, &redhatcopv1alpha1.Policy{}, timeout, interval)
+	stack.PolicySecretReader = &redhatcopv1alpha1.Policy{}
+	Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, stack.PolicySecretReader)).Should(Succeed())
+	waitForReconcileSuccess(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, &redhatcopv1alpha1.Policy{}, timeout, interval)
 
-	roleKVEngineAdmin, err := decoder.GetKubernetesAuthEngineRoleInstance(fixtureRoleKVEngineAdminV2)
+	name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, fixtureRoleKVEngineAdminV2, vaultAdminNamespaceName)
 	Expect(err).To(BeNil())
-	roleKVEngineAdmin.Namespace = vaultAdminNamespaceName
-	Expect(k8sIntegrationClient.Create(ctx, roleKVEngineAdmin)).Should(Succeed())
-	stack.RoleKVEngineAdmin = roleKVEngineAdmin
-	waitForReconcileSuccess(ctx, types.NamespacedName{Name: roleKVEngineAdmin.Name, Namespace: roleKVEngineAdmin.Namespace}, &redhatcopv1alpha1.KubernetesAuthEngineRole{}, timeout, interval)
+	stack.RoleKVEngineAdmin = &redhatcopv1alpha1.KubernetesAuthEngineRole{}
+	Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, stack.RoleKVEngineAdmin)).Should(Succeed())
+	waitForReconcileSuccess(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, &redhatcopv1alpha1.KubernetesAuthEngineRole{}, timeout, interval)
 
-	roleSecretWriter, err := decoder.GetKubernetesAuthEngineRoleInstance(fixtureRoleSecretWriterV2)
+	name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, fixtureRoleSecretWriterV2, vaultAdminNamespaceName)
 	Expect(err).To(BeNil())
-	roleSecretWriter.Namespace = vaultAdminNamespaceName
-	Expect(k8sIntegrationClient.Create(ctx, roleSecretWriter)).Should(Succeed())
-	stack.RoleSecretWriter = roleSecretWriter
-	waitForReconcileSuccess(ctx, types.NamespacedName{Name: roleSecretWriter.Name, Namespace: roleSecretWriter.Namespace}, &redhatcopv1alpha1.KubernetesAuthEngineRole{}, timeout, interval)
+	stack.RoleSecretWriter = &redhatcopv1alpha1.KubernetesAuthEngineRole{}
+	Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, stack.RoleSecretWriter)).Should(Succeed())
+	waitForReconcileSuccess(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, &redhatcopv1alpha1.KubernetesAuthEngineRole{}, timeout, interval)
 
-	roleSecretReader, err := decoder.GetKubernetesAuthEngineRoleInstance(fixtureRoleSecretReaderV2)
+	name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, fixtureRoleSecretReaderV2, vaultAdminNamespaceName)
 	Expect(err).To(BeNil())
-	roleSecretReader.Namespace = vaultAdminNamespaceName
-	Expect(k8sIntegrationClient.Create(ctx, roleSecretReader)).Should(Succeed())
-	stack.RoleSecretReader = roleSecretReader
-	waitForReconcileSuccess(ctx, types.NamespacedName{Name: roleSecretReader.Name, Namespace: roleSecretReader.Namespace}, &redhatcopv1alpha1.KubernetesAuthEngineRole{}, timeout, interval)
+	stack.RoleSecretReader = &redhatcopv1alpha1.KubernetesAuthEngineRole{}
+	Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, stack.RoleSecretReader)).Should(Succeed())
+	waitForReconcileSuccess(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, &redhatcopv1alpha1.KubernetesAuthEngineRole{}, timeout, interval)
 
-	semInstance, err := decoder.GetSecretEngineMountInstance(fixtureSEMKVv2)
+	name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, fixtureSEMKVv2, vaultTestNamespaceName)
 	Expect(err).To(BeNil())
-	semInstance.Namespace = vaultTestNamespaceName
-	Expect(k8sIntegrationClient.Create(ctx, semInstance)).Should(Succeed())
-	stack.SecretEngineMount = semInstance
-	waitForReconcileSuccess(ctx, types.NamespacedName{Name: semInstance.Name, Namespace: semInstance.Namespace}, &redhatcopv1alpha1.SecretEngineMount{}, timeout, interval)
+	stack.SecretEngineMount = &redhatcopv1alpha1.SecretEngineMount{}
+	Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, stack.SecretEngineMount)).Should(Succeed())
+	waitForReconcileSuccess(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, &redhatcopv1alpha1.SecretEngineMount{}, timeout, interval)
 
 	return stack
 }

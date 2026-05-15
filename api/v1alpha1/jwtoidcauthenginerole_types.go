@@ -54,7 +54,7 @@ type JWTOIDCRole struct {
 
 	// Type of role, either "oidc" (default) or "jwt"
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
+	// +kubebuilder:validation:Enum={"oidc","jwt"}
 	RoleType string `json:"roleType,omitempty"`
 
 	// List of aud claims to match against. Any match is sufficient. Required for "jwt" roles, optional for "oidc" roles
@@ -71,33 +71,28 @@ type JWTOIDCRole struct {
 	// Specifies if the user_claim value uses JSON pointer syntax for referencing claims.
 	// By default, the user_claim value will not use JSON pointer.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=false
-	UserClaimJSONPointer bool `json:"userClaimJSONPointer"`
+	UserClaimJSONPointer bool `json:"userClaimJSONPointer,omitempty"`
 
 	// The amount of leeway to add to all claims to account for clock skew, in seconds.
 	// Defaults to 60 seconds if set to 0 and can be disabled if set to -1.
 	// Accepts an integer number of seconds, or a Go duration format string. Only applicable with "jwt" roles
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=0
-	ClockSkewLeeway int64 `json:"clockSkewLeeway"`
+	ClockSkewLeeway int64 `json:"clockSkewLeeway,omitempty"`
 
 	// The amount of leeway to add to expiration (exp) claims to account for clock skew, in seconds.
 	// Defaults to 150 seconds if set to 0 and can be disabled if set to -1.
 	// Accepts an integer number of seconds, or a Go duration format string. Only applicable with "jwt" roles.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=0
-	ExpirationLeeway int64 `json:"expirationLeeway"`
+	ExpirationLeeway int64 `json:"expirationLeeway,omitempty"`
 
 	// he amount of leeway to add to not before (nbf) claims to account for clock skew, in seconds
 	// Defaults to 150 seconds if set to 0 and can be disabled if set to -1.
 	// Accepts an integer number of seconds, or a Go duration format string. Only applicable with "jwt" roles
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=0
-	NotBeforeLeeway int64 `json:"notBeforeLeeway"`
+	NotBeforeLeeway int64 `json:"notBeforeLeeway,omitempty"`
 
 	// If set, requires that the sub claim matches this value.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	BoundSubject string `json:"boundSubject,omitempty"`
 
 	// If set, a map of claims (keys) to match against respective claim values (values)
@@ -105,7 +100,6 @@ type JWTOIDCRole struct {
 	// The interpretation of the bound claim values is configured with bound_claims_type
 	// Keys support JSON pointer syntax for referencing claims
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default={}
 	BoundClaims *apiextensionsv1.JSON `json:"boundClaims,omitempty"`
 
 	// Configures the interpretation of the bound_claims values.
@@ -113,18 +107,17 @@ type JWTOIDCRole struct {
 	// If set to "glob", the values will be interpreted as globs, with * matching any number of characters
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="string"
-	BoundClaimsType string `json:"boundClaimsType,omitempty"`
+	// +kubebuilder:validation:Enum={"string","glob"}
+	BoundClaimsType string `json:"boundClaimsType"`
 
 	// The claim to use to uniquely identify the set of groups to which the user belongs; this will be used as the names for the Identity group aliases created due to a successful login.
 	// The claim value must be a list of strings. Supports JSON pointer syntax for referencing claims
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	GroupsClaim string `json:"groupsClaim,omitempty"`
 
 	// If set, a map of claims (keys) to be copied to specified metadata fields (values)
 	// Keys support JSON pointer syntax for referencing claims
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default={}
 	ClaimMappings map[string]string `json:"claimMappings,omitempty"`
 
 	// If set, a list of OIDC scopes to be used with an OIDC role
@@ -143,27 +136,24 @@ type JWTOIDCRole struct {
 	// Log received OIDC tokens and claims when debug-level logging is active
 	// Not recommended in production since sensitive information may be present in OIDC responses
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=false
-	VerboseOIDCLogging bool `json:"verboseOIDCLogging"`
+	VerboseOIDCLogging bool `json:"verboseOIDCLogging,omitempty"`
 
 	// Specifies the allowable elapsed time in seconds since the last time the user was actively authenticated with the OIDC provider
 	// If set, the max_age request parameter will be included in the authentication request
 	// See AuthRequest for additional details
 	// Accepts an integer number of seconds, or a Go duration format string
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=0
-	MaxAge int64 `json:"maxage"`
+	// +kubebuilder:validation:Minimum=0
+	MaxAge int64 `json:"maxage,omitempty"`
 
 	// The incremental lifetime for generated tokens
 	// This current value of this will be referenced at renewal time
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	TokenTTL string `json:"tokenTTL,omitempty"`
 
 	// The maximum lifetime for generated tokens.
 	// This current value of this will be referenced at renewal time
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	TokenMaxTTL string `json:"tokenMaxTTL,omitempty"`
 
 	// List of policies to encode onto generated tokens
@@ -182,29 +172,27 @@ type JWTOIDCRole struct {
 	// If set, will encode an explicit max TTL onto the token.
 	// This is a hard cap even if token_ttl and token_max_ttl would otherwise allow a renewal.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty"`
 
 	// If set, the default policy will not be set on generated tokens; otherwise it will be added to the policies set in token_policies
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=false
-	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy"`
+	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty"`
 
 	// The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited.
 	// If you require the token to have the ability to create child tokens, you will need to set this value to 0
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=0
-	TokenNumUses int64 `json:"tokenNumUses"`
+	// +kubebuilder:validation:Minimum=0
+	TokenNumUses int64 `json:"tokenNumUses,omitempty"`
 
 	// The period, if any, to set on the token
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=0
-	TokenPeriod int64 `json:"tokenPeriod"`
+	// +kubebuilder:validation:Minimum=0
+	TokenPeriod int64 `json:"tokenPeriod,omitempty"`
 
 	// The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens).
 	// For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
+	// +kubebuilder:validation:Enum={"service","batch","default","default-service","default-batch"}
 	TokenType string `json:"tokenType,omitempty"`
 }
 

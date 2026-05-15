@@ -123,7 +123,7 @@ type KAECConfig struct {
 	// KubernetesHost Host must be a host string, a host:port pair, or a URL to the base of the Kubernetes API server.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default="https://kubernetes.default.svc:443"
-	KubernetesHost string `json:"kubernetesHost,omitempty"`
+	KubernetesHost string `json:"kubernetesHost"`
 
 	// kubernetesCACert PEM encoded CA cert for use by the TLS client used to talk with the Kubernetes API. NOTE: Every line must end with a newline: \n
 	// if omitted will default to the content of the file "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt" in the operator pod
@@ -140,12 +140,10 @@ type KAECConfig struct {
 
 	// DisableISSValidation Disable JWT issuer validation. Allows to skip ISS validation.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=false
 	DisableISSValidation bool `json:"disableISSValidation,omitempty"`
 
 	// DisableLocalCAJWT Disable defaulting to the local CA cert and service account JWT when running in a Kubernetes pod.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=false
 	DisableLocalCAJWT bool `json:"disableLocalCAJWT,omitempty"`
 
 	// UseOperatorPodCA . This field is considered only if `kubernetesCACert` is not set and `disableLocalCAJWT` is set to true.
@@ -153,7 +151,7 @@ type KAECConfig struct {
 	// If tis field is set to false, the os ca bundle of where vault is running will be used.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=true
-	UseOperatorPodCA bool `json:"useOperatorPodCA,omitempty"`
+	UseOperatorPodCA bool `json:"useOperatorPodCA"`
 
 	// UseAnnotationsAsAliasMetadata  Use annotations from the client token's associated service account as alias metadata for the Vault entity. Only annotations with the vault.hashicorp.com/alias-metadata- key prefix are targeted as alias metadata and your annotations must be 512 characters or less due to the Vault alias metadata value limit. For example, if you configure the annotation vault.hashicorp.com/alias-metadata-foo, Vault saves the string "foo" along with the annotation value to the alias metadata. To save alias metadata, Vault must have permission to read service accounts from the Kubernetes API.
 	// +kubebuilder:validation:Optional

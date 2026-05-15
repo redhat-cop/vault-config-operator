@@ -59,11 +59,10 @@ var _ = Describe("JWTOIDCAuthEngine controllers", Ordered, func() {
 			Expect(k8sIntegrationClient.Create(ctx, oidcSecret)).Should(Succeed())
 
 			By("Loading and creating the AuthEngineMount fixture")
-			var err error
-			mountInstance, err = decoder.GetAuthEngineMountInstance("../test/jwtoidcauthengine/test-jwtoidc-auth-mount.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/jwtoidcauthengine/test-jwtoidc-auth-mount.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			mountInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, mountInstance)).Should(Succeed())
+			mountInstance = &redhatcopv1alpha1.AuthEngineMount{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, mountInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: mountInstance.Name, Namespace: mountInstance.Namespace}
 			created := &redhatcopv1alpha1.AuthEngineMount{}
@@ -95,11 +94,10 @@ var _ = Describe("JWTOIDCAuthEngine controllers", Ordered, func() {
 		It("Should write the OIDC config to Vault", func() {
 
 			By("Loading and creating the JWTOIDCAuthEngineConfig fixture")
-			var err error
-			configInstance, err = decoder.GetJWTOIDCAuthEngineConfigInstance("../test/jwtoidcauthengine/test-jwtoidc-auth-config.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/jwtoidcauthengine/test-jwtoidc-auth-config.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			configInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, configInstance)).Should(Succeed())
+			configInstance = &redhatcopv1alpha1.JWTOIDCAuthEngineConfig{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, configInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: configInstance.Name, Namespace: configInstance.Namespace}
 			created := &redhatcopv1alpha1.JWTOIDCAuthEngineConfig{}
@@ -124,6 +122,7 @@ var _ = Describe("JWTOIDCAuthEngine controllers", Ordered, func() {
 			Expect(secret).NotTo(BeNil())
 			Expect(secret.Data["oidc_discovery_url"]).To(Equal("http://keycloak.keycloak.svc.cluster.local:8080/realms/test-realm"))
 			Expect(secret.Data["oidc_client_id"]).To(Equal("vault-oidc"))
+			Expect(secret.Data["namespace_in_state"]).To(BeTrue(), "expected namespace_in_state to be true (AC2: non-zero default always serialized)")
 		})
 	})
 
@@ -131,11 +130,10 @@ var _ = Describe("JWTOIDCAuthEngine controllers", Ordered, func() {
 		It("Should create the role in Vault with correct OIDC settings", func() {
 
 			By("Loading and creating the JWTOIDCAuthEngineRole fixture")
-			var err error
-			roleInstance, err = decoder.GetJWTOIDCAuthEngineRoleInstance("../test/jwtoidcauthengine/test-jwtoidc-auth-role.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/jwtoidcauthengine/test-jwtoidc-auth-role.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			roleInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, roleInstance)).Should(Succeed())
+			roleInstance = &redhatcopv1alpha1.JWTOIDCAuthEngineRole{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, roleInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: roleInstance.Name, Namespace: roleInstance.Namespace}
 			created := &redhatcopv1alpha1.JWTOIDCAuthEngineRole{}

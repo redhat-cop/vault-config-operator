@@ -84,23 +84,23 @@ type CertAuthEngineConfigList struct {
 type CertAuthEngineConfigInternal struct {
 	// If set, during renewal, skips the matching of presented client identity with the client identity used during login.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=false
 	DisableBinding bool `json:"disableBinding,omitempty"`
 
 	// If set, metadata of the certificate including the metadata corresponding to allowedMetadataExtensions will be stored in the alias.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=false
 	EnableIdentityAliasMetadata bool `json:"enableIdentityAliasMetadata,omitempty"`
 
 	// The size of the OCSP response LRU cache. Note that this cache is used for all configured certificates.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=100
-	OCSPCacheSize int `json:"ocspCacheSize,omitempty"`
+	// +kubebuilder:validation:Minimum=0
+	OCSPCacheSize int `json:"ocspCacheSize"`
 
 	// The size of the role cache. Use -1 to disable role caching.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=200
-	RoleCacheSize int `json:"roleCacheSize,omitempty"`
+	// +kubebuilder:validation:Minimum=-1
+	RoleCacheSize int `json:"roleCacheSize"`
 }
 
 func (c *CertAuthEngineConfigInternal) toMap() map[string]any {

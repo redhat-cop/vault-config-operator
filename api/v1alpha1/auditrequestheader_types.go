@@ -44,7 +44,6 @@ type AuditRequestHeaderSpec struct {
 
 	// HMAC specifies if this header's value should be HMAC'd in the audit logs
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=false
 	HMAC bool `json:"hmac,omitempty"`
 }
 

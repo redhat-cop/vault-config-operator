@@ -194,12 +194,10 @@ spec:
                   Provided as base64 encoded PEM data.
                 type: string
               ocspEnabled:
-                default: false
                 description: If enabled, validate certificates' revocation status
                   using OCSP.
                 type: boolean
               ocspFailOpen:
-                default: false
                 description: If true and an OCSP response cannot be fetched or is
                   of an unknown status, the login will proceed as if the certificate
                   has not been revoked.
@@ -209,9 +207,9 @@ spec:
                 description: The number of retries attempted before giving up on an
                   OCSP request. 0 will disable retries.
                 format: int64
+                minimum: 0
                 type: integer
               ocspQueryAllServers:
-                default: false
                 description: If set to true, rather than accepting the first successful
                   OCSP response, query all servers and consider the certificate valid
                   only if all servers agree.
@@ -262,16 +260,15 @@ spec:
                   value of this will be referenced at renewal time.
                 type: string
               tokenNoDefaultPolicy:
-                default: false
                 description: If set, the default policy will not be set on generated
                   tokens; otherwise it will be added to the policies set in tokenPolicies.
                 type: boolean
               tokenNumUses:
-                default: 0
                 description: |-
                   The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited.
                   If you require the token to have the ability to create child tokens, you will need to set this value to 0.
                 format: int64
+                minimum: 0
                 type: integer
               tokenPeriod:
                 description: The maximum allowed period value when a periodic token
@@ -294,6 +291,12 @@ spec:
                   Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens).
                   For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time.
                   For machine based authentication cases, you should use batch type tokens.
+                enum:
+                - service
+                - batch
+                - default
+                - default-service
+                - default-batch
                 type: string
             type: object
           status:

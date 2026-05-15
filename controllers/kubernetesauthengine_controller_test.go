@@ -45,11 +45,10 @@ var _ = Describe("KubernetesAuthEngine controllers", Ordered, func() {
 		It("Should enable the kubernetes auth method in Vault", func() {
 
 			By("Loading and creating the AuthEngineMount fixture")
-			var err error
-			mountInstance, err = decoder.GetAuthEngineMountInstance("../test/kubernetesauthengine/test-kube-auth-mount.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/kubernetesauthengine/test-kube-auth-mount.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			mountInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, mountInstance)).Should(Succeed())
+			mountInstance = &redhatcopv1alpha1.AuthEngineMount{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, mountInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: mountInstance.Name, Namespace: mountInstance.Namespace}
 			created := &redhatcopv1alpha1.AuthEngineMount{}
@@ -81,11 +80,10 @@ var _ = Describe("KubernetesAuthEngine controllers", Ordered, func() {
 		It("Should write the config to Vault", func() {
 
 			By("Loading and creating the KubernetesAuthEngineConfig fixture")
-			var err error
-			configInstance, err = decoder.GetKubernetesAuthEngineConfigInstance("../test/kubernetesauthengine/test-kube-auth-config.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/kubernetesauthengine/test-kube-auth-config.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			configInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, configInstance)).Should(Succeed())
+			configInstance = &redhatcopv1alpha1.KubernetesAuthEngineConfig{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, configInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: configInstance.Name, Namespace: configInstance.Namespace}
 			created := &redhatcopv1alpha1.KubernetesAuthEngineConfig{}
@@ -116,11 +114,10 @@ var _ = Describe("KubernetesAuthEngine controllers", Ordered, func() {
 		It("Should create the role in Vault with correct bindings", func() {
 
 			By("Loading and creating the KubernetesAuthEngineRole fixture")
-			var err error
-			roleInstance, err = decoder.GetKubernetesAuthEngineRoleInstance("../test/kubernetesauthengine/test-kube-auth-role.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/kubernetesauthengine/test-kube-auth-role.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			roleInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, roleInstance)).Should(Succeed())
+			roleInstance = &redhatcopv1alpha1.KubernetesAuthEngineRole{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, roleInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: roleInstance.Name, Namespace: roleInstance.Namespace}
 			created := &redhatcopv1alpha1.KubernetesAuthEngineRole{}
@@ -162,11 +159,10 @@ var _ = Describe("KubernetesAuthEngine controllers", Ordered, func() {
 		It("Should resolve the selector and set bound namespaces", func() {
 
 			By("Loading and creating the KubernetesAuthEngineRole selector fixture")
-			var err error
-			roleSelectorInstance, err = decoder.GetKubernetesAuthEngineRoleInstance("../test/kubernetesauthengine/test-kube-auth-role-selector.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/kubernetesauthengine/test-kube-auth-role-selector.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			roleSelectorInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, roleSelectorInstance)).Should(Succeed())
+			roleSelectorInstance = &redhatcopv1alpha1.KubernetesAuthEngineRole{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, roleSelectorInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: roleSelectorInstance.Name, Namespace: roleSelectorInstance.Namespace}
 			created := &redhatcopv1alpha1.KubernetesAuthEngineRole{}

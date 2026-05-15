@@ -7,4 +7,6 @@ spec:
     path: kubernetes
     role: policy-admin
   type: rabbitmq
+  config:
+    listingVisibility: "hidden"
   path: test-rmqse

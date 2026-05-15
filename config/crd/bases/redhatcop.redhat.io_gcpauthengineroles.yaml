@@ -40,13 +40,11 @@ spec:
             description: GCPAuthEngineRoleSpec defines the desired state of GCPAuthEngineRole
             properties:
               addGroupAliases:
-                default: false
                 description: |-
                   If true, any auth token generated under this token will have associated group aliases, namely project-$PROJECT_ID, folder-$PROJECT_ID, and organization-$ORG_ID for the entities project and all its folder or organization ancestors.
                   This requires Vault to have IAM permission resourcemanager.projects.get.
                 type: boolean
               allowGCEInference:
-                default: false
                 description: A flag to determine if this role should allow GCE instances
                   to authenticate by inferring service accounts from the GCE identity
                   metadata token.
@@ -191,7 +189,6 @@ spec:
                     type: string
                 type: object
               maxJWTExp:
-                default: ""
                 description: |-
                   The number of seconds past the time of authentication that the login param JWT must expire within.
                   For example, if a user attempts to login with a token that expires within an hour and this is set to 15 minutes, Vault will return an error prompting the user to create a new signed JWT with a shorter exp.
@@ -227,33 +224,30 @@ spec:
                 type: array
                 x-kubernetes-list-type: set
               tokenExplicitMaxTTL:
-                default: ""
                 description: |-
                   If set, will encode an explicit max TTL onto the token.
                   This is a hard cap even if token_ttl and token_max_ttl would otherwise allow a renewal.
                 type: string
               tokenMaxTTL:
-                default: ""
                 description: The maximum lifetime for generated tokens. This current
                   value of this will be referenced at renewal time.
                 type: string
               tokenNoDefaultPolicy:
-                default: false
                 description: If set, the default policy will not be set on generated
                   tokens; otherwise it will be added to the policies set in token_policies.
                 type: boolean
               tokenNumUses:
-                default: 0
                 description: |-
                   The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited.
                   If you require the token to have the ability to create child tokens, you will need to set this value to 0.
                 format: int64
+                minimum: 0
                 type: integer
               tokenPeriod:
-                default: 0
                 description: The maximum allowed period value when a periodic token
                   is requested from this role.
                 format: int64
+                minimum: 0
                 type: integer
               tokenPolicies:
                 description: |-
@@ -265,22 +259,29 @@ spec:
                 type: array
                 x-kubernetes-list-type: set
               tokenTTL:
-                default: ""
                 description: The incremental lifetime for generated tokens. This current
                   value of this will be referenced at renewal time.
                 type: string
               tokenType:
-                default: ""
                 description: |-
                   The type of token that should be generated.
                   Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens).
                   For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time.
                   For machine based authentication cases, you should use batch type tokens.
+                enum:
+                - service
+                - batch
+                - default
+                - default-service
+                - default-batch
                 type: string
               type:
                 description: The type of this role. Certain fields correspond to specific
                   roles and will be rejected otherwise. Please see below for more
                   information.
+                enum:
+                - iam
+                - gce
                 type: string
             required:
             - name

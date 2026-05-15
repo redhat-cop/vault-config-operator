@@ -65,13 +65,13 @@ type PKIType struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum:={"root","intermediate"}
 	// +kubebuilder:default="root"
-	Type string `json:"type,omitempty"`
+	Type string `json:"type"`
 
 	// Specifies the type of the root to create. If exported, the private key will be returned in the response; if internal the private key will not be returned and cannot be retrieved later. This is part of the request URL.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum:={"internal","exported"}
 	// +kubebuilder:default="internal"
-	PrivateKeyType string `json:"privateKeyType,omitempty"`
+	PrivateKeyType string `json:"privateKeyType"`
 }
 
 type PKICommon struct {
@@ -104,27 +104,29 @@ type PKICommon struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"pem","pem_bundle", "der"}
 	// +kubebuilder:default="pem"
-	Format string `json:"format,omitempty"`
+	Format string `json:"format"`
 
 	// Specifies the format for marshaling the private key. Defaults to der which will return either base64-encoded DER or PEM-encoded DER, depending on the value of format. The other option is pkcs8 which will return the key marshalled as PEM-encoded PKCS8.
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum={"der","pkcs8"}
 	PrivateKeyFormat string `json:"privateKeyFormat,omitempty"`
 
 	// Specifies the desired key type; must be rsa or ec.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"rsa","ec"}
 	// +kubebuilder:default="rsa"
-	KeyType string `json:"keyType,omitempty"`
+	KeyType string `json:"keyType"`
 
 	// Specifies the number of bits to use. This must be changed to a valid value if the key_type is ec, e.g., 224, 256, 384 or 521.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=2048
-	KeyBits int `json:"keyBits,omitempty"`
+	KeyBits int `json:"keyBits"`
 
 	// Specifies the maximum path length to encode in the generated certificate. -1 means no limit. Unless the signing certificate has a maximum path length set, in which case the path length is set to one less than that of the signing certificate. A limit of 0 means a literal path length of zero.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=-1
-	MaxPathLength int `json:"maxPathLength,omitempty"`
+	// +kubebuilder:validation:Minimum=-1
+	MaxPathLength int `json:"maxPathLength"`
 
 	// If set, the given common_name will not be included in DNS or Email Subject Alternate Names (as appropriate). Useful if the CN is not a hostname or email address, but is instead some human-readable identifier.
 	// +kubebuilder:validation:Optional
@@ -200,7 +202,7 @@ type PKIConfigCRL struct {
 	// Specifies the time until expiration.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="72h"
-	CRLExpiry metav1.Duration `json:"CRLExpiry,omitempty"`
+	CRLExpiry metav1.Duration `json:"CRLExpiry"`
 
 	// Disables or enables CRL building.
 	// +kubebuilder:validation:Optional
@@ -215,7 +217,7 @@ type PKIIntermediate struct {
 	// CertificateKey key to be used when retrieving the signed certificate
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="tls.crt"
-	CertificateKey string `json:"certificateKey,omitempty"`
+	CertificateKey string `json:"certificateKey"`
 
 	// Use the configured refered Vault PKISecretEngineConfig to issue a certificate with appropriate values for acting as an intermediate CA.
 	// +kubebuilder:validation:Optional

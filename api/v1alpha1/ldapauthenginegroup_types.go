@@ -48,7 +48,6 @@ type LDAPAuthEngineGroupSpec struct {
 
 	// Comma-separated list of policies associated to the group
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=""
 	Policies string `json:"policies,omitempty"`
 }
 

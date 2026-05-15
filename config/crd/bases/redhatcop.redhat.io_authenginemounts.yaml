@@ -136,6 +136,12 @@ spec:
                     x-kubernetes-list-type: set
                   tokenType:
                     description: TokenType undocumented
+                    enum:
+                    - service
+                    - batch
+                    - default
+                    - default-service
+                    - default-batch
                     type: string
                 type: object
               connection:

@@ -45,11 +45,10 @@ var _ = Describe("Identity OIDC controllers", Ordered, func() {
 		It("Should create the scope in Vault with correct settings", func() {
 
 			By("Loading and creating the IdentityOIDCScope fixture")
-			var err error
-			scopeInstance, err = decoder.GetIdentityOIDCScopeInstance("../test/identityoidc/identityoidcscope.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/identityoidc/identityoidcscope.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			scopeInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, scopeInstance)).Should(Succeed())
+			scopeInstance = &redhatcopv1alpha1.IdentityOIDCScope{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, scopeInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: scopeInstance.Name, Namespace: scopeInstance.Namespace}
 			created := &redhatcopv1alpha1.IdentityOIDCScope{}
@@ -87,11 +86,10 @@ var _ = Describe("Identity OIDC controllers", Ordered, func() {
 		It("Should create the assignment in Vault", func() {
 
 			By("Loading and creating the IdentityOIDCAssignment fixture")
-			var err error
-			assignmentInstance, err = decoder.GetIdentityOIDCAssignmentInstance("../test/identityoidc/identityoidcassignment.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/identityoidc/identityoidcassignment.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			assignmentInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, assignmentInstance)).Should(Succeed())
+			assignmentInstance = &redhatcopv1alpha1.IdentityOIDCAssignment{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, assignmentInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: assignmentInstance.Name, Namespace: assignmentInstance.Namespace}
 			created := &redhatcopv1alpha1.IdentityOIDCAssignment{}
@@ -121,11 +119,10 @@ var _ = Describe("Identity OIDC controllers", Ordered, func() {
 		It("Should create the client in Vault with correct settings", func() {
 
 			By("Loading and creating the IdentityOIDCClient fixture")
-			var err error
-			clientInstance, err = decoder.GetIdentityOIDCClientInstance("../test/identityoidc/identityoidcclient.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/identityoidc/identityoidcclient.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			clientInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, clientInstance)).Should(Succeed())
+			clientInstance = &redhatcopv1alpha1.IdentityOIDCClient{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, clientInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: clientInstance.Name, Namespace: clientInstance.Namespace}
 			created := &redhatcopv1alpha1.IdentityOIDCClient{}
@@ -175,11 +172,10 @@ var _ = Describe("Identity OIDC controllers", Ordered, func() {
 		It("Should create the provider in Vault with correct settings", func() {
 
 			By("Loading and creating the IdentityOIDCProvider fixture")
-			var err error
-			providerInstance, err = decoder.GetIdentityOIDCProviderInstance("../test/identityoidc/identityoidcprovider.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/identityoidc/identityoidcprovider.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			providerInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, providerInstance)).Should(Succeed())
+			providerInstance = &redhatcopv1alpha1.IdentityOIDCProvider{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, providerInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: providerInstance.Name, Namespace: providerInstance.Namespace}
 			created := &redhatcopv1alpha1.IdentityOIDCProvider{}

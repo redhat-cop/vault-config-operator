@@ -25,10 +25,10 @@ var _ = Describe("Entity controller", func() {
 		It("Should create an Entity in Vault", func() {
 
 			By("Creating a new Entity")
-			entityInstance, err := decoder.GetEntityInstance("../test/identity/01-entity-sample.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/identity/01-entity-sample.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			entityInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, entityInstance)).Should(Succeed())
+			entityInstance := &redhatcopv1alpha1.Entity{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, entityInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: entityInstance.Name, Namespace: entityInstance.Namespace}
 			created := &redhatcopv1alpha1.Entity{}
@@ -63,10 +63,10 @@ var _ = Describe("Entity controller", func() {
 		It("Should update the Entity in Vault and reflect updated ObservedGeneration", func() {
 
 			By("Creating a new Entity")
-			entityInstance, err := decoder.GetEntityInstance("../test/identity/01-entity-sample.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/identity/01-entity-sample.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			entityInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, entityInstance)).Should(Succeed())
+			entityInstance := &redhatcopv1alpha1.Entity{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, entityInstance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: entityInstance.Name, Namespace: entityInstance.Namespace}
 			created := &redhatcopv1alpha1.Entity{}

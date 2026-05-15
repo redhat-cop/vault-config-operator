@@ -7,4 +7,6 @@ spec:
     path: kubernetes
     role: policy-admin
   type: approle
+  config:
+    listingVisibility: "hidden"
   path: test-auth-mount

@@ -3,6 +3,19 @@
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/redhat-cop/vault-config-operator)
 [![CRD Docs](https://img.shields.io/badge/CRD-Docs-brightgreen)](https://doc.crds.dev/github.com/redhat-cop/vault-config-operator)
 
+> [!IMPORTANT]
+> I am bringing this project under a spec-driven development methodology called BMAD to help accelerate development.
+>
+> The development plan is roughly:
+> 1. Full unit test coverage -- done
+> 2. Full integration test coverage -- done
+> 3. Cross-cutting refactoring (`CRD` type homogeneity, code duplication, lint, OLM warnings) -- we are here
+> 4. Full documentation coverage
+> 5. Tech stack upgrade to latest
+> 6. Full Vault API coverage
+>
+> The goal is to complete all of this without introducing disruption. If you encounter any issues along the way, please let me know as always.
+
 - [Vault Config Operator](#vault-config-operator)
   - [Authentication Engines](#authentication-engines)
   - [Policy management](#policy-management)

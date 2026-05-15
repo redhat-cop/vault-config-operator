@@ -7,4 +7,6 @@ spec:
     path: kubernetes
     role: policy-admin
   type: ldap
+  config:
+    listingVisibility: "hidden"
   path: test-ldap-auth

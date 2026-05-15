@@ -25,10 +25,10 @@ var _ = Describe("DatabaseSecretEngineStaticRole controller", func() {
 	Context("When preparing a Database Secret Engine", func() {
 		It("Should create a Database Secret Engine when created", func() {
 			By("By creating new Policies")
-			pInstance, err := decoder.GetPolicyInstance("../test/databasesecretengine/database-engine-admin-policy.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/databasesecretengine/database-engine-admin-policy.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			pInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, pInstance)).Should(Succeed())
+			pInstance := &redhatcopv1alpha1.Policy{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, pInstance)).Should(Succeed())
 
 			pLookupKey := types.NamespacedName{Name: pInstance.Name, Namespace: pInstance.Namespace}
 			pCreated := &redhatcopv1alpha1.Policy{}
@@ -48,10 +48,10 @@ var _ = Describe("DatabaseSecretEngineStaticRole controller", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 
-			kaerInstance, err := decoder.GetKubernetesAuthEngineRoleInstance("../test/databasesecretengine/database-secret-engine-auth-role.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/databasesecretengine/database-secret-engine-auth-role.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			kaerInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, kaerInstance)).Should(Succeed())
+			kaerInstance := &redhatcopv1alpha1.KubernetesAuthEngineRole{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, kaerInstance)).Should(Succeed())
 
 			kaerLookupKey := types.NamespacedName{Name: kaerInstance.Name, Namespace: kaerInstance.Namespace}
 			kaerCreated := &redhatcopv1alpha1.KubernetesAuthEngineRole{}
@@ -73,10 +73,10 @@ var _ = Describe("DatabaseSecretEngineStaticRole controller", func() {
 
 			By("By creating a new SecretEngineMount")
 
-			semInstance, err := decoder.GetSecretEngineMountInstance("../test/database-secret-engine.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/database-secret-engine.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			semInstance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, semInstance)).Should(Succeed())
+			semInstance := &redhatcopv1alpha1.SecretEngineMount{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, semInstance)).Should(Succeed())
 
 			semLookupKey := types.NamespacedName{Name: semInstance.Name, Namespace: semInstance.Namespace}
 			semCreated := &redhatcopv1alpha1.SecretEngineMount{}
@@ -102,10 +102,10 @@ var _ = Describe("DatabaseSecretEngineStaticRole controller", func() {
 	Context("When creating a DatabaseSecretEngine", func() {
 		It("Should configure the engine for the specific path when created", func() {
 			By("By creating a new PasswordPolicy")
-			ppInstance, err := decoder.GetPasswordPolicyInstance("../test/databasesecretengine/password-policy.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/databasesecretengine/password-policy.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())
-			ppInstance.Namespace = vaultAdminNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, ppInstance)).Should(Succeed())
+			ppInstance := &redhatcopv1alpha1.PasswordPolicy{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultAdminNamespaceName}, ppInstance)).Should(Succeed())
 
 			pplookupKey := types.NamespacedName{Name: ppInstance.Name, Namespace: ppInstance.Namespace}
 			ppCreated := &redhatcopv1alpha1.PasswordPolicy{}
@@ -127,10 +127,10 @@ var _ = Describe("DatabaseSecretEngineStaticRole controller", func() {
 
 			By("By creating a new SecretEngineMount")
 
-			semInstance, err := decoder.GetSecretEngineMountInstance("../test/databasesecretengine/database-kv-engine-mount.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/databasesecretengine/database-kv-engine-mount.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			semInstance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, semInstance)).Should(Succeed())
+			semInstance := &redhatcopv1alpha1.SecretEngineMount{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, semInstance)).Should(Succeed())
 
 			semLookupKey := types.NamespacedName{Name: semInstance.Name, Namespace: semInstance.Namespace}
 			semCreated := &redhatcopv1alpha1.SecretEngineMount{}
@@ -151,11 +151,10 @@ var _ = Describe("DatabaseSecretEngineStaticRole controller", func() {
 			}, timeout, interval).Should(BeTrue())
 
 			By("By creating a new RandomSecret")
-			instance, err := decoder.GetRandomSecretInstance("../test/databasesecretengine/database-random-secret.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/databasesecretengine/database-random-secret.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-
-			instance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, instance)).Should(Succeed())
+			instance := &redhatcopv1alpha1.RandomSecret{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, instance)).Should(Succeed())
 
 			lookupKey := types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}
 			created := &redhatcopv1alpha1.RandomSecret{}
@@ -191,10 +190,10 @@ var _ = Describe("DatabaseSecretEngineStaticRole controller", func() {
 			Expect(k8sIntegrationClient.Create(ctx, pgSecret)).Should(Succeed())
 
 			By("By creating a database secret engine config")
-			rsInstance, err := decoder.GetDatabaseSecretEngineConfigInstance("../test/databasesecretengine/database-engine-config.yaml")
+			name, err = decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/databasesecretengine/database-engine-config.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			rsInstance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, rsInstance)).Should(Succeed())
+			rsInstance := &redhatcopv1alpha1.DatabaseSecretEngineConfig{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, rsInstance)).Should(Succeed())
 
 			rslookupKey := types.NamespacedName{Name: rsInstance.Name, Namespace: rsInstance.Namespace}
 			rsCreated := &redhatcopv1alpha1.DatabaseSecretEngineConfig{}
@@ -220,10 +219,10 @@ var _ = Describe("DatabaseSecretEngineStaticRole controller", func() {
 	Context("When creating a DatabaseSecretEngineStaticRole", func() {
 		It("Should create the static role in Vault", func() {
 			By("Creating a DatabaseSecretEngineStaticRole")
-			srInstance, err := decoder.GetDatabaseSecretEngineStaticRoleInstance("../test/database-engine-read-only-static-role.yaml")
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../test/database-engine-read-only-static-role.yaml", vaultTestNamespaceName)
 			Expect(err).To(BeNil())
-			srInstance.Namespace = vaultTestNamespaceName
-			Expect(k8sIntegrationClient.Create(ctx, srInstance)).Should(Succeed())
+			srInstance := &redhatcopv1alpha1.DatabaseSecretEngineStaticRole{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, srInstance)).Should(Succeed())
 
 			srLookupKey := types.NamespacedName{Name: srInstance.Name, Namespace: srInstance.Namespace}
 			srCreated := &redhatcopv1alpha1.DatabaseSecretEngineStaticRole{}

@@ -128,7 +128,6 @@ spec:
                     type: string
                 type: object
               hmac:
-                default: false
                 description: HMAC specifies if this header's value should be HMAC'd
                   in the audit logs
                 type: boolean

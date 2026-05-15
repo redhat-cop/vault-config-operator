@@ -188,7 +188,6 @@ type KubeSEConfig struct {
 
 	// DisableLocalCAJWT Disable defaulting to the local CA certificate and service account JWT when running in a Kubernetes pod.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=false
 	DisableLocalCAJWT bool `json:"disableLocalCAJWT,omitempty"`
 
 	retrievedServiceAccountJWT string `json:"-"`

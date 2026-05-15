@@ -42,13 +42,11 @@ spec:
               JWTOIDCAuthEngineConfig
             properties:
               JWKSCAPEM:
-                default: ""
                 description: |-
                   The CA certificate or chain of certificates, in PEM format, to use to validate connections to the JWKS URL.
                   If not set, system certificates are used.
                 type: string
               JWKSURL:
-                default: ""
                 description: |-
                   JWKS URL to use to authenticate signatures.
                   Cannot be used with "oidc_discovery_url" or "jwt_validation_pubkeys"
@@ -70,7 +68,6 @@ spec:
                 type: array
                 x-kubernetes-list-type: set
               OIDCClientID:
-                default: ""
                 description: The OAuth Client ID from the provider for OIDC roles.
                 type: string
               OIDCCredentials:
@@ -132,22 +129,22 @@ spec:
                     type: object
                 type: object
               OIDCDiscoveryCAPEM:
-                default: ""
                 description: |-
                   The CA certificate or chain of certificates, in PEM format, to use to validate connections to the OIDC Discovery URL.
                   If not set, system certificates are used
                 type: string
               OIDCDiscoveryURL:
-                default: ""
                 description: The OIDC Discovery URL, without any .well-known component
                   (base path). Cannot be used with "jwks_url" or "jwt_validation_pubkeys"
                 type: string
               OIDCResponseMode:
-                default: ""
                 description: |-
                   The response mode to be used in the OAuth2 request.
                   Allowed values are "query" and "form_post". Defaults to "query".
                   If using Vault namespaces, and oidc_response_mode is "form_post", then "namespace_in_state" should be set to false
+                enum:
+                - query
+                - form_post
                 type: string
               OIDCResponseTypes:
                 description: |-
@@ -190,7 +187,6 @@ spec:
                     x-kubernetes-map-type: atomic
                 type: object
               boundIssuer:
-                default: ""
                 description: The value against which to match the iss claim in a JWT
                 type: string
               connection:
@@ -248,7 +244,6 @@ spec:
                     type: string
                 type: object
               defaultRole:
-                default: ""
                 description: The default role to use if none is provided during login
                 type: string
               namespaceInState:
@@ -267,7 +262,6 @@ spec:
                 pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
                 type: string
               providerConfig:
-                default: {}
                 description: |-
                   Configuration options for provider-specific handling. Providers with specific handling include: Azure, Google.
                   The options are described in each provider's section in OIDC Provider Setup

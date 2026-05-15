@@ -100,12 +100,10 @@ type PKIRole struct {
 
 	// Specifies the Time To Live value provided as a string duration with time suffix. Hour is the largest suffix. If not set, uses the system default value or the value of max_ttl, whichever is shorter.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default="0s"
 	TTL metav1.Duration `json:"TTL,omitempty"`
 
 	// Specifies the maximum Time To Live provided as a string duration with time suffix. Hour is the largest suffix. If not set, defaults to the system maximum lease TTL.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default="0s"
 	MaxTTL metav1.Duration `json:"maxTTL,omitempty"`
 
 	// +kubebuilder:validation:Optional
@@ -173,14 +171,14 @@ type PKIRole struct {
 
 	// Specifies the type of key to generate for generated private keys and the type of key expected for submitted CSRs. Currently, rsa and ec are supported, or when signing CSRs any can be specified to allow keys of either type and with any bit size (subject to > 1024 bits for RSA keys).
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Enum:={"rsa","ec"}
+	// +kubebuilder:validation:Enum:={"rsa","ec","any"}
 	// +kubebuilder:default="rsa"
-	KeyType string `json:"keyType,omitempty"`
+	KeyType string `json:"keyType"`
 
 	// Specifies the number of bits to use for the generated keys. This will need to be changed for ec keys, e.g., 224, 256, 384 or 521.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=2048
-	KeyBits int `json:"keyBits,omitempty"`
+	KeyBits int `json:"keyBits"`
 
 	// Specifies the allowed key usage constraint on issued certificates. Valid values can be found at https://golang.org/pkg/crypto/x509/#KeyUsage - simply drop the KeyUsage part of the value. Values are not case-sensitive. To specify no key usage constraints, set this to an empty list.
 	// +kubebuilder:validation:Optional
@@ -203,12 +201,12 @@ type PKIRole struct {
 	// When used with the CSR signing endpoint, the common name in the CSR will be used instead of taken from the JSON data. This does not include any requested SANs in the CSR; use use_csr_sans for that.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=true
-	UseCSRCommonName bool `json:"useCSRCommonName,omitempty"`
+	UseCSRCommonName bool `json:"useCSRCommonName"`
 
 	// When used with the CSR signing endpoint, the subject alternate names in the CSR will be used instead of taken from the JSON data. This does not include the common name in the CSR; use use_csr_common_name for that.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=true
-	UseCSRSans bool `json:"useCSRSans,omitempty"`
+	UseCSRSans bool `json:"useCSRSans"`
 
 	// Specifies the OU (OrganizationalUnit) values in the subject field of issued certificates. This is a comma-separated string or JSON array.
 	// +kubebuilder:validation:Optional
@@ -267,7 +265,7 @@ type PKIRole struct {
 	// Specifies the duration by which to backdate the NotBefore property.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="30s"
-	NotBeforeDuration metav1.Duration `json:"notBeforeDuration,omitempty"`
+	NotBeforeDuration metav1.Duration `json:"notBeforeDuration"`
 }
 
 // KeyUsage specifies the allowed key usage constraint on issued certificates. Valid values can be found at https://golang.org/pkg/crypto/x509/#KeyUsage - simply drop the KeyUsage part of the value.
