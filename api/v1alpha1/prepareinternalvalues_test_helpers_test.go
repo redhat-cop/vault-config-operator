@@ -58,7 +58,7 @@ func (h *fakeVaultHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		resp := map[string]interface{}{"data": data}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp) // test handler; encode error is not actionable
 	case http.MethodPut, http.MethodPost:
 		data, ok := h.routes[path]
 		if !ok {
@@ -67,7 +67,7 @@ func (h *fakeVaultHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		resp := map[string]interface{}{"data": data}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp) // test handler; encode error is not actionable
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}

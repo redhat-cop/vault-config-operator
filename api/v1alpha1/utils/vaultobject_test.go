@@ -66,7 +66,7 @@ func (s *fakeVaultStore) handler() http.Handler {
 			}
 			resp := map[string]interface{}{"data": data}
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(resp)
+			_ = json.NewEncoder(w).Encode(resp) // test handler; encode error is not actionable
 		case http.MethodPut, http.MethodPost:
 			var body map[string]interface{}
 			if err := json.NewDecoder(r.Body).Decode(&body); err != nil {

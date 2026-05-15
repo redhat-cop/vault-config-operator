@@ -26,7 +26,9 @@ var errDecode = errors.New("failed to decode")
 
 func init() {
 	scheme := runtime.NewScheme()
-	redhatcopv1alpha1.AddToScheme(scheme)
+	if err := redhatcopv1alpha1.AddToScheme(scheme); err != nil {
+		panic(err)
+	}
 	runtimeDecoder = serializer.NewCodecFactory(scheme).UniversalDeserializer()
 }
 

@@ -177,7 +177,10 @@ func (vc *VaultConnection) getConnectionConfig(context context.Context, kubeName
 			tlsConfig.TLSServerName = *vc.TLSConfig.TLSServerName
 		}
 		tlsConfig.Insecure = vc.TLSConfig.SkipVerify
-		config.ConfigureTLS(&tlsConfig)
+		if err := config.ConfigureTLS(&tlsConfig); err != nil {
+			log.Error(err, "unable to configure TLS")
+			return nil, err
+		}
 	}
 	return config, nil
 }

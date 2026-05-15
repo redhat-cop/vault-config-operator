@@ -36,6 +36,7 @@
 
 generated: 2026-04-11
 last_updated: 2026-05-15
+# Story R1.2a done 2026-05-15
 # Story R1.1 done 2026-05-15
 # Story R1.1 review 2026-05-15
 # Story R1.1 in-progress 2026-05-15
@@ -248,7 +249,7 @@ development_status:
   # Epic R1: Code Modernization & Technical Debt Reduction
   epic-R1: in-progress
   R1-1-correctness-fixes-context-keys-pki-bug-webhook-loggers-tostring: done # Story R1.1 done 2026-05-15
-  R1-2a-fix-unchecked-error-returns-errcheck: ready-for-dev
+  R1-2a-fix-unchecked-error-returns-errcheck: done
   R1-2b-remove-deprecated-rand-seed: ready-for-dev
   R1-2c-lint-green-gate-verify-full-compliance: ready-for-dev
   R1-3-dependency-modernization-drop-deprecated-replace-handrolled: ready-for-dev
