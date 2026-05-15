@@ -87,8 +87,8 @@ func (r *VaultSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return reconcile.Result{}, err
 	}
 
-	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
-	ctx = context.WithValue(ctx, "restConfig", r.GetRestConfig())
+	ctx = vaultutils.ContextWithKubeClient(ctx, r.GetClient())
+	ctx = vaultutils.ContextWithRestConfig(ctx, r.GetRestConfig())
 
 	if !instance.GetDeletionTimestamp().IsZero() {
 		if !controllerutil.ContainsFinalizer(instance, vaultutils.GetFinalizer(instance)) {
@@ -334,14 +334,14 @@ func (r *VaultSecretReconciler) manageSyncLogic(ctx context.Context, instance *r
 	definitionsStatus := make([]redhatcopv1alpha1.VaultSecretDefinitionStatus, len(instance.Spec.VaultSecretDefinitions))
 
 	for idx, vaultSecretDefinition := range instance.Spec.VaultSecretDefinitions {
-		ctx = context.WithValue(ctx, "vaultConnection", vaultSecretDefinition.GetVaultConnection())
+		ctx = vaultutils.ContextWithVaultConnection(ctx, vaultSecretDefinition.GetVaultConnection())
 		vaultClient, err := vaultSecretDefinition.Authentication.GetVaultClient(ctx, instance.Namespace)
 		if err != nil {
 			r.Log.Error(err, "unable to create vault client", "instance", instance)
 			return err
 		}
 
-		ctx = context.WithValue(ctx, "vaultClient", vaultClient)
+		ctx = vaultutils.ContextWithVaultClient(ctx, vaultClient)
 		vaultSecretEndpoint := vaultutils.NewVaultSecretEndpoint(&vaultSecretDefinition)
 		vaultSecret, ok, err := vaultSecretEndpoint.GetSecret(ctx)
 		if err != nil {

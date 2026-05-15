@@ -281,7 +281,7 @@ func (p *PKISecretEngineConfig) CreateExported(context context.Context, secret *
 	exported := p.Spec.PrivateKeyType == "exported"
 
 	if exported {
-		kubeClient := context.Value("kubeClient").(client.Client)
+		kubeClient := vaultutils.KubeClientFromContext(context)
 		kubeSecret := &corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      p.Name,
@@ -319,12 +319,12 @@ func (p *PKISecretEngineConfig) SetIntermediate(context context.Context) error {
 	if p.Spec.Type == "intermediate" {
 
 		log := log.FromContext(context)
-		vaultClient := context.Value("vaultClient").(*vault.Client)
+		vaultClient := vaultutils.VaultClientFromContext(context)
 
 		if p.Spec.InternalSign != nil && p.Spec.InternalSign.Name != "" {
 
 			if p.Spec.PKIIntermediate.cSR == "" {
-				kubeClient := context.Value("kubeClient").(client.Client)
+				kubeClient := vaultutils.KubeClientFromContext(context)
 				secret := &corev1.Secret{}
 
 				err := kubeClient.Get(context, types.NamespacedName{
@@ -355,7 +355,7 @@ func (p *PKISecretEngineConfig) SetIntermediate(context context.Context) error {
 				return err
 			}
 
-			kubeClient := context.Value("kubeClient").(client.Client)
+			kubeClient := vaultutils.KubeClientFromContext(context)
 			secret := &corev1.Secret{}
 
 			err := kubeClient.Get(context, types.NamespacedName{

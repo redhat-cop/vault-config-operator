@@ -21,7 +21,6 @@ import (
 	"errors"
 	"reflect"
 
-	vault "github.com/hashicorp/vault/api"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -132,8 +131,8 @@ func (r *GitHubSecretEngineConfig) IsValid() (bool, error) {
 
 func (r *GitHubSecretEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
-	kubeClient := context.Value("kubeClient").(client.Client)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	kubeClient := vaultutils.KubeClientFromContext(context)
+	vaultClient := vaultutils.VaultClientFromContext(context)
 	if r.Spec.SSHKeyReference.Secret != nil {
 		secret := &corev1.Secret{}
 		err := kubeClient.Get(context, types.NamespacedName{

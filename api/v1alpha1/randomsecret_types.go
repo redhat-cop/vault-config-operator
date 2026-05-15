@@ -26,7 +26,6 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2/hclsimple"
-	vault "github.com/hashicorp/vault/api"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	"github.com/scylladb/go-set/u8set"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -236,7 +235,7 @@ func (d *RandomSecret) GenerateNewPassword(context context.Context) error {
 		}
 	}
 	if d.Spec.SecretFormat.PasswordPolicyName != "" {
-		vaultClient := context.Value("vaultClient").(*vault.Client)
+		vaultClient := vaultutils.VaultClientFromContext(context)
 		response, err := vaultClient.Logical().Read("/sys/policies/password/" + d.Spec.SecretFormat.PasswordPolicyName + "/generate")
 		if err != nil {
 			return err

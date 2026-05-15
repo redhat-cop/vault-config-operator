@@ -21,7 +21,6 @@ import (
 	"errors"
 	"reflect"
 
-	vault "github.com/hashicorp/vault/api"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -195,14 +194,14 @@ func (d *EntityAlias) PrepareInternalValues(context context.Context, object clie
 			payload["custom_metadata"] = d.Spec.CustomMetadata
 		}
 		log.V(1).Info("create entity alias", "payload", payload)
-		vaultClient := context.Value("vaultClient").(*vault.Client)
+		vaultClient := vaultutils.VaultClientFromContext(context)
 		result, err := vaultClient.Logical().Write("/identity/entity-alias", payload)
 		if err != nil {
 			log.Error(err, "unable to create entity alias", "entity alias", d.Spec)
 			return err
 		}
 		d.Status.ID = result.Data["id"].(string)
-		kubeClient := context.Value("kubeClient").(client.Client)
+		kubeClient := vaultutils.KubeClientFromContext(context)
 		err = kubeClient.Status().Update(context, d, &client.SubResourceUpdateOptions{})
 		if err != nil {
 			log.Error(err, "unable to update entity alias status, your kube and vault systems may now be inconsistent", "instance", d)

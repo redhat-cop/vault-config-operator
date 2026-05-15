@@ -82,7 +82,7 @@ func (s *fakeVaultStore) handler() http.Handler {
 }
 
 func newTestContext(client *vault.Client) context.Context {
-	return context.WithValue(context.Background(), "vaultClient", client)
+	return ContextWithVaultClient(context.Background(), client)
 }
 
 func newTestClient(t *testing.T, store *fakeVaultStore) (*vault.Client, *httptest.Server) {

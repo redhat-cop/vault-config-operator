@@ -62,7 +62,7 @@ func (ve *VaultPKIEngineEndpoint) Generate(context context.Context) (*vault.Secr
 
 func (ve *VaultPKIEngineEndpoint) DeleteIfExists(context context.Context) error {
 	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	vaultClient := VaultClientFromContext(context)
 	_, err := vaultClient.Logical().Delete(ve.vaultPKIEngineObject.GetDeletePath())
 	if err != nil {
 		if respErr, ok := err.(*vault.ResponseError); ok {
@@ -111,7 +111,7 @@ func (ve *VaultPKIEngineEndpoint) CreateOrUpdateConfig(context context.Context, 
 	}
 
 	if !ve.vaultObject.IsEquivalentToDesiredState(currentConfigPayload) {
-		return write(context, ve.vaultPKIEngineObject.GetConfigCrlPath(), payload)
+		return write(context, configPath, payload)
 	}
 
 	return nil

@@ -200,7 +200,7 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) IsValid() (bool, error) {
 
 func (rabbitMQ *RabbitMQSecretEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
-	k8sClient := context.Value("kubeClient").(client.Client)
+	k8sClient := vaultutils.KubeClientFromContext(context)
 	if rabbitMQ.Spec.RootCredentials.RandomSecret != nil {
 		randomSecret := &RandomSecret{}
 		err := k8sClient.Get(context, types.NamespacedName{

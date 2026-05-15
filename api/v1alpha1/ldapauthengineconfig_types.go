@@ -105,7 +105,7 @@ func (r *LDAPAuthEngineConfig) IsValid() (bool, error) {
 
 func (r *LDAPAuthEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
-	kubeClient := context.Value("kubeClient").(client.Client)
+	kubeClient := vaultutils.KubeClientFromContext(context)
 	if r.Spec.BindCredentials.RandomSecret != nil {
 		randomSecret := &RandomSecret{}
 		err := kubeClient.Get(context, types.NamespacedName{
@@ -169,7 +169,7 @@ func (r *LDAPAuthEngineConfig) setInternalCredentials(context context.Context) e
 
 func (r *LDAPAuthEngineConfig) setTLSConfig(context context.Context) error {
 	log := log.FromContext(context)
-	kubeClient := context.Value("kubeClient").(client.Client)
+	kubeClient := vaultutils.KubeClientFromContext(context)
 
 	if r.Spec.TLSConfig.TLSSecret != nil {
 		secret := &corev1.Secret{}

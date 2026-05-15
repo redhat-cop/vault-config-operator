@@ -123,7 +123,7 @@ func (r *KubernetesAuthEngineRole) findSelectedNamespaceNames(context context.Co
 		log.Error(err, "unable to create selector from label selector", "selector", r.Spec.TargetNamespaces.TargetNamespaceSelector)
 		return nil, err
 	}
-	kubeClient := context.Value("kubeClient").(client.Client)
+	kubeClient := vaultutils.KubeClientFromContext(context)
 	err = kubeClient.List(context, namespaceList, &client.ListOptions{
 		LabelSelector: labelSelector,
 	})

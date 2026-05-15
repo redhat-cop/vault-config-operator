@@ -96,7 +96,7 @@ func (q *QuaySecretEngineConfig) IsValid() (bool, error) {
 
 func (q *QuaySecretEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
-	kubeClient := context.Value("kubeClient").(client.Client)
+	kubeClient := vaultutils.KubeClientFromContext(context)
 	if q.Spec.RootCredentials.RandomSecret != nil {
 		randomSecret := &RandomSecret{}
 		err := kubeClient.Get(context, types.NamespacedName{

@@ -28,6 +28,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -189,7 +190,7 @@ func NewLookupFunction(config *rest.Config, logger logr.Logger) lookupFunc {
 	return func(apiversion string, resource string, namespace string, name string) (map[string]interface{}, error) {
 		var client dynamic.ResourceInterface
 		ctx := context.TODO()
-		ctx = context.WithValue(ctx, "restConfig", config)
+		ctx = vaultutils.ContextWithRestConfig(ctx, config)
 		ctx = log.IntoContext(ctx, logger.WithName("lookup function"))
 		c, namespaced, err := GetDynamicClientForGVK(ctx, schema.FromAPIVersionAndKind(apiversion, resource))
 		if err != nil {

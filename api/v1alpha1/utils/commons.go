@@ -30,7 +30,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -139,7 +138,7 @@ func (cache *VaultClientCache) Delete(kc *KubeAuthConfiguration, kubeNamespace s
 
 func (vc *VaultConnection) getConnectionConfig(context context.Context, kubeNamespace string) (*vault.Config, error) {
 	log := log.FromContext(context)
-	restConfig := context.Value("restConfig").(*rest.Config)
+	restConfig := RestConfigFromContext(context)
 	clientset, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		log.Error(err, "unable to create kubernetes clientset")
@@ -241,7 +240,7 @@ func (kc *KubeAuthConfiguration) GetVaultClient(context context.Context, kubeNam
 func GetJWTTokenWithDuration(context context.Context, serviceAccountName string, kubeNamespace string, duration int64) (string, error) {
 	log := log.FromContext(context)
 
-	restConfig := context.Value("restConfig").(*rest.Config)
+	restConfig := RestConfigFromContext(context)
 
 	treq := &authv1.TokenRequest{
 		Spec: authv1.TokenRequestSpec{
@@ -278,7 +277,7 @@ func (kc *KubeAuthConfiguration) getJWTToken(context context.Context, kubeNamesp
 func (kc *KubeAuthConfiguration) createVaultClient(context context.Context, jwt string, namespace string) (*vault.Client, error) {
 	log := log.FromContext(context)
 	log.V(1).Info("Creating new client")
-	vaultConnection := context.Value("vaultConnection").(*VaultConnection)
+	vaultConnection := VaultConnectionFromContext(context)
 	var config *vault.Config
 	if vaultConnection != nil {
 		var err error
@@ -352,10 +351,17 @@ func CleansePath(path string) string {
 }
 
 func ToString(name interface{}) string {
-	if name != nil {
-		return name.(string)
+	if name == nil {
+		return ""
 	}
-	return ""
+	switch v := name.(type) {
+	case string:
+		return v
+	case []byte:
+		return string(v)
+	default:
+		return fmt.Sprintf("%v", name)
+	}
 }
 
 // +kubebuilder:object:generate=true

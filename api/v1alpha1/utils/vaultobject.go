@@ -53,7 +53,7 @@ func NewVaultEndpoint(obj client.Object) *VaultEndpoint {
 // This is similar to vaultClient.KVv2(mountPath string).DeleteMetadata(ctx context.Context, secretPath string) but works better with existing interface
 func (ve *VaultEndpoint) DeleteKVv2IfExists(context context.Context) error {
 	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	vaultClient := VaultClientFromContext(context)
 
 	// should match pathToDelete := fmt.Sprintf("%s/metadata/%s", kv.mountPath, secretPath)
 	pathToDelete := strings.Replace(ve.vaultObject.GetPath(), "/data/", "/metadata/", 1)
@@ -73,7 +73,7 @@ func (ve *VaultEndpoint) DeleteKVv2IfExists(context context.Context) error {
 
 func (ve *VaultEndpoint) DeleteIfExists(context context.Context) error {
 	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	vaultClient := VaultClientFromContext(context)
 	_, err := vaultClient.Logical().Delete(ve.vaultObject.GetPath())
 	if err != nil {
 		if respErr, ok := err.(*vault.ResponseError); ok {

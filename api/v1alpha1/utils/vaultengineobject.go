@@ -21,7 +21,6 @@ import (
 	"errors"
 	"strings"
 
-	vault "github.com/hashicorp/vault/api"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -47,7 +46,7 @@ func NewVaultEngineEndpoint(obj client.Object) *VaultEngineEndpoint {
 
 func (ve *VaultEngineEndpoint) retrieveAccessor(context context.Context) (string, bool, error) {
 	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	vaultClient := VaultClientFromContext(context)
 	secret, err := vaultClient.Logical().Read(ve.vaultEngineObject.GetEngineListPath())
 	if err != nil {
 		log.Error(err, "unable to read engines at", "path", ve.vaultEngineObject.GetEngineListPath())

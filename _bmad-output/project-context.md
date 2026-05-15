@@ -74,8 +74,9 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - For engine mounts (`VaultEngineObject`), `IsEquivalentToDesiredState` compares the **tune config** (`Config.toMap()`) not the full mount spec, because Vault's read response for mounts returns only tune-level fields.
 
 #### Context-Carried Values
-- `prepareContext()` in `controllers/commons.go` enriches the context with 4 values: `"kubeClient"`, `"restConfig"`, `"vaultConnection"`, `"vaultClient"`.
-- All downstream code retrieves these via `context.Value("key").(Type)` — type assertions with no safety check (will panic if missing).
+- `prepareContext()` in `controllers/commons.go` enriches the context with 4 typed keys using setter functions from `api/v1alpha1/utils/contextkeys.go`: `vaultutils.ContextWithKubeClient(ctx, ...)`, `vaultutils.ContextWithRestConfig(ctx, ...)`, `vaultutils.ContextWithVaultConnection(ctx, ...)`, `vaultutils.ContextWithVaultClient(ctx, ...)`.
+- All downstream code retrieves these via matching accessor functions: `vaultutils.KubeClientFromContext(ctx)`, `vaultutils.RestConfigFromContext(ctx)`, `vaultutils.VaultConnectionFromContext(ctx)`, `vaultutils.VaultClientFromContext(ctx)`. The accessors use typed `contextKey` constants (not bare strings), so a typo causes a compile error instead of a runtime panic.
+- The accessors still use unchecked type assertions internally — if a key is missing from the context, the operator will panic early. This is intentional.
 - The `vaultClient` is obtained per-reconcile via `GetKubeAuthConfiguration().GetVaultClient(ctx, namespace)`.
 
 #### Error Management Pattern
@@ -285,7 +286,7 @@ These rules govern the interaction between `kubebuilder:default`, `omitempty`, a
 - `zz_generated.deepcopy.go` is auto-generated — never edit it manually.
 
 #### Context Value Contract
-- The enriched context from `prepareContext()` carries `"kubeClient"`, `"restConfig"`, `"vaultConnection"`, `"vaultClient"` — all retrieved via unsafe type assertions. If any of these are missing, the operator will panic. Any new context value must follow the same pattern.
+- The enriched context from `prepareContext()` carries four typed keys (`KubeClientKey`, `RestConfigKey`, `VaultConnectionKey`, `VaultClientKey`) set via `vaultutils.ContextWith*` and read via `vaultutils.*FromContext`. The accessors use unchecked type assertions — if any key is missing, the operator will panic. New context values must follow the same typed-key pattern in `api/v1alpha1/utils/contextkeys.go`.
 
 #### Deletion Safety
 - `manageCleanUpLogic` only deletes from Vault if the CR previously had a `ReconcileSuccessful=True` condition. This prevents deleting Vault resources that were never successfully created.

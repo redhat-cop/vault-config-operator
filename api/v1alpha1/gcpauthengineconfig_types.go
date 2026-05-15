@@ -204,7 +204,7 @@ func (r *GCPAuthEngineConfig) PrepareTLSConfig(context context.Context, object c
 
 func (r *GCPAuthEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
-	kubeClient := context.Value("kubeClient").(client.Client)
+	kubeClient := vaultutils.KubeClientFromContext(context)
 	if r.Spec.GCPCredentials.RandomSecret != nil {
 		randomSecret := &RandomSecret{}
 		err := kubeClient.Get(context, types.NamespacedName{

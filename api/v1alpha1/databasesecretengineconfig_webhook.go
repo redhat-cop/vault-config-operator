@@ -41,7 +41,7 @@ var _ webhook.Defaulter = &DatabaseSecretEngineConfig{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *DatabaseSecretEngineConfig) Default() {
-	authenginemountlog.Info("default", "name", r.Name)
+	databasesecretengineconfiglog.Info("default", "name", r.Name)
 }
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!

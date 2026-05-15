@@ -23,7 +23,6 @@ import (
 	"regexp"
 	"strings"
 
-	vault "github.com/hashicorp/vault/api"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -86,7 +85,7 @@ func (d *Policy) PrepareInternalValues(context context.Context, object client.Ob
 
 	// Retrieves the list of auth engines to get their accessors
 	// Kinda duplicates logic found in VaultEngineObject.retrieveAccessor
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	vaultClient := vaultutils.VaultClientFromContext(context)
 	secret, err := vaultClient.Logical().Read("sys/auth")
 	if err != nil {
 		// Log but ignore the error: do not resolve placeholders

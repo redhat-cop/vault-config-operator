@@ -191,7 +191,7 @@ func (r *AzureAuthEngineConfig) PrepareTLSConfig(context context.Context, object
 
 func (r *AzureAuthEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
-	kubeClient := context.Value("kubeClient").(client.Client)
+	kubeClient := vaultutils.KubeClientFromContext(context)
 	if r.Spec.AzureCredentials.RandomSecret != nil {
 		randomSecret := &RandomSecret{}
 		err := kubeClient.Get(context, types.NamespacedName{

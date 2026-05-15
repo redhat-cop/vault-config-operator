@@ -23,7 +23,6 @@ import (
 	"errors"
 	"reflect"
 
-	vault "github.com/hashicorp/vault/api"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -145,7 +144,7 @@ func (r *DatabaseSecretEngineConfig) IsValid() (bool, error) {
 
 func (r *DatabaseSecretEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
-	kubeClient := context.Value("kubeClient").(client.Client)
+	kubeClient := vaultutils.KubeClientFromContext(context)
 	if r.Spec.RootCredentials.RandomSecret != nil {
 		randomSecret := &RandomSecret{}
 		err := kubeClient.Get(context, types.NamespacedName{
@@ -397,7 +396,7 @@ func (d *DatabaseSecretEngineConfig) GetKubeAuthConfiguration() *vaultutils.Kube
 
 func (d *DatabaseSecretEngineConfig) RotateRootPassword(ctx context.Context) error {
 	log := log.FromContext(ctx)
-	vaultClient := ctx.Value("vaultClient").(*vault.Client)
+	vaultClient := vaultutils.VaultClientFromContext(ctx)
 	_, err := vaultClient.Logical().WriteWithContext(ctx, d.GetRootPasswordRotationPath(), nil)
 	if err != nil {
 		log.Error(err, "unable to rotate root password", "instance", d)

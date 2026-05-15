@@ -1,6 +1,6 @@
 # Story R1.1: Correctness Fixes — Context Keys, PKI Bug, Webhook Loggers, Unsafe ToString
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -18,38 +18,38 @@ So that the operator is reliable before further refactoring.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define typed context key type and constants (AC: 1)
-  - [ ] 1.1: In `api/v1alpha1/utils/`, create an unexported `contextKey` type and 4 exported constants: `KubeClientKey`, `RestConfigKey`, `VaultConnectionKey`, `VaultClientKey`
-  - [ ] 1.2: Add 4 accessor functions: `KubeClientFromContext(ctx) client.Client`, `RestConfigFromContext(ctx) *rest.Config`, `VaultConnectionFromContext(ctx) *VaultConnection`, `VaultClientFromContext(ctx) *vault.Client`
-  - [ ] 1.3: Add 4 setter functions: `ContextWithKubeClient(ctx, client) context.Context`, `ContextWithRestConfig(ctx, cfg) context.Context`, `ContextWithVaultConnection(ctx, vc) context.Context`, `ContextWithVaultClient(ctx, vc) context.Context`
-- [ ] Task 2: Migrate all `context.WithValue` calls — 14 sites in 7 files (AC: 1)
-  - [ ] 2.1: `controllers/commons.go` (lines 20-23, 28) — 4 `WithValue` calls in `prepareContext`
-  - [ ] 2.2: `controllers/vaultsecret_controller.go` (lines 90-91) — 2 calls for `kubeClient`/`restConfig`
-  - [ ] 2.3: `controllers/vaultsecret_controller.go` (lines 337, 344) — 2 calls for `vaultConnection`/`vaultClient`
-  - [ ] 2.4: `controllers/vaultresourcecontroller/advanced-funcmap.go` (line 192) — 1 `restConfig` call
-  - [ ] 2.5: `api/v1alpha1/prepareinternalvalues_test_helpers_test.go` (lines 89-90, 96) — 3 calls across `pivContext` and `pivContextWithRestConfig`
-  - [ ] 2.6: `api/v1alpha1/kubernetesauthenginerole_test.go` (line 322) — 1 `kubeClient` call
-  - [ ] 2.7: `api/v1alpha1/utils/vaultobject_test.go` (line 85) — 1 `vaultClient` call in `newTestContext`
-- [ ] Task 3: Migrate all `context.Value("...")` calls — 43 sites in 18 files (AC: 1)
-  - [ ] 3.1: `api/v1alpha1/utils/commons.go` — 3 sites: `restConfig` (lines 142, 244), `vaultConnection` (line 281)
-  - [ ] 3.2: `api/v1alpha1/utils/vaultutils.go` — 4 sites: `vaultClient` (lines 36, 47, 66, 86)
-  - [ ] 3.3: `api/v1alpha1/utils/vaultobject.go` — 2 sites: `vaultClient` (lines 56, 76)
-  - [ ] 3.4: `api/v1alpha1/utils/vaultengineobject.go` — 1 site: `vaultClient` (line 50)
-  - [ ] 3.5: `api/v1alpha1/utils/vautlpkiengineobject.go` — 1 site: `vaultClient` (line 65)
-  - [ ] 3.6: `api/v1alpha1/utils/vaultauditobject.go` — 4 sites: `vaultClient` (lines 47, 67, 95, 120)
-  - [ ] 3.7: 16 `*_types.go` files — 26 sites total (see complete inventory below)
-  - [ ] 3.8: `controllers/vaultresourcecontroller/dynamicclientutils.go` — 2 sites: `restConfig` (lines 53, 83)
-- [ ] Task 4: Fix PKI `CreateOrUpdateConfig` write path (AC: 2)
-  - [ ] 4.1: In `api/v1alpha1/utils/vautlpkiengineobject.go` line 114: change `write(context, ve.vaultPKIEngineObject.GetConfigCrlPath(), payload)` to `write(context, configPath, payload)`
-- [ ] Task 5: Fix webhook logger copy-paste errors (AC: 3)
-  - [ ] 5.1: `api/v1alpha1/secretenginemount_webhook.go` line 47: change `authenginemountlog.Info(...)` to `secretenginemountlog.Info(...)`
-  - [ ] 5.2: `api/v1alpha1/databasesecretengineconfig_webhook.go` line 44: change `authenginemountlog.Info(...)` to `databasesecretengineconfiglog.Info(...)`
-  - [ ] 5.3: `api/v1alpha1/azureauthengineconfig_webhook.go` line 60: change `jwtoidcauthengineconfiglog.Info(...)` to `azureauthengineconfiglog.Info(...)`
-- [ ] Task 6: Replace `ToString` with safe conversion (AC: 4)
-  - [ ] 6.1: In `api/v1alpha1/utils/commons.go` (~line 354): replace unsafe `name.(string)` with `fmt.Sprintf("%v", name)` or a type switch
-- [ ] Task 7: Verify no regressions (AC: 5)
-  - [ ] 7.1: Run `make manifests generate fmt vet test`
-  - [ ] 7.2: Run `make integration`
+- [x] Task 1: Define typed context key type and constants (AC: 1)
+  - [x] 1.1: In `api/v1alpha1/utils/`, create an unexported `contextKey` type and 4 exported constants: `KubeClientKey`, `RestConfigKey`, `VaultConnectionKey`, `VaultClientKey`
+  - [x] 1.2: Add 4 accessor functions: `KubeClientFromContext(ctx) client.Client`, `RestConfigFromContext(ctx) *rest.Config`, `VaultConnectionFromContext(ctx) *VaultConnection`, `VaultClientFromContext(ctx) *vault.Client`
+  - [x] 1.3: Add 4 setter functions: `ContextWithKubeClient(ctx, client) context.Context`, `ContextWithRestConfig(ctx, cfg) context.Context`, `ContextWithVaultConnection(ctx, vc) context.Context`, `ContextWithVaultClient(ctx, vc) context.Context`
+- [x] Task 2: Migrate all `context.WithValue` calls — 14 sites in 7 files (AC: 1)
+  - [x] 2.1: `controllers/commons.go` (lines 20-23, 28) — 4 `WithValue` calls in `prepareContext`
+  - [x] 2.2: `controllers/vaultsecret_controller.go` (lines 90-91) — 2 calls for `kubeClient`/`restConfig`
+  - [x] 2.3: `controllers/vaultsecret_controller.go` (lines 337, 344) — 2 calls for `vaultConnection`/`vaultClient`
+  - [x] 2.4: `controllers/vaultresourcecontroller/advanced-funcmap.go` (line 192) — 1 `restConfig` call
+  - [x] 2.5: `api/v1alpha1/prepareinternalvalues_test_helpers_test.go` (lines 89-90, 96) — 3 calls across `pivContext` and `pivContextWithRestConfig`
+  - [x] 2.6: `api/v1alpha1/kubernetesauthenginerole_test.go` (line 322) — 1 `kubeClient` call
+  - [x] 2.7: `api/v1alpha1/utils/vaultobject_test.go` (line 85) — 1 `vaultClient` call in `newTestContext`
+- [x] Task 3: Migrate all `context.Value("...")` calls — 43 sites in 18 files (AC: 1)
+  - [x] 3.1: `api/v1alpha1/utils/commons.go` — 3 sites: `restConfig` (lines 142, 244), `vaultConnection` (line 281)
+  - [x] 3.2: `api/v1alpha1/utils/vaultutils.go` — 4 sites: `vaultClient` (lines 36, 47, 66, 86)
+  - [x] 3.3: `api/v1alpha1/utils/vaultobject.go` — 2 sites: `vaultClient` (lines 56, 76)
+  - [x] 3.4: `api/v1alpha1/utils/vaultengineobject.go` — 1 site: `vaultClient` (line 50)
+  - [x] 3.5: `api/v1alpha1/utils/vautlpkiengineobject.go` — 1 site: `vaultClient` (line 65)
+  - [x] 3.6: `api/v1alpha1/utils/vaultauditobject.go` — 4 sites: `vaultClient` (lines 47, 67, 95, 120)
+  - [x] 3.7: 16 `*_types.go` files — 26 sites total (see complete inventory below)
+  - [x] 3.8: `controllers/vaultresourcecontroller/dynamicclientutils.go` — 2 sites: `restConfig` (lines 53, 83)
+- [x] Task 4: Fix PKI `CreateOrUpdateConfig` write path (AC: 2)
+  - [x] 4.1: In `api/v1alpha1/utils/vautlpkiengineobject.go` line 114: change `write(context, ve.vaultPKIEngineObject.GetConfigCrlPath(), payload)` to `write(context, configPath, payload)`
+- [x] Task 5: Fix webhook logger copy-paste errors (AC: 3)
+  - [x] 5.1: `api/v1alpha1/secretenginemount_webhook.go` line 47: change `authenginemountlog.Info(...)` to `secretenginemountlog.Info(...)`
+  - [x] 5.2: `api/v1alpha1/databasesecretengineconfig_webhook.go` line 44: change `authenginemountlog.Info(...)` to `databasesecretengineconfiglog.Info(...)`
+  - [x] 5.3: `api/v1alpha1/azureauthengineconfig_webhook.go` line 60: change `jwtoidcauthengineconfiglog.Info(...)` to `azureauthengineconfiglog.Info(...)`
+- [x] Task 6: Replace `ToString` with safe conversion (AC: 4)
+  - [x] 6.1: In `api/v1alpha1/utils/commons.go` (~line 354): replace unsafe `name.(string)` with `fmt.Sprintf("%v", name)` or a type switch
+- [x] Task 7: Verify no regressions (AC: 5)
+  - [x] 7.1: Run `make manifests generate fmt vet test`
+  - [x] 7.2: Run `make integration`
 
 ## Dev Notes
 
@@ -213,10 +213,56 @@ This is the first story in Epic R1. Key learnings from Epic 7.5 (the immediately
 
 ### Agent Model Used
 
+Opus 4.6 (Cursor Agent)
+
 ### Debug Log References
+
+None — clean implementation, no debug cycles needed.
 
 ### Completion Notes List
 
+- **AC1 (Context Keys):** Created `api/v1alpha1/utils/contextkeys.go` with typed `contextKey` int type, 4 exported constants, 4 getter functions, and 4 setter functions. Migrated all 14 `context.WithValue` call sites and all 43 `context.Value("...")` call sites across 25 files. Removed 8 now-unused imports (`vault`, `rest`). A context key typo will now cause a compile error instead of a runtime panic.
+- **AC2 (PKI Bug):** Fixed `CreateOrUpdateConfig` in `vautlpkiengineobject.go` to write to `configPath` instead of hardcoded `GetConfigCrlPath()`. This was a data-corruption bug where URL config would overwrite CRL config on drift detection.
+- **AC3 (Webhook Loggers):** Fixed 3 copy-paste logger errors: `secretenginemount_webhook.go`, `databasesecretengineconfig_webhook.go`, and `azureauthengineconfig_webhook.go` now use their own per-file logger variable.
+- **AC4 (ToString):** Replaced unsafe `name.(string)` type assertion with type-switch approach: fast path for strings, `fmt.Sprintf` fallback for non-strings. Non-string values now produce a string instead of panicking.
+- **AC5 (No Regressions):** `make manifests generate fmt vet test` and `make integration` both pass (integration: 576s).
+
 ### Change Log
 
+- 2026-05-15: Implemented all 7 tasks for story R1.1 — typed context keys, PKI write-path fix, webhook logger fixes, safe ToString conversion. All unit and integration tests pass.
+
 ### File List
+
+- api/v1alpha1/utils/contextkeys.go (NEW)
+- api/v1alpha1/utils/commons.go (MODIFIED — removed bare-string context value lookups, safe ToString)
+- api/v1alpha1/utils/vaultutils.go (MODIFIED — typed context accessors)
+- api/v1alpha1/utils/vaultobject.go (MODIFIED — typed context accessors)
+- api/v1alpha1/utils/vaultobject_test.go (MODIFIED — typed context setter)
+- api/v1alpha1/utils/vaultengineobject.go (MODIFIED — typed context accessors, removed vault import)
+- api/v1alpha1/utils/vautlpkiengineobject.go (MODIFIED — typed context accessors, PKI write-path fix)
+- api/v1alpha1/utils/vaultauditobject.go (MODIFIED — typed context accessors)
+- api/v1alpha1/policy_types.go (MODIFIED — typed context accessors, removed vault import)
+- api/v1alpha1/randomsecret_types.go (MODIFIED — typed context accessors, removed vault import)
+- api/v1alpha1/entityalias_types.go (MODIFIED — typed context accessors, removed vault import)
+- api/v1alpha1/groupalias_types.go (MODIFIED — typed context accessors, removed vault import)
+- api/v1alpha1/kubernetesauthenginerole_types.go (MODIFIED — typed context accessors)
+- api/v1alpha1/kubernetessecretengineconfig_types.go (MODIFIED — typed context accessors, removed vault import)
+- api/v1alpha1/databasesecretengineconfig_types.go (MODIFIED — typed context accessors, removed vault import)
+- api/v1alpha1/pkisecretengineconfig_types.go (MODIFIED — typed context accessors)
+- api/v1alpha1/githubsecretengineconfig_types.go (MODIFIED — typed context accessors, removed vault import)
+- api/v1alpha1/quaysecretengineconfig_types.go (MODIFIED — typed context accessors)
+- api/v1alpha1/ldapauthengineconfig_types.go (MODIFIED — typed context accessors)
+- api/v1alpha1/jwtoidcauthengineconfig_types.go (MODIFIED — typed context accessors)
+- api/v1alpha1/azureauthengineconfig_types.go (MODIFIED — typed context accessors)
+- api/v1alpha1/gcpauthengineconfig_types.go (MODIFIED — typed context accessors)
+- api/v1alpha1/azuresecretengineconfig_types.go (MODIFIED — typed context accessors)
+- api/v1alpha1/rabbitmqsecretengineconfig_types.go (MODIFIED — typed context accessors)
+- api/v1alpha1/secretenginemount_webhook.go (MODIFIED — logger fix)
+- api/v1alpha1/databasesecretengineconfig_webhook.go (MODIFIED — logger fix)
+- api/v1alpha1/azureauthengineconfig_webhook.go (MODIFIED — logger fix)
+- api/v1alpha1/prepareinternalvalues_test_helpers_test.go (MODIFIED — typed context setters)
+- api/v1alpha1/kubernetesauthenginerole_test.go (MODIFIED — typed context setter)
+- controllers/commons.go (MODIFIED — typed context setters)
+- controllers/vaultsecret_controller.go (MODIFIED — typed context setters)
+- controllers/vaultresourcecontroller/advanced-funcmap.go (MODIFIED — typed context setter, added vaultutils import)
+- controllers/vaultresourcecontroller/dynamicclientutils.go (MODIFIED — typed context accessors, added vaultutils import, removed rest import)

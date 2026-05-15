@@ -224,7 +224,7 @@ func (r *JWTOIDCAuthEngineConfig) PrepareTLSConfig(context context.Context, obje
 func (r *JWTOIDCAuthEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
 	if r.Spec.OIDCCredentials != nil {
-		kubeClient := context.Value("kubeClient").(client.Client)
+		kubeClient := vaultutils.KubeClientFromContext(context)
 		if r.Spec.OIDCCredentials.RandomSecret != nil {
 			randomSecret := &RandomSecret{}
 			err := kubeClient.Get(context, types.NamespacedName{

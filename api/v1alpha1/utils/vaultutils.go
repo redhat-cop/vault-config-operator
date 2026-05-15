@@ -33,7 +33,7 @@ func write(context context.Context, path string, payload map[string]interface{})
 
 func writeWithResponse(context context.Context, path string, payload map[string]interface{}) (*vault.Secret, error) {
 	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	vaultClient := VaultClientFromContext(context)
 	secret, err := vaultClient.Logical().Write(path, payload)
 	if err != nil {
 		log.Error(err, "unable to write object at", "path", path)
@@ -44,7 +44,7 @@ func writeWithResponse(context context.Context, path string, payload map[string]
 
 func read(context context.Context, path string) (map[string]interface{}, bool, error) {
 	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	vaultClient := VaultClientFromContext(context)
 	secret, err := vaultClient.Logical().Read(path)
 	if err != nil {
 		if respErr, ok := err.(*vault.ResponseError); ok {
@@ -63,7 +63,7 @@ func read(context context.Context, path string) (map[string]interface{}, bool, e
 
 func ReadSecret(context context.Context, path string) (*vault.Secret, bool, error) {
 	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	vaultClient := VaultClientFromContext(context)
 	secret, err := vaultClient.Logical().Read(path)
 	if err != nil {
 		if respErr, ok := err.(*vault.ResponseError); ok {
@@ -83,7 +83,7 @@ func ReadSecret(context context.Context, path string) (*vault.Secret, bool, erro
 
 func ReadSecretWithPayload(context context.Context, path string, payload map[string]string) (*vault.Secret, bool, error) {
 	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	vaultClient := VaultClientFromContext(context)
 	payloadi := map[string]interface{}{}
 	for key, value := range payload {
 		payloadi[key] = value
