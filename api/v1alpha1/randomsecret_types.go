@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2/hclsimple"
@@ -296,10 +295,6 @@ func (d *RandomSecret) calculateSecret(policy *PasswordPolicyFormat, attempts in
 		d.Spec.calculatedSecret = randomString
 	}
 	return valid
-}
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
 }
 
 func randStringBytes(n int, letterUints []uint8) string {

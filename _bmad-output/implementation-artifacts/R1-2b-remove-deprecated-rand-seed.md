@@ -1,6 +1,6 @@
 # Story R1.2b: Remove Deprecated `rand.Seed` (SA1019)
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -20,23 +20,23 @@ So that the code uses the modern Go 1.20+ automatic seeding and the SA1019 lint 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Remove the second `init()` function (AC: 1)
-  - [ ] 1.1: In `api/v1alpha1/randomsecret_types.go`, delete the entire `init()` block at lines 302-304:
+- [x] Task 1: Remove the second `init()` function (AC: 1)
+  - [x] 1.1: In `api/v1alpha1/randomsecret_types.go`, delete the entire `init()` block at lines 302-304:
     ```go
     func init() {
         rand.Seed(time.Now().UnixNano())
     }
     ```
     The first `init()` at line 209 (`SchemeBuilder.Register(...)`) is unrelated and must be preserved.
-- [ ] Task 2: Clean up `"time"` import (AC: 2)
-  - [ ] 2.1: Remove `"time"` from the import block (line 25). It has zero other usages in this file.
-  - [ ] 2.2: The `"math/rand"` import (line 23) must stay — `randStringBytes` uses `rand.Intn`.
-- [ ] Task 3: Verify lint (AC: 4)
-  - [ ] 3.1: Run `golangci-lint run --disable-all --enable=staticcheck ./...`
-  - [ ] 3.2: Confirm zero SA1019 findings for `rand.Seed`. The only remaining SA1019 should be the `ioutil` usage in `controllers/controllertestutils/decoder.go` (R1.3 scope — do NOT fix it in this story).
-- [ ] Task 4: Verify no regressions (AC: 5)
-  - [ ] 4.1: Run `make manifests generate fmt vet test`
-  - [ ] 4.2: Run `make integration`
+- [x] Task 2: Clean up `"time"` import (AC: 2)
+  - [x] 2.1: Remove `"time"` from the import block (line 25). It has zero other usages in this file.
+  - [x] 2.2: The `"math/rand"` import (line 23) must stay — `randStringBytes` uses `rand.Intn`.
+- [x] Task 3: Verify lint (AC: 4)
+  - [x] 3.1: Run `golangci-lint run --disable-all --enable=staticcheck ./...`
+  - [x] 3.2: Confirm zero SA1019 findings for `rand.Seed`. The only remaining SA1019 should be the `ioutil` usage in `controllers/controllertestutils/decoder.go` (R1.3 scope — do NOT fix it in this story).
+- [x] Task 4: Verify no regressions (AC: 5)
+  - [x] 4.1: Run `make manifests generate fmt vet test`
+  - [x] 4.2: Run `make integration`
 
 ## Dev Notes
 
@@ -118,10 +118,35 @@ R1.2a is the immediately preceding story in the lint-fix sequence. Key learnings
 
 ### Agent Model Used
 
+Cursor Agent (Opus 4.6)
+
 ### Debug Log References
+
+- Initial `make integration` failed due to kubectl context pointing at OpenShift cluster instead of kind-kind. Switched context with `kubectl config use-context kind-kind` and re-ran successfully.
+- golangci-lint v1.59.1 (Makefile default) failed to compile with current Go toolchain. Installed v1.64.8 per story Dev Notes guidance.
 
 ### Completion Notes List
 
+- Removed the second `init()` function containing `rand.Seed(time.Now().UnixNano())` from `randomsecret_types.go`
+- Removed unused `"time"` import; preserved `"math/rand"` import used by `randStringBytes`
+- First `init()` (SchemeBuilder.Register) preserved intact
+- golangci-lint staticcheck confirms zero SA1019 findings for `rand.Seed`; only remaining SA1019 is the `ioutil` finding in `decoder.go` (R1.3 scope)
+- `make manifests generate fmt vet test` passed — zero diffs from code generation, all unit tests pass
+- `make integration` passed — all integration tests pass (~576s), no regressions
+- No new tests needed — this is a lint compliance fix with unchanged behavioral contract
+
 ### Change Log
 
+- 2026-05-15: Removed deprecated `rand.Seed` call and unused `"time"` import from `api/v1alpha1/randomsecret_types.go`. SA1019 lint finding resolved.
+
+### Review Findings
+
+Clean review — all layers passed. 0 decision-needed, 0 patch, 0 defer, 12 dismissed as noise.
+
+- [x] [Review][Dismiss] All 12 Blind Hunter findings dismissed — out-of-scope concerns, pre-existing design choices, or information unavailable by design (Go version pin, explicit spec exclusions, CI gate coverage)
+- Edge Case Hunter: zero unhandled paths
+- Acceptance Auditor: all AC1–AC5 satisfied; AC4/AC5 confirmed via dev agent completion notes (lint + test runs)
+
 ### File List
+
+- `api/v1alpha1/randomsecret_types.go` (modified — removed second `init()` function and `"time"` import)
