@@ -37,12 +37,12 @@ import (
 
 	//"github.com/redhat-cop/operator-utils/pkg/util"
 
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	"github.com/redhat-cop/vault-config-operator/controllers"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
-	"sigs.k8s.io/controller-runtime/pkg/cache"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -264,6 +264,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controllers.AWSSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AWSSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AWSSecretEngineConfig")
+		os.Exit(1)
+	}
+
+	if err = (&controllers.AWSSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AWSSecretEngineRole")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AWSSecretEngineRole")
+		os.Exit(1)
+	}
+
 	if err = (&controllers.AzureSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AzureSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AzureSecretEngineConfig")
 		os.Exit(1)
@@ -464,6 +474,16 @@ func main() {
 
 		if err = (&redhatcopv1alpha1.AzureSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "AzureSecretEngineConfig")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.AWSSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "AWSSecretEngineConfig")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.AWSSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "AWSSecretEngineRole")
 			os.Exit(1)
 		}
 
