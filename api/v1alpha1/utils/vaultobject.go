@@ -39,6 +39,13 @@ type VaultObject interface {
 	GetVaultConnection() *VaultConnection
 }
 
+// VaultStatusEnricher is an optional interface that VaultObjects can implement
+// to enrich their Kubernetes status with data read back from Vault after a
+// successful create or update operation.
+type VaultStatusEnricher interface {
+	EnrichStatus(ctx context.Context) error
+}
+
 type VaultEndpoint struct {
 	vaultObject VaultObject
 }

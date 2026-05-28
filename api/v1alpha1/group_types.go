@@ -20,6 +20,7 @@ import (
 	"context"
 	"reflect"
 
+	vault "github.com/hashicorp/vault/api"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -80,6 +81,10 @@ type GroupConfig struct {
 
 // GroupStatus defines the observed state of Group
 type GroupStatus struct {
+	// ID is the Vault-assigned unique identifier for this identity group.
+	// +kubebuilder:validation:Optional
+	ID string `json:"id,omitempty"`
+
 	// +patchMergeKey=type
 	// +patchStrategy=merge
 	// +listType=map
@@ -114,6 +119,7 @@ func init() {
 
 var _ vaultutils.VaultObject = &Group{}
 var _ vaultutils.ConditionsAware = &Group{}
+var _ vaultutils.VaultStatusEnricher = &Group{}
 
 func (m *Group) GetConditions() []metav1.Condition {
 	return m.Status.Conditions
@@ -177,4 +183,19 @@ func (d *Group) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 func (d *Group) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
 	desiredState := d.Spec.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
+}
+
+// EnrichStatus reads the group back from Vault and persists the Vault-assigned ID in status.
+func (d *Group) EnrichStatus(ctx context.Context) error {
+	vaultClient := ctx.Value("vaultClient").(*vault.Client)
+	secret, err := vaultClient.Logical().ReadWithContext(ctx, d.GetPath())
+	if err != nil {
+		return err
+	}
+	if secret != nil && secret.Data != nil {
+		if id, ok := secret.Data["id"].(string); ok {
+			d.Status.ID = id
+		}
+	}
+	return nil
 }

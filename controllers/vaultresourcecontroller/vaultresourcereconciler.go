@@ -68,6 +68,14 @@ func (r *VaultResource) Reconcile(ctx context.Context, instance client.Object) (
 		return ManageOutcome(ctx, *r.reconcilerBase, instance, err)
 	}
 
+	// Enrich status with Vault-side data if the object supports it
+	if enricher, ok := instance.(vaultutils.VaultStatusEnricher); ok {
+		if enrichErr := enricher.EnrichStatus(ctx); enrichErr != nil {
+			log.Error(enrichErr, "unable to enrich status from Vault", "instance", instance)
+			// Non-fatal: proceed with ManageOutcome so conditions are still updated
+		}
+	}
+
 	return ManageOutcome(ctx, *r.reconcilerBase, instance, err)
 }
 
