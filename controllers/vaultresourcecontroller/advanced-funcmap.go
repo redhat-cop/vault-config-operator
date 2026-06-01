@@ -21,13 +21,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"text/template"
 
 	"github.com/BurntSushi/toml"
 	"github.com/Masterminds/sprig/v3"
 	"github.com/go-logr/logr"
-	"github.com/pkg/errors"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -71,10 +71,10 @@ func AdvancedTemplateFuncMap(config *rest.Config, logger logr.Logger) template.F
 	// Add the `required` function here so we can use lintMode
 	f["required"] = func(warn string, val interface{}) (interface{}, error) {
 		if val == nil {
-			return val, errors.Errorf(warn)
+			return val, fmt.Errorf("%s", warn)
 		} else if _, ok := val.(string); ok {
 			if val == "" {
-				return val, errors.Errorf(warn)
+				return val, fmt.Errorf("%s", warn)
 			}
 		}
 		return val, nil

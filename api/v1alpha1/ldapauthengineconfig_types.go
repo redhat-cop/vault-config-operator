@@ -454,7 +454,7 @@ func (i *LDAPConfig) toMap() map[string]interface{} {
 }
 
 func (r *LDAPAuthEngineConfig) isValid() error {
-	return r.Spec.BindCredentials.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+	return r.Spec.BindCredentials.ValidateCredentialSource()
 }
 
 func (d *LDAPAuthEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {

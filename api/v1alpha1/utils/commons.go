@@ -40,18 +40,6 @@ type ConditionsAware interface {
 	SetConditions(conditions []metav1.Condition)
 }
 
-// AddOrReplaceCondition adds or replaces the passed condition in the passed array of conditions
-func AddOrReplaceCondition(c metav1.Condition, conditions []metav1.Condition) []metav1.Condition {
-	for i, condition := range conditions {
-		if c.Type == condition.Type {
-			conditions[i] = c
-			return conditions
-		}
-	}
-	conditions = append(conditions, c)
-	return conditions
-}
-
 var vaultClientCache = VaultClientCache{}
 
 // +kubebuilder:object:generate=true
@@ -407,33 +395,19 @@ type RootCredentialConfig struct {
 	UsernameKey string `json:"usernameKey,omitempty"`
 }
 
-func (credentials *RootCredentialConfig) ValidateEitherFromVaultSecretOrFromSecret() error {
+func (credentials *RootCredentialConfig) ValidateCredentialSource() error {
 	count := 0
-	if credentials.Secret != nil {
-		count++
-	}
 	if credentials.VaultSecret != nil {
 		count++
 	}
-	if count != 1 {
-		return errors.New("only one of spec.rootCredentials.vaultSecret or spec.rootCredentials.secret or spec.rootCredentials.randomSecret can be specified")
+	if credentials.Secret != nil {
+		count++
 	}
-	return nil
-}
-
-func (credentials *RootCredentialConfig) ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret() error {
-	count := 0
 	if credentials.RandomSecret != nil {
 		count++
 	}
-	if credentials.Secret != nil {
-		count++
-	}
-	if credentials.VaultSecret != nil {
-		count++
-	}
 	if count != 1 {
-		return errors.New("only one of spec.rootCredentials.vaultSecret or spec.rootCredentials.secret or spec.rootCredentials.randomSecret can be specified")
+		return errors.New("exactly one of spec.rootCredentials.vaultSecret, spec.rootCredentials.secret, or spec.rootCredentials.randomSecret must be specified")
 	}
 	return nil
 }

@@ -224,7 +224,7 @@ func init() {
 }
 
 func (r *QuaySecretEngineConfig) isValid() error {
-	return r.Spec.RootCredentials.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+	return r.Spec.RootCredentials.ValidateCredentialSource()
 }
 
 func (d *QuaySecretEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {

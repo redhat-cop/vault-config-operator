@@ -1,6 +1,6 @@
 # Story R1.3: Dependency Modernization — Drop Deprecated Packages & Replace Hand-Rolled Stdlib Equivalents
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -20,20 +20,20 @@ So that the codebase uses maintained, idiomatic Go patterns.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Replace `pkg/errors` with stdlib `fmt` (AC: 1)
-  - [ ] 1.1: In `controllers/vaultresourcecontroller/advanced-funcmap.go`, replace the two `errors.Errorf(warn)` calls (lines 71, 74) with `fmt.Errorf("%s", warn)`
-  - [ ] 1.2: Remove the `"github.com/pkg/errors"` import (line 30)
-  - [ ] 1.3: Add `"fmt"` to the import block if not already present
-  - [ ] 1.4: Run `go mod tidy` — `github.com/pkg/errors` should be removed from `go.mod` (it has no other direct consumers in Go source)
-- [ ] Task 2: Replace `ioutil.ReadFile` with `os.ReadFile` (AC: 2)
-  - [ ] 2.1: In `controllers/controllertestutils/decoder.go` line 60 (`decodeFile`), change `ioutil.ReadFile(filename)` to `os.ReadFile(filename)`
-  - [ ] 2.2: Remove `"io/ioutil"` from the import block (line 7). `"os"` is already imported (line 8).
-- [ ] Task 3: Simplify `VaultSecret.isValid()` (AC: 3)
-  - [ ] 3.1: In `api/v1alpha1/vaultsecret_types.go` lines 182-185, replace the body of `isValid()` with `return nil`
-  - [ ] 3.2: Remove the `"github.com/hashicorp/go-multierror"` import (line 20)
-  - [ ] 3.3: Do NOT remove `go-multierror` from `go.mod` — `randomsecret_types.go` has real usage with `multierror.Append` chains in its `isValid()`
-- [ ] Task 4: Migrate `AddOrReplaceCondition` to `apimeta.SetStatusCondition` (AC: 4)
-  - [ ] 4.1: In `controllers/vaultresourcecontroller/utils.go` line 154, replace:
+- [x] Task 1: Replace `pkg/errors` with stdlib `fmt` (AC: 1)
+  - [x] 1.1: In `controllers/vaultresourcecontroller/advanced-funcmap.go`, replace the two `errors.Errorf(warn)` calls (lines 71, 74) with `fmt.Errorf("%s", warn)`
+  - [x] 1.2: Remove the `"github.com/pkg/errors"` import (line 30)
+  - [x] 1.3: Add `"fmt"` to the import block if not already present
+  - [x] 1.4: Run `go mod tidy` — `github.com/pkg/errors` should be removed from `go.mod` (it has no other direct consumers in Go source)
+- [x] Task 2: Replace `ioutil.ReadFile` with `os.ReadFile` (AC: 2)
+  - [x] 2.1: In `controllers/controllertestutils/decoder.go` line 60 (`decodeFile`), change `ioutil.ReadFile(filename)` to `os.ReadFile(filename)`
+  - [x] 2.2: Remove `"io/ioutil"` from the import block (line 7). `"os"` is already imported (line 8).
+- [x] Task 3: Simplify `VaultSecret.isValid()` (AC: 3)
+  - [x] 3.1: In `api/v1alpha1/vaultsecret_types.go` lines 182-185, replace the body of `isValid()` with `return nil`
+  - [x] 3.2: Remove the `"github.com/hashicorp/go-multierror"` import (line 20)
+  - [x] 3.3: Do NOT remove `go-multierror` from `go.mod` — `randomsecret_types.go` has real usage with `multierror.Append` chains in its `isValid()`
+- [x] Task 4: Migrate `AddOrReplaceCondition` to `apimeta.SetStatusCondition` (AC: 4)
+  - [x] 4.1: In `controllers/vaultresourcecontroller/utils.go` line 154, replace:
     ```go
     conditionsAware.SetConditions(vaultutils.AddOrReplaceCondition(condition, conditionsAware.GetConditions()))
     ```
@@ -43,32 +43,36 @@ So that the codebase uses maintained, idiomatic Go patterns.
     apimeta.SetStatusCondition(&conditions, condition)
     conditionsAware.SetConditions(conditions)
     ```
-  - [ ] 4.2: Add import `apimeta "k8s.io/apimachinery/pkg/api/meta"` to `utils.go`
-  - [ ] 4.3: Delete the `AddOrReplaceCondition` function from `api/v1alpha1/utils/commons.go` (lines 44-54)
-  - [ ] 4.4: Verify no other call sites exist (analysis confirms only one: `utils.go:154`)
-- [ ] Task 5: Consolidate `ValidateEither` functions (AC: 5)
-  - [ ] 5.1: Replace both functions in `api/v1alpha1/utils/commons.go` (lines 401-430) with a single `ValidateCredentialSource` function that counts all three non-nil fields (`VaultSecret`, `Secret`, `RandomSecret`)
-  - [ ] 5.2: Update the 1 call site for `ValidateEitherFromVaultSecretOrFromSecret`:
+  - [x] 4.2: Add import `apimeta "k8s.io/apimachinery/pkg/api/meta"` to `utils.go`
+  - [x] 4.3: Delete the `AddOrReplaceCondition` function from `api/v1alpha1/utils/commons.go` (lines 44-54)
+  - [x] 4.4: Verify no other call sites exist (analysis confirms only one: `utils.go:154`)
+- [x] Task 5: Consolidate `ValidateEither` functions (AC: 5)
+  - [x] 5.1: Replace both functions in `api/v1alpha1/utils/commons.go` (lines 401-430) with a single `ValidateCredentialSource` function that counts all three non-nil fields (`VaultSecret`, `Secret`, `RandomSecret`)
+  - [x] 5.2: Update the 1 call site for `ValidateEitherFromVaultSecretOrFromSecret`:
     - `api/v1alpha1/kubernetessecretengineconfig_types.go:143`
-  - [ ] 5.3: Update the 5 call sites for `ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret`:
+  - [x] 5.3: Update the 5 call sites for `ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret`:
     - `api/v1alpha1/azuresecretengineconfig_types.go:173`
     - `api/v1alpha1/databasesecretengineconfig_types.go:391`
     - `api/v1alpha1/ldapauthengineconfig_types.go:457`
     - `api/v1alpha1/quaysecretengineconfig_types.go:227`
     - `api/v1alpha1/rabbitmqsecretengineconfig_types.go:166`
-- [ ] Task 6: Rename typo filename (AC: 6)
-  - [ ] 6.1: `git mv api/v1alpha1/utils/vautlpkiengineobject.go api/v1alpha1/utils/vaultpkiengineobject.go`
-  - [ ] 6.2: No import updates needed — file is in `package utils`, same package. All references are to functions/types within the package, not to the filename.
-- [ ] Task 7: Clean up PKI debug logging
-  - [ ] 7.1: In `controllers/vaultresourcecontroller/vaultpkiengineresourcereconciler.go`, fix 4 log calls with informal key names:
+- [x] Task 6: Rename typo filename (AC: 6)
+  - [x] 6.1: `git mv api/v1alpha1/utils/vautlpkiengineobject.go api/v1alpha1/utils/vaultpkiengineobject.go`
+  - [x] 6.2: No import updates needed — file is in `package utils`, same package. All references are to functions/types within the package, not to the filename.
+- [x] Task 7: Clean up PKI debug logging
+  - [x] 7.1: In `controllers/vaultresourcecontroller/vaultpkiengineresourcereconciler.go`, fix 4 log calls with informal key names:
     - Line 53: `log.Info("DeleteIfExists", "Try to: ", instance)` → `log.Info("deleting vault resource if exists")`
     - Line 70: `log.Info("Delete", "Try to: ", instance)` → `log.Info("processing deletion")`
     - Line 73: `log.Info("Finaliter?", "Try to: ", instance)` → `log.Info("no finalizer found, skipping cleanup")`
     - Line 81: `log.Info("RemoveFinalizer", "Try to: ", instance)` → `log.Info("removing finalizer")`
-- [ ] Task 8: Verify no regressions (AC: 7)
-  - [ ] 8.1: Run `make manifests generate fmt vet test`
-  - [ ] 8.2: Run `golangci-lint run --disable-all --enable=staticcheck ./...` — confirm zero SA1019 findings for `ioutil`
-  - [ ] 8.3: Run `make integration`
+- [x] Task 8: Verify no regressions (AC: 7)
+  - [x] 8.1: Run `make manifests generate fmt vet test`
+  - [x] 8.2: Run `golangci-lint run --disable-all --enable=staticcheck ./...` — confirm zero SA1019 findings for `ioutil`
+  - [x] 8.3: Run `make integration`
+
+### Review Findings
+
+- [x] [Review][Patch] Preserve `JWTReference` rejection of `randomSecret` [`api/v1alpha1/kubernetessecretengineconfig_types.go:142`] — `ValidateCredentialSource()` now accepts `RandomSecret`, but `JWTReference` is documented to allow only `Secret` or `VaultSecret`, and `setInternalCredentials()` still has no `RandomSecret` handling.
 
 ## Dev Notes
 
@@ -376,10 +380,42 @@ This must show zero SA1019 findings after Task 2 (the `ioutil` finding was the l
 
 ### Agent Model Used
 
+Opus 4.6 (Cursor Agent)
+
 ### Debug Log References
+
+- Integration tests have a pre-existing infrastructure issue: Kind cluster namespace termination race condition causes "unable to create new content in namespace because it is being terminated" errors. This affects ~14 tests across both baseline and post-change runs. Not related to code changes.
+- `pkg/errors` remains in `go.mod` as an indirect dependency (transitive via other modules). `go mod tidy` correctly removed it as a direct dependency.
+- `go-multierror` correctly retained as direct dependency — `randomsecret_types.go` has genuine `multierror.Append` usage.
 
 ### Completion Notes List
 
+- Task 1: Replaced 2x `errors.Errorf(warn)` with `fmt.Errorf("%s", warn)` in `advanced-funcmap.go`. Added `"fmt"` import, removed `"github.com/pkg/errors"` import. `go mod tidy` demoted `pkg/errors` to indirect.
+- Task 2: Replaced `ioutil.ReadFile(filename)` with `os.ReadFile(filename)` in `decoder.go`. Removed `"io/ioutil"` import. `"os"` was already imported. Resolves SA1019 lint finding.
+- Task 3: Simplified `VaultSecret.isValid()` to `return nil` (was creating empty `multierror.Error{}` and returning `ErrorOrNil()` which always returned nil). Removed `"github.com/hashicorp/go-multierror"` import from `vaultsecret_types.go`.
+- Task 4: Migrated sole `AddOrReplaceCondition` call site in `ManageOutcomeWithRequeue` to `apimeta.SetStatusCondition` (3-line pattern: get conditions, set status condition, set conditions). Added `apimeta "k8s.io/apimachinery/pkg/api/meta"` import. Deleted `AddOrReplaceCondition` function from `commons.go`. `SetStatusCondition` has smarter `LastTransitionTime` handling (preserves timestamp when status unchanged).
+- Task 5: Consolidated `ValidateEitherFromVaultSecretOrFromSecret` and `ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret` into single `ValidateCredentialSource` that checks all 3 fields. Updated all 6 call sites. Error message improved to "exactly one of ... must be specified".
+- Task 6: Renamed `vautlpkiengineobject.go` → `vaultpkiengineobject.go` via `git mv`. No import changes needed (same package).
+- Task 7: Fixed 4 informal log messages in `vaultpkiengineresourcereconciler.go` — replaced malformed `"Try to: "` key-value pairs with clean descriptive message strings.
+- Task 8: All verification passed: `make manifests generate fmt vet test` clean, zero SA1019 staticcheck findings, no manifest diffs. Integration test failures are pre-existing infrastructure issues (identical to baseline).
+
 ### Change Log
 
+- 2026-06-01: Implemented all 8 tasks for dependency modernization story R1.3. Replaced deprecated `pkg/errors` and `ioutil` APIs with stdlib equivalents, simplified dead `VaultSecret.isValid()` code, migrated hand-rolled `AddOrReplaceCondition` to stdlib `apimeta.SetStatusCondition`, consolidated duplicate `ValidateEither` functions, renamed typo filename, and cleaned up informal PKI debug logging.
+
 ### File List
+
+- `controllers/vaultresourcecontroller/advanced-funcmap.go` — replaced `errors.Errorf` with `fmt.Errorf`, swapped imports
+- `controllers/controllertestutils/decoder.go` — replaced `ioutil.ReadFile` with `os.ReadFile`, removed `ioutil` import
+- `api/v1alpha1/vaultsecret_types.go` — simplified `isValid()` to `return nil`, removed `multierror` import
+- `controllers/vaultresourcecontroller/utils.go` — migrated to `apimeta.SetStatusCondition`, added `apimeta` import
+- `api/v1alpha1/utils/commons.go` — deleted `AddOrReplaceCondition`, replaced 2 `ValidateEither` functions with `ValidateCredentialSource`
+- `api/v1alpha1/kubernetessecretengineconfig_types.go` — updated call to `ValidateCredentialSource`
+- `api/v1alpha1/azuresecretengineconfig_types.go` — updated call to `ValidateCredentialSource`
+- `api/v1alpha1/databasesecretengineconfig_types.go` — updated call to `ValidateCredentialSource`
+- `api/v1alpha1/ldapauthengineconfig_types.go` — updated call to `ValidateCredentialSource`
+- `api/v1alpha1/quaysecretengineconfig_types.go` — updated call to `ValidateCredentialSource`
+- `api/v1alpha1/rabbitmqsecretengineconfig_types.go` — updated call to `ValidateCredentialSource`
+- `api/v1alpha1/utils/vautlpkiengineobject.go` → `api/v1alpha1/utils/vaultpkiengineobject.go` — renamed (typo fix)
+- `controllers/vaultresourcecontroller/vaultpkiengineresourcereconciler.go` — fixed 4 informal log messages
+- `go.mod` / `go.sum` — `go mod tidy` demoted `pkg/errors` to indirect

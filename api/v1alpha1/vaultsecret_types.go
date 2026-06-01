@@ -17,7 +17,6 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"github.com/hashicorp/go-multierror"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -180,8 +179,7 @@ func (vs *VaultSecret) IsValid() (bool, error) {
 }
 
 func (vs *VaultSecret) isValid() error {
-	result := &multierror.Error{}
-	return result.ErrorOrNil()
+	return nil
 }
 
 var _ vaultutils.VaultSecretObject = &VaultSecretDefinition{}

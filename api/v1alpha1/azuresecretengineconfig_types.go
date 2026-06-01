@@ -170,7 +170,7 @@ func (r *AzureSecretEngineConfig) IsValid() (bool, error) {
 }
 
 func (r *AzureSecretEngineConfig) isValid() error {
-	return r.Spec.AzureCredentials.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+	return r.Spec.AzureCredentials.ValidateCredentialSource()
 }
 
 func (r *AzureSecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {

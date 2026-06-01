@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"io/ioutil"
 	"os"
 	"reflect"
 
@@ -59,7 +58,7 @@ func (d *decoder) CreateFromYAML(ctx context.Context, c client.Client, filename 
 }
 
 func (d *decoder) decodeFile(filename string) (runtime.Object, *schema.GroupVersionKind, error) {
-	stream, err := ioutil.ReadFile(filename)
+	stream, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, nil, err
 	}

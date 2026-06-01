@@ -163,7 +163,7 @@ func (m *RabbitMQSecretEngineConfig) SetUsernameAndPassword(username string, pas
 }
 
 func (rabbitMQ *RabbitMQSecretEngineConfig) isValid() error {
-	return rabbitMQ.Spec.RootCredentials.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+	return rabbitMQ.Spec.RootCredentials.ValidateCredentialSource()
 }
 
 var _ vaultutils.RabbitMQEngineConfigVaultObject = &RabbitMQSecretEngineConfig{}

@@ -387,7 +387,7 @@ func (i *DBSEConfig) toMap() map[string]interface{} {
 }
 
 func (r *DatabaseSecretEngineConfig) isValid() error {
-	return r.Spec.RootCredentials.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+	return r.Spec.RootCredentials.ValidateCredentialSource()
 }
 
 func (d *DatabaseSecretEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {

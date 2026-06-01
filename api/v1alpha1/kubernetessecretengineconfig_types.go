@@ -139,7 +139,10 @@ func (r *KubernetesSecretEngineConfig) IsValid() (bool, error) {
 }
 
 func (r *KubernetesSecretEngineConfig) isValid() error {
-	return r.Spec.JWTReference.ValidateEitherFromVaultSecretOrFromSecret()
+	if r.Spec.JWTReference.RandomSecret != nil {
+		return errors.New("spec.jwtReference.randomSecret is not allowed; only vaultSecret or secret can be specified")
+	}
+	return r.Spec.JWTReference.ValidateCredentialSource()
 }
 
 func (r *KubernetesSecretEngineConfig) setInternalCredentials(context context.Context) error {

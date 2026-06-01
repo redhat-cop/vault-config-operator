@@ -50,7 +50,7 @@ func (r *VaultPKIEngineResource) manageCleanUpLogic(context context.Context, ins
 	if conditionAware, ok := instance.(vaultutils.ConditionsAware); ok {
 		for _, condition := range conditionAware.GetConditions() {
 			if condition.Status == metav1.ConditionTrue && condition.Type == ReconcileSuccessful {
-				log.Info("DeleteIfExists", "Try to: ", instance)
+				log.Info("deleting vault resource if exists")
 				err := r.vaultPKIEngineEndpoint.DeleteIfExists(context)
 				if err != nil {
 					log.Error(err, "unable to delete vault resource", "instance", instance)
@@ -67,10 +67,10 @@ func (r *VaultPKIEngineResource) Reconcile(ctx context.Context, instance client.
 	log.Info("starting reconcile cycle")
 	log.V(1).Info("reconcile", "instance", instance)
 	if !instance.GetDeletionTimestamp().IsZero() {
-		log.Info("Delete", "Try to: ", instance)
+		log.Info("processing deletion")
 
 		if !controllerutil.ContainsFinalizer(instance, vaultutils.GetFinalizer(instance)) {
-			log.Info("Finaliter?", "Try to: ", instance)
+			log.Info("no finalizer found, skipping cleanup")
 			return reconcile.Result{}, nil
 		}
 		err := r.manageCleanUpLogic(ctx, instance)
@@ -78,7 +78,7 @@ func (r *VaultPKIEngineResource) Reconcile(ctx context.Context, instance client.
 			log.Error(err, "unable to delete instance", "instance", instance)
 			return ManageOutcome(ctx, *r.reconcilerBase, instance, err)
 		}
-		log.Info("RemoveFinalizer", "Try to: ", instance)
+		log.Info("removing finalizer")
 		controllerutil.RemoveFinalizer(instance, vaultutils.GetFinalizer(instance))
 		err = r.reconcilerBase.GetClient().Update(ctx, instance)
 		if err != nil {
