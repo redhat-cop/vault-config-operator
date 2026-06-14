@@ -154,6 +154,14 @@ func ManageOutcomeWithRequeue(context context.Context, r ReconcilerBase, obj cli
 	}
 	conditions := conditionsAware.GetConditions()
 	apimeta.SetStatusCondition(&conditions, condition)
+	// apimeta.SetStatusCondition only updates LastTransitionTime when Status changes.
+	// We always stamp it so observers can detect that reconciliation occurred.
+	for i := range conditions {
+		if conditions[i].Type == condition.Type {
+			conditions[i].LastTransitionTime = condition.LastTransitionTime
+			break
+		}
+	}
 	conditionsAware.SetConditions(conditions)
 	err := r.GetClient().Status().Update(context, obj)
 	if err != nil {

@@ -35,7 +35,9 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-06-01
+last_updated: 2026-06-14
+# Story R1.2c done 2026-06-14
+# Story R1.2c review 2026-06-01
 # Story R1.3 done 2026-06-01
 # Story R1.3 review 2026-06-01
 # Story R1.3 in-progress 2026-06-01
@@ -257,7 +259,7 @@ development_status:
   R1-1-correctness-fixes-context-keys-pki-bug-webhook-loggers-tostring: done # Story R1.1 done 2026-05-15
   R1-2a-fix-unchecked-error-returns-errcheck: done
   R1-2b-remove-deprecated-rand-seed: done
-  R1-2c-lint-green-gate-verify-full-compliance: ready-for-dev
+  R1-2c-lint-green-gate-verify-full-compliance: done # Story R1.2c done 2026-06-14
   R1-3-dependency-modernization-drop-deprecated-replace-handrolled: done
   R1-4-test-decoder-generics-rewrite: ready-for-dev
   R1-5-reconciler-struct-deduplication: ready-for-dev
