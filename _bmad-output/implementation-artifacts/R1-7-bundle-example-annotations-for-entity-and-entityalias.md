@@ -1,6 +1,6 @@
 # Story R1.7: Bundle Example Annotations for `Entity` and `EntityAlias`
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -19,26 +19,26 @@ So that Community Operators validation no longer warns that those provided APIs 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Understand how bundle examples are sourced (AC: 4)
-  - [ ] 1.1: Confirm the pipeline: `config/samples/kustomization.yaml` → `config/manifests/kustomization.yaml` (includes `../samples`) → `make bundle` → `operator-sdk generate bundle` → `alm-examples` annotation in generated CSV
-  - [ ] 1.2: Verify that the **only** change needed is adding the two sample filenames to `config/samples/kustomization.yaml` — no Go code, markers, or type-level annotations are involved
-- [ ] Task 2: Normalize `config/samples/redhatcop_v1alpha1_entity.yaml` (AC: 2)
-  - [ ] 2.1: Review current file against `EntitySpec` schema (`entity_types.go`): fields are `authentication` (required), inline `EntityConfig` with `metadata` (map[string]string), `policies` ([]string), `disabled` (bool), plus optional `connection` and `name`
-  - [ ] 2.2: Verify the sample is a valid minimal-but-realistic example — current content already has `authentication`, `metadata`, `policies`, `disabled` which covers all user-facing fields
-  - [ ] 2.3: If any fields are invalid or missing required values, update them; if the sample is already valid, no changes needed
-- [ ] Task 3: Normalize `config/samples/redhatcop_v1alpha1_entityalias.yaml` (AC: 2)
-  - [ ] 3.1: Review current file against `EntityAliasSpec` schema (`entityalias_types.go`): fields are `authentication` (required), inline `EntityAliasConfig` with `authEngineMountPath` (required), `entityName` (required), `customMetadata` (map[string]string, optional), plus optional `connection` and `name`
-  - [ ] 3.2: Verify the sample is a valid minimal-but-realistic example — current content already has `authentication`, `authEngineMountPath`, `entityName`, `customMetadata` which covers all user-facing fields
-  - [ ] 3.3: If any fields are invalid or missing required values, update them; if the sample is already valid, no changes needed
-- [ ] Task 4: Add samples to kustomization resources (AC: 1)
-  - [ ] 4.1: Edit `config/samples/kustomization.yaml` — add `- redhatcop_v1alpha1_entity.yaml` and `- redhatcop_v1alpha1_entityalias.yaml` to the `resources:` list (before the `#+kubebuilder:scaffold:manifestskustomizesamples` marker)
-- [ ] Task 5: Regenerate bundle and validate (AC: 1, 3)
-  - [ ] 5.1: Run `make bundle`
-  - [ ] 5.2: Inspect the generated CSV in `bundle/manifests/vault-config-operator.clusterserviceversion.yaml` — confirm the `alm-examples` annotation now contains JSON entries for `Entity` and `EntityAlias`
-  - [ ] 5.3: Verify `operator-sdk bundle validate ./bundle` output no longer includes warnings for `Entity` or `EntityAlias` missing examples
-- [ ] Task 6: Commit and verify (AC: 1, 3, 4)
-  - [ ] 6.1: Commit the kustomization change and any sample normalization
-  - [ ] 6.2: Commit the regenerated bundle output (the `bundle/` directory is tracked in git)
+- [x] Task 1: Understand how bundle examples are sourced (AC: 4)
+  - [x] 1.1: Confirm the pipeline: `config/samples/kustomization.yaml` → `config/manifests/kustomization.yaml` (includes `../samples`) → `make bundle` → `operator-sdk generate bundle` → `alm-examples` annotation in generated CSV
+  - [x] 1.2: Verify that the **only** change needed is adding the two sample filenames to `config/samples/kustomization.yaml` — no Go code, markers, or type-level annotations are involved
+- [x] Task 2: Normalize `config/samples/redhatcop_v1alpha1_entity.yaml` (AC: 2)
+  - [x] 2.1: Review current file against `EntitySpec` schema (`entity_types.go`): fields are `authentication` (required), inline `EntityConfig` with `metadata` (map[string]string), `policies` ([]string), `disabled` (bool), plus optional `connection` and `name`
+  - [x] 2.2: Verify the sample is a valid minimal-but-realistic example — current content already has `authentication`, `metadata`, `policies`, `disabled` which covers all user-facing fields
+  - [x] 2.3: If any fields are invalid or missing required values, update them; if the sample is already valid, no changes needed
+- [x] Task 3: Normalize `config/samples/redhatcop_v1alpha1_entityalias.yaml` (AC: 2)
+  - [x] 3.1: Review current file against `EntityAliasSpec` schema (`entityalias_types.go`): fields are `authentication` (required), inline `EntityAliasConfig` with `authEngineMountPath` (required), `entityName` (required), `customMetadata` (map[string]string, optional), plus optional `connection` and `name`
+  - [x] 3.2: Verify the sample is a valid minimal-but-realistic example — current content already has `authentication`, `authEngineMountPath`, `entityName`, `customMetadata` which covers all user-facing fields
+  - [x] 3.3: If any fields are invalid or missing required values, update them; if the sample is already valid, no changes needed
+- [x] Task 4: Add samples to kustomization resources (AC: 1)
+  - [x] 4.1: Edit `config/samples/kustomization.yaml` — add `- redhatcop_v1alpha1_entity.yaml` and `- redhatcop_v1alpha1_entityalias.yaml` to the `resources:` list (before the `#+kubebuilder:scaffold:manifestskustomizesamples` marker)
+- [x] Task 5: Regenerate bundle and validate (AC: 1, 3)
+  - [x] 5.1: Run `make bundle`
+  - [x] 5.2: Inspect the generated CSV in `bundle/manifests/vault-config-operator.clusterserviceversion.yaml` — confirm the `alm-examples` annotation now contains JSON entries for `Entity` and `EntityAlias`
+  - [x] 5.3: Verify `operator-sdk bundle validate ./bundle` output no longer includes warnings for `Entity` or `EntityAlias` missing examples
+- [x] Task 6: Commit and verify (AC: 1, 3, 4)
+  - [x] 6.1: Commit the kustomization change and any sample normalization
+  - [x] 6.2: Commit the regenerated bundle output (the `bundle/` directory is tracked in git)
 
 ## Dev Notes
 
@@ -154,10 +154,27 @@ After `make bundle`:
 
 ### Agent Model Used
 
+Claude Opus 4.6
+
 ### Debug Log References
+
+No debug issues encountered — straightforward metadata-only story.
 
 ### Completion Notes List
 
+- Task 1: Confirmed the bundle pipeline — samples in kustomization.yaml → manifests assembly → `operator-sdk generate bundle` → `alm-examples` annotation in CSV. Only change needed was adding 2 entries to `config/samples/kustomization.yaml`.
+- Task 2: Entity sample already valid against EntitySpec schema — all required fields present, no normalization needed.
+- Task 3: EntityAlias sample already valid against EntityAliasSpec schema — all required fields present, no normalization needed.
+- Task 4: Added `redhatcop_v1alpha1_entity.yaml` and `redhatcop_v1alpha1_entityalias.yaml` to `config/samples/kustomization.yaml` before the scaffold marker.
+- Task 5: `make bundle` regenerated successfully. CSV at `bundle/manifests/vault-config-operator.clusterserviceversion.yaml` now contains Entity (line 392) and EntityAlias (line 421) in the `alm-examples` annotation. `operator-sdk bundle validate ./bundle` passed with "All validation tests have completed successfully" — zero warnings.
+- Task 6: Changes committed as single commit covering kustomization change and regenerated bundle output.
+
 ### Change Log
 
+- 2026-06-20: Added Entity and EntityAlias sample references to config/samples/kustomization.yaml; regenerated bundle manifests; bundle validation passes with no example-annotation warnings.
+
 ### File List
+
+- config/samples/kustomization.yaml (modified — added 2 resource entries for entity and entityalias)
+- _bmad-output/implementation-artifacts/R1-7-bundle-example-annotations-for-entity-and-entityalias.md (modified — story tracking)
+- _bmad-output/implementation-artifacts/sprint-status.yaml (modified — status tracking)

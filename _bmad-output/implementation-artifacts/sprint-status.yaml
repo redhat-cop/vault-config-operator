@@ -36,6 +36,8 @@
 
 generated: 2026-04-11
 last_updated: 2026-06-20
+# Story R1.7 review 2026-06-20
+# Story R1.7 in-progress 2026-06-20
 # Story R1.6 done 2026-06-20
 # Story R1.6 review 2026-06-20
 # Story R1.6 in-progress 2026-06-20
@@ -269,7 +271,7 @@ development_status:
   R1-4-test-decoder-generics-rewrite: done # Story R1.4 done 2026-06-20
   R1-5-reconciler-struct-deduplication: done
   R1-6-interface-to-any-sweep: done # Story R1.6 done 2026-06-20
-  R1-7-bundle-example-annotations-for-entity-and-entityalias: ready-for-dev
+  R1-7-bundle-example-annotations-for-entity-and-entityalias: review
   R1-8-populate-owned-crd-descriptions-for-community-operators-bundle: ready-for-dev
   R1-9-declare-csv-min-kube-version: ready-for-dev
   epic-R1-retrospective: optional
