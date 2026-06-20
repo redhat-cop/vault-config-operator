@@ -1,6 +1,6 @@
 # Story R1.5: Reconciler Struct Deduplication
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -19,26 +19,26 @@ So that the finalizer/deletion/outcome flow is defined once and bug fixes apply 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define a `deleteFunc` type and extract `manageCleanUpLogic` into a shared function (AC: 2)
-  - [ ] 1.1: Define `type deleteFunc func(ctx context.Context) error` in a new or existing file in `controllers/vaultresourcecontroller/`
-  - [ ] 1.2: Create a shared `manageCleanUpLogic(ctx context.Context, instance client.Object, deleteFn deleteFunc) error` package-level function that encapsulates the IsDeletable guard + ReconcileSuccessful condition check + deleteFn call
-  - [ ] 1.3: Each type's `manageCleanUpLogic` becomes a one-liner delegating to the shared function with its endpoint's `DeleteIfExists` method reference
-- [ ] Task 2: Extract the `Reconcile()` deletion/finalizer/outcome skeleton into a shared function (AC: 1, 3)
-  - [ ] 2.1: Define `type reconcileFunc func(ctx context.Context, instance client.Object) error` for the type-specific reconcile logic
-  - [ ] 2.2: Create `ReconcileWithFunctions(ctx context.Context, reconcilerBase *ReconcilerBase, instance client.Object, cleanupFn deleteFunc, reconcileFn reconcileFunc) (ctrl.Result, error)` — the shared skeleton that handles: deletion timestamp check → finalizer guard → cleanup → remove finalizer → update → OR → reconcileFn → ManageOutcome
-  - [ ] 2.3: Ensure the shared skeleton uses the same log messages as the current `VaultResource.Reconcile()` (the canonical version without debug extras)
-- [ ] Task 3: Refactor all 4 types to use the shared skeleton (AC: 1, 3)
-  - [ ] 3.1: Refactor `VaultResource.Reconcile()` to call `ReconcileWithFunctions`
-  - [ ] 3.2: Refactor `VaultEngineResource.Reconcile()` to call `ReconcileWithFunctions`
-  - [ ] 3.3: Refactor `VaultAuditResource.Reconcile()` to call `ReconcileWithFunctions`
-  - [ ] 3.4: Refactor `VaultPKIEngineResource.Reconcile()` to call `ReconcileWithFunctions`
-- [ ] Task 4: Remove dead code and verify compilation (AC: 3)
-  - [ ] 4.1: Remove `VaultPKIEngineResource`'s extra debug log lines that differ from the canonical pattern (the `"Delete"`, `"Finaliter?"`, `"RemoveFinalizer"`, `"DeleteIfExists"` Info logs)
-  - [ ] 4.2: Normalize `VaultAuditResource`'s log message from `"starting audit reconcile cycle"` to `"starting reconcile cycle"` (now handled by shared skeleton)
-  - [ ] 4.3: Run `go build ./...` to verify compilation
-- [ ] Task 5: Run `make test` and `make integration` (AC: 4)
-  - [ ] 5.1: Run `make manifests generate fmt vet test`
-  - [ ] 5.2: Run `make integration`
+- [x] Task 1: Define a `deleteFunc` type and extract `manageCleanUpLogic` into a shared function (AC: 2)
+  - [x] 1.1: Define `type deleteFunc func(ctx context.Context) error` in a new or existing file in `controllers/vaultresourcecontroller/`
+  - [x] 1.2: Create a shared `manageCleanUpLogic(ctx context.Context, instance client.Object, deleteFn deleteFunc) error` package-level function that encapsulates the IsDeletable guard + ReconcileSuccessful condition check + deleteFn call
+  - [x] 1.3: Each type's `manageCleanUpLogic` becomes a one-liner delegating to the shared function with its endpoint's `DeleteIfExists` method reference
+- [x] Task 2: Extract the `Reconcile()` deletion/finalizer/outcome skeleton into a shared function (AC: 1, 3)
+  - [x] 2.1: Define `type reconcileFunc func(ctx context.Context, instance client.Object) error` for the type-specific reconcile logic
+  - [x] 2.2: Create `ReconcileWithFunctions(ctx context.Context, reconcilerBase *ReconcilerBase, instance client.Object, cleanupFn deleteFunc, reconcileFn reconcileFunc) (ctrl.Result, error)` — the shared skeleton that handles: deletion timestamp check → finalizer guard → cleanup → remove finalizer → update → OR → reconcileFn → ManageOutcome
+  - [x] 2.3: Ensure the shared skeleton uses the same log messages as the current `VaultResource.Reconcile()` (the canonical version without debug extras)
+- [x] Task 3: Refactor all 4 types to use the shared skeleton (AC: 1, 3)
+  - [x] 3.1: Refactor `VaultResource.Reconcile()` to call `ReconcileWithFunctions`
+  - [x] 3.2: Refactor `VaultEngineResource.Reconcile()` to call `ReconcileWithFunctions`
+  - [x] 3.3: Refactor `VaultAuditResource.Reconcile()` to call `ReconcileWithFunctions`
+  - [x] 3.4: Refactor `VaultPKIEngineResource.Reconcile()` to call `ReconcileWithFunctions`
+- [x] Task 4: Remove dead code and verify compilation (AC: 3)
+  - [x] 4.1: Remove `VaultPKIEngineResource`'s extra debug log lines that differ from the canonical pattern (the `"Delete"`, `"Finaliter?"`, `"RemoveFinalizer"`, `"DeleteIfExists"` Info logs)
+  - [x] 4.2: Normalize `VaultAuditResource`'s log message from `"starting audit reconcile cycle"` to `"starting reconcile cycle"` (now handled by shared skeleton)
+  - [x] 4.3: Run `go build ./...` to verify compilation
+- [x] Task 5: Run `make test` and `make integration` (AC: 4)
+  - [x] 5.1: Run `make manifests generate fmt vet test`
+  - [x] 5.2: Run `make integration`
 
 ## Dev Notes
 
@@ -316,10 +316,32 @@ After refactoring:
 
 ### Agent Model Used
 
+Claude Opus 4.6
+
 ### Debug Log References
+
+- Initial integration test failure was infrastructure-related (Kind cluster degraded, Vault Helm chart timed out). Resolved by deleting and recreating the Kind cluster.
 
 ### Completion Notes List
 
+- Created `reconcile_skeleton.go` with shared `deleteFunc` type, `reconcileFunc` type, `manageCleanUpLogic` function, and `ReconcileWithFunctions` function
+- Refactored all 4 reconciler types (`VaultResource`, `VaultEngineResource`, `VaultAuditResource`, `VaultPKIEngineResource`) to delegate to `ReconcileWithFunctions`
+- Removed duplicated `manageCleanUpLogic` methods from all 4 types (each was ~20 lines, now eliminated)
+- Removed duplicated `Reconcile()` skeleton from all 4 types (each was ~25 lines, now a 3-line wrapper)
+- Removed PKI-specific debug log lines (`"processing deletion"`, `"no finalizer found, skipping cleanup"`, `"removing finalizer"`, `"deleting vault resource if exists"`)
+- Normalized VaultAuditResource log message from `"starting audit reconcile cycle"` to standard `"starting reconcile cycle"` (via shared skeleton)
+- Normalized VaultAuditResource error message from `"unable to disable audit device"` to standard `"unable to delete vault resource"` (via shared `manageCleanUpLogic`)
+- `make manifests generate fmt vet test` passes with zero diffs and all tests green
+- `make integration` passes (576s, consistent with baseline)
+
 ### Change Log
 
+- 2026-06-20: Story R1.5 implemented — reconciler struct deduplication via shared skeleton functions
+
 ### File List
+
+- controllers/vaultresourcecontroller/reconcile_skeleton.go (new)
+- controllers/vaultresourcecontroller/vaultresourcereconciler.go (modified)
+- controllers/vaultresourcecontroller/vaultengineresourcereconciler.go (modified)
+- controllers/vaultresourcecontroller/vaultauditresourcereconciler.go (modified)
+- controllers/vaultresourcecontroller/vaultpkiengineresourcereconciler.go (modified)
