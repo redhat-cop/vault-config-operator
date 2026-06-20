@@ -11,8 +11,8 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/controllers/controllertestutils"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
-
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -283,7 +283,7 @@ var _ = Describe("Drift detection", Ordered, func() {
 			vaultresourcecontroller.SetSyncPeriod(36000 * time.Second)
 
 			var err error
-			policyInstance, err = decoder.GetPolicyInstance("../test/drift-detection/policy-drift-test.yaml")
+			policyInstance, err = controllertestutils.DecodeInstance[*redhatcopv1alpha1.Policy]("../test/drift-detection/policy-drift-test.yaml")
 			Expect(err).To(BeNil())
 			policyInstance.Name = "test-drift-policy-disabled"
 			policyInstance.Namespace = vaultAdminNamespaceName

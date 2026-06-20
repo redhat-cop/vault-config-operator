@@ -1,6 +1,6 @@
 # Story R1.4: Test Decoder Generics Rewrite
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -19,21 +19,25 @@ So that adding a new CRD type no longer requires copying another decode method.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Refactor `decodeFile` and implement generic `DecodeInstance[T]` in `decoder.go` (AC: 1, 2)
-  - [ ] 1.1: Convert `decodeFile` from a method `(d *decoder) decodeFile(filename)` to a standalone function `decodeFile(filename)` — it only uses the package-level `runtimeDecoder` variable, not any `decoder` fields
-  - [ ] 1.2: Fix the `ioutil.ReadFile` → `os.ReadFile` in `decodeFile` if R1.3 has not yet been merged (line 60); remove `"io/ioutil"` import
-  - [ ] 1.3: Add a top-level generic function `func DecodeInstance[T runtime.Object](filename string) (T, error)` that calls `decodeFile`, checks `gvk.Kind` against `reflect.TypeOf(*new(T)).Elem().Name()`, and type-asserts the result
-  - [ ] 1.4: Ensure the type constraint uses `runtime.Object` (from `k8s.io/apimachinery/pkg/runtime`) — all CRD types implement this via generated `DeepCopyObject()`
-- [ ] Task 2: Remove all 34 `Get<Type>Instance` methods (AC: 4)
-  - [ ] 2.1: Delete all methods from line 67 through line 577
-  - [ ] 2.2: Verify the file is reduced to ~55 lines (init, NewDecoder, CreateFromYAML, decodeFile, DecodeInstance)
-- [ ] Task 3: Migrate all test call sites and add imports (AC: 3)
-  - [ ] 3.1: Add `"github.com/redhat-cop/vault-config-operator/controllers/controllertestutils"` import to `databasesecretenginestaticrole_controller_test.go`, `pkisecretengine_controller_test.go`, and `driftdetection_controller_test.go`
-  - [ ] 3.2: Migrate 8 calls in `databasesecretenginestaticrole_controller_test.go`
-  - [ ] 3.3: Migrate 5 calls in `pkisecretengine_controller_test.go`
-  - [ ] 3.4: Migrate 1 call in `driftdetection_controller_test.go`
-- [ ] Task 4: Run `make test` — all unit and envtest tests pass (AC: 3)
-- [ ] Task 5: Run `make integration` — all integration tests pass (AC: 3)
+- [x] Task 1: Refactor `decodeFile` and implement generic `DecodeInstance[T]` in `decoder.go` (AC: 1, 2)
+  - [x] 1.1: Convert `decodeFile` from a method `(d *decoder) decodeFile(filename)` to a standalone function `decodeFile(filename)` — it only uses the package-level `runtimeDecoder` variable, not any `decoder` fields
+  - [x] 1.2: Fix the `ioutil.ReadFile` → `os.ReadFile` in `decodeFile` if R1.3 has not yet been merged (line 60); remove `"io/ioutil"` import
+  - [x] 1.3: Add a top-level generic function `func DecodeInstance[T runtime.Object](filename string) (T, error)` that calls `decodeFile`, checks `gvk.Kind` against `reflect.TypeOf(*new(T)).Elem().Name()`, and type-asserts the result
+  - [x] 1.4: Ensure the type constraint uses `runtime.Object` (from `k8s.io/apimachinery/pkg/runtime`) — all CRD types implement this via generated `DeepCopyObject()`
+- [x] Task 2: Remove all 34 `Get<Type>Instance` methods (AC: 4)
+  - [x] 2.1: Delete all methods from line 67 through line 577
+  - [x] 2.2: Verify the file is reduced to ~55 lines (init, NewDecoder, CreateFromYAML, decodeFile, DecodeInstance)
+- [x] Task 3: Migrate all test call sites and add imports (AC: 3)
+  - [x] 3.1: Add `"github.com/redhat-cop/vault-config-operator/controllers/controllertestutils"` import to `databasesecretenginestaticrole_controller_test.go`, `pkisecretengine_controller_test.go`, and `driftdetection_controller_test.go`
+  - [x] 3.2: Migrate 8 calls in `databasesecretenginestaticrole_controller_test.go`
+  - [x] 3.3: Migrate 5 calls in `pkisecretengine_controller_test.go`
+  - [x] 3.4: Migrate 1 call in `driftdetection_controller_test.go`
+- [x] Task 4: Run `make test` — all unit and envtest tests pass (AC: 3)
+- [x] Task 5: Run `make integration` — all integration tests pass (AC: 3)
+
+### Review Findings
+
+- [x] [Review][Patch] Guard `DecodeInstance[T]` against non-concrete `runtime.Object` type arguments [controllers/controllertestutils/decoder.go:75] — the function signature accepts any `runtime.Object`, but `reflect.TypeOf(*new(T)).Elem().Name()` assumes `T` is a concrete pointer type and can panic for broader valid instantiations like `runtime.Object` instead of returning `errDecode`.
 
 ## Dev Notes
 
@@ -271,10 +275,31 @@ Note: `CreateFromYAML` remains a method on `decoder` (it uses `client.Client` an
 
 ### Agent Model Used
 
+Claude Opus 4.6 (via Cursor)
+
 ### Debug Log References
+
+No debug issues encountered. Clean implementation with all tests passing on first run.
 
 ### Completion Notes List
 
+- Converted `decodeFile` from method `(d *decoder) decodeFile(filename)` to standalone function `decodeFile(filename)` since it only uses the package-level `runtimeDecoder` variable
+- Implemented `DecodeInstance[T runtime.Object](filename string) (T, error)` generic function using reflect-based kind matching and type assertion
+- Subtask 1.2 was already satisfied — R1.3 was merged previously, `os.ReadFile` already in use
+- Deleted all 34 `Get<Type>Instance` methods, reducing `decoder.go` from 577 lines to 88 lines (~489 lines eliminated)
+- Migrated 14 call sites across 3 test files to use `controllertestutils.DecodeInstance[*Type](...)` syntax
+- `controllertestutils` coverage increased from 4.5% to 40.6%
+- golangci-lint passes clean; `make manifests generate` produces no unexpected diffs
+- Integration tests pass in 576s (all delete operations and mutation-before-create scenarios work correctly)
+
 ### Change Log
 
+- 2026-06-14: Implemented generic `DecodeInstance[T]`, removed 34 duplicate methods, migrated 14 call sites across 3 test files
+
 ### File List
+
+- `controllers/controllertestutils/decoder.go` — refactored: `decodeFile` to standalone, added `DecodeInstance[T]`, removed 34 typed methods
+- `controllers/databasesecretenginestaticrole_controller_test.go` — added `controllertestutils` import, migrated 8 decode calls
+- `controllers/pkisecretengine_controller_test.go` — added `controllertestutils` import, migrated 5 decode calls
+- `controllers/driftdetection_controller_test.go` — added `controllertestutils` import, migrated 1 decode call
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — status updated

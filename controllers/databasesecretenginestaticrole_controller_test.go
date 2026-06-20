@@ -11,6 +11,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/controllers/controllertestutils"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -319,7 +320,7 @@ var _ = Describe("DatabaseSecretEngineStaticRole controller", func() {
 		It("Should delete from Vault", func() {
 
 			By("Deleting DatabaseSecretEngineStaticRole")
-			srInstance, err := decoder.GetDatabaseSecretEngineStaticRoleInstance("../test/database-engine-read-only-static-role.yaml")
+			srInstance, err := controllertestutils.DecodeInstance[*redhatcopv1alpha1.DatabaseSecretEngineStaticRole]("../test/database-engine-read-only-static-role.yaml")
 			Expect(err).To(BeNil())
 			srInstance.Namespace = vaultTestNamespaceName
 
@@ -339,7 +340,7 @@ var _ = Describe("DatabaseSecretEngineStaticRole controller", func() {
 
 			By("Deleting DatabaseSecretEngineConfig")
 
-			dsecInstance, err := decoder.GetDatabaseSecretEngineConfigInstance("../test/databasesecretengine/database-engine-config.yaml")
+			dsecInstance, err := controllertestutils.DecodeInstance[*redhatcopv1alpha1.DatabaseSecretEngineConfig]("../test/databasesecretengine/database-engine-config.yaml")
 			Expect(err).To(BeNil())
 			dsecInstance.Namespace = vaultTestNamespaceName
 
@@ -358,7 +359,7 @@ var _ = Describe("DatabaseSecretEngineStaticRole controller", func() {
 			}, timeout, interval).Should(Succeed())
 
 			By("Deleting RandomSecret")
-			rsInstance, err := decoder.GetRandomSecretInstance("../test/databasesecretengine/database-random-secret.yaml")
+			rsInstance, err := controllertestutils.DecodeInstance[*redhatcopv1alpha1.RandomSecret]("../test/databasesecretengine/database-random-secret.yaml")
 			Expect(err).To(BeNil())
 			rsInstance.Namespace = vaultTestNamespaceName
 
@@ -378,7 +379,7 @@ var _ = Describe("DatabaseSecretEngineStaticRole controller", func() {
 
 			By("Deleting KV SecretEngineMount")
 
-			semKvDbInstance, err := decoder.GetSecretEngineMountInstance("../test/databasesecretengine/database-kv-engine-mount.yaml")
+			semKvDbInstance, err := controllertestutils.DecodeInstance[*redhatcopv1alpha1.SecretEngineMount]("../test/databasesecretengine/database-kv-engine-mount.yaml")
 			Expect(err).To(BeNil())
 			semKvDbInstance.Namespace = vaultTestNamespaceName
 
@@ -397,7 +398,7 @@ var _ = Describe("DatabaseSecretEngineStaticRole controller", func() {
 			}, timeout, interval).Should(Succeed())
 
 			By("Deleting PasswordPolicy")
-			ppInstance, err := decoder.GetPasswordPolicyInstance("../test/databasesecretengine/password-policy.yaml")
+			ppInstance, err := controllertestutils.DecodeInstance[*redhatcopv1alpha1.PasswordPolicy]("../test/databasesecretengine/password-policy.yaml")
 			Expect(err).To(BeNil())
 			ppInstance.Namespace = vaultAdminNamespaceName
 
@@ -417,7 +418,7 @@ var _ = Describe("DatabaseSecretEngineStaticRole controller", func() {
 
 			By("Deleting SecretEngineMount")
 
-			semInstance, err := decoder.GetSecretEngineMountInstance("../test/database-secret-engine.yaml")
+			semInstance, err := controllertestutils.DecodeInstance[*redhatcopv1alpha1.SecretEngineMount]("../test/database-secret-engine.yaml")
 			Expect(err).To(BeNil())
 			semInstance.Namespace = vaultTestNamespaceName
 
@@ -437,7 +438,7 @@ var _ = Describe("DatabaseSecretEngineStaticRole controller", func() {
 
 			By("Deleting Policies")
 
-			kaerInstance, err := decoder.GetKubernetesAuthEngineRoleInstance("../test/databasesecretengine/database-secret-engine-auth-role.yaml")
+			kaerInstance, err := controllertestutils.DecodeInstance[*redhatcopv1alpha1.KubernetesAuthEngineRole]("../test/databasesecretengine/database-secret-engine-auth-role.yaml")
 			Expect(err).To(BeNil())
 			kaerInstance.Namespace = vaultAdminNamespaceName
 
@@ -455,7 +456,7 @@ var _ = Describe("DatabaseSecretEngineStaticRole controller", func() {
 				return fmt.Errorf("secret is not nil %s", string(out))
 			}, timeout, interval).Should(Succeed())
 
-			pInstance, err := decoder.GetPolicyInstance("../test/databasesecretengine/database-engine-admin-policy.yaml")
+			pInstance, err := controllertestutils.DecodeInstance[*redhatcopv1alpha1.Policy]("../test/databasesecretengine/database-engine-admin-policy.yaml")
 			Expect(err).To(BeNil())
 			pInstance.Namespace = vaultAdminNamespaceName
 
