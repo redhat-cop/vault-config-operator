@@ -70,10 +70,10 @@ func (d *KubernetesAuthEngineConfig) GetPath() string {
 	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/" + d.Name + "/config")
 }
 
-func (d *KubernetesAuthEngineConfig) GetPayload() map[string]interface{} {
+func (d *KubernetesAuthEngineConfig) GetPayload() map[string]any {
 	return d.Spec.KAECConfig.toMap()
 }
-func (d *KubernetesAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *KubernetesAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.KAECConfig.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
@@ -203,8 +203,8 @@ func init() {
 	SchemeBuilder.Register(&KubernetesAuthEngineConfig{}, &KubernetesAuthEngineConfigList{})
 }
 
-func (i *KAECConfig) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *KAECConfig) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["kubernetes_host"] = i.KubernetesHost
 	payload["kubernetes_ca_cert"] = i.KubernetesCACert
 	payload["token_reviewer_jwt"] = i.retrievedTokenReviewerJWT

@@ -41,7 +41,7 @@ func TestAzureSEConfigToMap(t *testing.T) {
 		t.Errorf("expected 7 keys in toMap() output, got %d", len(result))
 	}
 
-	expected := map[string]interface{}{
+	expected := map[string]any{
 		"subscription_id":   "sub-123",
 		"tenant_id":         "tenant-456",
 		"client_id":         "client-789",

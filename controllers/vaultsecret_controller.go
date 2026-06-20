@@ -165,7 +165,7 @@ func (r *VaultSecretReconciler) manageCleanUpLogic(context context.Context, inst
 	return nil
 }
 
-func (r *VaultSecretReconciler) formatK8sSecret(instance *redhatcopv1alpha1.VaultSecret, data interface{}) (*corev1.Secret, error) {
+func (r *VaultSecretReconciler) formatK8sSecret(instance *redhatcopv1alpha1.VaultSecret, data any) (*corev1.Secret, error) {
 
 	bytesData := make(map[string][]byte)
 	for k, v := range instance.Spec.TemplatizedK8sSecret.StringData {
@@ -329,7 +329,7 @@ func (r *VaultSecretReconciler) manageSyncLogic(ctx context.Context, instance *r
 
 	r.Log.V(1).Info("Sync VaultSecret", "namespacedName", toNamespacedName(instance))
 
-	mergedMap := make(map[string]interface{})
+	mergedMap := make(map[string]any)
 
 	definitionsStatus := make([]redhatcopv1alpha1.VaultSecretDefinitionStatus, len(instance.Spec.VaultSecretDefinitions))
 

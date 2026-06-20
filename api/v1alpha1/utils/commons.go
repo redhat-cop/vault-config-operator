@@ -289,7 +289,7 @@ func (kc *KubeAuthConfiguration) createVaultClient(context context.Context, jwt 
 	if kc.GetNamespace() != "" {
 		client.SetNamespace(kc.GetNamespace())
 	}
-	secret, err := client.Logical().Write(kc.GetKubeAuthPath(), map[string]interface{}{
+	secret, err := client.Logical().Write(kc.GetKubeAuthPath(), map[string]any{
 		"jwt":  jwt,
 		"role": kc.GetRole(),
 	})
@@ -341,7 +341,7 @@ func CleansePath(path string) string {
 	return strings.Trim(strings.ReplaceAll(path, "//", "/"), "/")
 }
 
-func ToString(name interface{}) string {
+func ToString(name any) string {
 	if name == nil {
 		return ""
 	}

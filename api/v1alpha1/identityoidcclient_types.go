@@ -146,12 +146,12 @@ func (d *IdentityOIDCClient) GetPath() string {
 	return vaultutils.CleansePath("identity/oidc/client/" + d.Name)
 }
 
-func (d *IdentityOIDCClient) GetPayload() map[string]interface{} {
+func (d *IdentityOIDCClient) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
 
-func (i *IdentityOIDCClientSpec) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *IdentityOIDCClientSpec) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["key"] = i.Key
 	payload["redirect_uris"] = i.RedirectURIs
 	payload["assignments"] = i.Assignments
@@ -181,7 +181,7 @@ func (d *IdentityOIDCClient) GetKubeAuthConfiguration() *vaultutils.KubeAuthConf
 	return &d.Spec.Authentication
 }
 
-func (d *IdentityOIDCClient) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *IdentityOIDCClient) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

@@ -69,10 +69,10 @@ func (d *LDAPAuthEngineConfig) GetPath() string {
 	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/config")
 }
 
-func (d *LDAPAuthEngineConfig) GetPayload() map[string]interface{} {
+func (d *LDAPAuthEngineConfig) GetPayload() map[string]any {
 	return d.Spec.LDAPConfig.toMap()
 }
-func (d *LDAPAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *LDAPAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.LDAPConfig.toMap()
 	delete(desiredState, "bindpass")
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
@@ -407,8 +407,8 @@ func init() {
 	SchemeBuilder.Register(&LDAPAuthEngineConfig{}, &LDAPAuthEngineConfigList{})
 }
 
-func (i *LDAPConfig) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *LDAPConfig) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["url"] = i.URL
 	payload["case_sensitive_names"] = i.CaseSensitiveNames
 	payload["request_timeout"] = i.RequestTimeout

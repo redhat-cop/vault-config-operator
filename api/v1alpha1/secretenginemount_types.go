@@ -57,10 +57,10 @@ func (d *SecretEngineMount) GetPath() string {
 	}
 	return vaultutils.CleansePath(d.GetEngineListPath() + "/" + pathComponent + "/" + d.Name)
 }
-func (d *SecretEngineMount) GetPayload() map[string]interface{} {
+func (d *SecretEngineMount) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
-func (d *SecretEngineMount) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *SecretEngineMount) IsEquivalentToDesiredState(payload map[string]any) bool {
 	configMap := d.Spec.Config.toMap()
 	delete(configMap, "options")
 	delete(configMap, "description")
@@ -89,7 +89,7 @@ func (d *SecretEngineMount) GetEngineListPath() string {
 func (d *SecretEngineMount) GetEngineTunePath() string {
 	return d.GetPath() + "/tune"
 }
-func (d *SecretEngineMount) GetTunePayload() map[string]interface{} {
+func (d *SecretEngineMount) GetTunePayload() map[string]any {
 	return d.Spec.Config.toMap()
 }
 
@@ -248,8 +248,8 @@ func init() {
 	SchemeBuilder.Register(&SecretEngineMount{}, &SecretEngineMountList{})
 }
 
-func (mc *MountConfig) toMap() map[string]interface{} {
-	return map[string]interface{}{
+func (mc *MountConfig) toMap() map[string]any {
+	return map[string]any{
 		"default_lease_ttl":            mc.DefaultLeaseTTL,
 		"max_lease_ttl":                mc.MaxLeaseTTL,
 		"force_no_cache":               mc.ForceNoCache,
@@ -261,8 +261,8 @@ func (mc *MountConfig) toMap() map[string]interface{} {
 	}
 }
 
-func (m *Mount) toMap() map[string]interface{} {
-	return map[string]interface{}{
+func (m *Mount) toMap() map[string]any {
+	return map[string]any{
 		"type":                    m.Type,
 		"description":             m.Description,
 		"config":                  m.Config.toMap(),

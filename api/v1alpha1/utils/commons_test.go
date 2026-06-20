@@ -7,7 +7,7 @@ import (
 func TestToString(t *testing.T) {
 	tests := []struct {
 		name     string
-		input    interface{}
+		input    any
 		expected string
 	}{
 		{"nil returns empty", nil, ""},

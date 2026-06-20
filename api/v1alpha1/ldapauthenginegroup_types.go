@@ -66,11 +66,11 @@ func (d *LDAPAuthEngineGroup) IsDeletable() bool {
 	return true
 }
 
-func (d *LDAPAuthEngineGroup) GetPayload() map[string]interface{} {
+func (d *LDAPAuthEngineGroup) GetPayload() map[string]any {
 	return d.toMap()
 }
 
-func (d *LDAPAuthEngineGroup) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *LDAPAuthEngineGroup) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.GetPayload()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
@@ -133,8 +133,8 @@ func init() {
 	SchemeBuilder.Register(&LDAPAuthEngineGroup{}, &LDAPAuthEngineGroupList{})
 }
 
-func (i *LDAPAuthEngineGroup) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *LDAPAuthEngineGroup) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["name"] = i.Spec.Name
 	payload["policies"] = i.Spec.Policies
 

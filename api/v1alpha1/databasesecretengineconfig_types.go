@@ -86,15 +86,15 @@ func (d *DatabaseSecretEngineConfig) GetRootPasswordRotationPath() string {
 	}
 	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "rotate-root" + "/" + d.Name)
 }
-func (d *DatabaseSecretEngineConfig) GetPayload() map[string]interface{} {
+func (d *DatabaseSecretEngineConfig) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
-func (d *DatabaseSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *DatabaseSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	if d.Spec.DBSEConfig.RootPasswordRotation != nil && d.Spec.DBSEConfig.RootPasswordRotation.Enable && d.Status.LastRootPasswordRotation.IsZero() {
 		return false
 	}
 	desiredState := d.Spec.DBSEConfig.toMap()
-	connectionDetails := map[string]interface{}{}
+	connectionDetails := map[string]any{}
 	connectionDetails["connection_url"] = desiredState["connection_url"]
 	connectionDetails["disable_escaping"] = desiredState["disable_escaping"]
 	connectionDetails["root_credentials_rotate_statements"] = desiredState["root_credentials_rotate_statements"]
@@ -107,7 +107,7 @@ func (d *DatabaseSecretEngineConfig) IsEquivalentToDesiredState(payload map[stri
 	delete(desiredState, "disable_escaping")
 
 	// Create filtered payload with only the fields we manage
-	filteredPayload := make(map[string]interface{})
+	filteredPayload := make(map[string]any)
 	for key, value := range payload {
 		if _, exists := desiredState[key]; exists || key == "connection_details" {
 			filteredPayload[key] = value
@@ -117,8 +117,8 @@ func (d *DatabaseSecretEngineConfig) IsEquivalentToDesiredState(payload map[stri
 	return reflect.DeepEqual(desiredState, filteredPayload)
 }
 
-func toInterfaceArray(values []string) []interface{} {
-	result := []interface{}{}
+func toInterfaceArray(values []string) []any {
+	result := []any{}
 	for _, value := range values {
 		result = append(result, value)
 	}
@@ -166,7 +166,7 @@ func (r *DatabaseSecretEngineConfig) setInternalCredentials(context context.Cont
 		}
 
 		if randomSecret.Spec.IsKVSecretsEngineV2 {
-			var actualData map[string]interface{} = secret.Data["data"].(map[string]interface{})
+			var actualData map[string]any = secret.Data["data"].(map[string]any)
 			r.SetUsernameAndPassword(r.Spec.Username, (actualData[randomSecret.Spec.SecretKey]).(string))
 		} else {
 			r.SetUsernameAndPassword(r.Spec.Username, secret.Data[randomSecret.Spec.SecretKey].(string))
@@ -360,8 +360,8 @@ func init() {
 	SchemeBuilder.Register(&DatabaseSecretEngineConfig{}, &DatabaseSecretEngineConfigList{})
 }
 
-func (i *DBSEConfig) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *DBSEConfig) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["plugin_name"] = i.PluginName
 	payload["plugin_version"] = i.PluginVersion
 	payload["verify_connection"] = i.VerifyConnection

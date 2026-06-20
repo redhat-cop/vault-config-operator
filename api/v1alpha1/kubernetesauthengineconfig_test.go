@@ -66,7 +66,7 @@ func TestKAECConfigToMap(t *testing.T) {
 		t.Errorf("expected 8 keys in map, got %d", len(result))
 	}
 
-	expected := map[string]interface{}{
+	expected := map[string]any{
 		"kubernetes_host":                   "https://kubernetes.default.svc:443",
 		"kubernetes_ca_cert":                "-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----",
 		"token_reviewer_jwt":                "",

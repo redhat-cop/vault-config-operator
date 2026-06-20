@@ -138,12 +138,12 @@ func (d *Group) GetPath() string {
 	return vaultutils.CleansePath(string("/identity/group/name/" + d.Name))
 }
 
-func (d *Group) GetPayload() map[string]interface{} {
+func (d *Group) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
 
-func (i *GroupSpec) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *GroupSpec) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["type"] = i.Type
 	payload["metadata"] = i.Metadata
 	payload["policies"] = i.Policies
@@ -174,7 +174,7 @@ func (d *Group) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
 }
 
-func (d *Group) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *Group) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

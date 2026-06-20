@@ -151,11 +151,11 @@ func (d *AzureSecretEngineConfig) GetPath() string {
 	return string(d.Spec.Path) + "/" + "config"
 }
 
-func (d *AzureSecretEngineConfig) GetPayload() map[string]interface{} {
+func (d *AzureSecretEngineConfig) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
 
-func (r *AzureSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (r *AzureSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := r.Spec.AzureSEConfig.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
@@ -255,8 +255,8 @@ func (r *AzureSecretEngineConfig) SetClientIDAndClientSecret(ClientID string, Cl
 	r.Spec.AzureSEConfig.retrievedClientPassword = ClientSecret
 }
 
-func (i *AzureSEConfig) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *AzureSEConfig) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["subscription_id"] = i.SubscriptionID
 	payload["tenant_id"] = i.TenantID
 	payload["client_id"] = i.retrievedClientID

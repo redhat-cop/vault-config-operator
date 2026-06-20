@@ -67,11 +67,11 @@ func (q *QuaySecretEngineConfig) GetPath() string {
 	return string(q.Spec.Path) + "/" + "config"
 }
 
-func (q *QuaySecretEngineConfig) GetPayload() map[string]interface{} {
+func (q *QuaySecretEngineConfig) GetPayload() map[string]any {
 	return q.Spec.toMap()
 }
 
-func (q *QuaySecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (q *QuaySecretEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := q.Spec.QuayConfig.toMap()
 	delete(desiredState, "password")
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
@@ -210,8 +210,8 @@ type QuaySecretEngineConfigList struct {
 	Items           []QuaySecretEngineConfig `json:"items"`
 }
 
-func (i *QuayConfig) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *QuayConfig) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["url"] = i.URL
 	payload["token"] = i.retrievedToken
 	payload["ca_certificate"] = i.CACertertificate

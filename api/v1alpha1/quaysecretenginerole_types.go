@@ -86,10 +86,10 @@ func (d *QuaySecretEngineRole) GetPath() string {
 	}
 	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + d.Name)
 }
-func (q *QuaySecretEngineRole) GetPayload() map[string]interface{} {
+func (q *QuaySecretEngineRole) GetPayload() map[string]any {
 	return q.Spec.toMap()
 }
-func (q *QuaySecretEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (q *QuaySecretEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := q.Spec.QuayRole.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
@@ -110,8 +110,8 @@ func (q *QuaySecretEngineRole) IsValid() (bool, error) {
 	return true, nil
 }
 
-func (r *QuayRole) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (r *QuayRole) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["namespace_type"] = r.NamespaceType
 	payload["namespace_name"] = r.NamespaceName
 	payload["create_repositories"] = r.CreateRepositories
@@ -130,7 +130,7 @@ func (r *QuayRole) toMap() map[string]interface{} {
 	return payload
 }
 
-func setMapJson(payload map[string]interface{}, fieldName string, field interface{}) {
+func setMapJson(payload map[string]any, fieldName string, field any) {
 	j, err := json.Marshal(field)
 	if err == nil {
 		payload[fieldName] = string(j)

@@ -41,12 +41,12 @@ func (d *PasswordPolicy) GetPath() string {
 	}
 	return vaultutils.CleansePath("sys/policies/password/" + d.Name)
 }
-func (d *PasswordPolicy) GetPayload() map[string]interface{} {
-	return map[string]interface{}{
+func (d *PasswordPolicy) GetPayload() map[string]any {
+	return map[string]any{
 		"policy": d.Spec.PasswordPolicy,
 	}
 }
-func (d *PasswordPolicy) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *PasswordPolicy) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.GetPayload()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

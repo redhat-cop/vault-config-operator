@@ -112,10 +112,10 @@ func (d *KubernetesSecretEngineConfig) IsDeletable() bool {
 func (d *KubernetesSecretEngineConfig) GetPath() string {
 	return string(d.Spec.Path) + "/" + "config"
 }
-func (d *KubernetesSecretEngineConfig) GetPayload() map[string]interface{} {
+func (d *KubernetesSecretEngineConfig) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
-func (d *KubernetesSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *KubernetesSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.KubeSEConfig.toMap()
 	delete(desiredState, "service_account_jwt")
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
@@ -195,8 +195,8 @@ type KubeSEConfig struct {
 	retrievedServiceAccountJWT string `json:"-"`
 }
 
-func (i *KubeSEConfig) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *KubeSEConfig) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["kubernetes_host"] = i.KubernetesHost
 	payload["kubernetes_ca_cert"] = i.KubernetesCACert
 	payload["service_account_jwt"] = i.retrievedServiceAccountJWT

@@ -187,11 +187,11 @@ func (r *JWTOIDCAuthEngineConfig) GetPath() string {
 	return vaultutils.CleansePath("auth/" + string(r.Spec.Path) + "/config")
 }
 
-func (r *JWTOIDCAuthEngineConfig) GetPayload() map[string]interface{} {
+func (r *JWTOIDCAuthEngineConfig) GetPayload() map[string]any {
 	return r.Spec.JWTOIDCConfig.toMap()
 }
 
-func (r *JWTOIDCAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (r *JWTOIDCAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := r.Spec.JWTOIDCConfig.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
@@ -292,8 +292,8 @@ func init() {
 	SchemeBuilder.Register(&JWTOIDCAuthEngineConfig{}, &JWTOIDCAuthEngineConfigList{})
 }
 
-func (i *JWTOIDCConfig) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *JWTOIDCConfig) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["oidc_discovery_url"] = i.OIDCDiscoveryURL
 	payload["oidc_discovery_ca_pem"] = i.OIDCDiscoveryCAPEM
 	payload["oidc_client_id"] = i.retrievedClientID

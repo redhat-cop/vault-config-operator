@@ -67,7 +67,7 @@ func TestAuthMountConfigToMap(t *testing.T) {
 
 	result := config.toMap()
 
-	expected := map[string]interface{}{
+	expected := map[string]any{
 		"default_lease_ttl":            "1h",
 		"max_lease_ttl":                "24h",
 		"audit_non_hmac_request_keys":  []string{"key1", "key2"},
@@ -140,9 +140,9 @@ func TestAuthMountToMap(t *testing.T) {
 		t.Errorf("expected seal_wrap false, got %v", result["seal_wrap"])
 	}
 
-	configMap, ok := result["config"].(map[string]interface{})
+	configMap, ok := result["config"].(map[string]any)
 	if !ok {
-		t.Fatal("expected config to be map[string]interface{}")
+		t.Fatal("expected config to be map[string]any")
 	}
 	if configMap["default_lease_ttl"] != "1h" {
 		t.Errorf("expected nested config default_lease_ttl '1h', got %v", configMap["default_lease_ttl"])
@@ -181,9 +181,9 @@ func TestAuthEngineMountGetPayload(t *testing.T) {
 		t.Errorf("expected seal_wrap true, got %v", payload["seal_wrap"])
 	}
 
-	configMap, ok := payload["config"].(map[string]interface{})
+	configMap, ok := payload["config"].(map[string]any)
 	if !ok {
-		t.Fatal("expected payload config to be map[string]interface{}")
+		t.Fatal("expected payload config to be map[string]any")
 	}
 	if configMap["default_lease_ttl"] != "30m" {
 		t.Errorf("expected nested default_lease_ttl '30m', got %v", configMap["default_lease_ttl"])
@@ -311,7 +311,7 @@ func TestAuthEngineMountIsEquivalentToDesiredStateNonMatching(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"default_lease_ttl":            "2h", // changed
 		"max_lease_ttl":                "24h",
 		"audit_non_hmac_request_keys":  []string(nil),
@@ -344,7 +344,7 @@ func TestAuthEngineMountIsEquivalentToDesiredStateExtraFields(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"default_lease_ttl":            "1h",
 		"max_lease_ttl":                "24h",
 		"audit_non_hmac_request_keys":  []string(nil),

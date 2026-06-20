@@ -48,7 +48,7 @@ func TestJWTOIDCConfigToMap(t *testing.T) {
 		t.Errorf("expected 14 keys in map, got %d", len(result))
 	}
 
-	expected := map[string]interface{}{
+	expected := map[string]any{
 		"oidc_discovery_url":     "https://accounts.google.com",
 		"oidc_discovery_ca_pem":  "ca-pem-data",
 		"oidc_client_id":         "my-client-id",

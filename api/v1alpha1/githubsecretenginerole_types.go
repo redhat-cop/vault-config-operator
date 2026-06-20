@@ -81,8 +81,8 @@ type PermissionSet struct {
 	Permissions map[string]string `json:"permissions,omitempty"`
 }
 
-func (i *PermissionSet) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *PermissionSet) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["installation_id"] = i.InstallationID
 	payload["org_name"] = i.OrganizationName
 	payload["repositories"] = i.Repositories
@@ -103,10 +103,10 @@ func (d *GitHubSecretEngineRole) GetPath() string {
 	}
 	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "permissionset" + "/" + d.Name)
 }
-func (d *GitHubSecretEngineRole) GetPayload() map[string]interface{} {
+func (d *GitHubSecretEngineRole) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
-func (d *GitHubSecretEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *GitHubSecretEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.PermissionSet.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

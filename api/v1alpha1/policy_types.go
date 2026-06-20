@@ -51,12 +51,12 @@ func (d *Policy) GetPath() string {
 	}
 	return vaultutils.CleansePath("sys/policy/" + d.Name)
 }
-func (d *Policy) GetPayload() map[string]interface{} {
-	return map[string]interface{}{
+func (d *Policy) GetPayload() map[string]any {
+	return map[string]any{
 		"policy": d.Spec.Policy,
 	}
 }
-func (d *Policy) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *Policy) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.GetPayload()
 	desiredState["name"] = map[bool]string{true: d.Spec.Name, false: d.Name}[d.Spec.Name != ""]
 	if d.Spec.Type == "" {
@@ -99,7 +99,7 @@ func (d *Policy) PrepareInternalValues(context context.Context, object client.Ob
 	for key, data := range secret.Data {
 		authenginepath := strings.Trim(key, "/")
 		placeholder := "${auth/" + authenginepath + "/@accessor}"
-		accessor := data.(map[string]interface{})["accessor"].(string)
+		accessor := data.(map[string]any)["accessor"].(string)
 		d.Spec.Policy = strings.ReplaceAll(d.Spec.Policy, placeholder, accessor)
 	}
 

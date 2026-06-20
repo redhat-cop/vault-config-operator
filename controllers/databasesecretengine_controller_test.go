@@ -126,13 +126,13 @@ var _ = Describe("DatabaseSecretEngine controllers", Ordered, func() {
 			Expect(ok).To(BeTrue(), "expected plugin_name to be a string")
 			Expect(pluginName).To(Equal("postgresql-database-plugin"))
 
-			connDetails, ok := secret.Data["connection_details"].(map[string]interface{})
+			connDetails, ok := secret.Data["connection_details"].(map[string]any)
 			Expect(ok).To(BeTrue(), "expected connection_details to be a map")
 			Expect(connDetails["connection_url"]).To(Equal("postgresql://{{username}}:{{password}}@my-postgresql-database.test-vault-config-operator.svc:5432"))
 			Expect(connDetails["username"]).To(Equal("postgres"))
 
-			allowedRoles, ok := secret.Data["allowed_roles"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected allowed_roles to be []interface{}")
+			allowedRoles, ok := secret.Data["allowed_roles"].([]any)
+			Expect(ok).To(BeTrue(), "expected allowed_roles to be []any")
 			Expect(allowedRoles).To(ContainElement("test-db-role"))
 		})
 	})
@@ -172,8 +172,8 @@ var _ = Describe("DatabaseSecretEngine controllers", Ordered, func() {
 			Expect(ok).To(BeTrue(), "expected db_name to be a string")
 			Expect(dbName).To(Equal("test-db-config"))
 
-			creationStatements, ok := secret.Data["creation_statements"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected creation_statements to be []interface{}")
+			creationStatements, ok := secret.Data["creation_statements"].([]any)
+			Expect(ok).To(BeTrue(), "expected creation_statements to be []any")
 			Expect(creationStatements).To(HaveLen(1))
 			Expect(creationStatements[0]).To(Equal("CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}';"))
 

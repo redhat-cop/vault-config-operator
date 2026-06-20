@@ -61,7 +61,7 @@ func TestGitHubSecretEngineConfigIsEquivalentPrvKeyDeleted(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"app_id":   int64(12345),
 		"base_url": "https://api.github.com",
 	}
@@ -106,7 +106,7 @@ func TestGitHubSecretEngineConfigIsEquivalentNonMatching(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"app_id":   int64(12345),
 		"base_url": "https://api.github.example.com",
 	}
@@ -128,7 +128,7 @@ func TestGitHubSecretEngineConfigIsEquivalentExtraFields(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"app_id":      int64(12345),
 		"base_url":    "https://api.github.com",
 		"extra_field": "from-vault",
@@ -151,7 +151,7 @@ func TestGitHubSecretEngineConfigIsEquivalentPayloadWithPrvKey(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"app_id":   int64(12345),
 		"base_url": "https://api.github.com",
 		"prv_key":  "test-ssh-key",
@@ -258,7 +258,7 @@ func TestGitHubSecretEngineConfig_PrepareInternalValues_FromVaultSecret(t *testi
 	ns := "ns-github"
 	vaultPath := "secret/data/github-ssh"
 	handler := newFakeVaultHandler()
-	handler.setGet(vaultPath, map[string]interface{}{
+	handler.setGet(vaultPath, map[string]any{
 		"key": "private-key-from-vault",
 	})
 	kube := newFakeKubeClient()

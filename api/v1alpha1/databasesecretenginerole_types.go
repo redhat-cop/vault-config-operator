@@ -73,10 +73,10 @@ func (d *DatabaseSecretEngineRole) GetPath() string {
 	}
 	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + d.Name)
 }
-func (d *DatabaseSecretEngineRole) GetPayload() map[string]interface{} {
+func (d *DatabaseSecretEngineRole) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
-func (d *DatabaseSecretEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *DatabaseSecretEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.DBSERole.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
@@ -178,8 +178,8 @@ func init() {
 	SchemeBuilder.Register(&DatabaseSecretEngineRole{}, &DatabaseSecretEngineRoleList{})
 }
 
-func (i *DBSERole) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *DBSERole) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["db_name"] = i.DBName
 	payload["default_ttl"] = i.DefaultTTL
 	payload["max_ttl"] = i.MaxTTL

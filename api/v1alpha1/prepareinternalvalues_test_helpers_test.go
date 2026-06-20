@@ -35,14 +35,14 @@ func newFakeKubeClient(objs ...client.Object) client.Client {
 }
 
 type fakeVaultHandler struct {
-	routes map[string]map[string]interface{}
+	routes map[string]map[string]any
 }
 
 func newFakeVaultHandler() *fakeVaultHandler {
-	return &fakeVaultHandler{routes: make(map[string]map[string]interface{})}
+	return &fakeVaultHandler{routes: make(map[string]map[string]any)}
 }
 
-func (h *fakeVaultHandler) setGet(path string, data map[string]interface{}) {
+func (h *fakeVaultHandler) setGet(path string, data map[string]any) {
 	h.routes[path] = data
 }
 
@@ -56,7 +56,7 @@ func (h *fakeVaultHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
-		resp := map[string]interface{}{"data": data}
+		resp := map[string]any{"data": data}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(resp) // test handler; encode error is not actionable
 	case http.MethodPut, http.MethodPost:
@@ -65,7 +65,7 @@ func (h *fakeVaultHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
-		resp := map[string]interface{}{"data": data}
+		resp := map[string]any{"data": data}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(resp) // test handler; encode error is not actionable
 	default:

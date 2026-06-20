@@ -259,8 +259,8 @@ var _ = Describe("DatabaseSecretEngineStaticRole controller", func() {
 			initialSecret, err := vaultClient.Logical().Read("test-vault-config-operator/database/static-roles/read-only-static")
 			Expect(err).To(BeNil())
 			Expect(initialSecret).NotTo(BeNil())
-			initialStatements, ok := initialSecret.Data["rotation_statements"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected rotation_statements to be []interface{}")
+			initialStatements, ok := initialSecret.Data["rotation_statements"].([]any)
+			Expect(ok).To(BeTrue(), "expected rotation_statements to be []any")
 			Expect(initialStatements).To(HaveLen(1))
 
 			By("Recording initial ObservedGeneration")

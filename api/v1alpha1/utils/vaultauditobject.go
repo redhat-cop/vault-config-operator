@@ -135,7 +135,7 @@ func (ve *VaultAuditEndpoint) IsEquivalentToDesired(context context.Context) (bo
 	}
 
 	// Convert current audit to a comparable format
-	currentPayload := map[string]interface{}{
+	currentPayload := map[string]any{
 		"type":        currentAudit.Type,
 		"description": currentAudit.Description,
 		"local":       currentAudit.Local,

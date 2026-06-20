@@ -161,8 +161,8 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 			initialSecret, err := vaultClient.Logical().Read("test-vault-config-operator/pki/roles/pki-example")
 			Expect(err).To(BeNil())
 			Expect(initialSecret).NotTo(BeNil())
-			initialDomains, ok := initialSecret.Data["allowed_domains"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected allowed_domains to be []interface{}")
+			initialDomains, ok := initialSecret.Data["allowed_domains"].([]any)
+			Expect(ok).To(BeTrue(), "expected allowed_domains to be []any")
 			Expect(initialDomains).To(ContainElement("internal.io"))
 			Expect(initialDomains).To(ContainElement("pki-vault-demo.svc"))
 			Expect(initialDomains).To(ContainElement("example.com"))
@@ -194,7 +194,7 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 				if err != nil || secret == nil {
 					return false
 				}
-				domains, ok := secret.Data["allowed_domains"].([]interface{})
+				domains, ok := secret.Data["allowed_domains"].([]any)
 				if !ok {
 					return false
 				}

@@ -98,7 +98,7 @@ func TestIdentityOIDCProviderIsEquivalentToDesiredState(t *testing.T) {
 		},
 	}
 
-	matching := map[string]interface{}{
+	matching := map[string]any{
 		"issuer":             "https://example.com",
 		"allowed_client_ids": []string{"client1"},
 		"scopes_supported":   []string{"openid"},
@@ -107,7 +107,7 @@ func TestIdentityOIDCProviderIsEquivalentToDesiredState(t *testing.T) {
 		t.Error("expected matching payload to be equivalent")
 	}
 
-	nonMatching := map[string]interface{}{
+	nonMatching := map[string]any{
 		"issuer":             "https://other.com",
 		"allowed_client_ids": []string{"client1"},
 		"scopes_supported":   []string{"openid"},
@@ -204,7 +204,7 @@ func TestIdentityOIDCScopeIsEquivalentToDesiredState(t *testing.T) {
 		},
 	}
 
-	matching := map[string]interface{}{
+	matching := map[string]any{
 		"template":    "tmpl",
 		"description": "desc",
 	}
@@ -212,7 +212,7 @@ func TestIdentityOIDCScopeIsEquivalentToDesiredState(t *testing.T) {
 		t.Error("expected matching payload to be equivalent")
 	}
 
-	nonMatching := map[string]interface{}{
+	nonMatching := map[string]any{
 		"template":    "other",
 		"description": "desc",
 	}
@@ -311,7 +311,7 @@ func TestIdentityOIDCClientIsEquivalentToDesiredState(t *testing.T) {
 		},
 	}
 
-	matching := map[string]interface{}{
+	matching := map[string]any{
 		"key":              "default",
 		"redirect_uris":    []string{"https://example.com/callback"},
 		"assignments":      []string{"allow_all"},
@@ -323,7 +323,7 @@ func TestIdentityOIDCClientIsEquivalentToDesiredState(t *testing.T) {
 		t.Error("expected matching payload to be equivalent")
 	}
 
-	nonMatching := map[string]interface{}{
+	nonMatching := map[string]any{
 		"key":              "other-key",
 		"redirect_uris":    []string{"https://example.com/callback"},
 		"assignments":      []string{"allow_all"},
@@ -406,7 +406,7 @@ func TestIdentityOIDCAssignmentIsEquivalentToDesiredState(t *testing.T) {
 		},
 	}
 
-	matching := map[string]interface{}{
+	matching := map[string]any{
 		"entity_ids": []string{"entity-1"},
 		"group_ids":  []string{"group-1"},
 	}
@@ -414,7 +414,7 @@ func TestIdentityOIDCAssignmentIsEquivalentToDesiredState(t *testing.T) {
 		t.Error("expected matching payload to be equivalent")
 	}
 
-	nonMatching := map[string]interface{}{
+	nonMatching := map[string]any{
 		"entity_ids": []string{"entity-2"},
 		"group_ids":  []string{"group-1"},
 	}
@@ -433,7 +433,7 @@ func TestIdentityOIDCScopeIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 		},
 	}
 
-	payloadWithExtra := map[string]interface{}{
+	payloadWithExtra := map[string]any{
 		"template":    "tmpl",
 		"description": "desc",
 		"extra_field": "vault-returned-value",
@@ -454,7 +454,7 @@ func TestIdentityOIDCProviderIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 		},
 	}
 
-	payloadWithExtra := map[string]interface{}{
+	payloadWithExtra := map[string]any{
 		"issuer":             "https://example.com",
 		"allowed_client_ids": []string{"client1"},
 		"scopes_supported":   []string{"openid"},
@@ -479,7 +479,7 @@ func TestIdentityOIDCClientIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 		},
 	}
 
-	payloadWithExtra := map[string]interface{}{
+	payloadWithExtra := map[string]any{
 		"key":              "default",
 		"redirect_uris":    []string{"https://example.com/callback"},
 		"assignments":      []string{"allow_all"},
@@ -504,7 +504,7 @@ func TestIdentityOIDCAssignmentIsEquivalentExtraFieldsReturnsFalse(t *testing.T)
 		},
 	}
 
-	payloadWithExtra := map[string]interface{}{
+	payloadWithExtra := map[string]any{
 		"entity_ids":  []string{"entity-1"},
 		"group_ids":   []string{"group-1"},
 		"extra_field": "vault-returned-value",

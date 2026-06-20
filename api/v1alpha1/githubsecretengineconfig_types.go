@@ -72,8 +72,8 @@ type GHConfig struct {
 	retrievedSSHKey string `json:"-"`
 }
 
-func (i *GHConfig) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *GHConfig) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["app_id"] = i.ApplicationID
 	payload["prv_key"] = i.retrievedSSHKey
 	payload["base_url"] = i.GitHubAPIBaseURL
@@ -103,10 +103,10 @@ func (d *GitHubSecretEngineConfig) IsDeletable() bool {
 func (d *GitHubSecretEngineConfig) GetPath() string {
 	return string(d.Spec.Path) + "/" + "config"
 }
-func (d *GitHubSecretEngineConfig) GetPayload() map[string]interface{} {
+func (d *GitHubSecretEngineConfig) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
-func (d *GitHubSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *GitHubSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.GHConfig.toMap()
 	delete(desiredState, "prv_key")
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))

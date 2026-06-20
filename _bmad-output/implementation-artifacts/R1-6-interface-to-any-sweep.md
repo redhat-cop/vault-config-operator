@@ -1,6 +1,6 @@
 # Story R1.6: `interface{}` to `any` Sweep
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -18,28 +18,28 @@ So that the codebase uses idiomatic modern Go.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Replace `interface{}` → `any` across `api/v1alpha1/` (AC: 1, 3)
-  - [ ] 1.1: Replace in all `*_types.go` files (~40 files, ~4 occurrences each)
-  - [ ] 1.2: Replace in all `*_test.go` files (~30 files, varies per file)
-  - [ ] 1.3: Replace in `payload_filter.go` (3 occurrences)
-  - [ ] 1.4: Replace in `api/v1alpha1/utils/` — `commons.go` (2), `vaultutils.go` (4), `vaultobject.go` (7), `vaultengineobject.go` (4), `vaultauditobject.go` (1), `vautlpkiengineobject.go` (6), `vaultobject_test.go` (45)
-  - [ ] 1.5: Verify `zz_generated.deepcopy.go` is NOT touched — currently contains zero `interface{}` so no exclusion gymnastics needed
-  - [ ] 1.6: Run `go build ./api/...` to confirm compilation
-- [ ] Task 2: Replace `interface{}` → `any` across `controllers/` (AC: 1, 3)
-  - [ ] 2.1: Replace in `controllers/vaultresourcecontroller/advanced-funcmap.go` (31 occurrences — highest count in controllers)
-  - [ ] 2.2: Replace in `controllers/vaultsecret_controller.go` (2 occurrences)
-  - [ ] 2.3: Replace in all `controllers/*_controller_test.go` files (~15 files, varies per file)
-  - [ ] 2.4: Replace in `controllers/controllertestutils/decoder_test.go` (1 occurrence)
-  - [ ] 2.5: Run `go build ./controllers/...` to confirm compilation
-- [ ] Task 3: Verify zero remaining occurrences (AC: 3)
-  - [ ] 3.1: Run `grep -r 'interface{}' api/ controllers/ --include='*.go' | grep -v zz_generated` and confirm zero matches
-- [ ] Task 4: Run `make manifests generate fmt vet test` (AC: 1, 2)
-  - [ ] 4.1: Run `make manifests generate` — should produce zero diffs (no `*_types.go` structural changes, only alias rename)
-  - [ ] 4.2: Run `make fmt` — should be a no-op (gofmt treats `any` and `interface{}` identically in formatted output)
-  - [ ] 4.3: Run `make vet` — should pass
-  - [ ] 4.4: Run `make test` — all envtest-based unit tests pass
-- [ ] Task 5: Run `make integration` (AC: 2)
-  - [ ] 5.1: Run `make integration` — full Kind+Vault integration suite passes
+- [x] Task 1: Replace `interface{}` → `any` across `api/v1alpha1/` (AC: 1, 3)
+  - [x] 1.1: Replace in all `*_types.go` files (~40 files, ~4 occurrences each)
+  - [x] 1.2: Replace in all `*_test.go` files (~30 files, varies per file)
+  - [x] 1.3: Replace in `payload_filter.go` (3 occurrences)
+  - [x] 1.4: Replace in `api/v1alpha1/utils/` — `commons.go` (2), `vaultutils.go` (4), `vaultobject.go` (7), `vaultengineobject.go` (4), `vaultauditobject.go` (1), `vautlpkiengineobject.go` (6), `vaultobject_test.go` (45)
+  - [x] 1.5: Verify `zz_generated.deepcopy.go` is NOT touched — currently contains zero `interface{}` so no exclusion gymnastics needed
+  - [x] 1.6: Run `go build ./api/...` to confirm compilation
+- [x] Task 2: Replace `interface{}` → `any` across `controllers/` (AC: 1, 3)
+  - [x] 2.1: Replace in `controllers/vaultresourcecontroller/advanced-funcmap.go` (31 occurrences — highest count in controllers)
+  - [x] 2.2: Replace in `controllers/vaultsecret_controller.go` (2 occurrences)
+  - [x] 2.3: Replace in all `controllers/*_controller_test.go` files (~15 files, varies per file)
+  - [x] 2.4: Replace in `controllers/controllertestutils/decoder_test.go` (1 occurrence)
+  - [x] 2.5: Run `go build ./controllers/...` to confirm compilation
+- [x] Task 3: Verify zero remaining occurrences (AC: 3)
+  - [x] 3.1: Run `grep -r 'interface{}' api/ controllers/ --include='*.go' | grep -v zz_generated` and confirm zero matches
+- [x] Task 4: Run `make manifests generate fmt vet test` (AC: 1, 2)
+  - [x] 4.1: Run `make manifests generate` — should produce zero diffs (no `*_types.go` structural changes, only alias rename)
+  - [x] 4.2: Run `make fmt` — should be a no-op (gofmt treats `any` and `interface{}` identically in formatted output)
+  - [x] 4.3: Run `make vet` — should pass
+  - [x] 4.4: Run `make test` — all envtest-based unit tests pass
+- [x] Task 5: Run `make integration` (AC: 2)
+  - [x] 5.1: Run `make integration` — full Kind+Vault integration suite passes
 
 ## Dev Notes
 
@@ -180,10 +180,136 @@ There should be zero occurrences of `interface{}` inside Go string literals (e.g
 
 ### Agent Model Used
 
+Claude Opus 4.6
+
 ### Debug Log References
+
+- Integration test infrastructure failures (Kind cluster degradation) required fresh cluster recreation before successful run
 
 ### Completion Notes List
 
+- Replaced all ~570 `interface{}` occurrences with `any` across 111 Go source files in `api/v1alpha1/` and `controllers/`
+- `zz_generated.deepcopy.go` confirmed untouched (zero occurrences present, excluded from sed)
+- `make manifests generate` produced zero diffs (CRD generation and deepcopy unaffected)
+- `make fmt` reformatted one file (`api/v1alpha1/utils/vaultobject_test.go`) with minor whitespace adjustment
+- `make vet` and `make test` pass — all unit tests green
+- `make integration` passes — full Kind+Vault integration suite (575.8s) green
+- Zero `interface{}` remaining in non-generated .go files under `api/` and `controllers/`
+
 ### Change Log
 
+- 2026-06-20: Replaced all `interface{}` with `any` across api/ and controllers/ (mechanical rename, zero behavioral change)
+
 ### File List
+
+- _bmad-output/implementation-artifacts/sprint-status.yaml (modified)
+- api/v1alpha1/audit_test.go (modified)
+- api/v1alpha1/audit_types.go (modified)
+- api/v1alpha1/auditrequestheader_test.go (modified)
+- api/v1alpha1/auditrequestheader_types.go (modified)
+- api/v1alpha1/authenginemount_test.go (modified)
+- api/v1alpha1/authenginemount_types.go (modified)
+- api/v1alpha1/azureauthengineconfig_test.go (modified)
+- api/v1alpha1/azureauthengineconfig_types.go (modified)
+- api/v1alpha1/azureauthenginerole_test.go (modified)
+- api/v1alpha1/azureauthenginerole_types.go (modified)
+- api/v1alpha1/azuresecretengineconfig_test.go (modified)
+- api/v1alpha1/azuresecretengineconfig_types.go (modified)
+- api/v1alpha1/azuresecretenginerole_types.go (modified)
+- api/v1alpha1/certauthengineconfig_types.go (modified)
+- api/v1alpha1/certauthenginerole_types.go (modified)
+- api/v1alpha1/databasesecretengineconfig_test.go (modified)
+- api/v1alpha1/databasesecretengineconfig_types.go (modified)
+- api/v1alpha1/databasesecretenginerole_test.go (modified)
+- api/v1alpha1/databasesecretenginerole_types.go (modified)
+- api/v1alpha1/databasesecretenginestaticrole_test.go (modified)
+- api/v1alpha1/databasesecretenginestaticrole_types.go (modified)
+- api/v1alpha1/entity_test.go (modified)
+- api/v1alpha1/entity_types.go (modified)
+- api/v1alpha1/entityalias_test.go (modified)
+- api/v1alpha1/entityalias_types.go (modified)
+- api/v1alpha1/gcpauthengineconfig_test.go (modified)
+- api/v1alpha1/gcpauthengineconfig_types.go (modified)
+- api/v1alpha1/gcpauthenginerole_test.go (modified)
+- api/v1alpha1/gcpauthenginerole_types.go (modified)
+- api/v1alpha1/githubsecretengineconfig_test.go (modified)
+- api/v1alpha1/githubsecretengineconfig_types.go (modified)
+- api/v1alpha1/githubsecretenginerole_test.go (modified)
+- api/v1alpha1/githubsecretenginerole_types.go (modified)
+- api/v1alpha1/group_test.go (modified)
+- api/v1alpha1/group_types.go (modified)
+- api/v1alpha1/groupalias_test.go (modified)
+- api/v1alpha1/groupalias_types.go (modified)
+- api/v1alpha1/identityoidc_test.go (modified)
+- api/v1alpha1/identityoidcassignment_types.go (modified)
+- api/v1alpha1/identityoidcclient_types.go (modified)
+- api/v1alpha1/identityoidcprovider_types.go (modified)
+- api/v1alpha1/identityoidcscope_types.go (modified)
+- api/v1alpha1/identitytoken_test.go (modified)
+- api/v1alpha1/identitytokenconfig_types.go (modified)
+- api/v1alpha1/identitytokenkey_types.go (modified)
+- api/v1alpha1/identitytokenrole_types.go (modified)
+- api/v1alpha1/isequivalent_audit_test.go (modified)
+- api/v1alpha1/jwtoidcauthengineconfig_test.go (modified)
+- api/v1alpha1/jwtoidcauthengineconfig_types.go (modified)
+- api/v1alpha1/jwtoidcauthenginerole_test.go (modified)
+- api/v1alpha1/jwtoidcauthenginerole_types.go (modified)
+- api/v1alpha1/kubernetesauthengineconfig_test.go (modified)
+- api/v1alpha1/kubernetesauthengineconfig_types.go (modified)
+- api/v1alpha1/kubernetesauthenginerole_test.go (modified)
+- api/v1alpha1/kubernetesauthenginerole_types.go (modified)
+- api/v1alpha1/kubernetessecretengineconfig_test.go (modified)
+- api/v1alpha1/kubernetessecretengineconfig_types.go (modified)
+- api/v1alpha1/kubernetessecretenginerole_types.go (modified)
+- api/v1alpha1/ldapauthengineconfig_test.go (modified)
+- api/v1alpha1/ldapauthengineconfig_types.go (modified)
+- api/v1alpha1/ldapauthenginegroup_test.go (modified)
+- api/v1alpha1/ldapauthenginegroup_types.go (modified)
+- api/v1alpha1/passwordpolicy_test.go (modified)
+- api/v1alpha1/passwordpolicy_types.go (modified)
+- api/v1alpha1/payload_filter.go (modified)
+- api/v1alpha1/payload_filter_test.go (modified)
+- api/v1alpha1/pkisecretengineconfig_types.go (modified)
+- api/v1alpha1/pkisecretenginerole_types.go (modified)
+- api/v1alpha1/policy_test.go (modified)
+- api/v1alpha1/policy_types.go (modified)
+- api/v1alpha1/prepareinternalvalues_test_helpers_test.go (modified)
+- api/v1alpha1/quaysecretengineconfig_test.go (modified)
+- api/v1alpha1/quaysecretengineconfig_types.go (modified)
+- api/v1alpha1/quaysecretenginerole_types.go (modified)
+- api/v1alpha1/quaysecretenginestaticrole_types.go (modified)
+- api/v1alpha1/rabbitmqsecretengineconfig_test.go (modified)
+- api/v1alpha1/rabbitmqsecretengineconfig_types.go (modified)
+- api/v1alpha1/rabbitmqsecretenginerole_types.go (modified)
+- api/v1alpha1/randomsecret_test.go (modified)
+- api/v1alpha1/randomsecret_types.go (modified)
+- api/v1alpha1/secretenginemount_test.go (modified)
+- api/v1alpha1/secretenginemount_types.go (modified)
+- api/v1alpha1/utils/commons.go (modified)
+- api/v1alpha1/utils/commons_test.go (modified)
+- api/v1alpha1/utils/vaultauditobject.go (modified)
+- api/v1alpha1/utils/vaultengineobject.go (modified)
+- api/v1alpha1/utils/vaultobject.go (modified)
+- api/v1alpha1/utils/vaultobject_test.go (modified)
+- api/v1alpha1/utils/vaultpkiengineobject.go (modified)
+- api/v1alpha1/utils/vaultutils.go (modified)
+- controllers/audit_controller_test.go (modified)
+- controllers/authenginemount_controller_test.go (modified)
+- controllers/controllertestutils/decoder_test.go (modified)
+- controllers/databasesecretengine_controller_test.go (modified)
+- controllers/databasesecretenginestaticrole_controller_test.go (modified)
+- controllers/driftdetection_controller_test.go (modified)
+- controllers/entity_controller_test.go (modified)
+- controllers/entityalias_controller_test.go (modified)
+- controllers/group_controller_test.go (modified)
+- controllers/identityoidc_controller_test.go (modified)
+- controllers/identitytoken_controller_test.go (modified)
+- controllers/jwtoidcauthengine_controller_test.go (modified)
+- controllers/kubernetesauthengine_controller_test.go (modified)
+- controllers/kubernetessecretengine_controller_test.go (modified)
+- controllers/ldapauthengine_controller_test.go (modified)
+- controllers/pkisecretengine_controller_test.go (modified)
+- controllers/randomsecret_controller_test.go (modified)
+- controllers/secretenginemount_controller_test.go (modified)
+- controllers/vaultresourcecontroller/advanced-funcmap.go (modified)
+- controllers/vaultsecret_controller.go (modified)

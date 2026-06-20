@@ -69,12 +69,12 @@ var _ = Describe("Group and GroupAlias controllers", Ordered, func() {
 			Expect(ok).To(BeTrue(), "expected type to be a string")
 			Expect(groupType).To(Equal("external"))
 
-			metadata, ok := secret.Data["metadata"].(map[string]interface{})
-			Expect(ok).To(BeTrue(), "expected metadata to be map[string]interface{}")
+			metadata, ok := secret.Data["metadata"].(map[string]any)
+			Expect(ok).To(BeTrue(), "expected metadata to be map[string]any")
 			Expect(metadata["team"]).To(Equal("team-abc"))
 
-			policies, ok := secret.Data["policies"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected policies to be []interface{}")
+			policies, ok := secret.Data["policies"].([]any)
+			Expect(ok).To(BeTrue(), "expected policies to be []any")
 			Expect(policies).To(ConsistOf("team-abc-access"))
 		})
 	})
@@ -107,7 +107,7 @@ var _ = Describe("Group and GroupAlias controllers", Ordered, func() {
 				if err != nil || secret == nil {
 					return false
 				}
-				policies, ok := secret.Data["policies"].([]interface{})
+				policies, ok := secret.Data["policies"].([]any)
 				if !ok {
 					return false
 				}
@@ -124,8 +124,8 @@ var _ = Describe("Group and GroupAlias controllers", Ordered, func() {
 			updatedSecret, err := vaultClient.Logical().Read("identity/group/name/test-group")
 			Expect(err).To(BeNil())
 			Expect(updatedSecret).NotTo(BeNil())
-			updatedPolicies, ok := updatedSecret.Data["policies"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected policies to be []interface{}")
+			updatedPolicies, ok := updatedSecret.Data["policies"].([]any)
+			Expect(ok).To(BeTrue(), "expected policies to be []any")
 			Expect(updatedPolicies).To(ConsistOf("team-abc-access", "kv-reader"))
 
 			By("Verifying ObservedGeneration increased on ReconcileSuccessful condition")
@@ -194,7 +194,7 @@ var _ = Describe("Group and GroupAlias controllers", Ordered, func() {
 			authMounts, err := vaultClient.Logical().Read("sys/auth")
 			Expect(err).To(BeNil())
 			Expect(authMounts).NotTo(BeNil())
-			kubeMount, ok := authMounts.Data["kubernetes/"].(map[string]interface{})
+			kubeMount, ok := authMounts.Data["kubernetes/"].(map[string]any)
 			Expect(ok).To(BeTrue(), "expected kubernetes/ auth mount to exist")
 			expectedAccessor, ok := kubeMount["accessor"].(string)
 			Expect(ok).To(BeTrue(), "expected accessor to be a string")

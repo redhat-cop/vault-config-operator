@@ -132,12 +132,12 @@ func (d *IdentityTokenKey) GetPath() string {
 	return vaultutils.CleansePath("identity/oidc/key/" + d.Name)
 }
 
-func (d *IdentityTokenKey) GetPayload() map[string]interface{} {
+func (d *IdentityTokenKey) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
 
-func (i *IdentityTokenKeySpec) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *IdentityTokenKeySpec) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["rotation_period"] = i.RotationPeriod
 	payload["verification_ttl"] = i.VerificationTTL
 	payload["allowed_client_ids"] = i.AllowedClientIDs
@@ -165,7 +165,7 @@ func (d *IdentityTokenKey) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfig
 	return &d.Spec.Authentication
 }
 
-func (d *IdentityTokenKey) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *IdentityTokenKey) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

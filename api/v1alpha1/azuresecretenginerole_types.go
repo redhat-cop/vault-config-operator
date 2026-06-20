@@ -144,7 +144,7 @@ func (d *AzureSecretEngineRole) GetPath() string {
 	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + d.Name)
 }
 
-func (d *AzureSecretEngineRole) GetPayload() map[string]interface{} {
+func (d *AzureSecretEngineRole) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
 
@@ -156,7 +156,7 @@ func (d *AzureSecretEngineRole) GetVaultConnection() *vaultutils.VaultConnection
 	return d.Spec.Connection
 }
 
-func (d *AzureSecretEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *AzureSecretEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.AzureSERole.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
@@ -185,8 +185,8 @@ func (r *AzureSecretEngineRole) SetConditions(conditions []metav1.Condition) {
 	r.Status.Conditions = conditions
 }
 
-func (i *AzureSERole) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *AzureSERole) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["azure_roles"] = i.AzureRoles
 	payload["azure_groups"] = i.AzureGroups
 	payload["application_object_id"] = i.ApplicationObjectID

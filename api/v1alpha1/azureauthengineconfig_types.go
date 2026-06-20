@@ -155,11 +155,11 @@ func (r *AzureAuthEngineConfig) GetPath() string {
 	return vaultutils.CleansePath("auth/" + string(r.Spec.Path) + "/config")
 }
 
-func (r *AzureAuthEngineConfig) GetPayload() map[string]interface{} {
+func (r *AzureAuthEngineConfig) GetPayload() map[string]any {
 	return r.Spec.AzureConfig.toMap()
 }
 
-func (r *AzureAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (r *AzureAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := r.Spec.AzureConfig.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
@@ -257,8 +257,8 @@ func init() {
 	SchemeBuilder.Register(&AzureAuthEngineConfig{}, &AzureAuthEngineConfigList{})
 }
 
-func (i *AzureConfig) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *AzureConfig) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["tenant_id"] = i.TenantID
 	payload["resource"] = i.Resource
 	payload["environment"] = i.Environment

@@ -108,9 +108,9 @@ func (d *RandomSecret) IsDeletable() bool {
 	return true
 }
 
-func (d *RandomSecret) getV1Payload() map[string]interface{} {
+func (d *RandomSecret) getV1Payload() map[string]any {
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		d.Spec.SecretKey: d.Spec.calculatedSecret,
 	}
 
@@ -125,16 +125,16 @@ func (d *RandomSecret) IsKVSecretsEngineV2() bool {
 	return d.Spec.IsKVSecretsEngineV2
 }
 
-func (d *RandomSecret) GetPayload() map[string]interface{} {
+func (d *RandomSecret) GetPayload() map[string]any {
 	if d.IsKVSecretsEngineV2() {
-		return map[string]interface{}{
+		return map[string]any{
 			"data": d.getV1Payload(),
 		}
 	}
 	return d.getV1Payload()
 }
 
-func (d *RandomSecret) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *RandomSecret) IsEquivalentToDesiredState(payload map[string]any) bool {
 	return false
 }
 

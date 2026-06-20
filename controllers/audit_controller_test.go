@@ -104,7 +104,7 @@ var _ = Describe("Audit controllers", Ordered, func() {
 			Expect(secret).NotTo(BeNil())
 			Expect(secret.Data).NotTo(BeNil())
 
-			headerData, ok := secret.Data["X-Custom-Test-Header"].(map[string]interface{})
+			headerData, ok := secret.Data["X-Custom-Test-Header"].(map[string]any)
 			Expect(ok).To(BeTrue(), "expected header data to be a map")
 			hmac, ok := headerData["hmac"].(bool)
 			Expect(ok).To(BeTrue(), "expected hmac to be a bool")
@@ -192,7 +192,7 @@ var _ = Describe("Audit controllers", Ordered, func() {
 				if err != nil || secret == nil {
 					return false
 				}
-				headerData, ok := secret.Data["X-Custom-Test-Header"].(map[string]interface{})
+				headerData, ok := secret.Data["X-Custom-Test-Header"].(map[string]any)
 				if !ok {
 					return false
 				}

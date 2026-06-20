@@ -121,12 +121,12 @@ func (d *GroupAlias) GetPath() string {
 	return vaultutils.CleansePath("/identity/group-alias/id/" + d.Status.ID)
 }
 
-func (d *GroupAlias) GetPayload() map[string]interface{} {
+func (d *GroupAlias) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
 
-func (i *GroupAliasSpec) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *GroupAliasSpec) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["name"] = i.retrievedName
 	payload["id"] = i.retrievedAliasID
 	payload["mount_accessor"] = i.retrievedMountAccessor
@@ -167,7 +167,7 @@ func (d *GroupAlias) PrepareInternalValues(context context.Context, object clien
 
 	if d.Status.ID == "" {
 		//we have to create the group alias as unfortunately this api is asymmetric
-		payload := map[string]interface{}{
+		payload := map[string]any{
 			"name":           map[bool]string{true: d.Spec.Name, false: d.Name}[d.Spec.Name != ""],
 			"mount_accessor": mountAccessor,
 			"canonical_id":   canonicalID,
@@ -213,7 +213,7 @@ func (d *GroupAlias) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguratio
 	return &d.Spec.Authentication
 }
 
-func (d *GroupAlias) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *GroupAlias) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

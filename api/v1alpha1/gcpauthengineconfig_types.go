@@ -168,11 +168,11 @@ func (r *GCPAuthEngineConfig) GetPath() string {
 	return vaultutils.CleansePath("auth/" + string(r.Spec.Path) + "/config")
 }
 
-func (r *GCPAuthEngineConfig) GetPayload() map[string]interface{} {
+func (r *GCPAuthEngineConfig) GetPayload() map[string]any {
 	return r.Spec.GCPConfig.toMap()
 }
 
-func (r *GCPAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (r *GCPAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := r.Spec.GCPConfig.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
@@ -270,8 +270,8 @@ func init() {
 	SchemeBuilder.Register(&GCPAuthEngineConfig{}, &GCPAuthEngineConfigList{})
 }
 
-func (i *GCPConfig) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *GCPConfig) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["credentials"] = i.retrievedCredentials
 	payload["iam_alias"] = i.IAMalias
 	payload["iam_metadata"] = i.IAMmetadata

@@ -48,17 +48,17 @@ func TestAuditRequestHeaderGetPayload(t *testing.T) {
 	tests := []struct {
 		name     string
 		hmac     bool
-		expected map[string]interface{}
+		expected map[string]any
 	}{
 		{
 			name:     "hmac true",
 			hmac:     true,
-			expected: map[string]interface{}{"hmac": true},
+			expected: map[string]any{"hmac": true},
 		},
 		{
 			name:     "hmac false",
 			hmac:     false,
-			expected: map[string]interface{}{"hmac": false},
+			expected: map[string]any{"hmac": false},
 		},
 	}
 
@@ -84,31 +84,31 @@ func TestAuditRequestHeaderIsEquivalentToDesiredState(t *testing.T) {
 	tests := []struct {
 		name       string
 		specHMAC   bool
-		payload    map[string]interface{}
+		payload    map[string]any
 		equivalent bool
 	}{
 		{
 			name:       "matching hmac=true",
 			specHMAC:   true,
-			payload:    map[string]interface{}{"hmac": true},
+			payload:    map[string]any{"hmac": true},
 			equivalent: true,
 		},
 		{
 			name:       "matching hmac=false",
 			specHMAC:   false,
-			payload:    map[string]interface{}{"hmac": false},
+			payload:    map[string]any{"hmac": false},
 			equivalent: true,
 		},
 		{
 			name:       "non-matching hmac values",
 			specHMAC:   true,
-			payload:    map[string]interface{}{"hmac": false},
+			payload:    map[string]any{"hmac": false},
 			equivalent: false,
 		},
 		{
 			name:       "non-matching hmac values reversed",
 			specHMAC:   false,
-			payload:    map[string]interface{}{"hmac": true},
+			payload:    map[string]any{"hmac": true},
 			equivalent: false,
 		},
 	}
@@ -135,7 +135,7 @@ func TestAuditRequestHeaderIsEquivalentMissingHMACKey(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{}
+	payload := map[string]any{}
 	if header.IsEquivalentToDesiredState(payload) {
 		t.Error("expected missing hmac key to return false")
 	}
@@ -150,19 +150,19 @@ func TestAuditRequestHeaderIsEquivalentNonBoolHMAC(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		payload map[string]interface{}
+		payload map[string]any
 	}{
 		{
 			name:    "string value",
-			payload: map[string]interface{}{"hmac": "true"},
+			payload: map[string]any{"hmac": "true"},
 		},
 		{
 			name:    "integer value",
-			payload: map[string]interface{}{"hmac": 1},
+			payload: map[string]any{"hmac": 1},
 		},
 		{
 			name:    "nil value",
-			payload: map[string]interface{}{"hmac": nil},
+			payload: map[string]any{"hmac": nil},
 		},
 	}
 
@@ -184,7 +184,7 @@ func TestAuditRequestHeaderIsEquivalentExtraFieldsIgnored(t *testing.T) {
 		},
 	}
 
-	payloadWithExtra := map[string]interface{}{
+	payloadWithExtra := map[string]any{
 		"hmac":        true,
 		"extra_field": "vault-returned-value",
 		"another":     42,

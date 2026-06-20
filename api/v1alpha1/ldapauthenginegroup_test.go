@@ -36,7 +36,7 @@ func TestLDAPAuthEngineGroupToMap(t *testing.T) {
 		t.Errorf("expected 2 keys in map, got %d", len(result))
 	}
 
-	expected := map[string]interface{}{
+	expected := map[string]any{
 		"name":     "admins",
 		"policies": "admin,reader",
 	}

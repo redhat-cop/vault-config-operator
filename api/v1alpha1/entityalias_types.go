@@ -131,12 +131,12 @@ func (d *EntityAlias) GetPath() string {
 	return vaultutils.CleansePath("/identity/entity-alias/id/" + d.Status.ID)
 }
 
-func (d *EntityAlias) GetPayload() map[string]interface{} {
+func (d *EntityAlias) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
 
-func (i *EntityAliasSpec) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *EntityAliasSpec) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["name"] = i.retrievedName
 	payload["id"] = i.retrievedAliasID
 	payload["mount_accessor"] = i.retrievedMountAccessor
@@ -185,7 +185,7 @@ func (d *EntityAlias) PrepareInternalValues(context context.Context, object clie
 
 	if d.Status.ID == "" {
 		//we have to create the entity alias as unfortunately this api is asymmetric
-		payload := map[string]interface{}{
+		payload := map[string]any{
 			"name":           map[bool]string{true: d.Spec.Name, false: d.Name}[d.Spec.Name != ""],
 			"mount_accessor": d.Spec.retrievedMountAccessor,
 			"canonical_id":   d.Spec.retrievedCanonicalID,
@@ -225,7 +225,7 @@ func (d *EntityAlias) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfigurati
 	return &d.Spec.Authentication
 }
 
-func (d *EntityAlias) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *EntityAlias) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

@@ -88,7 +88,7 @@ func TestJWTOIDCRoleToMap(t *testing.T) {
 		t.Errorf("expected 26 keys in map, got %d", len(result))
 	}
 
-	expected := map[string]interface{}{
+	expected := map[string]any{
 		"name":                    "test-role",
 		"role_type":               "oidc",
 		"bound_audiences":         []string{"aud1", "aud2"},

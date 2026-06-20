@@ -218,7 +218,7 @@ func TestDatabaseSecretEngineStaticRoleIsEquivalentExtraFields(t *testing.T) {
 	}
 }
 
-// Documents that credential_config as map[string]string vs map[string]interface{}
+// Documents that credential_config as map[string]string vs map[string]any
 // causes a DeepEqual mismatch due to Go type differences.
 func TestDatabaseSecretEngineStaticRoleIsEquivalentCredentialConfigTypeMismatch(t *testing.T) {
 	role := &DatabaseSecretEngineStaticRole{
@@ -236,19 +236,19 @@ func TestDatabaseSecretEngineStaticRoleIsEquivalentCredentialConfigTypeMismatch(
 		},
 	}
 
-	// Build a payload that matches in values but uses map[string]interface{}
+	// Build a payload that matches in values but uses map[string]any
 	// instead of map[string]string for credential_config
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"db_name":             "my-db",
 		"username":            "static-user",
 		"rotation_period":     86400,
 		"rotation_statements": []string(nil),
 		"credential_type":     "password",
-		"credential_config":   map[string]interface{}{"password_policy": "my-policy"},
+		"credential_config":   map[string]any{"password_policy": "my-policy"},
 	}
 
 	if role.IsEquivalentToDesiredState(payload) {
-		t.Error("expected false: map[string]string != map[string]interface{} in reflect.DeepEqual")
+		t.Error("expected false: map[string]string != map[string]any in reflect.DeepEqual")
 	}
 }
 

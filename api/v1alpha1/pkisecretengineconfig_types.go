@@ -393,7 +393,7 @@ func (p *PKISecretEngineConfig) SetSignedStatus(status bool) {
 	p.Status.Signed = status
 }
 
-func (p *PKISecretEngineConfig) GetExportedPayload(data map[string]interface{}) map[string]string {
+func (p *PKISecretEngineConfig) GetExportedPayload(data map[string]any) map[string]string {
 
 	payload := map[string]string{}
 
@@ -411,34 +411,34 @@ func (p *PKISecretEngineConfig) GetExportedPayload(data map[string]interface{}) 
 	return payload
 }
 
-func (p *PKISecretEngineConfig) GetSignIntermediatePayload() map[string]interface{} {
+func (p *PKISecretEngineConfig) GetSignIntermediatePayload() map[string]any {
 	payload := p.GetPayload()
 
 	payload["csr"] = p.Spec.PKIIntermediate.cSR
 	return payload
 }
 
-func (p *PKISecretEngineConfig) GetIntermediateSetSignedPayload() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (p *PKISecretEngineConfig) GetIntermediateSetSignedPayload() map[string]any {
+	payload := map[string]any{}
 
 	payload["certificate"] = p.Spec.signedIntermediate
 
 	return payload
 }
 
-func (p *PKISecretEngineConfig) GetPayload() map[string]interface{} {
+func (p *PKISecretEngineConfig) GetPayload() map[string]any {
 	return p.Spec.PKICommon.toMap()
 }
 
-func (p *PKISecretEngineConfig) GetConfigUrlsPayload() map[string]interface{} {
+func (p *PKISecretEngineConfig) GetConfigUrlsPayload() map[string]any {
 	return p.Spec.PKIConfig.PKIConfigUrls.toMap()
 }
 
-func (p *PKISecretEngineConfig) GetConfigCrlPayload() map[string]interface{} {
+func (p *PKISecretEngineConfig) GetConfigCrlPayload() map[string]any {
 	return p.Spec.PKIConfig.PKIConfigCRL.toMap()
 }
 
-func (p *PKISecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (p *PKISecretEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := p.Spec.PKICommon.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
@@ -522,8 +522,8 @@ func init() {
 	SchemeBuilder.Register(&PKISecretEngineConfig{}, &PKISecretEngineConfigList{})
 }
 
-func (i *PKICommon) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *PKICommon) toMap() map[string]any {
+	payload := map[string]any{}
 
 	// payload["type"] = i.Type
 	payload["common_name"] = i.CommonName
@@ -551,8 +551,8 @@ func (i *PKICommon) toMap() map[string]interface{} {
 	return payload
 }
 
-func (i *PKIConfigUrls) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *PKIConfigUrls) toMap() map[string]any {
+	payload := map[string]any{}
 
 	payload["issuing_certificates"] = i.IssuingCertificates
 	payload["crl_distribution_points"] = i.CRLDistributionPoints
@@ -561,8 +561,8 @@ func (i *PKIConfigUrls) toMap() map[string]interface{} {
 	return payload
 }
 
-func (i *PKIConfigCRL) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *PKIConfigCRL) toMap() map[string]any {
+	payload := map[string]any{}
 
 	payload["expiry"] = i.CRLExpiry
 	payload["disable"] = i.CRLDisable
