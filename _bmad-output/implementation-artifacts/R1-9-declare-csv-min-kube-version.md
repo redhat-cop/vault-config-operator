@@ -1,6 +1,6 @@
 # Story R1.9: Declare CSV `minKubeVersion`
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -19,22 +19,22 @@ So that release metadata reflects the tested support floor instead of implying s
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Determine the supported Kubernetes floor (AC: 1, 2)
-  - [ ] 1.1: Confirm K8s dependency baseline from `go.mod` — `k8s.io/api`, `k8s.io/apimachinery`, `k8s.io/client-go` are all pinned at `v0.29.2` (maps to Kubernetes 1.29)
-  - [ ] 1.2: Confirm envtest version from `Makefile:19` — `ENVTEST_K8S_VERSION = 1.29.0`
-  - [ ] 1.3: Confirm Kind integration node image — `kindest/node:v1.29.0` via `KUBECTL_VERSION` in `Makefile:8`
-  - [ ] 1.4: Confirm controller-runtime `v0.17.3` targets K8s 1.29 (controller-runtime 0.17.x release notes)
-  - [ ] 1.5: Select `1.29.0` as the `minKubeVersion` value — this is the exact version the project compiles against and tests on
-- [ ] Task 2: Add `spec.minKubeVersion` to the CSV base (AC: 1, 3)
-  - [ ] 2.1: Edit `config/manifests/bases/vault-config-operator.clusterserviceversion.yaml`
-  - [ ] 2.2: Insert `minKubeVersion: "1.29.0"` at line 268, between `maturity: alpha` (line 267) and `provider:` (line 268) — alphabetically sorted alongside sibling spec fields
-- [ ] Task 3: Regenerate bundle and validate (AC: 3, 4)
-  - [ ] 3.1: Run `make bundle`
-  - [ ] 3.2: Inspect `bundle/manifests/vault-config-operator.clusterserviceversion.yaml` — confirm `minKubeVersion: "1.29.0"` appears in the `spec` section
-  - [ ] 3.3: Run `operator-sdk bundle validate ./bundle` and verify the missing `minKubeVersion` warning is gone
-- [ ] Task 4: Commit (AC: 1, 3)
-  - [ ] 4.1: Commit the CSV base change (`config/manifests/bases/vault-config-operator.clusterserviceversion.yaml`)
-  - [ ] 4.2: Commit the regenerated bundle output (`bundle/` directory is tracked in git)
+- [x] Task 1: Determine the supported Kubernetes floor (AC: 1, 2)
+  - [x] 1.1: Confirm K8s dependency baseline from `go.mod` — `k8s.io/api`, `k8s.io/apimachinery`, `k8s.io/client-go` are all pinned at `v0.29.2` (maps to Kubernetes 1.29)
+  - [x] 1.2: Confirm envtest version from `Makefile:19` — `ENVTEST_K8S_VERSION = 1.29.0`
+  - [x] 1.3: Confirm Kind integration node image — `kindest/node:v1.29.0` via `KUBECTL_VERSION` in `Makefile:8`
+  - [x] 1.4: Confirm controller-runtime `v0.17.3` targets K8s 1.29 (controller-runtime 0.17.x release notes)
+  - [x] 1.5: Select `1.29.0` as the `minKubeVersion` value — this is the exact version the project compiles against and tests on
+- [x] Task 2: Add `spec.minKubeVersion` to the CSV base (AC: 1, 3)
+  - [x] 2.1: Edit `config/manifests/bases/vault-config-operator.clusterserviceversion.yaml`
+  - [x] 2.2: Insert `minKubeVersion: "1.29.0"` at line 268, between `maturity: alpha` (line 267) and `provider:` (line 268) — alphabetically sorted alongside sibling spec fields
+- [x] Task 3: Regenerate bundle and validate (AC: 3, 4)
+  - [x] 3.1: Run `make bundle`
+  - [x] 3.2: Inspect `bundle/manifests/vault-config-operator.clusterserviceversion.yaml` — confirm `minKubeVersion: "1.29.0"` appears in the `spec` section
+  - [x] 3.3: Run `operator-sdk bundle validate ./bundle` and verify the missing `minKubeVersion` warning is gone
+- [x] Task 4: Commit (AC: 1, 3)
+  - [x] 4.1: Commit the CSV base change (`config/manifests/bases/vault-config-operator.clusterserviceversion.yaml`)
+  - [x] 4.2: Commit the regenerated bundle output (`bundle/` directory is tracked in git)
 
 ## Dev Notes
 
@@ -158,10 +158,24 @@ After `make bundle`:
 
 ### Agent Model Used
 
+Claude Opus 4 (via Cursor)
+
 ### Debug Log References
+
+None — no issues encountered during implementation.
 
 ### Completion Notes List
 
+- Verified all 4 version signals converge on K8s 1.29: go.mod libs v0.29.2, ENVTEST_K8S_VERSION 1.29.0, KUBECTL_VERSION v1.29.0, controller-runtime v0.17.3
+- Added `minKubeVersion: "1.29.0"` to CSV base between `maturity` and `provider` (alphabetical order)
+- `make bundle` succeeded; `operator-sdk bundle validate ./bundle` passes with "All validation tests have completed successfully" — no minKubeVersion warning
+- Task 4.2 note: `bundle/` directory is gitignored (commit c63cfb8 "remove and ignore bundle"), so only the CSV base was committed. The Dev Notes stated bundle was tracked but this changed in a prior story.
+- CRD entry reordering in CSV base is a standard side-effect of `operator-sdk generate kustomize manifests` (invoked by `make bundle`)
+
 ### Change Log
 
+- 2026-06-21: Added `spec.minKubeVersion: "1.29.0"` to CSV base; ran `make bundle` and validated. Committed as 014217d.
+
 ### File List
+
+- config/manifests/bases/vault-config-operator.clusterserviceversion.yaml (modified — added minKubeVersion field, CRD entries reordered by manifest generation)

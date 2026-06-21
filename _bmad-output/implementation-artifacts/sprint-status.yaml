@@ -36,6 +36,9 @@
 
 generated: 2026-04-11
 last_updated: 2026-06-21
+# Story R1.9 done 2026-06-21
+# Story R1.9 review 2026-06-21
+# Story R1.9 in-progress 2026-06-21
 # Story R1.8 done 2026-06-21
 # Story R1.8 review 2026-06-21
 # Story R1.8 in-progress 2026-06-21
@@ -277,7 +280,7 @@ development_status:
   R1-6-interface-to-any-sweep: done # Story R1.6 done 2026-06-20
   R1-7-bundle-example-annotations-for-entity-and-entityalias: done
   R1-8-populate-owned-crd-descriptions-for-community-operators-bundle: done
-  R1-9-declare-csv-min-kube-version: ready-for-dev
+  R1-9-declare-csv-min-kube-version: done
   epic-R1-retrospective: optional
 
   # --- Phase 1.5: Documentation Improvement ---
