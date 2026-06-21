@@ -36,6 +36,7 @@
 
 generated: 2026-04-11
 last_updated: 2026-06-21
+# Epic R1 done + retrospective completed 2026-06-21
 # Story R1.9 done 2026-06-21
 # Story R1.9 review 2026-06-21
 # Story R1.9 in-progress 2026-06-21
@@ -269,7 +270,7 @@ development_status:
   # --- Phase 1.8: Code Modernization & Technical Debt ---
 
   # Epic R1: Code Modernization & Technical Debt Reduction
-  epic-R1: in-progress
+  epic-R1: done
   R1-1-correctness-fixes-context-keys-pki-bug-webhook-loggers-tostring: done # Story R1.1 done 2026-05-15
   R1-2a-fix-unchecked-error-returns-errcheck: done
   R1-2b-remove-deprecated-rand-seed: done
@@ -281,12 +282,16 @@ development_status:
   R1-7-bundle-example-annotations-for-entity-and-entityalias: done
   R1-8-populate-owned-crd-descriptions-for-community-operators-bundle: done
   R1-9-declare-csv-min-kube-version: done
-  epic-R1-retrospective: optional
+  epic-R1-retrospective: done
 
   # --- Phase 1.5: Documentation Improvement ---
 
   # Epic D1: Documentation Standards & Missing CertAuth Engine Docs
+  # (Prepended with runtime fix, test update, and metadata stories from R1 retro)
   epic-d1: backlog
+  d1-0a-fix-lasttransitiontime-misuse-requeueafter-drift-detection: backlog
+  d1-0b-update-drift-detection-tests-for-requeueafter: backlog
+  d1-0c-populate-remaining-owned-crd-descriptions: backlog
   d1-1-create-documentation-template-and-pattern-guide: backlog
   d1-2-document-certauthengineconfig-and-certauthenginerole: backlog
   d1-3-fix-broken-links-and-field-naming-inconsistencies: backlog
