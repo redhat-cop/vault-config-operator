@@ -56,6 +56,12 @@ spec:
       kind: AzureAuthEngineRole
       name: azureauthengineroles.redhatcop.redhat.io
       version: v1alpha1
+    - description: AzureSecretEngineConfig is the Schema for the azuresecretengineconfigs
+        API
+      displayName: Azure Secret Engine Config
+      kind: AzureSecretEngineConfig
+      name: azuresecretengineconfigs.redhatcop.redhat.io
+      version: v1alpha1
     - description: AzureSecretEngineRole is the Schema for the azuresecretengineroles
         API
       displayName: Azure Secret Engine Role
@@ -113,6 +119,16 @@ spec:
       displayName: Git Hub Secret Engine Role
       kind: GitHubSecretEngineRole
       name: githubsecretengineroles.redhatcop.redhat.io
+      version: v1alpha1
+    - description: Entity is the Schema for the entities API
+      displayName: Entity
+      kind: Entity
+      name: entities.redhatcop.redhat.io
+      version: v1alpha1
+    - description: EntityAlias is the Schema for the entityaliases API
+      displayName: Entity Alias
+      kind: EntityAlias
+      name: entityaliases.redhatcop.redhat.io
       version: v1alpha1
     - description: GroupAlias is the Schema for the groupaliases API
       displayName: Group Alias

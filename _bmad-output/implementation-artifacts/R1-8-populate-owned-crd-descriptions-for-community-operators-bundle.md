@@ -1,6 +1,6 @@
 # Story R1.8: Populate Owned CRD Descriptions for Community Operators Bundle
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -19,12 +19,12 @@ So that the Community Operators bundle presents complete metadata instead of war
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Verify the description source-of-truth pipeline (AC: 2)
-  - [ ] 1.1: Confirm that owned CRD descriptions flow from `config/manifests/bases/vault-config-operator.clusterserviceversion.yaml` → `kustomize build config/manifests` → `operator-sdk generate bundle` → `bundle/manifests/vault-config-operator.clusterserviceversion.yaml`
-  - [ ] 1.2: Confirm that `operator-sdk generate kustomize manifests --interactive=false` auto-discovers CRDs from `config/crd/bases/` and adds any missing ones to the CSV with empty descriptions — this is the root cause of the warnings
-  - [ ] 1.3: Verify the existing pattern: all 33 current entries in the CSV base `owned` list have the format `description: <Kind> is the Schema for the <lowercase-plural> API`
-- [ ] Task 2: Add `AzureSecretEngineConfig` to the CSV base owned list (AC: 1, 4)
-  - [ ] 2.1: Add entry after line 48 (after AzureAuthEngineRole, before AzureSecretEngineRole) to maintain alphabetical order:
+- [x] Task 1: Verify the description source-of-truth pipeline (AC: 2)
+  - [x] 1.1: Confirm that owned CRD descriptions flow from `config/manifests/bases/vault-config-operator.clusterserviceversion.yaml` → `kustomize build config/manifests` → `operator-sdk generate bundle` → `bundle/manifests/vault-config-operator.clusterserviceversion.yaml`
+  - [x] 1.2: Confirm that `operator-sdk generate kustomize manifests --interactive=false` auto-discovers CRDs from `config/crd/bases/` and adds any missing ones to the CSV with empty descriptions — this is the root cause of the warnings
+  - [x] 1.3: Verify the existing pattern: all 33 current entries in the CSV base `owned` list have the format `description: <Kind> is the Schema for the <lowercase-plural> API`
+- [x] Task 2: Add `AzureSecretEngineConfig` to the CSV base owned list (AC: 1, 4)
+  - [x] 2.1: Add entry after line 48 (after AzureAuthEngineRole, before AzureSecretEngineRole) to maintain alphabetical order:
     ```yaml
     - description: AzureSecretEngineConfig is the Schema for the azuresecretengineconfigs
         API
@@ -33,9 +33,9 @@ So that the Community Operators bundle presents complete metadata instead of war
       name: azuresecretengineconfigs.redhatcop.redhat.io
       version: v1alpha1
     ```
-  - [ ] 2.2: Verify the description matches the Go comment in `api/v1alpha1/azuresecretengineconfig_types.go:68` (`// AzureSecretEngineConfig is the Schema for the azuresecretengineconfigs API`)
-- [ ] Task 3: Add `Entity` to the CSV base owned list (AC: 1, 4)
-  - [ ] 3.1: Add entry after GitHubSecretEngineRole (alphabetically between GitHub* and Group*):
+  - [x] 2.2: Verify the description matches the Go comment in `api/v1alpha1/azuresecretengineconfig_types.go:68` (`// AzureSecretEngineConfig is the Schema for the azuresecretengineconfigs API`)
+- [x] Task 3: Add `Entity` to the CSV base owned list (AC: 1, 4)
+  - [x] 3.1: Add entry after GitHubSecretEngineRole (alphabetically between GitHub* and Group*):
     ```yaml
     - description: Entity is the Schema for the entities API
       displayName: Entity
@@ -43,9 +43,9 @@ So that the Community Operators bundle presents complete metadata instead of war
       name: entities.redhatcop.redhat.io
       version: v1alpha1
     ```
-  - [ ] 3.2: Verify the description matches the Go comment in `api/v1alpha1/entity_types.go:79` (`// Entity is the Schema for the entities API`)
-- [ ] Task 4: Add `EntityAlias` to the CSV base owned list (AC: 1, 4)
-  - [ ] 4.1: Add entry immediately after the Entity entry (alphabetically before Group*):
+  - [x] 3.2: Verify the description matches the Go comment in `api/v1alpha1/entity_types.go:79` (`// Entity is the Schema for the entities API`)
+- [x] Task 4: Add `EntityAlias` to the CSV base owned list (AC: 1, 4)
+  - [x] 4.1: Add entry immediately after the Entity entry (alphabetically before Group*):
     ```yaml
     - description: EntityAlias is the Schema for the entityaliases API
       displayName: Entity Alias
@@ -53,14 +53,19 @@ So that the Community Operators bundle presents complete metadata instead of war
       name: entityaliases.redhatcop.redhat.io
       version: v1alpha1
     ```
-  - [ ] 4.2: Verify the description matches the Go comment in `api/v1alpha1/entityalias_types.go:90` (`// EntityAlias is the Schema for the entityaliases API`)
-- [ ] Task 5: Regenerate bundle and validate (AC: 1, 3)
-  - [ ] 5.1: Run `make bundle`
-  - [ ] 5.2: Inspect `bundle/manifests/vault-config-operator.clusterserviceversion.yaml` — confirm the three CRDs now have non-empty descriptions in `spec.customresourcedefinitions.owned`
-  - [ ] 5.3: Run `operator-sdk bundle validate ./bundle` and verify the empty-description warnings for AzureSecretEngineConfig, Entity, and EntityAlias are gone
-- [ ] Task 6: Commit (AC: 1, 3)
-  - [ ] 6.1: Commit the CSV base change (`config/manifests/bases/vault-config-operator.clusterserviceversion.yaml`)
-  - [ ] 6.2: Commit the regenerated bundle output (`bundle/` directory is tracked in git)
+  - [x] 4.2: Verify the description matches the Go comment in `api/v1alpha1/entityalias_types.go:90` (`// EntityAlias is the Schema for the entityaliases API`)
+- [x] Task 5: Regenerate bundle and validate (AC: 1, 3)
+  - [x] 5.1: Run `make bundle`
+  - [x] 5.2: Inspect `bundle/manifests/vault-config-operator.clusterserviceversion.yaml` — confirm the three CRDs now have non-empty descriptions in `spec.customresourcedefinitions.owned`
+  - [x] 5.3: Run `operator-sdk bundle validate ./bundle` and verify the empty-description warnings for AzureSecretEngineConfig, Entity, and EntityAlias are gone
+- [x] Task 6: Commit (AC: 1, 3)
+  - [x] 6.1: Commit the CSV base change (`config/manifests/bases/vault-config-operator.clusterserviceversion.yaml`)
+  - [x] 6.2: bundle/ directory is gitignored (not tracked) — no bundle commit needed
+
+### Review Findings
+
+- [x] [Review][Patch] Owned CRD entries were inserted at the top of the CSV base list instead of at the required alphabetical insertion points [`config/manifests/bases/vault-config-operator.clusterserviceversion.yaml:31`]
+- [x] [Review][Patch] Story notes still conflict on whether `bundle/` is tracked and part of the expected deliverables [`_bmad-output/implementation-artifacts/R1-8-populate-owned-crd-descriptions-for-community-operators-bundle.md:153`]
 
 ## Dev Notes
 
@@ -154,7 +159,7 @@ After `make bundle`:
 - Also a metadata-only story — added Entity/EntityAlias sample annotations to bundle
 - Changed `config/samples/kustomization.yaml` and regenerated `bundle/`
 - `make bundle` is the verification gate (same as this story)
-- The R1.7 story confirmed that `bundle/` directory is tracked in git and must be committed
+- The `bundle/` directory is gitignored — only the CSV base file needs committing
 - R1.7 explicitly noted: "Do NOT add owned CRD descriptions for Entity/EntityAlias — that is R1.8's scope"
 
 **From Epic R1 preamble:**
@@ -164,10 +169,10 @@ After `make bundle`:
 
 ### Project Structure Notes
 
-- Changes confined to `config/manifests/bases/vault-config-operator.clusterserviceversion.yaml` (add 3 entries, ~15 lines) and regenerated `bundle/` output
+- Changes confined to `config/manifests/bases/vault-config-operator.clusterserviceversion.yaml` (add 3 entries, ~15 lines)
 - No new files created
 - No Go source changes — no `make generate` or `make manifests` needed beyond what `make bundle` already runs
-- The `bundle/` directory is generated output that is tracked in git
+- The `bundle/` directory is gitignored generated output — only the CSV base file is committed
 
 ### References
 
@@ -184,11 +189,23 @@ After `make bundle`:
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Opus 4.6
 
 ### Debug Log References
 
 ### Completion Notes List
+- Added 3 missing owned CRD description entries to CSV base (`config/manifests/bases/vault-config-operator.clusterserviceversion.yaml`):
+  - `AzureSecretEngineConfig` — inserted alphabetically between AzureAuthEngineRole and AzureSecretEngineRole
+  - `Entity` — inserted alphabetically between GitHubSecretEngineRole and GroupAlias
+  - `EntityAlias` — inserted alphabetically between Entity and GroupAlias
+- Verified all descriptions match Go doc comments in `api/v1alpha1/*_types.go`
+- Ran `make bundle` — successful, generated CSV contains all three descriptions
+- `operator-sdk bundle validate ./bundle` — passed with "All validation tests have completed successfully"
+- Note: `bundle/` directory is gitignored (contrary to story assumption), so only CSV base file needs committing
+- No Go source files modified — metadata-only change
 
 ### Change Log
+- 2026-06-21: Added AzureSecretEngineConfig, Entity, EntityAlias owned CRD descriptions to CSV base
 
 ### File List
+- config/manifests/bases/vault-config-operator.clusterserviceversion.yaml (modified — added 3 owned CRD entries)
