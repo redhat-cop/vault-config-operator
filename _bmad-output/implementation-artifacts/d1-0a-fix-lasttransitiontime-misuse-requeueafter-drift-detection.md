@@ -1,6 +1,6 @@
 # Story D1.0a: Fix LastTransitionTime Misuse — Migrate Drift Detection to RequeueAfter
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -18,25 +18,25 @@ So that the operator follows standard Kubernetes condition API conventions and r
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Remove `LastTransitionTime` force-override in `ManageOutcomeWithRequeue` (AC: 1)
-  - [ ] 1.1: In `controllers/vaultresourcecontroller/utils.go`, delete lines 157-164 (the `// apimeta.SetStatusCondition only updates...` comment + `for i := range conditions` loop)
-  - [ ] 1.2: Verify compilation: `go build ./...`
-- [ ] Task 2: Add `RequeueAfter` for drift detection in `ManageOutcome` (AC: 2)
-  - [ ] 2.1: Modify `ManageOutcome` to calculate `requeueAfter` conditionally: `SyncPeriod` when `issue == nil && IsDriftDetectionEnabled()`, else `0`
-  - [ ] 2.2: Verify no other code calls `ManageOutcomeWithRequeue` directly (search for all call sites — expected: only `ManageOutcome`)
-  - [ ] 2.3: Verify compilation: `go build ./...`
-- [ ] Task 3: Simplify `PeriodicReconcilePredicate.Update()` to generation-only filtering (AC: 3)
-  - [ ] 3.1: Replace the `Update` method body: keep only the nil-object check and generation-change check; remove the `IsDriftDetectionEnabled()` check, the `ConditionsAware` type assertion, the `LastTransitionTime` comparison, and the `SyncPeriod` elapsed check
-  - [ ] 3.2: Update doc comments on `PeriodicReconcilePredicate` struct and `Update` method to reflect that it is now generation-only (drift detection uses `RequeueAfter`)
-  - [ ] 3.3: Keep struct fields and constructors unchanged (exported API — backward compatible)
-  - [ ] 3.4: Verify compilation: `go build ./...`
-- [ ] Task 4: Update unit tests in `utils_test.go` (AC: 4)
-  - [ ] 4.1: Update `TestPeriodicReconcilePredicate_Update` — predicate no longer does time-based checks; tests that expected `true` for elapsed-interval-with-drift-enabled should now expect `false`; remove drift-detection-specific test cases or convert them to assert `false`
-  - [ ] 4.2: Keep `TestIsDriftDetectionEnabled` unchanged — the function is still used by `ManageOutcome`
-  - [ ] 4.3: Run `make test` — all unit tests pass
-- [ ] Task 5: Verify no regressions (AC: 4, 5)
-  - [ ] 5.1: Run `make manifests generate fmt vet test` — zero diffs, all tests pass
-  - [ ] 5.2: Run `golangci-lint run --max-issues-per-linter=100 --max-same-issues=100 ./...` — exit 0, zero findings
+- [x] Task 1: Remove `LastTransitionTime` force-override in `ManageOutcomeWithRequeue` (AC: 1)
+  - [x] 1.1: In `controllers/vaultresourcecontroller/utils.go`, delete lines 157-164 (the `// apimeta.SetStatusCondition only updates...` comment + `for i := range conditions` loop)
+  - [x] 1.2: Verify compilation: `go build ./...`
+- [x] Task 2: Add `RequeueAfter` for drift detection in `ManageOutcome` (AC: 2)
+  - [x] 2.1: Modify `ManageOutcome` to calculate `requeueAfter` conditionally: `SyncPeriod` when `issue == nil && IsDriftDetectionEnabled()`, else `0`
+  - [x] 2.2: Verify no other code calls `ManageOutcomeWithRequeue` directly (search for all call sites — expected: only `ManageOutcome`)
+  - [x] 2.3: Verify compilation: `go build ./...`
+- [x] Task 3: Simplify `PeriodicReconcilePredicate.Update()` to generation-only filtering (AC: 3)
+  - [x] 3.1: Replace the `Update` method body: keep only the nil-object check and generation-change check; remove the `IsDriftDetectionEnabled()` check, the `ConditionsAware` type assertion, the `LastTransitionTime` comparison, and the `SyncPeriod` elapsed check
+  - [x] 3.2: Update doc comments on `PeriodicReconcilePredicate` struct and `Update` method to reflect that it is now generation-only (drift detection uses `RequeueAfter`)
+  - [x] 3.3: Keep struct fields and constructors unchanged (exported API — backward compatible)
+  - [x] 3.4: Verify compilation: `go build ./...`
+- [x] Task 4: Update unit tests in `utils_test.go` (AC: 4)
+  - [x] 4.1: Update `TestPeriodicReconcilePredicate_Update` — predicate no longer does time-based checks; tests that expected `true` for elapsed-interval-with-drift-enabled should now expect `false`; remove drift-detection-specific test cases or convert them to assert `false`
+  - [x] 4.2: Keep `TestIsDriftDetectionEnabled` unchanged — the function is still used by `ManageOutcome`
+  - [x] 4.3: Run `make test` — all unit tests pass
+- [x] Task 5: Verify no regressions (AC: 4, 5)
+  - [x] 5.1: Run `make manifests generate fmt vet test` — zero diffs, all tests pass
+  - [x] 5.2: Run `golangci-lint run --max-issues-per-linter=100 --max-same-issues=100 ./...` — exit 0, zero findings
 
 ## Dev Notes
 
@@ -279,10 +279,26 @@ Do NOT spin up a Kind cluster or run `make integration` for this story. This sto
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+None — clean implementation with no issues encountered.
+
 ### Completion Notes List
 
+- Task 1: Removed the `LastTransitionTime` force-override loop (6 lines) from `ManageOutcomeWithRequeue`. `apimeta.SetStatusCondition` now operates with standard K8s semantics — `LastTransitionTime` only updates when `Status` actually transitions.
+- Task 2: Modified `ManageOutcome` to calculate `requeueAfter` conditionally: `SyncPeriod` when `issue == nil && IsDriftDetectionEnabled()`, else `0`. This causes controller-runtime's work queue to schedule drift-detection reconciles automatically.
+- Task 3: Simplified `PeriodicReconcilePredicate.Update()` to a pure generation-based filter (3 lines). Removed all time-based drift detection logic. Updated struct and method doc comments. Kept struct fields and constructors for backward compatibility.
+- Task 4: Rewrote `TestPeriodicReconcilePredicate_Update` to test generation-only semantics. Removed all drift-detection env var setup, `GetConditions` mock setup, and time-based test cases. Added nil-object edge case tests. Kept `TestIsDriftDetectionEnabled` unchanged.
+- Task 5: `make manifests generate fmt vet test` — zero diffs, all tests pass. `golangci-lint` v1.64.8 — zero findings.
+- Verified `ManageOutcomeWithRequeue` direct callers: `VaultSecretReconciler` and `RandomSecretReconciler` use custom durations — not affected by this change.
+
+### Change Log
+
+- 2026-06-22: Implemented D1.0a — removed `LastTransitionTime` force-override, added `RequeueAfter` drift detection in `ManageOutcome`, simplified predicate to generation-only filtering, updated unit tests.
+
 ### File List
+
+- controllers/vaultresourcecontroller/utils.go (modified)
+- controllers/vaultresourcecontroller/utils_test.go (modified)
