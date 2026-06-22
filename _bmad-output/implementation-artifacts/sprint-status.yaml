@@ -35,7 +35,14 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-06-21
+last_updated: 2026-06-22
+# Story D1.3 ready-for-dev 2026-06-22
+# Story D1.2 ready-for-dev 2026-06-22
+# Story D1.0c ready-for-dev 2026-06-22
+# Story D1.1 ready-for-dev 2026-06-22
+# Story D1.0b ready-for-dev 2026-06-22
+# Epic D1 in-progress 2026-06-22
+# Story D1.0a ready-for-dev 2026-06-22
 # Epic R1 done + retrospective completed 2026-06-21
 # Story R1.9 done 2026-06-21
 # Story R1.9 review 2026-06-21
@@ -288,13 +295,13 @@ development_status:
 
   # Epic D1: Documentation Standards & Missing CertAuth Engine Docs
   # (Prepended with runtime fix, test update, and metadata stories from R1 retro)
-  epic-d1: backlog
-  d1-0a-fix-lasttransitiontime-misuse-requeueafter-drift-detection: backlog
-  d1-0b-update-drift-detection-tests-for-requeueafter: backlog
-  d1-0c-populate-remaining-owned-crd-descriptions: backlog
-  d1-1-create-documentation-template-and-pattern-guide: backlog
-  d1-2-document-certauthengineconfig-and-certauthenginerole: backlog
-  d1-3-fix-broken-links-and-field-naming-inconsistencies: backlog
+  epic-d1: in-progress
+  d1-0a-fix-lasttransitiontime-misuse-requeueafter-drift-detection: ready-for-dev
+  d1-0b-update-drift-detection-tests-for-requeueafter: ready-for-dev
+  d1-0c-populate-remaining-owned-crd-descriptions: ready-for-dev
+  d1-1-create-documentation-template-and-pattern-guide: ready-for-dev
+  d1-2-document-certauthengineconfig-and-certauthenginerole: ready-for-dev
+  d1-3-fix-broken-links-and-field-naming-inconsistencies: ready-for-dev
   epic-d1-retrospective: optional
 
   # Epic D2: Auth Engine Documentation — Per-Engine Split & Standardization
