@@ -36,6 +36,9 @@
 
 generated: 2026-04-11
 last_updated: 2026-06-22
+# Story D1.0b done 2026-06-22
+# Story D1.0b review 2026-06-22
+# Story D1.0b in-progress 2026-06-22
 # Story D1.0a done 2026-06-22
 # Story D1.3 ready-for-dev 2026-06-22
 # Story D1.2 ready-for-dev 2026-06-22
@@ -298,7 +301,7 @@ development_status:
   # (Prepended with runtime fix, test update, and metadata stories from R1 retro)
   epic-d1: in-progress
   d1-0a-fix-lasttransitiontime-misuse-requeueafter-drift-detection: done
-  d1-0b-update-drift-detection-tests-for-requeueafter: ready-for-dev
+  d1-0b-update-drift-detection-tests-for-requeueafter: done
   d1-0c-populate-remaining-owned-crd-descriptions: ready-for-dev
   d1-1-create-documentation-template-and-pattern-guide: ready-for-dev
   d1-2-document-certauthengineconfig-and-certauthenginerole: ready-for-dev

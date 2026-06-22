@@ -1,6 +1,6 @@
 # Story D1.0b: Update Drift Detection Tests for RequeueAfter
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -19,37 +19,44 @@ So that the test suite passes after D1.0a removed `LastTransitionTime` heartbeat
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Remove `triggerNonSpecUpdate` helper function (AC: 1, 3)
-  - [ ] 1.1: Delete the `triggerNonSpecUpdate` function (lines 39-47) — it is no longer needed because `RequeueAfter` handles periodic reconciliation via the controller-runtime work queue
-  - [ ] 1.2: Remove any remaining callers in the file
-- [ ] Task 2: Remove `getReconcileSuccessfulTime` helper function (AC: 2)
-  - [ ] 2.1: Delete the `getReconcileSuccessfulTime` function (lines 49-56) — `LastTransitionTime` no longer advances on same-status reconciles, so it cannot be used to detect "last reconcile"
-  - [ ] 2.2: Remove any remaining callers in the file
-- [ ] Task 3: Rewrite "Should correct drift when Vault policy is manually modified" (AC: 1)
-  - [ ] 3.1: Remove the `triggerNonSpecUpdate` call and the "Waiting for the SyncPeriod to elapse" + manual `time.Sleep`
-  - [ ] 3.2: Replace with: after introducing drift in Vault, simply poll with `Eventually` for the operator to correct it — `RequeueAfter` will fire automatically after SyncPeriod (set to 5s in `enableDriftDetection`)
-  - [ ] 3.3: The `Eventually` timeout should be generous enough to account for SyncPeriod (5s) + reconcile processing time — use 30s timeout with 2s interval
-- [ ] Task 4: Rewrite "Should not write when no drift exists (no false positive)" (AC: 2)
-  - [ ] 4.1: Remove the `getReconcileSuccessfulTime` / `LastTransitionTime` assertion pattern
-  - [ ] 4.2: New strategy: after initial reconcile succeeds, wait for at least one `RequeueAfter` cycle to fire (sleep > SyncPeriod), then assert Vault policy still has exact original rules. Use `Consistently` to verify no unnecessary writes occur over a window
-  - [ ] 4.3: The key assertion: Vault state matches the CR spec (original rules) throughout the observation window — proving no false positive writes
-- [ ] Task 5: Rewrite "Should correct drift when tune config is manually modified" (AC: 3)
-  - [ ] 5.1: Remove the `triggerNonSpecUpdate` call and `time.Sleep`
-  - [ ] 5.2: After introducing tune config drift in Vault, poll with `Eventually` for automatic correction via `RequeueAfter`
-  - [ ] 5.3: Use 30s timeout with 2s interval (same pattern as Task 3)
-- [ ] Task 6: Rewrite "Drift detection disabled — drift persists" (AC: 4)
-  - [ ] 6.1: Remove the `triggerNonSpecUpdate` call
-  - [ ] 6.2: Remove the `LastTransitionTime` assertion (lines 352-357)
-  - [ ] 6.3: New strategy: when drift detection is disabled, `ManageOutcome` returns `RequeueAfter: 0` — no periodic reconciliation. Introduce drift in Vault, use `Consistently` over an interval longer than what SyncPeriod would have been to prove drift persists
-  - [ ] 6.4: Set `SyncPeriod` to a large value (36000s as currently done) AND unset `ENABLE_DRIFT_DETECTION` — since `ManageOutcome` checks `IsDriftDetectionEnabled()`, `RequeueAfter` will be 0 regardless of SyncPeriod value
-- [ ] Task 7: Clean up unused imports (AC: 6)
-  - [ ] 7.1: After removing `triggerNonSpecUpdate` and `getReconcileSuccessfulTime`, check if these imports are still needed: `"context"` (may still be used by test helpers), `metav1` (may be unused if no more `LastTransitionTime` references)
-  - [ ] 7.2: Verify `context` is still needed — it's used by `k8sIntegrationClient.Get(ctx, ...)` so it stays
-  - [ ] 7.3: Check if `metav1` is still needed — used in BeforeAll for condition checks; keep if still referenced
-- [ ] Task 8: Verify (AC: 5, 6)
-  - [ ] 8.1: Run `make integration` — all integration tests pass (requires Kind cluster + Vault)
-  - [ ] 8.2: Run `golangci-lint run --max-issues-per-linter=100 --max-same-issues=100 ./...` — zero findings
-  - [ ] 8.3: Run `make test` — all unit tests pass (sanity check, should be unaffected)
+- [x] Task 1: Remove `triggerNonSpecUpdate` helper function (AC: 1, 3)
+  - [x] 1.1: Delete the `triggerNonSpecUpdate` function (lines 39-47) — it is no longer needed because `RequeueAfter` handles periodic reconciliation via the controller-runtime work queue
+  - [x] 1.2: Remove any remaining callers in the file
+- [x] Task 2: Remove `getReconcileSuccessfulTime` helper function (AC: 2)
+  - [x] 2.1: Delete the `getReconcileSuccessfulTime` function (lines 49-56) — `LastTransitionTime` no longer advances on same-status reconciles, so it cannot be used to detect "last reconcile"
+  - [x] 2.2: Remove any remaining callers in the file
+- [x] Task 3: Rewrite "Should correct drift when Vault policy is manually modified" (AC: 1)
+  - [x] 3.1: Remove the `triggerNonSpecUpdate` call and the "Waiting for the SyncPeriod to elapse" + manual `time.Sleep`
+  - [x] 3.2: Replace with: after introducing drift in Vault, simply poll with `Eventually` for the operator to correct it — `RequeueAfter` will fire automatically after SyncPeriod (set to 5s in `enableDriftDetection`)
+  - [x] 3.3: The `Eventually` timeout should be generous enough to account for SyncPeriod (5s) + reconcile processing time — use 30s timeout with 2s interval
+- [x] Task 4: Rewrite "Should not write when no drift exists (no false positive)" (AC: 2)
+  - [x] 4.1: Remove the `getReconcileSuccessfulTime` / `LastTransitionTime` assertion pattern
+  - [x] 4.2: New strategy: after initial reconcile succeeds, wait for at least one `RequeueAfter` cycle to fire (sleep > SyncPeriod), then assert Vault policy still has exact original rules. Use `Consistently` to verify no unnecessary writes occur over a window
+  - [x] 4.3: The key assertion: Vault state matches the CR spec (original rules) throughout the observation window — proving no false positive writes
+- [x] Task 5: Rewrite "Should correct drift when tune config is manually modified" (AC: 3)
+  - [x] 5.1: Remove the `triggerNonSpecUpdate` call and `time.Sleep`
+  - [x] 5.2: After introducing tune config drift in Vault, poll with `Eventually` for automatic correction via `RequeueAfter`
+  - [x] 5.3: Use 30s timeout with 2s interval (same pattern as Task 3)
+- [x] Task 6: Rewrite "Drift detection disabled — drift persists" (AC: 4)
+  - [x] 6.1: Remove the `triggerNonSpecUpdate` call
+  - [x] 6.2: Remove the `LastTransitionTime` assertion (lines 352-357)
+  - [x] 6.3: New strategy: when drift detection is disabled, `ManageOutcome` returns `RequeueAfter: 0` — no periodic reconciliation. Introduce drift in Vault, use `Consistently` over an interval longer than what SyncPeriod would have been to prove drift persists
+  - [x] 6.4: Set `SyncPeriod` to a large value (36000s as currently done) AND unset `ENABLE_DRIFT_DETECTION` — since `ManageOutcome` checks `IsDriftDetectionEnabled()`, `RequeueAfter` will be 0 regardless of SyncPeriod value
+- [x] Task 7: Clean up unused imports (AC: 6)
+  - [x] 7.1: After removing `triggerNonSpecUpdate` and `getReconcileSuccessfulTime`, check if these imports are still needed: `"context"` (may still be used by test helpers), `metav1` (may be unused if no more `LastTransitionTime` references)
+  - [x] 7.2: Verify `context` is still needed — it's used by `k8sIntegrationClient.Get(ctx, ...)` so it stays
+  - [x] 7.3: Check if `metav1` is still needed — used in BeforeAll for condition checks; keep if still referenced
+- [x] Task 8: Verify (AC: 5, 6)
+  - [x] 8.1: Run `make integration` — all integration tests pass (requires Kind cluster + Vault)
+  - [x] 8.2: Run `golangci-lint run --max-issues-per-linter=100 --max-same-issues=100 ./...` — zero findings
+  - [x] 8.3: Run `make test` — all unit tests pass (sanity check, should be unaffected)
+
+### Review Findings
+
+- [x] [Review][Patch] Fix default `KUBE_CONTEXT` derivation — changed `KIND_CLUSTER_NAME` from `kind-vault-config-operator` to `vault-config-operator` so the derived context is `kind-vault-config-operator` (not double-prefixed) [`Makefile:7`]
+- [x] [Review][Patch] Wire isolated kubeconfig into `VAULT_TOKEN` lookup — added `KUBECONFIG=$(KUBE_CONFIG_FILE)` prefix to the kubectl call in the `integration` recipe [`Makefile:138`]
+- [x] [Review][Patch] Strengthen disabled-drift test — changed `SyncPeriod` from `36000s` to `5s` so the `Consistently` window would catch a regression where `ManageOutcome()` still scheduled `RequeueAfter` [`controllers/driftdetection_controller_test.go:240`]
+- [x] [Review][Patch] Restore global state in disabled-drift `AfterAll` — save/restore `SyncPeriod` and `ENABLE_DRIFT_DETECTION` to prevent leaking into later specs [`controllers/driftdetection_controller_test.go:267-273`]
 
 ## Dev Notes
 
@@ -272,10 +279,33 @@ go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (Cursor)
 
 ### Debug Log References
 
+- Pre-flight: working tree clean, integration tests showed 1 expected failure ("Should not write when no drift exists") due to D1.0a removing LastTransitionTime advancement — this is the exact test D1.0b is designed to fix
+- User requested Kind cluster context isolation (Makefile changes) during implementation — completed as additional work alongside the story
+
 ### Completion Notes List
 
+- Deleted `triggerNonSpecUpdate` helper function — no longer needed because `RequeueAfter` handles periodic reconciliation via the controller-runtime work queue
+- Deleted `getReconcileSuccessfulTime` helper function — `LastTransitionTime` no longer advances on same-status reconciles after D1.0a
+- Rewrote "Should correct drift when Vault policy is manually modified": removed `time.Sleep(6s)` + `triggerNonSpecUpdate`, replaced with direct `Eventually` poll (30s timeout, 2s interval) relying on `RequeueAfter`
+- Rewrote "Should not write when no drift exists": removed `LastTransitionTime` assertion pattern, replaced with baseline Vault state check + `time.Sleep(7s)` for one RequeueAfter cycle + `Consistently` (10s window, 2s interval) proving no false positive writes
+- Rewrote "Should correct drift when tune config is manually modified": same pattern as policy drift — removed `time.Sleep` + `triggerNonSpecUpdate`, replaced with direct `Eventually` poll (30s timeout, 2s interval)
+- Rewrote "Drift detection disabled — drift persists": removed `triggerNonSpecUpdate` call and `LastTransitionTime` assertion, replaced with `Consistently` (15s window, 2s interval) proving drift persists when `RequeueAfter` is 0
+- Removed `"context"` import (only used by deleted `triggerNonSpecUpdate`)
+- Removed `"sigs.k8s.io/controller-runtime/pkg/client"` import (only used by deleted `triggerNonSpecUpdate` parameter types)
+- Kept `metav1` (used in BeforeAll condition checks), `apierrors` (used in AfterAll cleanup), `controllertestutils` (used in disabled test's BeforeAll)
+- Additional work (user request, not in story scope): Makefile Kind cluster context isolation — changed `KIND_CLUSTER_NAME` to `kind-vault-config-operator`, added `--context`/`--kube-context` to all kubectl/helm commands, added isolated kubeconfig export
+- All acceptance criteria verified: `make integration` passes (exit code 0), `golangci-lint` zero findings, `make test` passes
+
+### Change Log
+
+- 2026-06-22: Story implementation complete — rewrote 4 drift detection integration tests to use RequeueAfter instead of triggerNonSpecUpdate/LastTransitionTime
+- 2026-06-22: Additional Makefile changes for Kind cluster context isolation (user request during implementation)
+
 ### File List
+
+- controllers/driftdetection_controller_test.go (modified — story scope)
+- Makefile (modified — additional user request for Kind cluster context isolation)
