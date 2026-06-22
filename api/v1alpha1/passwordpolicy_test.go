@@ -80,14 +80,14 @@ rule "charset" {
 		},
 	}
 
-	matching := map[string]interface{}{
+	matching := map[string]any{
 		"policy": hcl,
 	}
 	if !policy.IsEquivalentToDesiredState(matching) {
 		t.Error("expected matching payload to be equivalent")
 	}
 
-	nonMatching := map[string]interface{}{
+	nonMatching := map[string]any{
 		"policy": "length = 10",
 	}
 	if policy.IsEquivalentToDesiredState(nonMatching) {
@@ -104,7 +104,7 @@ func TestPasswordPolicyIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 		},
 	}
 
-	payloadWithExtra := map[string]interface{}{
+	payloadWithExtra := map[string]any{
 		"policy":      "length = 20",
 		"extra_field": "vault-returned-value",
 	}

@@ -89,12 +89,12 @@ var _ = Describe("Entity controller", func() {
 			initialSecret, err := vaultClient.Logical().Read("identity/entity/name/test-entity")
 			Expect(err).To(BeNil())
 			Expect(initialSecret).NotTo(BeNil())
-			initialMetadata, ok := initialSecret.Data["metadata"].(map[string]interface{})
-			Expect(ok).To(BeTrue(), "expected metadata field to be map[string]interface{}")
+			initialMetadata, ok := initialSecret.Data["metadata"].(map[string]any)
+			Expect(ok).To(BeTrue(), "expected metadata field to be map[string]any")
 			Expect(initialMetadata["team"]).To(Equal("engineering"))
 			Expect(initialMetadata["environment"]).To(Equal("test"))
-			initialPolicies, ok := initialSecret.Data["policies"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected policies field to be []interface{}")
+			initialPolicies, ok := initialSecret.Data["policies"].([]any)
+			Expect(ok).To(BeTrue(), "expected policies field to be []any")
 			Expect(initialPolicies).To(ContainElement("default"))
 			Expect(initialSecret.Data["disabled"]).To(Equal(false))
 
@@ -126,7 +126,7 @@ var _ = Describe("Entity controller", func() {
 				if err != nil || secret == nil {
 					return false
 				}
-				policies, ok := secret.Data["policies"].([]interface{})
+				policies, ok := secret.Data["policies"].([]any)
 				if !ok {
 					return false
 				}
@@ -147,8 +147,8 @@ var _ = Describe("Entity controller", func() {
 			updatedSecret, err := vaultClient.Logical().Read("identity/entity/name/test-entity")
 			Expect(err).To(BeNil())
 			Expect(updatedSecret).NotTo(BeNil())
-			updatedMetadata, ok := updatedSecret.Data["metadata"].(map[string]interface{})
-			Expect(ok).To(BeTrue(), "expected metadata field to be map[string]interface{}")
+			updatedMetadata, ok := updatedSecret.Data["metadata"].(map[string]any)
+			Expect(ok).To(BeTrue(), "expected metadata field to be map[string]any")
 			Expect(updatedMetadata["owner"]).To(Equal("integration-test"))
 			Expect(updatedMetadata["team"]).To(Equal("engineering"))
 			Expect(updatedMetadata["environment"]).To(Equal("test"))

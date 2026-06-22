@@ -173,7 +173,7 @@ func TestDatabaseSecretEngineRoleIsEquivalentExtraFields(t *testing.T) {
 }
 
 // DBSERole.toMap() stores statement fields as []string. Vault may return them
-// as []interface{}. reflect.DeepEqual treats these as different types, so the
+// as []any. reflect.DeepEqual treats these as different types, so the
 // comparison fails. This documents the known type-skew behavior.
 func TestDatabaseSecretEngineRoleIsEquivalentStatementTypeSkew(t *testing.T) {
 	role := &DatabaseSecretEngineRole{
@@ -188,18 +188,18 @@ func TestDatabaseSecretEngineRoleIsEquivalentStatementTypeSkew(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"db_name":               "my-db",
 		"default_ttl":           metav1.Duration{Duration: 1 * time.Hour},
 		"max_ttl":               metav1.Duration{Duration: 24 * time.Hour},
-		"creation_statements":   []interface{}{"CREATE ROLE"},
-		"revocation_statements": []interface{}{},
-		"rollback_statements":   []interface{}{},
-		"renew_statements":      []interface{}{},
+		"creation_statements":   []any{"CREATE ROLE"},
+		"revocation_statements": []any{},
+		"rollback_statements":   []any{},
+		"renew_statements":      []any{},
 	}
 
 	if role.IsEquivalentToDesiredState(payload) {
-		t.Error("expected false: []string from toMap() != []interface{} from Vault JSON (bare DeepEqual, no type coercion)")
+		t.Error("expected false: []string from toMap() != []any from Vault JSON (bare DeepEqual, no type coercion)")
 	}
 }
 

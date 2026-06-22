@@ -44,7 +44,7 @@ var _ webhook.Defaulter = &SecretEngineMount{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *SecretEngineMount) Default() {
-	authenginemountlog.Info("default", "name", r.Name)
+	secretenginemountlog.Info("default", "name", r.Name)
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.

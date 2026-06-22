@@ -68,10 +68,10 @@ func (d *PKISecretEngineRole) GetPath() string {
 	}
 	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + d.Name)
 }
-func (d *PKISecretEngineRole) GetPayload() map[string]interface{} {
+func (d *PKISecretEngineRole) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
-func (d *PKISecretEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *PKISecretEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.PKIRole.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
@@ -320,8 +320,8 @@ func init() {
 	SchemeBuilder.Register(&PKISecretEngineRole{}, &PKISecretEngineRoleList{})
 }
 
-func (i *PKIRole) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *PKIRole) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["ttl"] = i.TTL
 	payload["max_ttl"] = i.MaxTTL
 	payload["allow_localhost"] = i.AllowLocalhost

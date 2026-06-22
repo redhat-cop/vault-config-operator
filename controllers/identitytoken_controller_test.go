@@ -106,8 +106,8 @@ var _ = Describe("Identity Token controllers", Ordered, func() {
 			Expect(ok).To(BeTrue(), "expected algorithm to be a string")
 			Expect(algorithm).To(Equal("RS256"))
 
-			allowedClientIDs, ok := secret.Data["allowed_client_ids"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected allowed_client_ids to be []interface{}")
+			allowedClientIDs, ok := secret.Data["allowed_client_ids"].([]any)
+			Expect(ok).To(BeTrue(), "expected allowed_client_ids to be []any")
 			Expect(allowedClientIDs).To(ContainElement("*"))
 		})
 	})

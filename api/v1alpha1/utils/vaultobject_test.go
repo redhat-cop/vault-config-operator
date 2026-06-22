@@ -15,15 +15,15 @@ import (
 // mockVaultObject implements VaultObject for testing.
 type mockVaultObject struct {
 	path    string
-	payload map[string]interface{}
+	payload map[string]any
 }
 
-func (m *mockVaultObject) GetPath() string                                          { return m.path }
-func (m *mockVaultObject) GetPayload() map[string]interface{}                       { return m.payload }
-func (m *mockVaultObject) IsEquivalentToDesiredState(_ map[string]interface{}) bool { return false }
-func (m *mockVaultObject) IsInitialized() bool                                      { return true }
-func (m *mockVaultObject) IsValid() (bool, error)                                   { return true, nil }
-func (m *mockVaultObject) IsDeletable() bool                                        { return true }
+func (m *mockVaultObject) GetPath() string                                  { return m.path }
+func (m *mockVaultObject) GetPayload() map[string]any                       { return m.payload }
+func (m *mockVaultObject) IsEquivalentToDesiredState(_ map[string]any) bool { return false }
+func (m *mockVaultObject) IsInitialized() bool                              { return true }
+func (m *mockVaultObject) IsValid() (bool, error)                           { return true, nil }
+func (m *mockVaultObject) IsDeletable() bool                                { return true }
 func (m *mockVaultObject) PrepareInternalValues(_ context.Context, _ client.Object) error {
 	return nil
 }
@@ -34,20 +34,20 @@ func (m *mockVaultObject) GetVaultConnection() *VaultConnection                 
 // fakeVaultStore holds in-memory KV data and serves Vault-compatible HTTP responses.
 type fakeVaultStore struct {
 	mu   sync.Mutex
-	data map[string]map[string]interface{}
+	data map[string]map[string]any
 }
 
 func newFakeVaultStore() *fakeVaultStore {
-	return &fakeVaultStore{data: make(map[string]map[string]interface{})}
+	return &fakeVaultStore{data: make(map[string]map[string]any)}
 }
 
-func (s *fakeVaultStore) set(path string, payload map[string]interface{}) {
+func (s *fakeVaultStore) set(path string, payload map[string]any) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.data[path] = payload
 }
 
-func (s *fakeVaultStore) get(path string) (map[string]interface{}, bool) {
+func (s *fakeVaultStore) get(path string) (map[string]any, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	v, ok := s.data[path]
@@ -64,11 +64,11 @@ func (s *fakeVaultStore) handler() http.Handler {
 				w.WriteHeader(http.StatusNotFound)
 				return
 			}
-			resp := map[string]interface{}{"data": data}
+			resp := map[string]any{"data": data}
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(resp)
+			_ = json.NewEncoder(w).Encode(resp) // test handler; encode error is not actionable
 		case http.MethodPut, http.MethodPost:
-			var body map[string]interface{}
+			var body map[string]any
 			if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				return
@@ -82,7 +82,7 @@ func (s *fakeVaultStore) handler() http.Handler {
 }
 
 func newTestContext(client *vault.Client) context.Context {
-	return context.WithValue(context.Background(), "vaultClient", client)
+	return ContextWithVaultClient(context.Background(), client)
 }
 
 func newTestClient(t *testing.T, store *fakeVaultStore) (*vault.Client, *httptest.Server) {
@@ -106,7 +106,7 @@ func TestCreateOrMergeKV_KVv1_CreatesWhenPathNotFound(t *testing.T) {
 
 	obj := &mockVaultObject{
 		path:    "secret/myapp",
-		payload: map[string]interface{}{"password": "abc123"},
+		payload: map[string]any{"password": "abc123"},
 	}
 	ve := &VaultEndpoint{vaultObject: obj}
 	ctx := newTestContext(client)
@@ -127,13 +127,13 @@ func TestCreateOrMergeKV_KVv1_CreatesWhenPathNotFound(t *testing.T) {
 
 func TestCreateOrMergeKV_KVv1_MergesNewKey(t *testing.T) {
 	store := newFakeVaultStore()
-	store.set("secret/myapp", map[string]interface{}{"password": "existing-pw"})
+	store.set("secret/myapp", map[string]any{"password": "existing-pw"})
 	client, ts := newTestClient(t, store)
 	defer ts.Close()
 
 	obj := &mockVaultObject{
 		path:    "secret/myapp",
-		payload: map[string]interface{}{"username": "admin"},
+		payload: map[string]any{"username": "admin"},
 	}
 	ve := &VaultEndpoint{vaultObject: obj}
 	ctx := newTestContext(client)
@@ -154,13 +154,13 @@ func TestCreateOrMergeKV_KVv1_MergesNewKey(t *testing.T) {
 
 func TestCreateOrMergeKV_KVv1_OverwritesExistingKey(t *testing.T) {
 	store := newFakeVaultStore()
-	store.set("secret/myapp", map[string]interface{}{"password": "old-value"})
+	store.set("secret/myapp", map[string]any{"password": "old-value"})
 	client, ts := newTestClient(t, store)
 	defer ts.Close()
 
 	obj := &mockVaultObject{
 		path:    "secret/myapp",
-		payload: map[string]interface{}{"password": "new-value"},
+		payload: map[string]any{"password": "new-value"},
 	}
 	ve := &VaultEndpoint{vaultObject: obj}
 	ctx := newTestContext(client)
@@ -178,13 +178,13 @@ func TestCreateOrMergeKV_KVv1_OverwritesExistingKey(t *testing.T) {
 
 func TestCreateOrMergeKV_KVv1_PreservesExistingKey(t *testing.T) {
 	store := newFakeVaultStore()
-	store.set("secret/myapp", map[string]interface{}{"password": "keep-this"})
+	store.set("secret/myapp", map[string]any{"password": "keep-this"})
 	client, ts := newTestClient(t, store)
 	defer ts.Close()
 
 	obj := &mockVaultObject{
 		path:    "secret/myapp",
-		payload: map[string]interface{}{"password": "would-overwrite"},
+		payload: map[string]any{"password": "would-overwrite"},
 	}
 	ve := &VaultEndpoint{vaultObject: obj}
 	ctx := newTestContext(client)
@@ -202,13 +202,13 @@ func TestCreateOrMergeKV_KVv1_PreservesExistingKey(t *testing.T) {
 
 func TestCreateOrMergeKV_KVv1_PreserveAddsNewKeyButKeepsExisting(t *testing.T) {
 	store := newFakeVaultStore()
-	store.set("secret/myapp", map[string]interface{}{"password": "keep-this"})
+	store.set("secret/myapp", map[string]any{"password": "keep-this"})
 	client, ts := newTestClient(t, store)
 	defer ts.Close()
 
 	obj := &mockVaultObject{
 		path: "secret/myapp",
-		payload: map[string]interface{}{
+		payload: map[string]any{
 			"password": "would-overwrite",
 			"username": "new-user",
 		},
@@ -237,7 +237,7 @@ func TestCreateOrMergeKV_KVv1_PreserveCreatesWhenPathNotFound(t *testing.T) {
 
 	obj := &mockVaultObject{
 		path:    "secret/myapp",
-		payload: map[string]interface{}{"password": "first-value"},
+		payload: map[string]any{"password": "first-value"},
 	}
 	ve := &VaultEndpoint{vaultObject: obj}
 	ctx := newTestContext(client)
@@ -265,8 +265,8 @@ func TestCreateOrMergeKV_KVv2_CreatesWhenPathNotFound(t *testing.T) {
 
 	obj := &mockVaultObject{
 		path: "secret/data/myapp",
-		payload: map[string]interface{}{
-			"data": map[string]interface{}{"password": "abc123"},
+		payload: map[string]any{
+			"data": map[string]any{"password": "abc123"},
 		},
 	}
 	ve := &VaultEndpoint{vaultObject: obj}
@@ -281,7 +281,7 @@ func TestCreateOrMergeKV_KVv2_CreatesWhenPathNotFound(t *testing.T) {
 	if !ok {
 		t.Fatal("expected secret to be created")
 	}
-	data, _ := stored["data"].(map[string]interface{})
+	data, _ := stored["data"].(map[string]any)
 	if data["password"] != "abc123" {
 		t.Errorf("expected password=abc123, got %v", data["password"])
 	}
@@ -289,16 +289,16 @@ func TestCreateOrMergeKV_KVv2_CreatesWhenPathNotFound(t *testing.T) {
 
 func TestCreateOrMergeKV_KVv2_MergesNewKey(t *testing.T) {
 	store := newFakeVaultStore()
-	store.set("secret/data/myapp", map[string]interface{}{
-		"data": map[string]interface{}{"password": "existing-pw"},
+	store.set("secret/data/myapp", map[string]any{
+		"data": map[string]any{"password": "existing-pw"},
 	})
 	client, ts := newTestClient(t, store)
 	defer ts.Close()
 
 	obj := &mockVaultObject{
 		path: "secret/data/myapp",
-		payload: map[string]interface{}{
-			"data": map[string]interface{}{"username": "admin"},
+		payload: map[string]any{
+			"data": map[string]any{"username": "admin"},
 		},
 	}
 	ve := &VaultEndpoint{vaultObject: obj}
@@ -310,7 +310,7 @@ func TestCreateOrMergeKV_KVv2_MergesNewKey(t *testing.T) {
 	}
 
 	stored, _ := store.get("secret/data/myapp")
-	data, _ := stored["data"].(map[string]interface{})
+	data, _ := stored["data"].(map[string]any)
 	if data["password"] != "existing-pw" {
 		t.Errorf("existing key should be preserved during merge, got %v", data["password"])
 	}
@@ -321,16 +321,16 @@ func TestCreateOrMergeKV_KVv2_MergesNewKey(t *testing.T) {
 
 func TestCreateOrMergeKV_KVv2_OverwritesExistingKey(t *testing.T) {
 	store := newFakeVaultStore()
-	store.set("secret/data/myapp", map[string]interface{}{
-		"data": map[string]interface{}{"password": "old-value"},
+	store.set("secret/data/myapp", map[string]any{
+		"data": map[string]any{"password": "old-value"},
 	})
 	client, ts := newTestClient(t, store)
 	defer ts.Close()
 
 	obj := &mockVaultObject{
 		path: "secret/data/myapp",
-		payload: map[string]interface{}{
-			"data": map[string]interface{}{"password": "new-value"},
+		payload: map[string]any{
+			"data": map[string]any{"password": "new-value"},
 		},
 	}
 	ve := &VaultEndpoint{vaultObject: obj}
@@ -342,7 +342,7 @@ func TestCreateOrMergeKV_KVv2_OverwritesExistingKey(t *testing.T) {
 	}
 
 	stored, _ := store.get("secret/data/myapp")
-	data, _ := stored["data"].(map[string]interface{})
+	data, _ := stored["data"].(map[string]any)
 	if data["password"] != "new-value" {
 		t.Errorf("expected overwritten password=new-value, got %v", data["password"])
 	}
@@ -350,16 +350,16 @@ func TestCreateOrMergeKV_KVv2_OverwritesExistingKey(t *testing.T) {
 
 func TestCreateOrMergeKV_KVv2_PreservesExistingKey(t *testing.T) {
 	store := newFakeVaultStore()
-	store.set("secret/data/myapp", map[string]interface{}{
-		"data": map[string]interface{}{"password": "keep-this"},
+	store.set("secret/data/myapp", map[string]any{
+		"data": map[string]any{"password": "keep-this"},
 	})
 	client, ts := newTestClient(t, store)
 	defer ts.Close()
 
 	obj := &mockVaultObject{
 		path: "secret/data/myapp",
-		payload: map[string]interface{}{
-			"data": map[string]interface{}{"password": "would-overwrite"},
+		payload: map[string]any{
+			"data": map[string]any{"password": "would-overwrite"},
 		},
 	}
 	ve := &VaultEndpoint{vaultObject: obj}
@@ -371,7 +371,7 @@ func TestCreateOrMergeKV_KVv2_PreservesExistingKey(t *testing.T) {
 	}
 
 	stored, _ := store.get("secret/data/myapp")
-	data, _ := stored["data"].(map[string]interface{})
+	data, _ := stored["data"].(map[string]any)
 	if data["password"] != "keep-this" {
 		t.Errorf("expected preserved password=keep-this, got %v", data["password"])
 	}
@@ -379,16 +379,16 @@ func TestCreateOrMergeKV_KVv2_PreservesExistingKey(t *testing.T) {
 
 func TestCreateOrMergeKV_KVv2_PreserveAddsNewKeyButKeepsExisting(t *testing.T) {
 	store := newFakeVaultStore()
-	store.set("secret/data/myapp", map[string]interface{}{
-		"data": map[string]interface{}{"password": "keep-this"},
+	store.set("secret/data/myapp", map[string]any{
+		"data": map[string]any{"password": "keep-this"},
 	})
 	client, ts := newTestClient(t, store)
 	defer ts.Close()
 
 	obj := &mockVaultObject{
 		path: "secret/data/myapp",
-		payload: map[string]interface{}{
-			"data": map[string]interface{}{
+		payload: map[string]any{
+			"data": map[string]any{
 				"password": "would-overwrite",
 				"username": "new-user",
 			},
@@ -403,7 +403,7 @@ func TestCreateOrMergeKV_KVv2_PreserveAddsNewKeyButKeepsExisting(t *testing.T) {
 	}
 
 	stored, _ := store.get("secret/data/myapp")
-	data, _ := stored["data"].(map[string]interface{})
+	data, _ := stored["data"].(map[string]any)
 	if data["password"] != "keep-this" {
 		t.Errorf("existing key should be preserved, got %v", data["password"])
 	}
@@ -419,8 +419,8 @@ func TestCreateOrMergeKV_KVv2_PreserveCreatesWhenPathNotFound(t *testing.T) {
 
 	obj := &mockVaultObject{
 		path: "secret/data/myapp",
-		payload: map[string]interface{}{
-			"data": map[string]interface{}{"password": "first-value"},
+		payload: map[string]any{
+			"data": map[string]any{"password": "first-value"},
 		},
 	}
 	ve := &VaultEndpoint{vaultObject: obj}
@@ -435,7 +435,7 @@ func TestCreateOrMergeKV_KVv2_PreserveCreatesWhenPathNotFound(t *testing.T) {
 	if !ok {
 		t.Fatal("expected secret to be created")
 	}
-	data, _ := stored["data"].(map[string]interface{})
+	data, _ := stored["data"].(map[string]any)
 	if data["password"] != "first-value" {
 		t.Errorf("expected password=first-value, got %v", data["password"])
 	}

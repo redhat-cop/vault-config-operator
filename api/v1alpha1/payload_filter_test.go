@@ -6,11 +6,11 @@ import (
 )
 
 func TestFilterPayloadToDesiredKeysBasic(t *testing.T) {
-	desiredState := map[string]interface{}{
+	desiredState := map[string]any{
 		"key1": "val1",
 		"key2": 42,
 	}
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"key1":  "val1",
 		"key2":  42,
 		"extra": "should-be-filtered",
@@ -18,7 +18,7 @@ func TestFilterPayloadToDesiredKeysBasic(t *testing.T) {
 
 	filtered := filterPayloadToDesiredKeys(desiredState, payload)
 
-	expected := map[string]interface{}{
+	expected := map[string]any{
 		"key1": "val1",
 		"key2": 42,
 	}
@@ -28,10 +28,10 @@ func TestFilterPayloadToDesiredKeysBasic(t *testing.T) {
 }
 
 func TestFilterPayloadToDesiredKeysPreservesPayloadValues(t *testing.T) {
-	desiredState := map[string]interface{}{
+	desiredState := map[string]any{
 		"name": "original",
 	}
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"name":  "vault-returned",
 		"extra": "ignored",
 	}
@@ -47,11 +47,11 @@ func TestFilterPayloadToDesiredKeysPreservesPayloadValues(t *testing.T) {
 }
 
 func TestFilterPayloadToDesiredKeysMissingKeyInPayload(t *testing.T) {
-	desiredState := map[string]interface{}{
+	desiredState := map[string]any{
 		"present": "yes",
 		"missing": "not-in-payload",
 	}
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"present": "yes",
 		"extra":   "ignored",
 	}
@@ -67,8 +67,8 @@ func TestFilterPayloadToDesiredKeysMissingKeyInPayload(t *testing.T) {
 }
 
 func TestFilterPayloadToDesiredKeysEmptyDesiredState(t *testing.T) {
-	desiredState := map[string]interface{}{}
-	payload := map[string]interface{}{
+	desiredState := map[string]any{}
+	payload := map[string]any{
 		"key1": "val1",
 	}
 
@@ -80,10 +80,10 @@ func TestFilterPayloadToDesiredKeysEmptyDesiredState(t *testing.T) {
 }
 
 func TestFilterPayloadToDesiredKeysDoesNotMutateInputs(t *testing.T) {
-	desiredState := map[string]interface{}{
+	desiredState := map[string]any{
 		"key1": "val1",
 	}
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"key1":  "val1",
 		"extra": "should-remain",
 	}

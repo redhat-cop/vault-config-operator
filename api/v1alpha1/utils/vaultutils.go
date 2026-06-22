@@ -23,7 +23,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-func write(context context.Context, path string, payload map[string]interface{}) error {
+func write(context context.Context, path string, payload map[string]any) error {
 	_, err := writeWithResponse(context, path, payload)
 	if err != nil {
 		return err
@@ -31,9 +31,9 @@ func write(context context.Context, path string, payload map[string]interface{})
 	return nil
 }
 
-func writeWithResponse(context context.Context, path string, payload map[string]interface{}) (*vault.Secret, error) {
+func writeWithResponse(context context.Context, path string, payload map[string]any) (*vault.Secret, error) {
 	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	vaultClient := VaultClientFromContext(context)
 	secret, err := vaultClient.Logical().Write(path, payload)
 	if err != nil {
 		log.Error(err, "unable to write object at", "path", path)
@@ -42,9 +42,9 @@ func writeWithResponse(context context.Context, path string, payload map[string]
 	return secret, nil
 }
 
-func read(context context.Context, path string) (map[string]interface{}, bool, error) {
+func read(context context.Context, path string) (map[string]any, bool, error) {
 	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	vaultClient := VaultClientFromContext(context)
 	secret, err := vaultClient.Logical().Read(path)
 	if err != nil {
 		if respErr, ok := err.(*vault.ResponseError); ok {
@@ -63,7 +63,7 @@ func read(context context.Context, path string) (map[string]interface{}, bool, e
 
 func ReadSecret(context context.Context, path string) (*vault.Secret, bool, error) {
 	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	vaultClient := VaultClientFromContext(context)
 	secret, err := vaultClient.Logical().Read(path)
 	if err != nil {
 		if respErr, ok := err.(*vault.ResponseError); ok {
@@ -83,8 +83,8 @@ func ReadSecret(context context.Context, path string) (*vault.Secret, bool, erro
 
 func ReadSecretWithPayload(context context.Context, path string, payload map[string]string) (*vault.Secret, bool, error) {
 	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
-	payloadi := map[string]interface{}{}
+	vaultClient := VaultClientFromContext(context)
+	payloadi := map[string]any{}
 	for key, value := range payload {
 		payloadi[key] = value
 	}

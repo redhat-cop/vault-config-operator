@@ -114,7 +114,7 @@ func TestGroupIsEquivalentMatching(t *testing.T) {
 	}
 
 	// "name" is deleted from payload before comparison
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"name":              "some-group",
 		"type":              "internal",
 		"metadata":          map[string]string{"team": "platform"},
@@ -140,7 +140,7 @@ func TestGroupIsEquivalentNonMatching(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"type":              "internal",
 		"metadata":          map[string]string{"team": "other-team"},
 		"policies":          []string{"default"},
@@ -166,7 +166,7 @@ func TestGroupIsEquivalentExtraFields(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"name":              "some-group",
 		"type":              "internal",
 		"metadata":          map[string]string{"team": "platform"},

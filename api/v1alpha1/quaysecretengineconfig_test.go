@@ -65,7 +65,7 @@ func TestQuaySecretEngineConfigIsEquivalentPasswordDeleted(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"url":                      "https://quay.example.com",
 		"token":                    "my-token",
 		"ca_certificate":           "pem-data",
@@ -75,7 +75,7 @@ func TestQuaySecretEngineConfigIsEquivalentPasswordDeleted(t *testing.T) {
 		t.Error("expected true when payload matches all keys from toMap() (password delete is a no-op)")
 	}
 
-	payloadWithPassword := map[string]interface{}{
+	payloadWithPassword := map[string]any{
 		"url":                      "https://quay.example.com",
 		"token":                    "my-token",
 		"ca_certificate":           "pem-data",
@@ -121,7 +121,7 @@ func TestQuaySecretEngineConfigIsEquivalentNonMatching(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"url":                      "https://quay.example.com",
 		"token":                    "my-token",
 		"ca_certificate":           "other-pem",
@@ -146,7 +146,7 @@ func TestQuaySecretEngineConfigIsEquivalentExtraFields(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"url":                      "https://quay.example.com",
 		"token":                    "my-token",
 		"ca_certificate":           "pem-data",
@@ -233,7 +233,7 @@ func TestQuaySecretEngineConfig_PrepareInternalValues(t *testing.T) {
 				t.Helper()
 				kube := newFakeKubeClient()
 				handler := newFakeVaultHandler()
-				handler.setGet("secret/quay-creds", map[string]interface{}{
+				handler.setGet("secret/quay-creds", map[string]any{
 					"password": "vault-quay-token",
 				})
 				vc, ts := newFakeVaultClient(t, handler)

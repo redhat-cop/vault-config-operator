@@ -4,13 +4,13 @@ import (
 	"context"
 	"strings"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/jsonpath"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -50,7 +50,7 @@ func GetDynamicClientForAPIResource(context context.Context, resource *metav1.AP
 
 func getDynamicClientForGVR(context context.Context, gvr schema.GroupVersionResource) (dynamic.NamespaceableResourceInterface, error) {
 	log := log.FromContext(context)
-	restConfig := context.Value("restConfig").(*rest.Config)
+	restConfig := vaultutils.RestConfigFromContext(context)
 	intf, err := dynamic.NewForConfig(restConfig)
 	if err != nil {
 		log.Error(err, "Unable to get dynamic client")
@@ -80,7 +80,7 @@ func GetDynamicClientForGVK(context context.Context, gvk schema.GroupVersionKind
 func getAPIReourceForGVK(context context.Context, gvk schema.GroupVersionKind) (*metav1.APIResource, error) {
 	res := &metav1.APIResource{}
 	log := log.FromContext(context)
-	restConfig := context.Value("restConfig").(*rest.Config)
+	restConfig := vaultutils.RestConfigFromContext(context)
 	discoveryClient := discovery.NewDiscoveryClientForConfigOrDie(restConfig)
 	resList, err := discoveryClient.ServerResourcesForGroupVersion(gvk.GroupVersion().String())
 	if err != nil {

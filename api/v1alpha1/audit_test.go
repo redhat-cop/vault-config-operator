@@ -63,7 +63,7 @@ func TestAuditIsEquivalentMatching(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"type":        "file",
 		"description": "File audit device",
 		"local":       false,
@@ -84,7 +84,7 @@ func TestAuditIsEquivalentTypeMismatch(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"type":        "socket",
 		"description": "File audit device",
 		"local":       false,
@@ -105,7 +105,7 @@ func TestAuditIsEquivalentDescriptionMismatch(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"type":        "file",
 		"description": "Different description",
 		"local":       false,
@@ -126,7 +126,7 @@ func TestAuditIsEquivalentLocalMismatch(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"type":        "file",
 		"description": "File audit device",
 		"local":       true,
@@ -147,7 +147,7 @@ func TestAuditIsEquivalentOptionsMismatch(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"type":        "file",
 		"description": "File audit device",
 		"local":       false,
@@ -168,7 +168,7 @@ func TestAuditIsEquivalentOptionsLengthMismatch(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"type":        "file",
 		"description": "File audit device",
 		"local":       false,
@@ -180,7 +180,7 @@ func TestAuditIsEquivalentOptionsLengthMismatch(t *testing.T) {
 }
 
 // Audit's type assertion to map[string]string fails when Vault returns
-// map[string]interface{} for the options field, causing IsEquivalent to
+// map[string]any for the options field, causing IsEquivalent to
 // return false.
 func TestAuditIsEquivalentOptionsWrongType(t *testing.T) {
 	audit := &Audit{
@@ -192,14 +192,14 @@ func TestAuditIsEquivalentOptionsWrongType(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"type":        "file",
 		"description": "File audit device",
 		"local":       false,
-		"options":     map[string]interface{}{"file_path": "/var/log/vault_audit.log"},
+		"options":     map[string]any{"file_path": "/var/log/vault_audit.log"},
 	}
 	if audit.IsEquivalentToDesiredState(payload) {
-		t.Error("expected options as map[string]interface{} (not map[string]string) to fail type assertion and return false")
+		t.Error("expected options as map[string]any (not map[string]string) to fail type assertion and return false")
 	}
 }
 
@@ -216,7 +216,7 @@ func TestAuditIsEquivalentExtraFields(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"type":        "file",
 		"description": "File audit device",
 		"local":       false,

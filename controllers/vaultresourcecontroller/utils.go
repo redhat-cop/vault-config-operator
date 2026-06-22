@@ -24,6 +24,7 @@ import (
 	"github.com/go-logr/logr"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -151,7 +152,17 @@ func ManageOutcomeWithRequeue(context context.Context, r ReconcilerBase, obj cli
 			Status:             metav1.ConditionFalse,
 		}
 	}
-	conditionsAware.SetConditions(vaultutils.AddOrReplaceCondition(condition, conditionsAware.GetConditions()))
+	conditions := conditionsAware.GetConditions()
+	apimeta.SetStatusCondition(&conditions, condition)
+	// apimeta.SetStatusCondition only updates LastTransitionTime when Status changes.
+	// We always stamp it so observers can detect that reconciliation occurred.
+	for i := range conditions {
+		if conditions[i].Type == condition.Type {
+			conditions[i].LastTransitionTime = condition.LastTransitionTime
+			break
+		}
+	}
+	conditionsAware.SetConditions(conditions)
 	err := r.GetClient().Status().Update(context, obj)
 	if err != nil {
 		log.Error(err, "unable to update status")

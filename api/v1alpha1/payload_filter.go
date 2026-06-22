@@ -4,8 +4,8 @@ package v1alpha1
 // with values taken from payload. This allows reflect.DeepEqual to compare only the fields the
 // operator manages, ignoring extra fields Vault adds to its read responses (timestamps, IDs,
 // computed metadata, etc.).
-func filterPayloadToDesiredKeys(desiredState, payload map[string]interface{}) map[string]interface{} {
-	filtered := make(map[string]interface{}, len(desiredState))
+func filterPayloadToDesiredKeys(desiredState, payload map[string]any) map[string]any {
+	filtered := make(map[string]any, len(desiredState))
 	for key := range desiredState {
 		if val, exists := payload[key]; exists {
 			filtered[key] = val

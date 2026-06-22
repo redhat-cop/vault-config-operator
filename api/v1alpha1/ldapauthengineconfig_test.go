@@ -62,7 +62,7 @@ func TestLDAPConfigToMap(t *testing.T) {
 	config.retrievedPassword = "s3cret"
 
 	result := config.toMap()
-	expected := map[string]interface{}{
+	expected := map[string]any{
 		"url":                     "ldap://ldap.example.com",
 		"case_sensitive_names":    true,
 		"request_timeout":         "90s",
@@ -402,7 +402,7 @@ func TestLDAPAuthEngineConfig_PrepareInternalValues(t *testing.T) {
 				t.Helper()
 				kube := newFakeKubeClient()
 				handler := newFakeVaultHandler()
-				handler.setGet("secret/ldap-creds", map[string]interface{}{
+				handler.setGet("secret/ldap-creds", map[string]any{
 					"username": "cn=vault,dc=example,dc=com",
 					"password": "vault-bind-pass",
 				})

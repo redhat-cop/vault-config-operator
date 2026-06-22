@@ -69,10 +69,10 @@ func (d *LDAPAuthEngineConfig) GetPath() string {
 	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/config")
 }
 
-func (d *LDAPAuthEngineConfig) GetPayload() map[string]interface{} {
+func (d *LDAPAuthEngineConfig) GetPayload() map[string]any {
 	return d.Spec.LDAPConfig.toMap()
 }
-func (d *LDAPAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *LDAPAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.LDAPConfig.toMap()
 	delete(desiredState, "bindpass")
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
@@ -105,7 +105,7 @@ func (r *LDAPAuthEngineConfig) IsValid() (bool, error) {
 
 func (r *LDAPAuthEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
-	kubeClient := context.Value("kubeClient").(client.Client)
+	kubeClient := vaultutils.KubeClientFromContext(context)
 	if r.Spec.BindCredentials.RandomSecret != nil {
 		randomSecret := &RandomSecret{}
 		err := kubeClient.Get(context, types.NamespacedName{
@@ -169,7 +169,7 @@ func (r *LDAPAuthEngineConfig) setInternalCredentials(context context.Context) e
 
 func (r *LDAPAuthEngineConfig) setTLSConfig(context context.Context) error {
 	log := log.FromContext(context)
-	kubeClient := context.Value("kubeClient").(client.Client)
+	kubeClient := vaultutils.KubeClientFromContext(context)
 
 	if r.Spec.TLSConfig.TLSSecret != nil {
 		secret := &corev1.Secret{}
@@ -407,8 +407,8 @@ func init() {
 	SchemeBuilder.Register(&LDAPAuthEngineConfig{}, &LDAPAuthEngineConfigList{})
 }
 
-func (i *LDAPConfig) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *LDAPConfig) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["url"] = i.URL
 	payload["case_sensitive_names"] = i.CaseSensitiveNames
 	payload["request_timeout"] = i.RequestTimeout
@@ -454,7 +454,7 @@ func (i *LDAPConfig) toMap() map[string]interface{} {
 }
 
 func (r *LDAPAuthEngineConfig) isValid() error {
-	return r.Spec.BindCredentials.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+	return r.Spec.BindCredentials.ValidateCredentialSource()
 }
 
 func (d *LDAPAuthEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {

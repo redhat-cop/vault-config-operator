@@ -172,10 +172,10 @@ func (d *RabbitMQSecretEngineRole) GetPath() string {
 	}
 	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + d.Name)
 }
-func (rabbitMQ *RabbitMQSecretEngineRole) GetPayload() map[string]interface{} {
+func (rabbitMQ *RabbitMQSecretEngineRole) GetPayload() map[string]any {
 	return rabbitMQ.Spec.rabbitMQToMap()
 }
-func (rabbitMQ *RabbitMQSecretEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (rabbitMQ *RabbitMQSecretEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := rabbitMQ.Spec.RMQSERole.rabbitMQToMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
@@ -197,9 +197,9 @@ func (rabbitMQ *RabbitMQSecretEngineRole) IsValid() (bool, error) {
 }
 
 func convertVhostsToJson(vhosts []Vhost) string {
-	vhostData := make(map[string]interface{})
+	vhostData := make(map[string]any)
 	for _, vhost := range vhosts {
-		vhostData = map[string]interface{}{
+		vhostData = map[string]any{
 			vhost.VhostName: vhost.Permissions,
 		}
 	}
@@ -211,15 +211,15 @@ func convertVhostsToJson(vhosts []Vhost) string {
 }
 
 func convertTopicsToJson(vhosts []VhostTopic) string {
-	vhostData := make(map[string]interface{})
-	topicData := make(map[string]interface{})
+	vhostData := make(map[string]any)
+	topicData := make(map[string]any)
 	for _, vhost := range vhosts {
 		for _, topic := range vhost.Topics {
-			topicData = map[string]interface{}{
+			topicData = map[string]any{
 				topic.TopicName: topic.Permissions,
 			}
 		}
-		vhostData = map[string]interface{}{
+		vhostData = map[string]any{
 			vhost.VhostName: topicData,
 		}
 	}
@@ -230,8 +230,8 @@ func convertTopicsToJson(vhosts []VhostTopic) string {
 	return string(result)
 }
 
-func (fields *RMQSERole) rabbitMQToMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (fields *RMQSERole) rabbitMQToMap() map[string]any {
+	payload := map[string]any{}
 	payload["tags"] = fields.Tags
 	payload["vhosts"] = convertVhostsToJson(fields.Vhosts)
 	payload["vhost_topics"] = convertTopicsToJson(fields.VhostTopics)

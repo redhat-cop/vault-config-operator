@@ -223,8 +223,8 @@ var _ = Describe("KubernetesSecretEngine controllers", Ordered, func() {
 			Expect(ok).To(BeTrue(), "expected kubernetes_role_type to be a string")
 			Expect(roleType).To(Equal("ClusterRole"))
 
-			allowedNs, ok := secret.Data["allowed_kubernetes_namespaces"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected allowed_kubernetes_namespaces to be []interface{}")
+			allowedNs, ok := secret.Data["allowed_kubernetes_namespaces"].([]any)
+			Expect(ok).To(BeTrue(), "expected allowed_kubernetes_namespaces to be []any")
 			Expect(allowedNs).To(ContainElement("default"))
 		})
 	})

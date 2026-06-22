@@ -158,12 +158,12 @@ var _ = Describe("Identity OIDC controllers", Ordered, func() {
 			Expect(ok).To(BeTrue(), "expected client_id to be a string")
 			Expect(clientID).NotTo(BeEmpty())
 
-			redirectURIs, ok := secret.Data["redirect_uris"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected redirect_uris to be []interface{}")
+			redirectURIs, ok := secret.Data["redirect_uris"].([]any)
+			Expect(ok).To(BeTrue(), "expected redirect_uris to be []any")
 			Expect(redirectURIs).To(ContainElement("https://example.com/callback"))
 
-			assignments, ok := secret.Data["assignments"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected assignments to be []interface{}")
+			assignments, ok := secret.Data["assignments"].([]any)
+			Expect(ok).To(BeTrue(), "expected assignments to be []any")
 			Expect(assignments).To(ContainElement("test-assignment"))
 		})
 	})
@@ -199,12 +199,12 @@ var _ = Describe("Identity OIDC controllers", Ordered, func() {
 			Expect(err).To(BeNil())
 			Expect(secret).NotTo(BeNil())
 
-			scopesSupported, ok := secret.Data["scopes_supported"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected scopes_supported to be []interface{}")
+			scopesSupported, ok := secret.Data["scopes_supported"].([]any)
+			Expect(ok).To(BeTrue(), "expected scopes_supported to be []any")
 			Expect(scopesSupported).To(ContainElement("test-scope"))
 
-			allowedClientIDs, ok := secret.Data["allowed_client_ids"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected allowed_client_ids to be []interface{}")
+			allowedClientIDs, ok := secret.Data["allowed_client_ids"].([]any)
+			Expect(ok).To(BeTrue(), "expected allowed_client_ids to be []any")
 			Expect(allowedClientIDs).To(ContainElement("*"))
 		})
 	})

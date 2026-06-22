@@ -141,16 +141,16 @@ var _ = Describe("KubernetesAuthEngine controllers", Ordered, func() {
 			Expect(err).To(BeNil())
 			Expect(secret).NotTo(BeNil())
 
-			boundSANames, ok := secret.Data["bound_service_account_names"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected bound_service_account_names to be []interface{}")
+			boundSANames, ok := secret.Data["bound_service_account_names"].([]any)
+			Expect(ok).To(BeTrue(), "expected bound_service_account_names to be []any")
 			Expect(boundSANames).To(ContainElement("default"))
 
-			boundSANamespaces, ok := secret.Data["bound_service_account_namespaces"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected bound_service_account_namespaces to be []interface{}")
+			boundSANamespaces, ok := secret.Data["bound_service_account_namespaces"].([]any)
+			Expect(ok).To(BeTrue(), "expected bound_service_account_namespaces to be []any")
 			Expect(boundSANamespaces).To(ContainElement("vault-admin"))
 
-			tokenPolicies, ok := secret.Data["token_policies"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected token_policies to be []interface{}")
+			tokenPolicies, ok := secret.Data["token_policies"].([]any)
+			Expect(ok).To(BeTrue(), "expected token_policies to be []any")
 			Expect(tokenPolicies).To(ContainElement("vault-admin"))
 		})
 	})
@@ -186,8 +186,8 @@ var _ = Describe("KubernetesAuthEngine controllers", Ordered, func() {
 			Expect(err).To(BeNil())
 			Expect(secret).NotTo(BeNil())
 
-			boundSANamespaces, ok := secret.Data["bound_service_account_namespaces"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected bound_service_account_namespaces to be []interface{}")
+			boundSANamespaces, ok := secret.Data["bound_service_account_namespaces"].([]any)
+			Expect(ok).To(BeTrue(), "expected bound_service_account_namespaces to be []any")
 			Expect(boundSANamespaces).To(ContainElement("test-vault-config-operator"))
 		})
 	})

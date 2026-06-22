@@ -132,7 +132,7 @@ func TestRandomSecretGetPayloadKVv2(t *testing.T) {
 
 	payload := rs.GetPayload()
 
-	data, ok := payload["data"].(map[string]interface{})
+	data, ok := payload["data"].(map[string]any)
 	if !ok {
 		t.Fatal("expected KV v2 payload to have 'data' wrapper key")
 	}
@@ -172,11 +172,11 @@ func TestRandomSecretIsEquivalentAlwaysFalse(t *testing.T) {
 		},
 	}
 
-	if rs.IsEquivalentToDesiredState(map[string]interface{}{"password": "s3cr3t-value"}) {
+	if rs.IsEquivalentToDesiredState(map[string]any{"password": "s3cr3t-value"}) {
 		t.Error("expected IsEquivalentToDesiredState to always return false for RandomSecret")
 	}
 
-	if rs.IsEquivalentToDesiredState(map[string]interface{}{}) {
+	if rs.IsEquivalentToDesiredState(map[string]any{}) {
 		t.Error("expected IsEquivalentToDesiredState to return false even for empty payload")
 	}
 
@@ -248,7 +248,7 @@ func TestRandomSecret_PrepareInternalValues_PasswordPolicyFromVault(t *testing.T
 		},
 	}
 	handler := newFakeVaultHandler()
-	handler.setGet("sys/policies/password/my-policy/generate", map[string]interface{}{
+	handler.setGet("sys/policies/password/my-policy/generate", map[string]any{
 		"password": "generated-pw-123",
 	})
 	vc, ts := newFakeVaultClient(t, handler)

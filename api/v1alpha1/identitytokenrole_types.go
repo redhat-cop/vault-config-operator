@@ -126,12 +126,12 @@ func (d *IdentityTokenRole) GetPath() string {
 	return vaultutils.CleansePath("identity/oidc/role/" + d.Name)
 }
 
-func (d *IdentityTokenRole) GetPayload() map[string]interface{} {
+func (d *IdentityTokenRole) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
 
-func (i *IdentityTokenRoleSpec) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *IdentityTokenRoleSpec) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["key"] = i.Key
 	if i.Template != "" {
 		payload["template"] = i.Template
@@ -163,7 +163,7 @@ func (d *IdentityTokenRole) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfi
 	return &d.Spec.Authentication
 }
 
-func (d *IdentityTokenRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *IdentityTokenRole) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

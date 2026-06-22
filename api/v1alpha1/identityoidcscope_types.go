@@ -115,12 +115,12 @@ func (d *IdentityOIDCScope) GetPath() string {
 	return vaultutils.CleansePath("identity/oidc/scope/" + d.Name)
 }
 
-func (d *IdentityOIDCScope) GetPayload() map[string]interface{} {
+func (d *IdentityOIDCScope) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
 
-func (i *IdentityOIDCScopeSpec) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *IdentityOIDCScopeSpec) toMap() map[string]any {
+	payload := map[string]any{}
 	if i.Template != "" {
 		payload["template"] = i.Template
 	}
@@ -150,7 +150,7 @@ func (d *IdentityOIDCScope) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfi
 	return &d.Spec.Authentication
 }
 
-func (d *IdentityOIDCScope) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *IdentityOIDCScope) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

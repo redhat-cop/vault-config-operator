@@ -65,7 +65,7 @@ func TestKubernetesSecretEngineConfigIsEquivalentJWTDeleted(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"kubernetes_host":      "https://k8s.example.com",
 		"kubernetes_ca_cert":   "pem-ca-data",
 		"disable_local_ca_jwt": true,
@@ -110,7 +110,7 @@ func TestKubernetesSecretEngineConfigIsEquivalentNonMatching(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"kubernetes_host":      "https://k8s.other.example.com",
 		"kubernetes_ca_cert":   "pem-ca-data",
 		"disable_local_ca_jwt": true,
@@ -134,7 +134,7 @@ func TestKubernetesSecretEngineConfigIsEquivalentExtraFields(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"kubernetes_host":      "https://k8s.example.com",
 		"kubernetes_ca_cert":   "pem-ca-data",
 		"disable_local_ca_jwt": true,
@@ -159,7 +159,7 @@ func TestKubernetesSecretEngineConfigIsEquivalentPayloadWithJWT(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"kubernetes_host":      "https://k8s.example.com",
 		"kubernetes_ca_cert":   "pem-ca-data",
 		"disable_local_ca_jwt": true,
@@ -266,7 +266,7 @@ func TestKubernetesSecretEngineConfig_PrepareInternalValues_FromVaultSecret(t *t
 	ns := "ns-kube-se"
 	vaultPath := "secret/data/k8s-jwt"
 	handler := newFakeVaultHandler()
-	handler.setGet(vaultPath, map[string]interface{}{
+	handler.setGet(vaultPath, map[string]any{
 		"key": "jwt-from-vault-path",
 	})
 	kube := newFakeKubeClient()

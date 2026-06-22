@@ -165,17 +165,17 @@ var _ = Describe("JWTOIDCAuthEngine controllers", Ordered, func() {
 			Expect(ok).To(BeTrue(), "expected user_claim to be a string")
 			Expect(userClaim).To(Equal("email"))
 
-			tokenPolicies, ok := secret.Data["token_policies"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected token_policies to be []interface{}")
+			tokenPolicies, ok := secret.Data["token_policies"].([]any)
+			Expect(ok).To(BeTrue(), "expected token_policies to be []any")
 			Expect(tokenPolicies).To(ContainElement("default"))
 
-			oidcScopes, ok := secret.Data["oidc_scopes"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected oidc_scopes to be []interface{}")
+			oidcScopes, ok := secret.Data["oidc_scopes"].([]any)
+			Expect(ok).To(BeTrue(), "expected oidc_scopes to be []any")
 			Expect(oidcScopes).To(ContainElement("openid"))
 			Expect(oidcScopes).To(ContainElement("email"))
 
-			allowedRedirects, ok := secret.Data["allowed_redirect_uris"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected allowed_redirect_uris to be []interface{}")
+			allowedRedirects, ok := secret.Data["allowed_redirect_uris"].([]any)
+			Expect(ok).To(BeTrue(), "expected allowed_redirect_uris to be []any")
 			Expect(allowedRedirects).To(ContainElement("http://localhost:8250/oidc/callback"))
 		})
 	})

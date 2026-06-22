@@ -64,7 +64,7 @@ spec:
 		t.Fatalf("failed to Get created object: %v", err)
 	}
 
-	spec, ok := obj.Object["spec"].(map[string]interface{})
+	spec, ok := obj.Object["spec"].(map[string]any)
 	if !ok {
 		t.Fatal("expected spec to be a map")
 	}

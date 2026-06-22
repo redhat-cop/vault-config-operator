@@ -62,10 +62,10 @@ func (d *QuaySecretEngineStaticRole) GetPath() string {
 	}
 	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "static-roles" + "/" + d.Name)
 }
-func (q *QuaySecretEngineStaticRole) GetPayload() map[string]interface{} {
+func (q *QuaySecretEngineStaticRole) GetPayload() map[string]any {
 	return q.Spec.toMap()
 }
-func (q *QuaySecretEngineStaticRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (q *QuaySecretEngineStaticRole) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := q.Spec.QuayBaseRole.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
@@ -90,8 +90,8 @@ func (q *QuaySecretEngineStaticRole) IsValid() (bool, error) {
 	return true, nil
 }
 
-func (r *QuayBaseRole) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (r *QuayBaseRole) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["namespace_type"] = r.NamespaceType
 	payload["namespace_name"] = r.NamespaceName
 	payload["create_repositories"] = r.CreateRepositories

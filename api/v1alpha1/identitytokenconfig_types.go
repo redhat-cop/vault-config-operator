@@ -105,12 +105,12 @@ func (d *IdentityTokenConfig) GetPath() string {
 	return vaultutils.CleansePath("identity/oidc/config")
 }
 
-func (d *IdentityTokenConfig) GetPayload() map[string]interface{} {
+func (d *IdentityTokenConfig) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
 
-func (i *IdentityTokenConfigSpec) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *IdentityTokenConfigSpec) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["issuer"] = i.Issuer
 	return payload
 }
@@ -135,7 +135,7 @@ func (d *IdentityTokenConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthCon
 	return &d.Spec.Authentication
 }
 
-func (d *IdentityTokenConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *IdentityTokenConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

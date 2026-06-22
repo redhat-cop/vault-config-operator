@@ -21,13 +21,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"text/template"
 
 	"github.com/BurntSushi/toml"
 	"github.com/Masterminds/sprig/v3"
 	"github.com/go-logr/logr"
-	"github.com/pkg/errors"
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -55,9 +56,9 @@ func AdvancedTemplateFuncMap(config *rest.Config, logger logr.Logger) template.F
 		"fromJsonArray": fromJSONArray,
 
 		// A variety of known templating functions that have not been implemented yet
-		"include":  func(string, interface{}) string { return "not implemented" },
-		"tpl":      func(string, interface{}) interface{} { return "not implemented" },
-		"required": func(string, interface{}) (interface{}, error) { return "not implemented", nil },
+		"include":  func(string, any) string { return "not implemented" },
+		"tpl":      func(string, any) any { return "not implemented" },
+		"required": func(string, any) (any, error) { return "not implemented", nil },
 	}
 
 	for k, v := range extra {
@@ -68,12 +69,12 @@ func AdvancedTemplateFuncMap(config *rest.Config, logger logr.Logger) template.F
 	f["lookup"] = NewLookupFunction(config, logger)
 
 	// Add the `required` function here so we can use lintMode
-	f["required"] = func(warn string, val interface{}) (interface{}, error) {
+	f["required"] = func(warn string, val any) (any, error) {
 		if val == nil {
-			return val, errors.Errorf(warn)
+			return val, fmt.Errorf("%s", warn)
 		} else if _, ok := val.(string); ok {
 			if val == "" {
-				return val, errors.Errorf(warn)
+				return val, fmt.Errorf("%s", warn)
 			}
 		}
 		return val, nil
@@ -86,7 +87,7 @@ func AdvancedTemplateFuncMap(config *rest.Config, logger logr.Logger) template.F
 // always return a string, even on marshal error (empty string).
 //
 // This is designed to be called from a template.
-func toYAML(v interface{}) string {
+func toYAML(v any) string {
 	data, err := yaml.Marshal(v)
 	if err != nil {
 		// Swallow errors inside of a template.
@@ -95,14 +96,14 @@ func toYAML(v interface{}) string {
 	return strings.TrimSuffix(string(data), "\n")
 }
 
-// fromYAML converts a YAML document into a map[string]interface{}.
+// fromYAML converts a YAML document into a map[string]any.
 //
 // This is not a general-purpose YAML parser, and will not parse all valid
 // YAML documents. Additionally, because its intended use is within templates
 // it tolerates errors. It will insert the returned error message string into
 // m["Error"] in the returned map.
-func fromYAML(str string) map[string]interface{} {
-	m := map[string]interface{}{}
+func fromYAML(str string) map[string]any {
+	m := map[string]any{}
 
 	if err := yaml.Unmarshal([]byte(str), &m); err != nil {
 		m["Error"] = err.Error()
@@ -110,17 +111,17 @@ func fromYAML(str string) map[string]interface{} {
 	return m
 }
 
-// fromYAMLArray converts a YAML array into a []interface{}.
+// fromYAMLArray converts a YAML array into a []any.
 //
 // This is not a general-purpose YAML parser, and will not parse all valid
 // YAML documents. Additionally, because its intended use is within templates
 // it tolerates errors. It will insert the returned error message string as
 // the first and only item in the returned array.
-func fromYAMLArray(str string) []interface{} {
-	a := []interface{}{}
+func fromYAMLArray(str string) []any {
+	a := []any{}
 
 	if err := yaml.Unmarshal([]byte(str), &a); err != nil {
-		a = []interface{}{err.Error()}
+		a = []any{err.Error()}
 	}
 	return a
 }
@@ -129,7 +130,7 @@ func fromYAMLArray(str string) []interface{} {
 // always return a string, even on marshal error (empty string).
 //
 // This is designed to be called from a template.
-func toTOML(v interface{}) string {
+func toTOML(v any) string {
 	b := bytes.NewBuffer(nil)
 	e := toml.NewEncoder(b)
 	err := e.Encode(v)
@@ -143,7 +144,7 @@ func toTOML(v interface{}) string {
 // always return a string, even on marshal error (empty string).
 //
 // This is designed to be called from a template.
-func toJSON(v interface{}) string {
+func toJSON(v any) string {
 	data, err := json.Marshal(v)
 	if err != nil {
 		// Swallow errors inside of a template.
@@ -152,14 +153,14 @@ func toJSON(v interface{}) string {
 	return string(data)
 }
 
-// fromJSON converts a JSON document into a map[string]interface{}.
+// fromJSON converts a JSON document into a map[string]any.
 //
 // This is not a general-purpose JSON parser, and will not parse all valid
 // JSON documents. Additionally, because its intended use is within templates
 // it tolerates errors. It will insert the returned error message string into
 // m["Error"] in the returned map.
-func fromJSON(str string) map[string]interface{} {
-	m := make(map[string]interface{})
+func fromJSON(str string) map[string]any {
+	m := make(map[string]any)
 
 	if err := json.Unmarshal([]byte(str), &m); err != nil {
 		m["Error"] = err.Error()
@@ -167,33 +168,33 @@ func fromJSON(str string) map[string]interface{} {
 	return m
 }
 
-// fromJSONArray converts a JSON array into a []interface{}.
+// fromJSONArray converts a JSON array into a []any.
 //
 // This is not a general-purpose JSON parser, and will not parse all valid
 // JSON documents. Additionally, because its intended use is within templates
 // it tolerates errors. It will insert the returned error message string as
 // the first and only item in the returned array.
-func fromJSONArray(str string) []interface{} {
-	a := []interface{}{}
+func fromJSONArray(str string) []any {
+	a := []any{}
 
 	if err := json.Unmarshal([]byte(str), &a); err != nil {
-		a = []interface{}{err.Error()}
+		a = []any{err.Error()}
 	}
 	return a
 }
 
-type lookupFunc = func(apiversion string, resource string, namespace string, name string) (map[string]interface{}, error)
+type lookupFunc = func(apiversion string, resource string, namespace string, name string) (map[string]any, error)
 
 // NewLookupFunction get information at runtime from cluster
 func NewLookupFunction(config *rest.Config, logger logr.Logger) lookupFunc {
-	return func(apiversion string, resource string, namespace string, name string) (map[string]interface{}, error) {
+	return func(apiversion string, resource string, namespace string, name string) (map[string]any, error) {
 		var client dynamic.ResourceInterface
 		ctx := context.TODO()
-		ctx = context.WithValue(ctx, "restConfig", config)
+		ctx = vaultutils.ContextWithRestConfig(ctx, config)
 		ctx = log.IntoContext(ctx, logger.WithName("lookup function"))
 		c, namespaced, err := GetDynamicClientForGVK(ctx, schema.FromAPIVersionAndKind(apiversion, resource))
 		if err != nil {
-			return map[string]interface{}{}, err
+			return map[string]any{}, err
 		}
 		if namespaced && namespace != "" {
 			client = c.Namespace(namespace)
@@ -207,9 +208,9 @@ func NewLookupFunction(config *rest.Config, logger logr.Logger) lookupFunc {
 				if apierrors.IsNotFound(err) {
 					// Just return an empty interface when the object was not found.
 					// That way, users can use `if not (lookup ...)` in their templates.
-					return map[string]interface{}{}, nil
+					return map[string]any{}, nil
 				}
-				return map[string]interface{}{}, err
+				return map[string]any{}, err
 			}
 			return obj.UnstructuredContent(), nil
 		}
@@ -219,9 +220,9 @@ func NewLookupFunction(config *rest.Config, logger logr.Logger) lookupFunc {
 			if apierrors.IsNotFound(err) {
 				// Just return an empty interface when the object was not found.
 				// That way, users can use `if not (lookup ...)` in their templates.
-				return map[string]interface{}{}, nil
+				return map[string]any{}, nil
 			}
-			return map[string]interface{}{}, err
+			return map[string]any{}, err
 		}
 		return obj.UnstructuredContent(), nil
 	}

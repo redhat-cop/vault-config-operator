@@ -77,10 +77,10 @@ func (d *KubernetesAuthEngineRole) GetPath() string {
 	}
 	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/role/" + d.Name)
 }
-func (d *KubernetesAuthEngineRole) GetPayload() map[string]interface{} {
+func (d *KubernetesAuthEngineRole) GetPayload() map[string]any {
 	return d.Spec.VRole.toMap()
 }
-func (d *KubernetesAuthEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *KubernetesAuthEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.VRole.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
@@ -123,7 +123,7 @@ func (r *KubernetesAuthEngineRole) findSelectedNamespaceNames(context context.Co
 		log.Error(err, "unable to create selector from label selector", "selector", r.Spec.TargetNamespaces.TargetNamespaceSelector)
 		return nil, err
 	}
-	kubeClient := context.Value("kubeClient").(client.Client)
+	kubeClient := vaultutils.KubeClientFromContext(context)
 	err = kubeClient.List(context, namespaceList, &client.ListOptions{
 		LabelSelector: labelSelector,
 	})
@@ -258,8 +258,8 @@ func init() {
 	SchemeBuilder.Register(&KubernetesAuthEngineRole{}, &KubernetesAuthEngineRoleList{})
 }
 
-func (i *VRole) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *VRole) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["bound_service_account_names"] = i.TargetServiceAccounts
 	payload["bound_service_account_namespaces"] = i.namespaces
 	payload["alias_name_source"] = i.AliasNameSource

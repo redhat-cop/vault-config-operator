@@ -117,12 +117,12 @@ func (d *IdentityOIDCAssignment) GetPath() string {
 	return vaultutils.CleansePath("identity/oidc/assignment/" + d.Name)
 }
 
-func (d *IdentityOIDCAssignment) GetPayload() map[string]interface{} {
+func (d *IdentityOIDCAssignment) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
 
-func (i *IdentityOIDCAssignmentSpec) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *IdentityOIDCAssignmentSpec) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["entity_ids"] = i.EntityIDs
 	payload["group_ids"] = i.GroupIDs
 	return payload
@@ -148,7 +148,7 @@ func (d *IdentityOIDCAssignment) GetKubeAuthConfiguration() *vaultutils.KubeAuth
 	return &d.Spec.Authentication
 }
 
-func (d *IdentityOIDCAssignment) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *IdentityOIDCAssignment) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

@@ -117,8 +117,8 @@ func (d *Audit) GetPath() string {
 	return vaultutils.CleansePath("sys/audit/" + d.Spec.Path)
 }
 
-func (d *Audit) GetPayload() map[string]interface{} {
-	payload := map[string]interface{}{
+func (d *Audit) GetPayload() map[string]any {
+	payload := map[string]any{
 		"type":        d.Spec.Type,
 		"description": d.Spec.Description,
 		"local":       d.Spec.Local,
@@ -127,7 +127,7 @@ func (d *Audit) GetPayload() map[string]interface{} {
 	return payload
 }
 
-func (d *Audit) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *Audit) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredPayload := d.GetPayload()
 	if payload["type"] != desiredPayload["type"] {
 		return false

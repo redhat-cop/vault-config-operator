@@ -112,7 +112,7 @@ func TestGitHubSecretEngineRoleIsEquivalentMatching(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"installation_id": int64(123),
 		"org_name":        "my-org",
 		"repositories":    []string{"repo1", "repo2"},

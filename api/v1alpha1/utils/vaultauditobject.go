@@ -44,7 +44,7 @@ func NewVaultAuditEndpoint(obj client.Object) *VaultAuditEndpoint {
 // Exists checks if the audit device is currently enabled
 func (ve *VaultAuditEndpoint) Exists(context context.Context) (bool, error) {
 	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	vaultClient := VaultClientFromContext(context)
 
 	audits, err := vaultClient.Sys().ListAudit()
 	if err != nil {
@@ -64,7 +64,7 @@ func (ve *VaultAuditEndpoint) Exists(context context.Context) (bool, error) {
 // Enable enables the audit device
 func (ve *VaultAuditEndpoint) Enable(context context.Context) error {
 	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	vaultClient := VaultClientFromContext(context)
 
 	path := ve.vaultObject.GetPath()
 	// Extract just the audit device name from sys/audit/<name>
@@ -92,7 +92,7 @@ func (ve *VaultAuditEndpoint) Enable(context context.Context) error {
 // Disable disables the audit device
 func (ve *VaultAuditEndpoint) Disable(context context.Context) error {
 	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	vaultClient := VaultClientFromContext(context)
 
 	path := ve.vaultObject.GetPath()
 	// Extract just the audit device name from sys/audit/<name>
@@ -117,7 +117,7 @@ func (ve *VaultAuditEndpoint) Disable(context context.Context) error {
 // IsEquivalentToDesired checks if the current audit device configuration matches the desired state
 func (ve *VaultAuditEndpoint) IsEquivalentToDesired(context context.Context) (bool, error) {
 	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	vaultClient := VaultClientFromContext(context)
 
 	audits, err := vaultClient.Sys().ListAudit()
 	if err != nil {
@@ -135,7 +135,7 @@ func (ve *VaultAuditEndpoint) IsEquivalentToDesired(context context.Context) (bo
 	}
 
 	// Convert current audit to a comparable format
-	currentPayload := map[string]interface{}{
+	currentPayload := map[string]any{
 		"type":        currentAudit.Type,
 		"description": currentAudit.Description,
 		"local":       currentAudit.Local,

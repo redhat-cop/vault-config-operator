@@ -71,10 +71,10 @@ var _ = Describe("SecretEngineMount controller", Ordered, func() {
 			mountData, exists := secret.Data["test-kv-mount/"]
 			Expect(exists).To(BeTrue(), "expected mount 'test-kv-mount/' in sys/mounts")
 
-			mountMap, ok := mountData.(map[string]interface{})
+			mountMap, ok := mountData.(map[string]any)
 			Expect(ok).To(BeTrue(), "expected mount data to be a map")
 			Expect(mountMap["type"]).To(Equal("kv"))
-			mountOptions, ok := mountMap["options"].(map[string]interface{})
+			mountOptions, ok := mountMap["options"].(map[string]any)
 			Expect(ok).To(BeTrue(), "expected mount options to be a map")
 			Expect(mountOptions["version"]).To(Equal("2"))
 

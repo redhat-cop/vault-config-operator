@@ -30,7 +30,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -39,18 +38,6 @@ import (
 type ConditionsAware interface {
 	GetConditions() []metav1.Condition
 	SetConditions(conditions []metav1.Condition)
-}
-
-// AddOrReplaceCondition adds or replaces the passed condition in the passed array of conditions
-func AddOrReplaceCondition(c metav1.Condition, conditions []metav1.Condition) []metav1.Condition {
-	for i, condition := range conditions {
-		if c.Type == condition.Type {
-			conditions[i] = c
-			return conditions
-		}
-	}
-	conditions = append(conditions, c)
-	return conditions
 }
 
 var vaultClientCache = VaultClientCache{}
@@ -139,7 +126,7 @@ func (cache *VaultClientCache) Delete(kc *KubeAuthConfiguration, kubeNamespace s
 
 func (vc *VaultConnection) getConnectionConfig(context context.Context, kubeNamespace string) (*vault.Config, error) {
 	log := log.FromContext(context)
-	restConfig := context.Value("restConfig").(*rest.Config)
+	restConfig := RestConfigFromContext(context)
 	clientset, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		log.Error(err, "unable to create kubernetes clientset")
@@ -178,7 +165,10 @@ func (vc *VaultConnection) getConnectionConfig(context context.Context, kubeName
 			tlsConfig.TLSServerName = *vc.TLSConfig.TLSServerName
 		}
 		tlsConfig.Insecure = vc.TLSConfig.SkipVerify
-		config.ConfigureTLS(&tlsConfig)
+		if err := config.ConfigureTLS(&tlsConfig); err != nil {
+			log.Error(err, "unable to configure TLS")
+			return nil, err
+		}
 	}
 	return config, nil
 }
@@ -241,7 +231,7 @@ func (kc *KubeAuthConfiguration) GetVaultClient(context context.Context, kubeNam
 func GetJWTTokenWithDuration(context context.Context, serviceAccountName string, kubeNamespace string, duration int64) (string, error) {
 	log := log.FromContext(context)
 
-	restConfig := context.Value("restConfig").(*rest.Config)
+	restConfig := RestConfigFromContext(context)
 
 	treq := &authv1.TokenRequest{
 		Spec: authv1.TokenRequestSpec{
@@ -278,7 +268,7 @@ func (kc *KubeAuthConfiguration) getJWTToken(context context.Context, kubeNamesp
 func (kc *KubeAuthConfiguration) createVaultClient(context context.Context, jwt string, namespace string) (*vault.Client, error) {
 	log := log.FromContext(context)
 	log.V(1).Info("Creating new client")
-	vaultConnection := context.Value("vaultConnection").(*VaultConnection)
+	vaultConnection := VaultConnectionFromContext(context)
 	var config *vault.Config
 	if vaultConnection != nil {
 		var err error
@@ -299,7 +289,7 @@ func (kc *KubeAuthConfiguration) createVaultClient(context context.Context, jwt 
 	if kc.GetNamespace() != "" {
 		client.SetNamespace(kc.GetNamespace())
 	}
-	secret, err := client.Logical().Write(kc.GetKubeAuthPath(), map[string]interface{}{
+	secret, err := client.Logical().Write(kc.GetKubeAuthPath(), map[string]any{
 		"jwt":  jwt,
 		"role": kc.GetRole(),
 	})
@@ -351,11 +341,18 @@ func CleansePath(path string) string {
 	return strings.Trim(strings.ReplaceAll(path, "//", "/"), "/")
 }
 
-func ToString(name interface{}) string {
-	if name != nil {
-		return name.(string)
+func ToString(name any) string {
+	if name == nil {
+		return ""
 	}
-	return ""
+	switch v := name.(type) {
+	case string:
+		return v
+	case []byte:
+		return string(v)
+	default:
+		return fmt.Sprintf("%v", name)
+	}
 }
 
 // +kubebuilder:object:generate=true
@@ -398,33 +395,19 @@ type RootCredentialConfig struct {
 	UsernameKey string `json:"usernameKey,omitempty"`
 }
 
-func (credentials *RootCredentialConfig) ValidateEitherFromVaultSecretOrFromSecret() error {
+func (credentials *RootCredentialConfig) ValidateCredentialSource() error {
 	count := 0
-	if credentials.Secret != nil {
-		count++
-	}
 	if credentials.VaultSecret != nil {
 		count++
 	}
-	if count != 1 {
-		return errors.New("only one of spec.rootCredentials.vaultSecret or spec.rootCredentials.secret or spec.rootCredentials.randomSecret can be specified")
+	if credentials.Secret != nil {
+		count++
 	}
-	return nil
-}
-
-func (credentials *RootCredentialConfig) ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret() error {
-	count := 0
 	if credentials.RandomSecret != nil {
 		count++
 	}
-	if credentials.Secret != nil {
-		count++
-	}
-	if credentials.VaultSecret != nil {
-		count++
-	}
 	if count != 1 {
-		return errors.New("only one of spec.rootCredentials.vaultSecret or spec.rootCredentials.secret or spec.rootCredentials.randomSecret can be specified")
+		return errors.New("exactly one of spec.rootCredentials.vaultSecret, spec.rootCredentials.secret, or spec.rootCredentials.randomSecret must be specified")
 	}
 	return nil
 }

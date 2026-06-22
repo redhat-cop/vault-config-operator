@@ -29,6 +29,32 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
+    - description: AzureSecretEngineConfig is the Schema for the azuresecretengineconfigs
+        API
+      displayName: Azure Secret Engine Config
+      kind: AzureSecretEngineConfig
+      name: azuresecretengineconfigs.redhatcop.redhat.io
+      version: v1alpha1
+    - description: Entity is the Schema for the entities API
+      displayName: Entity
+      kind: Entity
+      name: entities.redhatcop.redhat.io
+      version: v1alpha1
+    - description: EntityAlias is the Schema for the entityaliases API
+      displayName: Entity Alias
+      kind: EntityAlias
+      name: entityaliases.redhatcop.redhat.io
+      version: v1alpha1
+    - description: AuditRequestHeader is the Schema for the auditrequestheaders API
+      displayName: Audit Request Header
+      kind: AuditRequestHeader
+      name: auditrequestheaders.redhatcop.redhat.io
+      version: v1alpha1
+    - description: Audit is the Schema for the audits API
+      displayName: Audit
+      kind: Audit
+      name: audits.redhatcop.redhat.io
+      version: v1alpha1
     - description: AuthEngineMount is the Schema for the authenginemounts API
       displayName: Auth Engine Mount
       kind: AuthEngineMount
@@ -51,6 +77,17 @@ spec:
       displayName: Azure Secret Engine Role
       kind: AzureSecretEngineRole
       name: azuresecretengineroles.redhatcop.redhat.io
+      version: v1alpha1
+    - description: CertAuthEngineConfig is the Schema for the certauthengineconfigs
+        API
+      displayName: Cert Auth Engine Config
+      kind: CertAuthEngineConfig
+      name: certauthengineconfigs.redhatcop.redhat.io
+      version: v1alpha1
+    - description: CertAuthEngineRole is the Schema for the certauthengineroles API
+      displayName: Cert Auth Engine Role
+      kind: CertAuthEngineRole
+      name: certauthengineroles.redhatcop.redhat.io
       version: v1alpha1
     - description: DatabaseSecretEngineConfig is the Schema for the databasesecretengineconfigs
         API
@@ -102,6 +139,44 @@ spec:
       displayName: Group
       kind: Group
       name: groups.redhatcop.redhat.io
+      version: v1alpha1
+    - description: IdentityOIDCAssignment is the Schema for the identityoidcassignments
+        API
+      displayName: Identity OIDCAssignment
+      kind: IdentityOIDCAssignment
+      name: identityoidcassignments.redhatcop.redhat.io
+      version: v1alpha1
+    - description: IdentityOIDCClient is the Schema for the identityoidcclients API
+      displayName: Identity OIDCClient
+      kind: IdentityOIDCClient
+      name: identityoidcclients.redhatcop.redhat.io
+      version: v1alpha1
+    - description: IdentityOIDCProvider is the Schema for the identityoidcproviders
+        API
+      displayName: Identity OIDCProvider
+      kind: IdentityOIDCProvider
+      name: identityoidcproviders.redhatcop.redhat.io
+      version: v1alpha1
+    - description: IdentityOIDCScope is the Schema for the identityoidcscopes API
+      displayName: Identity OIDCScope
+      kind: IdentityOIDCScope
+      name: identityoidcscopes.redhatcop.redhat.io
+      version: v1alpha1
+    - description: IdentityTokenConfig is the Schema for the identitytokenconfigs
+        API
+      displayName: Identity Token Config
+      kind: IdentityTokenConfig
+      name: identitytokenconfigs.redhatcop.redhat.io
+      version: v1alpha1
+    - description: IdentityTokenKey is the Schema for the identitytokenkeys API
+      displayName: Identity Token Key
+      kind: IdentityTokenKey
+      name: identitytokenkeys.redhatcop.redhat.io
+      version: v1alpha1
+    - description: IdentityTokenRole is the Schema for the identitytokenroles API
+      displayName: Identity Token Role
+      kind: IdentityTokenRole
+      name: identitytokenroles.redhatcop.redhat.io
       version: v1alpha1
     - description: JWTOIDCAuthEngineConfig is the Schema for the jwtoidcauthengineconfigs
         API
@@ -265,6 +340,7 @@ spec:
   - email: rspazzol@redhat.com
     name: Raffaele Spazzoli
   maturity: alpha
+  minKubeVersion: 1.29.0
   provider:
     name: Red Hat Community of Practice
   version: 0.1.0
