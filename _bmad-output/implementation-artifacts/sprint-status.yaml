@@ -36,6 +36,9 @@
 
 generated: 2026-04-11
 last_updated: 2026-06-22
+# Story D1.1 done 2026-06-22
+# Story D1.1 review 2026-06-22
+# Story D1.1 in-progress 2026-06-22
 # Story D1.0c done 2026-06-22
 # Story D1.0c review 2026-06-22
 # Story D1.0c in-progress 2026-06-22
@@ -306,7 +309,7 @@ development_status:
   d1-0a-fix-lasttransitiontime-misuse-requeueafter-drift-detection: done
   d1-0b-update-drift-detection-tests-for-requeueafter: done
   d1-0c-populate-remaining-owned-crd-descriptions: done
-  d1-1-create-documentation-template-and-pattern-guide: ready-for-dev
+  d1-1-create-documentation-template-and-pattern-guide: done
   d1-2-document-certauthengineconfig-and-certauthenginerole: ready-for-dev
   d1-3-fix-broken-links-and-field-naming-inconsistencies: ready-for-dev
   epic-d1-retrospective: optional

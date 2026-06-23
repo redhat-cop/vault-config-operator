@@ -1,6 +1,6 @@
 # Story D1.1: Create Documentation Template and Pattern Guide
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -22,25 +22,32 @@ So that all engine docs are consistent and contributors know exactly what to wri
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Analyze existing gold-standard docs for structural patterns (AC: 2)
-  - [ ] 1.1: Review `docs/identities.md` structure — per-CRD pattern: H2 heading, description+link, YAML example, field descriptions as list
-  - [ ] 1.2: Review `docs/audit-management.md` structure — per-CRD pattern: H2 heading, description+link, YAML example, `### Field Description` header, field list
-  - [ ] 1.3: Review existing auth-engine and secret-engine docs for Vault CLI equivalents and credential resolution sections already in use
-  - [ ] 1.4: Identify inconsistencies to fix in the template (mixed heading styles, missing field tables, no Vault CLI equivalents in some docs)
-- [ ] Task 2: Create `docs/engine-doc-template.md` (AC: 1)
-  - [ ] 2.1: Write the template with placeholder sections in the exact order specified in AC1
-  - [ ] 2.2: Use `{{placeholder}}` syntax for variable content (engine name, CRD kind, Vault doc URL, etc.)
-  - [ ] 2.3: Include inline comments/instructions for contributors explaining what each section must contain
-  - [ ] 2.4: Provide a filled-in example section alongside each template section so contributors see the expected output
-  - [ ] 2.5: Field descriptions must use a markdown table format (`Field | Type | Required | Description`) with camelCase field names (DNFR3)
-  - [ ] 2.6: YAML examples must use `apiVersion: redhatcop.redhat.io/v1alpha1` (DNFR2)
-  - [ ] 2.7: Include the Vault CLI equivalent command after each CRD's YAML example
-  - [ ] 2.8: Include credential resolution section template with three subsections: Kubernetes Secret, Vault Secret, RandomSecret — each with a YAML snippet
-  - [ ] 2.9: Include links section template pointing to `auth-section.md` and `contributing-vault-apis.md`
-- [ ] Task 3: Validate template quality against gold standards (AC: 2)
-  - [ ] 3.1: Verify every structural element in `identities.md` and `audit-management.md` has a corresponding template section
-  - [ ] 3.2: Verify the template adds improvements not present in either: field description tables (vs plain lists), Vault CLI equivalents, credential resolution section
-  - [ ] 3.3: Verify DNFR1-DNFR3 compliance: all camelCase field names, valid YAML apiVersion, consistent section ordering
+- [x] Task 1: Analyze existing gold-standard docs for structural patterns (AC: 2)
+  - [x] 1.1: Review `docs/identities.md` structure — per-CRD pattern: H2 heading, description+link, YAML example, field descriptions as list
+  - [x] 1.2: Review `docs/audit-management.md` structure — per-CRD pattern: H2 heading, description+link, YAML example, `### Field Description` header, field list
+  - [x] 1.3: Review existing auth-engine and secret-engine docs for Vault CLI equivalents and credential resolution sections already in use
+  - [x] 1.4: Identify inconsistencies to fix in the template (mixed heading styles, missing field tables, no Vault CLI equivalents in some docs)
+- [x] Task 2: Create `docs/engine-doc-template.md` (AC: 1)
+  - [x] 2.1: Write the template with placeholder sections in the exact order specified in AC1
+  - [x] 2.2: Use `{{placeholder}}` syntax for variable content (engine name, CRD kind, Vault doc URL, etc.)
+  - [x] 2.3: Include inline comments/instructions for contributors explaining what each section must contain
+  - [x] 2.4: Provide a filled-in example section alongside each template section so contributors see the expected output
+  - [x] 2.5: Field descriptions must use a markdown table format (`Field | Type | Required | Description`) with camelCase field names (DNFR3)
+  - [x] 2.6: YAML examples must use `apiVersion: redhatcop.redhat.io/v1alpha1` (DNFR2)
+  - [x] 2.7: Include the Vault CLI equivalent command after each CRD's YAML example
+  - [x] 2.8: Include credential resolution section template with three subsections: Kubernetes Secret, Vault Secret, RandomSecret — each with a YAML snippet
+  - [x] 2.9: Include links section template pointing to `auth-section.md` and `contributing-vault-apis.md`
+- [x] Task 3: Validate template quality against gold standards (AC: 2)
+  - [x] 3.1: Verify every structural element in `identities.md` and `audit-management.md` has a corresponding template section
+  - [x] 3.2: Verify the template adds improvements not present in either: field description tables (vs plain lists), Vault CLI equivalents, credential resolution section
+  - [x] 3.3: Verify DNFR1-DNFR3 compliance: all camelCase field names, valid YAML apiVersion, consistent section ordering
+
+### Review Findings
+
+- [x] [Review][Patch] Template hardcodes `Role` and does not support `Group` variants [`docs/engine-doc-template.md:24`]
+- [x] [Review][Patch] Secret-engine examples still use auth-style paths and commands [`docs/engine-doc-template.md:84`]
+- [x] [Review][Patch] Role/Group YAML example omits the optional `connection` block pattern [`docs/engine-doc-template.md:141`]
+- [x] [Review][Patch] Credential-resolution placeholders do not support nested credential objects like `OIDCCredentials` [`docs/engine-doc-template.md:221`]
 
 ## Dev Notes
 
@@ -183,10 +190,26 @@ Only 1 file: `docs/engine-doc-template.md`
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (via Cursor)
 
 ### Debug Log References
 
+No debug issues — documentation-only story, no code compilation or test execution required.
+
 ### Completion Notes List
 
+- Analyzed all 4 existing doc files (identities.md, audit-management.md, auth-engines.md, secret-engines.md) for structural patterns
+- Identified 5 key inconsistencies: mixed heading styles, missing field tables, no Vault CLI equivalents in gold standards, scattered credential resolution, mixed camelCase/snake_case
+- Created `docs/engine-doc-template.md` with all required sections in exact order per AC1
+- Template uses `{{placeholder}}` syntax, includes inline HTML comment instructions, and provides filled-in examples alongside each section
+- Field description tables use markdown format (Field | Type | Required | Description) with camelCase names (DNFR3)
+- All YAML examples use `apiVersion: redhatcop.redhat.io/v1alpha1` (DNFR2)
+- Vault CLI equivalent included after each CRD YAML example
+- Credential resolution section provides three methods (Kubernetes Secret, Vault Secret, RandomSecret) with examples
+- Links section references auth-section.md and contributing-vault-apis.md
+- Validated template covers all structural elements from gold standards plus adds three improvements (tables, CLI equivalents, credential resolution)
+- Confirmed DNFR1-DNFR3 compliance
+
 ### File List
+
+- docs/engine-doc-template.md (new)
