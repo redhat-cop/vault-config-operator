@@ -9,7 +9,7 @@ In this scenario, we explain how to use this operator to address the following r
 
 ## Install vault-config-operator
 
-see [here](./../readme.md##deploying-the-operator)
+see [here](./../readme.md#deploying-the-operator)
 
 ## Install namespace-config-operator
 

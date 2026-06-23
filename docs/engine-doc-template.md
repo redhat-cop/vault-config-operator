@@ -289,7 +289,7 @@ spec:
 
 ### Using a RandomSecret
 
-Specify the `{{credentialFieldPrefix}}FromRandomSecret` field. When the [RandomSecret](secret-management.md#RandomSecret) generates a new secret, this configuration will also be updated.
+Specify the `{{credentialFieldPrefix}}FromRandomSecret` field. When the [RandomSecret](secret-management.md#randomsecret) generates a new secret, this configuration will also be updated.
 
 ```yaml
 spec:

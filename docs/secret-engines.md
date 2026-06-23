@@ -16,8 +16,8 @@
   - [PKISecretEngineRole](#pkisecretenginerole)
   - [KubernetesSecretEngineConfig](#kubernetessecretengineconfig)
   - [KubernetesSecretEngineRole](#kubernetessecretenginerole)
-  - [AzureSecretEngineConfig] (#azuresecretengineconfig) 
-  - [AzureSecretEngineRole] (#azuresecretenginerole)
+  - [AzureSecretEngineConfig](#azuresecretengineconfig)
+  - [AzureSecretEngineRole](#azuresecretenginerole)
 
 
 ## SecretEngineMount
@@ -94,7 +94,7 @@ The password and possibly the username can be retrived a three different ways:
 
 1. From a Kubernetes secret, specifying the `rootCredentialsFromSecret` field. The secret must be of [basic auth type](https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret). If the secret is updated this connection will also be updated.
 2. From a Vault secret, specifying the `rootCredentialsFromVaultSecret` field.
-3. From a [RandomSecret](#RandomSecret), specifying the `rootCredentialsFromRandomSecret` field. When the RandomSecret generates a new secret, this connection will also be updated.
+3. From a [RandomSecret](secret-management.md#randomsecret), specifying the `rootCredentialsFromRandomSecret` field. When the RandomSecret generates a new secret, this connection will also be updated.
 
 The `passwordAuthentication` field, set to `scram-sha-256`, tells Vault to hash the password before sending it to PostgreSQL. This field is optional; if not specified, the default value is "password". When set to "password", passwords are sent to PostgreSQL in clear text and may appear as such in PostgreSQL logs.
 
@@ -283,7 +283,7 @@ The token can retrieved in three different ways:
 
 1. From a Kubernetes secret, specifying the `rootCredentialsFromSecret` field. The secret must be of [basic auth type](https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret). If the secret is updated this connection will also be updated.
 2. From a Vault secret, specifying the `rootCredentialsFromVaultSecret` field.
-3. From a [RandomSecret](#RandomSecret), specifying the `rootCredentialsFromRandomSecret` field. When the RandomSecret generates a new secret, this connection will also be updated.
+3. From a [RandomSecret](secret-management.md#randomsecret), specifying the `rootCredentialsFromRandomSecret` field. When the RandomSecret generates a new secret, this connection will also be updated.
 
 More parameters exists for their explanation and for how to install the vault-plugin-secrets-quay engine see [here](https://github.com/redhat-cop/vault-plugin-secrets-quay)
 
@@ -413,7 +413,7 @@ The password and possibly the username can be retrieved in three different ways:
 
 1. From a Kubernetes secret, specifying the `rootCredentialsFromSecret` field. The secret must be of [basic auth type](https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret). If the secret is updated this connection will also be updated.
 2. From a Vault secret, specifying the `rootCredentialsFromVaultSecret` field.
-3. From a [RandomSecret](#RandomSecret), specifying the `rootCredentialsFromRandomSecret` field. When the RandomSecret generates a new secret, this connection will also be updated.
+3. From a [RandomSecret](secret-management.md#randomsecret), specifying the `rootCredentialsFromRandomSecret` field. When the RandomSecret generates a new secret, this connection will also be updated.
 
 Additional options supported from [Vault Documentation](https://www.vaultproject.io/api-docs/secret/rabbitmq#configure-connection)
 
@@ -678,7 +678,7 @@ If the secret is updated this connection will also be updated.
     usernameKey: clientid
     passwordKey: clientsecret
 ```
-3. From a [RandomSecret](secret-management.md#RandomSecret), specifying the `azureCredentials` field as follows : 
+3. From a [RandomSecret](secret-management.md#randomsecret), specifying the `azureCredentials` field as follows : 
 ```yaml
   azureCredentials:
     randomSecret: 

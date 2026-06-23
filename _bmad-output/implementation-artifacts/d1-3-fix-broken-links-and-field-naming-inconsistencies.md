@@ -1,6 +1,6 @@
 # Story D1.3: Fix Broken Links and Field Naming Inconsistencies
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -18,77 +18,82 @@ So that the docs are accurate and navigable.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Fix broken TOC links in `docs/secret-engines.md` (AC: 1)
-  - [ ] 1.1: Line 19: `[AzureSecretEngineConfig] (#azuresecretengineconfig)` → `[AzureSecretEngineConfig](#azuresecretengineconfig)` (remove space before paren, remove trailing whitespace)
-  - [ ] 1.2: Line 20: `[AzureSecretEngineRole] (#azuresecretenginerole)` → `[AzureSecretEngineRole](#azuresecretenginerole)` (remove space before paren)
-- [ ] Task 2: Fix broken `#RandomSecret` cross-file references in `docs/secret-engines.md` (AC: 3)
-  - [ ] 2.1: Line 97: `[RandomSecret](#RandomSecret)` → `[RandomSecret](secret-management.md#randomsecret)` (wrong file + wrong case)
-  - [ ] 2.2: Line 286: `[RandomSecret](#RandomSecret)` → `[RandomSecret](secret-management.md#randomsecret)` (wrong file + wrong case)
-  - [ ] 2.3: Line 416: `[RandomSecret](#RandomSecret)` → `[RandomSecret](secret-management.md#randomsecret)` (wrong file + wrong case)
-  - [ ] 2.4: Line 681: `[RandomSecret](secret-management.md#RandomSecret)` → `[RandomSecret](secret-management.md#randomsecret)` (correct file, wrong anchor case)
-- [ ] Task 3: Fix broken `#RandomSecret` cross-file references in `docs/auth-engines.md` (AC: 3)
-  - [ ] 3.1: Line 159: `[RandomSecret](#RandomSecret)` → `[RandomSecret](secret-management.md#randomsecret)` (wrong file + wrong case)
-  - [ ] 3.2: Line 314: `[RandomSecret](secret-management.md#RandomSecret)` → `[RandomSecret](secret-management.md#randomsecret)` (correct file, wrong anchor case)
-  - [ ] 3.3: Line 671: `[RandomSecret](secret-management.md#RandomSecret)` → `[RandomSecret](secret-management.md#randomsecret)` (correct file, wrong anchor case)
-- [ ] Task 4: Fix broken reference link in `docs/secret-management.md` (AC: 3)
-  - [ ] 4.1: Line 10: `[Password Policy]` is a reference-style link with no definition → change to `[Password Policy](https://www.vaultproject.io/docs/concepts/password-policies)` or add a reference definition at the bottom of the file
-  - [ ] 4.2: Line 123: `[authentication](#the-authentication-section)` links to an anchor in the wrong file → change to `[authentication](auth-section.md#the-authentication-section)` (the heading exists in `auth-section.md`, not `secret-management.md`)
-- [ ] Task 5: Fix double-hash anchor in `docs/end-to-end-example.md` (AC: 3)
-  - [ ] 5.1: Line 12: `[here](./../readme.md##deploying-the-operator)` → `[here](./../readme.md#deploying-the-operator)` (remove duplicate `#`)
-- [ ] Task 6: Fix snake_case field names in GCPAuthEngineRole section of `docs/auth-engines.md` (AC: 2)
-  - [ ] 6.1: Line 546: `bound_service_accounts` → `boundServiceAccounts`
-  - [ ] 6.2: Line 548: `bound_projects` → `boundProjects`
-  - [ ] 6.3: Line 550: `add_group_aliases` → `addGroupAliases`
-  - [ ] 6.4: Line 552: `token_ttl` → `tokenTTL`
-  - [ ] 6.5: Line 554: `token_max_ttl` → `tokenMaxTTL`
-  - [ ] 6.6: Line 556: `token_policies` → `tokenPolicies`
-  - [ ] 6.7: Line 560: `token_bound_cidrs` → `tokenBoundCIDRs`
-  - [ ] 6.8: Line 562: `token_explicit_max_ttl` → `tokenExplicitMaxTTL`
-  - [ ] 6.9: Line 564: `token_no_default_policy` → `tokenNoDefaultPolicy`
-  - [ ] 6.10: Line 566: `token_num_uses` → `tokenNumUses`
-  - [ ] 6.11: Line 568: `token_period` → `tokenPeriod`
-  - [ ] 6.12: Line 570: `token_type` → `tokenType`
-  - [ ] 6.13: Line 574: `max_jwt_exp` → `maxJWTExp`
-  - [ ] 6.14: Line 576: `allow_gce_inference` → `allowGCEInference`
-  - [ ] 6.15: Line 580: `bound_zones` → `boundZones`
-  - [ ] 6.16: Line 582: `bound_regions` → `boundRegions`
-  - [ ] 6.17: Line 584: `bound_instance_groups` → `boundInstanceGroups`
-  - [ ] 6.18: Line 586: `bound_labels` → `boundLabels`
-- [ ] Task 7: Fix snake_case field names in AzureAuthEngineConfig section of `docs/auth-engines.md` (AC: 2)
-  - [ ] 7.1: Line 626: `tenant_id` → `tenantID`
-  - [ ] 7.2: Line 634: `client_id` → `clientID`
-  - [ ] 7.3: Line 636: `client_secret` → `azureCredentials` (the CRD uses `azureCredentials` of type `RootCredentialConfig`, not a bare `client_secret` string)
-  - [ ] 7.4: Line 638: `max_retries` → `maxRetries`
-  - [ ] 7.5: Line 640: `max_retry_delay` → `maxRetryDelay`
-  - [ ] 7.6: Line 642: `retry_delay` → `retryDelay`
-- [ ] Task 8: Fix snake_case field names in AzureAuthEngineRole section of `docs/auth-engines.md` (AC: 2)
-  - [ ] 8.1: Line 717: YAML example uses PascalCase `BoundResourceGroups:` → `boundResourceGroups:` (this is invalid YAML for the CRD)
-  - [ ] 8.2: Line 743: `bound_service_principal_ids` → `boundServicePrincipalIDs`
-  - [ ] 8.3: Line 745: `bound_group_ids` → `boundGroupIDs`
-  - [ ] 8.4: Line 747: `bound_locations` → `boundLocations`
-  - [ ] 8.5: Line 749: `bound_subscription_ids` → `boundSubscriptionIDs`
-  - [ ] 8.6: Line 751: `bound_resource_groups` → `boundResourceGroups`
-  - [ ] 8.7: Line 753: `bound_scale_sets` → `boundScaleSets`
-  - [ ] 8.8: Line 755: `token_ttl` → `tokenTTL`
-  - [ ] 8.9: Line 757: `token_max_ttl` → `tokenMaxTTL`
-  - [ ] 8.10: Line 759: `token_policies` → `tokenPolicies`
-  - [ ] 8.11: Line 763: `token_bound_cidrs` → `tokenBoundCIDRs`
-  - [ ] 8.12: Line 765: `token_explicit_max_ttl` → `tokenExplicitMaxTTL`
-  - [ ] 8.13: Line 767: `token_no_default_policy` → `tokenNoDefaultPolicy`
-  - [ ] 8.14: Line 769: `token_num_uses` → `tokenNumUses`
-  - [ ] 8.15: Line 771: `token_period` → `tokenPeriod`
-  - [ ] 8.16: Line 773: `token_type` → `tokenType`
-- [ ] Task 9: Fix leading-space code fences in `docs/auth-engines.md` (AC: 3)
-  - [ ] 9.1: Line 499: ` ```yaml` → ````yaml` (remove leading space)
-  - [ ] 9.2: Line 540: ` ``` ` → ` ``` ` (remove leading space and trailing space — closing fence in GCPAuthEngineRole YAML block)
-  - [ ] 9.3: Line 684: ` ```yaml` → ````yaml` (remove leading space — opening fence in AzureAuthEngineRole YAML block)
-  - [ ] 9.4: Line 739: ` ``` ` → ` ``` ` (remove leading space and trailing space — closing fence in AzureAuthEngineRole YAML block)
-- [ ] Task 10: Final audit pass (AC: 1, 2, 3)
-  - [ ] 10.1: Grep all doc files for `] (` pattern (space before paren in markdown links) — confirm zero remaining
-  - [ ] 10.2: Grep all doc files for `#RandomSecret` (mixed case) — confirm zero remaining
-  - [ ] 10.3: Grep all doc files for `##[a-z]` (double-hash anchors) — confirm zero remaining
-  - [ ] 10.4: Grep `auth-engines.md` for `_` in field description lines of GCP and Azure sections — confirm zero remaining snake_case field names
-  - [ ] 10.5: Spot-check 3-5 other engine doc sections for snake_case field descriptions (identify any NOT caught above)
+- [x] Task 1: Fix broken TOC links in `docs/secret-engines.md` (AC: 1)
+  - [x] 1.1: Line 19: `[AzureSecretEngineConfig] (#azuresecretengineconfig)` → `[AzureSecretEngineConfig](#azuresecretengineconfig)` (remove space before paren, remove trailing whitespace)
+  - [x] 1.2: Line 20: `[AzureSecretEngineRole] (#azuresecretenginerole)` → `[AzureSecretEngineRole](#azuresecretenginerole)` (remove space before paren)
+- [x] Task 2: Fix broken `#RandomSecret` cross-file references in `docs/secret-engines.md` (AC: 3)
+  - [x] 2.1: Line 97: `[RandomSecret](#RandomSecret)` → `[RandomSecret](secret-management.md#randomsecret)` (wrong file + wrong case)
+  - [x] 2.2: Line 286: `[RandomSecret](#RandomSecret)` → `[RandomSecret](secret-management.md#randomsecret)` (wrong file + wrong case)
+  - [x] 2.3: Line 416: `[RandomSecret](#RandomSecret)` → `[RandomSecret](secret-management.md#randomsecret)` (wrong file + wrong case)
+  - [x] 2.4: Line 681: `[RandomSecret](secret-management.md#RandomSecret)` → `[RandomSecret](secret-management.md#randomsecret)` (correct file, wrong anchor case)
+- [x] Task 3: Fix broken `#RandomSecret` cross-file references in `docs/auth-engines.md` (AC: 3)
+  - [x] 3.1: Line 159: `[RandomSecret](#RandomSecret)` → `[RandomSecret](secret-management.md#randomsecret)` (wrong file + wrong case)
+  - [x] 3.2: Line 314: `[RandomSecret](secret-management.md#RandomSecret)` → `[RandomSecret](secret-management.md#randomsecret)` (correct file, wrong anchor case)
+  - [x] 3.3: Line 671: `[RandomSecret](secret-management.md#RandomSecret)` → `[RandomSecret](secret-management.md#randomsecret)` (correct file, wrong anchor case)
+- [x] Task 4: Fix broken reference link in `docs/secret-management.md` (AC: 3)
+  - [x] 4.1: Line 10: `[Password Policy]` is a reference-style link with no definition → change to `[Password Policy](https://www.vaultproject.io/docs/concepts/password-policies)` or add a reference definition at the bottom of the file
+  - [x] 4.2: Line 123: `[authentication](#the-authentication-section)` links to an anchor in the wrong file → change to `[authentication](auth-section.md#the-authentication-section)` (the heading exists in `auth-section.md`, not `secret-management.md`)
+- [x] Task 5: Fix double-hash anchor in `docs/end-to-end-example.md` (AC: 3)
+  - [x] 5.1: Line 12: `[here](./../readme.md##deploying-the-operator)` → `[here](./../readme.md#deploying-the-operator)` (remove duplicate `#`)
+- [x] Task 6: Fix snake_case field names in GCPAuthEngineRole section of `docs/auth-engines.md` (AC: 2)
+  - [x] 6.1: Line 546: `bound_service_accounts` → `boundServiceAccounts`
+  - [x] 6.2: Line 548: `bound_projects` → `boundProjects`
+  - [x] 6.3: Line 550: `add_group_aliases` → `addGroupAliases`
+  - [x] 6.4: Line 552: `token_ttl` → `tokenTTL`
+  - [x] 6.5: Line 554: `token_max_ttl` → `tokenMaxTTL`
+  - [x] 6.6: Line 556: `token_policies` → `tokenPolicies`
+  - [x] 6.7: Line 560: `token_bound_cidrs` → `tokenBoundCIDRs`
+  - [x] 6.8: Line 562: `token_explicit_max_ttl` → `tokenExplicitMaxTTL`
+  - [x] 6.9: Line 564: `token_no_default_policy` → `tokenNoDefaultPolicy`
+  - [x] 6.10: Line 566: `token_num_uses` → `tokenNumUses`
+  - [x] 6.11: Line 568: `token_period` → `tokenPeriod`
+  - [x] 6.12: Line 570: `token_type` → `tokenType`
+  - [x] 6.13: Line 574: `max_jwt_exp` → `maxJWTExp`
+  - [x] 6.14: Line 576: `allow_gce_inference` → `allowGCEInference`
+  - [x] 6.15: Line 580: `bound_zones` → `boundZones`
+  - [x] 6.16: Line 582: `bound_regions` → `boundRegions`
+  - [x] 6.17: Line 584: `bound_instance_groups` → `boundInstanceGroups`
+  - [x] 6.18: Line 586: `bound_labels` → `boundLabels`
+- [x] Task 7: Fix snake_case field names in AzureAuthEngineConfig section of `docs/auth-engines.md` (AC: 2)
+  - [x] 7.1: Line 626: `tenant_id` → `tenantID`
+  - [x] 7.2: Line 634: `client_id` → `clientID`
+  - [x] 7.3: Line 636: `client_secret` → `azureCredentials` (the CRD uses `azureCredentials` of type `RootCredentialConfig`, not a bare `client_secret` string)
+  - [x] 7.4: Line 638: `max_retries` → `maxRetries`
+  - [x] 7.5: Line 640: `max_retry_delay` → `maxRetryDelay`
+  - [x] 7.6: Line 642: `retry_delay` → `retryDelay`
+- [x] Task 8: Fix snake_case field names in AzureAuthEngineRole section of `docs/auth-engines.md` (AC: 2)
+  - [x] 8.1: Line 717: YAML example uses PascalCase `BoundResourceGroups:` → `boundResourceGroups:` (this is invalid YAML for the CRD)
+  - [x] 8.2: Line 743: `bound_service_principal_ids` → `boundServicePrincipalIDs`
+  - [x] 8.3: Line 745: `bound_group_ids` → `boundGroupIDs`
+  - [x] 8.4: Line 747: `bound_locations` → `boundLocations`
+  - [x] 8.5: Line 749: `bound_subscription_ids` → `boundSubscriptionIDs`
+  - [x] 8.6: Line 751: `bound_resource_groups` → `boundResourceGroups`
+  - [x] 8.7: Line 753: `bound_scale_sets` → `boundScaleSets`
+  - [x] 8.8: Line 755: `token_ttl` → `tokenTTL`
+  - [x] 8.9: Line 757: `token_max_ttl` → `tokenMaxTTL`
+  - [x] 8.10: Line 759: `token_policies` → `tokenPolicies`
+  - [x] 8.11: Line 763: `token_bound_cidrs` → `tokenBoundCIDRs`
+  - [x] 8.12: Line 765: `token_explicit_max_ttl` → `tokenExplicitMaxTTL`
+  - [x] 8.13: Line 767: `token_no_default_policy` → `tokenNoDefaultPolicy`
+  - [x] 8.14: Line 769: `token_num_uses` → `tokenNumUses`
+  - [x] 8.15: Line 771: `token_period` → `tokenPeriod`
+  - [x] 8.16: Line 773: `token_type` → `tokenType`
+- [x] Task 9: Fix leading-space code fences in `docs/auth-engines.md` (AC: 3)
+  - [x] 9.1: Line 499: ` ```yaml` → ````yaml` (remove leading space)
+  - [x] 9.2: Line 540: ` ``` ` → ` ``` ` (remove leading space and trailing space — closing fence in GCPAuthEngineRole YAML block)
+  - [x] 9.3: Line 684: ` ```yaml` → ````yaml` (remove leading space — opening fence in AzureAuthEngineRole YAML block)
+  - [x] 9.4: Line 739: ` ``` ` → ` ``` ` (remove leading space and trailing space — closing fence in AzureAuthEngineRole YAML block)
+- [x] Task 10: Final audit pass (AC: 1, 2, 3)
+  - [x] 10.1: Grep all doc files for `] (` pattern (space before paren in markdown links) — confirm zero remaining
+  - [x] 10.2: Grep all doc files for `#RandomSecret` (mixed case) — confirm zero remaining
+  - [x] 10.3: Grep all doc files for `##[a-z]` (double-hash anchors) — confirm zero remaining
+  - [x] 10.4: Grep `auth-engines.md` for `_` in field description lines of GCP and Azure sections — confirm zero remaining snake_case field names
+  - [x] 10.5: Spot-check 3-5 other engine doc sections for snake_case field descriptions (identify any NOT caught above)
+
+### Review Findings
+
+- [x] [Review][Patch] Correct stale OIDC-specific prose under `azureCredentials` so the Azure auth config docs match the CRD’s `RootCredentialConfig` semantics. [docs/auth-engines.md:646] — fixed
+- [x] [Review][Patch] Finish the camelCase sweep in `auth-engines.md`; several JWT/OIDC and GCP descriptions still reference snake_case names like `token_ttl`, `jwks_url`, `bound_claims_type`, `iam_alias`, and `gce_alias`, which conflicts with the story’s “all field references” requirement. [docs/auth-engines.md:203] — fixed
 
 ## Dev Notes
 
@@ -267,10 +272,34 @@ D1.3 fixes quality issues in the CURRENT monolith doc files. When D2 splits `aut
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4 (claude-sonnet-4-20250514)
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Fixed 2 broken TOC links in `docs/secret-engines.md` (space before parenthesis)
+- Fixed 4 broken `#RandomSecret` cross-file references in `docs/secret-engines.md` (wrong file and/or wrong anchor case)
+- Fixed 3 broken `#RandomSecret` references in `docs/auth-engines.md` (wrong file and/or wrong anchor case)
+- Fixed 1 broken `#RandomSecret` reference in `docs/engine-doc-template.md` (wrong anchor case, discovered in audit)
+- Fixed broken `[Password Policy]` reference-style link in `docs/secret-management.md` (converted to inline link)
+- Fixed broken `[authentication](#the-authentication-section)` cross-file link in `docs/secret-management.md` (pointed to correct file `auth-section.md`)
+- Fixed double-hash anchor `##deploying-the-operator` in `docs/end-to-end-example.md`
+- Fixed 18 snake_case→camelCase field names in GCPAuthEngineRole section of `docs/auth-engines.md`
+- Fixed 6 snake_case→camelCase field names in AzureAuthEngineConfig section (including `client_secret`→`azureCredentials`)
+- Fixed PascalCase `BoundResourceGroups:` → `boundResourceGroups:` in AzureAuthEngineRole YAML example
+- Fixed 16 snake_case→camelCase field names in AzureAuthEngineRole section of `docs/auth-engines.md`
+- Fixed 4 leading-space code fences in `docs/auth-engines.md` (GCPAuthEngineRole and AzureAuthEngineRole blocks)
+- Final audit confirmed zero remaining broken patterns across all doc files
+
+### Change Log
+
+- 2026-06-23: Implemented story D1.3 — fixed all broken links, field naming inconsistencies, and code fence formatting issues across documentation files
+
 ### File List
+
+- docs/secret-engines.md (modified)
+- docs/auth-engines.md (modified)
+- docs/secret-management.md (modified)
+- docs/end-to-end-example.md (modified)
+- docs/engine-doc-template.md (modified)
