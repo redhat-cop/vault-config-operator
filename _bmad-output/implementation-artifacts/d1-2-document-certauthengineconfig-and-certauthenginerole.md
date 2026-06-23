@@ -1,6 +1,6 @@
 # Story D1.2: Document CertAuthEngineConfig and CertAuthEngineRole
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -21,22 +21,28 @@ So that I can discover and use the TLS certificate authentication method that th
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `docs/auth-engines/` directory (AC: 2)
-  - [ ] 1.1: `mkdir -p docs/auth-engines`
-- [ ] Task 2: Create `docs/auth-engines/cert.md` following the D1.1 template (AC: 1)
-  - [ ] 2.1: Write Title section with link to Vault TLS cert auth docs
-  - [ ] 2.2: Write Overview paragraph describing the TLS cert auth method
-  - [ ] 2.3: Write CertAuthEngineConfig section — description, full YAML example, Vault CLI equivalent, field descriptions table
-  - [ ] 2.4: Write CertAuthEngineRole section — description, full YAML example, Vault CLI equivalent, field descriptions table
-  - [ ] 2.5: Write Credential Resolution section with certificate/key reference examples (Kubernetes Secret, Vault Secret, RandomSecret)
-  - [ ] 2.6: Write See Also links section
-- [ ] Task 3: Add CertAuth entry to the `docs/auth-engines.md` TOC (AC: 2)
-  - [ ] 3.1: Add `[CertAuthEngineConfig](#certauthengineconfig)` and `[CertAuthEngineRole](#certauthenginerole)` entries to the TOC
-  - [ ] 3.2: Add a short CertAuth section at the end of `docs/auth-engines.md` pointing to `auth-engines/cert.md`
-- [ ] Task 4: Validate (AC: 1, 2)
-  - [ ] 4.1: Verify all internal links resolve
-  - [ ] 4.2: Verify YAML examples use `apiVersion: redhatcop.redhat.io/v1alpha1`
-  - [ ] 4.3: Verify all field names are camelCase (matching CRD json tags)
+- [x] Task 1: Create `docs/auth-engines/` directory (AC: 2)
+  - [x] 1.1: `mkdir -p docs/auth-engines`
+- [x] Task 2: Create `docs/auth-engines/cert.md` following the D1.1 template (AC: 1)
+  - [x] 2.1: Write Title section with link to Vault TLS cert auth docs
+  - [x] 2.2: Write Overview paragraph describing the TLS cert auth method
+  - [x] 2.3: Write CertAuthEngineConfig section — description, full YAML example, Vault CLI equivalent, field descriptions table
+  - [x] 2.4: Write CertAuthEngineRole section — description, full YAML example, Vault CLI equivalent, field descriptions table
+  - [x] 2.5: Write Credential Resolution section with certificate/key reference examples (Kubernetes Secret, Vault Secret, RandomSecret)
+  - [x] 2.6: Write See Also links section
+- [x] Task 3: Add CertAuth entry to the `docs/auth-engines.md` TOC (AC: 2)
+  - [x] 3.1: Add `[CertAuthEngineConfig](#certauthengineconfig)` and `[CertAuthEngineRole](#certauthenginerole)` entries to the TOC
+  - [x] 3.2: Add a short CertAuth section at the end of `docs/auth-engines.md` pointing to `auth-engines/cert.md`
+- [x] Task 4: Validate (AC: 1, 2)
+  - [x] 4.1: Verify all internal links resolve
+  - [x] 4.2: Verify YAML examples use `apiVersion: redhatcop.redhat.io/v1alpha1`
+  - [x] 4.3: Verify all field names are camelCase (matching CRD json tags)
+
+### Review Findings
+
+- [x] [Review][Patch] Document the correct `CertAuthEngineConfig` Vault path and CLI shape [`docs/auth-engines/cert.md:36`]
+- [x] [Review][Patch] Replace the misleading Kubernetes Secret `stringData` reference in credential resolution [`docs/auth-engines/cert.md:150`]
+- [x] [Review][Patch] Avoid the empty `CertAuthEngineConfig` section in the auth engines index page [`docs/auth-engines.md:777`]
 
 ## Dev Notes
 
@@ -273,10 +279,30 @@ For now, this story:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+None — documentation-only story with no code changes or test runs.
+
 ### Completion Notes List
 
+- Created `docs/auth-engines/cert.md` following the D1.1 template structure with all required sections
+- CertAuthEngineConfig section includes: description with Vault API link, full YAML example, Vault CLI equivalent, field descriptions table (8 fields including path, authentication, connection, name, disableBinding, enableIdentityAliasMetadata, ocspCacheSize, roleCacheSize)
+- CertAuthEngineRole section includes: description with Vault API link, full YAML example, Vault CLI equivalent, field descriptions table (28 fields covering certificate matching, OCSP validation, and token parameters)
+- Credential Resolution section explains the simpler inline PEM pattern (no credentialSecret/vaultSecretRef pattern for CertAuth)
+- See Also section links to auth-section.md, contributing-vault-apis.md, and Vault external docs
+- Added CertAuth TOC entries and cross-reference section to docs/auth-engines.md
+- All field names verified as camelCase matching Go struct json tags
+- All YAML examples use apiVersion: redhatcop.redhat.io/v1alpha1
+- All internal links verified to resolve correctly from the docs/auth-engines/ subdirectory
+
+### Change Log
+
+- 2026-06-23: Created docs/auth-engines/cert.md and updated docs/auth-engines.md TOC (Story D1.2)
+- 2026-06-23: Code review — fixed CertAuthEngineConfig Vault path (added `{name}` segment), clarified credential resolution wording, demoted CertAuthEngineRole to `###` in index page
+
 ### File List
+
+- docs/auth-engines/cert.md (new)
+- docs/auth-engines.md (modified — TOC and CertAuth cross-reference section added)

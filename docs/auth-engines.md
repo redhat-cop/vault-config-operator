@@ -12,6 +12,8 @@
     - [GCPAuthEngineRole](#gcpauthenginerole)
   - [AzureAuthEngineConfig](#azureauthengineconfig)
     - [AzureAuthEngineRole](#azureauthenginerole)
+  - [CertAuthEngineConfig](#certauthengineconfig)
+    - [CertAuthEngineRole](#certauthenginerole)
 
 ## AuthEngineMount
 
@@ -771,4 +773,10 @@ spec:
   The `token_period` field - The maximum allowed period value when a periodic token is requested from this role.
   
   The `token_type` field - The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens). For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time. For machine based authentication cases, you should use batch type tokens.
+
+## CertAuthEngineConfig
+
+### CertAuthEngineRole
+
+The `CertAuthEngineConfig` and `CertAuthEngineRole` CRDs allow you to configure a [TLS Certificate auth engine](https://developer.hashicorp.com/vault/docs/auth/cert). For full documentation including YAML examples, field descriptions, and Vault CLI equivalents, see [TLS Certificate Auth Engine](auth-engines/cert.md).
 
