@@ -22,7 +22,7 @@ ENVTEST_K8S_VERSION ?= 1.29.0
 
 CONTROLLER_TOOLS_VERSION ?= v0.14.0
 ENVTEST_VERSION ?= release-0.19
-GOLANGCI_LINT_VERSION ?= v1.59.1
+GOLANGCI_LINT_VERSION ?= v1.64.8
 
 # VERSION defines the project version for the bundle.
 # Update this value when you upgrade the version of your project.
