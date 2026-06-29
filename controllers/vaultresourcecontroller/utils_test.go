@@ -120,145 +120,73 @@ func TestIsDriftDetectionEnabled(t *testing.T) {
 }
 
 func TestPeriodicReconcilePredicate_Update(t *testing.T) {
-	origSyncPeriod := SyncPeriod
-	SetSyncPeriod(5 * time.Minute)
-	defer SetSyncPeriod(origSyncPeriod)
-
 	predicate := NewPeriodicReconcilePredicate(5 * time.Minute)
 
 	tests := []struct {
-		name                  string
-		oldGeneration         int64
-		newGeneration         int64
-		conditions            []metav1.Condition
-		driftDetectionEnabled bool
-		expectedResult        bool
-		description           string
+		name           string
+		oldGeneration  int64
+		newGeneration  int64
+		expectedResult bool
 	}{
 		{
-			name:                  "Should reconcile when generation changes regardless of drift detection setting",
-			oldGeneration:         1,
-			newGeneration:         2,
-			conditions:            []metav1.Condition{},
-			driftDetectionEnabled: false,
-			expectedResult:        true,
-			description:           "Generation change should always trigger reconcile",
+			name:           "Should reconcile when generation changes",
+			oldGeneration:  1,
+			newGeneration:  2,
+			expectedResult: true,
 		},
 		{
-			name:          "Should reconcile when interval has elapsed and drift detection is enabled",
-			oldGeneration: 1,
-			newGeneration: 1,
-			conditions: []metav1.Condition{
-				{
-					Type:               ReconcileSuccessful,
-					Status:             metav1.ConditionTrue,
-					LastTransitionTime: metav1.NewTime(time.Now().Add(-10 * time.Minute)), // 10 minutes ago
-				},
-			},
-			driftDetectionEnabled: true,
-			expectedResult:        true,
-			description:           "Should reconcile when enough time has passed and drift detection is enabled",
+			name:           "Should not reconcile when generation is unchanged",
+			oldGeneration:  1,
+			newGeneration:  1,
+			expectedResult: false,
 		},
 		{
-			name:          "Should not reconcile when interval has elapsed but drift detection is disabled",
-			oldGeneration: 1,
-			newGeneration: 1,
-			conditions: []metav1.Condition{
-				{
-					Type:               ReconcileSuccessful,
-					Status:             metav1.ConditionTrue,
-					LastTransitionTime: metav1.NewTime(time.Now().Add(-10 * time.Minute)), // 10 minutes ago
-				},
-			},
-			driftDetectionEnabled: false,
-			expectedResult:        false,
-			description:           "Should not reconcile when drift detection is disabled even if time has elapsed",
+			name:           "Should handle nil ObjectOld",
+			oldGeneration:  0,
+			newGeneration:  1,
+			expectedResult: false,
 		},
 		{
-			name:          "Should not reconcile when interval has not elapsed",
-			oldGeneration: 1,
-			newGeneration: 1,
-			conditions: []metav1.Condition{
-				{
-					Type:               ReconcileSuccessful,
-					Status:             metav1.ConditionTrue,
-					LastTransitionTime: metav1.NewTime(time.Now().Add(-2 * time.Minute)), // 2 minutes ago
-				},
-			},
-			driftDetectionEnabled: true,
-			expectedResult:        false,
-			description:           "Should not reconcile when not enough time has passed",
-		},
-		{
-			name:          "Should not reconcile when last reconcile failed",
-			oldGeneration: 1,
-			newGeneration: 1,
-			conditions: []metav1.Condition{
-				{
-					Type:               ReconcileFailed,
-					Status:             metav1.ConditionFalse,
-					LastTransitionTime: metav1.NewTime(time.Now().Add(-10 * time.Minute)),
-				},
-			},
-			driftDetectionEnabled: true,
-			expectedResult:        false,
-			description:           "Should not reconcile based on time when last reconcile failed",
-		},
-		{
-			name:                  "Should not reconcile when no conditions exist and drift detection is enabled",
-			oldGeneration:         1,
-			newGeneration:         1,
-			conditions:            []metav1.Condition{},
-			driftDetectionEnabled: true,
-			expectedResult:        false,
-			description:           "Should not reconcile when no conditions exist",
+			name:           "Should handle nil ObjectNew",
+			oldGeneration:  1,
+			newGeneration:  0,
+			expectedResult: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Set up drift detection environment
-			if tt.driftDetectionEnabled {
-				os.Setenv("ENABLE_DRIFT_DETECTION", "true")
+			var updateEvent event.UpdateEvent
+
+			if tt.name == "Should handle nil ObjectOld" {
+				updateEvent = event.UpdateEvent{
+					ObjectOld: nil,
+					ObjectNew: &MockConditionsAware{
+						ObjectMeta: metav1.ObjectMeta{Generation: tt.newGeneration},
+					},
+				}
+			} else if tt.name == "Should handle nil ObjectNew" {
+				updateEvent = event.UpdateEvent{
+					ObjectOld: &MockConditionsAware{
+						ObjectMeta: metav1.ObjectMeta{Generation: tt.oldGeneration},
+					},
+					ObjectNew: nil,
+				}
 			} else {
-				os.Unsetenv("ENABLE_DRIFT_DETECTION")
-			}
-			defer os.Unsetenv("ENABLE_DRIFT_DETECTION")
-
-			// Create mock objects
-			oldObj := &MockConditionsAware{
-				ObjectMeta: metav1.ObjectMeta{
-					Generation: tt.oldGeneration,
-				},
-			}
-			newObj := &MockConditionsAware{
-				ObjectMeta: metav1.ObjectMeta{
-					Generation: tt.newGeneration,
-				},
+				updateEvent = event.UpdateEvent{
+					ObjectOld: &MockConditionsAware{
+						ObjectMeta: metav1.ObjectMeta{Generation: tt.oldGeneration},
+					},
+					ObjectNew: &MockConditionsAware{
+						ObjectMeta: metav1.ObjectMeta{Generation: tt.newGeneration},
+					},
+				}
 			}
 
-			// Set up mock expectations for GetConditions only when needed
-			// GetConditions is only called when:
-			// 1. Generation hasn't changed AND
-			// 2. Drift detection is enabled
-			if tt.oldGeneration == tt.newGeneration && tt.driftDetectionEnabled {
-				newObj.On("GetConditions").Return(tt.conditions)
-			}
-
-			// Create update event
-			updateEvent := event.UpdateEvent{
-				ObjectOld: oldObj,
-				ObjectNew: newObj,
-			}
-
-			// Test the predicate
 			result := predicate.Update(updateEvent)
 			if result != tt.expectedResult {
-				t.Errorf("%s: expected %v, got %v", tt.description, tt.expectedResult, result)
+				t.Errorf("%s: expected %v, got %v", tt.name, tt.expectedResult, result)
 			}
-
-			// Assert that all expectations were met
-			newObj.AssertExpectations(t)
 		})
 	}
 }

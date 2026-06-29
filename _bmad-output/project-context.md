@@ -33,7 +33,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 ### Build & Dev Tooling
 - controller-gen v0.14.0 (CRD/RBAC generation)
 - kustomize v5.4.3, Helm v3.11.0
-- golangci-lint v1.59.1 (no committed config — uses defaults or shared workflow config)
+- golangci-lint v1.64.8 (no committed config — uses defaults or shared workflow config)
 - Kind v0.27.0, kubectl v1.29.0, Vault 1.19.0 (integration testing)
 - Container: golang:1.22 builder → registry.access.redhat.com/ubi9/ubi-minimal runtime
 - CI: GitHub Actions via reusable workflows from redhat-cop/github-workflows-operators
@@ -51,6 +51,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
   - `//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-<lowercase>,mutating=true,...`
   - `//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-<lowercase>,mutating=false,...`
 - **Critical rule:** `ValidateUpdate` must **always** reject changes to `spec.path` — immutable after creation: `errors.New("spec.path cannot be updated")`
+- **Credential validation:** Types with `RootCredentialConfig` fields (e.g., LDAP, Database, Azure, Quay, Kubernetes Secret Engine) must call `credentials.ValidateCredentialSource()` in `ValidateCreate`/`ValidateUpdate` — this ensures exactly one of `secret`, `vaultSecret`, or `randomSecret` is set (mutual exclusivity).
 - Types with mount semantics (engines) may additionally restrict updates to only the config sub-struct.
 - Webhook must be registered in `main.go` inside the `ENABLE_WEBHOOKS` env-var guard block.
 
@@ -67,7 +68,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - The framework (`ManageOutcome`) handles setting `ReconcileSuccessful`/`ReconcileFailed` conditions automatically; controllers must **not** set conditions directly.
 
 #### Imperative-to-Declarative Bridge: `toMap()` and `IsEquivalentToDesiredState()`
-- `toMap()` is defined on the inline Vault-specific config struct (e.g., `DBSEConfig`, `AuthMount`) and converts CRD spec fields to a `map[string]interface{}` matching the Vault API's JSON field names (snake_case).
+- `toMap()` is defined on the inline Vault-specific config struct (e.g., `DBSEConfig`, `AuthMount`) and converts CRD spec fields to a `map[string]any` matching the Vault API's JSON field names (snake_case).
 - `GetPayload()` calls `d.Spec.toMap()` to produce the map sent to Vault on write.
 - `IsEquivalentToDesiredState(payload)` compares the current Vault state (read response) against the desired state (from `toMap()`) using `reflect.DeepEqual`. This is the core declarative reconciliation check — if equivalent, no write is issued.
 - **Critical nuance:** Vault often returns extra fields not sent by the operator, or restructures fields (e.g., DB config moves `connection_url`/`username` into a `connection_details` sub-map). `IsEquivalentToDesiredState` must account for these transformations — filter payload to only managed keys, remap fields as Vault returns them.
@@ -97,14 +98,14 @@ _This file contains critical rules and patterns that AI agents must follow when 
 #### Controller Structure
 - Every controller embeds `vaultresourcecontroller.ReconcilerBase` (not a pointer).
 - Controller registration in `main.go` always uses: `&controllers.MyTypeReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "MyType")}`.
-- `SetupWithManager` uses `builder.WithPredicates(vaultresourcecontroller.NewDefaultPeriodicReconcilePredicate())` on the `For()` call to enable generation-based + optional drift detection filtering.
+- `SetupWithManager` uses `builder.WithPredicates(vaultresourcecontroller.NewDefaultPeriodicReconcilePredicate())` on the `For()` call to enable generation-based filtering. The predicate is generation-only — it reconciles when `spec` changes (generation increment) and ignores metadata-only updates. Drift detection is handled separately by `RequeueAfter` (see Reconcile Flow below).
 
 #### Reconcile Flow (Standard Types)
 1. Fetch instance via `r.GetClient().Get(ctx, req.NamespacedName, instance)`.
 2. If `apierrors.IsNotFound` → return `reconcile.Result{}, nil`.
 3. Call `prepareContext(ctx, r.ReconcilerBase, instance)` to build enriched context.
-4. Create `vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)` (or `NewVaultEngineResource` for mount types).
-5. Delegate to `vaultResource.Reconcile(ctx1, instance)`.
+4. Delegate to `vaultresourcecontroller.ReconcileWithFunctions(ctx, r.ReconcilerBase, instance, ...)` — the shared skeleton handles finalizer management, deletion cleanup, create/update via `VaultResource`/`VaultEngineResource`, and `ManageOutcome`.
+5. `ManageOutcome` returns `Result{RequeueAfter: SyncPeriod}` when drift detection is enabled and reconcile succeeds — the controller-runtime work queue schedules the next drift-detection reconcile automatically. No predicate involvement for drift detection.
 
 #### Three Reconciler Variants
 - **`VaultResource`** — standard types (policies, roles, configs). Uses `CreateOrUpdate` which reads from Vault, calls `IsEquivalentToDesiredState`, writes only if different.
@@ -112,9 +113,15 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **`VaultAuditResource`** — audit types. Separate reconciler for audit device lifecycle.
 
 #### Finalizer Management
-- Finalizers are managed automatically by `ManageOutcome` — added on first successful reconcile if `IsDeletable()` returns true.
+- Finalizers are managed automatically by `ReconcileWithFunctions` / `ManageOutcome` — added on first successful reconcile if `IsDeletable()` returns true.
 - Finalizer name is derived from the object via `vaultutils.GetFinalizer(obj)`.
 - On deletion: the framework checks for `ReconcileSuccessful` condition before deleting from Vault (only clean up if it was ever successfully created).
+
+#### ReconcileWithFunctions Shared Skeleton
+- `ReconcileWithFunctions` in `controllers/vaultresourcecontroller/reconcile_skeleton.go` is the shared reconcile skeleton used by all standard reconciler types.
+- It encapsulates: deletion/finalizer management, create-or-update via Vault resource, and `ManageOutcome` for condition management and requeue.
+- Controllers pass type-specific functions (create, update, delete) and the skeleton handles the common lifecycle flow.
+- `ManageOutcome` returns `Result{RequeueAfter: SyncPeriod}` when drift detection is enabled and reconcile succeeds — enabling automatic periodic drift checks via the controller-runtime work queue.
 
 #### Kubebuilder RBAC Markers
 - Every controller must declare RBAC markers for its resource (get/list/watch/create/update/patch/delete), status subresource, and finalizers.
@@ -151,8 +158,8 @@ This rule applies to all current and future integration tests. When adding a new
 - Test fixtures are YAML files in `test/` directory.
 - **Fixture creation** uses `decoder.CreateFromYAML(ctx, client, "../test/<path>.yaml", namespace)` which decodes YAML into an `unstructured.Unstructured` object (preserving only YAML-present fields) and creates it via the API server. This allows CRD server-side defaulting to apply for absent fields. The method returns the object name.
 - **Typed references** after creation are obtained via a subsequent `client.Get` into a typed struct (e.g., `&redhatcopv1alpha1.KubernetesAuthEngineRole{}`). The typed object will have server-applied defaults populated.
-- **Exception:** when a test must override `metadata.name` before creation (e.g., the drift-detection "disabled" test reuses a fixture with a different name), the old typed pattern (`decoder.Get<TypeName>Instance` + mutate + typed `Create`) is acceptable.
-- The typed `Get<TypeName>Instance` decoder methods still exist and are used for delete operations and for the exception case above.
+- **Generic decoder:** `controllertestutils.DecodeInstance[T](path, namespace)` is the single generic method for loading typed instances from YAML fixtures. It replaced 34 per-type `Get<Type>Instance` methods (removed in R1.4). Adding a new CRD type no longer requires a new decoder method.
+- **Exception:** when a test must override `metadata.name` before creation (e.g., the drift-detection "disabled" test reuses a fixture with a different name), use `DecodeInstance[T]` + mutate + typed `Create`.
 - Reconcile success is verified by polling the CR status for `ReconcileSuccessful` condition with `Eventually(func() bool {...}, timeout, interval).Should(BeTrue())`.
 - Standard timeout: `120s`, poll interval: `2s`.
 - Tests create the resource, wait for successful reconcile, then delete and wait for deletion.
@@ -182,7 +189,7 @@ This rule applies to all current and future integration tests. When adding a new
 - These negative cases are the highest-value tests — they prove the custom logic is actually exercised, not just that `reflect.DeepEqual` works.
 
 #### Adding Tests for New Types
-- Add a `Get<NewType>Instance` method to `controllers/controllertestutils/decoder.go`.
+- Use `controllertestutils.DecodeInstance[T]` (generic) — no new decoder methods needed.
 - Create YAML fixtures in `test/<feature>/` directory.
 - Write integration test in `controllers/<newtype>_controller_test.go` with `//go:build integration` tag.
 
@@ -227,7 +234,7 @@ These rules govern the interaction between `kubebuilder:default`, `omitempty`, a
 
 #### Code Quality Gates
 - CI runs `go fmt`, `go vet`, and `make test` (envtest-based unit tests). No golangci-lint in CI.
-- golangci-lint v1.59.1 is available locally via `make golangci-lint` but has no committed config (`.golangci.yml`) and is not wired into `make test` or the CI workflow.
+- golangci-lint v1.64.8 is available locally via `make golangci-lint` but has no committed config (`.golangci.yml`) and is not wired into `make test` or the CI workflow.
 - Effective quality enforcement: `go fmt` formatting + `go vet` static analysis only.
 
 ### Development Workflow Rules
@@ -252,7 +259,7 @@ These rules govern the interaction between `kubebuilder:default`, `omitempty`, a
 - **Tiltfile** for live-reload development: uses `podman` build with `ci.Dockerfile`, deploys via kustomize `config/local-development/tilt`.
 - `ENABLE_WEBHOOKS=false` env var disables webhook registration for local testing without cert-manager.
 - `SYNC_PERIOD_SECONDS` env var controls cache sync interval (default: 36000s / 10hrs).
-- `ENABLE_DRIFT_DETECTION=true` env var enables periodic reconciliation for drift detection.
+- `ENABLE_DRIFT_DETECTION=true` env var enables periodic reconciliation for drift detection. When enabled, `ManageOutcome` returns `RequeueAfter: SyncPeriod` causing the controller-runtime work queue to schedule automatic periodic reconciles.
 
 #### Adding a New Vault API Type (Full Checklist)
 1. `operator-sdk create api --group redhatcop --version v1alpha1 --kind MyType --resource --controller`
@@ -276,8 +283,8 @@ These rules govern the interaction between `kubebuilder:default`, `omitempty`, a
 
 #### Vault API Gotchas
 - Vault's read response often restructures fields compared to the write payload (e.g., `connection_url` becomes nested in `connection_details`). `IsEquivalentToDesiredState` must transform the desired state to match Vault's read format before comparison.
-- Vault returns extra fields not managed by the operator. Filter the read payload to only the keys the operator manages before calling `reflect.DeepEqual`.
-- Vault returns `[]interface{}` for lists, not `[]string`. The `toInterfaceArray()` helper converts `[]string` to `[]interface{}` for accurate comparison.
+- Vault returns extra fields not managed by the operator. The `filterPayloadToDesiredKeys` helper filters the Vault read response to only the keys present in the desired state map — any Vault-returned key not in `desiredState` is excluded before `reflect.DeepEqual`. This prevents false drift from unmanaged fields.
+- Vault returns `[]any` for lists, not `[]string`. The `toInterfaceArray()` helper converts `[]string` to `[]any` for accurate comparison.
 - Engine mounts (auth/secret) compare only the **tune config**, not the full mount spec, because Vault's tune endpoint returns a different payload structure than the enable endpoint.
 
 #### Code Generation Pitfalls
@@ -308,4 +315,4 @@ These rules govern the interaction between `kubebuilder:default`, `omitempty`, a
 - Review quarterly for outdated rules
 - Remove rules that become obvious over time
 
-Last Updated: 2026-04-23
+Last Updated: 2026-06-28
