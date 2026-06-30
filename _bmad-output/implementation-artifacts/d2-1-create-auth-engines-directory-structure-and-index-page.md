@@ -1,6 +1,6 @@
 # Story D2.1: Create Auth-Engines Directory Structure and Index Page
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -20,10 +20,10 @@ So that I can quickly navigate to the engine I need.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `docs/auth-engines/index.md` (AC: 1)
-  - [ ] 1.1: Write the page title and overview paragraph describing auth engine support in the operator (2-3 sentences, explain that each engine has a Config CRD and a Role/Group CRD)
-  - [ ] 1.2: Include the AuthEngineMount section — copy verbatim from `auth-engines.md` lines 18-37 (the `## AuthEngineMount` heading, YAML example, `type` and `path` field descriptions). This is the generic mount and belongs in the index, not in a per-engine file
-  - [ ] 1.3: Create a markdown table listing all supported auth engines with columns: Engine | Config CRD | Role/Group CRD | File. Link each file to its future per-engine file path (relative links). Use these entries:
+- [x] Task 1: Create `docs/auth-engines/index.md` (AC: 1)
+  - [x] 1.1: Write the page title and overview paragraph describing auth engine support in the operator (2-3 sentences, explain that each engine has a Config CRD and a Role/Group CRD)
+  - [x] 1.2: Include the AuthEngineMount section — copy verbatim from `auth-engines.md` lines 18-37 (the `## AuthEngineMount` heading, YAML example, `type` and `path` field descriptions). This is the generic mount and belongs in the index, not in a per-engine file
+  - [x] 1.3: Create a markdown table listing all supported auth engines with columns: Engine | Config CRD | Role/Group CRD | File. Link each file to its future per-engine file path (relative links). Use these entries:
 
     | Engine | Config CRD | Role/Group CRD | File |
     |--------|-----------|----------------|------|
@@ -34,23 +34,23 @@ So that I can quickly navigate to the engine I need.
     | Azure | AzureAuthEngineConfig | AzureAuthEngineRole | [azure.md](azure.md) |
     | TLS Certificate | CertAuthEngineConfig | CertAuthEngineRole | [cert.md](cert.md) |
 
-  - [ ] 1.4: Add a "Common Configuration" section with a link to `../auth-section.md` for the shared `authentication` block and a link to `../contributing-vault-apis.md` for the shared `connection` block
-  - [ ] 1.5: Add a "See Also" section with links to the main README, contributing guide, and secret engines index (future `../secret-engines/index.md` — use a comment noting this will be created in D3)
+  - [x] 1.4: Add a "Common Configuration" section with a link to `../auth-section.md` for the shared `authentication` block and a link to `../contributing-vault-apis.md` for the shared `connection` block
+  - [x] 1.5: Add a "See Also" section with links to the main README, contributing guide, and secret engines index (future `../secret-engines/index.md` — use a comment noting this will be created in D3)
 
-- [ ] Task 2: Replace `docs/auth-engines.md` with a redirect pointer (AC: 2)
-  - [ ] 2.1: Replace the contents of `docs/auth-engines.md` with a short document that:
+- [x] Task 2: Replace `docs/auth-engines.md` with a redirect pointer (AC: 2)
+  - [x] 2.1: Replace the contents of `docs/auth-engines.md` with a short document that:
     - States the auth engine documentation has moved to `docs/auth-engines/`
     - Links to `auth-engines/index.md` as the new location
     - Preserves the original page title for any external bookmarks
-  - [ ] 2.2: Keep the file small (under 15 lines) — it is just a pointer
+  - [x] 2.2: Keep the file small (under 15 lines) — it is just a pointer
 
-- [ ] Task 3: Update `docs/auth-engines/cert.md` relative links (AC: 1)
-  - [ ] 3.1: Verify that `cert.md`'s relative links (`../auth-section.md`, `../contributing-vault-apis.md`) still resolve correctly from `docs/auth-engines/` — they should, since cert.md was created in D1.2 under this directory already
-  - [ ] 3.2: If any links are broken, fix them
+- [x] Task 3: Update `docs/auth-engines/cert.md` relative links (AC: 1)
+  - [x] 3.1: Verify that `cert.md`'s relative links (`../auth-section.md`, `../contributing-vault-apis.md`) still resolve correctly from `docs/auth-engines/` — they should, since cert.md was created in D1.2 under this directory already
+  - [x] 3.2: If any links are broken, fix them
 
-- [ ] Task 4: Verify cross-references (AC: 1, 2)
-  - [ ] 4.1: Check if any other doc files (`secret-management.md`, `end-to-end-example.md`, `secret-engines.md`, `contributing-vault-apis.md`) link to `auth-engines.md` sections (e.g., `auth-engines.md#kubernetesauthengineconfig`) — if so, they will need updating in D2.2-D2.5 when the content actually moves
-  - [ ] 4.2: Document any found cross-references in the Dev Agent Record for downstream stories
+- [x] Task 4: Verify cross-references (AC: 1, 2)
+  - [x] 4.1: Check if any other doc files (`secret-management.md`, `end-to-end-example.md`, `secret-engines.md`, `contributing-vault-apis.md`) link to `auth-engines.md` sections (e.g., `auth-engines.md#kubernetesauthengineconfig`) — if so, they will need updating in D2.2-D2.5 when the content actually moves
+  - [x] 4.2: Document any found cross-references in the Dev Agent Record for downstream stories
 
 ## Dev Notes
 
@@ -159,10 +159,39 @@ docs/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (claude-4.6-opus)
 
 ### Debug Log References
 
+- Integration tests failed during pre-flight (Vault Helm chart timed out in Kind cluster — infrastructure issue, not code). User approved proceeding since this is a documentation-only story with no Go code changes.
+
 ### Completion Notes List
 
+- **Task 1 (index.md):** Created `docs/auth-engines/index.md` with overview paragraph, AuthEngineMount section (copied verbatim from original), supported engines table with relative links to per-engine files, Common Configuration section linking to `../auth-section.md` and `../contributing-vault-apis.md`, and See Also section with README and contributing links. Secret engines index link deferred to D3 via HTML comment.
+- **Task 2 (redirect):** Replaced `docs/auth-engines.md` contents with a 5-line redirect pointer preserving the original page title ("Authentication Engines APIs") and linking to `auth-engines/index.md`.
+- **Task 3 (cert.md links):** Verified all relative links in `cert.md` resolve correctly — `../auth-section.md` and `../contributing-vault-apis.md` both exist at the expected paths. No fixes needed.
+- **Task 4 (cross-references):** Found cross-references in `readme.md` (lines 68-75) linking to `docs/auth-engines.md` with anchors (`#authenginemount`, `#kubernetesauthengineconfig`, `#kubernetesauthenginerole`, `#ldapauthengineconfig`, `#ldapauthenginegroup`, `#jwtoidcauthengineconfig`, `#jwtoidcauthenginerole`, `#azureauthengineconfig`). No references found in `secret-management.md`, `end-to-end-example.md`, `secret-engines.md`, or `contributing-vault-apis.md`. The readme.md links will need updating in D2.2-D2.5 as content moves to per-engine files.
+
+### Cross-References for Downstream Stories
+
+The following `readme.md` links reference `docs/auth-engines.md` with section anchors and will need updating when per-engine content is extracted:
+
+| Line | Link Target | Downstream Story |
+|------|-------------|-----------------|
+| 68 | `auth-engines.md#authenginemount` | Stays in index — consider updating link to `auth-engines/index.md#authenginemount` in any D2.x story |
+| 69 | `auth-engines.md#kubernetesauthengineconfig` | D2.2 |
+| 70 | `auth-engines.md#KubernetesAuthEngineRole` | D2.2 |
+| 71 | `auth-engines.md#ldapauthengineconfig` | D2.3 |
+| 72 | `auth-engines.md#ldapauthenginegroup` | D2.3 |
+| 73 | `auth-engines.md#jwtoidcauthengineconfig` | D2.4 |
+| 74 | `auth-engines.md#jwtoidcauthenginerole` | D2.4 |
+| 75 | `auth-engines.md#azureauthengineconfig` | D2.5 |
+
 ### File List
+
+- `docs/auth-engines/index.md` — NEW: Auth engines index page with overview, AuthEngineMount section, engine table, and navigation links
+- `docs/auth-engines.md` — MODIFIED: Replaced full content with redirect pointer to `auth-engines/index.md`
+
+### Change Log
+
+- 2026-06-30: Created auth engines directory structure and index page (D2.1 implementation)
