@@ -35,7 +35,13 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-06-28
+last_updated: 2026-06-30
+# Story D2.5 ready-for-dev 2026-06-30
+# Story D2.4 ready-for-dev 2026-06-30
+# Story D2.3 ready-for-dev 2026-06-30
+# Story D2.2 ready-for-dev 2026-06-30
+# Epic D2 in-progress 2026-06-30
+# Story D2.1 ready-for-dev 2026-06-30
 # Epic D1 done + retrospective completed 2026-06-28
 # Story D1.3 done 2026-06-23
 # Story D1.3 review 2026-06-23
@@ -321,12 +327,12 @@ development_status:
   epic-d1-retrospective: done
 
   # Epic D2: Auth Engine Documentation — Per-Engine Split & Standardization
-  epic-d2: backlog
-  d2-1-create-auth-engines-directory-structure-and-index-page: backlog
-  d2-2-standardize-kubernetes-auth-engine-docs: backlog
-  d2-3-standardize-ldap-auth-engine-docs: backlog
-  d2-4-standardize-jwt-oidc-auth-engine-docs: backlog
-  d2-5-standardize-gcp-and-azure-auth-engine-docs: backlog
+  epic-d2: in-progress
+  d2-1-create-auth-engines-directory-structure-and-index-page: ready-for-dev
+  d2-2-standardize-kubernetes-auth-engine-docs: ready-for-dev
+  d2-3-standardize-ldap-auth-engine-docs: ready-for-dev
+  d2-4-standardize-jwt-oidc-auth-engine-docs: ready-for-dev
+  d2-5-standardize-gcp-and-azure-auth-engine-docs: ready-for-dev
   epic-d2-retrospective: optional
 
   # Epic D3: Secret Engine Documentation — Per-Engine Split & Standardization
