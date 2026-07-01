@@ -20,7 +20,6 @@ import (
 	"context"
 	"reflect"
 
-	vault "github.com/hashicorp/vault/api"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -144,12 +143,12 @@ func (d *Group) GetPath() string {
 	return vaultutils.CleansePath(string("/identity/group/name/" + d.Name))
 }
 
-func (d *Group) GetPayload() map[string]interface{} {
+func (d *Group) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
 
-func (i *GroupSpec) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *GroupSpec) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["type"] = i.Type
 	payload["metadata"] = i.Metadata
 	payload["policies"] = i.Policies
@@ -180,14 +179,14 @@ func (d *Group) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
 }
 
-func (d *Group) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *Group) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 // EnrichStatus reads the group back from Vault and persists the Vault-assigned ID in status.
 func (d *Group) EnrichStatus(ctx context.Context) error {
-	vaultClient := ctx.Value("vaultClient").(*vault.Client)
+	vaultClient := vaultutils.VaultClientFromContext(ctx)
 	secret, err := vaultClient.Logical().ReadWithContext(ctx, d.GetPath())
 	if err != nil {
 		return err

@@ -27,9 +27,9 @@ import (
 
 type VaultObject interface {
 	GetPath() string
-	GetPayload() map[string]interface{}
+	GetPayload() map[string]any
 	// IsEquivalentToDesiredState returns wether the passed payload is equivalent to the payload that the current object would generate. When this is a engine object the tune payload will be compared
-	IsEquivalentToDesiredState(payload map[string]interface{}) bool
+	IsEquivalentToDesiredState(payload map[string]any) bool
 	IsInitialized() bool
 	IsValid() (bool, error)
 	IsDeletable() bool
@@ -60,7 +60,7 @@ func NewVaultEndpoint(obj client.Object) *VaultEndpoint {
 // This is similar to vaultClient.KVv2(mountPath string).DeleteMetadata(ctx context.Context, secretPath string) but works better with existing interface
 func (ve *VaultEndpoint) DeleteKVv2IfExists(context context.Context) error {
 	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	vaultClient := VaultClientFromContext(context)
 
 	// should match pathToDelete := fmt.Sprintf("%s/metadata/%s", kv.mountPath, secretPath)
 	pathToDelete := strings.Replace(ve.vaultObject.GetPath(), "/data/", "/metadata/", 1)
@@ -80,7 +80,7 @@ func (ve *VaultEndpoint) DeleteKVv2IfExists(context context.Context) error {
 
 func (ve *VaultEndpoint) DeleteIfExists(context context.Context) error {
 	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	vaultClient := VaultClientFromContext(context)
 	_, err := vaultClient.Logical().Delete(ve.vaultObject.GetPath())
 	if err != nil {
 		if respErr, ok := err.(*vault.ResponseError); ok {
@@ -128,11 +128,11 @@ func (ve *VaultEndpoint) CreateOrMergeKV(context context.Context, isKVv2 bool, p
 	newPayload := ve.vaultObject.GetPayload()
 	if isKVv2 {
 		// For KVv2, data is nested under "data" key
-		existingData, ok := currentPayload["data"].(map[string]interface{})
+		existingData, ok := currentPayload["data"].(map[string]any)
 		if !ok {
-			existingData = make(map[string]interface{})
+			existingData = make(map[string]any)
 		}
-		newData, ok := newPayload["data"].(map[string]interface{})
+		newData, ok := newPayload["data"].(map[string]any)
 		if !ok {
 			return write(context, ve.vaultObject.GetPath(), newPayload)
 		}
@@ -145,7 +145,7 @@ func (ve *VaultEndpoint) CreateOrMergeKV(context context.Context, isKVv2 bool, p
 			}
 			existingData[k] = v
 		}
-		mergedPayload := map[string]interface{}{
+		mergedPayload := map[string]any{
 			"data": existingData,
 		}
 		return write(context, ve.vaultObject.GetPath(), mergedPayload)
@@ -183,7 +183,7 @@ func (ve *VaultEndpoint) CreateOrUpdate(context context.Context) error {
 type RabbitMQEngineConfigVaultObject interface {
 	VaultObject
 	GetLeasePath() string
-	GetLeasePayload() map[string]interface{}
+	GetLeasePayload() map[string]any
 	CheckTTLValuesProvided() bool
 }
 
