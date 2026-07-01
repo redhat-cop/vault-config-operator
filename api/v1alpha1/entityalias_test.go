@@ -96,7 +96,7 @@ func TestEntityAliasIsEquivalentMatching(t *testing.T) {
 	}
 
 	// 8 Vault-only keys are deleted before comparison
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"name":                      "my-alias",
 		"id":                        "alias-id-1",
 		"mount_accessor":            "auth_kubernetes_abc",
@@ -128,7 +128,7 @@ func TestEntityAliasIsEquivalentMatchingWithCustomMetadata(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"name":            "my-alias",
 		"id":              "alias-id-1",
 		"mount_accessor":  "auth_kubernetes_abc",
@@ -152,7 +152,7 @@ func TestEntityAliasIsEquivalentNonMatching(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"name":           "my-alias",
 		"id":             "alias-id-1",
 		"mount_accessor": "auth_different_accessor",
@@ -174,7 +174,7 @@ func TestEntityAliasIsEquivalentExtraFields(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"name":           "my-alias",
 		"id":             "alias-id-1",
 		"mount_accessor": "auth_kubernetes_abc",
@@ -235,11 +235,11 @@ func TestEntityAlias_PrepareInternalValues_SuccessWithPrepopulatedStatusID(t *te
 		Status: EntityAliasStatus{ID: "existing-alias-id"},
 	}
 	handler := newFakeVaultHandler()
-	handler.setGet("sys/auth/kubernetes", map[string]interface{}{
+	handler.setGet("sys/auth/kubernetes", map[string]any{
 		"accessor": "auth_k8s_1234",
 		"type":     "kubernetes",
 	})
-	handler.setGet("identity/entity/name/my-entity", map[string]interface{}{
+	handler.setGet("identity/entity/name/my-entity", map[string]any{
 		"id": "entity-uuid-567",
 	})
 	vc, ts := newFakeVaultClient(t, handler)
@@ -276,11 +276,11 @@ func TestEntityAlias_PrepareInternalValues_SpecNameOverride(t *testing.T) {
 		Status: EntityAliasStatus{ID: "existing-alias-id"},
 	}
 	handler := newFakeVaultHandler()
-	handler.setGet("sys/auth/kubernetes", map[string]interface{}{
+	handler.setGet("sys/auth/kubernetes", map[string]any{
 		"accessor": "auth_k8s_1234",
 		"type":     "kubernetes",
 	})
-	handler.setGet("identity/entity/name/my-entity", map[string]interface{}{
+	handler.setGet("identity/entity/name/my-entity", map[string]any{
 		"id": "entity-uuid-567",
 	})
 	vc, ts := newFakeVaultClient(t, handler)
@@ -332,7 +332,7 @@ func TestEntityAlias_PrepareInternalValues_EntityNotFound(t *testing.T) {
 		Status: EntityAliasStatus{ID: "id"},
 	}
 	handler := newFakeVaultHandler()
-	handler.setGet("sys/auth/kubernetes", map[string]interface{}{
+	handler.setGet("sys/auth/kubernetes", map[string]any{
 		"accessor": "auth_k8s_1234",
 		"type":     "kubernetes",
 	})

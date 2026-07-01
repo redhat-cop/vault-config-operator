@@ -107,7 +107,7 @@ func TestRabbitMQSecretEngineConfigIsEquivalentMatching(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"ttl":     3600,
 		"max_ttl": 7200,
 	}
@@ -128,7 +128,7 @@ func TestRabbitMQSecretEngineConfigIsEquivalentNonMatching(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"ttl":     3600,
 		"max_ttl": 9999,
 	}
@@ -149,7 +149,7 @@ func TestRabbitMQSecretEngineConfigIsEquivalentExtraFields(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"ttl":       3600,
 		"max_ttl":   7200,
 		"extra_key": "x",
@@ -293,7 +293,7 @@ func TestRabbitMQSecretEngineConfig_PrepareInternalValues(t *testing.T) {
 				t.Helper()
 				kube := newFakeKubeClient()
 				handler := newFakeVaultHandler()
-				handler.setGet("secret/rabbit-creds", map[string]interface{}{
+				handler.setGet("secret/rabbit-creds", map[string]any{
 					"username": "vault-rmq",
 					"password": "vault-rmq-secret",
 				})

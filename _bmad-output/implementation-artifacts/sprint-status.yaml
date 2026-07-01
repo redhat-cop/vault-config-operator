@@ -1,5 +1,5 @@
 # generated: 2026-04-11
-# last_updated: 2026-05-12
+# last_updated: 2026-06-23
 # project: vault-config-operator
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,69 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-05-12
+last_updated: 2026-06-28
+# Epic D1 done + retrospective completed 2026-06-28
+# Story D1.3 done 2026-06-23
+# Story D1.3 review 2026-06-23
+# Story D1.3 in-progress 2026-06-23
+# Story D1.2 review 2026-06-23
+# Story D1.2 in-progress 2026-06-23
+# Story D1.1 done 2026-06-22
+# Story D1.1 review 2026-06-22
+# Story D1.1 in-progress 2026-06-22
+# Story D1.0c done 2026-06-22
+# Story D1.0c review 2026-06-22
+# Story D1.0c in-progress 2026-06-22
+# Story D1.0b done 2026-06-22
+# Story D1.0b review 2026-06-22
+# Story D1.0b in-progress 2026-06-22
+# Story D1.0a done 2026-06-22
+# Story D1.3 ready-for-dev 2026-06-22
+# Story D1.2 ready-for-dev 2026-06-22
+# Story D1.0c ready-for-dev 2026-06-22
+# Story D1.1 ready-for-dev 2026-06-22
+# Story D1.0b ready-for-dev 2026-06-22
+# Epic D1 in-progress 2026-06-22
+# Story D1.0a ready-for-dev 2026-06-22
+# Epic R1 done + retrospective completed 2026-06-21
+# Story R1.9 done 2026-06-21
+# Story R1.9 review 2026-06-21
+# Story R1.9 in-progress 2026-06-21
+# Story R1.8 done 2026-06-21
+# Story R1.8 review 2026-06-21
+# Story R1.8 in-progress 2026-06-21
+# Story R1.7 done 2026-06-21
+# Story R1.7 review 2026-06-20
+# Story R1.7 in-progress 2026-06-20
+# Story R1.6 done 2026-06-20
+# Story R1.6 review 2026-06-20
+# Story R1.6 in-progress 2026-06-20
+# Story R1.5 review 2026-06-20
+# Story R1.4 done 2026-06-20
+# Story R1.2c done 2026-06-14
+# Story R1.2c review 2026-06-01
+# Story R1.3 done 2026-06-01
+# Story R1.3 review 2026-06-01
+# Story R1.3 in-progress 2026-06-01
+# Story R1.2b done 2026-05-15
+# Story R1.2b review 2026-05-15
+# Story R1.2b in-progress 2026-05-15
+# Story R1.2a done 2026-05-15
+# Story R1.1 done 2026-05-15
+# Story R1.1 review 2026-05-15
+# Story R1.1 in-progress 2026-05-15
+# Story R1.9 ready-for-dev 2026-05-15
+# Story R1.8 ready-for-dev 2026-05-15
+# Story R1.7 ready-for-dev 2026-05-15
+# Story R1.6 ready-for-dev 2026-05-15
+# Story R1.5 ready-for-dev 2026-05-15
+# Story R1.4 ready-for-dev 2026-05-15
+# Story R1.3 ready-for-dev 2026-05-15
+# Story R1.2c ready-for-dev 2026-05-15
+# Story R1.2b ready-for-dev 2026-05-15
+# Story R1.2a ready-for-dev 2026-05-15
+# Story R1.1 ready-for-dev 2026-05-15
+# Epic R1 in-progress 2026-05-15
 # Epic 7.5 done + retrospective completed 2026-05-12
 # Story 7.5.6 review 2026-05-12
 # Story 7.5.6 in-progress 2026-05-12
@@ -231,28 +293,32 @@ development_status:
   # --- Phase 1.8: Code Modernization & Technical Debt ---
 
   # Epic R1: Code Modernization & Technical Debt Reduction
-  epic-R1: backlog
-  R1-1-correctness-fixes-context-keys-pki-bug-webhook-loggers-tostring: backlog
-  R1-2a-fix-unchecked-error-returns-errcheck: backlog
-  R1-2b-remove-deprecated-rand-seed: backlog
-  R1-2c-lint-green-gate-verify-full-compliance: backlog
-  R1-3-dependency-modernization-drop-deprecated-replace-handrolled: backlog
-  R1-4-test-decoder-generics-rewrite: backlog
-  R1-5-reconciler-struct-deduplication: backlog
-  R1-6-interface-to-any-sweep: backlog
-  R1-7-bundle-example-annotations-for-entity-and-entityalias: backlog
-  R1-8-populate-owned-crd-descriptions-for-community-operators-bundle: backlog
-  R1-9-declare-csv-min-kube-version: backlog
-  epic-R1-retrospective: optional
+  epic-R1: done
+  R1-1-correctness-fixes-context-keys-pki-bug-webhook-loggers-tostring: done # Story R1.1 done 2026-05-15
+  R1-2a-fix-unchecked-error-returns-errcheck: done
+  R1-2b-remove-deprecated-rand-seed: done
+  R1-2c-lint-green-gate-verify-full-compliance: done # Story R1.2c done 2026-06-14
+  R1-3-dependency-modernization-drop-deprecated-replace-handrolled: done
+  R1-4-test-decoder-generics-rewrite: done # Story R1.4 done 2026-06-20
+  R1-5-reconciler-struct-deduplication: done
+  R1-6-interface-to-any-sweep: done # Story R1.6 done 2026-06-20
+  R1-7-bundle-example-annotations-for-entity-and-entityalias: done
+  R1-8-populate-owned-crd-descriptions-for-community-operators-bundle: done
+  R1-9-declare-csv-min-kube-version: done
+  epic-R1-retrospective: done
 
   # --- Phase 1.5: Documentation Improvement ---
 
   # Epic D1: Documentation Standards & Missing CertAuth Engine Docs
-  epic-d1: backlog
-  d1-1-create-documentation-template-and-pattern-guide: backlog
-  d1-2-document-certauthengineconfig-and-certauthenginerole: backlog
-  d1-3-fix-broken-links-and-field-naming-inconsistencies: backlog
-  epic-d1-retrospective: optional
+  # (Prepended with runtime fix, test update, and metadata stories from R1 retro)
+  epic-d1: done
+  d1-0a-fix-lasttransitiontime-misuse-requeueafter-drift-detection: done
+  d1-0b-update-drift-detection-tests-for-requeueafter: done
+  d1-0c-populate-remaining-owned-crd-descriptions: done
+  d1-1-create-documentation-template-and-pattern-guide: done
+  d1-2-document-certauthengineconfig-and-certauthenginerole: done
+  d1-3-fix-broken-links-and-field-naming-inconsistencies: done
+  epic-d1-retrospective: done
 
   # Epic D2: Auth Engine Documentation — Per-Engine Split & Standardization
   epic-d2: backlog

@@ -11,9 +11,9 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/controllers/controllertestutils"
 	"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -161,8 +161,8 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 			initialSecret, err := vaultClient.Logical().Read("test-vault-config-operator/pki/roles/pki-example")
 			Expect(err).To(BeNil())
 			Expect(initialSecret).NotTo(BeNil())
-			initialDomains, ok := initialSecret.Data["allowed_domains"].([]interface{})
-			Expect(ok).To(BeTrue(), "expected allowed_domains to be []interface{}")
+			initialDomains, ok := initialSecret.Data["allowed_domains"].([]any)
+			Expect(ok).To(BeTrue(), "expected allowed_domains to be []any")
 			Expect(initialDomains).To(ContainElement("internal.io"))
 			Expect(initialDomains).To(ContainElement("pki-vault-demo.svc"))
 			Expect(initialDomains).To(ContainElement("example.com"))
@@ -194,7 +194,7 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 				if err != nil || secret == nil {
 					return false
 				}
-				domains, ok := secret.Data["allowed_domains"].([]interface{})
+				domains, ok := secret.Data["allowed_domains"].([]any)
 				if !ok {
 					return false
 				}
@@ -309,7 +309,7 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 
 			By("Deleting PKISecretEngineRoleInstance(")
 
-			pkiRoleInstance, err := decoder.GetPKISecretEngineRoleInstance("../test/pkisecretengine/pki-secret-engine-role.yaml")
+			pkiRoleInstance, err := controllertestutils.DecodeInstance[*redhatcopv1alpha1.PKISecretEngineRole]("../test/pkisecretengine/pki-secret-engine-role.yaml")
 			Expect(err).To(BeNil())
 			pkiRoleInstance.Namespace = vaultTestNamespaceName
 
@@ -328,7 +328,7 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 			}, timeout, interval).Should(Succeed())
 
 			By("Deleting PKISecretEngineConfigInstance")
-			pkiConfigInstance, err := decoder.GetPKISecretEngineConfigInstance("../test/pkisecretengine/pki-secret-engine-config.yaml")
+			pkiConfigInstance, err := controllertestutils.DecodeInstance[*redhatcopv1alpha1.PKISecretEngineConfig]("../test/pkisecretengine/pki-secret-engine-config.yaml")
 			Expect(err).To(BeNil())
 			pkiConfigInstance.Namespace = vaultTestNamespaceName
 
@@ -348,7 +348,7 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 
 			By("Deleting SecretEngineMount")
 
-			semInstance, err := decoder.GetSecretEngineMountInstance("../test/pkisecretengine/pki-secret-engine.yaml")
+			semInstance, err := controllertestutils.DecodeInstance[*redhatcopv1alpha1.SecretEngineMount]("../test/pkisecretengine/pki-secret-engine.yaml")
 			Expect(err).To(BeNil())
 			semInstance.Namespace = vaultTestNamespaceName
 
@@ -368,7 +368,7 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 
 			By("Deleting KubernetesAuthEngineRoleInstance")
 
-			kaerInstance, err := decoder.GetKubernetesAuthEngineRoleInstance("../test/pkisecretengine/pki-secret-engine-kube-auth-role.yaml")
+			kaerInstance, err := controllertestutils.DecodeInstance[*redhatcopv1alpha1.KubernetesAuthEngineRole]("../test/pkisecretengine/pki-secret-engine-kube-auth-role.yaml")
 			Expect(err).To(BeNil())
 			kaerInstance.Namespace = vaultAdminNamespaceName
 
@@ -387,7 +387,7 @@ var _ = Describe("PKISecretEngineConfig controller", func() {
 			}, timeout, interval).Should(Succeed())
 
 			By("Deleting Policy")
-			pInstance, err := decoder.GetPolicyInstance("../test/pkisecretengine/pki-secret-engine-admin-policy.yaml")
+			pInstance, err := controllertestutils.DecodeInstance[*redhatcopv1alpha1.Policy]("../test/pkisecretengine/pki-secret-engine-admin-policy.yaml")
 			Expect(err).To(BeNil())
 			pInstance.Namespace = vaultAdminNamespaceName
 

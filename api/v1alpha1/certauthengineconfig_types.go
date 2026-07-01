@@ -124,12 +124,12 @@ func (r *CertAuthEngineConfig) GetPath() string {
 	return vaultutils.CleansePath("auth/" + string(r.Spec.Path) + "/" + r.Name + "/config")
 }
 
-func (r *CertAuthEngineConfig) GetPayload() map[string]interface{} {
+func (r *CertAuthEngineConfig) GetPayload() map[string]any {
 	return r.Spec.CertAuthEngineConfigInternal.toMap()
 }
 
 // IsEquivalentToDesiredState returns wether the passed payload is equivalent to the payload that the current object would generate. When this is a engine object the tune payload will be compared
-func (r *CertAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (r *CertAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := r.Spec.CertAuthEngineConfigInternal.toMap()
 
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))

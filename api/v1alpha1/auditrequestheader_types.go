@@ -96,13 +96,13 @@ func (d *AuditRequestHeader) GetPath() string {
 	return vaultutils.CleansePath("sys/config/auditing/request-headers/" + d.Spec.Name)
 }
 
-func (d *AuditRequestHeader) GetPayload() map[string]interface{} {
-	return map[string]interface{}{
+func (d *AuditRequestHeader) GetPayload() map[string]any {
+	return map[string]any{
 		"hmac": d.Spec.HMAC,
 	}
 }
 
-func (d *AuditRequestHeader) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *AuditRequestHeader) IsEquivalentToDesiredState(payload map[string]any) bool {
 	if hmac, ok := payload["hmac"].(bool); ok {
 		return hmac == d.Spec.HMAC
 	}

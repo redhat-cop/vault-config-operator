@@ -120,8 +120,8 @@ func (i *RSAPrivateKeyCredentialConfig) toMap() map[string]string {
 	return payload
 }
 
-func (i *DBSEStaticRole) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *DBSEStaticRole) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["db_name"] = i.DBName
 	payload["username"] = i.Username
 	payload["rotation_period"] = i.RotationPeriod
@@ -154,10 +154,10 @@ func (d *DatabaseSecretEngineStaticRole) GetPath() string {
 	}
 	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "static-roles" + "/" + d.Name)
 }
-func (d *DatabaseSecretEngineStaticRole) GetPayload() map[string]interface{} {
+func (d *DatabaseSecretEngineStaticRole) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
-func (d *DatabaseSecretEngineStaticRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *DatabaseSecretEngineStaticRole) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.DBSEStaticRole.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

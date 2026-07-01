@@ -57,7 +57,7 @@ func (r *AzureAuthEngineConfig) ValidateCreate() (admission.Warnings, error) {
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *AzureAuthEngineConfig) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	jwtoidcauthengineconfiglog.Info("validate update", "name", r.Name)
+	azureauthengineconfiglog.Info("validate update", "name", r.Name)
 
 	// the path cannot be updated
 	if r.Spec.Path != old.(*AzureAuthEngineConfig).Spec.Path {

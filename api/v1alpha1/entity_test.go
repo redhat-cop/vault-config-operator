@@ -77,18 +77,18 @@ func TestEntityIsEquivalentMatching(t *testing.T) {
 	}
 
 	// All 11 Vault-only keys are deleted before comparison
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"metadata":            map[string]string{"team": "platform"},
 		"policies":            []string{"default"},
 		"disabled":            false,
 		"name":                "my-entity",
 		"id":                  "entity-id-1",
-		"aliases":             []interface{}{},
+		"aliases":             []any{},
 		"creation_time":       "2024-01-01T00:00:00Z",
 		"last_update_time":    "2024-01-02T00:00:00Z",
 		"merged_entity_ids":   nil,
-		"direct_group_ids":    []interface{}{"g1"},
-		"group_ids":           []interface{}{"g1"},
+		"direct_group_ids":    []any{"g1"},
+		"group_ids":           []any{"g1"},
 		"inherited_group_ids": nil,
 		"namespace_id":        "root",
 		"bucket_key_hash":     "abc123",
@@ -109,7 +109,7 @@ func TestEntityIsEquivalentNonMatching(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"metadata": map[string]string{"team": "platform"},
 		"policies": []string{"default"},
 		"disabled": true,
@@ -131,7 +131,7 @@ func TestEntityIsEquivalentExtraFields(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"metadata":      map[string]string{"team": "platform"},
 		"policies":      []string{"default"},
 		"disabled":      false,

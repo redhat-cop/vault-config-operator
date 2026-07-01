@@ -21,7 +21,6 @@ import (
 	"errors"
 	"reflect"
 
-	vault "github.com/hashicorp/vault/api"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -73,8 +72,8 @@ type GHConfig struct {
 	retrievedSSHKey string `json:"-"`
 }
 
-func (i *GHConfig) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *GHConfig) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["app_id"] = i.ApplicationID
 	payload["prv_key"] = i.retrievedSSHKey
 	payload["base_url"] = i.GitHubAPIBaseURL
@@ -104,10 +103,10 @@ func (d *GitHubSecretEngineConfig) IsDeletable() bool {
 func (d *GitHubSecretEngineConfig) GetPath() string {
 	return string(d.Spec.Path) + "/" + "config"
 }
-func (d *GitHubSecretEngineConfig) GetPayload() map[string]interface{} {
+func (d *GitHubSecretEngineConfig) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
-func (d *GitHubSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *GitHubSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.GHConfig.toMap()
 	delete(desiredState, "prv_key")
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
@@ -132,8 +131,8 @@ func (r *GitHubSecretEngineConfig) IsValid() (bool, error) {
 
 func (r *GitHubSecretEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
-	kubeClient := context.Value("kubeClient").(client.Client)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	kubeClient := vaultutils.KubeClientFromContext(context)
+	vaultClient := vaultutils.VaultClientFromContext(context)
 	if r.Spec.SSHKeyReference.Secret != nil {
 		secret := &corev1.Secret{}
 		err := kubeClient.Get(context, types.NamespacedName{

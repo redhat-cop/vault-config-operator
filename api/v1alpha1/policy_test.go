@@ -86,7 +86,7 @@ func TestPolicyIsEquivalentNoType(t *testing.T) {
 	}
 
 	// When Type == "", the method renames "policy" → "rules" and adds "name"
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"name":  "meta-name",
 		"rules": policyText,
 	}
@@ -106,7 +106,7 @@ func TestPolicyIsEquivalentWithType(t *testing.T) {
 	}
 
 	// When Type == "acl", the method keeps "policy" key and adds "name"
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"name":   "meta-name",
 		"policy": policyText,
 	}
@@ -125,7 +125,7 @@ func TestPolicyIsEquivalentNameFromSpec(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"name":  "spec-name",
 		"rules": policyText,
 	}
@@ -143,7 +143,7 @@ func TestPolicyIsEquivalentNameFromMetadata(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"name":  "meta-name",
 		"rules": policyText,
 	}
@@ -160,7 +160,7 @@ func TestPolicyIsEquivalentNonMatching(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"name":  "meta-name",
 		"rules": `path "secret/*" { capabilities = ["list"] }`,
 	}
@@ -179,7 +179,7 @@ func TestPolicyIsEquivalentExtraFields(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"name":        "meta-name",
 		"rules":       policyText,
 		"extra_field": "unexpected",
@@ -218,7 +218,7 @@ func TestPolicyIsEquivalentAllVariants(t *testing.T) {
 	tests := []struct {
 		name    string
 		policy  *Policy
-		payload map[string]interface{}
+		payload map[string]any
 		want    bool
 	}{
 		{
@@ -227,7 +227,7 @@ func TestPolicyIsEquivalentAllVariants(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "meta-name"},
 				Spec:       PolicySpec{Policy: policyText},
 			},
-			payload: map[string]interface{}{"name": "meta-name", "rules": policyText},
+			payload: map[string]any{"name": "meta-name", "rules": policyText},
 			want:    true,
 		},
 		{
@@ -236,7 +236,7 @@ func TestPolicyIsEquivalentAllVariants(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "meta-name"},
 				Spec:       PolicySpec{Policy: policyText, Name: "spec-name"},
 			},
-			payload: map[string]interface{}{"name": "spec-name", "rules": policyText},
+			payload: map[string]any{"name": "spec-name", "rules": policyText},
 			want:    true,
 		},
 		{
@@ -245,7 +245,7 @@ func TestPolicyIsEquivalentAllVariants(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "meta-name"},
 				Spec:       PolicySpec{Policy: policyText, Type: "acl"},
 			},
-			payload: map[string]interface{}{"name": "meta-name", "policy": policyText},
+			payload: map[string]any{"name": "meta-name", "policy": policyText},
 			want:    true,
 		},
 		{
@@ -254,7 +254,7 @@ func TestPolicyIsEquivalentAllVariants(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "meta-name"},
 				Spec:       PolicySpec{Policy: policyText, Type: "acl", Name: "spec-name"},
 			},
-			payload: map[string]interface{}{"name": "spec-name", "policy": policyText},
+			payload: map[string]any{"name": "spec-name", "policy": policyText},
 			want:    true,
 		},
 	}
@@ -302,8 +302,8 @@ func TestPolicy_PrepareInternalValues_ReplaceKubernetesAccessor(t *testing.T) {
 		Spec:       PolicySpec{Policy: `grant "${auth/kubernetes/@accessor}"`},
 	}
 	handler := newFakeVaultHandler()
-	handler.setGet("sys/auth", map[string]interface{}{
-		"kubernetes/": map[string]interface{}{
+	handler.setGet("sys/auth", map[string]any{
+		"kubernetes/": map[string]any{
 			"accessor": "auth_kubernetes_abc123",
 			"type":     "kubernetes",
 		},
@@ -327,9 +327,9 @@ func TestPolicy_PrepareInternalValues_MultipleAuthEngines(t *testing.T) {
 		Spec:       PolicySpec{Policy: `a:${auth/kubernetes/@accessor} b:${auth/ldap/@accessor}`},
 	}
 	handler := newFakeVaultHandler()
-	handler.setGet("sys/auth", map[string]interface{}{
-		"kubernetes/": map[string]interface{}{"accessor": "acc-k8s", "type": "kubernetes"},
-		"ldap/":       map[string]interface{}{"accessor": "acc-ldap", "type": "ldap"},
+	handler.setGet("sys/auth", map[string]any{
+		"kubernetes/": map[string]any{"accessor": "acc-k8s", "type": "kubernetes"},
+		"ldap/":       map[string]any{"accessor": "acc-ldap", "type": "ldap"},
 	})
 	vc, ts := newFakeVaultClient(t, handler)
 	defer ts.Close()

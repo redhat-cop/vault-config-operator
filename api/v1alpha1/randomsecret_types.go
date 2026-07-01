@@ -22,11 +22,9 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2/hclsimple"
-	vault "github.com/hashicorp/vault/api"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	"github.com/scylladb/go-set/u8set"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -110,9 +108,9 @@ func (d *RandomSecret) IsDeletable() bool {
 	return true
 }
 
-func (d *RandomSecret) getV1Payload() map[string]interface{} {
+func (d *RandomSecret) getV1Payload() map[string]any {
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		d.Spec.SecretKey: d.Spec.calculatedSecret,
 	}
 
@@ -127,16 +125,16 @@ func (d *RandomSecret) IsKVSecretsEngineV2() bool {
 	return d.Spec.IsKVSecretsEngineV2
 }
 
-func (d *RandomSecret) GetPayload() map[string]interface{} {
+func (d *RandomSecret) GetPayload() map[string]any {
 	if d.IsKVSecretsEngineV2() {
-		return map[string]interface{}{
+		return map[string]any{
 			"data": d.getV1Payload(),
 		}
 	}
 	return d.getV1Payload()
 }
 
-func (d *RandomSecret) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *RandomSecret) IsEquivalentToDesiredState(payload map[string]any) bool {
 	return false
 }
 
@@ -236,7 +234,7 @@ func (d *RandomSecret) GenerateNewPassword(context context.Context) error {
 		}
 	}
 	if d.Spec.SecretFormat.PasswordPolicyName != "" {
-		vaultClient := context.Value("vaultClient").(*vault.Client)
+		vaultClient := vaultutils.VaultClientFromContext(context)
 		response, err := vaultClient.Logical().Read("/sys/policies/password/" + d.Spec.SecretFormat.PasswordPolicyName + "/generate")
 		if err != nil {
 			return err
@@ -297,10 +295,6 @@ func (d *RandomSecret) calculateSecret(policy *PasswordPolicyFormat, attempts in
 		d.Spec.calculatedSecret = randomString
 	}
 	return valid
-}
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
 }
 
 func randStringBytes(n int, letterUints []uint8) string {

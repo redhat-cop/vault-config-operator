@@ -151,11 +151,11 @@ func (d *AzureSecretEngineConfig) GetPath() string {
 	return string(d.Spec.Path) + "/" + "config"
 }
 
-func (d *AzureSecretEngineConfig) GetPayload() map[string]interface{} {
+func (d *AzureSecretEngineConfig) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
 
-func (r *AzureSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (r *AzureSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := r.Spec.AzureSEConfig.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
@@ -170,7 +170,7 @@ func (r *AzureSecretEngineConfig) IsValid() (bool, error) {
 }
 
 func (r *AzureSecretEngineConfig) isValid() error {
-	return r.Spec.AzureCredentials.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+	return r.Spec.AzureCredentials.ValidateCredentialSource()
 }
 
 func (r *AzureSecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
@@ -188,7 +188,7 @@ func (d *AzureSecretEngineConfig) PrepareTLSConfig(context context.Context, obje
 
 func (r *AzureSecretEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
-	kubeClient := context.Value("kubeClient").(client.Client)
+	kubeClient := vaultutils.KubeClientFromContext(context)
 	if r.Spec.AzureCredentials.RandomSecret != nil {
 		randomSecret := &RandomSecret{}
 		err := kubeClient.Get(context, types.NamespacedName{
@@ -255,8 +255,8 @@ func (r *AzureSecretEngineConfig) SetClientIDAndClientSecret(ClientID string, Cl
 	r.Spec.AzureSEConfig.retrievedClientPassword = ClientSecret
 }
 
-func (i *AzureSEConfig) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *AzureSEConfig) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["subscription_id"] = i.SubscriptionID
 	payload["tenant_id"] = i.TenantID
 	payload["client_id"] = i.retrievedClientID

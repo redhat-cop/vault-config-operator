@@ -247,11 +247,11 @@ func TestDBSEConfigToMapAllowedRolesTypeConversion(t *testing.T) {
 	}
 	result := config.toMap()
 
-	roles, ok := result["allowed_roles"].([]interface{})
+	roles, ok := result["allowed_roles"].([]any)
 	if !ok {
-		t.Fatalf("allowed_roles should be []interface{}, got %T", result["allowed_roles"])
+		t.Fatalf("allowed_roles should be []any, got %T", result["allowed_roles"])
 	}
-	expected := []interface{}{"role1", "role2"}
+	expected := []any{"role1", "role2"}
 	if !reflect.DeepEqual(roles, expected) {
 		t.Errorf("allowed_roles = %v, expected %v", roles, expected)
 	}
@@ -275,7 +275,7 @@ func TestDatabaseSecretEngineConfigIsEquivalentRootPasswordRotationGate(t *testi
 		},
 	}
 
-	payload := map[string]interface{}{"anything": "value"}
+	payload := map[string]any{"anything": "value"}
 	if config.IsEquivalentToDesiredState(payload) {
 		t.Error("expected false when RootPasswordRotation.Enable=true and LastRootPasswordRotation is zero")
 	}
@@ -300,19 +300,19 @@ func TestDatabaseSecretEngineConfigIsEquivalentRootPasswordRotationWithTimestamp
 	}
 
 	// Independent Vault read fixture — no reuse of toMap()
-	connectionDetails := map[string]interface{}{
+	connectionDetails := map[string]any{
 		"connection_url":                     "postgresql://localhost/mydb",
 		"disable_escaping":                   false,
-		"root_credentials_rotate_statements": []interface{}{},
+		"root_credentials_rotate_statements": []any{},
 		"username":                           nil,
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"plugin_name":                        "postgresql-database-plugin",
 		"plugin_version":                     "",
 		"verify_connection":                  false,
-		"allowed_roles":                      []interface{}{"*"},
-		"root_credentials_rotate_statements": []interface{}{},
+		"allowed_roles":                      []any{"*"},
+		"root_credentials_rotate_statements": []any{},
 		"password_policy":                    "",
 		"connection_details":                 connectionDetails,
 	}
@@ -338,19 +338,19 @@ func TestDatabaseSecretEngineConfigIsEquivalentConnectionDetailsRemapping(t *tes
 	}
 
 	// Build the payload as an independent Vault read response — no reuse of toMap()
-	connectionDetails := map[string]interface{}{
+	connectionDetails := map[string]any{
 		"connection_url":                     "postgresql://localhost/mydb",
 		"disable_escaping":                   true,
-		"root_credentials_rotate_statements": []interface{}{"ALTER USER"},
+		"root_credentials_rotate_statements": []any{"ALTER USER"},
 		"username":                           "admin",
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"plugin_name":                        "postgresql-database-plugin",
 		"plugin_version":                     "",
 		"verify_connection":                  false,
-		"allowed_roles":                      []interface{}{"*"},
-		"root_credentials_rotate_statements": []interface{}{"ALTER USER"},
+		"allowed_roles":                      []any{"*"},
+		"root_credentials_rotate_statements": []any{"ALTER USER"},
 		"password_policy":                    "",
 		"connection_details":                 connectionDetails,
 	}
@@ -379,20 +379,20 @@ func TestDatabaseSecretEngineConfigIsEquivalentMatching(t *testing.T) {
 	}
 
 	// Independent Vault read fixture — no reuse of toMap() output.
-	// allowed_roles built as []interface{} to mirror Vault JSON deserialization (AC2).
-	connectionDetails := map[string]interface{}{
+	// allowed_roles built as []any to mirror Vault JSON deserialization (AC2).
+	connectionDetails := map[string]any{
 		"connection_url":                     "postgresql://localhost/mydb",
 		"disable_escaping":                   false,
-		"root_credentials_rotate_statements": []interface{}{"ALTER USER"},
+		"root_credentials_rotate_statements": []any{"ALTER USER"},
 		"username":                           "admin",
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"plugin_name":                        "postgresql-database-plugin",
 		"plugin_version":                     "v1.0.0",
 		"verify_connection":                  true,
-		"allowed_roles":                      []interface{}{"*"},
-		"root_credentials_rotate_statements": []interface{}{"ALTER USER"},
+		"allowed_roles":                      []any{"*"},
+		"root_credentials_rotate_statements": []any{"ALTER USER"},
 		"password_policy":                    "my-policy",
 		"connection_details":                 connectionDetails,
 	}
@@ -415,14 +415,14 @@ func TestDatabaseSecretEngineConfigIsEquivalentNonMatching(t *testing.T) {
 	}
 
 	desiredState := config.Spec.DBSEConfig.toMap()
-	connectionDetails := map[string]interface{}{
+	connectionDetails := map[string]any{
 		"connection_url":                     desiredState["connection_url"],
 		"disable_escaping":                   desiredState["disable_escaping"],
 		"root_credentials_rotate_statements": desiredState["root_credentials_rotate_statements"],
 		"username":                           desiredState["username"],
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"plugin_name":                        "mysql-database-plugin", // changed
 		"plugin_version":                     desiredState["plugin_version"],
 		"verify_connection":                  desiredState["verify_connection"],
@@ -450,14 +450,14 @@ func TestDatabaseSecretEngineConfigIsEquivalentExtraFieldsFiltered(t *testing.T)
 	}
 
 	desiredState := config.Spec.DBSEConfig.toMap()
-	connectionDetails := map[string]interface{}{
+	connectionDetails := map[string]any{
 		"connection_url":                     desiredState["connection_url"],
 		"disable_escaping":                   desiredState["disable_escaping"],
 		"root_credentials_rotate_statements": desiredState["root_credentials_rotate_statements"],
 		"username":                           desiredState["username"],
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"plugin_name":                        desiredState["plugin_name"],
 		"plugin_version":                     desiredState["plugin_version"],
 		"verify_connection":                  desiredState["verify_connection"],
@@ -489,7 +489,7 @@ func TestDatabaseSecretEngineConfigIsEquivalentRootRotateStatementsRemainAtTopLe
 	}
 
 	desiredState := config.Spec.DBSEConfig.toMap()
-	connectionDetails := map[string]interface{}{
+	connectionDetails := map[string]any{
 		"connection_url":                     desiredState["connection_url"],
 		"disable_escaping":                   desiredState["disable_escaping"],
 		"root_credentials_rotate_statements": desiredState["root_credentials_rotate_statements"],
@@ -497,7 +497,7 @@ func TestDatabaseSecretEngineConfigIsEquivalentRootRotateStatementsRemainAtTopLe
 	}
 
 	// root_credentials_rotate_statements must exist BOTH at top-level AND inside connection_details
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"plugin_name":                        desiredState["plugin_name"],
 		"plugin_version":                     desiredState["plugin_version"],
 		"verify_connection":                  desiredState["verify_connection"],
@@ -512,7 +512,7 @@ func TestDatabaseSecretEngineConfigIsEquivalentRootRotateStatementsRemainAtTopLe
 	}
 
 	// Verify that removing it from top-level causes failure
-	payloadMissingTopLevel := map[string]interface{}{
+	payloadMissingTopLevel := map[string]any{
 		"plugin_name":        desiredState["plugin_name"],
 		"plugin_version":     desiredState["plugin_version"],
 		"verify_connection":  desiredState["verify_connection"],
@@ -600,22 +600,22 @@ func TestToInterfaceArray(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    []string
-		expected []interface{}
+		expected []any
 	}{
 		{
 			name:     "non-empty slice",
 			input:    []string{"a", "b"},
-			expected: []interface{}{"a", "b"},
+			expected: []any{"a", "b"},
 		},
 		{
 			name:     "empty slice",
 			input:    []string{},
-			expected: []interface{}{},
+			expected: []any{},
 		},
 		{
 			name:     "nil slice",
 			input:    nil,
-			expected: []interface{}{},
+			expected: []any{},
 		},
 	}
 
@@ -710,7 +710,7 @@ func TestDatabaseSecretEngineConfig_PrepareInternalValues(t *testing.T) {
 				t.Helper()
 				kube := newFakeKubeClient()
 				handler := newFakeVaultHandler()
-				handler.setGet("secret/creds", map[string]interface{}{
+				handler.setGet("secret/creds", map[string]any{
 					"username": "vault-user",
 					"password": "vault-pass",
 				})
@@ -741,7 +741,7 @@ func TestDatabaseSecretEngineConfig_PrepareInternalValues(t *testing.T) {
 				t.Helper()
 				kube := newFakeKubeClient()
 				handler := newFakeVaultHandler()
-				handler.setGet("secret/creds", map[string]interface{}{
+				handler.setGet("secret/creds", map[string]any{
 					"username": "vault-user",
 					"password": "vault-pass",
 				})
@@ -781,7 +781,7 @@ func TestDatabaseSecretEngineConfig_PrepareInternalValues(t *testing.T) {
 				}
 				kube := newFakeKubeClient(randomSecret)
 				handler := newFakeVaultHandler()
-				handler.setGet("secret/random/my-random", map[string]interface{}{
+				handler.setGet("secret/random/my-random", map[string]any{
 					"api_key": "rand-secret-value",
 				})
 				vc, ts := newFakeVaultClient(t, handler)
@@ -820,8 +820,8 @@ func TestDatabaseSecretEngineConfig_PrepareInternalValues(t *testing.T) {
 				}
 				kube := newFakeKubeClient(randomSecret)
 				handler := newFakeVaultHandler()
-				handler.setGet("secret/random/my-random", map[string]interface{}{
-					"data": map[string]interface{}{
+				handler.setGet("secret/random/my-random", map[string]any{
+					"data": map[string]any{
 						"password": "kv2-pw",
 					},
 				})

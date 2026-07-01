@@ -42,7 +42,7 @@ func TestAzureConfigToMap(t *testing.T) {
 		t.Errorf("expected 8 keys in map, got %d", len(result))
 	}
 
-	expected := map[string]interface{}{
+	expected := map[string]any{
 		"tenant_id":       "tenant-123",
 		"resource":        "https://management.azure.com/",
 		"environment":     "AzurePublicCloud",

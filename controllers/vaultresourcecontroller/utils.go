@@ -24,6 +24,7 @@ import (
 	"github.com/go-logr/logr"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -151,7 +152,9 @@ func ManageOutcomeWithRequeue(context context.Context, r ReconcilerBase, obj cli
 			Status:             metav1.ConditionFalse,
 		}
 	}
-	conditionsAware.SetConditions(vaultutils.AddOrReplaceCondition(condition, conditionsAware.GetConditions()))
+	conditions := conditionsAware.GetConditions()
+	apimeta.SetStatusCondition(&conditions, condition)
+	conditionsAware.SetConditions(conditions)
 	err := r.GetClient().Status().Update(context, obj)
 	if err != nil {
 		log.Error(err, "unable to update status")
@@ -185,14 +188,15 @@ func ManageOutcomeWithRequeue(context context.Context, r ReconcilerBase, obj cli
 }
 
 func ManageOutcome(context context.Context, r ReconcilerBase, obj client.Object, issue error) (reconcile.Result, error) {
-	return ManageOutcomeWithRequeue(context, r, obj, issue, 0)
+	requeueAfter := time.Duration(0)
+	if issue == nil && IsDriftDetectionEnabled() {
+		requeueAfter = SyncPeriod
+	}
+	return ManageOutcomeWithRequeue(context, r, obj, issue, requeueAfter)
 }
 
-// PeriodicReconcilePredicate combines generation-based filtering with optional time-based reconciliation
-// to allow periodic drift detection while avoiding excessive API calls.
-// This predicate replaces ResourceGenerationChangedPredicate and provides both:
-// 1. Immediate reconciliation on spec changes (generation change)
-// 2. Optional periodic reconciliation for drift detection when enabled via ENABLE_DRIFT_DETECTION
+// PeriodicReconcilePredicate filters update events to only reconcile on generation changes.
+// Drift detection is handled by RequeueAfter in ManageOutcome, not by this predicate.
 type PeriodicReconcilePredicate struct {
 	predicate.Funcs
 	// ReconcileInterval is the interval passed at construction time.
@@ -218,42 +222,13 @@ func NewDefaultPeriodicReconcilePredicate() PeriodicReconcilePredicate {
 	return NewPeriodicReconcilePredicate(SyncPeriod)
 }
 
-// Update implements UpdateEvent filter that provides unified reconciliation logic:
-// - Always reconciles on spec changes (generation change) for immediate response
-// - Optionally reconciles periodically after time interval for drift detection when enabled
+// Update filters UpdateEvents to only reconcile on generation changes (spec edits).
+// Drift detection is handled by RequeueAfter in ManageOutcome, not by the predicate.
 func (p PeriodicReconcilePredicate) Update(e event.UpdateEvent) bool {
-	// Check for nil objects at the interface level and underlying object level
 	if e.ObjectOld == nil || e.ObjectNew == nil {
 		return false
 	}
-
-	// Always reconcile if the generation changed (spec change)
-	if e.ObjectNew.GetGeneration() != e.ObjectOld.GetGeneration() {
-		return true
-	}
-
-	// Only do periodic drift detection if enabled
-	if !IsDriftDetectionEnabled() {
-		return false
-	}
-
-	// For periodic reconciliation, check if enough time has passed since last successful reconcile
-	if conditionsAware, ok := e.ObjectNew.(vaultutils.ConditionsAware); ok {
-		conditions := conditionsAware.GetConditions()
-		for _, condition := range conditions {
-			if condition.Type == ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
-				// If we have a successful reconcile condition, check if the interval has elapsed
-				timeSinceLastReconcile := time.Since(condition.LastTransitionTime.Time)
-				if timeSinceLastReconcile >= SyncPeriod {
-					return true
-				}
-				break
-			}
-		}
-	}
-
-	// Don't reconcile if generation hasn't changed and interval hasn't elapsed
-	return false
+	return e.ObjectNew.GetGeneration() != e.ObjectOld.GetGeneration()
 }
 
 // CreateOrUpdateResource creates a resource if it doesn't exist, and updates (overwrites it), if it exist

@@ -59,12 +59,12 @@ func TestIdentityTokenConfigIsEquivalentToDesiredState(t *testing.T) {
 		},
 	}
 
-	matching := map[string]interface{}{"issuer": "https://example.com"}
+	matching := map[string]any{"issuer": "https://example.com"}
 	if !config.IsEquivalentToDesiredState(matching) {
 		t.Error("expected matching payload to be equivalent")
 	}
 
-	nonMatching := map[string]interface{}{"issuer": "https://other.com"}
+	nonMatching := map[string]any{"issuer": "https://other.com"}
 	if config.IsEquivalentToDesiredState(nonMatching) {
 		t.Error("expected non-matching payload to not be equivalent")
 	}
@@ -143,7 +143,7 @@ func TestIdentityTokenKeyIsEquivalentToDesiredState(t *testing.T) {
 		},
 	}
 
-	matching := map[string]interface{}{
+	matching := map[string]any{
 		"rotation_period":    "24h",
 		"verification_ttl":   "24h",
 		"allowed_client_ids": []string{"*"},
@@ -153,7 +153,7 @@ func TestIdentityTokenKeyIsEquivalentToDesiredState(t *testing.T) {
 		t.Error("expected matching payload to be equivalent")
 	}
 
-	nonMatching := map[string]interface{}{
+	nonMatching := map[string]any{
 		"rotation_period":    "12h",
 		"verification_ttl":   "24h",
 		"allowed_client_ids": []string{"*"},
@@ -255,7 +255,7 @@ func TestIdentityTokenRoleIsEquivalentToDesiredState(t *testing.T) {
 		},
 	}
 
-	matching := map[string]interface{}{
+	matching := map[string]any{
 		"key": "key-001",
 		"ttl": "24h",
 	}
@@ -263,7 +263,7 @@ func TestIdentityTokenRoleIsEquivalentToDesiredState(t *testing.T) {
 		t.Error("expected matching payload to be equivalent")
 	}
 
-	nonMatching := map[string]interface{}{
+	nonMatching := map[string]any{
 		"key": "key-002",
 		"ttl": "24h",
 	}
@@ -281,7 +281,7 @@ func TestIdentityTokenConfigIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 		},
 	}
 
-	payloadWithExtra := map[string]interface{}{
+	payloadWithExtra := map[string]any{
 		"issuer":      "https://example.com",
 		"extra_field": "vault-returned-value",
 	}
@@ -302,7 +302,7 @@ func TestIdentityTokenKeyIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 		},
 	}
 
-	payloadWithExtra := map[string]interface{}{
+	payloadWithExtra := map[string]any{
 		"rotation_period":    "24h",
 		"verification_ttl":   "24h",
 		"allowed_client_ids": []string{"*"},
@@ -324,7 +324,7 @@ func TestIdentityTokenRoleIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 		},
 	}
 
-	payloadWithExtra := map[string]interface{}{
+	payloadWithExtra := map[string]any{
 		"key":         "key-001",
 		"ttl":         "24h",
 		"extra_field": "vault-returned-value",

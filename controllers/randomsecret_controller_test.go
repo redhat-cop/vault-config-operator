@@ -250,7 +250,7 @@ var _ = Describe("Random Secret controller for v2 secrets", func() {
 				if secret == nil {
 					return fmt.Errorf("secret is nil")
 				}
-				data, ok := secret.Data["data"].(map[string]interface{})
+				data, ok := secret.Data["data"].(map[string]any)
 				if !ok {
 					return fmt.Errorf("data field is not a map")
 				}
@@ -282,7 +282,7 @@ var _ = Describe("Random Secret controller for v2 secrets", func() {
 				if secret == nil {
 					return fmt.Errorf("secret is nil")
 				}
-				data, ok := secret.Data["data"].(map[string]interface{})
+				data, ok := secret.Data["data"].(map[string]any)
 				if !ok {
 					return fmt.Errorf("data field is not a map")
 				}
@@ -314,7 +314,7 @@ var _ = Describe("Random Secret controller for v2 secrets", func() {
 				if secret == nil {
 					return fmt.Errorf("secret is nil")
 				}
-				data, ok := secret.Data["data"].(map[string]interface{})
+				data, ok := secret.Data["data"].(map[string]any)
 				if !ok {
 					return fmt.Errorf("data field is not a map")
 				}
@@ -384,7 +384,7 @@ var _ = Describe("Random Secret controller for v2 secrets", func() {
 				if secret == nil {
 					return fmt.Errorf("secret is nil")
 				}
-				data, ok := secret.Data["data"].(map[string]interface{})
+				data, ok := secret.Data["data"].(map[string]any)
 				if !ok {
 					return fmt.Errorf("data field is not a map")
 				}
@@ -434,7 +434,7 @@ var _ = Describe("Random Secret controller for v2 secrets", func() {
 				if secret == nil {
 					return fmt.Errorf("secret is nil")
 				}
-				data, ok := secret.Data["data"].(map[string]interface{})
+				data, ok := secret.Data["data"].(map[string]any)
 				if !ok {
 					return fmt.Errorf("data field is not a map")
 				}
@@ -505,7 +505,7 @@ var _ = Describe("Random Secret controller for v2 secrets", func() {
 				if secret == nil {
 					return fmt.Errorf("secret is nil at %s", rsInstance.GetPath())
 				}
-				data, ok := secret.Data["data"].(map[string]interface{})
+				data, ok := secret.Data["data"].(map[string]any)
 				if !ok {
 					return fmt.Errorf("data field is not a map")
 				}
@@ -551,7 +551,7 @@ var _ = Describe("Random Secret controller for v2 secrets", func() {
 				if err != nil || secret == nil {
 					return false
 				}
-				data, ok := secret.Data["data"].(map[string]interface{})
+				data, ok := secret.Data["data"].(map[string]any)
 				if !ok {
 					return false
 				}
@@ -572,7 +572,7 @@ var _ = Describe("Random Secret controller for v2 secrets", func() {
 				if err != nil || secret == nil {
 					return false
 				}
-				data, ok := secret.Data["data"].(map[string]interface{})
+				data, ok := secret.Data["data"].(map[string]any)
 				if !ok {
 					return false
 				}
@@ -588,7 +588,7 @@ var _ = Describe("Random Secret controller for v2 secrets", func() {
 			secret, err := vaultClient.Logical().Read(rsInstance.GetPath())
 			Expect(err).To(BeNil())
 			Expect(secret).ToNot(BeNil())
-			data := secret.Data["data"].(map[string]interface{})
+			data := secret.Data["data"].(map[string]any)
 			newPassword := data["password"].(string)
 			Expect(regexp.MustCompile(`^[A-Z]{10}$`).MatchString(newPassword)).To(BeTrue(),
 				"updated password should be 10 uppercase chars, got: %s", newPassword)

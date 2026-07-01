@@ -208,11 +208,11 @@ func (r *AzureAuthEngineRole) GetPath() string {
 	return vaultutils.CleansePath("auth/" + string(r.Spec.Path) + "/role/" + string(r.Spec.Name))
 }
 
-func (r *AzureAuthEngineRole) GetPayload() map[string]interface{} {
+func (r *AzureAuthEngineRole) GetPayload() map[string]any {
 	return r.Spec.AzureRole.toMap()
 }
 
-func (r *AzureAuthEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (r *AzureAuthEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := r.Spec.AzureRole.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
@@ -233,8 +233,8 @@ func (d *AzureAuthEngineRole) PrepareTLSConfig(context context.Context, object c
 	return nil
 }
 
-func (r *AzureRole) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (r *AzureRole) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["name"] = r.Name
 	payload["bound_service_principal_ids"] = r.BoundServicePrincipalIDs
 	payload["bound_group_ids"] = r.BoundGroupIDs

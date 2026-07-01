@@ -71,10 +71,10 @@ func (d *KubernetesSecretEngineRole) GetPath() string {
 	}
 	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + d.Name)
 }
-func (d *KubernetesSecretEngineRole) GetPayload() map[string]interface{} {
+func (d *KubernetesSecretEngineRole) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
-func (d *KubernetesSecretEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *KubernetesSecretEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.KubeSERole.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
@@ -153,8 +153,8 @@ type KubeSERole struct {
 	ExtraLabels map[string]string `json:"extraLabels,omitempty"`
 }
 
-func (i *KubeSERole) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *KubeSERole) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["allowed_kubernetes_namespaces"] = i.AllowedKubernetesNamespaces
 	payload["allowed_kubernetes_namespace_selector"] = i.AllowedKubernetesNamespaceSelector
 	payload["token_max_ttl"] = i.MaxTTL

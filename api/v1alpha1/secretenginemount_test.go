@@ -86,7 +86,7 @@ func TestMountConfigToMap(t *testing.T) {
 
 	result := config.toMap()
 
-	expected := map[string]interface{}{
+	expected := map[string]any{
 		"default_lease_ttl":            "1h",
 		"max_lease_ttl":                "24h",
 		"force_no_cache":               true,
@@ -148,9 +148,9 @@ func TestMountToMap(t *testing.T) {
 		t.Errorf("expected options map, got %v", result["options"])
 	}
 
-	configMap, ok := result["config"].(map[string]interface{})
+	configMap, ok := result["config"].(map[string]any)
 	if !ok {
-		t.Fatal("expected config to be map[string]interface{}")
+		t.Fatal("expected config to be map[string]any")
 	}
 	if configMap["default_lease_ttl"] != "1h" {
 		t.Errorf("expected nested config default_lease_ttl '1h', got %v", configMap["default_lease_ttl"])
@@ -192,9 +192,9 @@ func TestSecretEngineMountGetPayload(t *testing.T) {
 		t.Errorf("expected options in payload, got %v", payload["options"])
 	}
 
-	configMap, ok := payload["config"].(map[string]interface{})
+	configMap, ok := payload["config"].(map[string]any)
 	if !ok {
-		t.Fatal("expected payload config to be map[string]interface{}")
+		t.Fatal("expected payload config to be map[string]any")
 	}
 	if configMap["default_lease_ttl"] != "30m" {
 		t.Errorf("expected nested default_lease_ttl '30m', got %v", configMap["default_lease_ttl"])
@@ -318,7 +318,7 @@ func TestSecretEngineMountIsEquivalentToDesiredStateNonMatching(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"default_lease_ttl":            "2h", // changed
 		"max_lease_ttl":                "24h",
 		"force_no_cache":               false,
@@ -349,7 +349,7 @@ func TestSecretEngineMountIsEquivalentToDesiredStateExtraFields(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"default_lease_ttl":            "1h",
 		"max_lease_ttl":                "24h",
 		"force_no_cache":               false,
@@ -359,7 +359,7 @@ func TestSecretEngineMountIsEquivalentToDesiredStateExtraFields(t *testing.T) {
 		"passthrough_request_headers":  []string(nil),
 		"allowed_response_headers":     []string(nil),
 		"plugin_version":               "",
-		"user_lockout_config":          map[string]interface{}{},
+		"user_lockout_config":          map[string]any{},
 	}
 
 	if !mount.IsEquivalentToDesiredState(payload) {

@@ -126,8 +126,8 @@ func init() {
 	SchemeBuilder.Register(&RabbitMQSecretEngineConfig{}, &RabbitMQSecretEngineConfigList{})
 }
 
-func (fields *RMQSEConfig) rabbitMQToMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (fields *RMQSEConfig) rabbitMQToMap() map[string]any {
+	payload := map[string]any{}
 	payload["connection_uri"] = fields.ConnectionURI
 	payload["verify_connection"] = fields.VerifyConnection
 	payload["username"] = fields.retrievedUsername
@@ -163,7 +163,7 @@ func (m *RabbitMQSecretEngineConfig) SetUsernameAndPassword(username string, pas
 }
 
 func (rabbitMQ *RabbitMQSecretEngineConfig) isValid() error {
-	return rabbitMQ.Spec.RootCredentials.ValidateEitherFromVaultSecretOrFromSecretOrFromRandomSecret()
+	return rabbitMQ.Spec.RootCredentials.ValidateCredentialSource()
 }
 
 var _ vaultutils.RabbitMQEngineConfigVaultObject = &RabbitMQSecretEngineConfig{}
@@ -172,11 +172,11 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) GetPath() string {
 	return string(rabbitMQ.Spec.Path) + "/config/connection"
 }
 
-func (rabbitMQ *RabbitMQSecretEngineConfig) GetPayload() map[string]interface{} {
+func (rabbitMQ *RabbitMQSecretEngineConfig) GetPayload() map[string]any {
 	return rabbitMQ.Spec.rabbitMQToMap()
 }
 
-func (rabbitMQ *RabbitMQSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (rabbitMQ *RabbitMQSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := rabbitMQ.Spec.RMQSEConfig.leasesToMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
@@ -200,7 +200,7 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) IsValid() (bool, error) {
 
 func (rabbitMQ *RabbitMQSecretEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
-	k8sClient := context.Value("kubeClient").(client.Client)
+	k8sClient := vaultutils.KubeClientFromContext(context)
 	if rabbitMQ.Spec.RootCredentials.RandomSecret != nil {
 		randomSecret := &RandomSecret{}
 		err := k8sClient.Get(context, types.NamespacedName{
@@ -222,11 +222,11 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) setInternalCredentials(context conte
 		}
 
 		// Handle both KV v1 and v2 secret formats
-		var secretData map[string]interface{}
+		var secretData map[string]any
 		if dataInterface, exists := secret.Data["data"]; exists {
 			// KV v2 format: secret data is nested under "data" key
 			var ok bool
-			secretData, ok = dataInterface.(map[string]interface{})
+			secretData, ok = dataInterface.(map[string]any)
 			if !ok {
 				err := errors.New("vault secret data is not in expected format for KV v2")
 				log.Error(err, "unable to parse vault secret data", "instance", rabbitMQ)
@@ -274,11 +274,11 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) setInternalCredentials(context conte
 			return err
 		}
 		// Handle both KV v1 and v2 secret formats
-		var secretData map[string]interface{}
+		var secretData map[string]any
 		if dataInterface, exists := secret.Data["data"]; exists {
 			// KV v2 format: secret data is nested under "data" key
 			var ok bool
-			secretData, ok = dataInterface.(map[string]interface{})
+			secretData, ok = dataInterface.(map[string]any)
 			if !ok {
 				err := errors.New("vault secret data is not in expected format for KV v2")
 				log.Error(err, "unable to parse vault secret data", "instance", rabbitMQ)
@@ -319,14 +319,14 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) setInternalCredentials(context conte
 	return errors.New("no means of retrieving a secret was specified")
 }
 
-func (fields *RMQSEConfig) leasesToMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (fields *RMQSEConfig) leasesToMap() map[string]any {
+	payload := map[string]any{}
 	payload["ttl"] = fields.LeaseTTL
 	payload["max_ttl"] = fields.LeaseMaxTTL
 	return payload
 }
 
-func (rabbitMQ *RabbitMQSecretEngineConfig) GetLeasePayload() map[string]interface{} {
+func (rabbitMQ *RabbitMQSecretEngineConfig) GetLeasePayload() map[string]any {
 	return rabbitMQ.Spec.leasesToMap()
 }
 

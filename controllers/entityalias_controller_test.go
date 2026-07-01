@@ -151,8 +151,8 @@ var _ = Describe("EntityAlias controller", func() {
 			initialSecret, err := vaultClient.Logical().Read("identity/entity-alias/id/" + capturedAliasID)
 			Expect(err).To(BeNil())
 			Expect(initialSecret).NotTo(BeNil())
-			initialCustomMetadata, ok := initialSecret.Data["custom_metadata"].(map[string]interface{})
-			Expect(ok).To(BeTrue(), "expected custom_metadata field to be map[string]interface{}")
+			initialCustomMetadata, ok := initialSecret.Data["custom_metadata"].(map[string]any)
+			Expect(ok).To(BeTrue(), "expected custom_metadata field to be map[string]any")
 			Expect(initialCustomMetadata["contact"]).To(Equal("admin@example.com"))
 
 			By("Recording initial ObservedGeneration")
@@ -182,7 +182,7 @@ var _ = Describe("EntityAlias controller", func() {
 				if err != nil || secret == nil {
 					return false
 				}
-				customMetadata, ok := secret.Data["custom_metadata"].(map[string]interface{})
+				customMetadata, ok := secret.Data["custom_metadata"].(map[string]any)
 				if !ok {
 					return false
 				}
@@ -197,8 +197,8 @@ var _ = Describe("EntityAlias controller", func() {
 			finalSecret, err := vaultClient.Logical().Read("identity/entity-alias/id/" + capturedAliasID)
 			Expect(err).To(BeNil())
 			Expect(finalSecret).NotTo(BeNil())
-			finalCustomMetadata, ok := finalSecret.Data["custom_metadata"].(map[string]interface{})
-			Expect(ok).To(BeTrue(), "expected custom_metadata field to be map[string]interface{}")
+			finalCustomMetadata, ok := finalSecret.Data["custom_metadata"].(map[string]any)
+			Expect(ok).To(BeTrue(), "expected custom_metadata field to be map[string]any")
 			Expect(finalCustomMetadata["contact"]).To(Equal("admin@example.com"))
 			Expect(finalCustomMetadata["purpose"]).To(Equal("integration-test"))
 

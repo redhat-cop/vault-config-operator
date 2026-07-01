@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	vault "github.com/hashicorp/vault/api"
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -34,14 +35,14 @@ func newFakeKubeClient(objs ...client.Object) client.Client {
 }
 
 type fakeVaultHandler struct {
-	routes map[string]map[string]interface{}
+	routes map[string]map[string]any
 }
 
 func newFakeVaultHandler() *fakeVaultHandler {
-	return &fakeVaultHandler{routes: make(map[string]map[string]interface{})}
+	return &fakeVaultHandler{routes: make(map[string]map[string]any)}
 }
 
-func (h *fakeVaultHandler) setGet(path string, data map[string]interface{}) {
+func (h *fakeVaultHandler) setGet(path string, data map[string]any) {
 	h.routes[path] = data
 }
 
@@ -55,18 +56,18 @@ func (h *fakeVaultHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
-		resp := map[string]interface{}{"data": data}
+		resp := map[string]any{"data": data}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp) // test handler; encode error is not actionable
 	case http.MethodPut, http.MethodPost:
 		data, ok := h.routes[path]
 		if !ok {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
-		resp := map[string]interface{}{"data": data}
+		resp := map[string]any{"data": data}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp) // test handler; encode error is not actionable
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
@@ -86,14 +87,14 @@ func newFakeVaultClient(t *testing.T, handler http.Handler) (*vault.Client, *htt
 
 func pivContext(kubeClient client.Client, vaultClient *vault.Client) context.Context {
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, "kubeClient", kubeClient)
-	ctx = context.WithValue(ctx, "vaultClient", vaultClient)
+	ctx = vaultutils.ContextWithKubeClient(ctx, kubeClient)
+	ctx = vaultutils.ContextWithVaultClient(ctx, vaultClient)
 	return ctx
 }
 
 func pivContextWithRestConfig(kubeClient client.Client, vaultClient *vault.Client, restConfig *rest.Config) context.Context {
 	ctx := pivContext(kubeClient, vaultClient)
-	ctx = context.WithValue(ctx, "restConfig", restConfig)
+	ctx = vaultutils.ContextWithRestConfig(ctx, restConfig)
 	return ctx
 }
 

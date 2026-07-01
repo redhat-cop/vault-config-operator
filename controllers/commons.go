@@ -17,14 +17,14 @@ type VaultAuthenticableResource interface {
 
 func prepareContext(ctx context.Context, r vaultresourcecontroller.ReconcilerBase, VAR VaultAuthenticableResource) (context.Context, error) {
 	rlog := log.FromContext(ctx)
-	ctx = context.WithValue(ctx, "kubeClient", r.GetClient())
-	ctx = context.WithValue(ctx, "restConfig", r.GetRestConfig())
-	ctx = context.WithValue(ctx, "vaultConnection", VAR.GetVaultConnection())
+	ctx = vaultutils.ContextWithKubeClient(ctx, r.GetClient())
+	ctx = vaultutils.ContextWithRestConfig(ctx, r.GetRestConfig())
+	ctx = vaultutils.ContextWithVaultConnection(ctx, VAR.GetVaultConnection())
 	vaultClient, err := VAR.GetKubeAuthConfiguration().GetVaultClient(ctx, VAR.GetNamespace())
 	if err != nil {
 		rlog.Error(err, "unable to create vault client", "KubeAuthConfiguration", VAR.GetKubeAuthConfiguration(), "namespace", VAR.GetNamespace())
 		return nil, err
 	}
-	ctx = context.WithValue(ctx, "vaultClient", vaultClient)
+	ctx = vaultutils.ContextWithVaultClient(ctx, vaultClient)
 	return ctx, nil
 }

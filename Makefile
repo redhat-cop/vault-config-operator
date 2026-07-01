@@ -4,10 +4,12 @@ HELM_REPO_DEST ?= /tmp/gh-pages
 OPERATOR_NAME ?=$(shell basename -z `pwd`)
 HELM_VERSION ?= v3.11.0
 KIND_VERSION ?= v0.27.0
-KIND_CLUSTER_NAME ?= kind
+KIND_CLUSTER_NAME ?= vault-config-operator
 KUBECTL_VERSION ?= v1.29.0
 KUSTOMIZE_VERSION ?= v5.4.3
 VAULT_HOST_PORT ?= 8200
+KUBE_CONTEXT ?= kind-$(KIND_CLUSTER_NAME)
+KUBE_CONFIG_FILE ?= /tmp/$(KIND_CLUSTER_NAME)-kubeconfig
 # Note changes to the vault version should also match image tags within the integration/vault-values.yaml and config/local-development/vault-values.yaml files
 VAULT_VERSION ?= 1.19.0
 # The vault version should also match the appVersion in the vault helm chart
@@ -20,7 +22,7 @@ ENVTEST_K8S_VERSION ?= 1.29.0
 
 CONTROLLER_TOOLS_VERSION ?= v0.14.0
 ENVTEST_VERSION ?= release-0.19
-GOLANGCI_LINT_VERSION ?= v1.59.1
+GOLANGCI_LINT_VERSION ?= v1.64.8
 
 # VERSION defines the project version for the bundle.
 # Update this value when you upgrade the version of your project.
@@ -133,25 +135,25 @@ test: manifests generate fmt vet envtest ## Run tests.
 # note: envtest requires docker, podman will not work
 .PHONY: integration
 integration: kind-setup deploy-vault deploy-ingress deploy-postgresql deploy-rabbitmq deploy-ldap deploy-keycloak vault manifests generate fmt vet envtest ## Run tests.
-	export VAULT_TOKEN=$$($(KUBECTL) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
+	export VAULT_TOKEN=$$(KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
 	export VAULT_ADDR="http://localhost:$(VAULT_HOST_PORT)" ;\
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration -timeout 30m
+	KUBECONFIG=$(KUBE_CONFIG_FILE) KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration -timeout 30m
 
 .PHONY: deploy-ingress
 deploy-ingress: kubectl helm
-	$(HELM) upgrade -i ingress-nginx ./integration/helm/ingress-nginx -n vault --atomic --create-namespace
-	$(KUBECTL) apply -f ./integration/manifests/ingress-nginx-kind-deploy.yaml
-	$(KUBECTL) rollout status deployment ingress-nginx-controller -n ingress-nginx -w
-	$(KUBECTL) wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=${KUBECTL_WAIT_TIMEOUT}
+	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i ingress-nginx ./integration/helm/ingress-nginx -n vault --atomic --create-namespace
+	$(KUBECTL) --context $(KUBE_CONTEXT) apply -f ./integration/manifests/ingress-nginx-kind-deploy.yaml
+	$(KUBECTL) --context $(KUBE_CONTEXT) rollout status deployment ingress-nginx-controller -n ingress-nginx -w
+	$(KUBECTL) --context $(KUBE_CONTEXT) wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=${KUBECTL_WAIT_TIMEOUT}
 
 .PHONY: deploy-vault
 deploy-vault: kubectl helm
-	$(KUBECTL) create namespace vault --dry-run=client -o yaml | $(KUBECTL) apply -f -
-	$(KUBECTL) apply -f ./integration/rolebinding-admin.yaml -n vault
-	$(HELM) repo add hashicorp https://helm.releases.hashicorp.com
-	$(HELM) show chart hashicorp/vault --version $(VAULT_CHART_VERSION)
-	$(HELM) upgrade vault hashicorp/vault --version $(VAULT_CHART_VERSION) -i --create-namespace -n vault --atomic -f ./integration/vault-values.yaml
-	$(KUBECTL) wait --for=condition=ready pod/vault-0 -n vault --timeout=${KUBECTL_WAIT_TIMEOUT}
+	$(KUBECTL) --context $(KUBE_CONTEXT) create namespace vault --dry-run=client -o yaml | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f -
+	$(KUBECTL) --context $(KUBE_CONTEXT) apply -f ./integration/rolebinding-admin.yaml -n vault
+	$(HELM) --kube-context $(KUBE_CONTEXT) repo add hashicorp https://helm.releases.hashicorp.com
+	$(HELM) --kube-context $(KUBE_CONTEXT) show chart hashicorp/vault --version $(VAULT_CHART_VERSION)
+	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade vault hashicorp/vault --version $(VAULT_CHART_VERSION) -i --create-namespace -n vault --atomic -f ./integration/vault-values.yaml
+	$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready pod/vault-0 -n vault --timeout=${KUBECTL_WAIT_TIMEOUT}
 
 .PHONY: kind-setup
 kind-setup: kind
@@ -170,48 +172,49 @@ kind-setup: kind
 	  echo "Creating Kind cluster '$(KIND_CLUSTER_NAME)'..."; \
 	  $(KIND) create cluster --name $(KIND_CLUSTER_NAME) --image docker.io/kindest/node:$(KUBECTL_VERSION) --config=./integration/cluster-kind.yaml; \
 	fi
+	$(KIND) export kubeconfig --name $(KIND_CLUSTER_NAME) --kubeconfig $(KUBE_CONFIG_FILE)
 
 .PHONY: deploy-postgresql
 deploy-postgresql: kubectl helm
-	$(HELM) repo add bitnami https://charts.bitnami.com/bitnami || true
-	$(HELM) upgrade -i postgresql bitnami/postgresql \
+	$(HELM) --kube-context $(KUBE_CONTEXT) repo add bitnami https://charts.bitnami.com/bitnami || true
+	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i postgresql bitnami/postgresql \
 		-n test-vault-config-operator --create-namespace --atomic \
 		-f ./integration/postgresql-values.yaml
-	$(KUBECTL) wait --for=condition=ready pod -l app.kubernetes.io/instance=postgresql \
+	$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready pod -l app.kubernetes.io/instance=postgresql \
 		-n test-vault-config-operator --timeout=$(KUBECTL_WAIT_TIMEOUT)
 
 .PHONY: deploy-rabbitmq
 deploy-rabbitmq: kubectl
-	$(KUBECTL) create namespace test-vault-config-operator --dry-run=client -o yaml | $(KUBECTL) apply -f -
-	$(KUBECTL) apply -f ./integration/rabbitmq -n test-vault-config-operator
-	$(KUBECTL) wait --for=condition=ready -n test-vault-config-operator pod -l app=rabbitmq --timeout=$(KUBECTL_WAIT_TIMEOUT)
+	$(KUBECTL) --context $(KUBE_CONTEXT) create namespace test-vault-config-operator --dry-run=client -o yaml | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f -
+	$(KUBECTL) --context $(KUBE_CONTEXT) apply -f ./integration/rabbitmq -n test-vault-config-operator
+	$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready -n test-vault-config-operator pod -l app=rabbitmq --timeout=$(KUBECTL_WAIT_TIMEOUT)
 
 .PHONY: deploy-ldap
 deploy-ldap: kubectl
-	$(KUBECTL) create namespace ldap --dry-run=client -o yaml | $(KUBECTL) apply -f -
-	$(KUBECTL) apply -f ./integration/ldap -n ldap
-	$(KUBECTL) wait --for=condition=ready -n ldap pod -l app=ldap --timeout=$(KUBECTL_WAIT_TIMEOUT)
+	$(KUBECTL) --context $(KUBE_CONTEXT) create namespace ldap --dry-run=client -o yaml | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f -
+	$(KUBECTL) --context $(KUBE_CONTEXT) apply -f ./integration/ldap -n ldap
+	$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready -n ldap pod -l app=ldap --timeout=$(KUBECTL_WAIT_TIMEOUT)
 
 .PHONY: deploy-keycloak
 deploy-keycloak: kubectl
-	$(KUBECTL) create namespace keycloak --dry-run=client -o yaml | $(KUBECTL) apply -f -
-	$(KUBECTL) apply -f ./integration/keycloak -n keycloak
-	$(KUBECTL) wait --for=condition=ready -n keycloak pod -l app=keycloak --timeout=$(KUBECTL_WAIT_TIMEOUT) || { echo "=== Keycloak pod failed to become ready ==="; $(KUBECTL) describe pod -n keycloak -l app=keycloak; echo "=== Keycloak logs ==="; $(KUBECTL) logs -n keycloak -l app=keycloak --tail=100; exit 1; }
+	$(KUBECTL) --context $(KUBE_CONTEXT) create namespace keycloak --dry-run=client -o yaml | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f -
+	$(KUBECTL) --context $(KUBE_CONTEXT) apply -f ./integration/keycloak -n keycloak
+	$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready -n keycloak pod -l app=keycloak --timeout=$(KUBECTL_WAIT_TIMEOUT) || { echo "=== Keycloak pod failed to become ready ==="; $(KUBECTL) --context $(KUBE_CONTEXT) describe pod -n keycloak -l app=keycloak; echo "=== Keycloak logs ==="; $(KUBECTL) --context $(KUBE_CONTEXT) logs -n keycloak -l app=keycloak --tail=100; exit 1; }
 
 .PHONY: ldap-setup
 ldap-setup: kind-setup vault
 ## Deploy LDAP Instance in ldap namespace
-	$(KUBECTL) create namespace ldap
-	$(KUBECTL) apply -f ./integration/ldap -n ldap
-	$(KUBECTL) wait --for=condition=ready -n ldap pod $$($(KUBECTL) get pods -n ldap -l=app=ldap -o json | jq '.items[].metadata.name') --timeout=${KUBECTL_WAIT_TIMEOUT}
-	$(KUBECTL) port-forward -n vault vault-0 8201:8200
-	$(KUBECTL) port-forward $$($(KUBECTL) get pods -n ldap -l=app=ldap -o json | jq '.items[].metadata.name') 8555:389 -n ldap
+	$(KUBECTL) --context $(KUBE_CONTEXT) create namespace ldap
+	$(KUBECTL) --context $(KUBE_CONTEXT) apply -f ./integration/ldap -n ldap
+	$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready -n ldap pod $$($(KUBECTL) --context $(KUBE_CONTEXT) get pods -n ldap -l=app=ldap -o json | jq '.items[].metadata.name') --timeout=${KUBECTL_WAIT_TIMEOUT}
+	$(KUBECTL) --context $(KUBE_CONTEXT) port-forward -n vault vault-0 8201:8200
+	$(KUBECTL) --context $(KUBE_CONTEXT) port-forward $$($(KUBECTL) --context $(KUBE_CONTEXT) get pods -n ldap -l=app=ldap -o json | jq '.items[].metadata.name') 8555:389 -n ldap
 	export VAULT_ADDR=http://localhost:8201
 	export VAULT_SKIP_VERIFY=true
-	$(KUBECTL) apply -f ./test/ldapauthengine/ldap-auth-engine-mount.yaml
-	$(KUBECTL) apply -f ./test/ldapauthengine/ldap-auth-engine-config.yaml
+	$(KUBECTL) --context $(KUBE_CONTEXT) apply -f ./test/ldapauthengine/ldap-auth-engine-mount.yaml
+	$(KUBECTL) --context $(KUBE_CONTEXT) apply -f ./test/ldapauthengine/ldap-auth-engine-config.yaml
 ## Create new Group in Vault LDAP Auth Engine (admins-group is pre-seeded in configmap LDIF)
-	$(KUBECTL) apply -f ./test/ldapauthengine/ldap-auth-engine-group.yaml
+	$(KUBECTL) --context $(KUBE_CONTEXT) apply -f ./test/ldapauthengine/ldap-auth-engine-group.yaml
 ## Login with LDAP user (check database.ldiff for its membership)
 	$(VAULT) login -method=ldap -path=ldap/test/ username=trevor password=admin
 
@@ -247,20 +250,20 @@ endif
 
 .PHONY: install
 install: manifests kustomize kubectl ## Install CRDs into the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd | $(KUBECTL) apply -f -
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f -
 
 .PHONY: uninstall
 uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) --context $(KUBE_CONTEXT) delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: deploy
 deploy: manifests kustomize kubectl ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
+	$(KUSTOMIZE) build config/default | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f -
 
 .PHONY: undeploy
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/default | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
+	$(KUSTOMIZE) build config/default | $(KUBECTL) --context $(KUBE_CONTEXT) delete --ignore-not-found=$(ignore-not-found) -f -
 
 ##@ Dependencies
 
@@ -445,21 +448,21 @@ helmchart-test: kind-setup deploy-vault helmchart
 	$(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker-build
 	docker tag ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
 	docker pull ${HELM_TEST_SIDECAR_IMG}
-	$(KIND) load docker-image ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} ${HELM_TEST_SIDECAR_IMG}
-	$(HELM) repo add jetstack https://charts.jetstack.io
-	$(HELM) install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.7.1 --set installCRDs=true
-	$(HELM) repo add prometheus-community https://prometheus-community.github.io/helm-charts
-	$(HELM) install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n default -f integration/kube-prometheus-stack-values.yaml
-	$(HELM) install prometheus-rbac integration/helm/prometheus-rbac -n default
-	$(HELM) upgrade -i ${OPERATOR_NAME}-local charts/${OPERATOR_NAME} -n ${OPERATOR_NAME}-local --create-namespace \
+	$(KIND) load docker-image --name $(KIND_CLUSTER_NAME) ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} ${HELM_TEST_SIDECAR_IMG}
+	$(HELM) --kube-context $(KUBE_CONTEXT) repo add jetstack https://charts.jetstack.io
+	$(HELM) --kube-context $(KUBE_CONTEXT) install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.7.1 --set installCRDs=true
+	$(HELM) --kube-context $(KUBE_CONTEXT) repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	$(HELM) --kube-context $(KUBE_CONTEXT) install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n default -f integration/kube-prometheus-stack-values.yaml
+	$(HELM) --kube-context $(KUBE_CONTEXT) install prometheus-rbac integration/helm/prometheus-rbac -n default
+	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i ${OPERATOR_NAME}-local charts/${OPERATOR_NAME} -n ${OPERATOR_NAME}-local --create-namespace \
 	  --set enableCertManager=true \
 	  --set image.repository=${HELM_TEST_IMG_NAME} \
 	  --set image.tag=${HELM_TEST_IMG_TAG} \
 	  --set env[0].name=VAULT_ADDR \
 	  --set env[0].value=http://vault.vault.svc:8200
-	$(KUBECTL) wait --namespace ${OPERATOR_NAME}-local --for=condition=ready pod --selector=app.kubernetes.io/name=${OPERATOR_NAME} --timeout=${KUBECTL_WAIT_TIMEOUT} || { $(KUBECTL) get pods -A; $(KUBECTL) logs -n ${OPERATOR_NAME}-local deploy/${OPERATOR_NAME}-local --all-containers; exit 1; }
-	$(KUBECTL) wait --namespace default --for=condition=ready pod prometheus-kube-prometheus-stack-prometheus-0 --timeout=${KUBECTL_WAIT_TIMEOUT} || { $(KUBECTL) get pods -A; $(KUBECTL) logs -n default statefulset/prometheus-kube-prometheus-stack-prometheus --all-containers; exit 1; }
-	$(KUBECTL) exec prometheus-kube-prometheus-stack-prometheus-0 -n default -c test-metrics -- /bin/sh -c "echo 'Example metrics...' && cat /tmp/ready"
+	$(KUBECTL) --context $(KUBE_CONTEXT) wait --namespace ${OPERATOR_NAME}-local --for=condition=ready pod --selector=app.kubernetes.io/name=${OPERATOR_NAME} --timeout=${KUBECTL_WAIT_TIMEOUT} || { $(KUBECTL) --context $(KUBE_CONTEXT) get pods -A; $(KUBECTL) --context $(KUBE_CONTEXT) logs -n ${OPERATOR_NAME}-local deploy/${OPERATOR_NAME}-local --all-containers; exit 1; }
+	$(KUBECTL) --context $(KUBE_CONTEXT) wait --namespace default --for=condition=ready pod prometheus-kube-prometheus-stack-prometheus-0 --timeout=${KUBECTL_WAIT_TIMEOUT} || { $(KUBECTL) --context $(KUBE_CONTEXT) get pods -A; $(KUBECTL) --context $(KUBE_CONTEXT) logs -n default statefulset/prometheus-kube-prometheus-stack-prometheus --all-containers; exit 1; }
+	$(KUBECTL) --context $(KUBE_CONTEXT) exec prometheus-kube-prometheus-stack-prometheus-0 -n default -c test-metrics -- /bin/sh -c "echo 'Example metrics...' && cat /tmp/ready"
 
 .PHONY: helmchart-clean
 helmchart-clean:

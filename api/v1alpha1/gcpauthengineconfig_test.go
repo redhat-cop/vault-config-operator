@@ -42,7 +42,7 @@ func TestGCPConfigToMap(t *testing.T) {
 		t.Errorf("expected 6 keys in map, got %d", len(result))
 	}
 
-	expected := map[string]interface{}{
+	expected := map[string]any{
 		"credentials":     `{"type":"service_account","project_id":"my-project"}`,
 		"iam_alias":       "unique_id",
 		"iam_metadata":    "default",

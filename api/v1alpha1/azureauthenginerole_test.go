@@ -51,7 +51,7 @@ func TestAzureRoleToMap(t *testing.T) {
 		t.Errorf("expected 17 keys in map, got %d", len(result))
 	}
 
-	expected := map[string]interface{}{
+	expected := map[string]any{
 		"name":                        "test-role",
 		"bound_service_principal_ids": []string{"sp-1", "sp-2"},
 		"bound_group_ids":             []string{"group-1"},

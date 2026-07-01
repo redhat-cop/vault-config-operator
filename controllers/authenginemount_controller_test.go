@@ -72,7 +72,7 @@ var _ = Describe("AuthEngineMount controller", Ordered, func() {
 			mountData, exists := secret.Data["test-auth-mount/test-aem-simple/"]
 			Expect(exists).To(BeTrue(), "expected mount 'test-auth-mount/test-aem-simple/' in sys/auth")
 
-			mountMap, ok := mountData.(map[string]interface{})
+			mountMap, ok := mountData.(map[string]any)
 			Expect(ok).To(BeTrue(), "expected mount data to be a map")
 			Expect(mountMap["type"]).To(Equal("approle"))
 

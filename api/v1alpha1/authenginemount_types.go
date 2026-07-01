@@ -145,8 +145,8 @@ var _ vaultutils.VaultObject = &AuthEngineMount{}
 var _ vaultutils.VaultEngineObject = &AuthEngineMount{}
 var _ vaultutils.ConditionsAware = &AuthEngineMount{}
 
-func (mc *AuthMountConfig) toMap() map[string]interface{} {
-	return map[string]interface{}{
+func (mc *AuthMountConfig) toMap() map[string]any {
+	return map[string]any{
 		"default_lease_ttl":            mc.DefaultLeaseTTL,
 		"max_lease_ttl":                mc.MaxLeaseTTL,
 		"audit_non_hmac_request_keys":  mc.AuditNonHMACRequestKeys,
@@ -160,8 +160,8 @@ func (mc *AuthMountConfig) toMap() map[string]interface{} {
 	}
 }
 
-func (m *AuthMount) toMap() map[string]interface{} {
-	return map[string]interface{}{
+func (m *AuthMount) toMap() map[string]any {
+	return map[string]any{
 		"type":        m.Type,
 		"description": m.Description,
 		"config":      m.Config.toMap(),
@@ -178,10 +178,10 @@ func (d *AuthEngineMount) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfigu
 	return &d.Spec.Authentication
 }
 
-func (d *AuthEngineMount) GetPayload() map[string]interface{} {
+func (d *AuthEngineMount) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
-func (d *AuthEngineMount) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *AuthEngineMount) IsEquivalentToDesiredState(payload map[string]any) bool {
 	configMap := d.Spec.Config.toMap()
 	return reflect.DeepEqual(configMap, filterPayloadToDesiredKeys(configMap, payload))
 }
@@ -208,7 +208,7 @@ func (d *AuthEngineMount) GetEngineListPath() string {
 func (d *AuthEngineMount) GetEngineTunePath() string {
 	return d.GetPath() + "/tune"
 }
-func (d *AuthEngineMount) GetTunePayload() map[string]interface{} {
+func (d *AuthEngineMount) GetTunePayload() map[string]any {
 	return d.Spec.Config.toMap()
 }
 

@@ -21,7 +21,6 @@ import (
 	"errors"
 	"reflect"
 
-	vault "github.com/hashicorp/vault/api"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -113,10 +112,10 @@ func (d *KubernetesSecretEngineConfig) IsDeletable() bool {
 func (d *KubernetesSecretEngineConfig) GetPath() string {
 	return string(d.Spec.Path) + "/" + "config"
 }
-func (d *KubernetesSecretEngineConfig) GetPayload() map[string]interface{} {
+func (d *KubernetesSecretEngineConfig) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
-func (d *KubernetesSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *KubernetesSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.KubeSEConfig.toMap()
 	delete(desiredState, "service_account_jwt")
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
@@ -140,13 +139,16 @@ func (r *KubernetesSecretEngineConfig) IsValid() (bool, error) {
 }
 
 func (r *KubernetesSecretEngineConfig) isValid() error {
-	return r.Spec.JWTReference.ValidateEitherFromVaultSecretOrFromSecret()
+	if r.Spec.JWTReference.RandomSecret != nil {
+		return errors.New("spec.jwtReference.randomSecret is not allowed; only vaultSecret or secret can be specified")
+	}
+	return r.Spec.JWTReference.ValidateCredentialSource()
 }
 
 func (r *KubernetesSecretEngineConfig) setInternalCredentials(context context.Context) error {
 	log := log.FromContext(context)
-	kubeClient := context.Value("kubeClient").(client.Client)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	kubeClient := vaultutils.KubeClientFromContext(context)
+	vaultClient := vaultutils.VaultClientFromContext(context)
 	if r.Spec.JWTReference.Secret != nil {
 		secret := &corev1.Secret{}
 		err := kubeClient.Get(context, types.NamespacedName{
@@ -193,8 +195,8 @@ type KubeSEConfig struct {
 	retrievedServiceAccountJWT string `json:"-"`
 }
 
-func (i *KubeSEConfig) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *KubeSEConfig) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["kubernetes_host"] = i.KubernetesHost
 	payload["kubernetes_ca_cert"] = i.KubernetesCACert
 	payload["service_account_jwt"] = i.retrievedServiceAccountJWT

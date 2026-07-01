@@ -68,7 +68,7 @@ func TestGroupAliasIsEquivalentMatching(t *testing.T) {
 	}
 
 	// 6 Vault-only keys are deleted before comparison
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"name":                      "my-alias",
 		"id":                        "alias-id-1",
 		"mount_accessor":            "auth_kubernetes_abc",
@@ -95,7 +95,7 @@ func TestGroupAliasIsEquivalentNonMatching(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"name":           "my-alias",
 		"id":             "alias-id-1",
 		"mount_accessor": "auth_different_accessor",
@@ -117,7 +117,7 @@ func TestGroupAliasIsEquivalentExtraFields(t *testing.T) {
 		},
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"name":           "my-alias",
 		"id":             "alias-id-1",
 		"mount_accessor": "auth_kubernetes_abc",
@@ -178,11 +178,11 @@ func TestGroupAlias_PrepareInternalValues_SuccessWithPrepopulatedStatusID(t *tes
 		Status: GroupAliasStatus{ID: "existing-group-alias-id"},
 	}
 	handler := newFakeVaultHandler()
-	handler.setGet("sys/auth/kubernetes", map[string]interface{}{
+	handler.setGet("sys/auth/kubernetes", map[string]any{
 		"accessor": "auth_k8s_1234",
 		"type":     "kubernetes",
 	})
-	handler.setGet("identity/group/name/my-group", map[string]interface{}{
+	handler.setGet("identity/group/name/my-group", map[string]any{
 		"id": "group-uuid-567",
 	})
 	vc, ts := newFakeVaultClient(t, handler)
@@ -219,11 +219,11 @@ func TestGroupAlias_PrepareInternalValues_SpecNameOverride(t *testing.T) {
 		Status: GroupAliasStatus{ID: "existing-group-alias-id"},
 	}
 	handler := newFakeVaultHandler()
-	handler.setGet("sys/auth/kubernetes", map[string]interface{}{
+	handler.setGet("sys/auth/kubernetes", map[string]any{
 		"accessor": "auth_k8s_1234",
 		"type":     "kubernetes",
 	})
-	handler.setGet("identity/group/name/my-group", map[string]interface{}{
+	handler.setGet("identity/group/name/my-group", map[string]any{
 		"id": "group-uuid-567",
 	})
 	vc, ts := newFakeVaultClient(t, handler)
@@ -250,7 +250,7 @@ func TestGroupAlias_PrepareInternalValues_GroupNotFound(t *testing.T) {
 		Status: GroupAliasStatus{ID: "id"},
 	}
 	handler := newFakeVaultHandler()
-	handler.setGet("sys/auth/kubernetes", map[string]interface{}{
+	handler.setGet("sys/auth/kubernetes", map[string]any{
 		"accessor": "auth_k8s_1234",
 		"type":     "kubernetes",
 	})

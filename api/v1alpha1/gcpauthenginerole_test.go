@@ -55,7 +55,7 @@ func TestGCPRoleToMap(t *testing.T) {
 		t.Errorf("expected 21 keys in map, got %d", len(result))
 	}
 
-	expected := map[string]interface{}{
+	expected := map[string]any{
 		"name":                    "test-role",
 		"type":                    "iam",
 		"bound_service_accounts":  []string{"sa@project.iam.gserviceaccount.com"},

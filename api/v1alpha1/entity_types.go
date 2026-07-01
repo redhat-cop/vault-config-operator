@@ -124,12 +124,12 @@ func (d *Entity) GetPath() string {
 	return vaultutils.CleansePath(string("/identity/entity/name/" + d.Name))
 }
 
-func (d *Entity) GetPayload() map[string]interface{} {
+func (d *Entity) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
 
-func (i *EntitySpec) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (i *EntitySpec) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["metadata"] = i.Metadata
 	payload["policies"] = i.Policies
 	payload["disabled"] = i.Disabled
@@ -156,7 +156,7 @@ func (d *Entity) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
 }
 
-func (d *Entity) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (d *Entity) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

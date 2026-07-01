@@ -257,11 +257,11 @@ func (r *JWTOIDCAuthEngineRole) GetPath() string {
 	return vaultutils.CleansePath("auth/" + string(r.Spec.Path) + "/role/" + r.getName())
 }
 
-func (r *JWTOIDCAuthEngineRole) GetPayload() map[string]interface{} {
+func (r *JWTOIDCAuthEngineRole) GetPayload() map[string]any {
 	return r.Spec.JWTOIDCRole.toMap()
 }
 
-func (r *JWTOIDCAuthEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (r *JWTOIDCAuthEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := r.Spec.JWTOIDCRole.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
@@ -282,8 +282,8 @@ func (d *JWTOIDCAuthEngineRole) PrepareTLSConfig(context context.Context, object
 	return nil
 }
 
-func (r *JWTOIDCRole) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (r *JWTOIDCRole) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["name"] = r.Name
 	payload["role_type"] = r.RoleType
 	payload["bound_audiences"] = r.BoundAudiences

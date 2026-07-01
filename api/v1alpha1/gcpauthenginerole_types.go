@@ -233,11 +233,11 @@ func (r *GCPAuthEngineRole) GetPath() string {
 	return vaultutils.CleansePath("auth/" + string(r.Spec.Path) + "/role/" + string(r.Spec.Name))
 }
 
-func (r *GCPAuthEngineRole) GetPayload() map[string]interface{} {
+func (r *GCPAuthEngineRole) GetPayload() map[string]any {
 	return r.Spec.GCPRole.toMap()
 }
 
-func (r *GCPAuthEngineRole) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
+func (r *GCPAuthEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := r.Spec.GCPRole.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
@@ -258,8 +258,8 @@ func (d *GCPAuthEngineRole) PrepareTLSConfig(context context.Context, object cli
 	return nil
 }
 
-func (r *GCPRole) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
+func (r *GCPRole) toMap() map[string]any {
+	payload := map[string]any{}
 	payload["name"] = r.Name
 	payload["type"] = r.Type
 	payload["bound_service_accounts"] = r.BoundServiceAccounts

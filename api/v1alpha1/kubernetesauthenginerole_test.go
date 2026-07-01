@@ -74,7 +74,7 @@ func TestVRoleToMap(t *testing.T) {
 		t.Errorf("expected 13 keys in map (with audience), got %d", len(result))
 	}
 
-	expected := map[string]interface{}{
+	expected := map[string]any{
 		"bound_service_account_names":      []string{"sa1", "sa2"},
 		"bound_service_account_namespaces": []string{"ns1", "ns2"},
 		"alias_name_source":                "serviceaccount_uid",
@@ -319,7 +319,7 @@ func TestKubernetesAuthEngineRole_PrepareInternalValues_LabelSelectorNoMatch(t *
 		},
 	}
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, "kubeClient", kube)
+	ctx = vaultutils.ContextWithKubeClient(ctx, kube)
 
 	if err := role.PrepareInternalValues(ctx, role); err != nil {
 		t.Fatalf("PrepareInternalValues: %v", err)

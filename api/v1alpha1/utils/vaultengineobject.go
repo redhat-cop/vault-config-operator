@@ -21,7 +21,6 @@ import (
 	"errors"
 	"strings"
 
-	vault "github.com/hashicorp/vault/api"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -29,7 +28,7 @@ import (
 type VaultEngineObject interface {
 	GetEngineListPath() string
 	GetEngineTunePath() string
-	GetTunePayload() map[string]interface{}
+	GetTunePayload() map[string]any
 	SetAccessor(accessor string)
 }
 
@@ -47,7 +46,7 @@ func NewVaultEngineEndpoint(obj client.Object) *VaultEngineEndpoint {
 
 func (ve *VaultEngineEndpoint) retrieveAccessor(context context.Context) (string, bool, error) {
 	log := log.FromContext(context)
-	vaultClient := context.Value("vaultClient").(*vault.Client)
+	vaultClient := VaultClientFromContext(context)
 	secret, err := vaultClient.Logical().Read(ve.vaultEngineObject.GetEngineListPath())
 	if err != nil {
 		log.Error(err, "unable to read engines at", "path", ve.vaultEngineObject.GetEngineListPath())
@@ -57,11 +56,11 @@ func (ve *VaultEngineEndpoint) retrieveAccessor(context context.Context) (string
 		return "", false, errors.New("read returned null secret")
 	}
 	found := false
-	foundData := map[string]interface{}{}
+	foundData := map[string]any{}
 	for key, data := range secret.Data {
 		if strings.Trim(key, "/") == strings.Trim(strings.TrimPrefix(ve.vaultObject.GetPath(), ve.vaultEngineObject.GetEngineListPath()), "/") {
 			found = true
-			foundData = data.(map[string]interface{})
+			foundData = data.(map[string]any)
 			break
 		}
 	}
@@ -96,7 +95,7 @@ func (ve *VaultEngineEndpoint) CreateOrUpdateTuneConfig(context context.Context)
 	return nil
 }
 
-func (ve *VaultEngineEndpoint) readTuneConfig(context context.Context) (map[string]interface{}, error) {
+func (ve *VaultEngineEndpoint) readTuneConfig(context context.Context) (map[string]any, error) {
 	log := log.FromContext(context)
 	secret, _, err := read(context, ve.vaultEngineObject.GetEngineTunePath())
 	if err != nil {
