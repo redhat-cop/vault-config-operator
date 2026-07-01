@@ -1,5 +1,5 @@
 # generated: 2026-04-11
-# last_updated: 2026-06-30
+# last_updated: 2026-07-01
 # project: vault-config-operator
 # project_key: NOKEY
 # tracking_system: file-system
@@ -36,6 +36,8 @@
 
 generated: 2026-04-11
 last_updated: 2026-06-30
+# Story D2.2 review 2026-06-30
+# Story D2.2 in-progress 2026-06-30
 # Story D2.1 review 2026-06-30
 # Story D2.1 in-progress 2026-06-30
 # Story D2.5 ready-for-dev 2026-06-30
@@ -331,7 +333,7 @@ development_status:
   # Epic D2: Auth Engine Documentation — Per-Engine Split & Standardization
   epic-d2: in-progress
   d2-1-create-auth-engines-directory-structure-and-index-page: done
-  d2-2-standardize-kubernetes-auth-engine-docs: ready-for-dev
+  d2-2-standardize-kubernetes-auth-engine-docs: done
   d2-3-standardize-ldap-auth-engine-docs: ready-for-dev
   d2-4-standardize-jwt-oidc-auth-engine-docs: ready-for-dev
   d2-5-standardize-gcp-and-azure-auth-engine-docs: ready-for-dev

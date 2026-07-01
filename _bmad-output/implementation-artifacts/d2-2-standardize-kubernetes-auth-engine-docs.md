@@ -1,6 +1,6 @@
 # Story D2.2: Standardize Kubernetes Auth Engine Docs
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -21,21 +21,28 @@ So that I can correctly configure the most common auth method.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `docs/auth-engines/kubernetes.md` (AC: 1, 2)
-  - [ ] 1.1: Write Overview section — 2-3 sentences explaining Kubernetes auth, link to Vault docs, list the two CRDs
-  - [ ] 1.2: Write KubernetesAuthEngineConfig section with Example YAML, Vault CLI Equivalent, and Field Descriptions table
-  - [ ] 1.3: Include the `kubernetesCACert` behavior table (from existing `auth-engines.md` lines 65-70) — this is a key differentiator for this engine
-  - [ ] 1.4: Write KubernetesAuthEngineRole section with Example YAML, Vault CLI Equivalent, and Field Descriptions table
-  - [ ] 1.5: Include `targetNamespaces` explanation (selector vs static list, mutual exclusivity)
-  - [ ] 1.6: Add "See Also" section with links to auth-section.md, contributing-vault-apis.md, and Vault docs
+- [x] Task 1: Create `docs/auth-engines/kubernetes.md` (AC: 1, 2)
+  - [x] 1.1: Write Overview section — 2-3 sentences explaining Kubernetes auth, link to Vault docs, list the two CRDs
+  - [x] 1.2: Write KubernetesAuthEngineConfig section with Example YAML, Vault CLI Equivalent, and Field Descriptions table
+  - [x] 1.3: Include the `kubernetesCACert` behavior table (from existing `auth-engines.md` lines 65-70) — this is a key differentiator for this engine
+  - [x] 1.4: Write KubernetesAuthEngineRole section with Example YAML, Vault CLI Equivalent, and Field Descriptions table
+  - [x] 1.5: Include `targetNamespaces` explanation (selector vs static list, mutual exclusivity)
+  - [x] 1.6: Add "See Also" section with links to auth-section.md, contributing-vault-apis.md, and Vault docs
 
-- [ ] Task 2: Audit field names for camelCase consistency (AC: 1)
-  - [ ] 2.1: Cross-reference all field names in the new doc against the Go CRD types (`kubernetesauthengineconfig_types.go`, `kubernetesauthenginerole_types.go`) — field names in the doc MUST match the `json:` tag values exactly
-  - [ ] 2.2: Fix any residual snake_case field names from the original `auth-engines.md` source (D1.3 did NOT audit Kubernetes section — confirmed in D1 retro)
+- [x] Task 2: Audit field names for camelCase consistency (AC: 1)
+  - [x] 2.1: Cross-reference all field names in the new doc against the Go CRD types (`kubernetesauthengineconfig_types.go`, `kubernetesauthenginerole_types.go`) — field names in the doc MUST match the `json:` tag values exactly
+  - [x] 2.2: Fix any residual snake_case field names from the original `auth-engines.md` source (D1.3 did NOT audit Kubernetes section — confirmed in D1 retro)
 
-- [ ] Task 3: Verify links and structure (AC: 2)
-  - [ ] 3.1: Verify relative links resolve correctly from `docs/auth-engines/kubernetes.md` (`../auth-section.md`, `../contributing-vault-apis.md`)
-  - [ ] 3.2: Verify structure matches `cert.md` pattern: heading hierarchy, section ordering, table format
+- [x] Task 3: Verify links and structure (AC: 2)
+  - [x] 3.1: Verify relative links resolve correctly from `docs/auth-engines/kubernetes.md` (`../auth-section.md`, `../contributing-vault-apis.md`)
+  - [x] 3.2: Verify structure matches `cert.md` pattern: heading hierarchy, section ordering, table format
+
+### Review Findings
+
+- [x] [Review][Patch] Clarify operator-resolved CLI mapping for config examples [`docs/auth-engines/kubernetes.md`]
+- [x] [Review][Patch] Explain `spec.authentication.path` vs `spec.path` to avoid mount confusion [`docs/auth-engines/kubernetes.md`]
+- [x] [Review][Patch] Document that an empty `targetNamespaceSelector: {}` matches all namespaces [`docs/auth-engines/kubernetes.md`]
+- [x] [Review][Patch] Document that static `targetNamespaces.targetNamespaces` must contain at least one namespace [`docs/auth-engines/kubernetes.md`]
 
 ## Dev Notes
 
@@ -210,10 +217,30 @@ docs/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (claude-4.6-opus)
 
 ### Debug Log References
 
+- Integration test baseline skipped: Vault Helm chart deployment timed out in Kind cluster (transient infrastructure issue). Proceeded as documentation-only story per user approval.
+
 ### Completion Notes List
 
+- Created `docs/auth-engines/kubernetes.md` with full template-compliant structure following `cert.md` reference implementation
+- Overview section with 2 sentences explaining Kubernetes auth, link to Vault docs, CRD list
+- KubernetesAuthEngineConfig: complete YAML example, Vault CLI equivalent with snake_case API names, field descriptions table with 13 fields (all camelCase matching JSON tags)
+- kubernetesCACert behavior table documenting CA resolution logic across 4 field combinations
+- KubernetesAuthEngineRole: complete YAML example with targetNamespaceSelector, Vault CLI equivalent, field descriptions table with 17 fields
+- Target Namespaces section explaining targetNamespaceSelector vs targetNamespaces mutual exclusivity, dynamic resolution, and `__no_namespace__` workaround
+- No Credential Resolution section (Kubernetes auth doesn't use external credentials)
+- See Also with links to auth-section.md, contributing-vault-apis.md, and Vault docs
+- camelCase audit: all 30 field names cross-referenced against Go CRD JSON tags — zero snake_case residuals found
+- Structure verified against cert.md: heading hierarchy, section ordering, table format all match
+- Relative links verified: `../auth-section.md` and `../contributing-vault-apis.md` both resolve correctly
+
+### Change Log
+
+- 2026-06-30: Created `docs/auth-engines/kubernetes.md` — extracted and standardized Kubernetes auth engine documentation from original `auth-engines.md` content per template and cert.md reference
+
 ### File List
+
+- docs/auth-engines/kubernetes.md (new)
