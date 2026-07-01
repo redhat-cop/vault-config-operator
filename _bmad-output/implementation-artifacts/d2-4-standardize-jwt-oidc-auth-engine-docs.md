@@ -1,6 +1,6 @@
 # Story D2.4: Standardize JWT/OIDC Auth Engine Docs
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -26,24 +26,31 @@ So that I can configure either mode correctly.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `docs/auth-engines/jwt-oidc.md` (AC: 1, 2)
-  - [ ] 1.1: Write Overview section — 2-3 sentences explaining JWT/OIDC auth, link to Vault docs, list the two CRDs (JWTOIDCAuthEngineConfig, JWTOIDCAuthEngineRole), explain dual-mode support
-  - [ ] 1.2: Write JWTOIDCAuthEngineConfig section with Example YAML (OIDC mode with Azure provider), Vault CLI Equivalent, and Field Descriptions table
-  - [ ] 1.3: Organize JWTOIDCAuthEngineConfig fields into logical groups: OIDC Discovery, JWKS Validation, JWT Validation, General Settings
-  - [ ] 1.4: Write a "JWT vs OIDC Modes" subsection explaining mutually-exclusive validation source fields
-  - [ ] 1.5: Write JWTOIDCAuthEngineRole section with Example YAML, Vault CLI Equivalent, and Field Descriptions table
-  - [ ] 1.6: Organize JWTOIDCAuthEngineRole fields into logical groups: Role Identity, Claims & Binding, OIDC-Specific, JWT-Specific (leeway fields), Token Parameters
-  - [ ] 1.7: Write Credential Resolution section documenting all three `OIDCCredentials` methods (Pattern B nested object) with YAML examples
-  - [ ] 1.8: Add "See Also" section with links to auth-section.md, contributing-vault-apis.md, and Vault docs
+- [x] Task 1: Create `docs/auth-engines/jwt-oidc.md` (AC: 1, 2)
+  - [x] 1.1: Write Overview section — 2-3 sentences explaining JWT/OIDC auth, link to Vault docs, list the two CRDs (JWTOIDCAuthEngineConfig, JWTOIDCAuthEngineRole), explain dual-mode support
+  - [x] 1.2: Write JWTOIDCAuthEngineConfig section with Example YAML (OIDC mode with Azure provider), Vault CLI Equivalent, and Field Descriptions table
+  - [x] 1.3: Organize JWTOIDCAuthEngineConfig fields into logical groups: OIDC Discovery, JWKS Validation, JWT Validation, General Settings
+  - [x] 1.4: Write a "JWT vs OIDC Modes" subsection explaining mutually-exclusive validation source fields
+  - [x] 1.5: Write JWTOIDCAuthEngineRole section with Example YAML, Vault CLI Equivalent, and Field Descriptions table
+  - [x] 1.6: Organize JWTOIDCAuthEngineRole fields into logical groups: Role Identity, Claims & Binding, OIDC-Specific, JWT-Specific (leeway fields), Token Parameters
+  - [x] 1.7: Write Credential Resolution section documenting all three `OIDCCredentials` methods (Pattern B nested object) with YAML examples
+  - [x] 1.8: Add "See Also" section with links to auth-section.md, contributing-vault-apis.md, and Vault docs
 
-- [ ] Task 2: Audit field names for camelCase consistency (AC: 3)
-  - [ ] 2.1: Cross-reference all field names in the new doc against `jwtoidcauthengineconfig_types.go` and `jwtoidcauthenginerole_types.go` — field names MUST match the `json:` tag values exactly
-  - [ ] 2.2: Fix any residual snake_case field names from the original `auth-engines.md` source
-  - [ ] 2.3: Verify fields with non-standard casing are correct: `OIDCDiscoveryURL`, `OIDCDiscoveryCAPEM`, `OIDCClientID`, `OIDCResponseMode`, `OIDCResponseTypes`, `JWKSURL`, `JWKSCAPEM`, `JWTValidationPubKeys`, `JWTSupportedAlgs`, `OIDCScopes` (these use uppercase prefixes per Go convention)
+- [x] Task 2: Audit field names for camelCase consistency (AC: 3)
+  - [x] 2.1: Cross-reference all field names in the new doc against `jwtoidcauthengineconfig_types.go` and `jwtoidcauthenginerole_types.go` — field names MUST match the `json:` tag values exactly
+  - [x] 2.2: Fix any residual snake_case field names from the original `auth-engines.md` source
+  - [x] 2.3: Verify fields with non-standard casing are correct: `OIDCDiscoveryURL`, `OIDCDiscoveryCAPEM`, `OIDCClientID`, `OIDCResponseMode`, `OIDCResponseTypes`, `JWKSURL`, `JWKSCAPEM`, `JWTValidationPubKeys`, `JWTSupportedAlgs`, `OIDCScopes` (these use uppercase prefixes per Go convention)
 
-- [ ] Task 3: Verify links and structure (AC: 2)
-  - [ ] 3.1: Verify relative links resolve correctly from `docs/auth-engines/jwt-oidc.md` (`../auth-section.md`, `../contributing-vault-apis.md`, `../secret-management.md`)
-  - [ ] 3.2: Verify structure matches `cert.md` pattern: heading hierarchy, section ordering, table format
+- [x] Task 3: Verify links and structure (AC: 2)
+  - [x] 3.1: Verify relative links resolve correctly from `docs/auth-engines/jwt-oidc.md` (`../auth-section.md`, `../contributing-vault-apis.md`, `../secret-management.md`)
+  - [x] 3.2: Verify structure matches `cert.md` pattern: heading hierarchy, section ordering, table format
+
+### Review Findings
+
+- [x] [Review][Patch] Clarify that `OIDCClientID` is not universally required for every OIDC configuration [docs/auth-engines/jwt-oidc.md:80]
+- [x] [Review][Patch] Remove or correct ignored `usernameKey`/`passwordKey` fields in the `RandomSecret` example [docs/auth-engines/jwt-oidc.md:270]
+- [x] [Review][Patch] Fix the `name` field docs for `JWTOIDCAuthEngineRole` to match the required schema behavior [docs/auth-engines/jwt-oidc.md:185]
+- [x] [Review][Patch] Explicitly document that JWT roles must set `roleType: jwt`; config mode does not imply role mode [docs/auth-engines/jwt-oidc.md:186]
 
 ## Dev Notes
 
@@ -317,10 +324,31 @@ docs/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Integration tests (`make integration`) failed during pre-flight due to transient infrastructure issue: Vault Helm chart deployment timed out in Kind cluster (`Error: release vault failed, and has been uninstalled due to atomic being set: timed out waiting for the condition`). This is a known environment issue unrelated to code changes. Story is documentation-only (no Go code changes).
+
 ### Completion Notes List
 
+- Created `docs/auth-engines/jwt-oidc.md` with full standardized documentation
+- Overview section explains dual-mode (JWT vs OIDC) with CRD links
+- JWTOIDCAuthEngineConfig: complete YAML example (Azure OIDC provider), Vault CLI equivalent, field descriptions organized into 4 groups (Common, OIDC Discovery, JWKS/JWT Validation, General Settings)
+- "JWT vs OIDC Modes" subsection with decision table showing mutually-exclusive validation sources
+- JWTOIDCAuthEngineRole: complete YAML example, Vault CLI equivalent, field descriptions organized into 5 groups (Role Identity, Claims & Binding, OIDC-Specific, JWT-Specific Leeway, Token Parameters)
+- Credential Resolution section documents all three OIDCCredentials methods (Pattern B nested object) with YAML examples
+- All enum validations documented: `OIDCResponseMode` (query/form_post), `roleType` (oidc/jwt), `boundClaimsType` (string/glob), `tokenType` (5 values)
+- Fixed known issue: `tokenTTL` description corrected (was copy-paste of `maxage` in original source)
+- Fixed known issue: `JWKSCAPEM` field included (missing from original source)
+- All field names verified against Go `json:` tags — zero snake_case residuals
+- All relative links verified to resolve to existing files
+- Structure matches `cert.md` reference implementation pattern
+
+### Change Log
+
+- 2026-07-01: Created `docs/auth-engines/jwt-oidc.md` — full standardized JWT/OIDC auth engine documentation
+
 ### File List
+
+- `docs/auth-engines/jwt-oidc.md` (new)
