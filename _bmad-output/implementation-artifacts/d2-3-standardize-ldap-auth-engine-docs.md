@@ -1,6 +1,6 @@
 # Story D2.3: Standardize LDAP Auth Engine Docs
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -27,23 +27,30 @@ So that I can configure LDAP auth without drowning in field descriptions.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `docs/auth-engines/ldap.md` (AC: 1, 2)
-  - [ ] 1.1: Write Overview section — 2-3 sentences explaining LDAP auth, link to Vault docs, list the two CRDs (LDAPAuthEngineConfig, LDAPAuthEngineGroup)
-  - [ ] 1.2: Write LDAPAuthEngineConfig section with Example YAML, Vault CLI Equivalent, and Field Descriptions table
-  - [ ] 1.3: Organize LDAPAuthEngineConfig fields into logical groups: Connection & TLS, User Search, Group Search, Token Parameters
-  - [ ] 1.4: Write TLS Configuration subsection documenting both inline fields (`certificate`, `clientTLSCert`, `clientTLSKey`) and the `tLSConfig` secret-based approach
-  - [ ] 1.5: Write LDAPAuthEngineGroup section with Example YAML, Vault CLI Equivalent, and Field Descriptions table
-  - [ ] 1.6: Write Credential Resolution section documenting all three `bindCredentials` methods with YAML examples
-  - [ ] 1.7: Add "See Also" section with links to auth-section.md, contributing-vault-apis.md, and Vault docs
+- [x] Task 1: Create `docs/auth-engines/ldap.md` (AC: 1, 2)
+  - [x] 1.1: Write Overview section — 2-3 sentences explaining LDAP auth, link to Vault docs, list the two CRDs (LDAPAuthEngineConfig, LDAPAuthEngineGroup)
+  - [x] 1.2: Write LDAPAuthEngineConfig section with Example YAML, Vault CLI Equivalent, and Field Descriptions table
+  - [x] 1.3: Organize LDAPAuthEngineConfig fields into logical groups: Connection & TLS, User Search, Group Search, Token Parameters
+  - [x] 1.4: Write TLS Configuration subsection documenting both inline fields (`certificate`, `clientTLSCert`, `clientTLSKey`) and the `tLSConfig` secret-based approach
+  - [x] 1.5: Write LDAPAuthEngineGroup section with Example YAML, Vault CLI Equivalent, and Field Descriptions table
+  - [x] 1.6: Write Credential Resolution section documenting all three `bindCredentials` methods with YAML examples
+  - [x] 1.7: Add "See Also" section with links to auth-section.md, contributing-vault-apis.md, and Vault docs
 
-- [ ] Task 2: Audit field names for camelCase consistency (AC: 4)
-  - [ ] 2.1: Cross-reference all field names in the new doc against `ldapauthengineconfig_types.go` and `ldapauthenginegroup_types.go` — field names MUST match the `json:` tag values exactly
-  - [ ] 2.2: Fix any residual snake_case field names from the original `auth-engines.md` source (D1.3 did NOT audit LDAP section — confirmed in D1 retro)
-  - [ ] 2.3: Verify fields with non-standard casing are correct: `TLSMinVersion`, `TLSMaxVersion`, `UPNDomain` (these use uppercase per Go convention)
+- [x] Task 2: Audit field names for camelCase consistency (AC: 4)
+  - [x] 2.1: Cross-reference all field names in the new doc against `ldapauthengineconfig_types.go` and `ldapauthenginegroup_types.go` — field names MUST match the `json:` tag values exactly
+  - [x] 2.2: Fix any residual snake_case field names from the original `auth-engines.md` source (D1.3 did NOT audit LDAP section — confirmed in D1 retro)
+  - [x] 2.3: Verify fields with non-standard casing are correct: `TLSMinVersion`, `TLSMaxVersion`, `UPNDomain` (these use uppercase per Go convention)
 
-- [ ] Task 3: Verify links and structure (AC: 2)
-  - [ ] 3.1: Verify relative links resolve correctly from `docs/auth-engines/ldap.md` (`../auth-section.md`, `../contributing-vault-apis.md`)
-  - [ ] 3.2: Verify structure matches `cert.md` pattern: heading hierarchy, section ordering, table format
+- [x] Task 3: Verify links and structure (AC: 2)
+  - [x] 3.1: Verify relative links resolve correctly from `docs/auth-engines/ldap.md` (`../auth-section.md`, `../contributing-vault-apis.md`)
+  - [x] 3.2: Verify structure matches `cert.md` pattern: heading hierarchy, section ordering, table format
+
+### Review Findings
+
+- [x] [Review][Patch] Clarify `spec.authentication.path` vs `spec.path` in the LDAP examples [`docs/auth-engines/ldap.md:20-49`]
+- [x] [Review][Patch] Explain that the Vault CLI example shows the resolved TLS fields for `tLSConfig`, and document the exact Secret keys required by `tLSConfig.tlsSecret` [`docs/auth-engines/ldap.md:51-71`]
+- [x] [Review][Patch] Document that exactly one of `bindCredentials.secret`, `bindCredentials.vaultSecret`, or `bindCredentials.randomSecret` may be set [`docs/auth-engines/ldap.md:217-255`]
+- [x] [Review][Patch] Correct the documented default for `groupAttr` to `cn` [`docs/auth-engines/ldap.md:116-121`]
 
 ## Dev Notes
 
@@ -278,10 +285,26 @@ docs/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (claude-4.6-opus)
 
 ### Debug Log References
 
+- Integration tests (`make integration`) failed twice during Step 0 pre-flight due to Vault Helm chart timeout in kind cluster (podman provider). Error: "release vault failed, and has been uninstalled due to atomic being set: timed out waiting for the condition". This is a pre-existing infrastructure issue unrelated to documentation changes. Story Dev Notes explicitly state "No Go code changes. No tests to run."
+
 ### Completion Notes List
 
+- Created `docs/auth-engines/ldap.md` with complete LDAP auth engine documentation
+- Structured per template: Overview → LDAPAuthEngineConfig (Example, CLI, Fields, TLS Config) → LDAPAuthEngineGroup (Example, CLI, Fields) → Credential Resolution → See Also
+- Organized LDAPAuthEngineConfig fields into 4 logical groups: Connection & TLS, User Search, Group Search, Token Parameters
+- Documented both TLS methods: inline fields and `tLSConfig` secret-based approach with mapping table
+- Documented all three `bindCredentials` methods (Kubernetes Secret, Vault Secret, RandomSecret) with YAML examples
+- All field names verified against `json:` tags in Go types — using exact camelCase (no snake_case)
+- Non-standard casing verified: `TLSMinVersion`, `TLSMaxVersion`, `UPNDomain`, `tLSConfig`
+- All relative links verified to exist: `../auth-section.md`, `../contributing-vault-apis.md`, `../secret-management.md`
+- Structure validated against `cert.md` reference implementation
+
 ### File List
+
+- docs/auth-engines/ldap.md (new)
+- _bmad-output/implementation-artifacts/d2-3-standardize-ldap-auth-engine-docs.md (modified — task checkboxes, status, dev agent record)
+- _bmad-output/implementation-artifacts/sprint-status.yaml (modified — story status update)
