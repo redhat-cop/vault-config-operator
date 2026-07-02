@@ -35,7 +35,10 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-07-01
+last_updated: 2026-07-02
+# Story D2.5 done 2026-07-02
+# Story D2.5 review 2026-07-01
+# Story D2.5 in-progress 2026-07-01
 # Story D2.4 done 2026-07-01
 # Story D2.4 review 2026-07-01
 # Story D2.4 in-progress 2026-07-01
@@ -342,7 +345,7 @@ development_status:
   d2-2-standardize-kubernetes-auth-engine-docs: done
   d2-3-standardize-ldap-auth-engine-docs: done
   d2-4-standardize-jwt-oidc-auth-engine-docs: done
-  d2-5-standardize-gcp-and-azure-auth-engine-docs: ready-for-dev
+  d2-5-standardize-gcp-and-azure-auth-engine-docs: done
   epic-d2-retrospective: optional
 
   # Epic D3: Secret Engine Documentation — Per-Engine Split & Standardization

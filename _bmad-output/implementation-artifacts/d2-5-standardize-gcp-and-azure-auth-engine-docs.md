@@ -1,6 +1,6 @@
 # Story D2.5: Standardize GCP and Azure Auth Engine Docs
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -32,28 +32,28 @@ So that I can configure cloud auth without confusion.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `docs/auth-engines/gcp.md` (AC: 1, 3, 5, 6)
-  - [ ] 1.1: Write Overview section — 2-3 sentences explaining GCP auth, link to Vault docs, list the two CRDs (GCPAuthEngineConfig, GCPAuthEngineRole), mention IAM and GCE role types
-  - [ ] 1.2: Write GCPAuthEngineConfig section with Example YAML (fix `path: azure` → `path: gcp`), Vault CLI Equivalent, and Field Descriptions table
-  - [ ] 1.3: Write GCPAuthEngineRole section with Example YAML, Vault CLI Equivalent, and Field Descriptions organized into groups: Role Identity, Token Parameters, IAM-Only Fields, GCE-Only Fields
-  - [ ] 1.4: Write Credential Resolution section documenting all three `GCPCredentials` methods (Pattern B nested object) with YAML examples
-  - [ ] 1.5: Add "See Also" section with links to auth-section.md, contributing-vault-apis.md, and Vault docs
+- [x] Task 1: Create `docs/auth-engines/gcp.md` (AC: 1, 3, 5, 6)
+  - [x] 1.1: Write Overview section — 2-3 sentences explaining GCP auth, link to Vault docs, list the two CRDs (GCPAuthEngineConfig, GCPAuthEngineRole), mention IAM and GCE role types
+  - [x] 1.2: Write GCPAuthEngineConfig section with Example YAML (fix `path: azure` → `path: gcp`), Vault CLI Equivalent, and Field Descriptions table
+  - [x] 1.3: Write GCPAuthEngineRole section with Example YAML, Vault CLI Equivalent, and Field Descriptions organized into groups: Role Identity, Token Parameters, IAM-Only Fields, GCE-Only Fields
+  - [x] 1.4: Write Credential Resolution section documenting all three `GCPCredentials` methods (Pattern B nested object) with YAML examples
+  - [x] 1.5: Add "See Also" section with links to auth-section.md, contributing-vault-apis.md, and Vault docs
 
-- [ ] Task 2: Create `docs/auth-engines/azure.md` (AC: 2, 4, 5, 6)
-  - [ ] 2.1: Write Overview section — 2-3 sentences explaining Azure auth, link to Vault docs, list the two CRDs (AzureAuthEngineConfig, AzureAuthEngineRole)
-  - [ ] 2.2: Write AzureAuthEngineConfig section with Example YAML, Vault CLI Equivalent, and Field Descriptions table
-  - [ ] 2.3: Write AzureAuthEngineRole section with Example YAML, Vault CLI Equivalent, and Field Descriptions table (Binding Fields + Token Parameters)
-  - [ ] 2.4: Write Credential Resolution section documenting all three `azureCredentials` methods (Pattern B nested object) with YAML examples
-  - [ ] 2.5: Add "See Also" section with links to auth-section.md, contributing-vault-apis.md, and Vault docs
+- [x] Task 2: Create `docs/auth-engines/azure.md` (AC: 2, 4, 5, 6)
+  - [x] 2.1: Write Overview section — 2-3 sentences explaining Azure auth, link to Vault docs, list the two CRDs (AzureAuthEngineConfig, AzureAuthEngineRole)
+  - [x] 2.2: Write AzureAuthEngineConfig section with Example YAML, Vault CLI Equivalent, and Field Descriptions table
+  - [x] 2.3: Write AzureAuthEngineRole section with Example YAML, Vault CLI Equivalent, and Field Descriptions table (Binding Fields + Token Parameters)
+  - [x] 2.4: Write Credential Resolution section documenting all three `azureCredentials` methods (Pattern B nested object) with YAML examples
+  - [x] 2.5: Add "See Also" section with links to auth-section.md, contributing-vault-apis.md, and Vault docs
 
-- [ ] Task 3: Audit field names for camelCase consistency (AC: 3)
-  - [ ] 3.1: Cross-reference all field names in `gcp.md` against `gcpauthengineconfig_types.go` and `gcpauthenginerole_types.go` — field names MUST match the `json:` tag values exactly
-  - [ ] 3.2: Cross-reference all field names in `azure.md` against `azureauthengineconfig_types.go` and `azureauthenginerole_types.go` — field names MUST match the `json:` tag values exactly
-  - [ ] 3.3: Fix any residual snake_case field names from the original `auth-engines.md` source
+- [x] Task 3: Audit field names for camelCase consistency (AC: 3)
+  - [x] 3.1: Cross-reference all field names in `gcp.md` against `gcpauthengineconfig_types.go` and `gcpauthenginerole_types.go` — field names MUST match the `json:` tag values exactly
+  - [x] 3.2: Cross-reference all field names in `azure.md` against `azureauthengineconfig_types.go` and `azureauthenginerole_types.go` — field names MUST match the `json:` tag values exactly
+  - [x] 3.3: Fix any residual snake_case field names from the original `auth-engines.md` source
 
-- [ ] Task 4: Verify links and structure (AC: 5)
-  - [ ] 4.1: Verify relative links resolve correctly from `docs/auth-engines/gcp.md` and `docs/auth-engines/azure.md` (`../auth-section.md`, `../contributing-vault-apis.md`, `../secret-management.md`)
-  - [ ] 4.2: Verify structure of both files matches `cert.md` pattern: heading hierarchy, section ordering, table format
+- [x] Task 4: Verify links and structure (AC: 5)
+  - [x] 4.1: Verify relative links resolve correctly from `docs/auth-engines/gcp.md` and `docs/auth-engines/azure.md` (`../auth-section.md`, `../contributing-vault-apis.md`, `../secret-management.md`)
+  - [x] 4.2: Verify structure of both files matches `cert.md` pattern: heading hierarchy, section ordering, table format
 
 ## Dev Notes
 
@@ -353,10 +353,30 @@ docs/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Integration tests failed consistently due to Vault Helm chart timeout in Kind cluster (infrastructure issue, not code-related). Proceeded with documentation-only story per Dev Notes: "No Go code changes. No tests to run."
+
 ### Completion Notes List
 
+- Created `docs/auth-engines/gcp.md` with full standardized documentation: Overview (IAM + GCE dual role types), GCPAuthEngineConfig (Example, CLI, Field Descriptions), GCPAuthEngineRole (Example, CLI, Field Descriptions with Role Identity / Token Parameters / IAM-Only / GCE-Only groups), Credential Resolution (Pattern B: Kubernetes Secret, Vault Secret, RandomSecret), See Also
+- Fixed known copy-paste error: `path: azure` → `path: gcp` in GCPAuthEngineConfig example
+- Created `docs/auth-engines/azure.md` with full standardized documentation: Overview, AzureAuthEngineConfig (Example, CLI, Field Descriptions), AzureAuthEngineRole (Example, CLI, Field Descriptions with Binding Fields + Token Parameters), Credential Resolution (Pattern B: Kubernetes Secret, Vault Secret, RandomSecret), See Also
+- Documented IsDeletable behavioral difference: GCPAuthEngineConfig does NOT clean up on CR deletion, AzureAuthEngineConfig does
+- Documented all enum validations: GCEalias (instance_id, role_id), GCP tokenType (5 values), Azure environment (4 values), Azure tokenType (5 values), GCP type (iam, gce)
+- All field names verified against Go type `json:` tags — zero snake_case issues, all camelCase correct
+- All relative links verified: `../auth-section.md`, `../contributing-vault-apis.md`, `../secret-management.md` all resolve correctly
+- Structure matches cert.md pattern: Title → Overview → Config CRD → Role CRD → Credential Resolution → See Also
+
 ### File List
+
+- docs/auth-engines/gcp.md (new)
+- docs/auth-engines/azure.md (new)
+- _bmad-output/implementation-artifacts/sprint-status.yaml (modified)
+- _bmad-output/implementation-artifacts/d2-5-standardize-gcp-and-azure-auth-engine-docs.md (modified)
+
+### Change Log
+
+- 2026-07-01: Created GCP and Azure auth engine documentation files, standardized per template with all field names verified against Go types (D2.5 implementation)
