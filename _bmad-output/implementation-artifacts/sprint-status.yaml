@@ -36,6 +36,7 @@
 
 generated: 2026-04-11
 last_updated: 2026-07-02
+# Epic D2 done + retrospective completed 2026-07-02
 # Story D2.5 done 2026-07-02
 # Story D2.5 review 2026-07-01
 # Story D2.5 in-progress 2026-07-01
@@ -340,13 +341,13 @@ development_status:
   epic-d1-retrospective: done
 
   # Epic D2: Auth Engine Documentation — Per-Engine Split & Standardization
-  epic-d2: in-progress
+  epic-d2: done
   d2-1-create-auth-engines-directory-structure-and-index-page: done
   d2-2-standardize-kubernetes-auth-engine-docs: done
   d2-3-standardize-ldap-auth-engine-docs: done
   d2-4-standardize-jwt-oidc-auth-engine-docs: done
   d2-5-standardize-gcp-and-azure-auth-engine-docs: done
-  epic-d2-retrospective: optional
+  epic-d2-retrospective: done
 
   # Epic D3: Secret Engine Documentation — Per-Engine Split & Standardization
   epic-d3: backlog
