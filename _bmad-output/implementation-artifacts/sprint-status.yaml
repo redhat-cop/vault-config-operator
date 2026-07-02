@@ -1,5 +1,5 @@
 # generated: 2026-04-11
-# last_updated: 2026-06-23
+# last_updated: 2026-07-01
 # project: vault-config-operator
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,27 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-06-28
+last_updated: 2026-07-02
+# Epic D2 done + retrospective completed 2026-07-02
+# Story D2.5 done 2026-07-02
+# Story D2.5 review 2026-07-01
+# Story D2.5 in-progress 2026-07-01
+# Story D2.4 done 2026-07-01
+# Story D2.4 review 2026-07-01
+# Story D2.4 in-progress 2026-07-01
+# Story D2.3 done 2026-07-01
+# Story D2.3 review 2026-07-01
+# Story D2.3 in-progress 2026-07-01
+# Story D2.2 review 2026-06-30
+# Story D2.2 in-progress 2026-06-30
+# Story D2.1 review 2026-06-30
+# Story D2.1 in-progress 2026-06-30
+# Story D2.5 ready-for-dev 2026-06-30
+# Story D2.4 ready-for-dev 2026-06-30
+# Story D2.3 ready-for-dev 2026-06-30
+# Story D2.2 ready-for-dev 2026-06-30
+# Epic D2 in-progress 2026-06-30
+# Story D2.1 ready-for-dev 2026-06-30
 # Epic D1 done + retrospective completed 2026-06-28
 # Story D1.3 done 2026-06-23
 # Story D1.3 review 2026-06-23
@@ -321,13 +341,13 @@ development_status:
   epic-d1-retrospective: done
 
   # Epic D2: Auth Engine Documentation — Per-Engine Split & Standardization
-  epic-d2: backlog
-  d2-1-create-auth-engines-directory-structure-and-index-page: backlog
-  d2-2-standardize-kubernetes-auth-engine-docs: backlog
-  d2-3-standardize-ldap-auth-engine-docs: backlog
-  d2-4-standardize-jwt-oidc-auth-engine-docs: backlog
-  d2-5-standardize-gcp-and-azure-auth-engine-docs: backlog
-  epic-d2-retrospective: optional
+  epic-d2: done
+  d2-1-create-auth-engines-directory-structure-and-index-page: done
+  d2-2-standardize-kubernetes-auth-engine-docs: done
+  d2-3-standardize-ldap-auth-engine-docs: done
+  d2-4-standardize-jwt-oidc-auth-engine-docs: done
+  d2-5-standardize-gcp-and-azure-auth-engine-docs: done
+  epic-d2-retrospective: done
 
   # Epic D3: Secret Engine Documentation — Per-Engine Split & Standardization
   epic-d3: backlog
