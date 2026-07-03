@@ -1,6 +1,6 @@
 # Story D3.1: Create Secret-Engines Directory Structure and Index Page
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -20,10 +20,10 @@ So that I can quickly navigate to the engine I need.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `docs/secret-engines/index.md` (AC: 1)
-  - [ ] 1.1: Create the `docs/secret-engines/` directory and write the page title and overview paragraph describing secret engine support in the operator (2-3 sentences, explain that the operator supports dynamic secrets via Config CRDs and Role CRDs for each engine)
-  - [ ] 1.2: Include the SecretEngineMount section — copy verbatim from `docs/secret-engines.md` lines 23-50 (the `## SecretEngineMount` heading, YAML example, `type` and `path` field descriptions, Vault CLI equivalent). This is the generic mount and belongs in the index, not in a per-engine file
-  - [ ] 1.3: Create a markdown table listing all supported secret engines with columns: Engine | Config CRD | Role CRD(s) | File. Link each file to its future per-engine file path (relative links). Use these entries:
+- [x] Task 1: Create `docs/secret-engines/index.md` (AC: 1)
+  - [x] 1.1: Create the `docs/secret-engines/` directory and write the page title and overview paragraph describing secret engine support in the operator (2-3 sentences, explain that the operator supports dynamic secrets via Config CRDs and Role CRDs for each engine)
+  - [x] 1.2: Include the SecretEngineMount section — copy verbatim from `docs/secret-engines.md` lines 23-50 (the `## SecretEngineMount` heading, YAML example, `type` and `path` field descriptions, Vault CLI equivalent). This is the generic mount and belongs in the index, not in a per-engine file
+  - [x] 1.3: Create a markdown table listing all supported secret engines with columns: Engine | Config CRD | Role CRD(s) | File. Link each file to its future per-engine file path (relative links). Use these entries:
 
     | Engine | Config CRD | Role CRD(s) | File |
     |--------|-----------|-------------|------|
@@ -35,22 +35,26 @@ So that I can quickly navigate to the engine I need.
     | Kubernetes | KubernetesSecretEngineConfig | KubernetesSecretEngineRole | [kubernetes.md](kubernetes.md) |
     | Azure | AzureSecretEngineConfig | AzureSecretEngineRole | [azure.md](azure.md) |
 
-  - [ ] 1.4: Add a "Common Configuration" section with a link to `../auth-section.md` for the shared `authentication` block and a link to `../contributing-vault-apis.md` for the shared `connection` block
-  - [ ] 1.5: Add a "See Also" section with links to the main README, contributing guide, and auth engines index (`../auth-engines/index.md`)
+  - [x] 1.4: Add a "Common Configuration" section with a link to `../auth-section.md` for the shared `authentication` block and a link to `../contributing-vault-apis.md` for the shared `connection` block
+  - [x] 1.5: Add a "See Also" section with links to the main README, contributing guide, and auth engines index (`../auth-engines/index.md`)
 
-- [ ] Task 2: Replace `docs/secret-engines.md` with a redirect pointer (AC: 2)
-  - [ ] 2.1: Replace the contents of `docs/secret-engines.md` with a short document that:
+- [x] Task 2: Replace `docs/secret-engines.md` with a redirect pointer (AC: 2)
+  - [x] 2.1: Replace the contents of `docs/secret-engines.md` with a short document that:
     - States the secret engine documentation has moved to `docs/secret-engines/`
     - Links to `secret-engines/index.md` as the new location
     - Preserves the original page title for any external bookmarks
-  - [ ] 2.2: Keep the file small (under 15 lines) — it is just a pointer
+  - [x] 2.2: Keep the file small (under 15 lines) — it is just a pointer
 
-- [ ] Task 3: Update `docs/auth-engines/index.md` See Also section (AC: 1)
-  - [ ] 3.1: Replace the HTML comment placeholder `<!-- Secret engines index will be created in D3: ../secret-engines/index.md -->` with an actual link to `../secret-engines/index.md` in the See Also section
+- [x] Task 3: Update `docs/auth-engines/index.md` See Also section (AC: 1)
+  - [x] 3.1: Replace the HTML comment placeholder `<!-- Secret engines index will be created in D3: ../secret-engines/index.md -->` with an actual link to `../secret-engines/index.md` in the See Also section
 
-- [ ] Task 4: Verify cross-references (AC: 1, 2)
-  - [ ] 4.1: Check if any other doc files link to `secret-engines.md` sections — document all found cross-references in the Dev Agent Record for downstream stories (D3.2-D3.4 will update them as content moves)
-  - [ ] 4.2: The known cross-references in `readme.md` lines 84-95 link to `docs/secret-engines.md` with anchors — document these for downstream stories
+- [x] Task 4: Verify cross-references (AC: 1, 2)
+  - [x] 4.1: Check if any other doc files link to `secret-engines.md` sections — document all found cross-references in the Dev Agent Record for downstream stories (D3.2-D3.4 will update them as content moves)
+  - [x] 4.2: The known cross-references in `readme.md` lines 84-95 link to `docs/secret-engines.md` with anchors — document these for downstream stories
+
+### Review Findings
+
+- [x] [Review][Patch] Preserve the original redirect page title in `docs/secret-engines.md` [`docs/secret-engines.md:1`] The story explicitly requires keeping the original `# Secret Engines` title for external bookmarks, but the redirect page was changed to `# Secret Engines APIs`. — Fixed: restored to `# Secret Engines`.
 
 ## Dev Notes
 
@@ -202,10 +206,44 @@ docs/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Opus 4.6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Created `docs/secret-engines/` directory and `docs/secret-engines/index.md` with overview paragraph, SecretEngineMount section (copied verbatim from original `secret-engines.md` lines 23-50), supported secret engines table with 7 engine entries and relative links to future per-engine files, Common Configuration section linking to `auth-section.md` and `contributing-vault-apis.md`, and See Also section linking to README, contributing guide, and auth engines index
+- Replaced `docs/secret-engines.md` (741 lines) with 5-line redirect pointer following the exact pattern from `docs/auth-engines.md` (D2.1 precedent)
+- Updated `docs/auth-engines/index.md` See Also section: replaced HTML comment placeholder with actual link to `../secret-engines/index.md`
+- Cross-reference verification: confirmed only `readme.md` lines 84-95 reference `secret-engines.md` with anchors (12 links total). No other doc files within `docs/` contain references. All 12 links are documented in Dev Notes and assigned to downstream stories (D3.2, D3.3, D3.4) for updating as per-engine content is extracted
+
+### Cross-References Found (for downstream stories)
+
+From `readme.md`:
+
+| Line | Current Link | Downstream Story |
+|------|-------------|-----------------|
+| 84 | `./docs/secret-engines.md#SecretEngineMount` | Stays in index — update to `./docs/secret-engines/index.md#secretenginemount` in any D3.x story |
+| 85 | `./docs/secret-engines.md#DatabaseSecretEngineConfig` | D3.2 |
+| 86 | `./docs/secret-engines.md#DatabaseSecretEngineRole` | D3.2 |
+| 87 | `./docs/secret-engines.md#GitHubSecretEngineConfig` | D3.4 |
+| 88 | `./docs/secret-engines.md#GitHubSecretEngineRole` | D3.4 |
+| 89 | `./docs/secret-engines.md#pkisecretengineconfig` | D3.3 |
+| 90 | `./docs/secret-engines.md#pkisecretenginerole` | D3.3 |
+| 91 | `./docs/secret-engines.md#QuaySecretEngineConfig` | D3.4 |
+| 92 | `./docs/secret-engines.md#QuaySecretEngineRole` | D3.4 |
+| 93 | `./docs/secret-engines.md#QuaySecretEngineStaticRole` | D3.4 |
+| 94 | `./docs/secret-engines.md#rabbitmqsecretengineconfig` | D3.3 |
+| 95 | `./docs/secret-engines.md#rabbitmqsecretenginerole` | D3.3 |
+
+No references found in other doc files (`docs/secret-management.md`, `docs/end-to-end-example.md`, `docs/contributing-vault-apis.md`, `docs/auth-section.md`, etc.).
+
 ### File List
+
+- docs/secret-engines/index.md (new)
+- docs/secret-engines.md (modified — replaced with redirect pointer)
+- docs/auth-engines/index.md (modified — replaced D3 comment placeholder with actual link)
+
+### Change Log
+
+- 2026-07-03: Created secret-engines directory structure, index page, redirect pointer, and activated auth-engines cross-link (D3.1 implementation complete)

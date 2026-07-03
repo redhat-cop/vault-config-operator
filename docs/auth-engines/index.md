@@ -43,4 +43,4 @@ The `path` field specifies the path at which the auth engine is mounted. The com
 
 - [vault-config-operator README](../../readme.md) — Project overview and getting started
 - [Contributing a New Vault API](../contributing-vault-apis.md) — Developer guide for adding new CRD types
-<!-- Secret engines index will be created in D3: ../secret-engines/index.md -->
+- [Secret Engines](../secret-engines/index.md) — Secret engine configuration documentation
