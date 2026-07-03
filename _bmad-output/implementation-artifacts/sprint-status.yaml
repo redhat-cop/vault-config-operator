@@ -35,7 +35,12 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-07-02
+last_updated: 2026-07-03
+# Story D3.4 ready-for-dev 2026-07-03
+# Story D3.3 ready-for-dev 2026-07-03
+# Story D3.2 ready-for-dev 2026-07-02
+# Story D3.1 ready-for-dev 2026-07-02
+# Epic D3 in-progress 2026-07-02
 # Epic D2 done + retrospective completed 2026-07-02
 # Story D2.5 done 2026-07-02
 # Story D2.5 review 2026-07-01
@@ -350,11 +355,11 @@ development_status:
   epic-d2-retrospective: done
 
   # Epic D3: Secret Engine Documentation — Per-Engine Split & Standardization
-  epic-d3: backlog
-  d3-1-create-secret-engines-directory-structure-and-index-page: backlog
-  d3-2-standardize-database-secret-engine-docs: backlog
-  d3-3-standardize-pki-and-rabbitmq-secret-engine-docs: backlog
-  d3-4-standardize-github-quay-kubernetes-and-azure-secret-engine-docs: backlog
+  epic-d3: in-progress
+  d3-1-create-secret-engines-directory-structure-and-index-page: ready-for-dev
+  d3-2-standardize-database-secret-engine-docs: ready-for-dev
+  d3-3-standardize-pki-and-rabbitmq-secret-engine-docs: ready-for-dev
+  d3-4-standardize-github-quay-kubernetes-and-azure-secret-engine-docs: ready-for-dev
   epic-d3-retrospective: optional
 
   # Epic D4: Examples Directory Expansion
