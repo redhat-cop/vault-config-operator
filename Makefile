@@ -10,6 +10,8 @@ KUSTOMIZE_VERSION ?= v5.4.3
 VAULT_HOST_PORT ?= 8200
 KUBE_CONTEXT ?= kind-$(KIND_CLUSTER_NAME)
 KUBE_CONFIG_FILE ?= /tmp/$(KIND_CLUSTER_NAME)-kubeconfig
+# Container runtime: use docker in CI (GitHub Actions), podman on local dev machines.
+CONTAINER_RUNTIME ?= $(shell if [ -n "$$GITHUB_ACTIONS" ]; then echo docker; else echo podman; fi)
 # Note changes to the vault version should also match image tags within the integration/vault-values.yaml and config/local-development/vault-values.yaml files
 VAULT_VERSION ?= 1.19.0
 # The vault version should also match the appVersion in the vault helm chart
@@ -132,7 +134,7 @@ vet: ## Run go vet against code.
 test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
 
-# note: envtest requires docker, podman will not work
+# note: envtest requires a container runtime (docker or podman)
 .PHONY: integration
 integration: kind-setup deploy-vault deploy-ingress deploy-postgresql deploy-rabbitmq deploy-ldap deploy-keycloak vault manifests generate fmt vet envtest ## Run tests.
 	export VAULT_TOKEN=$$(KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
@@ -159,8 +161,8 @@ deploy-vault: kubectl helm
 kind-setup: kind
 	@sed 's/VAULT_HOST_PORT_PLACEHOLDER/$(VAULT_HOST_PORT)/' ./integration/cluster-kind.yaml.tpl > ./integration/cluster-kind.yaml
 	@if $(KIND) get clusters 2>/dev/null | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
-	  CURRENT_IMAGE=$$(docker inspect $(KIND_CLUSTER_NAME)-control-plane --format='{{.Config.Image}}' 2>/dev/null || echo ""); \
-	  CURRENT_PORT=$$(docker inspect $(KIND_CLUSTER_NAME)-control-plane --format='{{(index (index .HostConfig.PortBindings "80/tcp") 0).HostPort}}' 2>/dev/null || echo ""); \
+	  CURRENT_IMAGE=$$($(CONTAINER_RUNTIME) inspect $(KIND_CLUSTER_NAME)-control-plane --format='{{.Config.Image}}' 2>/dev/null || echo ""); \
+	  CURRENT_PORT=$$($(CONTAINER_RUNTIME) inspect $(KIND_CLUSTER_NAME)-control-plane --format='{{(index (index .HostConfig.PortBindings "80/tcp") 0).HostPort}}' 2>/dev/null || echo ""); \
 	  if [ "$$CURRENT_IMAGE" = "docker.io/kindest/node:$(KUBECTL_VERSION)" ] && [ "$$CURRENT_PORT" = "$(VAULT_HOST_PORT)" ]; then \
 	    echo "Kind cluster '$(KIND_CLUSTER_NAME)' already exists with correct image and port, skipping recreation"; \
 	  else \
@@ -173,6 +175,9 @@ kind-setup: kind
 	  $(KIND) create cluster --name $(KIND_CLUSTER_NAME) --image docker.io/kindest/node:$(KUBECTL_VERSION) --config=./integration/cluster-kind.yaml; \
 	fi
 	$(KIND) export kubeconfig --name $(KIND_CLUSTER_NAME) --kubeconfig $(KUBE_CONFIG_FILE)
+	@echo "Switching Kind node to iptables-nft (required for nftables-only hosts)..."
+	@$(CONTAINER_RUNTIME) exec $(KIND_CLUSTER_NAME)-control-plane update-alternatives --set iptables /usr/sbin/iptables-nft >/dev/null 2>&1 || true
+	@$(CONTAINER_RUNTIME) exec $(KIND_CLUSTER_NAME)-control-plane update-alternatives --set ip6tables /usr/sbin/ip6tables-nft >/dev/null 2>&1 || true
 
 .PHONY: deploy-postgresql
 deploy-postgresql: kubectl helm
@@ -230,11 +235,11 @@ run: manifests generate fmt vet ## Run a controller from your host.
 
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.
-	docker build -t ${IMG} .
+	$(CONTAINER_RUNTIME) build -t ${IMG} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
-	docker push ${IMG}
+	$(CONTAINER_RUNTIME) push ${IMG}
 
 .PHONY: build-installer
 build-installer: manifests generate kustomize ## Generate a consolidated YAML with CRDs and deployment.
@@ -359,7 +364,7 @@ bundle: manifests kustomize operator-sdk ## Generate bundle manifests and metada
 
 .PHONY: bundle-build
 bundle-build: ## Build the bundle image.
-	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+	$(CONTAINER_RUNTIME) build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
 
 .PHONY: bundle-push
 bundle-push: ## Push the bundle image.
@@ -399,7 +404,7 @@ endif
 # https://github.com/operator-framework/community-operators/blob/7f1438c/docs/packaging-operator.md#updating-your-existing-operator
 .PHONY: catalog-build
 catalog-build: opm ## Build a catalog image.
-	$(OPM) index add --container-tool docker --mode semver --tag $(CATALOG_IMG) --bundles $(BUNDLE_IMGS) $(FROM_INDEX_OPT)
+	$(OPM) index add --container-tool $(CONTAINER_RUNTIME) --mode semver --tag $(CATALOG_IMG) --bundles $(BUNDLE_IMGS) $(FROM_INDEX_OPT)
 
 # Push the catalog image.
 .PHONY: catalog-push
@@ -446,8 +451,8 @@ HELM_TEST_SIDECAR_IMG ?= busybox:1.37
 .PHONY: helmchart-test
 helmchart-test: kind-setup deploy-vault helmchart
 	$(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker-build
-	docker tag ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
-	docker pull ${HELM_TEST_SIDECAR_IMG}
+	$(CONTAINER_RUNTIME) tag ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
+	$(CONTAINER_RUNTIME) pull ${HELM_TEST_SIDECAR_IMG}
 	$(KIND) load docker-image --name $(KIND_CLUSTER_NAME) ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} ${HELM_TEST_SIDECAR_IMG}
 	$(HELM) --kube-context $(KUBE_CONTEXT) repo add jetstack https://charts.jetstack.io
 	$(HELM) --kube-context $(KUBE_CONTEXT) install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.7.1 --set installCRDs=true
