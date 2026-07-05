@@ -64,5 +64,14 @@ func (r *VaultResource) manageReconcileLogic(context context.Context, instance c
 		log.Error(err, "unable to create/update vault resource", "instance", instance)
 		return err
 	}
+
+	// Enrich status with Vault-side data if the object supports it
+	if enricher, ok := instance.(vaultutils.VaultStatusEnricher); ok {
+		if enrichErr := enricher.EnrichStatus(context); enrichErr != nil {
+			log.Error(enrichErr, "unable to enrich status from Vault", "instance", instance)
+			// Non-fatal: proceed so conditions are still updated
+		}
+	}
+
 	return nil
 }
