@@ -6,7 +6,7 @@ A framework has been created to make it simple to add new types (essentially new
 
 Here are the steps:
 
-1. Create the CRD type and miutating a validating webhooks:
+1. Create the CRD type and mutating a validating webhooks:
 
    ```shell
    operator-sdk create api --group redhatcop --version v1alpha1 --kind MyVaultType --resource --controller

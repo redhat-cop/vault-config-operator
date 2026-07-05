@@ -363,6 +363,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controllers.NamespaceReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "Namespace")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Namespace")
+		os.Exit(1)
+	}
+
 	if webhooks, ok := os.LookupEnv("ENABLE_WEBHOOKS"); !ok || webhooks != "false" {
 		if err = (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "RandomSecret")
@@ -550,6 +555,10 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.IdentityTokenRole{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "IdentityTokenRole")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.Namespace{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Namespace")
 			os.Exit(1)
 		}
 	}
