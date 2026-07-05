@@ -36,6 +36,9 @@
 
 generated: 2026-04-11
 last_updated: 2026-07-05
+# Story D3.4 done 2026-07-05
+# Story D3.4 review 2026-07-05
+# Story D3.4 in-progress 2026-07-05
 # Story D3.3 review 2026-07-05
 # Story D3.3 in-progress 2026-07-05
 # Story D3.2 done 2026-07-03
@@ -366,7 +369,7 @@ development_status:
   d3-1-create-secret-engines-directory-structure-and-index-page: done
   d3-2-standardize-database-secret-engine-docs: done
   d3-3-standardize-pki-and-rabbitmq-secret-engine-docs: done
-  d3-4-standardize-github-quay-kubernetes-and-azure-secret-engine-docs: ready-for-dev
+  d3-4-standardize-github-quay-kubernetes-and-azure-secret-engine-docs: done
   epic-d3-retrospective: optional
 
   # Epic D4: Examples Directory Expansion

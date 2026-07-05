@@ -1,6 +1,6 @@
 # Story D3.4: Standardize GitHub, Quay, Kubernetes, and Azure Secret Engine Docs
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -24,50 +24,50 @@ So that switching between engines feels familiar.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `docs/secret-engines/github.md` (AC: 1, 2)
-  - [ ] 1.1: Write Overview — 2-3 sentences: third-party plugin (vault-plugin-secrets-github v2.0.0), generates GitHub installation access tokens, link to plugin repo
-  - [ ] 1.2: Write GitHubSecretEngineConfig section — Example YAML (include `applicationID`, `sSHKeyReference`, `gitHubAPIBaseURL`), Vault CLI Equivalent, Field Descriptions table
-  - [ ] 1.3: Write GitHubSecretEngineRole section — Example YAML (include `repositories`, `organizationName`, `permissions`), Vault CLI Equivalent (uses `permissionset` path, NOT `roles`), Field Descriptions table
-  - [ ] 1.4: Write SSH Key Resolution section (custom pattern — NOT Pattern A/B from template). Two methods: Kubernetes SSH-type secret (`sSHKeyReference.secret`) or Vault secret (`sSHKeyReference.vaultSecret`). Document mutual exclusivity (webhook rejects 0 or 2 sources)
-  - [ ] 1.5: Add See Also section
+- [x] Task 1: Create `docs/secret-engines/github.md` (AC: 1, 2)
+  - [x] 1.1: Write Overview — 2-3 sentences: third-party plugin (vault-plugin-secrets-github v2.0.0), generates GitHub installation access tokens, link to plugin repo
+  - [x] 1.2: Write GitHubSecretEngineConfig section — Example YAML (include `applicationID`, `sSHKeyReference`, `gitHubAPIBaseURL`), Vault CLI Equivalent, Field Descriptions table
+  - [x] 1.3: Write GitHubSecretEngineRole section — Example YAML (include `repositories`, `organizationName`, `permissions`), Vault CLI Equivalent (uses `permissionset` path, NOT `roles`), Field Descriptions table
+  - [x] 1.4: Write SSH Key Resolution section (custom pattern — NOT Pattern A/B from template). Two methods: Kubernetes SSH-type secret (`sSHKeyReference.secret`) or Vault secret (`sSHKeyReference.vaultSecret`). Document mutual exclusivity (webhook rejects 0 or 2 sources)
+  - [x] 1.5: Add See Also section
 
-- [ ] Task 2: Create `docs/secret-engines/quay.md` (AC: 1, 3)
-  - [ ] 2.1: Write Overview — 2-3 sentences: third-party plugin (vault-plugin-secrets-quay), manages Quay robot accounts, link to plugin repo
-  - [ ] 2.2: Write QuaySecretEngineConfig section — Example YAML (include `url`, `rootCredentials`, `caCertificate`, `disableSslVerification`), Vault CLI Equivalent, Field Descriptions table
-  - [ ] 2.3: Write QuaySecretEngineRole section — Example YAML (include `namespaceName`, `namespaceType`, `createRepositories`, `defaultPermission`, `teams`, `repositories`, `TTL`, `maxTTL`), Vault CLI Equivalent, Field Descriptions table
-  - [ ] 2.4: Write QuaySecretEngineStaticRole section — Example YAML (same fields as Role minus TTL/maxTTL), Vault CLI Equivalent, Field Descriptions table
-  - [ ] 2.5: Write Credential Resolution section using Pattern B (`rootCredentials.{secret,vaultSecret,randomSecret}`)
-  - [ ] 2.6: Add See Also section
+- [x] Task 2: Create `docs/secret-engines/quay.md` (AC: 1, 3)
+  - [x] 2.1: Write Overview — 2-3 sentences: third-party plugin (vault-plugin-secrets-quay), manages Quay robot accounts, link to plugin repo
+  - [x] 2.2: Write QuaySecretEngineConfig section — Example YAML (include `url`, `rootCredentials`, `caCertificate`, `disableSslVerification`), Vault CLI Equivalent, Field Descriptions table
+  - [x] 2.3: Write QuaySecretEngineRole section — Example YAML (include `namespaceName`, `namespaceType`, `createRepositories`, `defaultPermission`, `teams`, `repositories`, `TTL`, `maxTTL`), Vault CLI Equivalent, Field Descriptions table
+  - [x] 2.4: Write QuaySecretEngineStaticRole section — Example YAML (same fields as Role minus TTL/maxTTL), Vault CLI Equivalent, Field Descriptions table
+  - [x] 2.5: Write Credential Resolution section using Pattern B (`rootCredentials.{secret,vaultSecret,randomSecret}`)
+  - [x] 2.6: Add See Also section
 
-- [ ] Task 3: Create `docs/secret-engines/kubernetes.md` (AC: 1, 4)
-  - [ ] 3.1: Write Overview — 2-3 sentences: built-in Vault engine, generates Kubernetes service accounts/tokens with scoped RBAC, link to Vault docs
-  - [ ] 3.2: Write KubernetesSecretEngineConfig section — Example YAML (include `kubernetesHost`, `jwtReference`, `kubernetesCACert`, `disableLocalCAJWT`), Vault CLI Equivalent, Field Descriptions table
-  - [ ] 3.3: Write KubernetesSecretEngineRole section — Example YAML (include `allowedKubernetesNamespaces`, `kubernetesRoleName`, `kubernetesRoleType`, `nameTemplate`, full field set), Vault CLI Equivalent, Field Descriptions table
-  - [ ] 3.4: Write JWT Reference section (custom credential pattern — only Kubernetes service-account-token secret or Vault secret; RandomSecret is explicitly rejected by webhook)
-  - [ ] 3.5: Add See Also section
+- [x] Task 3: Create `docs/secret-engines/kubernetes.md` (AC: 1, 4)
+  - [x] 3.1: Write Overview — 2-3 sentences: built-in Vault engine, generates Kubernetes service accounts/tokens with scoped RBAC, link to Vault docs
+  - [x] 3.2: Write KubernetesSecretEngineConfig section — Example YAML (include `kubernetesHost`, `jwtReference`, `kubernetesCACert`, `disableLocalCAJWT`), Vault CLI Equivalent, Field Descriptions table
+  - [x] 3.3: Write KubernetesSecretEngineRole section — Example YAML (include `allowedKubernetesNamespaces`, `kubernetesRoleName`, `kubernetesRoleType`, `nameTemplate`, full field set), Vault CLI Equivalent, Field Descriptions table
+  - [x] 3.4: Write JWT Reference section (custom credential pattern — only Kubernetes service-account-token secret or Vault secret; RandomSecret is explicitly rejected by webhook)
+  - [x] 3.5: Add See Also section
 
-- [ ] Task 4: Create `docs/secret-engines/azure.md` (AC: 1, 5)
-  - [ ] 4.1: Write Overview — 2-3 sentences: built-in Vault engine, generates Azure service principals and credentials, link to Vault docs
-  - [ ] 4.2: Write AzureSecretEngineConfig section — Example YAML (include `tenantID`, `subscriptionID`, `clientID`, `environment`, `azureCredentials`, `passwordPolicy`, `rootPasswordTTL`), Vault CLI Equivalent, Field Descriptions table
-  - [ ] 4.3: Write AzureSecretEngineRole section — Example YAML (include `azureRoles`, `azureGroups`, `applicationObjectID`, `persistApp`, `TTL`, `maxTTL`, `permanentlyDelete`, `signInAudience`, `tags`), Vault CLI Equivalent, Field Descriptions table
-  - [ ] 4.4: Write Credential Resolution section using Pattern B (`azureCredentials.{secret,vaultSecret,randomSecret}`). Document that `clientID` set in spec takes precedence over clientID from credential source
-  - [ ] 4.5: Add See Also section
+- [x] Task 4: Create `docs/secret-engines/azure.md` (AC: 1, 5)
+  - [x] 4.1: Write Overview — 2-3 sentences: built-in Vault engine, generates Azure service principals and credentials, link to Vault docs
+  - [x] 4.2: Write AzureSecretEngineConfig section — Example YAML (include `tenantID`, `subscriptionID`, `clientID`, `environment`, `azureCredentials`, `passwordPolicy`, `rootPasswordTTL`), Vault CLI Equivalent, Field Descriptions table
+  - [x] 4.3: Write AzureSecretEngineRole section — Example YAML (include `azureRoles`, `azureGroups`, `applicationObjectID`, `persistApp`, `TTL`, `maxTTL`, `permanentlyDelete`, `signInAudience`, `tags`), Vault CLI Equivalent, Field Descriptions table
+  - [x] 4.4: Write Credential Resolution section using Pattern B (`azureCredentials.{secret,vaultSecret,randomSecret}`). Document that `clientID` set in spec takes precedence over clientID from credential source
+  - [x] 4.5: Add See Also section
 
-- [ ] Task 5: Audit field names for camelCase consistency (AC: 1, 2, 3, 4, 5)
-  - [ ] 5.1: Cross-reference ALL field names in the four new docs against Go CRD type files — field names in docs MUST match `json:` tag values exactly
-  - [ ] 5.2: Fix any snake_case field names from the original `secret-engines.md` source
+- [x] Task 5: Audit field names for camelCase consistency (AC: 1, 2, 3, 4, 5)
+  - [x] 5.1: Cross-reference ALL field names in the four new docs against Go CRD type files — field names in docs MUST match `json:` tag values exactly
+  - [x] 5.2: Fix any snake_case field names from the original `secret-engines.md` source
 
-- [ ] Task 6: Update `readme.md` cross-references (AC: 6)
-  - [ ] 6.1: Update line 87 from `./docs/secret-engines.md#GitHubSecretEngineConfig` to `./docs/secret-engines/github.md#githubsecretengineconfig`
-  - [ ] 6.2: Update line 88 from `./docs/secret-engines.md#GitHubSecretEngineRole` to `./docs/secret-engines/github.md#githubsecretenginerole`
-  - [ ] 6.3: Update line 91 from `./docs/secret-engines.md#QuaySecretEngineConfig` to `./docs/secret-engines/quay.md#quaysecretengineconfig`
-  - [ ] 6.4: Update line 92 from `./docs/secret-engines.md#QuaySecretEngineRole` to `./docs/secret-engines/quay.md#quaysecretenginerole`
-  - [ ] 6.5: Update line 93 from `./docs/secret-engines.md#QuaySecretEngineStaticRole` to `./docs/secret-engines/quay.md#quaysecretenginestaticrole`
-  - [ ] 6.6: (Optional) Add missing `readme.md` entries for KubernetesSecretEngineConfig, KubernetesSecretEngineRole, AzureSecretEngineConfig, AzureSecretEngineRole — these were never added to the README
+- [x] Task 6: Update `readme.md` cross-references (AC: 6)
+  - [x] 6.1: Update line 87 from `./docs/secret-engines.md#GitHubSecretEngineConfig` to `./docs/secret-engines/github.md#githubsecretengineconfig`
+  - [x] 6.2: Update line 88 from `./docs/secret-engines.md#GitHubSecretEngineRole` to `./docs/secret-engines/github.md#githubsecretenginerole`
+  - [x] 6.3: Update line 91 from `./docs/secret-engines.md#QuaySecretEngineConfig` to `./docs/secret-engines/quay.md#quaysecretengineconfig`
+  - [x] 6.4: Update line 92 from `./docs/secret-engines.md#QuaySecretEngineRole` to `./docs/secret-engines/quay.md#quaysecretenginerole`
+  - [x] 6.5: Update line 93 from `./docs/secret-engines.md#QuaySecretEngineStaticRole` to `./docs/secret-engines/quay.md#quaysecretenginestaticrole`
+  - [x] 6.6: (Optional) Add missing `readme.md` entries for KubernetesSecretEngineConfig, KubernetesSecretEngineRole, AzureSecretEngineConfig, AzureSecretEngineRole — these were never added to the README
 
-- [ ] Task 7: Verify links and structure (AC: 1)
-  - [ ] 7.1: Verify relative links resolve correctly from `docs/secret-engines/*.md` (`../auth-section.md`, `../contributing-vault-apis.md`, `../secret-management.md#randomsecret`)
-  - [ ] 7.2: Verify heading hierarchy and section ordering matches `docs/auth-engines/kubernetes.md` template pattern
+- [x] Task 7: Verify links and structure (AC: 1)
+  - [x] 7.1: Verify relative links resolve correctly from `docs/secret-engines/*.md` (`../auth-section.md`, `../contributing-vault-apis.md`, `../secret-management.md#randomsecret`)
+  - [x] 7.2: Verify heading hierarchy and section ordering matches `docs/auth-engines/kubernetes.md` template pattern
 
 ## Dev Notes
 
@@ -455,10 +455,45 @@ docs/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Pre-flight: Kind cluster local-path provisioner failure diagnosed (USB device `/dev/bus/usb/002/006` disappeared from host after container creation; stale device mapping caused helper pod `StartError`). Fixed by restarting Kind node container and re-applying iptables-nft configuration.
+- Post-completion: Same infrastructure issue recurred twice (stale device `/dev/hidraw3`). Each recurrence fixed by restarting Kind node container, re-applying iptables-nft, and cleaning local-path-storage pods. Final `make integration` passed (exit 0, 582s controller tests, all packages OK).
+
 ### Completion Notes List
 
+- Created `docs/secret-engines/github.md` with SSH Key Resolution (custom pattern, not Pattern A/B). Documents GitHubSecretEngineConfig and GitHubSecretEngineRole with `permissionset` path (not `/roles/`).
+- Created `docs/secret-engines/quay.md` with three CRDs (Config, Role, StaticRole). Uses Pattern B credential resolution (`rootCredentials.{secret,vaultSecret,randomSecret}`). Fixed known bug from source: credential docs now correctly use Pattern B nested structure, not Pattern A flat field names.
+- Created `docs/secret-engines/kubernetes.md` with JWT Reference section (custom restricted pattern — only K8s SA-token secret or Vault secret; RandomSecret explicitly rejected by webhook).
+- Created `docs/secret-engines/azure.md` with Pattern B credential resolution (`azureCredentials.{secret,vaultSecret,randomSecret}`). Documents `clientID` precedence behavior. No OIDC references (fixed copy-paste error from source).
+- All field names in all four docs verified against Go CRD `json:` tags — 100% match, no snake_case issues.
+- Updated 5 existing readme.md cross-references from `secret-engines.md#...` to per-engine files with lowercase anchors.
+- Added 4 new readme.md entries for KubernetesSecretEngineConfig, KubernetesSecretEngineRole, AzureSecretEngineConfig, AzureSecretEngineRole (previously missing from README).
+- All relative links verified: `../auth-section.md`, `../contributing-vault-apis.md`, `../secret-management.md#randomsecret` all resolve correctly.
+- Section ordering matches template pattern across all four files.
+
+### Change Log
+
+- 2026-07-05: Created github.md, quay.md, kubernetes.md, azure.md; updated readme.md cross-references; added missing K8s/Azure README entries
+- 2026-07-05: Code review — fixed 5 patch findings (Azure credential defaults, Quay passwordKey docs, K8s JWT wording, Azure permanentlyDelete type); 1 deferred (pre-existing README phrasing)
+
 ### File List
+
+- docs/secret-engines/github.md (new)
+- docs/secret-engines/quay.md (new)
+- docs/secret-engines/kubernetes.md (new)
+- docs/secret-engines/azure.md (new)
+- readme.md (modified — updated 5 cross-references, added 4 new entries)
+- _bmad-output/implementation-artifacts/sprint-status.yaml (modified — story status)
+- _bmad-output/implementation-artifacts/d3-4-standardize-github-quay-kubernetes-and-azure-secret-engine-docs.md (modified — task checkboxes, dev agent record)
+
+### Review Findings
+
+- [x] [Review][Patch] Azure docs describe an omitted/empty `azureCredentials` fallback mode that the current CRD/controller does not support [docs/secret-engines/azure.md] — fixed: removed incorrect defaults parenthetical, added exact-one-source constraint, aligned with auth-engine doc wording
+- [x] [Review][Patch] Quay credential docs omit the `rootCredentials.passwordKey` requirement/default even though the examples rely on a token key override [docs/secret-engines/quay.md] — fixed: documented passwordKey default and override requirement
+- [x] [Review][Patch] Azure credential docs omit the `usernameKey`/`passwordKey` defaults and the exact-one-source constraint for `azureCredentials` [docs/secret-engines/azure.md] — fixed: added key defaults note
+- [x] [Review][Patch] Kubernetes JWT docs do not clearly state that exactly one of `jwtReference.secret` or `jwtReference.vaultSecret` must be set [docs/secret-engines/kubernetes.md] — fixed: changed to "exactly one ... must be specified"
+- [x] [Review][Patch] Azure role docs present `permanentlyDelete` as a boolean-style flag even though the CRD field type is `string` [docs/secret-engines/azure.md] — fixed: clarified string type with `"true"`/`"false"` values
+- [x] [Review][Defer] Existing README wording still says "see the also the" in several secret-engine entries [readme.md] — deferred, pre-existing

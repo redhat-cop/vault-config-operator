@@ -26,3 +26,7 @@
 ## Deferred from: code review of d3-3-standardize-pki-and-rabbitmq-secret-engine-docs (2026-07-05)
 
 - **RabbitMQ multi-entry examples contradict current implementation**: `docs/secret-engines/rabbitmq.md` documents multiple `vhosts` and multiple `vhostTopics`, but `api/v1alpha1/rabbitmqsecretenginerole_types.go` overwrites the serialized map on each loop iteration, so only the last vhost and last topic set survive. The code review highlighted an inconsistency between the API and the implementation; we will document the correct implementation and defer the API fix to another story/epic.
+
+## Deferred from: code review of d3-4-standardize-github-quay-kubernetes-and-azure-secret-engine-docs (2026-07-05)
+
+- **Existing README wording still says "see the also the"**: The D3.4 changes correctly updated the secret-engine links, but several existing `readme.md` descriptions still contain the pre-existing phrase "see the also the". This is low-risk copy cleanup rather than a new defect introduced by the story, so it was deferred.

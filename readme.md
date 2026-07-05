@@ -84,15 +84,19 @@ Currently this operator covers the following Vault APIs:
 1. [SecretEngineMount](./docs/secret-engines.md#SecretEngineMount) Configures a Mount point for a [SecretEngine](https://www.vaultproject.io/docs/secrets)
 2. [DatabaseSecretEngineConfig](./docs/secret-engines/database.md#databasesecretengineconfig) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Connection
 3. [DatabaseSecretEngineRole](./docs/secret-engines/database.md#databasesecretenginerole) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Role
-4. [GitHubSecretEngineConfig](./docs/secret-engines.md#GitHubSecretEngineConfig) Configures a Github Application to produce tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
-5. [GitHubSecretEngineRole](./docs/secret-engines.md#GitHubSecretEngineRole) Configures a Github Application to produce scoped tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
+4. [GitHubSecretEngineConfig](./docs/secret-engines/github.md#githubsecretengineconfig) Configures a Github Application to produce tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
+5. [GitHubSecretEngineRole](./docs/secret-engines/github.md#githubsecretenginerole) Configures a Github Application to produce scoped tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
 6. [PKISecretEngineConfig](./docs/secret-engines/pki.md#pkisecretengineconfig)  Configures a [PKI Secret Engine](https://www.vaultproject.io/docs/secrets/pki)
 7. [PKISecretEngineRole](./docs/secret-engines/pki.md#pkisecretenginerole)  Configures a [PKI Secret Engine](https://www.vaultproject.io/docs/secrets/pki) Role
-8. [QuaySecretEngineConfig](./docs/secret-engines.md#QuaySecretEngineConfig) Configures a Quay server to produce Robot accounts, see the also the [vault-plugin-secrets-quay](https://github.com/redhat-cop/vault-plugin-secrets-quay)
-9. [QuaySecretEngineRole](./docs/secret-engines.md#QuaySecretEngineRole) Configures a Quay server to produce credentials for a Robot account, see the also the [vault-plugin-secrets-quay](https://github.com/redhat-cop/vault-plugin-secrets-quay)
-10. [QuaySecretEngineStaticRole](./docs/secret-engines.md#QuaySecretEngineStaticRole) Configures a Quay server to produce credentials for a Robot account using a fixed username and generated credentials, see the also the [vault-plugin-secrets-quay](https://github.com/redhat-cop/vault-plugin-secrets-quay)
+8. [QuaySecretEngineConfig](./docs/secret-engines/quay.md#quaysecretengineconfig) Configures a Quay server to produce Robot accounts, see the also the [vault-plugin-secrets-quay](https://github.com/redhat-cop/vault-plugin-secrets-quay)
+9. [QuaySecretEngineRole](./docs/secret-engines/quay.md#quaysecretenginerole) Configures a Quay server to produce credentials for a Robot account, see the also the [vault-plugin-secrets-quay](https://github.com/redhat-cop/vault-plugin-secrets-quay)
+10. [QuaySecretEngineStaticRole](./docs/secret-engines/quay.md#quaysecretenginestaticrole) Configures a Quay server to produce credentials for a Robot account using a fixed username and generated credentials, see the also the [vault-plugin-secrets-quay](https://github.com/redhat-cop/vault-plugin-secrets-quay)
 11. [RabbitMQSecretEngineConfig](./docs/secret-engines/rabbitmq.md#rabbitmqsecretengineconfig) Configures a [RabbitMQ Secret Engine](https://www.vaultproject.io/docs/secrets/rabbitmq#rabbitmq-secrets-engine)
 12. [RabbitMQSecretEngineRole](./docs/secret-engines/rabbitmq.md#rabbitmqsecretenginerole) Configures a [RabbitMQ Secret Engine Role](https://www.vaultproject.io/docs/secrets/rabbitmq#rabbitmq-secrets-engine)
+13. [KubernetesSecretEngineConfig](./docs/secret-engines/kubernetes.md#kubernetessecretengineconfig) Configures a [Kubernetes Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/kubernetes) Connection
+14. [KubernetesSecretEngineRole](./docs/secret-engines/kubernetes.md#kubernetessecretenginerole) Configures a [Kubernetes Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/kubernetes) Role
+15. [AzureSecretEngineConfig](./docs/secret-engines/azure.md#azuresecretengineconfig) Configures an [Azure Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/azure) Connection
+16. [AzureSecretEngineRole](./docs/secret-engines/azure.md#azuresecretenginerole) Configures an [Azure Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/azure) Role
 
 ## Secret Management
 
