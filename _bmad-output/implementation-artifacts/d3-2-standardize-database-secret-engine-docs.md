@@ -1,6 +1,6 @@
 # Story D3.2: Standardize Database Secret Engine Docs
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -22,25 +22,25 @@ So that I can set up the most complex secret engine correctly.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `docs/secret-engines/database.md` (AC: 1, 2)
-  - [ ] 1.1: Write Overview section — 2-3 sentences explaining Database secret engine, link to Vault docs, list the three CRDs (Config, Role, StaticRole)
-  - [ ] 1.2: Write DatabaseSecretEngineConfig section with Example YAML (include `rootPasswordRotation`, `passwordAuthentication`, `rootCredentialsFromSecret`), Vault CLI Equivalent, and Field Descriptions table
-  - [ ] 1.3: Write DatabaseSecretEngineRole section with Example YAML (include `creationStatements`), Vault CLI Equivalent, and Field Descriptions table
-  - [ ] 1.4: Write DatabaseSecretEngineStaticRole section with Example YAML (include `rotationStatements`, `credentialType`, `passwordCredentialConfig`), Vault CLI Equivalent, and Field Descriptions table
-  - [ ] 1.5: Write Credential Resolution section using Pattern A (`rootCredentialsFromSecret`, `rootCredentialsFromVaultSecret`, `rootCredentialsFromRandomSecret`)
-  - [ ] 1.6: Add "See Also" section with links to `../auth-section.md`, `../contributing-vault-apis.md`, and Vault docs
+- [x] Task 1: Create `docs/secret-engines/database.md` (AC: 1, 2)
+  - [x] 1.1: Write Overview section — 2-3 sentences explaining Database secret engine, link to Vault docs, list the three CRDs (Config, Role, StaticRole)
+  - [x] 1.2: Write DatabaseSecretEngineConfig section with Example YAML (include `rootPasswordRotation`, `passwordAuthentication`, `rootCredentialsFromSecret`), Vault CLI Equivalent, and Field Descriptions table
+  - [x] 1.3: Write DatabaseSecretEngineRole section with Example YAML (include `creationStatements`), Vault CLI Equivalent, and Field Descriptions table
+  - [x] 1.4: Write DatabaseSecretEngineStaticRole section with Example YAML (include `rotationStatements`, `credentialType`, `passwordCredentialConfig`), Vault CLI Equivalent, and Field Descriptions table
+  - [x] 1.5: Write Credential Resolution section using Pattern A (`rootCredentialsFromSecret`, `rootCredentialsFromVaultSecret`, `rootCredentialsFromRandomSecret`)
+  - [x] 1.6: Add "See Also" section with links to `../auth-section.md`, `../contributing-vault-apis.md`, and Vault docs
 
-- [ ] Task 2: Audit field names for camelCase consistency (AC: 1)
-  - [ ] 2.1: Cross-reference all field names in the new doc against the Go CRD types (`databasesecretengineconfig_types.go`, `databasesecretenginerole_types.go`, `databasesecretenginestaticrole_types.go`) — field names in the doc MUST match the `json:` tag values exactly
-  - [ ] 2.2: Fix any snake_case field names from the original `secret-engines.md` source
+- [x] Task 2: Audit field names for camelCase consistency (AC: 1)
+  - [x] 2.1: Cross-reference all field names in the new doc against the Go CRD types (`databasesecretengineconfig_types.go`, `databasesecretenginerole_types.go`, `databasesecretenginestaticrole_types.go`) — field names in the doc MUST match the `json:` tag values exactly
+  - [x] 2.2: Fix any snake_case field names from the original `secret-engines.md` source
 
-- [ ] Task 3: Update `readme.md` cross-references (AC: 3)
-  - [ ] 3.1: Update line 85 from `./docs/secret-engines.md#DatabaseSecretEngineConfig` to `./docs/secret-engines/database.md#databasesecretengineconfig`
-  - [ ] 3.2: Update line 86 from `./docs/secret-engines.md#DatabaseSecretEngineRole` to `./docs/secret-engines/database.md#databasesecretenginerole`
+- [x] Task 3: Update `readme.md` cross-references (AC: 3)
+  - [x] 3.1: Update line 85 from `./docs/secret-engines.md#DatabaseSecretEngineConfig` to `./docs/secret-engines/database.md#databasesecretengineconfig`
+  - [x] 3.2: Update line 86 from `./docs/secret-engines.md#DatabaseSecretEngineRole` to `./docs/secret-engines/database.md#databasesecretenginerole`
 
-- [ ] Task 4: Verify links and structure (AC: 2)
-  - [ ] 4.1: Verify relative links resolve correctly from `docs/secret-engines/database.md` (`../auth-section.md`, `../contributing-vault-apis.md`)
-  - [ ] 4.2: Verify structure matches `kubernetes.md` pattern: heading hierarchy, section ordering, table format
+- [x] Task 4: Verify links and structure (AC: 2)
+  - [x] 4.1: Verify relative links resolve correctly from `docs/secret-engines/database.md` (`../auth-section.md`, `../contributing-vault-apis.md`)
+  - [x] 4.2: Verify structure matches `kubernetes.md` pattern: heading hierarchy, section ordering, table format
 
 ## Dev Notes
 
@@ -280,10 +280,34 @@ docs/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (Cursor)
 
 ### Debug Log References
 
+- Credential resolution field audit: verified `rootCredentials.secret`, `rootCredentials.vaultSecret`, `rootCredentials.randomSecret` nested structure against `RootCredentialConfig` in `api/v1alpha1/utils/commons.go` — corrected from template's Pattern A flat description to actual nested CRD structure
+
 ### Completion Notes List
 
+- Created `docs/secret-engines/database.md` with complete documentation covering all three CRDs (Config, Role, StaticRole)
+- Documented all fields from Go CRD types with camelCase JSON tag names — cross-referenced against `databasesecretengineconfig_types.go`, `databasesecretenginerole_types.go`, `databasesecretenginestaticrole_types.go`
+- Credential Resolution section uses actual nested `rootCredentials` structure (matching `RootCredentialConfig` type), not the simplified "flat prefix" pattern described in the template
+- Updated `readme.md` cross-references (lines 85-86) to point to new `docs/secret-engines/database.md` with lowercase anchors
+- Structure verified against `docs/auth-engines/kubernetes.md` reference implementation — matches heading hierarchy (Overview → Config → Role → StaticRole → Credential Resolution → See Also)
+- All relative links verified: `../auth-section.md`, `../contributing-vault-apis.md`, `../secret-management.md` all exist
+- Documentation-only story: no Go code changes, no tests applicable
+
 ### File List
+
+- docs/secret-engines/database.md (new) — complete Database secret engine documentation
+- readme.md (modified) — updated 2 cross-reference links from `secret-engines.md#...` to `secret-engines/database.md#...`
+
+### Change Log
+
+- 2026-07-03: Created database.md with Config, Role, StaticRole sections, Credential Resolution (Pattern A nested), and See Also. Updated readme.md cross-references. All field names audited against CRD Go types.
+
+### Review Findings
+
+- [x] [Review][Patch] Document the required `rootCredentials` field in the config field table [`docs/secret-engines/database.md:64`]
+- [x] [Review][Patch] Fix the RandomSecret example to include the required `spec.username` companion field [`docs/secret-engines/database.md:224`]
+- [x] [Review][Patch] Correct the static-role credential-config docs to state exactly one config block is required [`docs/secret-engines/database.md:179`]
+- [x] [Review][Patch] Make the role CLI example include all `creationStatements` shown in the YAML example [`docs/secret-engines/database.md:114`]

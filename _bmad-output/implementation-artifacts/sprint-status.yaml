@@ -36,6 +36,9 @@
 
 generated: 2026-04-11
 last_updated: 2026-07-03
+# Story D3.2 done 2026-07-03
+# Story D3.2 review 2026-07-03
+# Story D3.2 in-progress 2026-07-03
 # Story D3.1 review 2026-07-03
 # Story D3.1 in-progress 2026-07-03
 # Story D3.4 ready-for-dev 2026-07-03
@@ -359,7 +362,7 @@ development_status:
   # Epic D3: Secret Engine Documentation — Per-Engine Split & Standardization
   epic-d3: in-progress
   d3-1-create-secret-engines-directory-structure-and-index-page: done
-  d3-2-standardize-database-secret-engine-docs: ready-for-dev
+  d3-2-standardize-database-secret-engine-docs: done
   d3-3-standardize-pki-and-rabbitmq-secret-engine-docs: ready-for-dev
   d3-4-standardize-github-quay-kubernetes-and-azure-secret-engine-docs: ready-for-dev
   epic-d3-retrospective: optional

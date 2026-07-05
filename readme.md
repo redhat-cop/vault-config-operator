@@ -82,8 +82,8 @@ Currently this operator covers the following Vault APIs:
 ## Secret Engines
 
 1. [SecretEngineMount](./docs/secret-engines.md#SecretEngineMount) Configures a Mount point for a [SecretEngine](https://www.vaultproject.io/docs/secrets)
-2. [DatabaseSecretEngineConfig](./docs/secret-engines.md#DatabaseSecretEngineConfig) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Connection
-3. [DatabaseSecretEngineRole](./docs/secret-engines.md#DatabaseSecretEngineRole) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Role
+2. [DatabaseSecretEngineConfig](./docs/secret-engines/database.md#databasesecretengineconfig) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Connection
+3. [DatabaseSecretEngineRole](./docs/secret-engines/database.md#databasesecretenginerole) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Role
 4. [GitHubSecretEngineConfig](./docs/secret-engines.md#GitHubSecretEngineConfig) Configures a Github Application to produce tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
 5. [GitHubSecretEngineRole](./docs/secret-engines.md#GitHubSecretEngineRole) Configures a Github Application to produce scoped tokens, see the also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
 6. [PKISecretEngineConfig](./docs/secret-engines.md#pkisecretengineconfig)  Configures a [PKI Secret Engine](https://www.vaultproject.io/docs/secrets/pki)
