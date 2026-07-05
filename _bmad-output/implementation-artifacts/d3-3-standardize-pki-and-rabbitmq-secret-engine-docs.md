@@ -1,6 +1,6 @@
 # Story D3.3: Standardize PKI and RabbitMQ Secret Engine Docs
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -26,33 +26,33 @@ So that I can configure these engines without guesswork.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `docs/secret-engines/pki.md` (AC: 1, 4)
-  - [ ] 1.1: Write Overview section — 2-3 sentences explaining the PKI secret engine, link to Vault docs, list the two CRDs (Config, Role)
-  - [ ] 1.2: Write PKISecretEngineConfig section with Example YAML (include `type`, `privateKeyType`, `commonName`, `TTL`, `format`, `keyType`, `keyBits`, `maxPathLength`, `issuingCertificates`, `CRLDistributionPoints`, `CRLExpiry`), Vault CLI Equivalent, and Field Descriptions table
-  - [ ] 1.3: Write "Intermediate CA" subsection explaining the two intermediate workflows (`externalSignSecret` and `internalSign`)
-  - [ ] 1.4: Write PKISecretEngineRole section with Example YAML (include `allowedDomains`, `allowSubdomains`, `allowBareDomains`, `maxTTL`, `keyType`, `keyBits`, `keyUsage`, `extKeyUsage`, `useCSRCommonName`, `useCSRSans`), Vault CLI Equivalent, and Field Descriptions table
-  - [ ] 1.5: Add "See Also" section with links to `../auth-section.md`, `../contributing-vault-apis.md`, and Vault PKI docs
+- [x] Task 1: Create `docs/secret-engines/pki.md` (AC: 1, 4)
+  - [x] 1.1: Write Overview section — 2-3 sentences explaining the PKI secret engine, link to Vault docs, list the two CRDs (Config, Role)
+  - [x] 1.2: Write PKISecretEngineConfig section with Example YAML (include `type`, `privateKeyType`, `commonName`, `TTL`, `format`, `keyType`, `keyBits`, `maxPathLength`, `issuingCertificates`, `CRLDistributionPoints`, `CRLExpiry`), Vault CLI Equivalent, and Field Descriptions table
+  - [x] 1.3: Write "Intermediate CA" subsection explaining the two intermediate workflows (`externalSignSecret` and `internalSign`)
+  - [x] 1.4: Write PKISecretEngineRole section with Example YAML (include `allowedDomains`, `allowSubdomains`, `allowBareDomains`, `maxTTL`, `keyType`, `keyBits`, `keyUsage`, `extKeyUsage`, `useCSRCommonName`, `useCSRSans`), Vault CLI Equivalent, and Field Descriptions table
+  - [x] 1.5: Add "See Also" section with links to `../auth-section.md`, `../contributing-vault-apis.md`, and Vault PKI docs
 
-- [ ] Task 2: Create `docs/secret-engines/rabbitmq.md` (AC: 2, 4)
-  - [ ] 2.1: Write Overview section — 2-3 sentences explaining the RabbitMQ secret engine, link to Vault docs, list the two CRDs (Config, Role)
-  - [ ] 2.2: Write RabbitMQSecretEngineConfig section with Example YAML (include `connectionURI`, `username`, `verifyConnection`, `passwordPolicy`, `usernameTemplate`, `leaseTTL`, `leaseMaxTTL`, `rootCredentials`), Vault CLI Equivalent, and Field Descriptions table
-  - [ ] 2.3: Write RabbitMQSecretEngineRole section with Example YAML (include `tags`, complete `vhosts` with multiple vhost entries, complete `vhostTopics` with multiple topic entries), Vault CLI Equivalent, and Field Descriptions table
-  - [ ] 2.4: Write Credential Resolution section using the nested `rootCredentials` object pattern (3 methods: `rootCredentials.secret`, `rootCredentials.vaultSecret`, `rootCredentials.randomSecret`)
-  - [ ] 2.5: Add "See Also" section with links to `../auth-section.md`, `../contributing-vault-apis.md`, and Vault RabbitMQ docs
+- [x] Task 2: Create `docs/secret-engines/rabbitmq.md` (AC: 2, 4)
+  - [x] 2.1: Write Overview section — 2-3 sentences explaining the RabbitMQ secret engine, link to Vault docs, list the two CRDs (Config, Role)
+  - [x] 2.2: Write RabbitMQSecretEngineConfig section with Example YAML (include `connectionURI`, `username`, `verifyConnection`, `passwordPolicy`, `usernameTemplate`, `leaseTTL`, `leaseMaxTTL`, `rootCredentials`), Vault CLI Equivalent, and Field Descriptions table
+  - [x] 2.3: Write RabbitMQSecretEngineRole section with Example YAML (include `tags`, complete `vhosts` with multiple vhost entries, complete `vhostTopics` with multiple topic entries), Vault CLI Equivalent, and Field Descriptions table
+  - [x] 2.4: Write Credential Resolution section using the nested `rootCredentials` object pattern (3 methods: `rootCredentials.secret`, `rootCredentials.vaultSecret`, `rootCredentials.randomSecret`)
+  - [x] 2.5: Add "See Also" section with links to `../auth-section.md`, `../contributing-vault-apis.md`, and Vault RabbitMQ docs
 
-- [ ] Task 3: Audit field names for camelCase consistency (AC: 1, 2)
-  - [ ] 3.1: Cross-reference all PKI field names against Go types (`pkisecretengineconfig_types.go`, `pkisecretenginerole_types.go`) — field names MUST match `json:` tag values exactly
-  - [ ] 3.2: Cross-reference all RabbitMQ field names against Go types (`rabbitmqsecretengineconfig_types.go`, `rabbitmqsecretenginerole_types.go`) — field names MUST match `json:` tag values exactly
+- [x] Task 3: Audit field names for camelCase consistency (AC: 1, 2)
+  - [x] 3.1: Cross-reference all PKI field names against Go types (`pkisecretengineconfig_types.go`, `pkisecretenginerole_types.go`) — field names MUST match `json:` tag values exactly
+  - [x] 3.2: Cross-reference all RabbitMQ field names against Go types (`rabbitmqsecretengineconfig_types.go`, `rabbitmqsecretenginerole_types.go`) — field names MUST match `json:` tag values exactly
 
-- [ ] Task 4: Update `readme.md` cross-references (AC: 3)
-  - [ ] 4.1: Update line 89 from `./docs/secret-engines.md#pkisecretengineconfig` to `./docs/secret-engines/pki.md#pkisecretengineconfig`
-  - [ ] 4.2: Update line 90 from `./docs/secret-engines.md#pkisecretenginerole` to `./docs/secret-engines/pki.md#pkisecretenginerole`
-  - [ ] 4.3: Update line 94 from `./docs/secret-engines.md#rabbitmqsecretengineconfig` to `./docs/secret-engines/rabbitmq.md#rabbitmqsecretengineconfig`
-  - [ ] 4.4: Update line 95 from `./docs/secret-engines.md#rabbitmqsecretenginerole` to `./docs/secret-engines/rabbitmq.md#rabbitmqsecretenginerole`
+- [x] Task 4: Update `readme.md` cross-references (AC: 3)
+  - [x] 4.1: Update line 89 from `./docs/secret-engines.md#pkisecretengineconfig` to `./docs/secret-engines/pki.md#pkisecretengineconfig`
+  - [x] 4.2: Update line 90 from `./docs/secret-engines.md#pkisecretenginerole` to `./docs/secret-engines/pki.md#pkisecretenginerole`
+  - [x] 4.3: Update line 94 from `./docs/secret-engines.md#rabbitmqsecretengineconfig` to `./docs/secret-engines/rabbitmq.md#rabbitmqsecretengineconfig`
+  - [x] 4.4: Update line 95 from `./docs/secret-engines.md#rabbitmqsecretenginerole` to `./docs/secret-engines/rabbitmq.md#rabbitmqsecretenginerole`
 
-- [ ] Task 5: Verify links and structure (AC: 4)
-  - [ ] 5.1: Verify relative links resolve correctly from `docs/secret-engines/pki.md` and `docs/secret-engines/rabbitmq.md` (`../auth-section.md`, `../contributing-vault-apis.md`)
-  - [ ] 5.2: Verify structure matches `kubernetes.md` pattern: heading hierarchy, section ordering, table format
+- [x] Task 5: Verify links and structure (AC: 4)
+  - [x] 5.1: Verify relative links resolve correctly from `docs/secret-engines/pki.md` and `docs/secret-engines/rabbitmq.md` (`../auth-section.md`, `../contributing-vault-apis.md`)
+  - [x] 5.2: Verify structure matches `kubernetes.md` pattern: heading hierarchy, section ordering, table format
 
 ## Dev Notes
 
@@ -556,14 +556,39 @@ docs/
 - [Source: readme.md:89-90,94-95] — Cross-references that need updating
 - [Source: _bmad-output/project-context.md] — Project conventions and coding standards
 
+### Review Findings
+
+- [x] [Review][Defer] RabbitMQ multi-entry examples contradict current implementation [`docs/secret-engines/rabbitmq.md`] — deferred, pre-existing. The code review highlighted an inconsistency between the API and the implementation; we will document the correct implementation and defer the API fix to another story/epic.
+- [x] [Review][Patch] PKI role example omits the `TTL` field required by the story acceptance criteria [`docs/secret-engines/pki.md`] — fixed
+- [x] [Review][Patch] PKI intermediate-signing documentation does not match the implemented Vault path logic [`docs/secret-engines/pki.md`] — fixed
+- [x] [Review][Patch] RabbitMQ role CLI example uses malformed JSON payload strings for `vhosts` and `vhost_topics` [`docs/secret-engines/rabbitmq.md`] — fixed
+
 ## Dev Agent Record
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Integration test infrastructure (PostgreSQL Helm chart) has a pre-existing timeout issue in Kind cluster — unrelated to this documentation-only story
+
 ### Completion Notes List
 
+- Created `docs/secret-engines/pki.md` with complete PKISecretEngineConfig (all PKICommon, PKIConfigUrls, PKIConfigCRL, PKIIntermediate fields) and PKISecretEngineRole (all 33 PKIRole fields) documentation including comprehensive YAML examples, Vault CLI equivalents, field description tables, and Intermediate CA workflow section
+- Created `docs/secret-engines/rabbitmq.md` with complete RabbitMQSecretEngineConfig (all RMQSEConfig fields including dual-write pattern for connection/lease) and RabbitMQSecretEngineRole (tags, vhosts with permissions, vhostTopics with nested topic permissions) documentation including comprehensive YAML examples, Vault CLI equivalents, field description tables, and nested `rootCredentials` Credential Resolution section
+- Audited all field names in both docs against Go `json:` tags — 100% match for PKI Config (34 fields), PKI Role (33 fields), RabbitMQ Config (7 spec fields + rootCredentials), RabbitMQ Role (3 top-level + nested structs)
+- Updated 4 cross-references in readme.md: PKISecretEngineConfig, PKISecretEngineRole (lines 89-90) and RabbitMQSecretEngineConfig, RabbitMQSecretEngineRole (lines 94-95) — all now point to per-engine files
+- Verified heading structure matches kubernetes.md and database.md template pattern: Title → Overview → Config CRD (Example → CLI → Fields) → Role CRD (Example → CLI → Fields) → [Credential Resolution] → See Also
+- Verified all relative links resolve: `../auth-section.md`, `../contributing-vault-apis.md`, `../secret-management.md#randomsecret`
+
+### Change Log
+
+- 2026-07-05: Story implementation complete — created PKI and RabbitMQ secret engine docs, updated readme.md cross-references
+- 2026-07-05: Code review complete — fixed PKI role TTL omission, clarified internalSign path semantics, fixed RabbitMQ CLI JSON quoting; deferred RabbitMQ multi-entry serialization bug to future story
+
 ### File List
+
+- docs/secret-engines/pki.md (new)
+- docs/secret-engines/rabbitmq.md (new)
+- readme.md (modified — 4 cross-reference links updated)
