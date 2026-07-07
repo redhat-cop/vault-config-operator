@@ -35,8 +35,12 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-07-05
+last_updated: 2026-07-07
+# Story D4.3 ready-for-dev 2026-07-07
+# Story D4.2 ready-for-dev 2026-07-07
 # Epic D3 done + retrospective completed 2026-07-05
+# Story D4.1 ready-for-dev 2026-07-07
+# Epic D4 in-progress 2026-07-07
 # Story D3.4 done 2026-07-05
 # Story D3.4 review 2026-07-05
 # Story D3.4 in-progress 2026-07-05
@@ -374,10 +378,10 @@ development_status:
   epic-d3-retrospective: done
 
   # Epic D4: Examples Directory Expansion
-  epic-d4: backlog
-  d4-1-create-example-yaml-files-for-each-auth-engine: backlog
-  d4-2-create-example-yaml-files-for-each-secret-engine: backlog
-  d4-3-create-additional-end-to-end-examples: backlog
+  epic-d4: in-progress
+  d4-1-create-example-yaml-files-for-each-auth-engine: ready-for-dev
+  d4-2-create-example-yaml-files-for-each-secret-engine: ready-for-dev
+  d4-3-create-additional-end-to-end-examples: ready-for-dev
   epic-d4-retrospective: optional
 
   # --- Phase 2: Expansion — Dependency Upgrades + Engine Coverage ---
