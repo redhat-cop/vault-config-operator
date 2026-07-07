@@ -36,6 +36,8 @@
 
 generated: 2026-04-11
 last_updated: 2026-07-07
+# Story D4.3 done 2026-07-07
+# Story D4.3 review 2026-07-07
 # Story D4.2 done 2026-07-07
 # Story D4.2 review 2026-07-07
 # Story D4.2 in-progress 2026-07-07
@@ -385,7 +387,7 @@ development_status:
   epic-d4: in-progress
   d4-1-create-example-yaml-files-for-each-auth-engine: done
   d4-2-create-example-yaml-files-for-each-secret-engine: done
-  d4-3-create-additional-end-to-end-examples: ready-for-dev
+  d4-3-create-additional-end-to-end-examples: done
   epic-d4-retrospective: optional
 
   # --- Phase 2: Expansion — Dependency Upgrades + Engine Coverage ---

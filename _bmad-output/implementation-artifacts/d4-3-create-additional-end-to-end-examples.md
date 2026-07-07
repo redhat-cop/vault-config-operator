@@ -1,6 +1,6 @@
 # Story D4.3: Create Additional End-to-End Examples
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -22,12 +22,12 @@ so that I can see how different engines and auth methods work together.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `docs/examples/e2e-jwt-pki/` directory (AC: #1, #2, #3)
-  - [ ] Create `README.md` with scenario description, prerequisites, walkthrough steps, verification, and cleanup
-  - [ ] Create `e2e-jwt-pki.yaml` with: AuthEngineMount (JWT) + JWTOIDCAuthEngineConfig (JWT mode with JWKS) + JWTOIDCAuthEngineRole + SecretEngineMount (PKI) + PKISecretEngineConfig (root CA) + PKISecretEngineRole + Policy (connecting auth to secrets)
-- [ ] Task 2: Create `docs/examples/e2e-azure/` directory (AC: #1, #2, #3)
-  - [ ] Create `README.md` with scenario description, prerequisites, walkthrough steps, verification, and cleanup
-  - [ ] Create `e2e-azure.yaml` with: AuthEngineMount (Azure) + AzureAuthEngineConfig + AzureAuthEngineRole + SecretEngineMount (Azure) + AzureSecretEngineConfig + AzureSecretEngineRole + Policy (connecting auth to secrets)
+- [x] Task 1: Create `docs/examples/e2e-jwt-pki/` directory (AC: #1, #2, #3)
+  - [x] Create `README.md` with scenario description, prerequisites, walkthrough steps, verification, and cleanup
+  - [x] Create `e2e-jwt-pki.yaml` with: AuthEngineMount (JWT) + JWTOIDCAuthEngineConfig (JWT mode with JWKS) + JWTOIDCAuthEngineRole + SecretEngineMount (PKI) + PKISecretEngineConfig (root CA) + PKISecretEngineRole + Policy (connecting auth to secrets)
+- [x] Task 2: Create `docs/examples/e2e-azure/` directory (AC: #1, #2, #3)
+  - [x] Create `README.md` with scenario description, prerequisites, walkthrough steps, verification, and cleanup
+  - [x] Create `e2e-azure.yaml` with: AuthEngineMount (Azure) + AzureAuthEngineConfig + AzureAuthEngineRole + SecretEngineMount (Azure) + AzureSecretEngineConfig + AzureSecretEngineRole + Policy (connecting auth to secrets)
 
 ## Dev Notes
 
@@ -77,13 +77,15 @@ The `spec.path` field (separate from `spec.authentication.path`) is the Vault mo
 
 **Scenario:** An organization uses JWT tokens (from a CI/CD system like GitHub Actions) to authenticate to Vault, and needs to issue short-lived TLS certificates for internal services via PKI.
 
+**Mount path composition:** `AuthEngineMount` and `SecretEngineMount` compose their Vault path as `{spec.path}/{metadata.name}`. This example uses `path: ci` as a grouping prefix, producing auth mount `ci/jwt` and secret mount `ci/pki`.
+
 **CRD Stack (in order):**
 
-1. **AuthEngineMount** — Mounts JWT auth at `jwt-ci`
-   - `type: jwt`, `path: jwt-ci`
+1. **AuthEngineMount** — Mounts JWT auth at `ci/jwt`
+   - `metadata.name: jwt`, `type: jwt`, `path: ci`
 
 2. **JWTOIDCAuthEngineConfig** — Configures JWT validation via JWKS URL
-   - `path: jwt-ci`
+   - `path: ci/jwt` (composite mount path)
    - Use `JWKSURL` mode (no credentials needed — JWT mode, not OIDC)
    - Example JWKS URL: `https://token.actions.githubusercontent.com/.well-known/jwks` (GitHub Actions)
    - Set `boundIssuer: https://token.actions.githubusercontent.com`
@@ -91,14 +93,14 @@ The `spec.path` field (separate from `spec.authentication.path`) is the Vault mo
 
 3. **Policy** — Grants certificate issuance access
    - Name: `ci-cert-issuer`
-   - Policy content: allow `read` on `pki-ci/issue/ci-service` and `pki-ci/sign/ci-service`
-   - Also allow `read` on `pki-ci/ca/pem` (for CA cert retrieval)
+   - Policy content: allow `read` on `ci/pki/issue/ci-service` and `ci/pki/sign/ci-service`
+   - Also allow `read` on `ci/pki/ca/pem` (for CA cert retrieval)
 
-4. **SecretEngineMount** — Mounts PKI engine at `pki-ci`
-   - `type: pki`, `path: pki-ci`
+4. **SecretEngineMount** — Mounts PKI engine at `ci/pki`
+   - `metadata.name: pki`, `type: pki`, `path: ci`
 
 5. **PKISecretEngineConfig** — Creates root CA
-   - `path: pki-ci`
+   - `path: ci/pki` (composite mount path)
    - `type: root`, `privateKeyType: internal`
    - `commonName: ci.internal.example.com`
    - `TTL: "87600h"` (10 years)
@@ -106,7 +108,7 @@ The `spec.path` field (separate from `spec.authentication.path`) is the Vault mo
    - `issuingCertificates` and `CRLDistributionPoints` URLs
 
 6. **PKISecretEngineRole** — Certificate issuance role
-   - `path: pki-ci`
+   - `path: ci/pki` (composite mount path)
    - `allowedDomains: ["internal.example.com", "svc.cluster.local"]`
    - `allowSubdomains: true`
    - `TTL: "1h"`, `maxTTL: "24h"` (short-lived CI certificates)
@@ -115,7 +117,7 @@ The `spec.path` field (separate from `spec.authentication.path`) is the Vault mo
    - `extKeyUsage: [ServerAuth, ClientAuth]`
 
 7. **JWTOIDCAuthEngineRole** — JWT auth role (references policy)
-   - `path: jwt-ci`
+   - `path: ci/jwt` (composite mount path)
    - `roleType: jwt` — **MUST be explicit** (default is `oidc`)
    - `userClaim: sub`
    - `boundAudiences: ["https://vault.example.com"]`
@@ -126,53 +128,55 @@ The `spec.path` field (separate from `spec.authentication.path`) is the Vault mo
 **Verification commands in README:**
 ```shell
 # Verify auth engine is mounted
-vault auth list | grep jwt-ci
+vault auth list | grep ci/jwt
 
 # Verify PKI CA is configured
-vault read pki-ci/ca/pem
+vault read ci/pki/ca/pem
 
 # Verify role exists
-vault read pki-ci/roles/ci-service
+vault read ci/pki/roles/ci-service
 
 # Issue a test certificate (after authenticating via JWT)
-vault write pki-ci/issue/ci-service common_name="myapp.internal.example.com" ttl="1h"
+vault write ci/pki/issue/ci-service common_name="myapp.internal.example.com" ttl="1h"
 ```
 
 ### Example 2: Azure Auth + Azure Secret Engine (`e2e-azure/`)
 
 **Scenario:** Azure VMs authenticate to Vault using their managed identity, then request dynamic Azure service principal credentials for cross-subscription resource access.
 
+**Mount path composition:** This example uses `path: infra` as a grouping prefix and distinct resource names (`azure-auth`, `azure-se`) to avoid collision.
+
 **CRD Stack (in order):**
 
-1. **AuthEngineMount** — Mounts Azure auth at `azure-auth`
-   - `type: azure`, `path: azure-auth`
+1. **AuthEngineMount** — Mounts Azure auth at `infra/azure-auth`
+   - `metadata.name: azure-auth`, `type: azure`, `path: infra`
 
 2. **AzureAuthEngineConfig** — Configures Azure auth
-   - `path: azure-auth`
+   - `path: infra/azure-auth` (composite mount path)
    - `tenantID: 00000000-0000-0000-0000-000000000000` (placeholder)
    - `resource: https://management.azure.com/`
    - `azureCredentials`: reference Kubernetes Secret with `usernameKey: clientid`, `passwordKey: clientsecret`
 
 3. **Policy** — Grants access to Azure secret engine credentials
    - Name: `azure-sp-reader`
-   - Policy: allow `read` on `azure-se/creds/contributor-role`
+   - Policy: allow `read` on `infra/azure-se/creds/contributor-role`
 
-4. **SecretEngineMount** — Mounts Azure secret engine at `azure-se`
-   - `type: azure`, `path: azure-se`
-   - Use `azure-se` (not `azure`) to avoid path collision with the auth mount
+4. **SecretEngineMount** — Mounts Azure secret engine at `infra/azure-se`
+   - `metadata.name: azure-se`, `type: azure`, `path: infra`
+   - Distinct `metadata.name` from the auth mount prevents path collision
 
 5. **AzureSecretEngineConfig** — Configures Azure secret engine
-   - `path: azure-se`
+   - `path: infra/azure-se` (composite mount path)
    - `subscriptionID`, `tenantID` with placeholder UUIDs
    - `azureCredentials`: reference Kubernetes Secret with `usernameKey: clientid`, `passwordKey: clientsecret`
 
 6. **AzureSecretEngineRole** — Dynamic SP credential role
-   - `path: azure-se`
+   - `path: infra/azure-se` (composite mount path)
    - `azureRoles`: JSON-encoded string — `'[{"role_name":"Contributor","scope":"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg"}]'`
    - `TTL: "1h"`, `maxTTL: "4h"`
 
 7. **AzureAuthEngineRole** — Auth role (references policy)
-   - `path: azure-auth`
+   - `path: infra/azure-auth` (composite mount path)
    - `name: azure-vm-role`
    - `boundSubscriptionIDs` with placeholder UUID
    - `boundResourceGroups: ["my-resource-group"]`
@@ -182,16 +186,16 @@ vault write pki-ci/issue/ci-service common_name="myapp.internal.example.com" ttl
 **Verification commands in README:**
 ```shell
 # Verify auth engine is mounted
-vault auth list | grep azure-auth
+vault auth list | grep infra/azure-auth
 
 # Verify secret engine is configured
-vault read azure-se/config
+vault read infra/azure-se/config
 
 # Verify role exists
-vault read azure-se/roles/contributor-role
+vault read infra/azure-se/roles/contributor-role
 
 # Generate credentials (after authenticating via Azure auth)
-vault read azure-se/creds/contributor-role
+vault read infra/azure-se/creds/contributor-role
 ```
 
 ### Naming Conventions
@@ -208,7 +212,7 @@ vault read azure-se/creds/contributor-role
 - Do NOT copy test fixtures from `test/` directory — those are terse; examples should be user-friendly
 - Do NOT use `roleType: oidc` (the default) in the JWT example — this is a JWT-mode example, must set `roleType: jwt` explicitly
 - Do NOT use YAML lists for `azureRoles` — this is a JSON-encoded string in the CRD
-- Do NOT use the same mount path (`azure`) for both the Azure auth engine and Azure secret engine — use `azure-auth` and `azure-se` to avoid collision
+- Do NOT use the same `metadata.name` for both the Azure auth engine and Azure secret engine — use distinct names (`azure-auth` and `azure-se`) under a shared `spec.path` prefix to avoid mount path collision
 - Do NOT make README.md excessively long — keep it focused and scannable, under 100 lines
 - Do NOT include a `connection` block in examples (optional, most users don't need it)
 - Do NOT use `OIDCDiscoveryURL` or `OIDCCredentials` in the JWT example — this is JWT mode (JWKS), not OIDC mode
@@ -278,10 +282,39 @@ Recent commits are documentation-focused (Epic D2, D3). No code changes affectin
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (via Cursor)
 
 ### Debug Log References
 
+- Integration tests passed before implementation (baseline established)
+- Integration tests passed after implementation (no regressions)
+
 ### Completion Notes List
 
+- Created `docs/examples/e2e-jwt-pki/` directory with two files:
+  - `README.md`: Scenario description (JWT/OIDC auth + PKI certificates), prerequisites, resources table with path composition note, apply/verify/cleanup commands, "How It Works" narrative
+  - `e2e-jwt-pki.yaml`: 7 CRDs — AuthEngineMount (name: jwt, path: ci → ci/jwt), JWTOIDCAuthEngineConfig (JWKS mode), Policy (ci-cert-issuer), SecretEngineMount (name: pki, path: ci → ci/pki), PKISecretEngineConfig (root CA), PKISecretEngineRole (ci-service), JWTOIDCAuthEngineRole (ci-runner, roleType: jwt)
+- Created `docs/examples/e2e-azure/` directory with two files:
+  - `README.md`: Scenario description (Azure auth + dynamic SP credentials), prerequisites, resources table with path composition note, apply/verify/cleanup commands, "How It Works" narrative
+  - `e2e-azure.yaml`: 7 CRDs — AuthEngineMount (name: azure-auth, path: infra → infra/azure-auth), AzureAuthEngineConfig, Policy (azure-sp-reader), SecretEngineMount (name: azure-se, path: infra → infra/azure-se), AzureSecretEngineConfig, AzureSecretEngineRole (contributor-role, JSON-encoded azureRoles), AzureAuthEngineRole (azure-vm-role)
+- Both examples follow the e2e pattern: auth mount → auth config → policy → secret mount → secret config → secret role → auth role
+- All CRDs use `apiVersion: redhatcop.redhat.io/v1alpha1` with standard `authentication` block
+- Mount path composition (`{spec.path}/{metadata.name}`) is correctly applied: mount CRs use a short grouping prefix (`ci`, `infra`) and downstream resources reference the composite path
+- Inline comments explain cross-resource connections and mount path composition
+- Placeholder values follow established patterns (example.com, 00000000-..., my-<thing>)
+- No namespace in metadata, no connection blocks, no status blocks
+- Azure example uses distinct `metadata.name` values (`azure-auth` vs `azure-se`) under shared `infra` prefix to avoid collision
+- JWT example explicitly sets `roleType: jwt` (not the default `oidc`)
+- azureRoles uses JSON-encoded string (not YAML list) as required by the CRD
+
 ### File List
+
+- docs/examples/e2e-jwt-pki/README.md (new)
+- docs/examples/e2e-jwt-pki/e2e-jwt-pki.yaml (new)
+- docs/examples/e2e-azure/README.md (new)
+- docs/examples/e2e-azure/e2e-azure.yaml (new)
+
+### Change Log
+
+- 2026-07-07: Created two end-to-end examples (JWT+PKI, Azure+Azure) with README and YAML files each
+- 2026-07-07: [Review Fix] Corrected mount path composition — mount CRs now use a short grouping prefix (`ci`, `infra`) with distinct `metadata.name`, and all downstream resources/policies/READMEs reference the composite `{spec.path}/{metadata.name}` path consistently

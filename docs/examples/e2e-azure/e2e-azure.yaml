@@ -1,0 +1,155 @@
+# End-to-End: Azure Auth + Azure Dynamic Service Principal Credentials
+#
+# Azure VMs authenticate via managed identity, then request dynamic Azure
+# service principal credentials for cross-subscription resource access.
+#
+# Flow: Azure auth → Policy → Azure secret engine
+#
+# Resources are ordered by dependency:
+#   1. AuthEngineMount (Azure) — mounts the auth engine
+#   2. AzureAuthEngineConfig — configures Azure AD tenant and credentials
+#   3. Policy — grants the auth role access to Azure credential paths
+#   4. SecretEngineMount (Azure) — mounts the secret engine
+#   5. AzureSecretEngineConfig — configures the Azure subscription
+#   6. AzureSecretEngineRole — defines dynamic SP credential parameters
+#   7. AzureAuthEngineRole — binds Azure identity to the policy (last, references policy)
+#
+# Mount path composition: AuthEngineMount and SecretEngineMount compose
+# their Vault path as {spec.path}/{metadata.name}. This example uses
+# "infra" as a grouping prefix and distinct resource names to avoid
+# mount path collision (both engines are Azure type).
+#
+# Apply with: kubectl apply -f e2e-azure.yaml
+
+# --- 1. Mount Azure auth engine at "infra/azure-auth" ---
+# Vault auth path: auth/{spec.path}/{metadata.name} = auth/infra/azure-auth
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AuthEngineMount
+metadata:
+  name: azure-auth
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  type: azure
+  path: infra
+---
+# --- 2. Configure Azure auth with tenant and credentials ---
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AzureAuthEngineConfig
+metadata:
+  name: azure-auth-config
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Composite mount path: {AuthEngineMount.path}/{AuthEngineMount.name}
+  path: infra/azure-auth
+  # Azure AD tenant ID — replace with your tenant
+  tenantID: "00000000-0000-0000-0000-000000000000"
+  # Resource URL for Azure IMDS JWT validation
+  resource: https://management.azure.com/
+  # Kubernetes Secret containing Azure client credentials for auth verification
+  azureCredentials:
+    secret:
+      name: azure-auth-credentials
+    usernameKey: clientid
+    passwordKey: clientsecret
+---
+# --- 3. Policy granting access to Azure dynamic credentials ---
+# This policy connects the Azure auth role to the secret engine credential path
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Policy
+metadata:
+  name: azure-sp-reader
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # HCL policy granting read access to the Azure secret engine mounted at infra/azure-se
+  policy: |
+    # Generate dynamic Azure service principal credentials
+    path "infra/azure-se/creds/contributor-role" {
+      capabilities = ["read"]
+    }
+---
+# --- 4. Mount Azure secret engine at "infra/azure-se" ---
+# Vault secret path: {spec.path}/{metadata.name} = infra/azure-se
+# Uses a distinct name from the auth mount to avoid path collision
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: SecretEngineMount
+metadata:
+  name: azure-se
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  type: azure
+  path: infra
+---
+# --- 5. Configure Azure secret engine with subscription and credentials ---
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AzureSecretEngineConfig
+metadata:
+  name: azure-se-config
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Composite mount path: {SecretEngineMount.path}/{SecretEngineMount.name}
+  path: infra/azure-se
+  # Azure subscription where service principals will be created
+  subscriptionID: "00000000-0000-0000-0000-000000000000"
+  # Azure AD tenant ID — replace with your tenant
+  tenantID: "00000000-0000-0000-0000-000000000000"
+  # Kubernetes Secret containing Azure SP credentials with permission to create other SPs
+  azureCredentials:
+    secret:
+      name: azure-se-credentials
+    usernameKey: clientid
+    passwordKey: clientsecret
+---
+# --- 6. Dynamic service principal credential role ---
+# Creates temporary Azure service principals with Contributor role
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AzureSecretEngineRole
+metadata:
+  name: contributor-role
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Composite mount path: {SecretEngineMount.path}/{SecretEngineMount.name}
+  path: infra/azure-se
+  # Azure role assignments — MUST be a JSON-encoded string (not a YAML list)
+  # Grants Contributor role scoped to a specific resource group
+  azureRoles: '[{"role_name":"Contributor","scope":"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group"}]'
+  # Dynamic credential TTLs
+  TTL: "1h"
+  maxTTL: "4h"
+---
+# --- 7. Azure auth role — connects Azure VMs to the azure-sp-reader policy ---
+# This role is last because it references the Policy defined above
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AzureAuthEngineRole
+metadata:
+  name: azure-vm-role
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Composite mount path: {AuthEngineMount.path}/{AuthEngineMount.name}
+  path: infra/azure-auth
+  name: azure-vm-role
+  # Restrict authentication to VMs in a specific subscription
+  boundSubscriptionIDs:
+    - "00000000-0000-0000-0000-000000000000"
+  # Restrict to a specific resource group
+  boundResourceGroups:
+    - my-resource-group
+  # Link to the policy that grants Azure secret engine access
+  tokenPolicies:
+    - azure-sp-reader
+  # Token TTLs matching the credential TTLs
+  tokenTTL: "1h"
+  tokenMaxTTL: "4h"
