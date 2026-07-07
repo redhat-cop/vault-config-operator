@@ -36,6 +36,7 @@
 
 generated: 2026-04-11
 last_updated: 2026-07-05
+# Epic D3 done + retrospective completed 2026-07-05
 # Story D3.4 done 2026-07-05
 # Story D3.4 review 2026-07-05
 # Story D3.4 in-progress 2026-07-05
@@ -365,12 +366,12 @@ development_status:
   epic-d2-retrospective: done
 
   # Epic D3: Secret Engine Documentation — Per-Engine Split & Standardization
-  epic-d3: in-progress
+  epic-d3: done
   d3-1-create-secret-engines-directory-structure-and-index-page: done
   d3-2-standardize-database-secret-engine-docs: done
   d3-3-standardize-pki-and-rabbitmq-secret-engine-docs: done
   d3-4-standardize-github-quay-kubernetes-and-azure-secret-engine-docs: done
-  epic-d3-retrospective: optional
+  epic-d3-retrospective: done
 
   # Epic D4: Examples Directory Expansion
   epic-d4: backlog
