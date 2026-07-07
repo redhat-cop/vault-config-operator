@@ -1,6 +1,6 @@
 # Story D4.2: Create Example YAML Files for Each Secret Engine
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -25,20 +25,20 @@ so that I can quickly bootstrap my configuration.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `docs/examples/secret-database/` directory (AC: #1, #2, #3)
-  - [ ] Create `secret-database.yaml` with SecretEngineMount + DatabaseSecretEngineConfig + DatabaseSecretEngineRole + DatabaseSecretEngineStaticRole
-- [ ] Task 2: Create `docs/examples/secret-pki/` directory (AC: #1, #2, #3)
-  - [ ] Create `secret-pki.yaml` with SecretEngineMount + PKISecretEngineConfig (root CA) + PKISecretEngineRole
-- [ ] Task 3: Create `docs/examples/secret-rabbitmq/` directory (AC: #1, #2, #3)
-  - [ ] Create `secret-rabbitmq.yaml` with SecretEngineMount + RabbitMQSecretEngineConfig + RabbitMQSecretEngineRole
-- [ ] Task 4: Create `docs/examples/secret-github/` directory (AC: #1, #2, #3)
-  - [ ] Create `secret-github.yaml` with SecretEngineMount + GitHubSecretEngineConfig + GitHubSecretEngineRole
-- [ ] Task 5: Create `docs/examples/secret-quay/` directory (AC: #1, #2, #3)
-  - [ ] Create `secret-quay.yaml` with SecretEngineMount + QuaySecretEngineConfig + QuaySecretEngineRole + QuaySecretEngineStaticRole
-- [ ] Task 6: Create `docs/examples/secret-kubernetes/` directory (AC: #1, #2, #3)
-  - [ ] Create `secret-kubernetes.yaml` with SecretEngineMount + KubernetesSecretEngineConfig + KubernetesSecretEngineRole
-- [ ] Task 7: Create `docs/examples/secret-azure/` directory (AC: #1, #2, #3)
-  - [ ] Create `secret-azure.yaml` with SecretEngineMount + AzureSecretEngineConfig + AzureSecretEngineRole
+- [x] Task 1: Create `docs/examples/secret-database/` directory (AC: #1, #2, #3)
+  - [x] Create `secret-database.yaml` with SecretEngineMount + DatabaseSecretEngineConfig + DatabaseSecretEngineRole + DatabaseSecretEngineStaticRole
+- [x] Task 2: Create `docs/examples/secret-pki/` directory (AC: #1, #2, #3)
+  - [x] Create `secret-pki.yaml` with SecretEngineMount + PKISecretEngineConfig (root CA) + PKISecretEngineRole
+- [x] Task 3: Create `docs/examples/secret-rabbitmq/` directory (AC: #1, #2, #3)
+  - [x] Create `secret-rabbitmq.yaml` with SecretEngineMount + RabbitMQSecretEngineConfig + RabbitMQSecretEngineRole
+- [x] Task 4: Create `docs/examples/secret-github/` directory (AC: #1, #2, #3)
+  - [x] Create `secret-github.yaml` with SecretEngineMount + GitHubSecretEngineConfig + GitHubSecretEngineRole
+- [x] Task 5: Create `docs/examples/secret-quay/` directory (AC: #1, #2, #3)
+  - [x] Create `secret-quay.yaml` with SecretEngineMount + QuaySecretEngineConfig + QuaySecretEngineRole + QuaySecretEngineStaticRole
+- [x] Task 6: Create `docs/examples/secret-kubernetes/` directory (AC: #1, #2, #3)
+  - [x] Create `secret-kubernetes.yaml` with SecretEngineMount + KubernetesSecretEngineConfig + KubernetesSecretEngineRole
+- [x] Task 7: Create `docs/examples/secret-azure/` directory (AC: #1, #2, #3)
+  - [x] Create `secret-azure.yaml` with SecretEngineMount + AzureSecretEngineConfig + AzureSecretEngineRole
 
 ## Dev Notes
 
@@ -296,10 +296,46 @@ Recent commits are documentation-focused (Epic D2, D3). No code changes that aff
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Integration tests skipped during pre-flight: Kind cluster container not running (infrastructure issue, not code regression). Story is pure documentation with no runtime impact.
+
 ### Completion Notes List
 
+- Created 7 example YAML files for all secret engines supported by the operator
+- Each file follows the multi-document YAML pattern from D4.1 auth engine examples and the existing `docs/examples/postgresql/` reference
+- All files use `apiVersion: redhatcop.redhat.io/v1alpha1` and standard authentication block (`path: kubernetes`, `role: policy-admin`)
+- Resources ordered by dependency: SecretEngineMount → Config → Role(s) → StaticRole
+- No `namespace` in metadata, no `status` blocks, no actual credentials
+- Inline YAML comments explain field purpose and when to change values
+- RabbitMQ example uses single vhost entry per known serialization bug (D3 retro)
+- Azure role uses JSON-encoded string for `azureRoles` (not YAML list) per CRD requirement
+- GitHub example notes `sSHKeyReference` double-capital-S naming and `permissionset` Vault path
+- Kubernetes and Azure secret engines use distinct mount paths (`kubernetes-se-demo`, `azure-se-demo`) to avoid auth engine confusion
+- Quay example includes both dynamic (TTL) and static (no TTL) roles
+- All 7 YAML files validated with Python YAML parser — no syntax errors
+
+### Change Log
+
+- 2026-07-07: Created all 7 secret engine example directories and YAML files
+
 ### File List
+
+- docs/examples/secret-database/secret-database.yaml (new)
+- docs/examples/secret-pki/secret-pki.yaml (new)
+- docs/examples/secret-rabbitmq/secret-rabbitmq.yaml (new)
+- docs/examples/secret-github/secret-github.yaml (new)
+- docs/examples/secret-quay/secret-quay.yaml (new)
+- docs/examples/secret-kubernetes/secret-kubernetes.yaml (new)
+- docs/examples/secret-azure/secret-azure.yaml (new)
+- _bmad-output/implementation-artifacts/d4-2-create-example-yaml-files-for-each-secret-engine.md (modified)
+- _bmad-output/implementation-artifacts/sprint-status.yaml (modified)
+
+### Review Findings
+
+- [x] [Review][Patch] Secret engine dependent CRs use the mount prefix instead of the actual mounted path [docs/examples/secret-database/secret-database.yaml:20] — **Fixed**: all 7 examples now use `{mount spec.path}/{mount metadata.name}` pattern matching the existing postgresql reference
+- [x] [Review][Patch] Database example allowlist omits the static role created later in the same file [docs/examples/secret-database/secret-database.yaml:47] — **Fixed**: added `app-user-rotation` to `allowedRoles`
+- [x] [Review][Patch] GitHub example uses `github` instead of the registered plugin mount type [docs/examples/secret-github/secret-github.yaml:28] — **Fixed**: changed to `vault-plugin-secrets-github`; also fixed Quay to `vault-plugin-secrets-quay`
+- [x] [Review][Dismiss] Sprint status history comments contradict the current story state transition — dismissed on deeper inspection; comments are the established append-only reverse-chronological audit trail format
