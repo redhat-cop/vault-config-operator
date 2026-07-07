@@ -1,0 +1,94 @@
+# JWT/OIDC Auth Engine — OIDC Mode Example
+#
+# This example configures a JWT/OIDC auth engine in OIDC mode (interactive
+# browser-based login via an identity provider) and creates a role for it.
+#
+# Resources are ordered by dependency:
+#   1. JWTOIDCAuthEngineConfig — configures the engine with OIDC Discovery
+#   2. JWTOIDCAuthEngineRole — defines a role for OIDC-based authentication
+#
+# Prerequisites:
+#   - An AuthEngineMount of type "oidc" must already exist at the path specified
+#   - A Kubernetes Secret "oidc-client-credentials" with client_id and client_secret
+#   - Register callback URLs with your OIDC provider
+#
+# For JWT mode (non-interactive, JWKS-based), see auth-jwt.yaml
+#
+# Apply with: kubectl apply -f auth-jwt-oidc.yaml
+
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: JWTOIDCAuthEngineConfig
+metadata:
+  name: oidc-config
+spec:
+  # How the operator authenticates to Vault to perform this operation
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Mount path of the JWT/OIDC auth engine being configured
+  path: oidc
+  # OIDC Discovery URL from your identity provider (without /.well-known suffix)
+  OIDCDiscoveryURL: https://login.microsoftonline.com/00000000-0000-0000-0000-000000000000/v2.0
+  # OAuth Client ID registered with your provider
+  OIDCClientID: 11111111-1111-1111-1111-111111111111
+  # Response mode for the OAuth2 authorization request
+  OIDCResponseMode: form_post
+  # Response types to request from the provider
+  OIDCResponseTypes:
+    - code
+  # Supported JWT signing algorithms
+  JWTSupportedAlgs:
+    - RS256
+  # Default role when none is specified during login
+  defaultRole: oidc-user
+  # Pass namespace in OIDC state parameter.
+  # NOTE: If using Vault Enterprise namespaces with OIDCResponseMode=form_post,
+  # set namespaceInState to false — otherwise the callback may fail.
+  namespaceInState: true
+  # Kubernetes Secret containing OIDC client credentials
+  OIDCCredentials:
+    secret:
+      name: oidc-client-credentials
+    usernameKey: client_id
+    passwordKey: client_secret
+---
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: JWTOIDCAuthEngineRole
+metadata:
+  name: oidc-user-role
+spec:
+  # How the operator authenticates to Vault to perform this operation
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Mount path of the JWT/OIDC auth engine
+  path: oidc
+  # Vault role name (can differ from metadata.name)
+  name: oidc-user
+  # Role type — "oidc" for interactive browser login (this is the default)
+  roleType: oidc
+  # JWT claim used to uniquely identify the user
+  userClaim: email
+  # Audiences that must be present in the JWT
+  boundAudiences:
+    - 11111111-1111-1111-1111-111111111111
+  # OIDC scopes to request from the provider
+  OIDCScopes:
+    - openid
+    - profile
+    - email
+  # Allowed callback URLs — must match your Vault and provider configuration
+  allowedRedirectURIs:
+    - https://vault.example.com:8250/oidc/callback
+    - http://localhost:8250/oidc/callback
+  # JWT claim containing group membership for policy mapping
+  groupsClaim: groups
+  # Map JWT claims to Vault token metadata
+  claimMappings:
+    preferred_username: display_name
+  # Vault policies granted to tokens issued via this role
+  tokenPolicies:
+    - app-reader
+    - default
+  tokenTTL: "1h"
+  tokenMaxTTL: "24h"

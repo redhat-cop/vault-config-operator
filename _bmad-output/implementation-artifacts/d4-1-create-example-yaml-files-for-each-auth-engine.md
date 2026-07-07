@@ -1,6 +1,6 @@
 # Story D4.1: Create Example YAML Files for Each Auth Engine
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -24,19 +24,26 @@ so that I can quickly bootstrap my configuration.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `docs/examples/auth-kubernetes/` directory (AC: #1, #2, #3)
-  - [ ] Create `auth-kubernetes.yaml` with AuthEngineMount + KubernetesAuthEngineConfig + KubernetesAuthEngineRole
-- [ ] Task 2: Create `docs/examples/auth-ldap/` directory (AC: #1, #2, #3)
-  - [ ] Create `auth-ldap.yaml` with LDAPAuthEngineConfig + LDAPAuthEngineGroup
-- [ ] Task 3: Create `docs/examples/auth-jwt-oidc/` directory (AC: #1, #2, #3)
-  - [ ] Create `auth-jwt-oidc.yaml` with JWTOIDCAuthEngineConfig (OIDC mode) + JWTOIDCAuthEngineRole
-  - [ ] Create `auth-jwt.yaml` with JWTOIDCAuthEngineConfig (JWT mode with JWKS) + JWTOIDCAuthEngineRole (roleType: jwt)
-- [ ] Task 4: Create `docs/examples/auth-gcp/` directory (AC: #1, #2, #3)
-  - [ ] Create `auth-gcp.yaml` with GCPAuthEngineConfig + GCPAuthEngineRole (IAM type) + GCPAuthEngineRole (GCE type)
-- [ ] Task 5: Create `docs/examples/auth-azure/` directory (AC: #1, #2, #3)
-  - [ ] Create `auth-azure.yaml` with AzureAuthEngineConfig + AzureAuthEngineRole
-- [ ] Task 6: Create `docs/examples/auth-cert/` directory (AC: #1, #2, #3)
-  - [ ] Create `auth-cert.yaml` with CertAuthEngineConfig + CertAuthEngineRole
+- [x] Task 1: Create `docs/examples/auth-kubernetes/` directory (AC: #1, #2, #3)
+  - [x] Create `auth-kubernetes.yaml` with AuthEngineMount + KubernetesAuthEngineConfig + KubernetesAuthEngineRole
+- [x] Task 2: Create `docs/examples/auth-ldap/` directory (AC: #1, #2, #3)
+  - [x] Create `auth-ldap.yaml` with LDAPAuthEngineConfig + LDAPAuthEngineGroup
+- [x] Task 3: Create `docs/examples/auth-jwt-oidc/` directory (AC: #1, #2, #3)
+  - [x] Create `auth-jwt-oidc.yaml` with JWTOIDCAuthEngineConfig (OIDC mode) + JWTOIDCAuthEngineRole
+  - [x] Create `auth-jwt.yaml` with JWTOIDCAuthEngineConfig (JWT mode with JWKS) + JWTOIDCAuthEngineRole (roleType: jwt)
+- [x] Task 4: Create `docs/examples/auth-gcp/` directory (AC: #1, #2, #3)
+  - [x] Create `auth-gcp.yaml` with GCPAuthEngineConfig + GCPAuthEngineRole (IAM type) + GCPAuthEngineRole (GCE type)
+- [x] Task 5: Create `docs/examples/auth-azure/` directory (AC: #1, #2, #3)
+  - [x] Create `auth-azure.yaml` with AzureAuthEngineConfig + AzureAuthEngineRole
+- [x] Task 6: Create `docs/examples/auth-cert/` directory (AC: #1, #2, #3)
+  - [x] Create `auth-cert.yaml` with CertAuthEngineConfig + CertAuthEngineRole
+
+### Review Findings
+
+- [x] [Review][Patch] Align Kubernetes auth example mount/config/role paths so they target the same auth engine [docs/examples/auth-kubernetes/auth-kubernetes.yaml:13]
+- [x] [Review][Patch] Correct the JWT example prerequisite to use the repo's actual JWT/OIDC auth mount type [docs/examples/auth-jwt-oidc/auth-jwt.yaml:13]
+- [x] [Review][Patch] Fix the OIDC example's `namespaceInState` guidance for `form_post` flows [docs/examples/auth-jwt-oidc/auth-jwt-oidc.yaml:34]
+- [x] [Review][Patch] Make the LDAP TLS Secret prerequisite consistent with the example's unconditional `tLSConfig` reference [docs/examples/auth-ldap/auth-ldap.yaml:10]
 
 ## Dev Notes
 
@@ -186,10 +193,35 @@ Show **two separate files** demonstrating both modes:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+(none — documentation-only story, no debugging needed)
+
 ### Completion Notes List
 
+- Created 7 example YAML files across 6 directories for all supported auth engines
+- All files follow the established postgresql example pattern: multi-document YAML, dependency ordering, inline comments, no namespace in metadata
+- All CRs use `apiVersion: redhatcop.redhat.io/v1alpha1` with correct Kind names matching CRD definitions
+- auth-kubernetes: AuthEngineMount + KubernetesAuthEngineConfig + KubernetesAuthEngineRole (demonstrates label selector for targetNamespaces)
+- auth-ldap: LDAPAuthEngineConfig (with TLS secret reference) + LDAPAuthEngineGroup (comma-separated policies)
+- auth-jwt-oidc: Two files — OIDC mode (OIDCDiscoveryURL + OIDCCredentials) and JWT mode (JWKSURL, explicit roleType: jwt)
+- auth-gcp: GCPAuthEngineConfig + two GCPAuthEngineRole resources demonstrating both IAM and GCE types
+- auth-azure: AzureAuthEngineConfig + AzureAuthEngineRole with subscription/resource group/principal bindings
+- auth-cert: CertAuthEngineConfig + CertAuthEngineRole with placeholder CA certificate and SAN constraints
+- No code changes, no Makefile changes, no CRD changes — pure documentation/examples
+
 ### File List
+
+- docs/examples/auth-kubernetes/auth-kubernetes.yaml (new)
+- docs/examples/auth-ldap/auth-ldap.yaml (new)
+- docs/examples/auth-jwt-oidc/auth-jwt-oidc.yaml (new)
+- docs/examples/auth-jwt-oidc/auth-jwt.yaml (new)
+- docs/examples/auth-gcp/auth-gcp.yaml (new)
+- docs/examples/auth-azure/auth-azure.yaml (new)
+- docs/examples/auth-cert/auth-cert.yaml (new)
+
+### Change Log
+
+- 2026-07-07: Created example YAML files for all 6 auth engines (kubernetes, ldap, jwt-oidc, gcp, azure, cert) with complete CRD examples, inline documentation, and dependency ordering

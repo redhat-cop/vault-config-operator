@@ -1,0 +1,70 @@
+# LDAP Auth Engine — Complete Example
+#
+# This example configures an LDAP auth engine and maps an LDAP group to
+# Vault policies.
+#
+# Resources are ordered by dependency:
+#   1. LDAPAuthEngineConfig — configures the LDAP connection and user/group search
+#   2. LDAPAuthEngineGroup — maps an LDAP group to Vault policies
+#
+# Prerequisites:
+#   - An AuthEngineMount of type "ldap" must already exist at the path specified
+#   - A Kubernetes Secret "ldap-bind-credentials" with bind password
+#   - A Kubernetes TLS Secret "ldap-tls-certificate" with ca.crt, tls.crt, tls.key
+#     (required when tLSConfig is present — remove the tLSConfig block if not using TLS secrets)
+#
+# Apply with: kubectl apply -f auth-ldap.yaml
+
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: LDAPAuthEngineConfig
+metadata:
+  name: ldap-config
+spec:
+  # How the operator authenticates to Vault to perform this operation
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Mount path of the LDAP auth engine being configured
+  path: ldap
+  # LDAP server URL — use ldaps:// for TLS
+  url: ldaps://ldap.example.com:636
+  # Distinguished name for the LDAP bind account
+  bindDN: cn=vault-svc,ou=Services,dc=example,dc=com
+  # Kubernetes Secret containing the bind password (basic-auth type secret)
+  bindCredentials:
+    secret:
+      name: ldap-bind-credentials
+  # Base DN for user searches
+  userDN: ou=Users,dc=example,dc=com
+  # Attribute on user objects matching the login username
+  userAttr: sAMAccountName
+  # Base DN for group membership searches
+  groupDN: ou=Groups,dc=example,dc=com
+  # Attribute on group objects representing the group name
+  groupAttr: cn
+  # LDAP filter for resolving group membership
+  groupFilter: (|(memberUid={{.Username}})(member={{.UserDN}})(uniqueMember={{.UserDN}}))
+  # TLS settings
+  insecureTLS: false
+  TLSMinVersion: tls12
+  TLSMaxVersion: tls13
+  # Reference a Kubernetes TLS Secret for CA and client certificates
+  tLSConfig:
+    tlsSecret:
+      name: ldap-tls-certificate
+---
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: LDAPAuthEngineGroup
+metadata:
+  name: ldap-admins
+spec:
+  # How the operator authenticates to Vault to perform this operation
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Mount path of the LDAP auth engine
+  path: ldap
+  # LDAP group name to map (must match the group name in your directory)
+  name: vault-admins
+  # Comma-separated list of Vault policies to assign to this group
+  policies: "admin, audit, default"
