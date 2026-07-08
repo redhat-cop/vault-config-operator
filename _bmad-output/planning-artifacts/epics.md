@@ -1446,16 +1446,16 @@ So that I can see how different engines and auth methods work together.
 
 ### Dependency Upgrade Requirements
 
-DU1: Upgrade Go from 1.22 to 1.24+ (required by latest controller-runtime, ginkgo, gomega)
-DU2: Upgrade controller-runtime from v0.17.3 to v0.23.x in lockstep with K8s client libraries (api, apimachinery, client-go, apiextensions-apiserver) from v0.29.2 to v0.35.x
+DU1: Upgrade Go from 1.22 to 1.26 (required by controller-runtime v0.24; Go 1.24 is EOL as of 2026-07)
+DU2: Upgrade controller-runtime from v0.17.3 to v0.24.x in lockstep with K8s client libraries (api, apimachinery, client-go, apiextensions-apiserver) from v0.29.2 to v0.36.x
 DU3: Upgrade Operator SDK from v1.31.0 to v1.42.x (Makefile, Dockerfile, bundle, project layout)
 DU4: Upgrade hashicorp/vault/api from v1.14.0 to v1.23.x
 DU5: Upgrade test dependencies (ginkgo v2.19→v2.28, gomega v1.33→v1.39)
 DU6: Upgrade peripheral dependencies (hcl/v2 v2.21→v2.24, sprig/v3 v3.2→v3.3, logr v1.4.2→v1.4.3)
 DU7: Upgrade security-sensitive indirect dependencies (golang.org/x/crypto, golang.org/x/net)
 DU8: Evaluate migration from archived `pkg/errors` to Go standard `fmt.Errorf` with `%w` wrapping
-DU9: Upgrade Makefile K8s-coupled tools: controller-gen v0.14→v0.20, envtest release-0.17→release-0.23, ENVTEST_K8S_VERSION 1.29→1.35, kubectl v1.29→v1.35, Kind v0.27→v0.31
-DU10: Upgrade Dockerfile builder image from golang:1.22 to golang:1.24+; add multi-arch support
+DU9: Upgrade Makefile K8s-coupled tools: controller-gen v0.14→v0.21, envtest release-0.17→release-0.24, ENVTEST_K8S_VERSION 1.29→1.36, kubectl v1.29→v1.36, Kind v0.27→v0.32
+DU10: Upgrade Dockerfile builder image from golang:1.22 to golang:1.26; add multi-arch support
 DU11: Update CI workflow version references (GO_VERSION, OPERATOR_SDK_VERSION, reusable workflow pin)
 DU12: Upgrade Helm from v3.11.0 to v4.x (major version change with breaking changes)
 DU13: Upgrade golangci-lint from v1.59.1 to v2.x (major version change with config format changes)
@@ -1534,7 +1534,7 @@ Refactor all CRD `*_types.go` files to comply with the CRD Field Default & Valid
 **FRs covered:** CRD1, CRD2, CRD3
 
 ### Epic 8: Go + Kubernetes Stack Upgrade
-Upgrade Go 1.22→1.24, controller-runtime v0.17→v0.23, K8s libs v0.29→v0.35, and all coupled tools (controller-gen, envtest, kubectl, Kind). Update Dockerfile, CI workflows, and Makefile version variables.
+Upgrade Go 1.22→1.26, controller-runtime v0.17→v0.24, K8s libs v0.29→v0.36, and all coupled tools (controller-gen v0.21, envtest 1.36, kubectl v1.36, Kind v0.32). Update Dockerfile, CI workflows, and Makefile version variables. (Targets updated 2026-07-08 from original 1.24/v0.23/v0.35 — Go 1.24 reached EOL, ecosystem moved to v0.36 generation.)
 **FRs covered:** DU1, DU2, DU9, DU10, DU11
 
 ### Epic 9: Vault API + Peripheral Dependency Upgrades
@@ -1775,40 +1775,44 @@ Upgrade the core Go + Kubernetes dependency stack. This is the highest-risk upgr
 
 **Precondition:** Phase 1 test stabilization must be substantially complete — the test suite is the safety net for this upgrade.
 
-### Story 8.1: Upgrade Go from 1.22 to 1.24
+### Story 8.1: Upgrade Go from 1.22 to 1.26
 
 As an operator developer,
-I want to upgrade the Go version from 1.22 to 1.24,
-So that we can use the latest controller-runtime and benefit from Go language improvements and security fixes.
+I want to upgrade the Go version from 1.22 to 1.26,
+So that we can use the latest controller-runtime (v0.24, which requires Go 1.26) and benefit from Go language improvements and security fixes.
+
+**Note (updated 2026-07-08):** Original target was Go 1.24, but Go 1.24 reached end-of-life — only Go 1.25 and 1.26 are actively maintained. controller-runtime v0.24 requires Go 1.26 minimum. Retargeted to Go 1.26.
 
 **Acceptance Criteria:**
 
 **Given** the project uses Go 1.22
-**When** go.mod is updated to `go 1.24` and all source files are adapted
+**When** go.mod is updated to `go 1.26` and all source files are adapted
 **Then** `go build ./...` succeeds, `go vet ./...` passes, `go test ./...` passes
 
 **Given** the Dockerfile builder stage references `golang:1.22`
-**When** the base image is updated to `golang:1.24`
+**When** the base image is updated to `golang:1.26`
 **Then** the container builds and operator binary runs correctly
 
 **Given** CI workflows (pr.yaml, push.yaml) reference `GO_VERSION: ~1.22`
-**When** both are updated to `GO_VERSION: ~1.24`
+**When** both are updated to `GO_VERSION: ~1.26`
 **Then** all CI jobs pass
 
 **Given** the Dockerfile hardcodes `GOARCH=amd64`
 **When** the build is updated to use `TARGETARCH` build arg for multi-arch support
 **Then** the image can be built for both amd64 and arm64
 
-### Story 8.2: Upgrade controller-runtime v0.17 → v0.23 and K8s libs v0.29 → v0.35
+### Story 8.2: Upgrade controller-runtime v0.17 → v0.24 and K8s libs v0.29 → v0.36
 
 As an operator developer,
 I want to upgrade controller-runtime and K8s client libraries to the latest versions,
 So that the operator is compatible with current Kubernetes versions and benefits from upstream fixes.
 
+**Note (updated 2026-07-08):** Original target was v0.23/v0.35. Retargeted to v0.24/v0.36 — the current generation as of July 2026. controller-runtime v0.24 requires Go 1.26 (covered by Story 8.1).
+
 **Acceptance Criteria:**
 
 **Given** go.mod pins controller-runtime v0.17.3 and K8s libs v0.29.2
-**When** all are updated to v0.23.x / v0.35.x
+**When** all are updated to v0.24.x / v0.36.x
 **Then** `go build ./...` succeeds after adapting to any API changes
 
 **Given** controller-runtime may have changed webhook registration, manager options, or reconciler interfaces
@@ -1819,7 +1823,7 @@ So that the operator is compatible with current Kubernetes versions and benefits
 **When** both unit and integration test suites are adapted
 **Then** `make test` and `make integration` pass
 
-**Implementation notes:** Review controller-runtime release notes for each minor version (v0.18 through v0.23) for breaking changes. Key areas: Manager.Start() signature, webhook server setup, envtest CRD loading, client.Reader vs client.Client, predicate APIs. This is the largest single story in the project.
+**Implementation notes:** Review controller-runtime release notes for each minor version (v0.18 through v0.24) for breaking changes. Key areas: Manager.Start() signature, webhook server setup, envtest CRD loading, client.Reader vs client.Client, predicate APIs. v0.24 adds k8s:enum and k8s:immutable marker support via controller-gen v0.21. This is the largest single story in the project.
 
 ### Story 8.3: Upgrade Makefile K8s-coupled tool versions
 
@@ -1827,29 +1831,35 @@ As an operator developer,
 I want to upgrade the Makefile tool versions that must track the K8s stack,
 So that tooling is compatible with the new controller-runtime and K8s lib versions.
 
+**Note (updated 2026-07-08):** All targets retargeted to the v0.36 / Go 1.26 generation. Kind v0.32.0 has breaking changes: Envoy replaces HAProxy for multi-control-plane LB, kubeadm v1beta4 config format required for K8s 1.36+.
+
 **Versions to update:**
 
 | Variable | Current | Target |
 |----------|---------|--------|
-| CONTROLLER_TOOLS_VERSION | v0.14.0 | v0.20.1 |
-| ENVTEST_VERSION | release-0.17 | release-0.23 |
-| ENVTEST_K8S_VERSION | 1.29.0 | 1.35.0 |
-| KUBECTL_VERSION | v1.29.0 | v1.35.x |
-| KIND_VERSION | v0.27.0 | v0.31.0 |
+| CONTROLLER_TOOLS_VERSION | v0.14.0 | v0.21.0 |
+| ENVTEST_VERSION | release-0.17 | release-0.24 |
+| ENVTEST_K8S_VERSION | 1.29.0 | 1.36.x |
+| KUBECTL_VERSION | v1.29.0 | v1.36.x |
+| KIND_VERSION | v0.27.0 | v0.32.0 |
 
 **Acceptance Criteria:**
 
 **Given** controller-gen v0.14 is used
-**When** CONTROLLER_TOOLS_VERSION is updated to v0.20.1
+**When** CONTROLLER_TOOLS_VERSION is updated to v0.21.0
 **Then** `make manifests` and `make generate` produce valid CRDs and deepcopy code
 
 **Given** ENVTEST_VERSION and ENVTEST_K8S_VERSION are updated
 **When** `make test` is run
-**Then** envtest downloads and uses the correct K8s 1.35 binaries
+**Then** envtest downloads and uses the correct K8s 1.36 binaries
 
-**Given** KIND_VERSION is updated to v0.31.0 and KUBECTL_VERSION to v1.35.x
+**Given** KIND_VERSION is updated to v0.32.0 and KUBECTL_VERSION to v1.36.x
 **When** `make kind-setup` and `make integration` are run
 **Then** the Kind cluster and integration tests work correctly
+
+**Given** Kind v0.32.0 switched from HAProxy to Envoy and requires kubeadm v1beta4 for K8s 1.36+
+**When** existing Kind cluster configurations are reviewed
+**Then** any HAProxy or kubeadm v1beta3 assumptions are updated
 
 ### Story 8.4: Adapt CI pipeline and Dockerfiles for new versions
 
@@ -1859,13 +1869,15 @@ So that builds, tests, and releases work with the updated stack.
 
 **Acceptance Criteria:**
 
+**Note (updated 2026-07-08):** Version references updated to match retargeted Go 1.26 / K8s 1.36 generation.
+
 **Given** pr.yaml and push.yaml reference `GO_VERSION: ~1.22` and `OPERATOR_SDK_VERSION: v1.31.0`
-**When** all version references are updated
+**When** all version references are updated (GO_VERSION to ~1.26)
 **Then** CI runs green on a PR with all changes
 
 **Given** the Kind node image in `make kind-setup` uses `kindest/node:$(KUBECTL_VERSION)`
-**When** KUBECTL_VERSION is updated
-**Then** the Kind cluster boots with the correct K8s version
+**When** KUBECTL_VERSION is updated to v1.36.x
+**Then** the Kind cluster boots with the correct K8s version (using Kind v0.32.0 node images)
 
 **Given** the `redhat-cop/github-workflows-operators` is pinned at v1.1.6
 **When** we check for newer versions of the reusable workflow
