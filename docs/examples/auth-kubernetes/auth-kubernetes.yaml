@@ -1,0 +1,74 @@
+# Kubernetes Auth Engine — Complete Example
+#
+# This example creates a Kubernetes auth engine mount, configures it,
+# and creates a role that allows specific service accounts to authenticate.
+#
+# Resources are ordered by dependency:
+#   1. AuthEngineMount — creates the auth engine mount point in Vault
+#   2. KubernetesAuthEngineConfig — configures the engine to talk to the K8s API
+#   3. KubernetesAuthEngineRole — defines which service accounts can authenticate
+#
+# Path semantics:
+#   AuthEngineMount creates the engine at: auth/{spec.path}/{metadata.name}
+#   Config targets the engine via: spec.path = mount's spec.path, metadata.name = mount's metadata.name
+#   Role targets the engine via: spec.path = "{mount's spec.path}/{mount's metadata.name}"
+#
+# Apply with: kubectl apply -f auth-kubernetes.yaml
+
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AuthEngineMount
+metadata:
+  name: k8s
+spec:
+  # How the operator authenticates to Vault to perform this operation
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Auth engine type to mount
+  type: kubernetes
+  # Vault mount path prefix — resulting engine path: auth/kubernetes/k8s
+  path: kubernetes
+---
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KubernetesAuthEngineConfig
+metadata:
+  # Must match the AuthEngineMount's metadata.name
+  name: k8s
+spec:
+  # How the operator authenticates to Vault to perform this operation
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Must match the AuthEngineMount's spec.path
+  path: kubernetes
+  # Kubernetes API server URL (default for in-cluster)
+  kubernetesHost: https://kubernetes.default.svc:443
+  # Service account used by Vault to validate tokens via TokenReview API
+  # If omitted, the JWT submitted during login is used for token review
+  tokenReviewerServiceAccount:
+    name: vault-token-reviewer
+---
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KubernetesAuthEngineRole
+metadata:
+  name: database-engine-admin
+spec:
+  # How the operator authenticates to Vault to perform this operation
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Full engine path: {mount's spec.path}/{mount's metadata.name}
+  path: kubernetes/k8s
+  # Vault policies granted to tokens issued via this role
+  policies:
+    - database-engine-admin
+    - readonly
+  # Service accounts allowed to authenticate with this role
+  targetServiceAccounts:
+    - vault-sa
+  # Namespaces allowed to authenticate — uses a label selector for dynamic resolution
+  # Alternative: use a static list with targetNamespaces.targetNamespaces: [ns-a, ns-b]
+  targetNamespaces:
+    targetNamespaceSelector:
+      matchLabels:
+        vault-enabled: "true"

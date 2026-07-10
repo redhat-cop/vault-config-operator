@@ -1,0 +1,72 @@
+# JWT/OIDC Auth Engine — JWT Mode Example
+#
+# This example configures a JWT/OIDC auth engine in JWT mode (non-interactive,
+# direct JWT validation via a remote JWKS endpoint) and creates a role for it.
+#
+# JWT mode validates tokens directly without browser-based login. Common use
+# cases include CI/CD pipelines and service-to-service authentication.
+#
+# Resources are ordered by dependency:
+#   1. JWTOIDCAuthEngineConfig — configures the engine with a JWKS URL
+#   2. JWTOIDCAuthEngineRole — defines a role for JWT-based authentication
+#
+# Prerequisites:
+#   - An AuthEngineMount of type "oidc" (or "jwt") must already exist at the path
+#     specified. Both types use the same Vault plugin and support JWT mode.
+#   - A JWKS endpoint accessible from Vault (no credentials needed)
+#
+# For OIDC mode (interactive browser-based login), see auth-jwt-oidc.yaml
+#
+# Apply with: kubectl apply -f auth-jwt.yaml
+
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: JWTOIDCAuthEngineConfig
+metadata:
+  name: jwt-config
+spec:
+  # How the operator authenticates to Vault to perform this operation
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Mount path of the JWT auth engine being configured
+  path: jwt
+  # JWKS URL for fetching public keys to validate JWT signatures
+  # No credentials needed — Vault fetches keys directly from this endpoint
+  JWKSURL: https://token.actions.githubusercontent.com/.well-known/jwks
+  # Restrict which issuers are accepted
+  boundIssuer: https://token.actions.githubusercontent.com
+  # Supported signing algorithms
+  JWTSupportedAlgs:
+    - RS256
+  # Default role when none is specified during login
+  defaultRole: ci-runner
+---
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: JWTOIDCAuthEngineRole
+metadata:
+  name: ci-runner-role
+spec:
+  # How the operator authenticates to Vault to perform this operation
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Mount path of the JWT auth engine
+  path: jwt
+  # Vault role name
+  name: ci-runner
+  # IMPORTANT: roleType MUST be explicitly set to "jwt" for JWT-mode engines
+  # The default is "oidc" — omitting this field would create a broken role
+  roleType: jwt
+  # JWT claim used to uniquely identify the user
+  userClaim: sub
+  # Audiences that must be present in the JWT (required for jwt roles)
+  boundAudiences:
+    - https://vault.example.com
+  # Restrict which repositories/workflows can authenticate (GitHub Actions example)
+  boundClaims:
+    repository: "my-org/my-repo"
+  # Vault policies granted to tokens issued via this role
+  tokenPolicies:
+    - ci-secrets-reader
+  tokenTTL: "15m"
+  tokenMaxTTL: "1h"

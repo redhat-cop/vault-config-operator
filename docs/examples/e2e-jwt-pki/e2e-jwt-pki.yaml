@@ -1,0 +1,186 @@
+# End-to-End: JWT Auth + PKI Certificate Issuance
+#
+# CI/CD pipelines authenticate via JWT tokens (e.g., GitHub Actions) and
+# issue short-lived TLS certificates from a PKI secret engine.
+#
+# Flow: JWT auth → Policy → PKI secret engine
+#
+# Resources are ordered by dependency:
+#   1. AuthEngineMount (JWT) — mounts the auth engine
+#   2. JWTOIDCAuthEngineConfig — configures JWT validation via JWKS
+#   3. Policy — grants the auth role access to PKI paths
+#   4. SecretEngineMount (PKI) — mounts the secret engine
+#   5. PKISecretEngineConfig — generates the root CA
+#   6. PKISecretEngineRole — defines certificate issuance parameters
+#   7. JWTOIDCAuthEngineRole — binds JWT claims to the policy (last, references policy)
+#
+# Mount path composition: AuthEngineMount and SecretEngineMount compose
+# their Vault path as {spec.path}/{metadata.name}. This example uses
+# "ci" as a grouping prefix, producing auth mount "ci/jwt" and secret
+# mount "ci/pki".
+#
+# Apply with: kubectl apply -f e2e-jwt-pki.yaml
+
+# --- 1. Mount JWT auth engine at "ci/jwt" ---
+# Vault auth path: auth/{spec.path}/{metadata.name} = auth/ci/jwt
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AuthEngineMount
+metadata:
+  name: jwt
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  type: jwt
+  path: ci
+---
+# --- 2. Configure JWT validation using GitHub Actions' JWKS endpoint ---
+# Uses JWT mode (not OIDC) — no client credentials needed
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: JWTOIDCAuthEngineConfig
+metadata:
+  name: jwt-ci-config
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Composite mount path: {AuthEngineMount.path}/{AuthEngineMount.name}
+  path: ci/jwt
+  # JWKS URL for fetching public keys — Vault validates JWTs against these keys
+  JWKSURL: https://token.actions.githubusercontent.com/.well-known/jwks
+  # Only accept tokens from this issuer
+  boundIssuer: https://token.actions.githubusercontent.com
+  JWTSupportedAlgs:
+    - RS256
+  defaultRole: ci-runner
+---
+# --- 3. Policy granting access to PKI certificate issuance ---
+# This policy connects the JWT auth role to the PKI secret engine paths
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Policy
+metadata:
+  name: ci-cert-issuer
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # HCL policy granting access to the PKI engine mounted at ci/pki
+  policy: |
+    # Issue certificates via the ci-service role
+    path "ci/pki/issue/ci-service" {
+      capabilities = ["read", "update"]
+    }
+
+    # Sign CSRs via the ci-service role
+    path "ci/pki/sign/ci-service" {
+      capabilities = ["read", "update"]
+    }
+
+    # Retrieve the CA certificate
+    path "ci/pki/ca/pem" {
+      capabilities = ["read"]
+    }
+---
+# --- 4. Mount PKI secret engine at "ci/pki" ---
+# Vault secret path: {spec.path}/{metadata.name} = ci/pki
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: SecretEngineMount
+metadata:
+  name: pki
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  type: pki
+  path: ci
+---
+# --- 5. Configure the root CA for CI certificates ---
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: PKISecretEngineConfig
+metadata:
+  name: pki-ci-root
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Composite mount path: {SecretEngineMount.path}/{SecretEngineMount.name}
+  path: ci/pki
+  type: root
+  privateKeyType: internal
+  commonName: ci.internal.example.com
+  # 10-year validity for the root CA
+  TTL: "87600h"
+  format: pem
+  keyType: rsa
+  keyBits: 4096
+  maxPathLength: -1
+  organization: Example Corp
+  country: US
+  province: California
+  locality: San Francisco
+  # URLs embedded in issued certificates for CA and CRL retrieval
+  issuingCertificates:
+    - "https://vault.example.com/v1/ci/pki/ca"
+  CRLDistributionPoints:
+    - "https://vault.example.com/v1/ci/pki/crl"
+  CRLExpiry: "72h"
+---
+# --- 6. Certificate issuance role for CI services ---
+# Short-lived certificates for internal services
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: PKISecretEngineRole
+metadata:
+  name: ci-service
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Composite mount path: {SecretEngineMount.path}/{SecretEngineMount.name}
+  path: ci/pki
+  # Domains this role can issue certificates for
+  allowedDomains:
+    - internal.example.com
+    - svc.cluster.local
+  allowSubdomains: true
+  # Short-lived CI certificates: 1h default, 24h maximum
+  TTL: "1h"
+  maxTTL: "24h"
+  keyType: rsa
+  keyBits: 2048
+  keyUsage:
+    - DigitalSignature
+    - KeyEncipherment
+  extKeyUsage:
+    - ServerAuth
+    - ClientAuth
+  requireCn: true
+---
+# --- 7. JWT auth role — connects JWT claims to the ci-cert-issuer policy ---
+# This role is last because it references the Policy defined above
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: JWTOIDCAuthEngineRole
+metadata:
+  name: ci-runner-role
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Composite mount path: {AuthEngineMount.path}/{AuthEngineMount.name}
+  path: ci/jwt
+  name: ci-runner
+  # IMPORTANT: must be "jwt" (default is "oidc") — this is a JWT-mode engine
+  roleType: jwt
+  # JWT claim used to uniquely identify the user
+  userClaim: sub
+  # Audiences that must be present in the JWT
+  boundAudiences:
+    - https://vault.example.com
+  # Restrict authentication to a specific GitHub repository and workflow
+  boundClaims:
+    repository: "my-org/my-repo"
+  # Link to the policy that grants PKI access
+  tokenPolicies:
+    - ci-cert-issuer
+  # Short-lived Vault tokens for CI workflows
+  tokenTTL: "10m"
+  tokenMaxTTL: "30m"

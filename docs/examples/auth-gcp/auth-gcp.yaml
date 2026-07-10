@@ -1,0 +1,110 @@
+# GCP Auth Engine — Complete Example
+#
+# This example configures a GCP auth engine and creates two roles demonstrating
+# both IAM and GCE authentication types.
+#
+# Resources are ordered by dependency:
+#   1. GCPAuthEngineConfig — configures the GCP auth engine with credentials
+#   2. GCPAuthEngineRole (IAM) — role for service account JWT authentication
+#   3. GCPAuthEngineRole (GCE) — role for Compute Engine instance identity
+#
+# Prerequisites:
+#   - An AuthEngineMount of type "gcp" must already exist at the path specified
+#   - A Kubernetes Secret "gcp-credentials" with GCP service account JSON
+#     (secret type: kubernetes.io/basic-auth, passwordKey holds the JSON)
+#   - If omitting GCPCredentials, Vault uses environment credentials (workload identity)
+#
+# Apply with: kubectl apply -f auth-gcp.yaml
+
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GCPAuthEngineConfig
+metadata:
+  name: gcp-config
+spec:
+  # How the operator authenticates to Vault to perform this operation
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Mount path of the GCP auth engine being configured
+  path: gcp
+  # Identity alias strategy for IAM roles
+  IAMalias: default
+  # Identity alias strategy for GCE roles
+  GCEalias: role_id
+  # Kubernetes Secret containing GCP service account credentials
+  # Omit GCPCredentials entirely to use environment-based credentials (workload identity)
+  GCPCredentials:
+    secret:
+      name: gcp-credentials
+    usernameKey: serviceaccount
+    passwordKey: credentials
+---
+# IAM Role — authenticates GCP service accounts via signed JWTs
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GCPAuthEngineRole
+metadata:
+  name: gcp-iam-role
+spec:
+  # How the operator authenticates to Vault to perform this operation
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Mount path of the GCP auth engine
+  path: gcp
+  # Vault role name
+  name: my-iam-role
+  # Role type: "iam" for service account JWT authentication
+  type: iam
+  # Service accounts allowed to authenticate (use "*" for any in boundProjects)
+  boundServiceAccounts:
+    - my-app@my-project.iam.gserviceaccount.com
+  # GCP projects whose service accounts can authenticate
+  boundProjects:
+    - my-project
+  # Maximum expiration time (seconds) allowed for the login JWT
+  maxJWTExp: "900"
+  # Allow GCE instances with this service account to also authenticate
+  allowGCEInference: true
+  # Vault policies granted to tokens issued via this role
+  tokenPolicies:
+    - app-secrets-reader
+    - default
+  tokenTTL: "1h"
+  tokenMaxTTL: "24h"
+---
+# GCE Role — authenticates Compute Engine instances via instance identity tokens
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GCPAuthEngineRole
+metadata:
+  name: gcp-gce-role
+spec:
+  # How the operator authenticates to Vault to perform this operation
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Mount path of the GCP auth engine
+  path: gcp
+  # Vault role name
+  name: my-gce-role
+  # Role type: "gce" for Compute Engine instance identity authentication
+  type: gce
+  # GCP projects whose instances can authenticate
+  boundProjects:
+    - my-project
+  # Restrict to specific zones
+  boundZones:
+    - us-central1-a
+    - us-central1-b
+  # Restrict to specific regions (ignored if boundZones is also set)
+  boundRegions:
+    - us-central1
+  # Require specific GCP labels on the instance (format: "key:value")
+  boundLabels:
+    - "environment:production"
+    - "team:platform"
+  # Vault policies granted to tokens issued via this role
+  tokenPolicies:
+    - gce-app-policy
+    - default
+  tokenTTL: "1h"
+  tokenMaxTTL: "12h"

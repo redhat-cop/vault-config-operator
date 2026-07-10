@@ -35,8 +35,19 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-07-05
+last_updated: 2026-07-08
+# Epic D4 done + retrospective completed 2026-07-08
+# Story D4.3 done 2026-07-07
+# Story D4.3 review 2026-07-07
+# Story D4.2 done 2026-07-07
+# Story D4.2 review 2026-07-07
+# Story D4.2 in-progress 2026-07-07
+# Story D4.1 done 2026-07-07
+# Story D4.3 ready-for-dev 2026-07-07
+# Story D4.2 ready-for-dev 2026-07-07
 # Epic D3 done + retrospective completed 2026-07-05
+# Story D4.1 ready-for-dev 2026-07-07
+# Epic D4 in-progress 2026-07-07
 # Story D3.4 done 2026-07-05
 # Story D3.4 review 2026-07-05
 # Story D3.4 in-progress 2026-07-05
@@ -374,17 +385,17 @@ development_status:
   epic-d3-retrospective: done
 
   # Epic D4: Examples Directory Expansion
-  epic-d4: backlog
-  d4-1-create-example-yaml-files-for-each-auth-engine: backlog
-  d4-2-create-example-yaml-files-for-each-secret-engine: backlog
-  d4-3-create-additional-end-to-end-examples: backlog
-  epic-d4-retrospective: optional
+  epic-d4: done
+  d4-1-create-example-yaml-files-for-each-auth-engine: done
+  d4-2-create-example-yaml-files-for-each-secret-engine: done
+  d4-3-create-additional-end-to-end-examples: done
+  epic-d4-retrospective: done
 
   # --- Phase 2: Expansion — Dependency Upgrades + Engine Coverage ---
 
-  # Epic 8: Go + Kubernetes Stack Upgrade
+  # Epic 8: Go + Kubernetes Stack Upgrade (targets updated 2026-07-08: Go 1.26, CR v0.24, K8s v0.36)
   epic-8: backlog
-  8-1-upgrade-go-from-1-22-to-1-24: backlog
+  8-1-upgrade-go-from-1-22-to-1-26: backlog
   8-2-upgrade-controller-runtime-and-k8s-libs: backlog
   8-3-upgrade-makefile-k8s-coupled-tool-versions: backlog
   8-4-adapt-ci-pipeline-and-dockerfiles-for-new-versions: backlog

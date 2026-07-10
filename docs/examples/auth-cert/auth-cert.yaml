@@ -1,0 +1,72 @@
+# TLS Certificate Auth Engine — Complete Example
+#
+# This example configures a TLS Certificate auth engine and creates a role
+# that allows clients presenting a valid certificate signed by a trusted CA.
+#
+# Resources are ordered by dependency:
+#   1. CertAuthEngineConfig — configures engine-wide settings (cache sizes, etc.)
+#   2. CertAuthEngineRole — defines a trusted CA and constraints for client certs
+#
+# Prerequisites:
+#   - An AuthEngineMount of type "cert" must already exist at the path specified
+#   - Your CA certificate in PEM format (replace the placeholder below)
+#   - Clients must present a TLS certificate during the Vault login handshake
+#
+# Apply with: kubectl apply -f auth-cert.yaml
+
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: CertAuthEngineConfig
+metadata:
+  name: cert-config
+spec:
+  # How the operator authenticates to Vault to perform this operation
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Mount path of the cert auth engine being configured
+  path: cert
+  # Size of the OCSP response cache (set to 0 to disable)
+  ocspCacheSize: 100
+  # Size of the role cache (set to -1 to disable caching)
+  roleCacheSize: 200
+  # If true, skip client identity matching during token renewal
+  disableBinding: false
+  # If true, store certificate metadata in the identity alias
+  enableIdentityAliasMetadata: false
+---
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: CertAuthEngineRole
+metadata:
+  name: my-app-cert-role
+spec:
+  # How the operator authenticates to Vault to perform this operation
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Mount path of the cert auth engine
+  path: cert
+  # PEM-encoded CA certificate used to verify client certificates
+  # Replace with your actual CA certificate
+  certificate: |
+    -----BEGIN CERTIFICATE-----
+    MIIDQjCCAiqgAwIBAgIUExampleCertificateReplaceMeAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAExampleOnly=
+    -----END CERTIFICATE-----
+  # Restrict which client certificates are accepted (glob patterns)
+  # Leave empty to allow any certificate signed by the CA above
+  allowedCommonNames:
+    - "*.apps.example.com"
+  allowedDNSSANs:
+    - "*.internal.example.com"
+  allowedURISANs:
+    - "spiffe://example.com/app/*"
+  # Vault policies granted to tokens issued via this role
+  tokenPolicies:
+    - app-policy
+    - default
+  tokenTTL: "1h"
+  tokenMaxTTL: "24h"

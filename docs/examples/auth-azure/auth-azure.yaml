@@ -1,0 +1,76 @@
+# Azure Auth Engine — Complete Example
+#
+# This example configures an Azure auth engine and creates a role that allows
+# Azure VMs and VM Scale Sets to authenticate with Vault.
+#
+# Resources are ordered by dependency:
+#   1. AzureAuthEngineConfig — configures the Azure auth engine with tenant/credentials
+#   2. AzureAuthEngineRole — defines which Azure resources can authenticate
+#
+# Prerequisites:
+#   - An AuthEngineMount of type "azure" must already exist at the path specified
+#   - A Kubernetes Secret "azure-credentials" with clientid and clientsecret
+#     (secret type: kubernetes.io/basic-auth)
+#   - If omitting azureCredentials, Vault uses AZURE_* environment variables
+#
+# Apply with: kubectl apply -f auth-azure.yaml
+
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AzureAuthEngineConfig
+metadata:
+  name: azure-config
+spec:
+  # How the operator authenticates to Vault to perform this operation
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Mount path of the Azure auth engine being configured
+  path: azure
+  # Azure Active Directory tenant ID
+  tenantID: 00000000-0000-0000-0000-000000000000
+  # Resource URL for the application registered in Azure AD
+  # Must match the audience (aud) claim in the JWT from Azure IMDS
+  resource: https://management.azure.com/
+  # Azure cloud environment
+  environment: AzurePublicCloud
+  # Retry configuration for Azure API calls
+  maxRetries: 3
+  maxRetryDelay: 60
+  retryDelay: 4
+  # Kubernetes Secret containing Azure client credentials
+  # Omit azureCredentials entirely to use AZURE_* environment variables
+  azureCredentials:
+    secret:
+      name: azure-credentials
+    usernameKey: clientid
+    passwordKey: clientsecret
+---
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AzureAuthEngineRole
+metadata:
+  name: azure-role
+spec:
+  # How the operator authenticates to Vault to perform this operation
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  # Mount path of the Azure auth engine
+  path: azure
+  # Vault role name
+  name: my-azure-role
+  # At least one binding must be specified to restrict which Azure resources can authenticate
+  # Restrict to a specific Azure subscription
+  boundSubscriptionIDs:
+    - 00000000-0000-0000-0000-000000000000
+  # Restrict to a specific resource group within the subscription
+  boundResourceGroups:
+    - my-resource-group
+  # Restrict to specific service principals (application registrations)
+  boundServicePrincipalIDs:
+    - 11111111-1111-1111-1111-111111111111
+  # Vault policies granted to tokens issued via this role
+  tokenPolicies:
+    - app-secrets-reader
+    - default
+  tokenTTL: "1h"
+  tokenMaxTTL: "24h"
