@@ -33,6 +33,6 @@ jobs:
       RUN_UNIT_TESTS: true
       RUN_INTEGRATION_TESTS: true
       RUN_HELMCHART_TEST: true
-      GO_VERSION: ~1.22
+      GO_VERSION: ~1.26
       OPERATOR_SDK_VERSION: v1.31.0
       KUBECTL_WAIT_TIMEOUT: ${{ github.event.inputs['kubectl-wait-timeout'] != '' && github.event.inputs['kubectl-wait-timeout'] || vars.KUBECTL_WAIT_TIMEOUT != '' && vars.KUBECTL_WAIT_TIMEOUT || '20m' }}

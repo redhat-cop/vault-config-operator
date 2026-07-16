@@ -17,7 +17,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 ## Technology Stack & Versions
 
 ### Core
-- **Language:** Go 1.22.0
+- **Language:** Go 1.26
 - **K8s Framework:** controller-runtime v0.17.3, Kubebuilder v3 layout
 - **OLM/SDK:** Operator SDK v1.31.0
 - **K8s API libs:** k8s.io/api, apimachinery, client-go v0.29.2
@@ -35,7 +35,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - kustomize v5.4.3, Helm v3.11.0
 - golangci-lint v1.64.8 (no committed config — uses defaults or shared workflow config)
 - Kind v0.27.0, kubectl v1.29.0, Vault 1.19.0 (integration testing)
-- Container: golang:1.22 builder → registry.access.redhat.com/ubi9/ubi-minimal runtime
+- Container: golang:1.26 builder → registry.access.redhat.com/ubi9/ubi-minimal runtime
 - CI: GitHub Actions via reusable workflows from redhat-cop/github-workflows-operators
 
 ## Critical Implementation Rules
