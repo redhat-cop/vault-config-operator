@@ -1978,6 +1978,60 @@ So that we test against a current Vault release.
 
 Upgrade Operator SDK, Helm, golangci-lint, OPM, and other build/CI tools that have major version gaps.
 
+### Story 10.0: Migrate project layout from go/v3 to go/v4
+
+As an operator developer,
+I want to migrate the project directory layout from Kubebuilder go/v3 to go/v4,
+So that the project follows the current scaffolding standard and is compatible with newer Operator SDK versions.
+
+**Reference:** https://book-v3.book.kubebuilder.io/migration/manually_migration_guide_gov3_to_gov4
+
+**Current state (go/v3 layout):**
+- `main.go` at project root
+- `controllers/` (plural) at project root
+- `api/` at project root
+- `PROJECT` file declares `layout: go.kubebuilder.io/v3`
+
+**Target state (go/v4 layout):**
+- `cmd/main.go`
+- `internal/controller/` (singular)
+- `api/` (unchanged)
+- `PROJECT` file declares `layout: go.kubebuilder.io/v4`
+
+**Files to update:**
+- `PROJECT`: change layout from `go.kubebuilder.io/v3` to `go.kubebuilder.io/v4`
+- `main.go` → `cmd/main.go`: move file, update all controller import paths
+- `controllers/` → `internal/controller/`: move directory, rename to singular
+- `Dockerfile`: update `COPY` paths and `go build` command to reference `cmd/main.go` and `internal/controller/`
+- `Makefile`: update `build` and `run` targets to reference `cmd/main.go`
+- `.github/workflows/*.yaml`: update any paths referencing `controllers/` or `main.go`
+- `internal/controller/suite_test.go` (and all controller test files): update `CRDDirectoryPaths` from `"..", "config", "crd", "bases"` to `"..", "..", "config", "crd", "bases"`
+- `bundle.Dockerfile`: update `go.kubebuilder.io/v3` label to `go.kubebuilder.io/v4`
+
+**Acceptance Criteria:**
+
+**Given** the project uses go/v3 layout with `main.go` at root and `controllers/` directory
+**When** `main.go` is moved to `cmd/main.go` and `controllers/` is moved to `internal/controller/`
+**Then** all Go import paths are updated and `go build ./cmd/main.go` succeeds
+
+**Given** the Makefile references `main.go` and `controllers/`
+**When** the targets are updated to `cmd/main.go` and `internal/controller/`
+**Then** `make build`, `make run`, and `make manifests generate` all succeed
+
+**Given** the Dockerfile copies `main.go` and `controllers/`
+**When** the paths are updated to `cmd/main.go` and `internal/controller/`
+**Then** `make docker-build` succeeds
+
+**Given** controller test suites reference `CRDDirectoryPaths` with relative paths
+**When** the paths are updated to account for the new `internal/controller/` depth
+**Then** `make test` passes (all unit and controller tests)
+
+**Given** the PROJECT file declares `go.kubebuilder.io/v3`
+**When** it is updated to `go.kubebuilder.io/v4`
+**Then** `operator-sdk` commands recognize the project as v4 layout
+
+**Implementation notes:** This is a prerequisite for Story 10.1 (Operator SDK upgrade). The Operator SDK v1.42 scaffolding assumes go/v4 layout. Follow the manual migration steps from the Kubebuilder migration guide. With ~35 controller files, bulk-rename tooling (`gorename`, `sed`, or IDE refactoring) is recommended. Run `make manifests generate test` after each major step to catch breakage early.
+
 ### Story 10.1: Upgrade Operator SDK from v1.31 to v1.42
 
 As an operator developer,

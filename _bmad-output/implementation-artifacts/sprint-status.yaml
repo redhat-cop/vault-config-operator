@@ -412,6 +412,7 @@ development_status:
 
   # Epic 10: Operator SDK + Build Tooling Upgrades
   epic-10: backlog
+  10-0-migrate-project-layout-from-gov3-to-gov4: backlog
   10-1-upgrade-operator-sdk-from-v1-31-to-v1-42: backlog
   10-2-upgrade-helm-from-v3-11-to-v4: backlog
   10-3-upgrade-golangci-lint-from-v1-59-to-v2: backlog
