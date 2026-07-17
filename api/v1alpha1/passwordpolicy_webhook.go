@@ -17,10 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/runtime"
+	"context"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -28,8 +28,9 @@ import (
 var passwordpolicylog = logf.Log.WithName("passwordpolicy-resource")
 
 func (r *PasswordPolicy) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
+	return ctrl.NewWebhookManagedBy(mgr, r).
+		WithDefaulter(r).
+		WithValidator(r).
 		Complete()
 }
 
@@ -37,37 +38,38 @@ func (r *PasswordPolicy) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-passwordpolicy,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=passwordpolicies,verbs=create,versions=v1alpha1,name=mpasswordpolicy.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Defaulter = &PasswordPolicy{}
+var _ admission.Defaulter[*PasswordPolicy] = &PasswordPolicy{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *PasswordPolicy) Default() {
-	passwordpolicylog.Info("default", "name", r.Name)
+// Default implements webhook.CustomDefaulter so a webhook will be registered for the type
+func (r *PasswordPolicy) Default(ctx context.Context, obj *PasswordPolicy) error {
+	passwordpolicylog.Info("default", "name", obj.Name)
+	return nil
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-passwordpolicy,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=passwordpolicies,verbs=create;update,versions=v1alpha1,name=vpasswordpolicy.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Validator = &PasswordPolicy{}
+var _ admission.Validator[*PasswordPolicy] = &PasswordPolicy{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *PasswordPolicy) ValidateCreate() (admission.Warnings, error) {
-	passwordpolicylog.Info("validate create", "name", r.Name)
+// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *PasswordPolicy) ValidateCreate(ctx context.Context, obj *PasswordPolicy) (admission.Warnings, error) {
+	passwordpolicylog.Info("validate create", "name", obj.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *PasswordPolicy) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	passwordpolicylog.Info("validate update", "name", r.Name)
+// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *PasswordPolicy) ValidateUpdate(ctx context.Context, oldObj, newObj *PasswordPolicy) (admission.Warnings, error) {
+	passwordpolicylog.Info("validate update", "name", newObj.Name)
 
 	// TODO(user): fill in your validation logic upon object update.
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *PasswordPolicy) ValidateDelete() (admission.Warnings, error) {
-	passwordpolicylog.Info("validate delete", "name", r.Name)
+// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *PasswordPolicy) ValidateDelete(ctx context.Context, obj *PasswordPolicy) (admission.Warnings, error) {
+	passwordpolicylog.Info("validate delete", "name", obj.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil, nil

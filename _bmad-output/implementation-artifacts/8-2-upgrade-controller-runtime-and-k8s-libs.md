@@ -1,6 +1,6 @@
 # Story 8.2: Upgrade controller-runtime v0.17 → v0.24 and K8s libs v0.29 → v0.36
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -380,6 +380,13 @@ For this story, the `go.sum` changes will be even larger since we're upgrading t
 - [Source: controller-runtime v0.23.0 release notes — https://github.com/kubernetes-sigs/controller-runtime/releases/tag/v0.23.0]
 - [Source: controller-runtime v0.24.0 release notes — https://github.com/kubernetes-sigs/controller-runtime/releases/tag/v0.24.0]
 - [Source: controller-runtime compatibility matrix — CR v0.24 requires k8s.io/* v0.36 and Go 1.26]
+
+### Review Findings
+
+- [x] [Review][Patch] Generated CRDs contain unresolved `LocalObjectReference` `$ref`s — reverted CRDs to HEAD; regeneration deferred to Story 8.3 (controller-gen upgrade)
+- [x] [Review][Patch] Events RBAC updated from core API group to `events.k8s.io` in all 33 controller markers and `config/rbac/role.yaml`
+- [x] [Review][Defer] Broken validating webhook markers are pre-existing in `Policy` and `PasswordPolicy` [api/v1alpha1/policy_webhook.go:50, api/v1alpha1/passwordpolicy_webhook.go:50] - deferred, pre-existing
+- [x] [Review][Defer] Copy-pasted `authenginemountlog` usage remains in several migrated defaulters [api/v1alpha1/databasesecretenginerole_webhook.go:44, api/v1alpha1/kubernetesauthenginerole_webhook.go:44, api/v1alpha1/randomsecret_webhook.go:44] - deferred, pre-existing
 
 ## Dev Agent Record
 

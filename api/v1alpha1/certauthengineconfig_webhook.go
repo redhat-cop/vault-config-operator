@@ -17,12 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"errors"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -30,49 +29,51 @@ import (
 var certauthengineconfiglog = logf.Log.WithName("certauthengineconfig-resource")
 
 func (r *CertAuthEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
+	return ctrl.NewWebhookManagedBy(mgr, r).
+		WithDefaulter(r).
+		WithValidator(r).
 		Complete()
 }
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-certauthengineconfig,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=certauthengineconfigs,verbs=create;update,versions=v1alpha1,name=mcertauthengineconfig.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Defaulter = &CertAuthEngineConfig{}
+var _ admission.Defaulter[*CertAuthEngineConfig] = &CertAuthEngineConfig{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *CertAuthEngineConfig) Default() {
-	certauthengineconfiglog.Info("default", "name", r.Name)
+// Default implements webhook.CustomDefaulter so a webhook will be registered for the type
+func (r *CertAuthEngineConfig) Default(ctx context.Context, obj *CertAuthEngineConfig) error {
+	certauthengineconfiglog.Info("default", "name", obj.Name)
+	return nil
 }
 
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-certauthengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=certauthengineconfigs,verbs=create;update,versions=v1alpha1,name=vcertauthengineconfig.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &CertAuthEngineConfig{}
+var _ admission.Validator[*CertAuthEngineConfig] = &CertAuthEngineConfig{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *CertAuthEngineConfig) ValidateCreate() (admission.Warnings, error) {
-	certauthengineconfiglog.Info("validate create", "name", r.Name)
+// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *CertAuthEngineConfig) ValidateCreate(ctx context.Context, obj *CertAuthEngineConfig) (admission.Warnings, error) {
+	certauthengineconfiglog.Info("validate create", "name", obj.Name)
 
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *CertAuthEngineConfig) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	certauthengineconfiglog.Info("validate update", "name", r.Name)
+// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *CertAuthEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *CertAuthEngineConfig) (admission.Warnings, error) {
+	certauthengineconfiglog.Info("validate update", "name", newObj.Name)
 
-	if r.Spec.Path != old.(*CertAuthEngineConfig).Spec.Path {
+	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}
 
-	if r.Spec.Name != old.(*CertAuthEngineConfig).Spec.Name {
+	if newObj.Spec.Name != oldObj.Spec.Name {
 		return nil, errors.New("spec.name cannot be updated")
 	}
 
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *CertAuthEngineConfig) ValidateDelete() (admission.Warnings, error) {
-	certauthengineconfiglog.Info("validate delete", "name", r.Name)
+// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *CertAuthEngineConfig) ValidateDelete(ctx context.Context, obj *CertAuthEngineConfig) (admission.Warnings, error) {
+	certauthengineconfiglog.Info("validate delete", "name", obj.Name)
 
 	return nil, nil
 }

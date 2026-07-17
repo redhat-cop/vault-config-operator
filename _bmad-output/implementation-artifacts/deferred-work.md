@@ -30,3 +30,8 @@
 ## Deferred from: code review of d3-4-standardize-github-quay-kubernetes-and-azure-secret-engine-docs (2026-07-05)
 
 - **Existing README wording still says "see the also the"**: The D3.4 changes correctly updated the secret-engine links, but several existing `readme.md` descriptions still contain the pre-existing phrase "see the also the". This is low-risk copy cleanup rather than a new defect introduced by the story, so it was deferred.
+
+## Deferred from: code review of 8-2-upgrade-controller-runtime-and-k8s-libs (2026-07-17)
+
+- **Broken validating webhook markers remain in unchanged Policy and PasswordPolicy webhooks**: `api/v1alpha1/policy_webhook.go:50` and `api/v1alpha1/passwordpolicy_webhook.go:50` still use `//kubebuilder:webhook` instead of `//+kubebuilder:webhook` for the validating marker. This issue predates the controller-runtime migration reviewed in story 8.2.
+- **Copy-pasted `authenginemountlog` usage remains in migrated defaulters**: `api/v1alpha1/databasesecretenginerole_webhook.go:44`, `api/v1alpha1/kubernetesauthenginerole_webhook.go:44`, and `api/v1alpha1/randomsecret_webhook.go:44` still log through `authenginemountlog` in `Default()`. The incorrect logger names were already present before this story and were only carried through the signature migration.

@@ -35,7 +35,8 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-07-16
+last_updated: 2026-07-17
+# Story 8.2 in-progress 2026-07-16
 # Story 8.1 review 2026-07-16
 # Story 8.1 in-progress 2026-07-16
 # Story 8.4 ready-for-dev 2026-07-16
@@ -403,7 +404,7 @@ development_status:
   # Epic 8: Go + Kubernetes Stack Upgrade (targets updated 2026-07-08: Go 1.26, CR v0.24, K8s v0.36)
   epic-8: in-progress
   8-1-upgrade-go-from-1-22-to-1-26: done
-  8-2-upgrade-controller-runtime-and-k8s-libs: ready-for-dev
+  8-2-upgrade-controller-runtime-and-k8s-libs: done
   8-3-upgrade-makefile-k8s-coupled-tool-versions: ready-for-dev
   8-4-adapt-ci-pipeline-and-dockerfiles-for-new-versions: ready-for-dev
   epic-8-retrospective: optional

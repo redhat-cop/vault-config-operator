@@ -17,12 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"errors"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -30,8 +29,9 @@ import (
 var githubsecretengineconfiglog = logf.Log.WithName("githubsecretengineconfig-resource")
 
 func (r *GitHubSecretEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
+	return ctrl.NewWebhookManagedBy(mgr, &GitHubSecretEngineConfig{}).
+		WithDefaulter(r).
+		WithValidator(r).
 		Complete()
 }
 
@@ -39,42 +39,43 @@ func (r *GitHubSecretEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) err
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-githubsecretengineconfig,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=githubsecretengineconfigs,verbs=create,versions=v1alpha1,name=mgithubsecretengineconfig.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Defaulter = &GitHubSecretEngineConfig{}
+var _ admission.Defaulter[*GitHubSecretEngineConfig] = &GitHubSecretEngineConfig{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *GitHubSecretEngineConfig) Default() {
-	githubsecretengineconfiglog.Info("default", "name", r.Name)
+// Default implements webhook.CustomDefaulter so a webhook will be registered for the type
+func (r *GitHubSecretEngineConfig) Default(ctx context.Context, obj *GitHubSecretEngineConfig) error {
+	githubsecretengineconfiglog.Info("default", "name", obj.Name)
 
 	// TODO(user): fill in your defaulting logic.
+	return nil
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-githubsecretengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=githubsecretengineconfigs,verbs=create;update,versions=v1alpha1,name=vgithubsecretengineconfig.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &GitHubSecretEngineConfig{}
+var _ admission.Validator[*GitHubSecretEngineConfig] = &GitHubSecretEngineConfig{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *GitHubSecretEngineConfig) ValidateCreate() (admission.Warnings, error) {
-	githubsecretengineconfiglog.Info("validate create", "name", r.Name)
+// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *GitHubSecretEngineConfig) ValidateCreate(ctx context.Context, obj *GitHubSecretEngineConfig) (admission.Warnings, error) {
+	githubsecretengineconfiglog.Info("validate create", "name", obj.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
-	return nil, r.isValid()
+	return nil, obj.isValid()
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *GitHubSecretEngineConfig) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	githubsecretengineconfiglog.Info("validate update", "name", r.Name)
+// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *GitHubSecretEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *GitHubSecretEngineConfig) (admission.Warnings, error) {
+	githubsecretengineconfiglog.Info("validate update", "name", newObj.Name)
 
 	// the path cannot be updated
-	if r.Spec.Path != old.(*GitHubSecretEngineConfig).Spec.Path {
+	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}
-	return nil, r.isValid()
+	return nil, newObj.isValid()
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *GitHubSecretEngineConfig) ValidateDelete() (admission.Warnings, error) {
-	githubsecretengineconfiglog.Info("validate delete", "name", r.Name)
+// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *GitHubSecretEngineConfig) ValidateDelete(ctx context.Context, obj *GitHubSecretEngineConfig) (admission.Warnings, error) {
+	githubsecretengineconfiglog.Info("validate delete", "name", obj.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil, nil

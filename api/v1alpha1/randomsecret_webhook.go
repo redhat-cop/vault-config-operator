@@ -17,12 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"errors"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -30,8 +29,9 @@ import (
 var randomsecretlog = logf.Log.WithName("randomsecret-resource")
 
 func (r *RandomSecret) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
+	return ctrl.NewWebhookManagedBy(mgr, r).
+		WithDefaulter(r).
+		WithValidator(r).
 		Complete()
 }
 
@@ -39,47 +39,48 @@ func (r *RandomSecret) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-randomsecret,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=randomsecrets,verbs=create,versions=v1alpha1,name=mrandomsecret.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Defaulter = &RandomSecret{}
+var _ admission.Defaulter[*RandomSecret] = &RandomSecret{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *RandomSecret) Default() {
-	authenginemountlog.Info("default", "name", r.Name)
+// Default implements webhook.CustomDefaulter so a webhook will be registered for the type
+func (r *RandomSecret) Default(ctx context.Context, obj *RandomSecret) error {
+	authenginemountlog.Info("default", "name", obj.Name)
+	return nil
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-randomsecret,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=randomsecrets,verbs=create;update,versions=v1alpha1,name=vrandomsecret.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Validator = &RandomSecret{}
+var _ admission.Validator[*RandomSecret] = &RandomSecret{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *RandomSecret) ValidateCreate() (admission.Warnings, error) {
-	randomsecretlog.Info("validate create", "name", r.Name)
+// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *RandomSecret) ValidateCreate(ctx context.Context, obj *RandomSecret) (admission.Warnings, error) {
+	randomsecretlog.Info("validate create", "name", obj.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
-	return nil, r.isValid()
+	return nil, obj.isValid()
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *RandomSecret) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	randomsecretlog.Info("validate update", "name", r.Name)
+// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *RandomSecret) ValidateUpdate(ctx context.Context, oldObj, newObj *RandomSecret) (admission.Warnings, error) {
+	randomsecretlog.Info("validate update", "name", newObj.Name)
 
 	// the path cannot be updated
-	if r.Spec.Path != old.(*RandomSecret).Spec.Path {
+	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}
 
 	// the secret key cannot be updated
-	if r.Spec.SecretKey != old.(*RandomSecret).Spec.SecretKey {
+	if newObj.Spec.SecretKey != oldObj.Spec.SecretKey {
 		return nil, errors.New("spec.secretKey cannot be updated")
 	}
 
 	// TODO(user): fill in your validation logic upon object update.
-	return nil, r.isValid()
+	return nil, newObj.isValid()
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *RandomSecret) ValidateDelete() (admission.Warnings, error) {
-	randomsecretlog.Info("validate delete", "name", r.Name)
+// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *RandomSecret) ValidateDelete(ctx context.Context, obj *RandomSecret) (admission.Warnings, error) {
+	randomsecretlog.Info("validate delete", "name", obj.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil, nil

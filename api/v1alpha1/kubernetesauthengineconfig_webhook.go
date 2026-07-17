@@ -17,13 +17,12 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"errors"
 	"os"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -31,8 +30,9 @@ import (
 var kubernetesauthengineconfiglog = logf.Log.WithName("kubernetesauthengineconfig-resource")
 
 func (r *KubernetesAuthEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
+	return ctrl.NewWebhookManagedBy(mgr, r).
+		WithDefaulter(r).
+		WithValidator(r).
 		Complete()
 }
 
@@ -40,48 +40,49 @@ func (r *KubernetesAuthEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) e
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-kubernetesauthengineconfig,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=kubernetesauthengineconfigs,verbs=create,versions=v1alpha1,name=mkubernetesauthengineconfig.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Defaulter = &KubernetesAuthEngineConfig{}
+var _ admission.Defaulter[*KubernetesAuthEngineConfig] = &KubernetesAuthEngineConfig{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *KubernetesAuthEngineConfig) Default() {
-	kubernetesauthengineconfiglog.Info("default", "name", r.Name)
-	if r.Spec.UseOperatorPodCA && r.Spec.KubernetesCACert == "" {
+// Default implements webhook.CustomDefaulter so a webhook will be registered for the type
+func (r *KubernetesAuthEngineConfig) Default(ctx context.Context, obj *KubernetesAuthEngineConfig) error {
+	kubernetesauthengineconfiglog.Info("default", "name", obj.Name)
+	if obj.Spec.UseOperatorPodCA && obj.Spec.KubernetesCACert == "" {
 		b, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
 		if err != nil {
 			kubernetesauthengineconfiglog.Error(err, "unable to read file /var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
-			return
+			return nil
 		}
-		r.Spec.KubernetesCACert = string(b)
+		obj.Spec.KubernetesCACert = string(b)
 	}
+	return nil
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-kubernetesauthengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=kubernetesauthengineconfigs,verbs=update,versions=v1alpha1,name=vkubernetesauthengineconfig.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Validator = &KubernetesAuthEngineConfig{}
+var _ admission.Validator[*KubernetesAuthEngineConfig] = &KubernetesAuthEngineConfig{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *KubernetesAuthEngineConfig) ValidateCreate() (admission.Warnings, error) {
-	kubernetesauthengineconfiglog.Info("validate create", "name", r.Name)
+// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *KubernetesAuthEngineConfig) ValidateCreate(ctx context.Context, obj *KubernetesAuthEngineConfig) (admission.Warnings, error) {
+	kubernetesauthengineconfiglog.Info("validate create", "name", obj.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *KubernetesAuthEngineConfig) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	kubernetesauthengineconfiglog.Info("validate update", "name", r.Name)
+// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *KubernetesAuthEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *KubernetesAuthEngineConfig) (admission.Warnings, error) {
+	kubernetesauthengineconfiglog.Info("validate update", "name", newObj.Name)
 
 	// the path cannot be updated
-	if r.Spec.Path != old.(*KubernetesAuthEngineConfig).Spec.Path {
+	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *KubernetesAuthEngineConfig) ValidateDelete() (admission.Warnings, error) {
-	kubernetesauthengineconfiglog.Info("validate delete", "name", r.Name)
+// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *KubernetesAuthEngineConfig) ValidateDelete(ctx context.Context, obj *KubernetesAuthEngineConfig) (admission.Warnings, error) {
+	kubernetesauthengineconfiglog.Info("validate delete", "name", obj.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil, nil

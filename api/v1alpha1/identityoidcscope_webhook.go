@@ -17,10 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/runtime"
+	"context"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -28,38 +28,40 @@ import (
 var identityoidcscopelog = logf.Log.WithName("identityoidcscope-resource")
 
 func (r *IdentityOIDCScope) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
+	return ctrl.NewWebhookManagedBy(mgr, &IdentityOIDCScope{}).
+		WithDefaulter(r).
+		WithValidator(r).
 		Complete()
 }
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-identityoidcscope,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=identityoidcscopes,verbs=create;update,versions=v1alpha1,name=midentityoidcscope.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Defaulter = &IdentityOIDCScope{}
+var _ admission.Defaulter[*IdentityOIDCScope] = &IdentityOIDCScope{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *IdentityOIDCScope) Default() {
-	identityoidcscopelog.Info("default", "name", r.Name)
+// Default implements webhook.CustomDefaulter so a webhook will be registered for the type
+func (r *IdentityOIDCScope) Default(ctx context.Context, obj *IdentityOIDCScope) error {
+	identityoidcscopelog.Info("default", "name", obj.Name)
+	return nil
 }
 
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-identityoidcscope,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=identityoidcscopes,verbs=create;update,versions=v1alpha1,name=videntityoidcscope.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &IdentityOIDCScope{}
+var _ admission.Validator[*IdentityOIDCScope] = &IdentityOIDCScope{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *IdentityOIDCScope) ValidateCreate() (admission.Warnings, error) {
-	identityoidcscopelog.Info("validate create", "name", r.Name)
+// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *IdentityOIDCScope) ValidateCreate(ctx context.Context, obj *IdentityOIDCScope) (admission.Warnings, error) {
+	identityoidcscopelog.Info("validate create", "name", obj.Name)
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *IdentityOIDCScope) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	identityoidcscopelog.Info("validate update", "name", r.Name)
+// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *IdentityOIDCScope) ValidateUpdate(ctx context.Context, oldObj, newObj *IdentityOIDCScope) (admission.Warnings, error) {
+	identityoidcscopelog.Info("validate update", "name", newObj.Name)
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *IdentityOIDCScope) ValidateDelete() (admission.Warnings, error) {
-	identityoidcscopelog.Info("validate delete", "name", r.Name)
+// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *IdentityOIDCScope) ValidateDelete(ctx context.Context, obj *IdentityOIDCScope) (admission.Warnings, error) {
+	identityoidcscopelog.Info("validate delete", "name", obj.Name)
 	return nil, nil
 }

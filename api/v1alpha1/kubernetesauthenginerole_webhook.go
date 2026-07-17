@@ -17,12 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"errors"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -30,8 +29,9 @@ import (
 var kubernetesauthenginerolelog = logf.Log.WithName("kubernetesauthenginerole-resource")
 
 func (r *KubernetesAuthEngineRole) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
+	return ctrl.NewWebhookManagedBy(mgr, r).
+		WithDefaulter(r).
+		WithValidator(r).
 		Complete()
 }
 
@@ -39,40 +39,41 @@ func (r *KubernetesAuthEngineRole) SetupWebhookWithManager(mgr ctrl.Manager) err
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-kubernetesauthenginerole,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=kubernetesauthengineroles,verbs=create,versions=v1alpha1,name=mkubernetesauthenginerole.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Defaulter = &KubernetesAuthEngineRole{}
+var _ admission.Defaulter[*KubernetesAuthEngineRole] = &KubernetesAuthEngineRole{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *KubernetesAuthEngineRole) Default() {
-	authenginemountlog.Info("default", "name", r.Name)
+// Default implements webhook.CustomDefaulter so a webhook will be registered for the type
+func (r *KubernetesAuthEngineRole) Default(ctx context.Context, obj *KubernetesAuthEngineRole) error {
+	authenginemountlog.Info("default", "name", obj.Name)
+	return nil
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-kubernetesauthenginerole,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=kubernetesauthengineroles,verbs=create;update,versions=v1alpha1,name=vkubernetesauthenginerole.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Validator = &KubernetesAuthEngineRole{}
+var _ admission.Validator[*KubernetesAuthEngineRole] = &KubernetesAuthEngineRole{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *KubernetesAuthEngineRole) ValidateCreate() (admission.Warnings, error) {
-	kubernetesauthenginerolelog.Info("validate create", "name", r.Name)
+// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *KubernetesAuthEngineRole) ValidateCreate(ctx context.Context, obj *KubernetesAuthEngineRole) (admission.Warnings, error) {
+	kubernetesauthenginerolelog.Info("validate create", "name", obj.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
-	return nil, r.isValid()
+	return nil, obj.isValid()
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *KubernetesAuthEngineRole) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	kubernetesauthenginerolelog.Info("validate update", "name", r.Name)
+// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *KubernetesAuthEngineRole) ValidateUpdate(ctx context.Context, oldObj, newObj *KubernetesAuthEngineRole) (admission.Warnings, error) {
+	kubernetesauthenginerolelog.Info("validate update", "name", newObj.Name)
 
 	// the path cannot be updated
-	if r.Spec.Path != old.(*KubernetesAuthEngineRole).Spec.Path {
+	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}
-	return nil, r.isValid()
+	return nil, newObj.isValid()
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *KubernetesAuthEngineRole) ValidateDelete() (admission.Warnings, error) {
-	kubernetesauthenginerolelog.Info("validate delete", "name", r.Name)
+// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *KubernetesAuthEngineRole) ValidateDelete(ctx context.Context, obj *KubernetesAuthEngineRole) (admission.Warnings, error) {
+	kubernetesauthenginerolelog.Info("validate delete", "name", obj.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil, nil

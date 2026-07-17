@@ -17,12 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"errors"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -30,45 +29,47 @@ import (
 var jwtoidcauthengineconfiglog = logf.Log.WithName("jwtoidcauthengineconfig-resource")
 
 func (r *JWTOIDCAuthEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
+	return ctrl.NewWebhookManagedBy(mgr, r).
+		WithDefaulter(r).
+		WithValidator(r).
 		Complete()
 }
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-jwtoidcauthengineconfig,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=jwtoidcauthengineconfigs,verbs=create,versions=v1alpha1,name=mjwtoidcauthengineconfig.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Defaulter = &JWTOIDCAuthEngineConfig{}
+var _ admission.Defaulter[*JWTOIDCAuthEngineConfig] = &JWTOIDCAuthEngineConfig{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *JWTOIDCAuthEngineConfig) Default() {
-	jwtoidcauthengineconfiglog.Info("default", "name", r.Name)
+// Default implements webhook.CustomDefaulter so a webhook will be registered for the type
+func (r *JWTOIDCAuthEngineConfig) Default(ctx context.Context, obj *JWTOIDCAuthEngineConfig) error {
+	jwtoidcauthengineconfiglog.Info("default", "name", obj.Name)
+	return nil
 }
 
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-jwtoidcauthengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=jwtoidcauthengineconfigs,verbs=update,versions=v1alpha1,name=vjwtoidcauthengineconfig.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &JWTOIDCAuthEngineConfig{}
+var _ admission.Validator[*JWTOIDCAuthEngineConfig] = &JWTOIDCAuthEngineConfig{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *JWTOIDCAuthEngineConfig) ValidateCreate() (admission.Warnings, error) {
-	jwtoidcauthengineconfiglog.Info("validate create", "name", r.Name)
+// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *JWTOIDCAuthEngineConfig) ValidateCreate(ctx context.Context, obj *JWTOIDCAuthEngineConfig) (admission.Warnings, error) {
+	jwtoidcauthengineconfiglog.Info("validate create", "name", obj.Name)
 
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *JWTOIDCAuthEngineConfig) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	jwtoidcauthengineconfiglog.Info("validate update", "name", r.Name)
+// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *JWTOIDCAuthEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *JWTOIDCAuthEngineConfig) (admission.Warnings, error) {
+	jwtoidcauthengineconfiglog.Info("validate update", "name", newObj.Name)
 
 	// the path cannot be updated
-	if r.Spec.Path != old.(*JWTOIDCAuthEngineConfig).Spec.Path {
+	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *JWTOIDCAuthEngineConfig) ValidateDelete() (admission.Warnings, error) {
-	jwtoidcauthengineconfiglog.Info("validate delete", "name", r.Name)
+// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *JWTOIDCAuthEngineConfig) ValidateDelete(ctx context.Context, obj *JWTOIDCAuthEngineConfig) (admission.Warnings, error) {
+	jwtoidcauthengineconfiglog.Info("validate delete", "name", obj.Name)
 
 	return nil, nil
 }

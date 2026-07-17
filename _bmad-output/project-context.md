@@ -18,16 +18,16 @@ _This file contains critical rules and patterns that AI agents must follow when 
 
 ### Core
 - **Language:** Go 1.26
-- **K8s Framework:** controller-runtime v0.17.3, Kubebuilder v3 layout
+- **K8s Framework:** controller-runtime v0.24.1, Kubebuilder v3 layout
 - **OLM/SDK:** Operator SDK v1.31.0
-- **K8s API libs:** k8s.io/api, apimachinery, client-go v0.29.2
+- **K8s API libs:** k8s.io/api, apimachinery, client-go v0.36.0
 - **Vault Client:** hashicorp/vault/api v1.14.0
 
 ### Key Dependencies
 - Masterminds/sprig/v3 v3.2.3 (template functions for VaultSecret)
 - hashicorp/hcl/v2 v2.21.0, BurntSushi/toml v1.4.0 (config parsing)
-- go-logr/logr v1.4.2 (structured logging via controller-runtime/zap)
-- onsi/ginkgo/v2 v2.19.0 + onsi/gomega v1.33.1 (BDD testing)
+- go-logr/logr v1.4.3 (structured logging via controller-runtime/zap)
+- onsi/ginkgo/v2 v2.27.4 + onsi/gomega v1.39.0 (BDD testing)
 - scylladb/go-set v1.0.2 (set data structures)
 
 ### Build & Dev Tooling
@@ -43,10 +43,10 @@ _This file contains critical rules and patterns that AI agents must follow when 
 ### Go Language Rules
 
 #### Admission Webhooks (Required for Every Type)
-- Every CRD type **must** have a corresponding `*_webhook.go` file implementing both `webhook.Defaulter` and `webhook.Validator` interfaces.
-- Compile-time checks: `var _ webhook.Defaulter = &MyType{}` and `var _ webhook.Validator = &MyType{}`
+- Every CRD type **must** have a corresponding `*_webhook.go` file implementing both `admission.Defaulter[*T]` and `admission.Validator[*T]` generic interfaces (from `sigs.k8s.io/controller-runtime/pkg/webhook/admission`).
+- Compile-time checks: `var _ admission.Defaulter[*MyType] = &MyType{}` and `var _ admission.Validator[*MyType] = &MyType{}`
 - Webhook file must declare a package-level logger: `var mytypelog = logf.Log.WithName("mytype-resource")`
-- `SetupWebhookWithManager` follows a fixed pattern: `ctrl.NewWebhookManagedBy(mgr).For(r).Complete()`
+- `SetupWebhookWithManager` follows a fixed pattern: `ctrl.NewWebhookManagedBy(mgr, r).WithDefaulter(r).WithValidator(r).Complete()`
 - Kubebuilder marker comments are required for both mutating and validating paths:
   - `//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-<lowercase>,mutating=true,...`
   - `//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-<lowercase>,mutating=false,...`
@@ -265,7 +265,7 @@ These rules govern the interaction between `kubebuilder:default`, `omitempty`, a
 1. `operator-sdk create api --group redhatcop --version v1alpha1 --kind MyType --resource --controller`
 2. `operator-sdk create webhook --group redhatcop --version v1alpha1 --kind MyType --defaulting --programmatic-validation`
 3. Define `*_types.go`: Spec with `Connection`, `Authentication`, inline config struct, `Path`, `Name`; implement `VaultObject` + `ConditionsAware`; add `toMap()` and `IsEquivalentToDesiredState()`
-4. Implement webhook in `*_webhook.go`: `Defaulter`, `Validator`, immutable `spec.path` rule
+4. Implement webhook in `*_webhook.go`: `admission.Defaulter[*T]`, `admission.Validator[*T]`, immutable `spec.path` rule
 5. Implement controller in `*_controller.go`: embed `ReconcilerBase`, standard reconcile flow
 6. Register controller + webhook in `main.go`
 7. Add decoder method in `controllertestutils/decoder.go`
@@ -315,4 +315,4 @@ These rules govern the interaction between `kubebuilder:default`, `omitempty`, a
 - Review quarterly for outdated rules
 - Remove rules that become obvious over time
 
-Last Updated: 2026-06-28
+Last Updated: 2026-07-16
