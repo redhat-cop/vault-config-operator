@@ -49,6 +49,7 @@ resources:
 - bases/redhatcop.redhat.io_identitytokenconfigs.yaml
 - bases/redhatcop.redhat.io_identitytokenkeys.yaml
 - bases/redhatcop.redhat.io_identitytokenroles.yaml
+- bases/redhatcop.redhat.io_namespaces.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge: []
