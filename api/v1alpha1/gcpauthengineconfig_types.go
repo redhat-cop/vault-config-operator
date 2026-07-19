@@ -44,7 +44,6 @@ type GCPAuthEngineConfigSpec struct {
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
 
-	// +kubebuilder:validation:Required
 	GCPConfig `json:",inline"`
 
 	// GCPCredentials in JSON string containing the contents of a GCP service account credentials file.

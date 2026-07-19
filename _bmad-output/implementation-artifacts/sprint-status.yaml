@@ -35,7 +35,9 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-07-17
+last_updated: 2026-07-18
+# Story 8.3 review 2026-07-18
+# Story 8.3 in-progress 2026-07-18
 # Story 8.2 in-progress 2026-07-16
 # Story 8.1 review 2026-07-16
 # Story 8.1 in-progress 2026-07-16
@@ -405,7 +407,7 @@ development_status:
   epic-8: in-progress
   8-1-upgrade-go-from-1-22-to-1-26: done
   8-2-upgrade-controller-runtime-and-k8s-libs: done
-  8-3-upgrade-makefile-k8s-coupled-tool-versions: ready-for-dev
+  8-3-upgrade-makefile-k8s-coupled-tool-versions: done
   8-4-adapt-ci-pipeline-and-dockerfiles-for-new-versions: ready-for-dev
   epic-8-retrospective: optional
 

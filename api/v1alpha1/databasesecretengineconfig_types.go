@@ -51,7 +51,6 @@ type DatabaseSecretEngineConfigSpec struct {
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
 
-	// +kubebuilder:validation:Required
 	DBSEConfig `json:",inline"`
 
 	// RootCredentials specifies how to retrieve the credentials for this DatabaseEngine connection.

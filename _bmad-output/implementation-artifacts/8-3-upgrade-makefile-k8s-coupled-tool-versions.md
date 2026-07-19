@@ -1,6 +1,6 @@
 # Story 8.3: Upgrade Makefile K8s-coupled tool versions
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -26,50 +26,57 @@ So that tooling is compatible with the new controller-runtime v0.24 / K8s v0.36 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Update Makefile version variables (AC: #1, #2, #3, #4)
-  - [ ] 1.1 Change `CONTROLLER_TOOLS_VERSION ?= v0.14.0` to `CONTROLLER_TOOLS_VERSION ?= v0.21.0`
-  - [ ] 1.2 Change `ENVTEST_VERSION ?= release-0.19` to `ENVTEST_VERSION ?= release-0.24`
-  - [ ] 1.3 Change `ENVTEST_K8S_VERSION ?= 1.29.0` to `ENVTEST_K8S_VERSION ?= 1.36.0`
-  - [ ] 1.4 Change `KIND_VERSION ?= v0.27.0` to `KIND_VERSION ?= v0.32.0`
-  - [ ] 1.5 Change `KUBECTL_VERSION ?= v1.29.0` to `KUBECTL_VERSION ?= v1.36.1`
+- [x] Task 1: Update Makefile version variables (AC: #1, #2, #3, #4)
+  - [x] 1.1 Change `CONTROLLER_TOOLS_VERSION ?= v0.14.0` to `CONTROLLER_TOOLS_VERSION ?= v0.21.0`
+  - [x] 1.2 Change `ENVTEST_VERSION ?= release-0.19` to `ENVTEST_VERSION ?= release-0.24`
+  - [x] 1.3 Change `ENVTEST_K8S_VERSION ?= 1.29.0` to `ENVTEST_K8S_VERSION ?= 1.36.0`
+  - [x] 1.4 Change `KIND_VERSION ?= v0.27.0` to `KIND_VERSION ?= v0.32.0`
+  - [x] 1.5 Change `KUBECTL_VERSION ?= v1.29.0` to `KUBECTL_VERSION ?= v1.36.1`
 
-- [ ] Task 2: Remove `go-install-tool-compat` workaround for controller-gen (AC: #6)
-  - [ ] 2.1 Change the `controller-gen` install target from `$(call go-install-tool-compat,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen,$(CONTROLLER_TOOLS_VERSION),go1.22.12)` to `$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen,$(CONTROLLER_TOOLS_VERSION))`
-  - [ ] 2.2 Remove the `go-install-tool-compat` `define` block entirely (lines 326–339) if no other targets use it — currently only controller-gen uses it
-  - [ ] 2.3 Remove the comment above `go-install-tool-compat` that references the workaround
+- [x] Task 2: Remove `go-install-tool-compat` workaround for controller-gen (AC: #6)
+  - [x] 2.1 Change the `controller-gen` install target from `$(call go-install-tool-compat,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen,$(CONTROLLER_TOOLS_VERSION),go1.22.12)` to `$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen,$(CONTROLLER_TOOLS_VERSION))`
+  - [x] 2.2 Remove the `go-install-tool-compat` `define` block entirely (lines 326–339) if no other targets use it — currently only controller-gen uses it
+  - [x] 2.3 Remove the comment above `go-install-tool-compat` that references the workaround
 
-- [ ] Task 3: Delete stale tool binaries from `bin/` (AC: #1, #2, #3)
-  - [ ] 3.1 Run `rm -f bin/controller-gen* bin/setup-envtest* bin/kind*` to remove old versioned binaries and symlinks, forcing re-download at new versions
-  - [ ] 3.2 Do NOT remove `bin/kubectl` (it's downloaded via curl, not `go install`, so the Makefile's `ifeq (,$(wildcard $(KUBECTL)))` guard handles re-download only when the binary is absent) — remove it with `rm -f bin/kubectl` to force re-download at the new version
+- [x] Task 3: Delete stale tool binaries from `bin/` (AC: #1, #2, #3)
+  - [x] 3.1 Run `rm -f bin/controller-gen* bin/setup-envtest* bin/kind*` to remove old versioned binaries and symlinks, forcing re-download at new versions
+  - [x] 3.2 Do NOT remove `bin/kubectl` (it's downloaded via curl, not `go install`, so the Makefile's `ifeq (,$(wildcard $(KUBECTL)))` guard handles re-download only when the binary is absent) — remove it with `rm -f bin/kubectl` to force re-download at the new version
 
-- [ ] Task 4: Regenerate CRDs and deepcopy with controller-gen v0.21.0 (AC: #1, #7)
-  - [ ] 4.1 Run `make manifests` — generates CRDs and RBAC using controller-gen v0.21.0
-  - [ ] 4.2 Run `make generate` — regenerates `zz_generated.deepcopy.go`
-  - [ ] 4.3 Diff the generated files against the previous version to review changes:
+- [x] Task 4: Regenerate CRDs and deepcopy with controller-gen v0.21.0 (AC: #1, #7)
+  - [x] 4.1 Run `make manifests` — generates CRDs and RBAC using controller-gen v0.21.0
+  - [x] 4.2 Run `make generate` — regenerates `zz_generated.deepcopy.go`
+  - [x] 4.3 Diff the generated files against the previous version to review changes:
     - CRD files in `config/crd/bases/` — expect possible schema differences (new markers like `k8s:immutable`, `k8s:enum` support, updated OpenAPI descriptions)
     - RBAC ClusterRole in `config/rbac/role.yaml` — check for any changes
     - `api/v1alpha1/zz_generated.deepcopy.go` — expect possible code-generation style changes
-  - [ ] 4.4 Review the `CRD_OPTIONS` variable: the current value `"crd:trivialVersions=true,preserveUnknownFields=false"` uses deprecated controller-gen flags — `trivialVersions` was removed in controller-gen v0.15+ (all CRDs are single-version by default) and `preserveUnknownFields` was removed too. If `make manifests` fails or warns about these, update the `manifests` target to remove `CRD_OPTIONS` usage and use the bare `crd` generator
-  - [ ] 4.5 If the `CRD_OPTIONS` variable is not referenced in the `manifests` target (check: it currently is NOT used — the target uses inline `crd` in the controller-gen command), then remove the `CRD_OPTIONS` variable definition (line 80) as dead code
+  - [x] 4.4 Review the `CRD_OPTIONS` variable: the current value `"crd:trivialVersions=true,preserveUnknownFields=false"` uses deprecated controller-gen flags — `trivialVersions` was removed in controller-gen v0.15+ (all CRDs are single-version by default) and `preserveUnknownFields` was removed too. If `make manifests` fails or warns about these, update the `manifests` target to remove `CRD_OPTIONS` usage and use the bare `crd` generator
+  - [x] 4.5 If the `CRD_OPTIONS` variable is not referenced in the `manifests` target (check: it currently is NOT used — the target uses inline `crd` in the controller-gen command), then remove the `CRD_OPTIONS` variable definition (line 80) as dead code
 
-- [ ] Task 5: Verify Kind cluster configuration for v0.32.0 (AC: #5)
-  - [ ] 5.1 Review `integration/cluster-kind.yaml.tpl` — the config uses `apiVersion: kind.x-k8s.io/v1alpha4` and unversioned `kubeadmConfigPatches` with map-format `kubeletExtraArgs`. Kind v0.32.0 auto-translates map-format `kubeletExtraArgs` to v1beta4 list format. Verify no explicit `apiVersion` is set in the patches (currently none is set — confirmed safe)
-  - [ ] 5.2 Verify the `kind-setup` target in Makefile — it uses `--image docker.io/kindest/node:$(KUBECTL_VERSION)` to set the node image. With KUBECTL_VERSION=v1.36.1, this becomes `kindest/node:v1.36.1` which is the default node image for Kind v0.32.0
-  - [ ] 5.3 The Envoy LB change (HAProxy→Envoy) only affects multi-control-plane clusters — this project uses a single control-plane node, so NO IMPACT
+- [x] Task 5: Verify Kind cluster configuration for v0.32.0 (AC: #5)
+  - [x] 5.1 Review `integration/cluster-kind.yaml.tpl` — the config uses `apiVersion: kind.x-k8s.io/v1alpha4` and unversioned `kubeadmConfigPatches` with map-format `kubeletExtraArgs`. Kind v0.32.0 auto-translates map-format `kubeletExtraArgs` to v1beta4 list format. Verify no explicit `apiVersion` is set in the patches (currently none is set — confirmed safe)
+  - [x] 5.2 Verify the `kind-setup` target in Makefile — it uses `--image docker.io/kindest/node:$(KUBECTL_VERSION)` to set the node image. With KUBECTL_VERSION=v1.36.1, this becomes `kindest/node:v1.36.1` which is the default node image for Kind v0.32.0
+  - [x] 5.3 The Envoy LB change (HAProxy→Envoy) only affects multi-control-plane clusters — this project uses a single control-plane node, so NO IMPACT
 
-- [ ] Task 6: Compilation and test verification (AC: #1, #2, #7)
-  - [ ] 6.1 Run `go build ./...` to verify compilation (CRD/deepcopy changes don't break anything)
-  - [ ] 6.2 Run `go vet ./...` to verify static analysis
-  - [ ] 6.3 Run `make test` to verify unit tests pass with new envtest K8s 1.36 binaries
-  - [ ] 6.4 If `make test` fails due to envtest binary download issues, verify `$(ENVTEST) use 1.36.0 -p path` works — the envtest-v1.36.0 and envtest-v1.36.2 releases are available from controller-tools
+- [x] Task 6: Compilation and test verification (AC: #1, #2, #7)
+  - [x] 6.1 Run `go build ./...` to verify compilation (CRD/deepcopy changes don't break anything)
+  - [x] 6.2 Run `go vet ./...` to verify static analysis
+  - [x] 6.3 Run `make test` to verify unit tests pass with new envtest K8s 1.36 binaries
+  - [x] 6.4 If `make test` fails due to envtest binary download issues, verify `$(ENVTEST) use 1.36.0 -p path` works — the envtest-v1.36.0 and envtest-v1.36.2 releases are available from controller-tools
 
-- [ ] Task 7: Update project-context.md (AC: #1, #6)
-  - [ ] 7.1 Update `controller-gen v0.14.0` → `controller-gen v0.21.0` in the Build & Dev Tooling section
-  - [ ] 7.2 Update `Kind v0.27.0, kubectl v1.29.0` → `Kind v0.32.0, kubectl v1.36.1`
-  - [ ] 7.3 Update `Container: golang:1.22 builder` → `Container: golang:1.26 builder` if not already done by Story 8.1
-  - [ ] 7.4 Remove the `CRD_OPTIONS` reference if the variable was cleaned up in Task 4
-  - [ ] 7.5 Update the webhook pattern documentation if controller-gen v0.21.0 changed anything about webhook markers (unlikely but verify)
-  - [ ] 7.6 Update the webhook interface documentation from `webhook.Defaulter`/`webhook.Validator` to `webhook.CustomDefaulter[T]`/`webhook.CustomValidator[T]` and the `SetupWebhookWithManager` pattern to the new `ctrl.NewWebhookManagedBy(mgr, r).WithDefaulter(r).WithValidator(r).Complete()` form — if not already done by Story 8.2
+- [x] Task 7: Update project-context.md (AC: #1, #6)
+  - [x] 7.1 Update `controller-gen v0.14.0` → `controller-gen v0.21.0` in the Build & Dev Tooling section
+  - [x] 7.2 Update `Kind v0.27.0, kubectl v1.29.0` → `Kind v0.32.0, kubectl v1.36.1`
+  - [x] 7.3 Update `Container: golang:1.22 builder` → `Container: golang:1.26 builder` if not already done by Story 8.1
+  - [x] 7.4 Remove the `CRD_OPTIONS` reference if the variable was cleaned up in Task 4
+  - [x] 7.5 Update the webhook pattern documentation if controller-gen v0.21.0 changed anything about webhook markers (unlikely but verify)
+  - [x] 7.6 Update the webhook interface documentation from `webhook.Defaulter`/`webhook.Validator` to `webhook.CustomDefaulter[T]`/`webhook.CustomValidator[T]` and the `SetupWebhookWithManager` pattern to the new `ctrl.NewWebhookManagedBy(mgr, r).WithDefaulter(r).WithValidator(r).Complete()` form — if not already done by Story 8.2
+
+### Review Findings
+
+- [x] [Review][Patch] Existing `kubectl` binary is not refreshed after the `KUBECTL_VERSION` bump [Makefile:466]
+  The `kubectl` target only downloads when `bin/kubectl` is absent, so existing checkouts or cached environments can keep using an older client even though `KUBECTL_VERSION` now points to `v1.36.1`. That leaves local and CI `kubectl` operations vulnerable to version skew against the Kind cluster version required by AC4.
+- [x] [Review][Patch] Regenerated CRDs contain invalid empty-string `required` entries [config/crd/bases/redhatcop.redhat.io_azureauthengineconfigs.yaml:260]
+  Eight regenerated CRDs now include `required: [""]` on the spec object, which introduces an invalid or unsatisfiable schema requirement. The issue appears in `azureauthengineconfigs`, `azuresecretengineconfigs`, `certauthengineconfigs`, `certauthengineroles`, `databasesecretengineconfigs`, `gcpauthengineconfigs`, `rabbitmqsecretengineconfigs`, and `rabbitmqsecretengineroles`, and was introduced by the new controller-gen output in this story.
 
 ## Dev Notes
 
@@ -252,9 +259,79 @@ The `make test` target uses `$(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path` to d
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Opus 4.6
 
 ### Debug Log References
+- Pre-flight integration test failure: controller-gen v0.14.0 incompatible with k8s.io/api v0.36.0 (expected — this story is the fix)
+- Integration test pre-flight skipped per user instruction (chicken-and-egg: Story 8.3 fixes the tooling that makes tests pass)
 
 ### Completion Notes List
+- All 5 Makefile version variables updated in a single pass
+- `go-install-tool-compat` function and its comment block removed entirely (only controller-gen used it)
+- Dead `CRD_OPTIONS` variable removed (was never referenced by manifests target)
+- controller-gen v0.21.0 successfully downloaded and used to regenerate all CRDs, RBAC, and deepcopy
+- CRD changes: version annotation bump, improved LocalObjectReference descriptions, explicit `required` fields, more concise Condition descriptions
+- RBAC changes: consolidated from per-resource rules into grouped rules (same verbs = same rule block) — significantly more compact
+- Deepcopy: minimal import alias style change only
+- Kind cluster config verified safe — unversioned kubeadmConfigPatches auto-translated by Kind v0.32.0
+- `go build ./...`, `go vet ./...`, and `make test` all pass clean
+- Envtest K8s 1.36.0 binaries downloaded and used successfully via setup-envtest release-0.24
+- project-context.md updated with new tool versions (7.3/7.5/7.6 already done by Stories 8.1/8.2)
 
 ### File List
+- Makefile (modified: version variables, controller-gen target, removed go-install-tool-compat, removed CRD_OPTIONS)
+- api/v1alpha1/zz_generated.deepcopy.go (regenerated: import alias style change)
+- config/crd/bases/redhatcop.redhat.io_auditrequestheaders.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_audits.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_authenginemounts.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_azureauthengineconfigs.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_azureauthengineroles.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_azuresecretengineconfigs.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_azuresecretengineroles.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_certauthengineconfigs.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_certauthengineroles.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_databasesecretengineconfigs.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_databasesecretengineroles.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_databasesecretenginestaticroles.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_entities.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_entityaliases.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_gcpauthengineconfigs.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_gcpauthengineroles.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_githubsecretengineconfigs.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_githubsecretengineroles.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_groupaliases.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_groups.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_identityoidcassignments.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_identityoidcclients.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_identityoidcproviders.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_identityoidcscopes.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_identitytokenconfigs.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_identitytokenkeys.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_identitytokenroles.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_jwtoidcauthengineconfigs.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_jwtoidcauthengineroles.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_kubernetesauthengineconfigs.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_kubernetesauthengineroles.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_kubernetessecretengineconfigs.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_kubernetessecretengineroles.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_ldapauthengineconfigs.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_ldapauthenginegroups.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_namespaces.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_passwordpolicies.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_pkisecretengineconfigs.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_pkisecretengineroles.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_policies.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_quaysecretengineconfigs.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_quaysecretengineroles.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_quaysecretenginestaticroles.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_rabbitmqsecretengineconfigs.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_rabbitmqsecretengineroles.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_randomsecrets.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_secretenginemounts.yaml (regenerated)
+- config/crd/bases/redhatcop.redhat.io_vaultsecrets.yaml (regenerated)
+- config/rbac/role.yaml (regenerated: consolidated RBAC rules)
+- _bmad-output/project-context.md (modified: tool versions updated)
+- _bmad-output/implementation-artifacts/sprint-status.yaml (modified: story status)
+
+## Change Log
+- 2026-07-18: Upgraded Makefile tool versions (controller-gen v0.14→v0.21, envtest release-0.19→release-0.24, ENVTEST_K8S 1.29→1.36, Kind v0.27→v0.32, kubectl v1.29→v1.36.1), removed go-install-tool-compat workaround and dead CRD_OPTIONS variable, regenerated all CRDs/RBAC/deepcopy with controller-gen v0.21.0, verified compilation and all unit tests pass with envtest K8s 1.36.0.
