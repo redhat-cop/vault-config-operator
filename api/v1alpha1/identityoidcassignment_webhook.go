@@ -17,10 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/runtime"
+	"context"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -28,38 +28,40 @@ import (
 var identityoidcassignmentlog = logf.Log.WithName("identityoidcassignment-resource")
 
 func (r *IdentityOIDCAssignment) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
+	return ctrl.NewWebhookManagedBy(mgr, &IdentityOIDCAssignment{}).
+		WithDefaulter(r).
+		WithValidator(r).
 		Complete()
 }
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-identityoidcassignment,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=identityoidcassignments,verbs=create;update,versions=v1alpha1,name=midentityoidcassignment.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Defaulter = &IdentityOIDCAssignment{}
+var _ admission.Defaulter[*IdentityOIDCAssignment] = &IdentityOIDCAssignment{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *IdentityOIDCAssignment) Default() {
-	identityoidcassignmentlog.Info("default", "name", r.Name)
+// Default implements webhook.CustomDefaulter so a webhook will be registered for the type
+func (r *IdentityOIDCAssignment) Default(ctx context.Context, obj *IdentityOIDCAssignment) error {
+	identityoidcassignmentlog.Info("default", "name", obj.Name)
+	return nil
 }
 
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-identityoidcassignment,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=identityoidcassignments,verbs=create;update,versions=v1alpha1,name=videntityoidcassignment.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &IdentityOIDCAssignment{}
+var _ admission.Validator[*IdentityOIDCAssignment] = &IdentityOIDCAssignment{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *IdentityOIDCAssignment) ValidateCreate() (admission.Warnings, error) {
-	identityoidcassignmentlog.Info("validate create", "name", r.Name)
+// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *IdentityOIDCAssignment) ValidateCreate(ctx context.Context, obj *IdentityOIDCAssignment) (admission.Warnings, error) {
+	identityoidcassignmentlog.Info("validate create", "name", obj.Name)
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *IdentityOIDCAssignment) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	identityoidcassignmentlog.Info("validate update", "name", r.Name)
+// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *IdentityOIDCAssignment) ValidateUpdate(ctx context.Context, oldObj, newObj *IdentityOIDCAssignment) (admission.Warnings, error) {
+	identityoidcassignmentlog.Info("validate update", "name", newObj.Name)
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *IdentityOIDCAssignment) ValidateDelete() (admission.Warnings, error) {
-	identityoidcassignmentlog.Info("validate delete", "name", r.Name)
+// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *IdentityOIDCAssignment) ValidateDelete(ctx context.Context, obj *IdentityOIDCAssignment) (admission.Warnings, error) {
+	identityoidcassignmentlog.Info("validate delete", "name", obj.Name)
 	return nil, nil
 }

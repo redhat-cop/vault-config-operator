@@ -44,7 +44,6 @@ type RabbitMQSecretEngineRoleSpec struct {
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path"`
 
-	// +kubebuilder:validation:Required
 	RMQSERole `json:",inline"`
 
 	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}

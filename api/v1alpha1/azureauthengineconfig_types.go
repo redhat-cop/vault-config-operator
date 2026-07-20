@@ -43,7 +43,6 @@ type AzureAuthEngineConfigSpec struct {
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
 
-	// +kubebuilder:validation:Required
 	AzureConfig `json:",inline"`
 
 	// AzureCredentials consists in ClientID and ClientSecret, which can be created as Kubernetes Secret, VaultSecret or RandomSecret

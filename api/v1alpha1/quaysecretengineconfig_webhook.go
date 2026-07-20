@@ -17,12 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"errors"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -30,8 +29,9 @@ import (
 var quaysecretengineconfiglog = logf.Log.WithName("quaysecretengineconfig-resource")
 
 func (r *QuaySecretEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
+	return ctrl.NewWebhookManagedBy(mgr, r).
+		WithDefaulter(r).
+		WithValidator(r).
 		Complete()
 }
 
@@ -39,39 +39,40 @@ func (r *QuaySecretEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) error
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-quaysecretengineconfig,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=quaysecretengineconfigs,verbs=create,versions=v1alpha1,name=mquaysecretengineconfig.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Defaulter = &QuaySecretEngineConfig{}
+var _ admission.Defaulter[*QuaySecretEngineConfig] = &QuaySecretEngineConfig{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *QuaySecretEngineConfig) Default() {
-	quaysecretengineconfiglog.Info("default", "name", r.Name)
+// Default implements webhook.CustomDefaulter so a webhook will be registered for the type
+func (r *QuaySecretEngineConfig) Default(ctx context.Context, obj *QuaySecretEngineConfig) error {
+	quaysecretengineconfiglog.Info("default", "name", obj.Name)
+	return nil
 }
 
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-quaysecretengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=quaysecretengineconfigs,verbs=create;update,versions=v1alpha1,name=vquaysecretengineconfig.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &QuaySecretEngineConfig{}
+var _ admission.Validator[*QuaySecretEngineConfig] = &QuaySecretEngineConfig{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *QuaySecretEngineConfig) ValidateCreate() (admission.Warnings, error) {
-	quaysecretengineconfiglog.Info("validate create", "name", r.Name)
+// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *QuaySecretEngineConfig) ValidateCreate(ctx context.Context, obj *QuaySecretEngineConfig) (admission.Warnings, error) {
+	quaysecretengineconfiglog.Info("validate create", "name", obj.Name)
 
-	return nil, r.isValid()
+	return nil, obj.isValid()
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *QuaySecretEngineConfig) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	quaysecretengineconfiglog.Info("validate update", "name", r.Name)
+// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *QuaySecretEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *QuaySecretEngineConfig) (admission.Warnings, error) {
+	quaysecretengineconfiglog.Info("validate update", "name", newObj.Name)
 
 	// the path cannot be updated
-	if r.Spec.Path != old.(*QuaySecretEngineConfig).Spec.Path {
+	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}
-	return nil, r.isValid()
+	return nil, newObj.isValid()
 
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *QuaySecretEngineConfig) ValidateDelete() (admission.Warnings, error) {
-	quaysecretengineconfiglog.Info("validate delete", "name", r.Name)
+// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *QuaySecretEngineConfig) ValidateDelete(ctx context.Context, obj *QuaySecretEngineConfig) (admission.Warnings, error) {
+	quaysecretengineconfiglog.Info("validate delete", "name", obj.Name)
 
 	return nil, nil
 }

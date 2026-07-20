@@ -1538,7 +1538,7 @@ Upgrade Go 1.22→1.26, controller-runtime v0.17→v0.24, K8s libs v0.29→v0.36
 **FRs covered:** DU1, DU2, DU9, DU10, DU11
 
 ### Epic 9: Vault API + Peripheral Dependency Upgrades
-Upgrade vault/api v1.14→v1.23, test deps (ginkgo, gomega), peripheral deps (hcl, sprig, logr), security-sensitive indirect deps (x/crypto, x/net), Vault integration test infrastructure (1.19→1.21), and evaluate pkg/errors migration.
+Upgrade vault/api v1.14→v1.23, test deps (ginkgo v2.32, gomega v1.42), peripheral deps (hcl v2.24, sprig v3.3, logr), security-sensitive indirect deps (x/crypto, x/net), Vault integration test infrastructure (1.19→2.0.3), and evaluate pkg/errors migration. Prepended with RabbitMQ serialization bug fix (Story 9.0 from Epic 8 retro). (Targets updated 2026-07-20 during Epic 8 retro — Vault 1.21 reached EOL April 2026, retargeted to Vault 2.0.3; test deps and peripheral deps refreshed to latest.)
 **FRs covered:** DU4, DU5, DU6, DU7, DU8, DU16
 
 ### Epic 10: Operator SDK + Build Tooling Upgrades
@@ -1887,7 +1887,31 @@ So that builds, tests, and releases work with the updated stack.
 
 ## Epic 9: Vault API + Peripheral Dependency Upgrades
 
-Upgrade vault/api, test dependencies, peripheral libraries, and security-sensitive indirect dependencies. These are lower-risk than the K8s stack upgrade and can be done independently.
+Upgrade vault/api, test dependencies, peripheral libraries, and security-sensitive indirect dependencies. These are lower-risk than the K8s stack upgrade and can be done independently. Prepended with a RabbitMQ serialization bug fix from the Epic 8 retrospective.
+
+(Targets updated 2026-07-20 during Epic 8 retrospective. Vault 1.21 reached EOL April 13, 2026 — retargeted to Vault 2.0.3. Test deps and peripheral deps refreshed to latest stable versions.)
+
+### Story 9.0: Fix RabbitMQ vhost/vhostTopic multi-entry serialization bug
+
+As an operator developer,
+I want to fix the RabbitMQ secret engine role serialization bug for vhost and vhostTopic multi-entry configurations,
+So that users can correctly configure multiple vhost or vhostTopic entries on a RabbitMQ secret engine role.
+
+**Background:** This bug has been tracked as technical debt since the Epic D3 retrospective (2026-07-05). The issue is in `api/v1alpha1/rabbitmqsecretenginerole_types.go` lines 199-231. When multiple vhost or vhostTopic entries are configured, the serialization produces incorrect output.
+
+**Acceptance Criteria:**
+
+**Given** a RabbitMQSecretEngineRole CR with multiple vhost entries
+**When** the `toMap()` method serializes the configuration
+**Then** all vhost entries are correctly serialized and sent to Vault
+
+**Given** a RabbitMQSecretEngineRole CR with multiple vhostTopic entries
+**When** the `toMap()` method serializes the configuration
+**Then** all vhostTopic entries are correctly serialized and sent to Vault
+
+**Given** the fix is applied
+**When** `make test` and `make integration` are run
+**Then** all tests pass including any new tests for the multi-entry serialization
 
 ### Story 9.1: Upgrade hashicorp/vault/api from v1.14 to v1.23
 
@@ -1910,13 +1934,15 @@ So that the operator can use new Vault API features and benefits from upstream f
 ### Story 9.2: Upgrade test dependencies (ginkgo, gomega)
 
 As an operator developer,
-I want to upgrade Ginkgo to v2.28 and Gomega to v1.39,
+I want to upgrade Ginkgo to v2.32.0 and Gomega to v1.42.1,
 So that we benefit from new test features (JSON reports, semantic version filtering) and remain on supported versions.
+
+**Note (updated 2026-07-20):** Original targets were ginkgo v2.28, gomega v1.39. Retargeted to v2.32.0 and v1.42.1 — current stable releases as of July 2026.
 
 **Acceptance Criteria:**
 
-**Given** go.mod pins ginkgo v2.19.0 and gomega v1.33.1
-**When** both are updated to latest
+**Given** go.mod pins ginkgo v2.27.4 and gomega v1.39.0
+**When** both are updated to latest (v2.32.0, v1.42.1)
 **Then** `make test` and `make integration` pass without test changes (backward compatible)
 
 ### Story 9.3: Upgrade peripheral and security dependencies
@@ -1925,9 +1951,11 @@ As an operator developer,
 I want to upgrade hcl/v2, sprig/v3, logr, x/crypto, and x/net to their latest versions,
 So that we have current security patches and bug fixes.
 
+**Note (updated 2026-07-20):** Specific targets refreshed: hcl/v2 v2.21.0→v2.24.0, sprig/v3 v3.2.3→v3.3.0. logr v1.4.3 is already current (no change needed). x/crypto and x/net targets to be determined at story creation time.
+
 **Acceptance Criteria:**
 
-**Given** multiple peripheral deps are behind by 1-3 minor versions
+**Given** multiple peripheral deps are behind by 1-3 minor versions (hcl/v2 v2.21→v2.24, sprig/v3 v3.2.3→v3.3.0)
 **When** all are updated via `go get -u` for each
 **Then** `go build ./...` succeeds and all tests pass
 
@@ -1947,36 +1975,96 @@ So that we can decide whether to include this in the upgrade or defer it.
 **When** reviewed by the team
 **Then** a decision is made: migrate now, migrate incrementally, or defer
 
-### Story 9.5: Upgrade Vault version in integration test infrastructure
+### Story 9.5: Upgrade Vault version in integration test infrastructure to 2.0.3
 
 As an operator developer,
-I want to upgrade the Vault version used in integration tests and local development from 1.19.x to 1.21.x,
-So that we test against a current Vault release.
+I want to upgrade the Vault version used in integration tests and local development from 1.19.x to 2.0.3,
+So that we test against the current supported Vault release and verify compatibility with the Vault 2.0 major version.
+
+**Note (updated 2026-07-20):** Original target was Vault 1.21.4. Vault 1.21 reached EOL on April 13, 2026 — the same day Vault 2.0.0 GA'd. Retargeted to Vault 2.0.3 (latest as of July 2026). Vault 2.0 is a major version change with potential breaking changes — this story includes analyzing and addressing them. Vault Helm chart v0.34.0 defaults to Vault 2.0.3 and was tested with Vault 2.0.3, 1.21-1.19 and Kubernetes v1.36-1.32.
 
 **Files to update:**
 
 | File | Current | Target |
 |------|---------|--------|
-| Makefile `VAULT_VERSION` | 1.19.0 | 1.21.4 |
-| Makefile `VAULT_CHART_VERSION` | 0.30.0 | Matching chart for 1.21.x |
-| integration/vault-values.yaml (4 image refs) | hashicorp/vault:1.19.0 | hashicorp/vault:1.21.4 |
-| config/local-development/vault-values.yaml (3 image refs) | hashicorp/vault:1.19.2-ubi | hashicorp/vault:1.21.x-ubi |
+| Makefile `VAULT_VERSION` | 1.19.0 | 2.0.3 |
+| Makefile `VAULT_CHART_VERSION` | 0.30.0 | 0.34.0 |
+| integration/vault-values.yaml (4 image refs) | hashicorp/vault:1.19.0 | hashicorp/vault:2.0.3 |
+| config/local-development/vault-values.yaml (3 image refs) | hashicorp/vault:1.19.2-ubi | hashicorp/vault:2.0.3-ubi |
 
 **Acceptance Criteria:**
 
 **Given** integration tests use Vault 1.19.0
-**When** all Vault version references are updated to 1.21.4
+**When** all Vault version references are updated to 2.0.3 and any breaking changes are addressed
 **Then** `make integration` passes against the new Vault version
 
 **Given** the Vault Helm chart version must match the Vault version
-**When** VAULT_CHART_VERSION is updated to the chart that ships Vault 1.21.x
+**When** VAULT_CHART_VERSION is updated to 0.34.0 (ships Vault 2.0.3)
 **Then** `make deploy-vault` deploys the correct Vault version
+
+**Given** Vault 2.0 may have breaking changes from 1.19/1.21
+**When** the Vault 2.0 CHANGELOG and migration guide are reviewed
+**Then** any operator code or test infrastructure affected by breaking changes is adapted
 
 ---
 
 ## Epic 10: Operator SDK + Build Tooling Upgrades
 
 Upgrade Operator SDK, Helm, golangci-lint, OPM, and other build/CI tools that have major version gaps.
+
+### Story 10.0: Migrate project layout from go/v3 to go/v4
+
+As an operator developer,
+I want to migrate the project directory layout from Kubebuilder go/v3 to go/v4,
+So that the project follows the current scaffolding standard and is compatible with newer Operator SDK versions.
+
+**Reference:** https://book-v3.book.kubebuilder.io/migration/manually_migration_guide_gov3_to_gov4
+
+**Current state (go/v3 layout):**
+- `main.go` at project root
+- `controllers/` (plural) at project root
+- `api/` at project root
+- `PROJECT` file declares `layout: go.kubebuilder.io/v3`
+
+**Target state (go/v4 layout):**
+- `cmd/main.go`
+- `internal/controller/` (singular)
+- `api/` (unchanged)
+- `PROJECT` file declares `layout: go.kubebuilder.io/v4`
+
+**Files to update:**
+- `PROJECT`: change layout from `go.kubebuilder.io/v3` to `go.kubebuilder.io/v4`
+- `main.go` → `cmd/main.go`: move file, update all controller import paths
+- `controllers/` → `internal/controller/`: move directory, rename to singular
+- `Dockerfile`: update `COPY` paths and `go build` command to reference `cmd/main.go` and `internal/controller/`
+- `Makefile`: update `build` and `run` targets to reference `cmd/main.go`
+- `.github/workflows/*.yaml`: update any paths referencing `controllers/` or `main.go`
+- `internal/controller/suite_test.go` (and all controller test files): update `CRDDirectoryPaths` from `"..", "config", "crd", "bases"` to `"..", "..", "config", "crd", "bases"`
+- `bundle.Dockerfile`: update `go.kubebuilder.io/v3` label to `go.kubebuilder.io/v4`
+
+**Acceptance Criteria:**
+
+**Given** the project uses go/v3 layout with `main.go` at root and `controllers/` directory
+**When** `main.go` is moved to `cmd/main.go` and `controllers/` is moved to `internal/controller/`
+**Then** all Go import paths are updated and `go build ./cmd/main.go` succeeds
+
+**Given** the Makefile references `main.go` and `controllers/`
+**When** the targets are updated to `cmd/main.go` and `internal/controller/`
+**Then** `make build`, `make run`, and `make manifests generate` all succeed
+
+**Given** the Dockerfile copies `main.go` and `controllers/`
+**When** the paths are updated to `cmd/main.go` and `internal/controller/`
+**Then** `make docker-build` succeeds
+
+**Given** controller test suites reference `CRDDirectoryPaths` with relative paths
+**When** the paths are updated to account for the new `internal/controller/` depth
+**Then** `make test` passes (all unit and controller tests)
+
+**Given** the PROJECT file declares `go.kubebuilder.io/v3`
+**When** it is updated to `go.kubebuilder.io/v4`
+**Then** `operator-sdk` commands recognize the project as v4 layout
+
+**Implementation notes:** This is a prerequisite for Story 10.1 (Operator SDK upgrade). The Operator SDK v1.42 scaffolding assumes go/v4 layout. Follow the manual migration steps from the Kubebuilder migration guide. With ~35 controller files, bulk-rename tooling (`gorename`, `sed`, or IDE refactoring) is recommended. Run `make manifests generate test` after each major step to catch breakage early.
 
 ### Story 10.1: Upgrade Operator SDK from v1.31 to v1.42
 

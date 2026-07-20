@@ -17,12 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"errors"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -30,8 +29,9 @@ import (
 var kubernetessecretenginerolelog = logf.Log.WithName("kubernetessecretenginerole-resource")
 
 func (r *KubernetesSecretEngineRole) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
+	return ctrl.NewWebhookManagedBy(mgr, r).
+		WithDefaulter(r).
+		WithValidator(r).
 		Complete()
 }
 
@@ -39,41 +39,42 @@ func (r *KubernetesSecretEngineRole) SetupWebhookWithManager(mgr ctrl.Manager) e
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-kubernetessecretenginerole,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=kubernetessecretengineroles,verbs=create,versions=v1alpha1,name=mkubernetessecretenginerole.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Defaulter = &KubernetesSecretEngineRole{}
+var _ admission.Defaulter[*KubernetesSecretEngineRole] = &KubernetesSecretEngineRole{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *KubernetesSecretEngineRole) Default() {
-	kubernetessecretenginerolelog.Info("default", "name", r.Name)
+// Default implements webhook.CustomDefaulter so a webhook will be registered for the type
+func (r *KubernetesSecretEngineRole) Default(ctx context.Context, obj *KubernetesSecretEngineRole) error {
+	kubernetessecretenginerolelog.Info("default", "name", obj.Name)
 	// TODO(user): fill in your defaulting logic.
+	return nil
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-kubernetessecretenginerole,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=kubernetessecretengineroles,verbs=update,versions=v1alpha1,name=vkubernetessecretenginerole.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &KubernetesSecretEngineRole{}
+var _ admission.Validator[*KubernetesSecretEngineRole] = &KubernetesSecretEngineRole{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *KubernetesSecretEngineRole) ValidateCreate() (admission.Warnings, error) {
-	kubernetessecretenginerolelog.Info("validate create", "name", r.Name)
+// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *KubernetesSecretEngineRole) ValidateCreate(ctx context.Context, obj *KubernetesSecretEngineRole) (admission.Warnings, error) {
+	kubernetessecretenginerolelog.Info("validate create", "name", obj.Name)
 	// the path cannot be updated
 
 	// TODO(user): fill in your validation logic upon object creation.
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *KubernetesSecretEngineRole) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	kubernetessecretenginerolelog.Info("validate update", "name", r.Name)
-	if r.Spec.Path != old.(*KubernetesSecretEngineRole).Spec.Path {
+// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *KubernetesSecretEngineRole) ValidateUpdate(ctx context.Context, oldObj, newObj *KubernetesSecretEngineRole) (admission.Warnings, error) {
+	kubernetessecretenginerolelog.Info("validate update", "name", newObj.Name)
+	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}
 	// TODO(user): fill in your validation logic upon object update.
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *KubernetesSecretEngineRole) ValidateDelete() (admission.Warnings, error) {
-	kubernetessecretenginerolelog.Info("validate delete", "name", r.Name)
+// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *KubernetesSecretEngineRole) ValidateDelete(ctx context.Context, obj *KubernetesSecretEngineRole) (admission.Warnings, error) {
+	kubernetessecretenginerolelog.Info("validate delete", "name", obj.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil, nil

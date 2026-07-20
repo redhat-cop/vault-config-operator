@@ -1491,6 +1491,27 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-passwordpolicy
+  failurePolicy: Fail
+  name: vpasswordpolicy.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - passwordpolicies
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /validate-redhatcop-redhat-io-v1alpha1-pkisecretengineconfig
   failurePolicy: Fail
   name: vpkisecretengineconfig.kb.io
@@ -1523,6 +1544,27 @@ webhooks:
     - UPDATE
     resources:
     - pkisecretengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-policy
+  failurePolicy: Fail
+  name: vpolicy.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - policies
   sideEffects: None
 - admissionReviewVersions:
   - v1

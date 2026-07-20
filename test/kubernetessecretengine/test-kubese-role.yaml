@@ -7,6 +7,10 @@ spec:
     path: kubernetes
     role: policy-admin
   path: test-kubese/test-kubese-mount
+  targetNamespaces:
+    targetNamespaceSelector:
+      matchLabels:
+        database-engine-admin: "true"
   allowedKubernetesNamespaces:
   - default
   kubernetesRoleName: "edit"

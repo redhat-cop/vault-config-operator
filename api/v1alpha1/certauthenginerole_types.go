@@ -47,7 +47,6 @@ type CertAuthEngineRoleSpec struct {
 	// +kubebuilder:validation:Pattern:=`[a-z0-9]([-a-z0-9]*[a-z0-9])?`
 	Name string `json:"name,omitempty"`
 
-	// +kubebuilder:validation:Required
 	CertAuthEngineRoleInternal `json:",inline"`
 }
 

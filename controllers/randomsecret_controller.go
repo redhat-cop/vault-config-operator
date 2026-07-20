@@ -45,7 +45,7 @@ type RandomSecretReconciler struct {
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=randomsecrets/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 //+kubebuilder:rbac:groups="",resources=serviceaccounts/token,verbs=create
-//+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
+//+kubebuilder:rbac:groups=events.k8s.io,resources=events,verbs=get;list;watch;create;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -99,6 +99,12 @@ func (r *RandomSecretReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 	// how to read this if: if the secret has been initialized once and there is no refresh period or time to refresh has not arrived yet, return.
 	if instance.Status.LastVaultSecretUpdate != nil && (instance.Spec.RefreshPeriod == nil || (instance.Spec.RefreshPeriod != nil && !instance.Status.LastVaultSecretUpdate.Add(instance.Spec.RefreshPeriod.Duration).Before(time.Now()))) {
+		if instance.Spec.RefreshPeriod != nil && instance.Spec.RefreshPeriod.Size() > 0 {
+			nextSchedule := time.Until(instance.Status.LastVaultSecretUpdate.Add(instance.Spec.RefreshPeriod.Duration))
+			if nextSchedule > 0 {
+				return reconcile.Result{RequeueAfter: nextSchedule}, nil
+			}
+		}
 		return reconcile.Result{}, nil
 	}
 

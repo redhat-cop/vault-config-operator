@@ -17,25 +17,25 @@ _This file contains critical rules and patterns that AI agents must follow when 
 ## Technology Stack & Versions
 
 ### Core
-- **Language:** Go 1.22.0
-- **K8s Framework:** controller-runtime v0.17.3, Kubebuilder v3 layout
+- **Language:** Go 1.26
+- **K8s Framework:** controller-runtime v0.24.1, Kubebuilder v3 layout
 - **OLM/SDK:** Operator SDK v1.31.0
-- **K8s API libs:** k8s.io/api, apimachinery, client-go v0.29.2
+- **K8s API libs:** k8s.io/api, apimachinery, client-go v0.36.0
 - **Vault Client:** hashicorp/vault/api v1.14.0
 
 ### Key Dependencies
 - Masterminds/sprig/v3 v3.2.3 (template functions for VaultSecret)
 - hashicorp/hcl/v2 v2.21.0, BurntSushi/toml v1.4.0 (config parsing)
-- go-logr/logr v1.4.2 (structured logging via controller-runtime/zap)
-- onsi/ginkgo/v2 v2.19.0 + onsi/gomega v1.33.1 (BDD testing)
+- go-logr/logr v1.4.3 (structured logging via controller-runtime/zap)
+- onsi/ginkgo/v2 v2.27.4 + onsi/gomega v1.39.0 (BDD testing)
 - scylladb/go-set v1.0.2 (set data structures)
 
 ### Build & Dev Tooling
-- controller-gen v0.14.0 (CRD/RBAC generation)
+- controller-gen v0.21.0 (CRD/RBAC generation)
 - kustomize v5.4.3, Helm v3.11.0
 - golangci-lint v1.64.8 (no committed config — uses defaults or shared workflow config)
-- Kind v0.27.0, kubectl v1.29.0, Vault 1.19.0 (integration testing)
-- Container: golang:1.22 builder → registry.access.redhat.com/ubi9/ubi-minimal runtime
+- Kind v0.32.0, kubectl v1.36.1, Vault 1.19.0 (integration testing)
+- Container: golang:1.26 builder → registry.access.redhat.com/ubi9/ubi-minimal runtime
 - CI: GitHub Actions via reusable workflows from redhat-cop/github-workflows-operators
 
 ## Critical Implementation Rules
@@ -43,10 +43,10 @@ _This file contains critical rules and patterns that AI agents must follow when 
 ### Go Language Rules
 
 #### Admission Webhooks (Required for Every Type)
-- Every CRD type **must** have a corresponding `*_webhook.go` file implementing both `webhook.Defaulter` and `webhook.Validator` interfaces.
-- Compile-time checks: `var _ webhook.Defaulter = &MyType{}` and `var _ webhook.Validator = &MyType{}`
+- Every CRD type **must** have a corresponding `*_webhook.go` file implementing both `admission.Defaulter[*T]` and `admission.Validator[*T]` generic interfaces (from `sigs.k8s.io/controller-runtime/pkg/webhook/admission`).
+- Compile-time checks: `var _ admission.Defaulter[*MyType] = &MyType{}` and `var _ admission.Validator[*MyType] = &MyType{}`
 - Webhook file must declare a package-level logger: `var mytypelog = logf.Log.WithName("mytype-resource")`
-- `SetupWebhookWithManager` follows a fixed pattern: `ctrl.NewWebhookManagedBy(mgr).For(r).Complete()`
+- `SetupWebhookWithManager` follows a fixed pattern: `ctrl.NewWebhookManagedBy(mgr, r).WithDefaulter(r).WithValidator(r).Complete()`
 - Kubebuilder marker comments are required for both mutating and validating paths:
   - `//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-<lowercase>,mutating=true,...`
   - `//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-<lowercase>,mutating=false,...`
@@ -265,7 +265,7 @@ These rules govern the interaction between `kubebuilder:default`, `omitempty`, a
 1. `operator-sdk create api --group redhatcop --version v1alpha1 --kind MyType --resource --controller`
 2. `operator-sdk create webhook --group redhatcop --version v1alpha1 --kind MyType --defaulting --programmatic-validation`
 3. Define `*_types.go`: Spec with `Connection`, `Authentication`, inline config struct, `Path`, `Name`; implement `VaultObject` + `ConditionsAware`; add `toMap()` and `IsEquivalentToDesiredState()`
-4. Implement webhook in `*_webhook.go`: `Defaulter`, `Validator`, immutable `spec.path` rule
+4. Implement webhook in `*_webhook.go`: `admission.Defaulter[*T]`, `admission.Validator[*T]`, immutable `spec.path` rule
 5. Implement controller in `*_controller.go`: embed `ReconcilerBase`, standard reconcile flow
 6. Register controller + webhook in `main.go`
 7. Add decoder method in `controllertestutils/decoder.go`
@@ -280,6 +280,11 @@ These rules govern the interaction between `kubebuilder:default`, `omitempty`, a
 - **Never set conditions on the CR status directly in controllers.** Always delegate to `ManageOutcome()` / `ManageOutcomeWithRequeue()` which handles both success and failure conditions consistently.
 - **Never add finalizers manually in controllers.** `ManageOutcome` adds the finalizer automatically after first successful reconcile when `IsDeletable()` returns true.
 - **Never create a new logger in controllers or types.** Use `log.FromContext(ctx)` or `r.Log` — never `logr.New()` or `ctrl.Log`.
+
+#### Vault Mount Path Composition
+- Engine types (auth engines, secret engines) compose their Vault mount path as `{spec.path}/{metadata.name}` — for example, if `spec.path` is `kubernetes` and `metadata.name` is `my-role`, the resulting Vault path is `kubernetes/my-role`. The `spec.path` field specifies the engine mount point, NOT the full path to the Vault object.
+- `GetPath()` uses `d.Spec.Name` (if set) as the object name override, falling back to `d.Name` (metadata name). The full Vault API path is then constructed by the reconciler from the mount path plus the object-specific suffix.
+- Examples and documentation must always show the composed path, not just `spec.path` alone, to avoid confusion about where Vault objects are created.
 
 #### Vault API Gotchas
 - Vault's read response often restructures fields compared to the write payload (e.g., `connection_url` becomes nested in `connection_details`). `IsEquivalentToDesiredState` must transform the desired state to match Vault's read format before comparison.
@@ -315,4 +320,4 @@ These rules govern the interaction between `kubebuilder:default`, `omitempty`, a
 - Review quarterly for outdated rules
 - Remove rules that become obvious over time
 
-Last Updated: 2026-06-28
+Last Updated: 2026-07-16

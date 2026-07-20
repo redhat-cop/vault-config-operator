@@ -38,7 +38,7 @@ type AuditReconciler struct {
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=audits/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=audits/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
-//+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
+//+kubebuilder:rbac:groups=events.k8s.io,resources=events,verbs=get;list;watch;create;patch
 //+kubebuilder:rbac:groups="",resources=serviceaccounts/token,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to

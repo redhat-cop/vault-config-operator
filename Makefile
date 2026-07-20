@@ -3,9 +3,9 @@ CHART_REPO_URL ?= http://example.com
 HELM_REPO_DEST ?= /tmp/gh-pages
 OPERATOR_NAME ?=$(shell basename -z `pwd`)
 HELM_VERSION ?= v3.11.0
-KIND_VERSION ?= v0.27.0
+KIND_VERSION ?= v0.32.0
 KIND_CLUSTER_NAME ?= vault-config-operator
-KUBECTL_VERSION ?= v1.29.0
+KUBECTL_VERSION ?= v1.36.1
 KUSTOMIZE_VERSION ?= v5.4.3
 VAULT_HOST_PORT ?= 8200
 KUBE_CONTEXT ?= kind-$(KIND_CLUSTER_NAME)
@@ -20,10 +20,10 @@ VAULT_CHART_VERSION ?= 0.30.0
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
 OPERATOR_SDK_VERSION ?= v1.31.0
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION ?= 1.29.0
+ENVTEST_K8S_VERSION ?= 1.36.0
 
-CONTROLLER_TOOLS_VERSION ?= v0.14.0
-ENVTEST_VERSION ?= release-0.19
+CONTROLLER_TOOLS_VERSION ?= v0.21.0
+ENVTEST_VERSION ?= release-0.24
 GOLANGCI_LINT_VERSION ?= v1.64.8
 
 # VERSION defines the project version for the bundle.
@@ -76,9 +76,6 @@ BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
 
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
-# Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
-
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -295,7 +292,7 @@ $(KUSTOMIZE): $(LOCALBIN)
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
 $(CONTROLLER_GEN): $(LOCALBIN)
-	$(call go-install-tool-compat,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen,$(CONTROLLER_TOOLS_VERSION),go1.22.12)
+	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen,$(CONTROLLER_TOOLS_VERSION))
 
 .PHONY: envtest
 envtest: $(ENVTEST) ## Download setup-envtest locally if necessary.
@@ -323,20 +320,6 @@ mv $(1) $(1)-$(3) ;\
 ln -sf $(1)-$(3) $(1)
 endef
 
-# go-install-tool-compat: like go-install-tool but pins GOTOOLCHAIN for packages
-# incompatible with the system Go version (e.g. controller-gen v0.14 vs Go 1.25+).
-# $4 - Go toolchain version to use (e.g. go1.22.12)
-define go-install-tool-compat
-@[ -f "$(1)-$(3)" ] || { \
-set -e; \
-package=$(2)@$(3) ;\
-echo "Downloading $${package} (using toolchain $(4))" ;\
-rm -f $(1) || true ;\
-GOTOOLCHAIN=$(4) GOBIN=$(LOCALBIN) go install $${package} ;\
-mv $(1) $(1)-$(3) ;\
-} ;\
-ln -sf $(1)-$(3) $(1)
-endef
 
 .PHONY: operator-sdk
 OPERATOR_SDK ?= $(LOCALBIN)/operator-sdk
@@ -360,6 +343,7 @@ bundle: manifests kustomize operator-sdk ## Generate bundle manifests and metada
 	$(OPERATOR_SDK) generate kustomize manifests --interactive=false -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle $(BUNDLE_GEN_FLAGS)
+	echo '  com.redhat.openshift.versions: v4.16' >> bundle/metadata/annotations.yaml
 	$(OPERATOR_SDK) bundle validate ./bundle
 
 .PHONY: bundle-build
@@ -482,16 +466,15 @@ $(KIND): $(LOCALBIN)
 .PHONY: kubectl
 KUBECTL ?= $(LOCALBIN)/kubectl
 kubectl: ## Download kubectl locally if necessary.
-ifeq (,$(wildcard $(KUBECTL)))
-	@{ \
+	@[ -f "$(KUBECTL)-$(KUBECTL_VERSION)" ] || { \
 	set -e ;\
-	echo "Downloading kubectl to ${KUBECTL}..." ;\
+	echo "Downloading kubectl $(KUBECTL_VERSION) to $(KUBECTL)..." ;\
 	OS=$(shell go env GOOS) ;\
 	ARCH=$(shell go env GOARCH) ;\
-	curl --create-dirs -sSLo ${KUBECTL} https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/$${OS}/$${ARCH}/kubectl ;\
-	chmod +x ${KUBECTL} ;\
-	}
-endif
+	curl --create-dirs -sSLo $(KUBECTL)-$(KUBECTL_VERSION) https://dl.k8s.io/release/$(KUBECTL_VERSION)/bin/$${OS}/$${ARCH}/kubectl ;\
+	chmod +x $(KUBECTL)-$(KUBECTL_VERSION) ;\
+	} ;\
+	ln -sf $(KUBECTL)-$(KUBECTL_VERSION) $(KUBECTL)
 
 .PHONY: vault
 VAULT ?= $(LOCALBIN)/vault

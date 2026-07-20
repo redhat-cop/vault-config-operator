@@ -17,10 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/runtime"
+	"context"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -28,38 +28,40 @@ import (
 var identitytokenkeylog = logf.Log.WithName("identitytokenkey-resource")
 
 func (r *IdentityTokenKey) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
+	return ctrl.NewWebhookManagedBy(mgr, &IdentityTokenKey{}).
+		WithDefaulter(r).
+		WithValidator(r).
 		Complete()
 }
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-identitytokenkey,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=identitytokenkeys,verbs=create;update,versions=v1alpha1,name=midentitytokenkey.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Defaulter = &IdentityTokenKey{}
+var _ admission.Defaulter[*IdentityTokenKey] = &IdentityTokenKey{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *IdentityTokenKey) Default() {
-	identitytokenkeylog.Info("default", "name", r.Name)
+// Default implements webhook.CustomDefaulter so a webhook will be registered for the type
+func (r *IdentityTokenKey) Default(ctx context.Context, obj *IdentityTokenKey) error {
+	identitytokenkeylog.Info("default", "name", obj.Name)
+	return nil
 }
 
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-identitytokenkey,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=identitytokenkeys,verbs=create;update;delete,versions=v1alpha1,name=videntitytokenkey.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &IdentityTokenKey{}
+var _ admission.Validator[*IdentityTokenKey] = &IdentityTokenKey{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *IdentityTokenKey) ValidateCreate() (admission.Warnings, error) {
-	identitytokenkeylog.Info("validate create", "name", r.Name)
+// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *IdentityTokenKey) ValidateCreate(ctx context.Context, obj *IdentityTokenKey) (admission.Warnings, error) {
+	identitytokenkeylog.Info("validate create", "name", obj.Name)
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *IdentityTokenKey) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	identitytokenkeylog.Info("validate update", "name", r.Name)
+// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *IdentityTokenKey) ValidateUpdate(ctx context.Context, oldObj, newObj *IdentityTokenKey) (admission.Warnings, error) {
+	identitytokenkeylog.Info("validate update", "name", newObj.Name)
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *IdentityTokenKey) ValidateDelete() (admission.Warnings, error) {
-	identitytokenkeylog.Info("validate delete", "name", r.Name)
+// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *IdentityTokenKey) ValidateDelete(ctx context.Context, obj *IdentityTokenKey) (admission.Warnings, error) {
+	identitytokenkeylog.Info("validate delete", "name", obj.Name)
 	return nil, nil
 }

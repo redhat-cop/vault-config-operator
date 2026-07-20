@@ -11,7 +11,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
@@ -19,8 +18,7 @@ import (
 
 type pathUpdateTestCase struct {
 	name         string
-	newObj       webhook.Validator
-	oldObj       runtime.Object
+	validateFn   func() (admission.Warnings, error)
 	expectErr    bool
 	errSubstring string
 }
@@ -30,184 +28,314 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 		// --- Rejection tests (path changed) ---
 
 		{
-			name:         "AuthEngineMount rejects path change",
-			newObj:       &AuthEngineMount{Spec: AuthEngineMountSpec{Path: "new/path"}},
-			oldObj:       &AuthEngineMount{Spec: AuthEngineMountSpec{Path: "old/path"}},
+			name: "AuthEngineMount rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &AuthEngineMount{}
+				return r.ValidateUpdate(context.Background(),
+					&AuthEngineMount{Spec: AuthEngineMountSpec{Path: "old/path"}},
+					&AuthEngineMount{Spec: AuthEngineMountSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "AzureAuthEngineConfig rejects path change",
-			newObj:       &AzureAuthEngineConfig{Spec: AzureAuthEngineConfigSpec{Path: "new/path"}},
-			oldObj:       &AzureAuthEngineConfig{Spec: AzureAuthEngineConfigSpec{Path: "old/path"}},
+			name: "AzureAuthEngineConfig rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &AzureAuthEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&AzureAuthEngineConfig{Spec: AzureAuthEngineConfigSpec{Path: "old/path"}},
+					&AzureAuthEngineConfig{Spec: AzureAuthEngineConfigSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "AzureSecretEngineConfig rejects path change",
-			newObj:       &AzureSecretEngineConfig{Spec: AzureSecretEngineConfigSpec{Path: "new/path"}},
-			oldObj:       &AzureSecretEngineConfig{Spec: AzureSecretEngineConfigSpec{Path: "old/path"}},
+			name: "AzureSecretEngineConfig rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &AzureSecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&AzureSecretEngineConfig{Spec: AzureSecretEngineConfigSpec{Path: "old/path"}},
+					&AzureSecretEngineConfig{Spec: AzureSecretEngineConfigSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "AzureSecretEngineRole rejects path change",
-			newObj:       &AzureSecretEngineRole{Spec: AzureSecretEngineRoleSpec{Path: "new/path"}},
-			oldObj:       &AzureSecretEngineRole{Spec: AzureSecretEngineRoleSpec{Path: "old/path"}},
+			name: "AzureSecretEngineRole rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &AzureSecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&AzureSecretEngineRole{Spec: AzureSecretEngineRoleSpec{Path: "old/path"}},
+					&AzureSecretEngineRole{Spec: AzureSecretEngineRoleSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "CertAuthEngineConfig rejects path change",
-			newObj:       &CertAuthEngineConfig{Spec: CertAuthEngineConfigSpec{Path: "new/path"}},
-			oldObj:       &CertAuthEngineConfig{Spec: CertAuthEngineConfigSpec{Path: "old/path"}},
+			name: "CertAuthEngineConfig rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &CertAuthEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&CertAuthEngineConfig{Spec: CertAuthEngineConfigSpec{Path: "old/path"}},
+					&CertAuthEngineConfig{Spec: CertAuthEngineConfigSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "CertAuthEngineRole rejects path change",
-			newObj:       &CertAuthEngineRole{Spec: CertAuthEngineRoleSpec{Path: "new/path"}},
-			oldObj:       &CertAuthEngineRole{Spec: CertAuthEngineRoleSpec{Path: "old/path"}},
+			name: "CertAuthEngineRole rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &CertAuthEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&CertAuthEngineRole{Spec: CertAuthEngineRoleSpec{Path: "old/path"}},
+					&CertAuthEngineRole{Spec: CertAuthEngineRoleSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "DatabaseSecretEngineConfig rejects path change",
-			newObj:       &DatabaseSecretEngineConfig{Spec: DatabaseSecretEngineConfigSpec{Path: "new/path"}},
-			oldObj:       &DatabaseSecretEngineConfig{Spec: DatabaseSecretEngineConfigSpec{Path: "old/path"}},
+			name: "DatabaseSecretEngineConfig rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &DatabaseSecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&DatabaseSecretEngineConfig{Spec: DatabaseSecretEngineConfigSpec{Path: "old/path"}},
+					&DatabaseSecretEngineConfig{Spec: DatabaseSecretEngineConfigSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "DatabaseSecretEngineRole rejects path change",
-			newObj:       &DatabaseSecretEngineRole{Spec: DatabaseSecretEngineRoleSpec{Path: "new/path"}},
-			oldObj:       &DatabaseSecretEngineRole{Spec: DatabaseSecretEngineRoleSpec{Path: "old/path"}},
+			name: "DatabaseSecretEngineRole rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &DatabaseSecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&DatabaseSecretEngineRole{Spec: DatabaseSecretEngineRoleSpec{Path: "old/path"}},
+					&DatabaseSecretEngineRole{Spec: DatabaseSecretEngineRoleSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "DatabaseSecretEngineStaticRole rejects path change",
-			newObj:       &DatabaseSecretEngineStaticRole{Spec: DatabaseSecretEngineStaticRoleSpec{Path: "new/path"}},
-			oldObj:       &DatabaseSecretEngineStaticRole{Spec: DatabaseSecretEngineStaticRoleSpec{Path: "old/path"}},
+			name: "DatabaseSecretEngineStaticRole rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &DatabaseSecretEngineStaticRole{}
+				return r.ValidateUpdate(context.Background(),
+					&DatabaseSecretEngineStaticRole{Spec: DatabaseSecretEngineStaticRoleSpec{Path: "old/path"}},
+					&DatabaseSecretEngineStaticRole{Spec: DatabaseSecretEngineStaticRoleSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "GCPAuthEngineConfig rejects path change",
-			newObj:       &GCPAuthEngineConfig{Spec: GCPAuthEngineConfigSpec{Path: "new/path"}},
-			oldObj:       &GCPAuthEngineConfig{Spec: GCPAuthEngineConfigSpec{Path: "old/path"}},
+			name: "GCPAuthEngineConfig rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &GCPAuthEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&GCPAuthEngineConfig{Spec: GCPAuthEngineConfigSpec{Path: "old/path"}},
+					&GCPAuthEngineConfig{Spec: GCPAuthEngineConfigSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "GitHubSecretEngineConfig rejects path change",
-			newObj:       &GitHubSecretEngineConfig{Spec: GitHubSecretEngineConfigSpec{Path: "new/path"}},
-			oldObj:       &GitHubSecretEngineConfig{Spec: GitHubSecretEngineConfigSpec{Path: "old/path"}},
+			name: "GitHubSecretEngineConfig rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &GitHubSecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&GitHubSecretEngineConfig{Spec: GitHubSecretEngineConfigSpec{Path: "old/path"}},
+					&GitHubSecretEngineConfig{Spec: GitHubSecretEngineConfigSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "GitHubSecretEngineRole rejects path change",
-			newObj:       &GitHubSecretEngineRole{Spec: GitHubSecretEngineRoleSpec{Path: "new/path"}},
-			oldObj:       &GitHubSecretEngineRole{Spec: GitHubSecretEngineRoleSpec{Path: "old/path"}},
+			name: "GitHubSecretEngineRole rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &GitHubSecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&GitHubSecretEngineRole{Spec: GitHubSecretEngineRoleSpec{Path: "old/path"}},
+					&GitHubSecretEngineRole{Spec: GitHubSecretEngineRoleSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "JWTOIDCAuthEngineConfig rejects path change",
-			newObj:       &JWTOIDCAuthEngineConfig{Spec: JWTOIDCAuthEngineConfigSpec{Path: "new/path"}},
-			oldObj:       &JWTOIDCAuthEngineConfig{Spec: JWTOIDCAuthEngineConfigSpec{Path: "old/path"}},
+			name: "JWTOIDCAuthEngineConfig rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &JWTOIDCAuthEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&JWTOIDCAuthEngineConfig{Spec: JWTOIDCAuthEngineConfigSpec{Path: "old/path"}},
+					&JWTOIDCAuthEngineConfig{Spec: JWTOIDCAuthEngineConfigSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "KubernetesAuthEngineConfig rejects path change",
-			newObj:       &KubernetesAuthEngineConfig{Spec: KubernetesAuthEngineConfigSpec{Path: "new/path"}},
-			oldObj:       &KubernetesAuthEngineConfig{Spec: KubernetesAuthEngineConfigSpec{Path: "old/path"}},
+			name: "KubernetesAuthEngineConfig rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &KubernetesAuthEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&KubernetesAuthEngineConfig{Spec: KubernetesAuthEngineConfigSpec{Path: "old/path"}},
+					&KubernetesAuthEngineConfig{Spec: KubernetesAuthEngineConfigSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "KubernetesAuthEngineRole rejects path change",
-			newObj:       &KubernetesAuthEngineRole{Spec: KubernetesAuthEngineRoleSpec{Path: "new/path"}},
-			oldObj:       &KubernetesAuthEngineRole{Spec: KubernetesAuthEngineRoleSpec{Path: "old/path"}},
+			name: "KubernetesAuthEngineRole rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &KubernetesAuthEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&KubernetesAuthEngineRole{Spec: KubernetesAuthEngineRoleSpec{Path: "old/path"}},
+					&KubernetesAuthEngineRole{Spec: KubernetesAuthEngineRoleSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "KubernetesSecretEngineConfig rejects path change",
-			newObj:       &KubernetesSecretEngineConfig{Spec: KubernetesSecretEngineConfigSpec{Path: "new/path"}},
-			oldObj:       &KubernetesSecretEngineConfig{Spec: KubernetesSecretEngineConfigSpec{Path: "old/path"}},
+			name: "KubernetesSecretEngineConfig rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &KubernetesSecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&KubernetesSecretEngineConfig{Spec: KubernetesSecretEngineConfigSpec{Path: "old/path"}},
+					&KubernetesSecretEngineConfig{Spec: KubernetesSecretEngineConfigSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "KubernetesSecretEngineRole rejects path change",
-			newObj:       &KubernetesSecretEngineRole{Spec: KubernetesSecretEngineRoleSpec{Path: "new/path"}},
-			oldObj:       &KubernetesSecretEngineRole{Spec: KubernetesSecretEngineRoleSpec{Path: "old/path"}},
+			name: "KubernetesSecretEngineRole rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &KubernetesSecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&KubernetesSecretEngineRole{Spec: KubernetesSecretEngineRoleSpec{Path: "old/path"}},
+					&KubernetesSecretEngineRole{Spec: KubernetesSecretEngineRoleSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "LDAPAuthEngineConfig rejects path change",
-			newObj:       &LDAPAuthEngineConfig{Spec: LDAPAuthEngineConfigSpec{Path: "new/path"}},
-			oldObj:       &LDAPAuthEngineConfig{Spec: LDAPAuthEngineConfigSpec{Path: "old/path"}},
+			name: "LDAPAuthEngineConfig rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &LDAPAuthEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&LDAPAuthEngineConfig{Spec: LDAPAuthEngineConfigSpec{Path: "old/path"}},
+					&LDAPAuthEngineConfig{Spec: LDAPAuthEngineConfigSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "PKISecretEngineConfig rejects path change",
-			newObj:       &PKISecretEngineConfig{Spec: PKISecretEngineConfigSpec{Path: "new/path"}},
-			oldObj:       &PKISecretEngineConfig{Spec: PKISecretEngineConfigSpec{Path: "old/path"}},
+			name: "PKISecretEngineConfig rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &PKISecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&PKISecretEngineConfig{Spec: PKISecretEngineConfigSpec{Path: "old/path"}},
+					&PKISecretEngineConfig{Spec: PKISecretEngineConfigSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "PKISecretEngineRole rejects path change",
-			newObj:       &PKISecretEngineRole{Spec: PKISecretEngineRoleSpec{Path: "new/path"}},
-			oldObj:       &PKISecretEngineRole{Spec: PKISecretEngineRoleSpec{Path: "old/path"}},
+			name: "PKISecretEngineRole rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &PKISecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&PKISecretEngineRole{Spec: PKISecretEngineRoleSpec{Path: "old/path"}},
+					&PKISecretEngineRole{Spec: PKISecretEngineRoleSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "QuaySecretEngineConfig rejects path change",
-			newObj:       &QuaySecretEngineConfig{Spec: QuaySecretEngineConfigSpec{Path: "new/path"}},
-			oldObj:       &QuaySecretEngineConfig{Spec: QuaySecretEngineConfigSpec{Path: "old/path"}},
+			name: "QuaySecretEngineConfig rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &QuaySecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&QuaySecretEngineConfig{Spec: QuaySecretEngineConfigSpec{Path: "old/path"}},
+					&QuaySecretEngineConfig{Spec: QuaySecretEngineConfigSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "QuaySecretEngineRole rejects path change",
-			newObj:       &QuaySecretEngineRole{Spec: QuaySecretEngineRoleSpec{Path: "new/path"}},
-			oldObj:       &QuaySecretEngineRole{Spec: QuaySecretEngineRoleSpec{Path: "old/path"}},
+			name: "QuaySecretEngineRole rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &QuaySecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&QuaySecretEngineRole{Spec: QuaySecretEngineRoleSpec{Path: "old/path"}},
+					&QuaySecretEngineRole{Spec: QuaySecretEngineRoleSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "QuaySecretEngineStaticRole rejects path change",
-			newObj:       &QuaySecretEngineStaticRole{Spec: QuaySecretEngineStaticRoleSpec{Path: "new/path"}},
-			oldObj:       &QuaySecretEngineStaticRole{Spec: QuaySecretEngineStaticRoleSpec{Path: "old/path"}},
+			name: "QuaySecretEngineStaticRole rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &QuaySecretEngineStaticRole{}
+				return r.ValidateUpdate(context.Background(),
+					&QuaySecretEngineStaticRole{Spec: QuaySecretEngineStaticRoleSpec{Path: "old/path"}},
+					&QuaySecretEngineStaticRole{Spec: QuaySecretEngineStaticRoleSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "RabbitMQSecretEngineRole rejects path change",
-			newObj:       &RabbitMQSecretEngineRole{Spec: RabbitMQSecretEngineRoleSpec{Path: "new/path"}},
-			oldObj:       &RabbitMQSecretEngineRole{Spec: RabbitMQSecretEngineRoleSpec{Path: "old/path"}},
+			name: "RabbitMQSecretEngineRole rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &RabbitMQSecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&RabbitMQSecretEngineRole{Spec: RabbitMQSecretEngineRoleSpec{Path: "old/path"}},
+					&RabbitMQSecretEngineRole{Spec: RabbitMQSecretEngineRoleSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "RandomSecret rejects path change",
-			newObj:       &RandomSecret{Spec: RandomSecretSpec{Path: "new/path"}},
-			oldObj:       &RandomSecret{Spec: RandomSecretSpec{Path: "old/path"}},
+			name: "RandomSecret rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &RandomSecret{}
+				return r.ValidateUpdate(context.Background(),
+					&RandomSecret{Spec: RandomSecretSpec{Path: "old/path"}},
+					&RandomSecret{Spec: RandomSecretSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
-			name:         "SecretEngineMount rejects path change",
-			newObj:       &SecretEngineMount{Spec: SecretEngineMountSpec{Path: "new/path"}},
-			oldObj:       &SecretEngineMount{Spec: SecretEngineMountSpec{Path: "old/path"}},
+			name: "SecretEngineMount rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &SecretEngineMount{}
+				return r.ValidateUpdate(context.Background(),
+					&SecretEngineMount{Spec: SecretEngineMountSpec{Path: "old/path"}},
+					&SecretEngineMount{Spec: SecretEngineMountSpec{Path: "new/path"}},
+				)
+			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
 		},
@@ -216,233 +344,363 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 
 		{
 			name: "AuthEngineMount allows config-only update",
-			newObj: &AuthEngineMount{Spec: AuthEngineMountSpec{
-				Path:      "same/path",
-				AuthMount: AuthMount{Config: AuthMountConfig{DefaultLeaseTTL: "2h"}},
-			}},
-			oldObj: &AuthEngineMount{Spec: AuthEngineMountSpec{
-				Path:      "same/path",
-				AuthMount: AuthMount{Config: AuthMountConfig{DefaultLeaseTTL: "1h"}},
-			}},
+			validateFn: func() (admission.Warnings, error) {
+				r := &AuthEngineMount{}
+				return r.ValidateUpdate(context.Background(),
+					&AuthEngineMount{Spec: AuthEngineMountSpec{
+						Path:      "same/path",
+						AuthMount: AuthMount{Config: AuthMountConfig{DefaultLeaseTTL: "1h"}},
+					}},
+					&AuthEngineMount{Spec: AuthEngineMountSpec{
+						Path:      "same/path",
+						AuthMount: AuthMount{Config: AuthMountConfig{DefaultLeaseTTL: "2h"}},
+					}},
+				)
+			},
 			expectErr: false,
 		},
 		{
-			name:      "AzureAuthEngineConfig allows non-path update",
-			newObj:    &AzureAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: AzureAuthEngineConfigSpec{Path: "same/path"}},
-			oldObj:    &AzureAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: AzureAuthEngineConfigSpec{Path: "same/path"}},
+			name: "AzureAuthEngineConfig allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &AzureAuthEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&AzureAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: AzureAuthEngineConfigSpec{Path: "same/path"}},
+					&AzureAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: AzureAuthEngineConfigSpec{Path: "same/path"}},
+				)
+			},
 			expectErr: false,
 		},
 		{
 			name: "AzureSecretEngineConfig allows non-path update",
-			newObj: &AzureSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: AzureSecretEngineConfigSpec{
-				Path:             "same/path",
-				AzureCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
-			}},
-			oldObj: &AzureSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: AzureSecretEngineConfigSpec{
-				Path:             "same/path",
-				AzureCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
-			}},
+			validateFn: func() (admission.Warnings, error) {
+				r := &AzureSecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&AzureSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: AzureSecretEngineConfigSpec{
+						Path:             "same/path",
+						AzureCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+					&AzureSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: AzureSecretEngineConfigSpec{
+						Path:             "same/path",
+						AzureCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+				)
+			},
 			expectErr: false,
 		},
 		{
-			name:      "AzureSecretEngineRole allows non-path update",
-			newObj:    &AzureSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: AzureSecretEngineRoleSpec{Path: "same/path"}},
-			oldObj:    &AzureSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: AzureSecretEngineRoleSpec{Path: "same/path"}},
+			name: "AzureSecretEngineRole allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &AzureSecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&AzureSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: AzureSecretEngineRoleSpec{Path: "same/path"}},
+					&AzureSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: AzureSecretEngineRoleSpec{Path: "same/path"}},
+				)
+			},
 			expectErr: false,
 		},
 		{
-			name:      "CertAuthEngineConfig allows non-path update",
-			newObj:    &CertAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: CertAuthEngineConfigSpec{Path: "same/path", Name: "same-name"}},
-			oldObj:    &CertAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: CertAuthEngineConfigSpec{Path: "same/path", Name: "same-name"}},
+			name: "CertAuthEngineConfig allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &CertAuthEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&CertAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: CertAuthEngineConfigSpec{Path: "same/path", Name: "same-name"}},
+					&CertAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: CertAuthEngineConfigSpec{Path: "same/path", Name: "same-name"}},
+				)
+			},
 			expectErr: false,
 		},
 		{
-			name:      "CertAuthEngineRole allows non-path update",
-			newObj:    &CertAuthEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: CertAuthEngineRoleSpec{Path: "same/path"}},
-			oldObj:    &CertAuthEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: CertAuthEngineRoleSpec{Path: "same/path"}},
+			name: "CertAuthEngineRole allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &CertAuthEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&CertAuthEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: CertAuthEngineRoleSpec{Path: "same/path"}},
+					&CertAuthEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: CertAuthEngineRoleSpec{Path: "same/path"}},
+				)
+			},
 			expectErr: false,
 		},
 		{
 			name: "DatabaseSecretEngineConfig allows non-path update",
-			newObj: &DatabaseSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: DatabaseSecretEngineConfigSpec{
-				Path:            "same/path",
-				RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
-			}},
-			oldObj: &DatabaseSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: DatabaseSecretEngineConfigSpec{
-				Path:            "same/path",
-				RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
-			}},
+			validateFn: func() (admission.Warnings, error) {
+				r := &DatabaseSecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&DatabaseSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: DatabaseSecretEngineConfigSpec{
+						Path:            "same/path",
+						RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+					&DatabaseSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: DatabaseSecretEngineConfigSpec{
+						Path:            "same/path",
+						RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+				)
+			},
 			expectErr: false,
 		},
 		{
-			name:      "DatabaseSecretEngineRole allows non-path update",
-			newObj:    &DatabaseSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: DatabaseSecretEngineRoleSpec{Path: "same/path"}},
-			oldObj:    &DatabaseSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: DatabaseSecretEngineRoleSpec{Path: "same/path"}},
+			name: "DatabaseSecretEngineRole allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &DatabaseSecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&DatabaseSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: DatabaseSecretEngineRoleSpec{Path: "same/path"}},
+					&DatabaseSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: DatabaseSecretEngineRoleSpec{Path: "same/path"}},
+				)
+			},
 			expectErr: false,
 		},
 		{
 			name: "DatabaseSecretEngineStaticRole allows non-path update",
-			newObj: &DatabaseSecretEngineStaticRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: DatabaseSecretEngineStaticRoleSpec{
-				Path:           "same/path",
-				DBSEStaticRole: DBSEStaticRole{PasswordCredentialConfig: &PasswordCredentialConfig{}},
-			}},
-			oldObj: &DatabaseSecretEngineStaticRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: DatabaseSecretEngineStaticRoleSpec{
-				Path:           "same/path",
-				DBSEStaticRole: DBSEStaticRole{PasswordCredentialConfig: &PasswordCredentialConfig{}},
-			}},
+			validateFn: func() (admission.Warnings, error) {
+				r := &DatabaseSecretEngineStaticRole{}
+				return r.ValidateUpdate(context.Background(),
+					&DatabaseSecretEngineStaticRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: DatabaseSecretEngineStaticRoleSpec{
+						Path:           "same/path",
+						DBSEStaticRole: DBSEStaticRole{PasswordCredentialConfig: &PasswordCredentialConfig{}},
+					}},
+					&DatabaseSecretEngineStaticRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: DatabaseSecretEngineStaticRoleSpec{
+						Path:           "same/path",
+						DBSEStaticRole: DBSEStaticRole{PasswordCredentialConfig: &PasswordCredentialConfig{}},
+					}},
+				)
+			},
 			expectErr: false,
 		},
 		{
-			name:      "GCPAuthEngineConfig allows non-path update",
-			newObj:    &GCPAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: GCPAuthEngineConfigSpec{Path: "same/path"}},
-			oldObj:    &GCPAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: GCPAuthEngineConfigSpec{Path: "same/path"}},
+			name: "GCPAuthEngineConfig allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &GCPAuthEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&GCPAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: GCPAuthEngineConfigSpec{Path: "same/path"}},
+					&GCPAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: GCPAuthEngineConfigSpec{Path: "same/path"}},
+				)
+			},
 			expectErr: false,
 		},
 		{
 			name: "GitHubSecretEngineConfig allows non-path update",
-			newObj: &GitHubSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: GitHubSecretEngineConfigSpec{
-				Path:            "same/path",
-				SSHKeyReference: SSHKeyConfig{Secret: &corev1.LocalObjectReference{Name: "ssh"}},
-			}},
-			oldObj: &GitHubSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: GitHubSecretEngineConfigSpec{
-				Path:            "same/path",
-				SSHKeyReference: SSHKeyConfig{Secret: &corev1.LocalObjectReference{Name: "ssh"}},
-			}},
+			validateFn: func() (admission.Warnings, error) {
+				r := &GitHubSecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&GitHubSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: GitHubSecretEngineConfigSpec{
+						Path:            "same/path",
+						SSHKeyReference: SSHKeyConfig{Secret: &corev1.LocalObjectReference{Name: "ssh"}},
+					}},
+					&GitHubSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: GitHubSecretEngineConfigSpec{
+						Path:            "same/path",
+						SSHKeyReference: SSHKeyConfig{Secret: &corev1.LocalObjectReference{Name: "ssh"}},
+					}},
+				)
+			},
 			expectErr: false,
 		},
 		{
-			name:      "GitHubSecretEngineRole allows non-path update",
-			newObj:    &GitHubSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: GitHubSecretEngineRoleSpec{Path: "same/path"}},
-			oldObj:    &GitHubSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: GitHubSecretEngineRoleSpec{Path: "same/path"}},
+			name: "GitHubSecretEngineRole allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &GitHubSecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&GitHubSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: GitHubSecretEngineRoleSpec{Path: "same/path"}},
+					&GitHubSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: GitHubSecretEngineRoleSpec{Path: "same/path"}},
+				)
+			},
 			expectErr: false,
 		},
 		{
-			name:      "JWTOIDCAuthEngineConfig allows non-path update",
-			newObj:    &JWTOIDCAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: JWTOIDCAuthEngineConfigSpec{Path: "same/path"}},
-			oldObj:    &JWTOIDCAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: JWTOIDCAuthEngineConfigSpec{Path: "same/path"}},
+			name: "JWTOIDCAuthEngineConfig allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &JWTOIDCAuthEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&JWTOIDCAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: JWTOIDCAuthEngineConfigSpec{Path: "same/path"}},
+					&JWTOIDCAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: JWTOIDCAuthEngineConfigSpec{Path: "same/path"}},
+				)
+			},
 			expectErr: false,
 		},
 		{
-			name:      "KubernetesAuthEngineConfig allows non-path update",
-			newObj:    &KubernetesAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: KubernetesAuthEngineConfigSpec{Path: "same/path"}},
-			oldObj:    &KubernetesAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: KubernetesAuthEngineConfigSpec{Path: "same/path"}},
+			name: "KubernetesAuthEngineConfig allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &KubernetesAuthEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&KubernetesAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: KubernetesAuthEngineConfigSpec{Path: "same/path"}},
+					&KubernetesAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: KubernetesAuthEngineConfigSpec{Path: "same/path"}},
+				)
+			},
 			expectErr: false,
 		},
 		{
 			name: "KubernetesAuthEngineRole allows non-path update",
-			newObj: &KubernetesAuthEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: KubernetesAuthEngineRoleSpec{
-				Path:             "same/path",
-				TargetNamespaces: vaultutils.TargetNamespaceConfig{TargetNamespaces: []string{"ns1"}},
-			}},
-			oldObj: &KubernetesAuthEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: KubernetesAuthEngineRoleSpec{
-				Path:             "same/path",
-				TargetNamespaces: vaultutils.TargetNamespaceConfig{TargetNamespaces: []string{"ns1"}},
-			}},
+			validateFn: func() (admission.Warnings, error) {
+				r := &KubernetesAuthEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&KubernetesAuthEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: KubernetesAuthEngineRoleSpec{
+						Path:             "same/path",
+						TargetNamespaces: vaultutils.TargetNamespaceConfig{TargetNamespaces: []string{"ns1"}},
+					}},
+					&KubernetesAuthEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: KubernetesAuthEngineRoleSpec{
+						Path:             "same/path",
+						TargetNamespaces: vaultutils.TargetNamespaceConfig{TargetNamespaces: []string{"ns1"}},
+					}},
+				)
+			},
 			expectErr: false,
 		},
 		{
 			name: "KubernetesSecretEngineConfig allows non-path update",
-			newObj: &KubernetesSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: KubernetesSecretEngineConfigSpec{
-				Path:         "same/path",
-				JWTReference: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "jwt"}},
-			}},
-			oldObj: &KubernetesSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: KubernetesSecretEngineConfigSpec{
-				Path:         "same/path",
-				JWTReference: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "jwt"}},
-			}},
+			validateFn: func() (admission.Warnings, error) {
+				r := &KubernetesSecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&KubernetesSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: KubernetesSecretEngineConfigSpec{
+						Path:         "same/path",
+						JWTReference: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "jwt"}},
+					}},
+					&KubernetesSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: KubernetesSecretEngineConfigSpec{
+						Path:         "same/path",
+						JWTReference: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "jwt"}},
+					}},
+				)
+			},
 			expectErr: false,
 		},
 		{
-			name:      "KubernetesSecretEngineRole allows non-path update",
-			newObj:    &KubernetesSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: KubernetesSecretEngineRoleSpec{Path: "same/path"}},
-			oldObj:    &KubernetesSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: KubernetesSecretEngineRoleSpec{Path: "same/path"}},
+			name: "KubernetesSecretEngineRole allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &KubernetesSecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&KubernetesSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: KubernetesSecretEngineRoleSpec{Path: "same/path"}},
+					&KubernetesSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: KubernetesSecretEngineRoleSpec{Path: "same/path"}},
+				)
+			},
 			expectErr: false,
 		},
 		{
-			name:      "LDAPAuthEngineConfig allows non-path update",
-			newObj:    &LDAPAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: LDAPAuthEngineConfigSpec{Path: "same/path"}},
-			oldObj:    &LDAPAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: LDAPAuthEngineConfigSpec{Path: "same/path"}},
+			name: "LDAPAuthEngineConfig allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &LDAPAuthEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&LDAPAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: LDAPAuthEngineConfigSpec{Path: "same/path"}},
+					&LDAPAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: LDAPAuthEngineConfigSpec{Path: "same/path"}},
+				)
+			},
 			expectErr: false,
 		},
 		{
 			name: "PKISecretEngineConfig allows non-path update",
-			newObj: &PKISecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: PKISecretEngineConfigSpec{
-				Path:    "same/path",
-				PKIType: PKIType{Type: "root", PrivateKeyType: "internal"},
-			}},
-			oldObj: &PKISecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: PKISecretEngineConfigSpec{
-				Path:    "same/path",
-				PKIType: PKIType{Type: "root", PrivateKeyType: "internal"},
-			}},
+			validateFn: func() (admission.Warnings, error) {
+				r := &PKISecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&PKISecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: PKISecretEngineConfigSpec{
+						Path:    "same/path",
+						PKIType: PKIType{Type: "root", PrivateKeyType: "internal"},
+					}},
+					&PKISecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: PKISecretEngineConfigSpec{
+						Path:    "same/path",
+						PKIType: PKIType{Type: "root", PrivateKeyType: "internal"},
+					}},
+				)
+			},
 			expectErr: false,
 		},
 		{
-			name:      "PKISecretEngineRole allows non-path update",
-			newObj:    &PKISecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: PKISecretEngineRoleSpec{Path: "same/path"}},
-			oldObj:    &PKISecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: PKISecretEngineRoleSpec{Path: "same/path"}},
+			name: "PKISecretEngineRole allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &PKISecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&PKISecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: PKISecretEngineRoleSpec{Path: "same/path"}},
+					&PKISecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: PKISecretEngineRoleSpec{Path: "same/path"}},
+				)
+			},
 			expectErr: false,
 		},
 		{
 			name: "QuaySecretEngineConfig allows non-path update",
-			newObj: &QuaySecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: QuaySecretEngineConfigSpec{
-				Path:            "same/path",
-				RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
-			}},
-			oldObj: &QuaySecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: QuaySecretEngineConfigSpec{
-				Path:            "same/path",
-				RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
-			}},
+			validateFn: func() (admission.Warnings, error) {
+				r := &QuaySecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&QuaySecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: QuaySecretEngineConfigSpec{
+						Path:            "same/path",
+						RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+					&QuaySecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: QuaySecretEngineConfigSpec{
+						Path:            "same/path",
+						RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+				)
+			},
 			expectErr: false,
 		},
 		{
-			name:      "QuaySecretEngineRole allows non-path update",
-			newObj:    &QuaySecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: QuaySecretEngineRoleSpec{Path: "same/path"}},
-			oldObj:    &QuaySecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: QuaySecretEngineRoleSpec{Path: "same/path"}},
+			name: "QuaySecretEngineRole allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &QuaySecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&QuaySecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: QuaySecretEngineRoleSpec{Path: "same/path"}},
+					&QuaySecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: QuaySecretEngineRoleSpec{Path: "same/path"}},
+				)
+			},
 			expectErr: false,
 		},
 		{
-			name:      "QuaySecretEngineStaticRole allows non-path update",
-			newObj:    &QuaySecretEngineStaticRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: QuaySecretEngineStaticRoleSpec{Path: "same/path"}},
-			oldObj:    &QuaySecretEngineStaticRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: QuaySecretEngineStaticRoleSpec{Path: "same/path"}},
+			name: "QuaySecretEngineStaticRole allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &QuaySecretEngineStaticRole{}
+				return r.ValidateUpdate(context.Background(),
+					&QuaySecretEngineStaticRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: QuaySecretEngineStaticRoleSpec{Path: "same/path"}},
+					&QuaySecretEngineStaticRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: QuaySecretEngineStaticRoleSpec{Path: "same/path"}},
+				)
+			},
 			expectErr: false,
 		},
 		{
-			name:      "RabbitMQSecretEngineRole allows non-path update",
-			newObj:    &RabbitMQSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: RabbitMQSecretEngineRoleSpec{Path: "same/path"}},
-			oldObj:    &RabbitMQSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: RabbitMQSecretEngineRoleSpec{Path: "same/path"}},
+			name: "RabbitMQSecretEngineRole allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &RabbitMQSecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&RabbitMQSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: RabbitMQSecretEngineRoleSpec{Path: "same/path"}},
+					&RabbitMQSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: RabbitMQSecretEngineRoleSpec{Path: "same/path"}},
+				)
+			},
 			expectErr: false,
 		},
 		{
 			name: "RandomSecret allows non-path update",
-			newObj: &RandomSecret{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: RandomSecretSpec{
-				Path:         "same/path",
-				SecretKey:    "key",
-				SecretFormat: VaultPasswordPolicy{PasswordPolicyName: "default"},
-			}},
-			oldObj: &RandomSecret{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: RandomSecretSpec{
-				Path:         "same/path",
-				SecretKey:    "key",
-				SecretFormat: VaultPasswordPolicy{PasswordPolicyName: "default"},
-			}},
+			validateFn: func() (admission.Warnings, error) {
+				r := &RandomSecret{}
+				return r.ValidateUpdate(context.Background(),
+					&RandomSecret{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: RandomSecretSpec{
+						Path:         "same/path",
+						SecretKey:    "key",
+						SecretFormat: VaultPasswordPolicy{PasswordPolicyName: "default"},
+					}},
+					&RandomSecret{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: RandomSecretSpec{
+						Path:         "same/path",
+						SecretKey:    "key",
+						SecretFormat: VaultPasswordPolicy{PasswordPolicyName: "default"},
+					}},
+				)
+			},
 			expectErr: false,
 		},
 		{
 			name: "SecretEngineMount allows config-only update",
-			newObj: &SecretEngineMount{Spec: SecretEngineMountSpec{
-				Path:  "same/path",
-				Mount: Mount{Config: MountConfig{DefaultLeaseTTL: "2h"}},
-			}},
-			oldObj: &SecretEngineMount{Spec: SecretEngineMountSpec{
-				Path:  "same/path",
-				Mount: Mount{Config: MountConfig{DefaultLeaseTTL: "1h"}},
-			}},
+			validateFn: func() (admission.Warnings, error) {
+				r := &SecretEngineMount{}
+				return r.ValidateUpdate(context.Background(),
+					&SecretEngineMount{Spec: SecretEngineMountSpec{
+						Path:  "same/path",
+						Mount: Mount{Config: MountConfig{DefaultLeaseTTL: "1h"}},
+					}},
+					&SecretEngineMount{Spec: SecretEngineMountSpec{
+						Path:  "same/path",
+						Mount: Mount{Config: MountConfig{DefaultLeaseTTL: "2h"}},
+					}},
+				)
+			},
 			expectErr: false,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := tc.newObj.ValidateUpdate(tc.oldObj)
+			_, err := tc.validateFn()
 
 			if tc.expectErr {
 				if err == nil {

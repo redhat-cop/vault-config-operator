@@ -49,7 +49,6 @@ type AzureSecretEngineConfigSpec struct {
 	// +kubebuilder:validation:Optional
 	AzureCredentials vaultutils.RootCredentialConfig `json:"azureCredentials,omitempty"`
 
-	// +kubebuilder:validation:Required
 	AzureSEConfig `json:",inline"`
 }
 

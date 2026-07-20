@@ -17,12 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"errors"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -30,46 +29,48 @@ import (
 var quaysecretenginestaticrolelog = logf.Log.WithName("quaysecretenginestaticrole-resource")
 
 func (r *QuaySecretEngineStaticRole) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
+	return ctrl.NewWebhookManagedBy(mgr, r).
+		WithDefaulter(r).
+		WithValidator(r).
 		Complete()
 }
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-quaysecretenginestaticrole,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=quaysecretenginestaticroles,verbs=create,versions=v1alpha1,name=mquaysecretenginestaticrole.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Defaulter = &QuaySecretEngineStaticRole{}
+var _ admission.Defaulter[*QuaySecretEngineStaticRole] = &QuaySecretEngineStaticRole{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *QuaySecretEngineStaticRole) Default() {
-	quaysecretenginestaticrolelog.Info("default", "name", r.Name)
+// Default implements webhook.CustomDefaulter so a webhook will be registered for the type
+func (r *QuaySecretEngineStaticRole) Default(ctx context.Context, obj *QuaySecretEngineStaticRole) error {
+	quaysecretenginestaticrolelog.Info("default", "name", obj.Name)
+	return nil
 }
 
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-quaysecretenginestaticrole,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=quaysecretenginestaticroles,verbs=create;update,versions=v1alpha1,name=vquaysecretenginestaticrole.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &QuaySecretEngineStaticRole{}
+var _ admission.Validator[*QuaySecretEngineStaticRole] = &QuaySecretEngineStaticRole{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *QuaySecretEngineStaticRole) ValidateCreate() (admission.Warnings, error) {
-	quaysecretenginestaticrolelog.Info("validate create", "name", r.Name)
+// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *QuaySecretEngineStaticRole) ValidateCreate(ctx context.Context, obj *QuaySecretEngineStaticRole) (admission.Warnings, error) {
+	quaysecretenginestaticrolelog.Info("validate create", "name", obj.Name)
 
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *QuaySecretEngineStaticRole) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	quaysecretenginestaticrolelog.Info("validate update", "name", r.Name)
+// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *QuaySecretEngineStaticRole) ValidateUpdate(ctx context.Context, oldObj, newObj *QuaySecretEngineStaticRole) (admission.Warnings, error) {
+	quaysecretenginestaticrolelog.Info("validate update", "name", newObj.Name)
 
 	// the path cannot be updated
-	if r.Spec.Path != old.(*QuaySecretEngineStaticRole).Spec.Path {
+	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}
 
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *QuaySecretEngineStaticRole) ValidateDelete() (admission.Warnings, error) {
-	quaysecretenginestaticrolelog.Info("validate delete", "name", r.Name)
+// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *QuaySecretEngineStaticRole) ValidateDelete(ctx context.Context, obj *QuaySecretEngineStaticRole) (admission.Warnings, error) {
+	quaysecretenginestaticrolelog.Info("validate delete", "name", obj.Name)
 
 	return nil, nil
 }

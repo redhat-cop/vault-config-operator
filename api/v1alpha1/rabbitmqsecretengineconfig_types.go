@@ -49,7 +49,6 @@ type RabbitMQSecretEngineConfigSpec struct {
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
 
-	// +kubebuilder:validation:Required
 	RMQSEConfig `json:",inline"`
 
 	// RootCredentials specifies how to retrieve the credentials for this RabbitMQEngine connection.

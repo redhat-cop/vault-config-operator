@@ -17,10 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/runtime"
+	"context"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -28,8 +28,9 @@ import (
 var grouplog = logf.Log.WithName("group-resource")
 
 func (r *Group) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
+	return ctrl.NewWebhookManagedBy(mgr, &Group{}).
+		WithDefaulter(r).
+		WithValidator(r).
 		Complete()
 }
 
@@ -37,39 +38,40 @@ func (r *Group) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 //+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-group,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=groups,verbs=create;update,versions=v1alpha1,name=mgroup.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Defaulter = &Group{}
+var _ admission.Defaulter[*Group] = &Group{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *Group) Default() {
-	grouplog.Info("default", "name", r.Name)
+// Default implements webhook.CustomDefaulter so a webhook will be registered for the type
+func (r *Group) Default(ctx context.Context, obj *Group) error {
+	grouplog.Info("default", "name", obj.Name)
 
 	// TODO(user): fill in your defaulting logic.
+	return nil
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-group,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=groups,verbs=create;update,versions=v1alpha1,name=vgroup.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &Group{}
+var _ admission.Validator[*Group] = &Group{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *Group) ValidateCreate() (admission.Warnings, error) {
-	grouplog.Info("validate create", "name", r.Name)
+// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *Group) ValidateCreate(ctx context.Context, obj *Group) (admission.Warnings, error) {
+	grouplog.Info("validate create", "name", obj.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *Group) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	grouplog.Info("validate update", "name", r.Name)
+// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *Group) ValidateUpdate(ctx context.Context, oldObj, newObj *Group) (admission.Warnings, error) {
+	grouplog.Info("validate update", "name", newObj.Name)
 
 	// TODO(user): fill in your validation logic upon object update.
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *Group) ValidateDelete() (admission.Warnings, error) {
-	grouplog.Info("validate delete", "name", r.Name)
+// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *Group) ValidateDelete(ctx context.Context, obj *Group) (admission.Warnings, error) {
+	grouplog.Info("validate delete", "name", obj.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil, nil
