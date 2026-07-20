@@ -281,6 +281,11 @@ These rules govern the interaction between `kubebuilder:default`, `omitempty`, a
 - **Never add finalizers manually in controllers.** `ManageOutcome` adds the finalizer automatically after first successful reconcile when `IsDeletable()` returns true.
 - **Never create a new logger in controllers or types.** Use `log.FromContext(ctx)` or `r.Log` — never `logr.New()` or `ctrl.Log`.
 
+#### Vault Mount Path Composition
+- Engine types (auth engines, secret engines) compose their Vault mount path as `{spec.path}/{metadata.name}` — for example, if `spec.path` is `kubernetes` and `metadata.name` is `my-role`, the resulting Vault path is `kubernetes/my-role`. The `spec.path` field specifies the engine mount point, NOT the full path to the Vault object.
+- `GetPath()` uses `d.Spec.Name` (if set) as the object name override, falling back to `d.Name` (metadata name). The full Vault API path is then constructed by the reconciler from the mount path plus the object-specific suffix.
+- Examples and documentation must always show the composed path, not just `spec.path` alone, to avoid confusion about where Vault objects are created.
+
 #### Vault API Gotchas
 - Vault's read response often restructures fields compared to the write payload (e.g., `connection_url` becomes nested in `connection_details`). `IsEquivalentToDesiredState` must transform the desired state to match Vault's read format before comparison.
 - Vault returns extra fields not managed by the operator. The `filterPayloadToDesiredKeys` helper filters the Vault read response to only the keys present in the desired state map — any Vault-returned key not in `desiredState` is excluded before `reflect.DeepEqual`. This prevents false drift from unmanaged fields.

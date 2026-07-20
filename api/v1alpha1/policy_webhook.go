@@ -47,7 +47,7 @@ func (r *Policy) Default(ctx context.Context, obj *Policy) error {
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-//kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-policy,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=policies,verbs=create;update,versions=v1alpha1,name=vpolicy.kb.io,admissionReviewVersions={v1,v1beta1}
+//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-policy,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=policies,verbs=create;update,versions=v1alpha1,name=vpolicy.kb.io,admissionReviewVersions={v1,v1beta1}
 
 var _ admission.Validator[*Policy] = &Policy{}
 

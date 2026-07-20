@@ -43,7 +43,7 @@ var _ admission.Defaulter[*KubernetesAuthEngineRole] = &KubernetesAuthEngineRole
 
 // Default implements webhook.CustomDefaulter so a webhook will be registered for the type
 func (r *KubernetesAuthEngineRole) Default(ctx context.Context, obj *KubernetesAuthEngineRole) error {
-	authenginemountlog.Info("default", "name", obj.Name)
+	kubernetesauthenginerolelog.Info("default", "name", obj.Name)
 	return nil
 }
 

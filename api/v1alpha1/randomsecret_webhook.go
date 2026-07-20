@@ -43,7 +43,7 @@ var _ admission.Defaulter[*RandomSecret] = &RandomSecret{}
 
 // Default implements webhook.CustomDefaulter so a webhook will be registered for the type
 func (r *RandomSecret) Default(ctx context.Context, obj *RandomSecret) error {
-	authenginemountlog.Info("default", "name", obj.Name)
+	randomsecretlog.Info("default", "name", obj.Name)
 	return nil
 }
 

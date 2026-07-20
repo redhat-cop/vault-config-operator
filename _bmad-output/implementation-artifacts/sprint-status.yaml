@@ -35,7 +35,9 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-07-19
+last_updated: 2026-07-20
+# Epic 8 done + retrospective completed 2026-07-20
+# Story 9.0 added to backlog 2026-07-20
 # Story 8.4 done 2026-07-19
 # Story 8.4 review 2026-07-19
 # Story 8.4 in-progress 2026-07-19
@@ -407,15 +409,16 @@ development_status:
   # --- Phase 2: Expansion — Dependency Upgrades + Engine Coverage ---
 
   # Epic 8: Go + Kubernetes Stack Upgrade (targets updated 2026-07-08: Go 1.26, CR v0.24, K8s v0.36)
-  epic-8: in-progress
+  epic-8: done
   8-1-upgrade-go-from-1-22-to-1-26: done
   8-2-upgrade-controller-runtime-and-k8s-libs: done
   8-3-upgrade-makefile-k8s-coupled-tool-versions: done
   8-4-adapt-ci-pipeline-and-dockerfiles-for-new-versions: done
-  epic-8-retrospective: optional
+  epic-8-retrospective: done
 
   # Epic 9: Vault API + Peripheral Dependency Upgrades
   epic-9: backlog
+  9-0-fix-rabbitmq-vhost-vhosttopic-serialization-bug: backlog
   9-1-upgrade-vault-api-from-v1-14-to-v1-23: backlog
   9-2-upgrade-test-dependencies-ginkgo-gomega: backlog
   9-3-upgrade-peripheral-and-security-dependencies: backlog

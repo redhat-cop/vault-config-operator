@@ -43,7 +43,7 @@ var _ admission.Defaulter[*DatabaseSecretEngineRole] = &DatabaseSecretEngineRole
 
 // Default implements webhook.CustomDefaulter so a webhook will be registered for the type
 func (r *DatabaseSecretEngineRole) Default(ctx context.Context, obj *DatabaseSecretEngineRole) error {
-	authenginemountlog.Info("default", "name", obj.Name)
+	databasesecretenginerolelog.Info("default", "name", obj.Name)
 	return nil
 }
 
