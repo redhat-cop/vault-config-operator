@@ -1,6 +1,6 @@
 # Story 9.0: Fix RabbitMQ vhost/vhostTopic multi-entry serialization bug
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -22,23 +22,23 @@ So that users can correctly configure multiple vhost or vhostTopic entries on a 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Fix `convertVhostsToJson` map reassignment bug (AC: #1)
-  - [ ] 1.1 Change `vhostData = map[string]any{...}` to `vhostData[vhost.VhostName] = vhost.Permissions` in `api/v1alpha1/rabbitmqsecretenginerole_types.go:201-203`
-- [ ] Task 2: Fix `convertTopicsToJson` map reassignment bugs (AC: #2)
-  - [ ] 2.1 Move `topicData` creation inside the outer loop (scope per vhost) — line 214 must move to inside the `for _, vhost := range vhosts` loop
-  - [ ] 2.2 Change `topicData = map[string]any{...}` to `topicData[topic.TopicName] = topic.Permissions` (line 217-219)
-  - [ ] 2.3 Change `vhostData = map[string]any{...}` to `vhostData[vhost.VhostName] = topicData` (line 221-223)
-- [ ] Task 3: Replace `log.Fatal` with proper error handling (AC: #3)
-  - [ ] 3.1 Remove the `"log"` stdlib import
-  - [ ] 3.2 In both `convertVhostsToJson` and `convertTopicsToJson`, replace `log.Fatal(err)` with a panic or structured error propagation — `json.Marshal` of a `map[string]any` with string keys and simple struct values will never fail in practice, but the stdlib `log.Fatal` calls `os.Exit(1)` which would kill the operator process
-- [ ] Task 4: Add multi-entry unit tests with independently-constructed expected values (AC: #1, #2, #3)
-  - [ ] 4.1 Add `TestConvertVhostsToJsonMultipleEntries` — construct 2+ vhosts, call `convertVhostsToJson`, unmarshal the result, assert ALL entries are present (not just the last one)
-  - [ ] 4.2 Add `TestConvertTopicsToJsonMultipleEntries` — construct 2+ vhostTopics with 2+ topics each, call `convertTopicsToJson`, unmarshal the result, assert all vhosts and all topics within each vhost are present
-  - [ ] 4.3 Add `TestRMQSERoleRabbitMQToMapMultipleVhosts` — construct a role with multiple vhosts and vhostTopics, call `rabbitMQToMap()`, parse the resulting JSON strings, and verify against independently-constructed Vault API payloads (do NOT use `convertVhostsToJson`/`convertTopicsToJson` to build expected values)
-  - [ ] 4.4 Add `TestRabbitMQSecretEngineRoleIsEquivalentMultipleVhosts` — verify `IsEquivalentToDesiredState` works correctly with multi-entry payloads using independently-constructed Vault-read-shaped fixtures
-- [ ] Task 5: Run `make test` and `make integration` (AC: #3, #4)
-  - [ ] 5.1 Run `make test` — verify all unit tests pass
-  - [ ] 5.2 Run `make integration` — verify all integration tests pass (existing single-entry fixture)
+- [x] Task 1: Fix `convertVhostsToJson` map reassignment bug (AC: #1)
+  - [x] 1.1 Change `vhostData = map[string]any{...}` to `vhostData[vhost.VhostName] = vhost.Permissions` in `api/v1alpha1/rabbitmqsecretenginerole_types.go:201-203`
+- [x] Task 2: Fix `convertTopicsToJson` map reassignment bugs (AC: #2)
+  - [x] 2.1 Move `topicData` creation inside the outer loop (scope per vhost) — line 214 must move to inside the `for _, vhost := range vhosts` loop
+  - [x] 2.2 Change `topicData = map[string]any{...}` to `topicData[topic.TopicName] = topic.Permissions` (line 217-219)
+  - [x] 2.3 Change `vhostData = map[string]any{...}` to `vhostData[vhost.VhostName] = topicData` (line 221-223)
+- [x] Task 3: Replace `log.Fatal` with proper error handling (AC: #3)
+  - [x] 3.1 Remove the `"log"` stdlib import
+  - [x] 3.2 In both `convertVhostsToJson` and `convertTopicsToJson`, replace `log.Fatal(err)` with a panic or structured error propagation — `json.Marshal` of a `map[string]any` with string keys and simple struct values will never fail in practice, but the stdlib `log.Fatal` calls `os.Exit(1)` which would kill the operator process
+- [x] Task 4: Add multi-entry unit tests with independently-constructed expected values (AC: #1, #2, #3)
+  - [x] 4.1 Add `TestConvertVhostsToJsonMultipleEntries` — construct 2+ vhosts, call `convertVhostsToJson`, unmarshal the result, assert ALL entries are present (not just the last one)
+  - [x] 4.2 Add `TestConvertTopicsToJsonMultipleEntries` — construct 2+ vhostTopics with 2+ topics each, call `convertTopicsToJson`, unmarshal the result, assert all vhosts and all topics within each vhost are present
+  - [x] 4.3 Add `TestRMQSERoleRabbitMQToMapMultipleVhosts` — construct a role with multiple vhosts and vhostTopics, call `rabbitMQToMap()`, parse the resulting JSON strings, and verify against independently-constructed Vault API payloads (do NOT use `convertVhostsToJson`/`convertTopicsToJson` to build expected values)
+  - [x] 4.4 Add `TestRabbitMQSecretEngineRoleIsEquivalentMultipleVhosts` — verify `IsEquivalentToDesiredState` works correctly with multi-entry payloads using independently-constructed Vault-read-shaped fixtures
+- [x] Task 5: Run `make test` and `make integration` (AC: #3, #4)
+  - [x] 5.1 Run `make test` — verify all unit tests pass
+  - [x] 5.2 Run `make integration` — verify all integration tests pass (existing single-entry fixture)
 
 ## Dev Notes
 
@@ -120,7 +120,10 @@ func convertVhostsToJson(vhosts []Vhost) string {
 func convertTopicsToJson(vhosts []VhostTopic) string {
 	vhostData := make(map[string]any)
 	for _, vhost := range vhosts {
-		topicData := make(map[string]any)
+		topicData, _ := vhostData[vhost.VhostName].(map[string]any)
+		if topicData == nil {
+			topicData = make(map[string]any)
+		}
 		for _, topic := range vhost.Topics {
 			topicData[topic.TopicName] = topic.Permissions
 		}
@@ -213,10 +216,41 @@ Replace `"log"` import with `"fmt"` (for `fmt.Sprintf` in the panic message). Th
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+None — implementation was straightforward with no debugging needed.
+
 ### Completion Notes List
 
+- Fixed `convertVhostsToJson` map reassignment bug: changed `vhostData = map[string]any{...}` to `vhostData[vhost.VhostName] = vhost.Permissions` so all vhost entries are preserved across loop iterations.
+- Fixed `convertTopicsToJson` with three changes: (1) moved `topicData` creation inside the outer loop to scope it per-vhost, (2) changed topic map reassignment to entry assignment, (3) changed vhost map reassignment to entry assignment.
+- Replaced `log.Fatal(err)` with `panic(fmt.Sprintf(...))` in both converter functions to avoid `os.Exit(1)` killing the operator process. Replaced `"log"` import with `"fmt"`.
+- Added 4 new multi-entry unit tests with independently-constructed expected values (not derived from code under test): `TestConvertVhostsToJsonMultipleEntries` (3 vhosts), `TestConvertTopicsToJsonMultipleEntries` (2 vhosts with 2+1 topics), `TestRMQSERoleRabbitMQToMapMultipleVhosts` (hardcoded expected JSON strings), `TestRabbitMQSecretEngineRoleIsEquivalentMultipleVhosts` (positive + negative matching with independently-constructed Vault-read-shaped payloads).
+- All existing tests continue to pass — no regressions.
+- `make test` passes (unit tests including new multi-entry tests).
+- `make integration` passes (existing single-entry RabbitMQ fixture continues to work).
+
+**Review fixes (2026-07-23):**
+- `convertTopicsToJson` now merges repeated `vhostName` entries instead of overwriting, so topics from duplicate vhost items are additive.
+- Replaced helper-derived expected values in `TestRMQSERoleRabbitMQToMap` with hardcoded JSON strings so the test no longer uses `convertVhostsToJson` / `convertTopicsToJson` to build expectations.
+- `TestRMQSERoleRabbitMQToMapMultipleVhosts` now parses JSON and compares via `reflect.DeepEqual` instead of raw string equality.
+- Added `"reflect"` import to the test file.
+
 ### File List
+
+- `api/v1alpha1/rabbitmqsecretenginerole_types.go` (modified) — fixed `convertVhostsToJson` and `convertTopicsToJson` map reassignment bugs; replaced `log.Fatal` with `panic`; replaced `"log"` import with `"fmt"`; `convertTopicsToJson` merges duplicate `vhostName` entries
+- `api/v1alpha1/rabbitmqsecretenginerole_test.go` (modified) — added 4 multi-entry unit tests with independently-constructed expected values; replaced helper-derived values in original test; multi-entry test uses parsed JSON comparison; added `"encoding/json"` and `"reflect"` imports
+
+## Change Log
+
+- 2026-07-21: Fixed RabbitMQ vhost/vhostTopic multi-entry serialization bug in `convertVhostsToJson` and `convertTopicsToJson`; replaced `log.Fatal` with `panic`; added 4 multi-entry unit tests
+- 2026-07-23: Code review fixes — merge duplicate `vhostTopics` entries; replace helper-derived test expectations with hardcoded JSON; switch multi-entry test to parsed JSON comparison
+
+### Review Findings
+
+- [x] [Review][Patch] Merge repeated `vhostTopics` entries with the same `vhostName` during serialization so later items add topics instead of overwriting earlier ones [api/v1alpha1/rabbitmqsecretenginerole_types.go:210] — fixed
+- [x] [Review][Dismiss] Align RabbitMQ equivalence handling and tests with actual Vault read payloads — dismissed as false positive; Vault RabbitMQ API returns `vhosts` and `vhost_topics` as JSON strings (not structured maps), confirmed by API docs and passing integration test
+- [x] [Review][Patch] Replace helper-derived expected values in the original single-entry `rabbitMQToMap` test so it no longer builds expectations with `convertVhostsToJson` / `convertTopicsToJson` [api/v1alpha1/rabbitmqsecretenginerole_test.go:93] — fixed
+- [x] [Review][Patch] Parse and compare the `vhosts` / `vhost_topics` JSON payloads in `TestRMQSERoleRabbitMQToMapMultipleVhosts` instead of asserting raw JSON string equality [api/v1alpha1/rabbitmqsecretenginerole_test.go:409] — fixed
