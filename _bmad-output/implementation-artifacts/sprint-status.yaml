@@ -36,6 +36,7 @@
 
 generated: 2026-04-11
 last_updated: 2026-07-29
+# Epic 10 expanded: added 10-0a, 10-5, 10-6, 10-7 for kustomize v5 + kube-rbac-proxy removal 2026-07-29
 # Story 9.2 done 2026-07-29
 # Story 9.2 review 2026-07-24
 # Story 9.2 in-progress 2026-07-24
@@ -438,13 +439,17 @@ development_status:
   9-5-upgrade-vault-version-in-integration-test-infrastructure: ready-for-dev
   epic-9-retrospective: optional
 
-  # Epic 10: Operator SDK + Build Tooling Upgrades
+  # Epic 10: Operator SDK + Build Tooling Upgrades & Metrics Modernization
   epic-10: backlog
   10-0-migrate-project-layout-from-gov3-to-gov4: backlog
+  10-0a-kustomize-v3-to-v5-syntax-migration: backlog
   10-1-upgrade-operator-sdk-from-v1-31-to-v1-42: backlog
   10-2-upgrade-helm-from-v3-11-to-v4: backlog
   10-3-upgrade-golangci-lint-from-v1-59-to-v2: backlog
   10-4-upgrade-opm-and-kustomize: backlog
+  10-5-remove-kube-rbac-proxy-enable-authn-authz: backlog
+  10-6-helm-chart-kube-rbac-proxy-removal-and-metrics-rearchitecture: backlog
+  10-7-ci-pipeline-adaptation-and-end-to-end-validation: backlog
   epic-10-retrospective: optional
 
   # Epic 11: High-Priority Missing Secret Engines (AWS, Transit, SSH)
