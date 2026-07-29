@@ -21,7 +21,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **K8s Framework:** controller-runtime v0.24.1, Kubebuilder v3 layout
 - **OLM/SDK:** Operator SDK v1.31.0
 - **K8s API libs:** k8s.io/api, apimachinery, client-go v0.36.0
-- **Vault Client:** hashicorp/vault/api v1.14.0
+- **Vault Client:** hashicorp/vault/api v1.23.0
 
 ### Key Dependencies
 - Masterminds/sprig/v3 v3.2.3 (template functions for VaultSecret)

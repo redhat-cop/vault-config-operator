@@ -36,6 +36,9 @@
 
 generated: 2026-04-11
 last_updated: 2026-07-29
+# Story 9.1 done 2026-07-29
+# Story 9.1 review 2026-07-29
+# Story 9.1 in-progress 2026-07-29
 # Epic 10 expanded: added 10-0a, 10-5, 10-6, 10-7 for kustomize v5 + kube-rbac-proxy removal 2026-07-29
 # Story 9.2 done 2026-07-29
 # Story 9.2 review 2026-07-24
@@ -432,7 +435,7 @@ development_status:
   # Epic 9: Vault API + Peripheral Dependency Upgrades
   epic-9: in-progress
   9-0-fix-rabbitmq-vhost-vhosttopic-serialization-bug: done
-  9-1-upgrade-vault-api-from-v1-14-to-v1-23: ready-for-dev
+  9-1-upgrade-vault-api-from-v1-14-to-v1-23: done
   9-2-upgrade-test-dependencies-ginkgo-gomega: done
   9-3-upgrade-peripheral-and-security-dependencies: ready-for-dev
   9-4-evaluate-and-plan-pkg-errors-migration: ready-for-dev
