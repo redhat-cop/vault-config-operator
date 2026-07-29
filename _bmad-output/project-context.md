@@ -27,7 +27,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Masterminds/sprig/v3 v3.2.3 (template functions for VaultSecret)
 - hashicorp/hcl/v2 v2.21.0, BurntSushi/toml v1.4.0 (config parsing)
 - go-logr/logr v1.4.3 (structured logging via controller-runtime/zap)
-- onsi/ginkgo/v2 v2.27.4 + onsi/gomega v1.39.0 (BDD testing)
+- onsi/ginkgo/v2 v2.32.0 + onsi/gomega v1.42.1 (BDD testing)
 - scylladb/go-set v1.0.2 (set data structures)
 
 ### Build & Dev Tooling

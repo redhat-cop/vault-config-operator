@@ -1,6 +1,6 @@
 # Story 9.2: Upgrade test dependencies (ginkgo, gomega)
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -22,17 +22,17 @@ So that we benefit from new test features (JSON reports, semantic version filter
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Upgrade ginkgo and gomega dependencies (AC: #1, #2)
-  - [ ] 1.1 Run `go get github.com/onsi/ginkgo/v2@v2.32.0 github.com/onsi/gomega@v1.42.1`
-  - [ ] 1.2 Run `go mod tidy` to resolve transitive dependency changes
-  - [ ] 1.3 Verify `go build ./...` succeeds
-  - [ ] 1.4 Review `go.mod` diff — confirm expected dependency version changes (see Transitive Dependency Changes section)
-- [ ] Task 2: Run tests (AC: #3, #4)
-  - [ ] 2.1 Run `make test` — verify all unit tests pass
-  - [ ] 2.2 Run `make integration` — verify all integration tests pass
-- [ ] Task 3: Update project-context.md (AC: #1, #2)
-  - [ ] 3.1 Update `onsi/ginkgo/v2 v2.27.4` → `v2.32.0` in the Key Dependencies section
-  - [ ] 3.2 Update `onsi/gomega v1.39.0` → `v1.42.1` in the Key Dependencies section
+- [x] Task 1: Upgrade ginkgo and gomega dependencies (AC: #1, #2)
+  - [x] 1.1 Run `go get github.com/onsi/ginkgo/v2@v2.32.0 github.com/onsi/gomega@v1.42.1`
+  - [x] 1.2 Run `go mod tidy` to resolve transitive dependency changes
+  - [x] 1.3 Verify `go build ./...` succeeds
+  - [x] 1.4 Review `go.mod` diff — confirm expected dependency version changes (see Transitive Dependency Changes section)
+- [x] Task 2: Run tests (AC: #3, #4)
+  - [x] 2.1 Run `make test` — verify all unit tests pass
+  - [x] 2.2 Run `make integration` — verify all integration tests pass
+- [x] Task 3: Update project-context.md (AC: #1, #2)
+  - [x] 3.1 Update `onsi/ginkgo/v2 v2.27.4` → `v2.32.0` in the Key Dependencies section
+  - [x] 3.2 Update `onsi/gomega v1.39.0` → `v1.42.1` in the Key Dependencies section
 
 ## Dev Notes
 
@@ -134,10 +134,30 @@ Expected `go.mod` changes after running `go get` + `go mod tidy`:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (via Cursor)
 
 ### Debug Log References
 
+None — clean upgrade with no issues.
+
 ### Completion Notes List
 
+- Upgraded ginkgo v2.27.4 → v2.32.0 and gomega v1.39.0 → v1.42.1 via `go get` + `go mod tidy`
+- `go build ./...` succeeded with zero compilation errors
+- Transitive dependency bumps as expected: golang.org/x/{net,tools,crypto,mod,sync,sys,term,text}, google/pprof — all minor/patch version bumps
+- `make test` — all unit tests pass (7 packages, 28.9% coverage on api/v1alpha1, 100% on vaultsecretutils)
+- `make integration` — all integration tests pass (controllers package 56.6% coverage, ~579s runtime)
+- No test code changes required — fully backward-compatible upgrade
+- Updated project-context.md Key Dependencies section with new versions
+
+### Change Log
+
+- 2026-07-24: Upgraded ginkgo v2.27.4 → v2.32.0, gomega v1.39.0 → v1.42.1, transitive deps updated, project-context.md versions updated
+
 ### File List
+
+- go.mod (modified — ginkgo, gomega, and transitive dependency version bumps)
+- go.sum (modified — automatically regenerated)
+- _bmad-output/project-context.md (modified — updated ginkgo/gomega versions in Key Dependencies)
+- _bmad-output/implementation-artifacts/9-2-upgrade-test-dependencies-ginkgo-gomega.md (modified — task tracking)
+- _bmad-output/implementation-artifacts/sprint-status.yaml (modified — story status tracking)
