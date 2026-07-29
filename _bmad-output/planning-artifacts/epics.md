@@ -1451,7 +1451,7 @@ DU2: Upgrade controller-runtime from v0.17.3 to v0.24.x in lockstep with K8s cli
 DU3: Upgrade Operator SDK from v1.31.0 to v1.42.x (Makefile, Dockerfile, bundle, project layout)
 DU4: Upgrade hashicorp/vault/api from v1.14.0 to v1.23.x
 DU5: Upgrade test dependencies (ginkgo v2.19→v2.28, gomega v1.33→v1.39)
-DU6: Upgrade peripheral dependencies (hcl/v2 v2.21→v2.24, sprig/v3 v3.2→v3.3, logr v1.4.2→v1.4.3)
+DU6: Upgrade peripheral dependencies (hcl/v2 v2.21→v2.24, sprig/v3 v3.2→v3.3, logr v1.4.2→v1.4.4)
 DU7: Upgrade security-sensitive indirect dependencies (golang.org/x/crypto, golang.org/x/net)
 DU8: Evaluate migration from archived `pkg/errors` to Go standard `fmt.Errorf` with `%w` wrapping
 DU9: Upgrade Makefile K8s-coupled tools: controller-gen v0.14→v0.21, envtest release-0.17→release-0.24, ENVTEST_K8S_VERSION 1.29→1.36, kubectl v1.29→v1.36, Kind v0.27→v0.32
@@ -1951,7 +1951,7 @@ As an operator developer,
 I want to upgrade hcl/v2, sprig/v3, logr, x/crypto, and x/net to their latest versions,
 So that we have current security patches and bug fixes.
 
-**Note (updated 2026-07-20):** Specific targets refreshed: hcl/v2 v2.21.0→v2.24.0, sprig/v3 v3.2.3→v3.3.0. logr v1.4.3 is already current (no change needed). x/crypto and x/net targets to be determined at story creation time.
+**Note (updated 2026-07-20, revised 2026-07-29):** Specific targets refreshed: hcl/v2 v2.21.0→v2.24.0, sprig/v3 v3.2.3→v3.3.0, logr v1.4.3→v1.4.4. x/crypto and x/net targets to be determined at story creation time.
 
 **Acceptance Criteria:**
 

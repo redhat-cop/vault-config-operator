@@ -36,6 +36,9 @@
 
 generated: 2026-04-11
 last_updated: 2026-07-29
+# Story 9.3 done 2026-07-29
+# Story 9.3 review 2026-07-29
+# Story 9.3 in-progress 2026-07-29
 # Story 9.1 done 2026-07-29
 # Story 9.1 review 2026-07-29
 # Story 9.1 in-progress 2026-07-29
@@ -437,7 +440,7 @@ development_status:
   9-0-fix-rabbitmq-vhost-vhosttopic-serialization-bug: done
   9-1-upgrade-vault-api-from-v1-14-to-v1-23: done
   9-2-upgrade-test-dependencies-ginkgo-gomega: done
-  9-3-upgrade-peripheral-and-security-dependencies: ready-for-dev
+  9-3-upgrade-peripheral-and-security-dependencies: done
   9-4-evaluate-and-plan-pkg-errors-migration: ready-for-dev
   9-5-upgrade-vault-version-in-integration-test-infrastructure: ready-for-dev
   epic-9-retrospective: optional
