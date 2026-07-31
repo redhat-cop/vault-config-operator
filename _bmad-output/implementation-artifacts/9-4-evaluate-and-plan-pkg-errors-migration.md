@@ -1,6 +1,6 @@
 # Story 9.4: Evaluate and plan pkg/errors migration
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -31,38 +31,43 @@ This story therefore evaluates:
 
 4. **Given** the migration plan, **When** a migrate-now vs. defer decision is made, **Then** the decision and rationale are documented in this story file.
 
-5. **Given** the decision is "migrate now", **When** the migration is executed, **Then** `go-multierror` and `errwrap` are removed from `go.mod`, `go build ./...` succeeds, and all tests pass.
+5. **Given** the decision is "migrate now", **When** the migration is executed, **Then** `go-multierror` is removed as a direct dependency (no source code imports it; it may remain as an indirect transitive dep of `vault/api`), `go build ./...` succeeds, and all tests pass.
 
 6. **Given** the decision is "defer", **When** the rationale is documented, **Then** a follow-up story reference is added to the backlog.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Inventory current error-handling dependencies (AC: #1)
-  - [ ] 1.1 Confirm `github.com/pkg/errors` is absent from `go.mod` (removed in R1.3)
-  - [ ] 1.2 Confirm `github.com/hashicorp/go-multierror v1.1.1` is the sole remaining external error package (direct dep)
-  - [ ] 1.3 Confirm `github.com/hashicorp/errwrap v1.1.0` is its sole transitive dependency (indirect dep)
-  - [ ] 1.4 Document that all `errors.New()` calls (51+ files) use standard library — no migration needed
-  - [ ] 1.5 Document that `fmt.Errorf` with `%w` is used in 1 file (`vaultauditobject.go`) — already idiomatic
-- [ ] Task 2: Analyze `go-multierror` usage and migration path (AC: #2)
-  - [ ] 2.1 Confirm single direct usage: `randomsecret_types.go` `isValid()` function (lines 313-319)
-  - [ ] 2.2 Document the 4 validation checks aggregated: `validateEitherPasswordPolicyReferenceOrInline`, `validateInlinePasswordPolicyFormat`, `validateSecretKey`, `validateKVv2DataInPath`
-  - [ ] 2.3 Document how `isValid()` is called: from `IsValid()` (line 308), which is called from `randomsecret_webhook.go` `ValidateCreate` (line 60) and `ValidateUpdate` (line 78)
-  - [ ] 2.4 Write concrete migration code: replace `multierror.Error{}` + `multierror.Append` pattern with `[]error` slice + `errors.Join`
-- [ ] Task 3: Analyze formatting impact (AC: #3)
-  - [ ] 3.1 Document current `go-multierror` format: numbered bullet list (`2 errors occurred:\n    * error 1\n    * error 2`)
-  - [ ] 3.2 Document `errors.Join` format: newline-separated (`error 1\nerror 2`)
-  - [ ] 3.3 Assess impact: error messages appear in webhook admission responses — format change is cosmetic but user-visible
-  - [ ] 3.4 Check if any tests assert on exact error message format (expected: none do — they check nil/non-nil)
-- [ ] Task 4: Make and document the migrate-now vs. defer decision (AC: #4)
-  - [ ] 4.1 Evaluate: 1 call site, ~7 lines changed, removes 2 dependencies, zero risk of behavioral regression
-  - [ ] 4.2 Record decision in this story file
-- [ ] Task 5: Execute migration if decision is "migrate now" (AC: #5)
-  - [ ] 5.1 Replace `isValid()` implementation in `randomsecret_types.go`
-  - [ ] 5.2 Remove `go-multierror` import, add `errors` import if not present
-  - [ ] 5.3 Run `go mod tidy` — confirm `go-multierror` and `errwrap` removed from `go.mod`
-  - [ ] 5.4 Run `go build ./...` — confirm compilation succeeds
-  - [ ] 5.5 Run `make test` — confirm all unit tests pass
-  - [ ] 5.6 Run `make integration` — confirm all integration tests pass
+- [x] Task 1: Inventory current error-handling dependencies (AC: #1)
+  - [x] 1.1 Confirm `github.com/pkg/errors` is absent from `go.mod` (removed in R1.3)
+  - [x] 1.2 Confirm `github.com/hashicorp/go-multierror v1.1.1` is the sole remaining external error package (direct dep)
+  - [x] 1.3 Confirm `github.com/hashicorp/errwrap v1.1.0` is its sole transitive dependency (indirect dep)
+  - [x] 1.4 Document that all `errors.New()` calls (51+ files) use standard library — no migration needed
+  - [x] 1.5 Document that `fmt.Errorf` with `%w` is used in 1 file (`vaultauditobject.go`) — already idiomatic
+- [x] Task 2: Analyze `go-multierror` usage and migration path (AC: #2)
+  - [x] 2.1 Confirm single direct usage: `randomsecret_types.go` `isValid()` function (lines 313-319)
+  - [x] 2.2 Document the 4 validation checks aggregated: `validateEitherPasswordPolicyReferenceOrInline`, `validateInlinePasswordPolicyFormat`, `validateSecretKey`, `validateKVv2DataInPath`
+  - [x] 2.3 Document how `isValid()` is called: from `IsValid()` (line 308), which is called from `randomsecret_webhook.go` `ValidateCreate` (line 60) and `ValidateUpdate` (line 78)
+  - [x] 2.4 Write concrete migration code: replace `multierror.Error{}` + `multierror.Append` pattern with `[]error` slice + `errors.Join`
+- [x] Task 3: Analyze formatting impact (AC: #3)
+  - [x] 3.1 Document current `go-multierror` format: numbered bullet list (`2 errors occurred:\n    * error 1\n    * error 2`)
+  - [x] 3.2 Document `errors.Join` format: newline-separated (`error 1\nerror 2`)
+  - [x] 3.3 Assess impact: error messages appear in webhook admission responses — format change is cosmetic but user-visible
+  - [x] 3.4 Check if any tests assert on exact error message format (expected: none do — they check nil/non-nil)
+- [x] Task 4: Make and document the migrate-now vs. defer decision (AC: #4)
+  - [x] 4.1 Evaluate: 1 call site, ~7 lines changed, removes 2 dependencies, zero risk of behavioral regression
+  - [x] 4.2 Record decision in this story file
+- [x] Task 5: Execute migration if decision is "migrate now" (AC: #5)
+  - [x] 5.1 Replace `isValid()` implementation in `randomsecret_types.go`
+  - [x] 5.2 Remove `go-multierror` import, add `errors` import if not present
+  - [x] 5.3 Run `go mod tidy` — confirm `go-multierror` removed as direct dep from `go.mod` (remains indirect via vault/api)
+  - [x] 5.4 Run `go build ./...` — confirm compilation succeeds
+  - [x] 5.5 Run `make test` — confirm all unit tests pass
+  - [x] 5.6 Run `make integration` — confirm all integration tests pass
+
+### Review Findings
+
+- [x] [Review][Decision] Resolve AC #5 vs. actual dependency outcome — Updated AC #5 to require removal as a direct dependency only; indirect presence via `vault/api` is acceptable.
+- [x] [Review][Patch] Remove stale `go.sum` change claim — corrected below
 
 ## Dev Notes
 
@@ -251,10 +256,29 @@ KVv2 secrets must have /data defined in the path
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (via Cursor)
 
 ### Debug Log References
 
+None — clean execution, no debugging required.
+
 ### Completion Notes List
 
+- Inventory confirmed: `pkg/errors` absent (removed in R1.3), `go-multierror v1.1.1` was the sole remaining external error package with `errwrap v1.1.0` as its transitive dep
+- Single call site confirmed: `randomsecret_types.go:isValid()` — 4 validation checks aggregated via `multierror.Append` pattern
+- Call chain confirmed: `isValid()` ← `IsValid()` ← `ValidateCreate`/`ValidateUpdate` in `randomsecret_webhook.go`
+- Formatting impact: cosmetic only — `go-multierror` numbered bullet list → `errors.Join` newline-separated. No tests assert on format
+- Decision: **Migrate now** — 1 call site, ~7 lines changed, removes direct dependency, zero behavioral risk
+- Migration executed: replaced `multierror.Error{}`/`multierror.Append`/`ErrorOrNil()` with `errors.Join(...)`, removed `go-multierror` import
+- `go mod tidy` result: `go-multierror` moved from direct to indirect (still required transitively by `hashicorp/vault/api`); `errwrap` remains indirect for same reason
+- `go build ./...` succeeds, `make test` passes (all unit tests), `make integration` passes (all integration tests, 579s)
+
+### Change Log
+
+- Migrated `RandomSecret.isValid()` from `go-multierror` pattern to stdlib `errors.Join` (Date: 2026-07-29)
+- Removed `go-multierror` as direct dependency; now indirect-only via `vault/api` (Date: 2026-07-29)
+
 ### File List
+
+- `api/v1alpha1/randomsecret_types.go` — replaced `isValid()` body, removed `go-multierror` import
+- `go.mod` — `go-multierror` moved from direct to indirect deps block (via `go mod tidy`)

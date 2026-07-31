@@ -23,7 +23,6 @@ import (
 	"math/rand"
 	"strings"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2/hclsimple"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	"github.com/scylladb/go-set/u8set"
@@ -311,12 +310,12 @@ func (r *RandomSecret) IsValid() (bool, error) {
 }
 
 func (r *RandomSecret) isValid() error {
-	result := &multierror.Error{}
-	result = multierror.Append(result, r.validateEitherPasswordPolicyReferenceOrInline())
-	result = multierror.Append(result, r.validateInlinePasswordPolicyFormat())
-	result = multierror.Append(result, r.validateSecretKey())
-	result = multierror.Append(result, r.validateKVv2DataInPath())
-	return result.ErrorOrNil()
+	return errors.Join(
+		r.validateEitherPasswordPolicyReferenceOrInline(),
+		r.validateInlinePasswordPolicyFormat(),
+		r.validateSecretKey(),
+		r.validateKVv2DataInPath(),
+	)
 }
 
 func (r *RandomSecret) validateEitherPasswordPolicyReferenceOrInline() error {

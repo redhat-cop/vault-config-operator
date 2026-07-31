@@ -35,7 +35,10 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-07-29
+last_updated: 2026-07-30
+# Story 9.4 done 2026-07-30
+# Story 9.4 review 2026-07-29
+# Story 9.4 in-progress 2026-07-29
 # Story 9.3 done 2026-07-29
 # Story 9.3 review 2026-07-29
 # Story 9.3 in-progress 2026-07-29
@@ -441,7 +444,7 @@ development_status:
   9-1-upgrade-vault-api-from-v1-14-to-v1-23: done
   9-2-upgrade-test-dependencies-ginkgo-gomega: done
   9-3-upgrade-peripheral-and-security-dependencies: done
-  9-4-evaluate-and-plan-pkg-errors-migration: ready-for-dev
+  9-4-evaluate-and-plan-pkg-errors-migration: done
   9-5-upgrade-vault-version-in-integration-test-infrastructure: ready-for-dev
   epic-9-retrospective: optional
 
