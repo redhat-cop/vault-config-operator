@@ -22,7 +22,7 @@
 | **Operator SDK** | v1.31.0 | v1.42.2 | 11 minor | **HIGH** | Scaffolding, Makefile targets, bundle generation, Dockerfile |
 | **ginkgo/v2** | v2.19.0 | v2.28.1 | 9 minor | **LOW** | Test-only, backward compatible; v2.28+ requires Go 1.24 |
 | **gomega** | v1.33.1 | v1.39.1 | 6 minor | **LOW** | Test-only, backward compatible; v1.39+ requires Go 1.24 |
-| **go-logr/logr** | v1.4.2 | v1.4.3 | 1 patch | **LOW** | Minor fix |
+| **go-logr/logr** | v1.4.2 | v1.4.4 | 2 patch | **LOW** | Minor fix |
 | **hcl/v2** | v2.21.0 | v2.24.0 | 3 minor | **LOW** | Used for HCL policy parsing |
 | **sprig/v3** | v3.2.3 | v3.3.0 | 1 minor | **LOW** | Template functions |
 | **pkg/errors** | v0.9.1 | v0.9.1 (archived) | 0 | **INFO** | Repository archived; consider migration to `fmt.Errorf` with `%w` |

@@ -13,9 +13,9 @@ KUBE_CONFIG_FILE ?= /tmp/$(KIND_CLUSTER_NAME)-kubeconfig
 # Container runtime: use docker in CI (GitHub Actions), podman on local dev machines.
 CONTAINER_RUNTIME ?= $(shell if [ -n "$$GITHUB_ACTIONS" ]; then echo docker; else echo podman; fi)
 # Note changes to the vault version should also match image tags within the integration/vault-values.yaml and config/local-development/vault-values.yaml files
-VAULT_VERSION ?= 1.19.0
+VAULT_VERSION ?= 2.0.3
 # The vault version should also match the appVersion in the vault helm chart
-VAULT_CHART_VERSION ?= 0.30.0
+VAULT_CHART_VERSION ?= 0.34.0
 # Set the Operator SDK version to use. By default, what is installed on the system is used.
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
 OPERATOR_SDK_VERSION ?= v1.31.0
@@ -479,14 +479,17 @@ kubectl: ## Download kubectl locally if necessary.
 .PHONY: vault
 VAULT ?= $(LOCALBIN)/vault
 vault: ## Download vault cli locally if necessary.
-ifeq (,$(wildcard $(VAULT)))
-	echo "Downloading vault to ${VAULT}..."
+	@[ -f "$(VAULT)-$(VAULT_VERSION)" ] || { \
+	set -e ;\
+	echo "Downloading vault $(VAULT_VERSION) to $(VAULT)..." ;\
 	OS=$(shell go env GOOS) ;\
 	ARCH=$(shell go env GOARCH) ;\
-	curl --create-dirs -sSLo ${VAULT}.zip https://releases.hashicorp.com/vault/${VAULT_VERSION}/vault_${VAULT_VERSION}_$${OS}_$${ARCH}.zip ;\
-	unzip ${VAULT}.zip -d $(LOCALBIN)/ ;\
-	chmod +x ${VAULT}
-endif
+	curl --create-dirs -sSLo $(VAULT)-$(VAULT_VERSION).zip https://releases.hashicorp.com/vault/$(VAULT_VERSION)/vault_$(VAULT_VERSION)_$${OS}_$${ARCH}.zip ;\
+	unzip -o $(VAULT)-$(VAULT_VERSION).zip -d $(LOCALBIN)/ ;\
+	mv $(VAULT) $(VAULT)-$(VAULT_VERSION) ;\
+	rm -f $(VAULT)-$(VAULT_VERSION).zip ;\
+	} ;\
+	ln -sf $(VAULT)-$(VAULT_VERSION) $(VAULT)
 
 .PHONY: helm
 HELM ?= $(LOCALBIN)/helm

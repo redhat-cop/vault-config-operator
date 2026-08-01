@@ -35,7 +35,32 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-07-20
+last_updated: 2026-08-01
+# Epic 9 done + retrospective completed 2026-08-01
+# Story 9.5 done 2026-08-01
+# Story 9.5 in-progress 2026-07-31
+# Story 9.4 done 2026-07-30
+# Story 9.4 review 2026-07-29
+# Story 9.4 in-progress 2026-07-29
+# Story 9.3 done 2026-07-29
+# Story 9.3 review 2026-07-29
+# Story 9.3 in-progress 2026-07-29
+# Story 9.1 done 2026-07-29
+# Story 9.1 review 2026-07-29
+# Story 9.1 in-progress 2026-07-29
+# Epic 10 expanded: added 10-0a, 10-5, 10-6, 10-7 for kustomize v5 + kube-rbac-proxy removal 2026-07-29
+# Story 9.2 done 2026-07-29
+# Story 9.2 review 2026-07-24
+# Story 9.2 in-progress 2026-07-24
+# Story 9.0 done 2026-07-23
+# Story 9.0 review 2026-07-21
+# Story 9.5 ready-for-dev 2026-07-21
+# Story 9.4 ready-for-dev 2026-07-21
+# Story 9.3 ready-for-dev 2026-07-21
+# Story 9.2 ready-for-dev 2026-07-21
+# Story 9.1 ready-for-dev 2026-07-21
+# Story 9.0 ready-for-dev 2026-07-21
+# Epic 9 in-progress 2026-07-21
 # Epic 8 done + retrospective completed 2026-07-20
 # Story 9.0 added to backlog 2026-07-20
 # Story 8.4 done 2026-07-19
@@ -417,22 +442,26 @@ development_status:
   epic-8-retrospective: done
 
   # Epic 9: Vault API + Peripheral Dependency Upgrades
-  epic-9: backlog
-  9-0-fix-rabbitmq-vhost-vhosttopic-serialization-bug: backlog
-  9-1-upgrade-vault-api-from-v1-14-to-v1-23: backlog
-  9-2-upgrade-test-dependencies-ginkgo-gomega: backlog
-  9-3-upgrade-peripheral-and-security-dependencies: backlog
-  9-4-evaluate-and-plan-pkg-errors-migration: backlog
-  9-5-upgrade-vault-version-in-integration-test-infrastructure: backlog
-  epic-9-retrospective: optional
+  epic-9: done
+  9-0-fix-rabbitmq-vhost-vhosttopic-serialization-bug: done
+  9-1-upgrade-vault-api-from-v1-14-to-v1-23: done
+  9-2-upgrade-test-dependencies-ginkgo-gomega: done
+  9-3-upgrade-peripheral-and-security-dependencies: done
+  9-4-evaluate-and-plan-pkg-errors-migration: done
+  9-5-upgrade-vault-version-in-integration-test-infrastructure: done
+  epic-9-retrospective: done
 
-  # Epic 10: Operator SDK + Build Tooling Upgrades
+  # Epic 10: Operator SDK + Build Tooling Upgrades & Metrics Modernization
   epic-10: backlog
   10-0-migrate-project-layout-from-gov3-to-gov4: backlog
+  10-0a-kustomize-v3-to-v5-syntax-migration: backlog
   10-1-upgrade-operator-sdk-from-v1-31-to-v1-42: backlog
   10-2-upgrade-helm-from-v3-11-to-v4: backlog
   10-3-upgrade-golangci-lint-from-v1-59-to-v2: backlog
   10-4-upgrade-opm-and-kustomize: backlog
+  10-5-remove-kube-rbac-proxy-enable-authn-authz: backlog
+  10-6-helm-chart-kube-rbac-proxy-removal-and-metrics-rearchitecture: backlog
+  10-7-ci-pipeline-adaptation-and-end-to-end-validation: backlog
   epic-10-retrospective: optional
 
   # Epic 11: High-Priority Missing Secret Engines (AWS, Transit, SSH)

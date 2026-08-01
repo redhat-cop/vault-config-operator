@@ -19,7 +19,7 @@ package v1alpha1
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
@@ -198,33 +198,30 @@ func (rabbitMQ *RabbitMQSecretEngineRole) IsValid() (bool, error) {
 func convertVhostsToJson(vhosts []Vhost) string {
 	vhostData := make(map[string]any)
 	for _, vhost := range vhosts {
-		vhostData = map[string]any{
-			vhost.VhostName: vhost.Permissions,
-		}
+		vhostData[vhost.VhostName] = vhost.Permissions
 	}
 	result, err := json.Marshal(vhostData)
 	if err != nil {
-		log.Fatal(err)
+		panic(fmt.Sprintf("failed to marshal vhost data: %v", err))
 	}
 	return string(result)
 }
 
 func convertTopicsToJson(vhosts []VhostTopic) string {
 	vhostData := make(map[string]any)
-	topicData := make(map[string]any)
 	for _, vhost := range vhosts {
+		topicData, _ := vhostData[vhost.VhostName].(map[string]any)
+		if topicData == nil {
+			topicData = make(map[string]any)
+		}
 		for _, topic := range vhost.Topics {
-			topicData = map[string]any{
-				topic.TopicName: topic.Permissions,
-			}
+			topicData[topic.TopicName] = topic.Permissions
 		}
-		vhostData = map[string]any{
-			vhost.VhostName: topicData,
-		}
+		vhostData[vhost.VhostName] = topicData
 	}
 	result, err := json.Marshal(vhostData)
 	if err != nil {
-		log.Fatal(err)
+		panic(fmt.Sprintf("failed to marshal vhost topic data: %v", err))
 	}
 	return string(result)
 }

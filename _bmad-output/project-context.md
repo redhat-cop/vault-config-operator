@@ -21,20 +21,20 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **K8s Framework:** controller-runtime v0.24.1, Kubebuilder v3 layout
 - **OLM/SDK:** Operator SDK v1.31.0
 - **K8s API libs:** k8s.io/api, apimachinery, client-go v0.36.0
-- **Vault Client:** hashicorp/vault/api v1.14.0
+- **Vault Client:** hashicorp/vault/api v1.23.0
 
 ### Key Dependencies
-- Masterminds/sprig/v3 v3.2.3 (template functions for VaultSecret)
-- hashicorp/hcl/v2 v2.21.0, BurntSushi/toml v1.4.0 (config parsing)
-- go-logr/logr v1.4.3 (structured logging via controller-runtime/zap)
-- onsi/ginkgo/v2 v2.27.4 + onsi/gomega v1.39.0 (BDD testing)
+- Masterminds/sprig/v3 v3.3.0 (template functions for VaultSecret)
+- hashicorp/hcl/v2 v2.24.0, BurntSushi/toml v1.4.0 (config parsing)
+- go-logr/logr v1.4.4 (structured logging via controller-runtime/zap)
+- onsi/ginkgo/v2 v2.32.0 + onsi/gomega v1.42.1 (BDD testing)
 - scylladb/go-set v1.0.2 (set data structures)
 
 ### Build & Dev Tooling
 - controller-gen v0.21.0 (CRD/RBAC generation)
 - kustomize v5.4.3, Helm v3.11.0
 - golangci-lint v1.64.8 (no committed config — uses defaults or shared workflow config)
-- Kind v0.32.0, kubectl v1.36.1, Vault 1.19.0 (integration testing)
+- Kind v0.32.0, kubectl v1.36.1, Vault 2.0.3 (integration testing)
 - Container: golang:1.26 builder → registry.access.redhat.com/ubi9/ubi-minimal runtime
 - CI: GitHub Actions via reusable workflows from redhat-cop/github-workflows-operators
 

@@ -1451,7 +1451,7 @@ DU2: Upgrade controller-runtime from v0.17.3 to v0.24.x in lockstep with K8s cli
 DU3: Upgrade Operator SDK from v1.31.0 to v1.42.x (Makefile, Dockerfile, bundle, project layout)
 DU4: Upgrade hashicorp/vault/api from v1.14.0 to v1.23.x
 DU5: Upgrade test dependencies (ginkgo v2.19→v2.28, gomega v1.33→v1.39)
-DU6: Upgrade peripheral dependencies (hcl/v2 v2.21→v2.24, sprig/v3 v3.2→v3.3, logr v1.4.2→v1.4.3)
+DU6: Upgrade peripheral dependencies (hcl/v2 v2.21→v2.24, sprig/v3 v3.2→v3.3, logr v1.4.2→v1.4.4)
 DU7: Upgrade security-sensitive indirect dependencies (golang.org/x/crypto, golang.org/x/net)
 DU8: Evaluate migration from archived `pkg/errors` to Go standard `fmt.Errorf` with `%w` wrapping
 DU9: Upgrade Makefile K8s-coupled tools: controller-gen v0.14→v0.21, envtest release-0.17→release-0.24, ENVTEST_K8S_VERSION 1.29→1.36, kubectl v1.29→v1.36, Kind v0.27→v0.32
@@ -1951,7 +1951,7 @@ As an operator developer,
 I want to upgrade hcl/v2, sprig/v3, logr, x/crypto, and x/net to their latest versions,
 So that we have current security patches and bug fixes.
 
-**Note (updated 2026-07-20):** Specific targets refreshed: hcl/v2 v2.21.0→v2.24.0, sprig/v3 v3.2.3→v3.3.0. logr v1.4.3 is already current (no change needed). x/crypto and x/net targets to be determined at story creation time.
+**Note (updated 2026-07-20, revised 2026-07-29):** Specific targets refreshed: hcl/v2 v2.21.0→v2.24.0, sprig/v3 v3.2.3→v3.3.0, logr v1.4.3→v1.4.4. x/crypto and x/net targets to be determined at story creation time.
 
 **Acceptance Criteria:**
 
@@ -2008,9 +2008,9 @@ So that we test against the current supported Vault release and verify compatibi
 
 ---
 
-## Epic 10: Operator SDK + Build Tooling Upgrades
+## Epic 10: Operator SDK + Build Tooling Upgrades & Metrics Modernization
 
-Upgrade Operator SDK, Helm, golangci-lint, OPM, and other build/CI tools that have major version gaps.
+Upgrade Operator SDK, Helm, golangci-lint, OPM, and other build/CI tools that have major version gaps. Also includes migration from kube-rbac-proxy sidecar to controller-runtime's built-in authn/authz for metrics endpoint protection, and kustomize manifest syntax modernization (v3→v5).
 
 ### Story 10.0: Migrate project layout from go/v3 to go/v4
 
@@ -2064,7 +2064,51 @@ So that the project follows the current scaffolding standard and is compatible w
 **When** it is updated to `go.kubebuilder.io/v4`
 **Then** `operator-sdk` commands recognize the project as v4 layout
 
-**Implementation notes:** This is a prerequisite for Story 10.1 (Operator SDK upgrade). The Operator SDK v1.42 scaffolding assumes go/v4 layout. Follow the manual migration steps from the Kubebuilder migration guide. With ~35 controller files, bulk-rename tooling (`gorename`, `sed`, or IDE refactoring) is recommended. Run `make manifests generate test` after each major step to catch breakage early.
+**Implementation notes:** This is a prerequisite for Story 10.0a (kustomize syntax migration) and Story 10.1 (Operator SDK upgrade). The Operator SDK v1.42 scaffolding assumes go/v4 layout. Follow the manual migration steps from the Kubebuilder migration guide. With ~35 controller files, bulk-rename tooling (`gorename`, `sed`, or IDE refactoring) is recommended. Run `make manifests generate test` after each major step to catch breakage early.
+
+### Story 10.0a: Kustomize v3 → v5 syntax migration
+
+As an operator developer,
+I want to migrate the kustomize manifests from deprecated v3 syntax to v5 syntax,
+So that the project is compatible with Kustomize v5+ and follows current Kubebuilder go/v4 scaffold conventions.
+
+**Reference:** https://book-v3.book.kubebuilder.io/migration/manually_migration_guide_gov3_to_gov4 (kustomize manifest section)
+
+**Current state (kustomize v3 syntax):**
+- `config/default/kustomization.yaml` uses `bases:` (deprecated, replaced by `resources:`)
+- `config/default/kustomization.yaml` uses `patchesStrategicMerge:` (deprecated, replaced by `patches:`)
+- `config/default/kustomization.yaml` uses `vars:` for variable substitution (deprecated, replaced by `replacements:`)
+- Three `vars:` entries: `METRICS_SERVICE_NAME`, `METRICS_SERVICE_NAMESPACE`, `ROLE_NAME`
+
+**Target state (kustomize v5 syntax):**
+- `bases:` → `resources:`
+- `patchesStrategicMerge:` → `patches:` with explicit path entries
+- `vars:` → `replacements:` with source/target field path selectors
+
+**Files to update:**
+- `config/default/kustomization.yaml`: all three syntax migrations
+- Any other `kustomization.yaml` files under `config/` that use deprecated syntax
+
+**Acceptance Criteria:**
+
+**Given** `config/default/kustomization.yaml` uses `bases:` to reference sub-directories
+**When** `bases:` is replaced with `resources:`
+**Then** `kustomize build config/default` produces the same output
+
+**Given** `config/default/kustomization.yaml` uses `patchesStrategicMerge:` to reference patch files
+**When** `patchesStrategicMerge:` is replaced with `patches:` using `- path:` entries
+**Then** `kustomize build config/default` produces the same output with patches applied
+
+**Given** `config/default/kustomization.yaml` uses `vars:` with `objref:` and `fieldref:` for variable substitution
+**When** `vars:` is replaced with `replacements:` using source/target field path selectors
+**Then** `kustomize build config/default` correctly substitutes values in target manifests
+**And** the output is semantically identical to the previous `vars:` approach
+
+**Given** all kustomize syntax has been migrated
+**When** `make manifests` and `make deploy` are run
+**Then** both succeed without warnings about deprecated kustomize fields
+
+**Implementation notes:** The `vars:` → `replacements:` migration is the most complex change. Each `vars:` entry must be converted to a `replacements:` block with explicit `source:` (kind, version, name, fieldPath) and `targets:` (select by kind/name, fieldPaths, options for delimiter/index). Refer to the [Kustomize replacements documentation](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/replacements/) for syntax. Test with `kustomize build` after each change. Consider also updating `config/samples/kustomization.yaml` if one does not exist.
 
 ### Story 10.1: Upgrade Operator SDK from v1.31 to v1.42
 
@@ -2147,6 +2191,136 @@ So that OLM catalog building and kustomize rendering use current tooling.
 **Given** KUSTOMIZE_VERSION is v5.4.3
 **When** it is updated to v5.8.1
 **Then** `make manifests`, `make deploy`, `make helmchart` all succeed
+
+### Story 10.5: Remove kube-rbac-proxy and enable controller-runtime authn/authz
+
+As an operator developer,
+I want to remove the kube-rbac-proxy sidecar and replace it with controller-runtime's built-in `WithAuthenticationAndAuthorization` filter for metrics endpoint protection,
+So that the operator no longer depends on an external proxy image for metrics security and follows the current Kubebuilder best practice.
+
+**Reference:** https://book.kubebuilder.io/reference/metrics.html
+
+**Background:** The upstream `gcr.io/kubebuilder/kube-rbac-proxy` images are unavailable since early 2025. The project currently uses a Red Hat copy at `quay.io/redhat-cop/kube-rbac-proxy:v0.11.0`. Since Kubebuilder v4.1.0, the recommended approach is controller-runtime's `WithAuthenticationAndAuthorization` feature, which handles authn/authz natively without a sidecar.
+
+**Current state:**
+- `config/default/manager_auth_proxy_patch.yaml`: injects kube-rbac-proxy sidecar
+- `config/rbac/auth_proxy_service.yaml`: metrics service routing through proxy
+- `config/rbac/auth_proxy_role.yaml`: RBAC for proxy
+- `config/rbac/auth_proxy_role_binding.yaml`: RBAC binding for proxy
+- `config/rbac/auth_proxy_client_clusterrole.yaml`: client access role
+- `main.go`: metrics bound to `127.0.0.1:8080` (localhost only, proxy forwards from `:8443`)
+- `main.go`: `secureMetrics` flag declared but not bound to `flag.BoolVar()`
+
+**Files to remove:**
+- `config/default/manager_auth_proxy_patch.yaml`
+- `config/rbac/auth_proxy_service.yaml`
+- `config/rbac/auth_proxy_role.yaml`
+- `config/rbac/auth_proxy_role_binding.yaml`
+- `config/rbac/auth_proxy_client_clusterrole.yaml`
+
+**Files to create:**
+- `config/rbac/metrics_auth_role.yaml`: ClusterRole granting tokenreviews + subjectaccessreviews (for authn/authz)
+- `config/rbac/metrics_auth_role_binding.yaml`: ClusterRoleBinding for the controller-manager ServiceAccount
+- `config/rbac/metrics_reader_role.yaml`: ClusterRole with read access to `/metrics` endpoint
+
+**Files to modify:**
+- `config/default/kustomization.yaml`: remove `manager_auth_proxy_patch.yaml` from patches, add `manager_metrics_patch.yaml` if needed
+- `config/rbac/kustomization.yaml`: remove 4 `auth_proxy_*` references, add 3 `metrics_*` references
+- `main.go`: bind `--metrics-secure` flag to `secureMetrics`, change default metrics bind address to `:8443`, add `FilterProvider: filters.WithAuthenticationAndAuthorization` when `secureMetrics` is true, import `sigs.k8s.io/controller-runtime/pkg/metrics/filters`
+
+**Acceptance Criteria:**
+
+**Given** the kube-rbac-proxy sidecar is currently injected via `manager_auth_proxy_patch.yaml`
+**When** the patch and all auth_proxy RBAC files are removed
+**Then** `kustomize build config/default` produces a Deployment with only the manager container (no sidecar)
+
+**Given** `main.go` binds metrics to `127.0.0.1:8080` with proxy forwarding
+**When** the metrics bind address is changed to `:8443` with `SecureServing: true` and `FilterProvider: filters.WithAuthenticationAndAuthorization`
+**Then** the metrics endpoint is directly served by the manager with authn/authz protection
+
+**Given** the `--metrics-secure` flag is not currently bound
+**When** `flag.BoolVar(&secureMetrics, "metrics-secure", true, ...)` is added
+**Then** metrics security can be toggled via command-line flag (default: enabled)
+
+**Given** new RBAC files are created for metrics authn/authz
+**When** `make manifests` is run
+**Then** the generated RBAC allows the controller-manager to perform token reviews and subject access reviews
+
+**Given** all changes are applied
+**When** `make build`, `make test`, and `make manifests` are run
+**Then** all succeed without errors
+
+**Implementation notes:** The `filters.WithAuthenticationAndAuthorization` feature requires controller-runtime v0.18+ (already satisfied after Epic 8). The metrics endpoint will use self-signed certificates by default (controller-runtime generates them automatically). For production, CertManager-managed certificates are recommended (separate optional configuration). The manager deployment patch should include the `--metrics-secure` argument. Review the Kubebuilder v4 scaffold for `cmd/main.go` to match the canonical implementation.
+
+### Story 10.6: Helm chart kube-rbac-proxy removal and metrics rearchitecture
+
+As an operator developer,
+I want to update the Helm chart to remove the kube-rbac-proxy sidecar and align the metrics architecture with the controller-runtime authn/authz approach,
+So that the Helm-based deployment matches the kustomize-based deployment and no longer references kube-rbac-proxy.
+
+**Current state:**
+- `config/helmchart/values.yaml.tpl`: contains `kube_rbac_proxy` section with image, resources, securityContext
+- `config/helmchart/templates/manager.yaml`: conditionally injects kube-rbac-proxy sidecar container when `enableMonitoring` is true, mounts `metrics-service-cert` volume for the proxy
+- Manager container binds to `--metrics-bind-address=127.0.0.1:8080` (localhost, behind proxy)
+
+**Files to modify:**
+- `config/helmchart/values.yaml.tpl`: remove entire `kube_rbac_proxy:` section, add `metricsSecure: true` flag
+- `config/helmchart/templates/manager.yaml`: remove kube-rbac-proxy sidecar container block, update manager args to include `--metrics-bind-address=:8443` and `--metrics-secure`, update volume mounts for metrics TLS certs on manager container directly
+
+**Acceptance Criteria:**
+
+**Given** `values.yaml.tpl` contains a `kube_rbac_proxy` configuration section
+**When** the section is removed and replaced with `metricsSecure: true`
+**Then** `helm template` no longer references kube-rbac-proxy image
+
+**Given** `templates/manager.yaml` injects a kube-rbac-proxy sidecar when `enableMonitoring` is true
+**When** the sidecar block is removed and the manager container is updated to serve metrics directly on `:8443`
+**Then** `helm template` produces a Deployment with only the manager container
+**And** the manager container includes `--metrics-secure` and `--metrics-bind-address=:8443` args
+
+**Given** the `enableMonitoring` flag controls metrics exposure
+**When** `enableMonitoring` is true
+**Then** the metrics port (8443) is exposed on the manager container directly (no proxy)
+
+**Given** all Helm chart changes are applied
+**When** `helm template` and `helm lint` are run
+**Then** both succeed without errors or warnings
+
+**Implementation notes:** The `enableMonitoring` flag semantics change: it previously controlled whether to inject the sidecar; now it controls whether metrics args are passed to the manager. The metrics-service-cert volume may still be needed for TLS certificates (served by the manager directly instead of the proxy). Ensure backward compatibility for existing Helm installations — document the breaking change in chart release notes.
+
+### Story 10.7: CI pipeline adaptation and end-to-end validation
+
+As an operator developer,
+I want to verify that all CI pipelines, Docker builds, and test suites work correctly after the cumulative changes from Stories 10.0 through 10.6,
+So that the project is fully validated after the build tooling and metrics modernization epic.
+
+**Acceptance Criteria:**
+
+**Given** all previous stories in Epic 10 are complete
+**When** the full CI pipeline is run
+**Then** all jobs pass: lint, unit tests, integration tests, docker build, helm chart tests
+
+**Given** the Dockerfile has been updated for v4 layout (Story 10.0)
+**When** `make docker-build` is run
+**Then** the image builds successfully and the operator binary starts
+
+**Given** ci.Dockerfile copies `bin/manager`
+**When** `make ci-build` (or equivalent) is run
+**Then** the CI-specific image builds successfully
+
+**Given** the Makefile targets reference the new paths
+**When** `make build`, `make run`, `make test`, `make manifests`, `make generate`, `make helmchart` are run
+**Then** all targets succeed
+
+**Given** the integration test suite references CRD paths
+**When** `make integration` is run against a Kind cluster
+**Then** all integration tests pass
+
+**Given** the kube-rbac-proxy has been removed and authn/authz is enabled
+**When** the operator is deployed to a Kind cluster
+**Then** the metrics endpoint is accessible with proper authentication and returns Prometheus metrics
+
+**Implementation notes:** This is a validation story, not a code-change story. It should be the final gating step before closing Epic 10. If any issues are found, they should be fixed in-story rather than opening new stories. Run `make all` as the primary validation. Consider running a manual smoke test of the deployed operator in a Kind cluster to verify metrics access, webhook functionality, and controller reconciliation.
 
 ---
 
