@@ -36,6 +36,7 @@
 
 generated: 2026-04-11
 last_updated: 2026-08-01
+# Epic 9 done + retrospective completed 2026-08-01
 # Story 9.5 done 2026-08-01
 # Story 9.5 in-progress 2026-07-31
 # Story 9.4 done 2026-07-30
@@ -441,14 +442,14 @@ development_status:
   epic-8-retrospective: done
 
   # Epic 9: Vault API + Peripheral Dependency Upgrades
-  epic-9: in-progress
+  epic-9: done
   9-0-fix-rabbitmq-vhost-vhosttopic-serialization-bug: done
   9-1-upgrade-vault-api-from-v1-14-to-v1-23: done
   9-2-upgrade-test-dependencies-ginkgo-gomega: done
   9-3-upgrade-peripheral-and-security-dependencies: done
   9-4-evaluate-and-plan-pkg-errors-migration: done
   9-5-upgrade-vault-version-in-integration-test-infrastructure: done
-  epic-9-retrospective: optional
+  epic-9-retrospective: done
 
   # Epic 10: Operator SDK + Build Tooling Upgrades & Metrics Modernization
   epic-10: backlog
