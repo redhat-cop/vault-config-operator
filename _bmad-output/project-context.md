@@ -34,7 +34,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - controller-gen v0.21.0 (CRD/RBAC generation)
 - kustomize v5.4.3, Helm v3.11.0
 - golangci-lint v1.64.8 (no committed config — uses defaults or shared workflow config)
-- Kind v0.32.0, kubectl v1.36.1, Vault 1.19.0 (integration testing)
+- Kind v0.32.0, kubectl v1.36.1, Vault 2.0.3 (integration testing)
 - Container: golang:1.26 builder → registry.access.redhat.com/ubi9/ubi-minimal runtime
 - CI: GitHub Actions via reusable workflows from redhat-cop/github-workflows-operators
 

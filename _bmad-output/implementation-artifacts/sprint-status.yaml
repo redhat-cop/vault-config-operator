@@ -35,7 +35,9 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-07-30
+last_updated: 2026-08-01
+# Story 9.5 done 2026-08-01
+# Story 9.5 in-progress 2026-07-31
 # Story 9.4 done 2026-07-30
 # Story 9.4 review 2026-07-29
 # Story 9.4 in-progress 2026-07-29
@@ -445,7 +447,7 @@ development_status:
   9-2-upgrade-test-dependencies-ginkgo-gomega: done
   9-3-upgrade-peripheral-and-security-dependencies: done
   9-4-evaluate-and-plan-pkg-errors-migration: done
-  9-5-upgrade-vault-version-in-integration-test-infrastructure: ready-for-dev
+  9-5-upgrade-vault-version-in-integration-test-infrastructure: done
   epic-9-retrospective: optional
 
   # Epic 10: Operator SDK + Build Tooling Upgrades & Metrics Modernization

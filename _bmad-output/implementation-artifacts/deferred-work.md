@@ -35,3 +35,7 @@
 
 - **Broken validating webhook markers remain in unchanged Policy and PasswordPolicy webhooks**: `api/v1alpha1/policy_webhook.go:50` and `api/v1alpha1/passwordpolicy_webhook.go:50` still use `//kubebuilder:webhook` instead of `//+kubebuilder:webhook` for the validating marker. This issue predates the controller-runtime migration reviewed in story 8.2.
 - **Copy-pasted `authenginemountlog` usage remains in migrated defaulters**: `api/v1alpha1/databasesecretenginerole_webhook.go:44`, `api/v1alpha1/kubernetesauthenginerole_webhook.go:44`, and `api/v1alpha1/randomsecret_webhook.go:44` still log through `authenginemountlog` in `Default()`. The incorrect logger names were already present before this story and were only carried through the signature migration.
+
+## Deferred from: code review of 9-5-upgrade-vault-version-in-integration-test-infrastructure (2026-07-31)
+
+- **Define the supported `deploy-vault` upgrade path across existing 1.x data**: Deferred because integration tests are expected to run on fresh environments, so Helm chart upgrade handling is out of scope for this story.

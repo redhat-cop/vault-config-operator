@@ -1,6 +1,6 @@
 # Story 9.5: Upgrade Vault version in integration test infrastructure to 2.0.3
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -24,39 +24,39 @@ So that we test against the current supported Vault release and verify compatibi
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Review Vault 2.0 breaking changes for operator impact (AC: #3)
-  - [ ] 1.1 Review path canonicalization change — Vault rejects `//`, `/../`, `/./` paths. Verify the operator never constructs non-canonical paths (it uses `spec.path` + `metadata.name` composition — should be safe).
-  - [ ] 1.2 Review container runtime change — Vault 2.0 runs as non-root `vault` user by default. Verify sidecar containers in `vault-values.yaml` can still access shared volumes (emptyDir is world-writable, secrets are readable by all — should be safe).
-  - [ ] 1.3 Review IPC_LOCK change — was required in 2.0.0, **removed** in 2.0.2. Since target is 2.0.3, no IPC_LOCK capability needed.
-  - [ ] 1.4 Review plugin registration changes — verify `vault plugin register` CLI syntax is unchanged. The integration tests register `vault-plugin-secrets-github` v1.3.0.
-  - [ ] 1.5 Review `vault operator init` / `vault operator unseal` CLI changes — used by auto-initializer and auto-unsealer sidecars.
-  - [ ] 1.6 Review `vault auth enable kubernetes` + `vault write auth/kubernetes/config` — used by vault-admin-initializer sidecar.
-  - [ ] 1.7 Review `vault policy write` / `vault policy list` — used by vault-admin-initializer.
-  - [ ] 1.8 Document any required changes or confirm all CLI operations are backward-compatible.
-- [ ] Task 2: Update Makefile version variables (AC: #1, #2)
-  - [ ] 2.1 Change `VAULT_VERSION ?= 1.19.0` → `VAULT_VERSION ?= 2.0.3` (line 16)
-  - [ ] 2.2 Change `VAULT_CHART_VERSION ?= 0.30.0` → `VAULT_CHART_VERSION ?= 0.34.0` (line 18)
-- [ ] Task 3: Update integration/vault-values.yaml (AC: #1)
-  - [ ] 3.1 Change `image: hashicorp/vault:1.19.0` → `image: hashicorp/vault:2.0.3` in `auto-initializer` sidecar (line 61)
-  - [ ] 3.2 Change `image: hashicorp/vault:1.19.0` → `image: hashicorp/vault:2.0.3` in `auto-unsealer` sidecar (line 89)
-  - [ ] 3.3 Change `image: hashicorp/vault:1.19.0` → `image: hashicorp/vault:2.0.3` in `github-module-loader` sidecar (line 118)
-  - [ ] 3.4 Change `image: hashicorp/vault:1.19.0` → `image: hashicorp/vault:2.0.3` in `vault-admin-initializer` sidecar (line 151)
-- [ ] Task 4: Update config/local-development/vault-values.yaml (AC: #4)
-  - [ ] 4.1 Change `tag: "1.19.2-ubi"` → `tag: "2.0.3-ubi"` in `injector.agentImage` (line 16)
-  - [ ] 4.2 Change `tag: "1.19.2-ubi"` → `tag: "2.0.3-ubi"` in `server.image` (line 26)
-  - [ ] 4.3 Change `image: registry.connect.redhat.com/hashicorp/vault:1.19.2-ubi` → `image: registry.connect.redhat.com/hashicorp/vault:2.0.3-ubi` in `auto-initializer` sidecar (line 111)
-  - [ ] 4.4 Change `image: registry.connect.redhat.com/hashicorp/vault:1.19.2-ubi` → `image: registry.connect.redhat.com/hashicorp/vault:2.0.3-ubi` in `auto-unsealer` sidecar (line 148)
-  - [ ] 4.5 Change `image: registry.connect.redhat.com/hashicorp/vault:1.19.2-ubi` → `image: registry.connect.redhat.com/hashicorp/vault:2.0.3-ubi` in `github-module-loader` sidecar (line 181)
-- [ ] Task 5: Verify Vault CLI binary download URL works (AC: #5)
-  - [ ] 5.1 Confirm `https://releases.hashicorp.com/vault/2.0.3/vault_2.0.3_linux_amd64.zip` resolves (the Makefile `vault` target downloads this)
-  - [ ] 5.2 If URL pattern changed for Vault 2.x, update the download URL in Makefile (line 486)
-- [ ] Task 6: Run full test suite (AC: #1, #5)
-  - [ ] 6.1 Run `go build ./...` — confirm compilation (no source changes expected)
-  - [ ] 6.2 Run `make test` — confirm unit tests pass (no Vault interaction)
-  - [ ] 6.3 Run `make integration` — confirm full integration test suite passes against Vault 2.0.3
-  - [ ] 6.4 If any integration tests fail, diagnose whether it's a Vault 2.0 behavioral change and fix accordingly
-- [ ] Task 7: Update project-context.md Vault version reference (AC: #1)
-  - [ ] 7.1 Change `Vault 1.19.0 (integration testing)` → `Vault 2.0.3 (integration testing)` in the Build & Dev Tooling section
+- [x] Task 1: Review Vault 2.0 breaking changes for operator impact (AC: #3)
+  - [x] 1.1 Review path canonicalization change — Vault rejects `//`, `/../`, `/./` paths. Verify the operator never constructs non-canonical paths (it uses `spec.path` + `metadata.name` composition — should be safe).
+  - [x] 1.2 Review container runtime change — Vault 2.0 runs as non-root `vault` user by default. Verify sidecar containers in `vault-values.yaml` can still access shared volumes (emptyDir is world-writable, secrets are readable by all — should be safe).
+  - [x] 1.3 Review IPC_LOCK change — was required in 2.0.0, **removed** in 2.0.2. Since target is 2.0.3, no IPC_LOCK capability needed.
+  - [x] 1.4 Review plugin registration changes — verify `vault plugin register` CLI syntax is unchanged. The integration tests register `vault-plugin-secrets-github` v1.3.0.
+  - [x] 1.5 Review `vault operator init` / `vault operator unseal` CLI changes — used by auto-initializer and auto-unsealer sidecars.
+  - [x] 1.6 Review `vault auth enable kubernetes` + `vault write auth/kubernetes/config` — used by vault-admin-initializer sidecar.
+  - [x] 1.7 Review `vault policy write` / `vault policy list` — used by vault-admin-initializer.
+  - [x] 1.8 Document any required changes or confirm all CLI operations are backward-compatible.
+- [x] Task 2: Update Makefile version variables (AC: #1, #2)
+  - [x] 2.1 Change `VAULT_VERSION ?= 1.19.0` → `VAULT_VERSION ?= 2.0.3` (line 16)
+  - [x] 2.2 Change `VAULT_CHART_VERSION ?= 0.30.0` → `VAULT_CHART_VERSION ?= 0.34.0` (line 18)
+- [x] Task 3: Update integration/vault-values.yaml (AC: #1)
+  - [x] 3.1 Change `image: hashicorp/vault:1.19.0` → `image: hashicorp/vault:2.0.3` in `auto-initializer` sidecar (line 61)
+  - [x] 3.2 Change `image: hashicorp/vault:1.19.0` → `image: hashicorp/vault:2.0.3` in `auto-unsealer` sidecar (line 89)
+  - [x] 3.3 Change `image: hashicorp/vault:1.19.0` → `image: hashicorp/vault:2.0.3` in `github-module-loader` sidecar (line 118)
+  - [x] 3.4 Change `image: hashicorp/vault:1.19.0` → `image: hashicorp/vault:2.0.3` in `vault-admin-initializer` sidecar (line 151)
+- [x] Task 4: Update config/local-development/vault-values.yaml (AC: #4)
+  - [x] 4.1 Change `tag: "1.19.2-ubi"` → `tag: "2.0.3-ubi"` in `injector.agentImage` (line 16)
+  - [x] 4.2 Change `tag: "1.19.2-ubi"` → `tag: "2.0.3-ubi"` in `server.image` (line 26)
+  - [x] 4.3 Change `image: registry.connect.redhat.com/hashicorp/vault:1.19.2-ubi` → `image: registry.connect.redhat.com/hashicorp/vault:2.0.3-ubi` in `auto-initializer` sidecar (line 111)
+  - [x] 4.4 Change `image: registry.connect.redhat.com/hashicorp/vault:1.19.2-ubi` → `image: registry.connect.redhat.com/hashicorp/vault:2.0.3-ubi` in `auto-unsealer` sidecar (line 148)
+  - [x] 4.5 Change `image: registry.connect.redhat.com/hashicorp/vault:1.19.2-ubi` → `image: registry.connect.redhat.com/hashicorp/vault:2.0.3-ubi` in `github-module-loader` sidecar (line 181)
+- [x] Task 5: Verify Vault CLI binary download URL works (AC: #5)
+  - [x] 5.1 Confirm `https://releases.hashicorp.com/vault/2.0.3/vault_2.0.3_linux_amd64.zip` resolves (the Makefile `vault` target downloads this)
+  - [x] 5.2 If URL pattern changed for Vault 2.x, update the download URL in Makefile (line 486)
+- [x] Task 6: Run full test suite (AC: #1, #5)
+  - [x] 6.1 Run `go build ./...` — confirm compilation (no source changes expected)
+  - [x] 6.2 Run `make test` — confirm unit tests pass (no Vault interaction)
+  - [x] 6.3 Run `make integration` — confirm full integration test suite passes against Vault 2.0.3
+  - [x] 6.4 If any integration tests fail, diagnose whether it's a Vault 2.0 behavioral change and fix accordingly
+- [x] Task 7: Update project-context.md Vault version reference (AC: #1)
+  - [x] 7.1 Change `Vault 1.19.0 (integration testing)` → `Vault 2.0.3 (integration testing)` in the Build & Dev Tooling section
 
 ## Dev Notes
 
@@ -180,10 +180,36 @@ If integration tests fail after the upgrade, investigate these areas:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Initial `make integration` with Helm upgrade from chart 0.30.0 to 0.34.0 failed with `--atomic` rollback — the in-place upgrade of an existing Vault 1.19.0 pod with persistent data timed out. Resolved by uninstalling the old Vault release, deleting the PVC, and performing a clean install with chart 0.34.0 (Vault 2.0.3).
+- Vault CLI binary download (`make vault`) failed due to pre-existing `LICENSE.txt` in `bin/` directory from the previous vault zip extraction. The `unzip` command prompts for overwrite in non-interactive mode and exits with code 1. Resolved by removing the stale `LICENSE.txt` before re-running. This is a pre-existing Makefile issue unrelated to the Vault version upgrade.
+
 ### Completion Notes List
 
+- **Task 1 (Review):** All 8 Vault 2.0 breaking changes reviewed against the sidecar container scripts and operator code. All CLI operations (`vault operator init`, `vault operator unseal`, `vault status`, `vault plugin register`, `vault plugin list`, `vault auth enable`, `vault write`, `vault policy write`, `vault policy list`) are core stable commands unchanged in Vault 2.0. The path canonicalization change, non-root container user, and IPC_LOCK removal (in 2.0.2) have no impact. No code changes required.
+- **Task 2 (Makefile):** Updated `VAULT_VERSION` from 1.19.0 to 2.0.3 and `VAULT_CHART_VERSION` from 0.30.0 to 0.34.0.
+- **Task 3 (integration values):** Updated all 4 sidecar container images from `hashicorp/vault:1.19.0` to `hashicorp/vault:2.0.3`.
+- **Task 4 (local-dev values):** Updated 2 tag fields (`1.19.2-ubi` → `2.0.3-ubi`) and 3 image fields (`registry.connect.redhat.com/hashicorp/vault:1.19.2-ubi` → `registry.connect.redhat.com/hashicorp/vault:2.0.3-ubi`).
+- **Task 5 (CLI download):** Verified `https://releases.hashicorp.com/vault/2.0.3/vault_2.0.3_linux_amd64.zip` returns HTTP 200 (176 MB). URL pattern unchanged for Vault 2.x.
+- **Task 6 (Test suite):** `go build ./...` succeeded (no source changes). `make test` passed (all unit tests). `make integration` passed against Vault 2.0.3 — all integration tests green with 56.6% controller coverage.
+- **Task 7 (project-context.md):** Updated Vault version reference from `1.19.0` to `2.0.3` in Build & Dev Tooling section.
+
 ### File List
+
+- `Makefile` (modified) — VAULT_VERSION 1.19.0 → 2.0.3, VAULT_CHART_VERSION 0.30.0 → 0.34.0
+- `integration/vault-values.yaml` (modified) — 4 sidecar image tags: hashicorp/vault:1.19.0 → hashicorp/vault:2.0.3
+- `config/local-development/vault-values.yaml` (modified) — 5 vault image references: 1.19.2-ubi → 2.0.3-ubi
+- `_bmad-output/project-context.md` (modified) — Vault version in Build & Dev Tooling: 1.19.0 → 2.0.3
+- `_bmad-output/implementation-artifacts/9-5-upgrade-vault-version-in-integration-test-infrastructure.md` (modified) — Story file updates
+
+### Change Log
+
+- 2026-07-31: Upgraded Vault from 1.19.0 to 2.0.3 across integration test infrastructure and local development. Updated Helm chart from 0.30.0 to 0.34.0. All integration tests pass against Vault 2.0.3. No Go source code changes required.
+
+### Review Findings
+
+- [x] [Review][Defer] Define the supported `deploy-vault` upgrade path across existing 1.x data — deferred: integration tests are expected to run on fresh environments, so Helm chart upgrade handling is out of scope for this story.
+- [x] [Review][Patch] Refresh the local Vault CLI when `VAULT_VERSION` changes [Makefile:481-492] — fixed: vault target now uses versioned binary path + symlink (matches kubectl pattern), also uses `unzip -o` to avoid interactive overwrite prompt
