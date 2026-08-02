@@ -216,3 +216,10 @@ make test
 ### Completion Notes List
 
 ### File List
+
+## Previous Review Notes (First Attempt — GPT 5.4)
+
+> These findings are from a code review of the first implementation attempt. Commit references are no longer valid but the architectural guidance remains relevant.
+
+- **[Patch]** The documented verification command `go build ./cmd/` fails because `cmd` is a directory. Use `go build ./cmd/main.go` instead.
+- **[Patch]** The `.gitignore` rule `main` is overly broad — it ignores any path named `main`, not just the root build artifact. Use `/main` to scope it to the repo root only.

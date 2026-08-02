@@ -241,3 +241,10 @@ If golangci-lint v2 causes unexpected issues:
 ### Completion Notes List
 
 ### File List
+
+## Previous Review Notes (First Attempt — GPT 5.4)
+
+> These findings are from a code review of the first implementation attempt. Commit references are no longer valid but the architectural guidance remains relevant.
+
+- **[Patch]** The `.golangci.yml` used a blanket `errcheck` exclusion for all `_test.go` files. Only 5 known acceptable cases were triaged — the exclusion should be narrowed (e.g., per-function `nolint` directives or a targeted exclusion list) to avoid hiding real unchecked errors in future tests.
+- **[Patch]** `staticcheck` was globally disabled with a comment about Go `1.27+` compatibility, but the repo baseline is `go 1.26.0`. Since the current Go version supports `staticcheck`, keep it enabled as a default correctness linter.

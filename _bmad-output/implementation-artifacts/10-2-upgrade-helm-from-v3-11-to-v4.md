@@ -205,3 +205,11 @@ If Helm 4 causes unexpected issues in CI that cannot be resolved quickly:
 ### Completion Notes List
 
 ### File List
+
+## Previous Review Notes (First Attempt — GPT 5.4)
+
+> These findings are from a code review of the first implementation attempt. Commit references are no longer valid but the architectural guidance remains relevant.
+
+- **[Decision]** The story spec says "DO NOT modify the helm download target structure" but the first attempt rewrote `make helm` into a version-suffixed binary + symlink flow. Decide whether to keep the existing download structure or adopt the version-suffix pattern (consistent with other tool targets like kustomize/opm).
+- **[Patch]** AC2 (`make deploy-ingress`, `make deploy-postgresql` success) and AC6 (integration test verification) were not evidenced. Ensure these are run and recorded in the Dev Agent Record.
+- **[Note]** cert-manager was bumped from v1.7.1 to v1.21.1 and `installCRDs=true` changed to `crds.enabled=true` — verify this aligns with the Helm 4 cert-manager chart requirements.

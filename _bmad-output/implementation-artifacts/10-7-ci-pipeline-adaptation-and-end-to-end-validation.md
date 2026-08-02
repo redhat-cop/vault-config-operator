@@ -362,3 +362,10 @@ make helmchart-test
 ### Completion Notes List
 
 ### File List
+
+## Previous Review Notes (First Attempt — GPT 5.4)
+
+> These findings are from a code review of the first implementation attempt. Commit references are no longer valid but the architectural guidance remains relevant.
+
+- **[Patch]** The story was marked `done` despite the completion notes recording 13/90 integration test failures (attributed to "Vault auth timeouts from degraded Kind cluster"). Do not mark done until all integration tests pass or failures are confirmed unrelated and documented with evidence.
+- **[Patch]** AC1 requires a full CI pipeline run to pass. The first attempt only reviewed workflow files statically — no actual CI pipeline execution was evidenced. Ensure a real CI run (or local equivalent) is recorded.

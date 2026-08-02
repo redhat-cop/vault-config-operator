@@ -377,3 +377,9 @@ After this change:
 ### Completion Notes List
 
 ### File List
+
+## Previous Review Notes (First Attempt — GPT 5.4)
+
+> These findings are from a code review of the first implementation attempt. Commit references are no longer valid but the architectural guidance remains relevant.
+
+- **[Decision]** After removing the kube-rbac-proxy sidecar, `config/prometheus/monitor.yaml` still references the old serving-cert trust anchor (`vault-config-operator-certs`), but this story moves metrics to controller-runtime self-signed HTTPS. This may temporarily break the default Prometheus scrape path. Decide whether Story 10.5 must maintain scrape continuity or if it's acceptable to fix in Story 10.6/10.7.

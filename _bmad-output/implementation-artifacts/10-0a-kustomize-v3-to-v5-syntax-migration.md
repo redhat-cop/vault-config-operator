@@ -362,3 +362,10 @@ All changes are confined to `config/` directory kustomization YAML files and the
 ### Completion Notes List
 
 ### File List
+
+## Previous Review Notes (First Attempt — GPT 5.4)
+
+> These findings are from a code review of the first implementation attempt. Commit references are no longer valid but the architectural guidance remains relevant.
+
+- **[Decision]** AC4 verification (`make deploy`) was skipped because it requires a live cluster. Decide whether to accept alternate evidence or require actual `make deploy` success.
+- **[Patch]** The tilt overlay `config/local-development/tilt/kustomization.yaml` depends on an ignored/generated `replace-image.yaml` — `kustomize build` is not reproducible from a clean checkout unless that file already exists.

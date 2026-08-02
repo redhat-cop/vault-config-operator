@@ -180,3 +180,10 @@ make test
 ### Completion Notes List
 
 ### File List
+
+## Previous Review Notes (First Attempt — GPT 5.4)
+
+> These findings are from a code review of the first implementation attempt. Commit references are no longer valid but the architectural guidance remains relevant.
+
+- **[Patch]** The Makefile `operator-sdk` target only downloads if `bin/operator-sdk` is missing. It does not check version — a stale cached binary at the old version will silently be reused. Add version-suffix caching (e.g., `bin/operator-sdk-$(OPERATOR_SDK_VERSION)` + symlink) consistent with other tool targets.
+- **[Patch]** AC5 and AC6 require evidence that `make bundle`, `operator-sdk bundle validate`, `make manifests generate`, `make build`, `make fmt vet`, and `make test` were actually run. Record this evidence in the Dev Agent Record.

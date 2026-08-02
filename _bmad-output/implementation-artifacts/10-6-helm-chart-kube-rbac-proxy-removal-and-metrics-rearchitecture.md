@@ -322,3 +322,10 @@ From Story 10.0 (go/v4 layout):
 ### Completion Notes List
 
 ### File List
+
+## Previous Review Notes (First Attempt — GPT 5.4)
+
+> These findings are from a code review of the first implementation attempt. Commit references are no longer valid but the architectural guidance remains relevant.
+
+- **[Patch]** The `metricsSecure=false` toggle is not end-to-end. The Helm template only emits the `--metrics-secure` flag when the value is `true`, while `cmd/main.go` defaults it to `true`. Setting `metricsSecure: false` in values has no effect. The insecure path needs proper plumbing if it's to be supported.
+- **[Patch]** The cert-manager metrics TLS wiring is broken. The `make helmchart` sed expression targets the wrong indentation level (6 spaces vs 8 in the actual `config/prometheus/monitor.yaml`), so the rewrite never fires. Also, the manager is not wired to serve metrics from the cert-manager-issued certificate secret.

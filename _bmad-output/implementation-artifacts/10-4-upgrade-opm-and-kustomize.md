@@ -281,3 +281,10 @@ From Story 10.3 (golangci-lint upgrade) and Story 10.2 (Helm upgrade):
 ### Completion Notes List
 
 ### File List
+
+## Previous Review Notes (First Attempt — GPT 5.4)
+
+> These findings are from a code review of the first implementation attempt. Commit references are no longer valid but the architectural guidance remains relevant.
+
+- **[Decision]** AC2 requires `make catalog-build` to succeed, but this command requires a pushed bundle image. The first attempt only confirmed `make opm` works. Decide whether to accept alternate evidence or require a real `make catalog-build` run.
+- **[Patch]** After adopting the version-suffixed opm binary + symlink pattern, the story's verification commands and rollback instructions should reference `bin/opm-$(OPM_VERSION)` not just `bin/opm`.
