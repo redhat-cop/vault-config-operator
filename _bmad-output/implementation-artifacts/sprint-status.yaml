@@ -35,7 +35,17 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-08-01
+last_updated: 2026-08-02
+# Story 10.6 ready-for-dev 2026-08-02
+# Story 10.5 ready-for-dev 2026-08-02
+# Story 10.7 ready-for-dev 2026-08-02
+# Story 10.4 ready-for-dev 2026-08-02
+# Story 10.3 ready-for-dev 2026-08-02
+# Story 10.2 ready-for-dev 2026-08-02
+# Story 10.0a ready-for-dev 2026-08-02
+# Story 10.1 ready-for-dev 2026-08-02
+# Story 10.0 ready-for-dev 2026-08-02
+# Epic 10 in-progress 2026-08-02
 # Epic 9 done + retrospective completed 2026-08-01
 # Story 9.5 done 2026-08-01
 # Story 9.5 in-progress 2026-07-31
@@ -452,16 +462,16 @@ development_status:
   epic-9-retrospective: done
 
   # Epic 10: Operator SDK + Build Tooling Upgrades & Metrics Modernization
-  epic-10: backlog
-  10-0-migrate-project-layout-from-gov3-to-gov4: backlog
-  10-0a-kustomize-v3-to-v5-syntax-migration: backlog
-  10-1-upgrade-operator-sdk-from-v1-31-to-v1-42: backlog
-  10-2-upgrade-helm-from-v3-11-to-v4: backlog
-  10-3-upgrade-golangci-lint-from-v1-59-to-v2: backlog
-  10-4-upgrade-opm-and-kustomize: backlog
-  10-5-remove-kube-rbac-proxy-enable-authn-authz: backlog
-  10-6-helm-chart-kube-rbac-proxy-removal-and-metrics-rearchitecture: backlog
-  10-7-ci-pipeline-adaptation-and-end-to-end-validation: backlog
+  epic-10: in-progress
+  10-0-migrate-project-layout-from-gov3-to-gov4: ready-for-dev
+  10-0a-kustomize-v3-to-v5-syntax-migration: ready-for-dev
+  10-1-upgrade-operator-sdk-from-v1-31-to-v1-42: ready-for-dev
+  10-2-upgrade-helm-from-v3-11-to-v4: ready-for-dev
+  10-3-upgrade-golangci-lint-from-v1-59-to-v2: ready-for-dev
+  10-4-upgrade-opm-and-kustomize: ready-for-dev
+  10-5-remove-kube-rbac-proxy-enable-authn-authz: ready-for-dev
+  10-6-helm-chart-kube-rbac-proxy-removal-and-metrics-rearchitecture: ready-for-dev
+  10-7-ci-pipeline-adaptation-and-end-to-end-validation: ready-for-dev
   epic-10-retrospective: optional
 
   # Epic 11: High-Priority Missing Secret Engines (AWS, Transit, SSH)
