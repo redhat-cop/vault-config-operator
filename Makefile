@@ -224,11 +224,11 @@ ldap-setup: kind-setup vault
 
 .PHONY: build
 build: manifests generate fmt vet ## Build manager binary.
-	go build -o bin/manager main.go
+	go build -o bin/manager ./cmd/
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
-	go run ./main.go
+	go run ./cmd/
 
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.

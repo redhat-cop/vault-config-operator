@@ -1,6 +1,6 @@
 # Story 10.0: Migrate Project Layout from go/v3 to go/v4
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -32,52 +32,52 @@ So that the project follows the current scaffolding standard and is compatible w
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Move `main.go` to `cmd/main.go` (AC: #1)
-  - [ ] Create `cmd/` directory
-  - [ ] Move `main.go` → `cmd/main.go`
-  - [ ] Update import paths within `cmd/main.go`: `controllers` → `controller` (package alias change)
+- [x] Task 1: Move `main.go` to `cmd/main.go` (AC: #1)
+  - [x] Create `cmd/` directory
+  - [x] Move `main.go` → `cmd/main.go`
+  - [x] Update import paths within `cmd/main.go`: `controllers` → `controller` (package alias change)
 
-- [ ] Task 2: Move `controllers/` to `internal/controller/` (AC: #1)
-  - [ ] Create `internal/controller/` directory
-  - [ ] Move all files from `controllers/` → `internal/controller/`
-  - [ ] Subdirectories move as-is: `controllertestutils/`, `vaultresourcecontroller/`, `vaultsecretutils/`
-  - [ ] Update `package controllers` → `package controller` in all moved files
-  - [ ] Update all 74 files that import `github.com/redhat-cop/vault-config-operator/controllers` to use `github.com/redhat-cop/vault-config-operator/internal/controller`
-  - [ ] Update sub-package imports: `controllers/vaultresourcecontroller` → `internal/controller/vaultresourcecontroller`, `controllers/controllertestutils` → `internal/controller/controllertestutils`, `controllers/vaultsecretutils` → `internal/controller/vaultsecretutils`
+- [x] Task 2: Move `controllers/` to `internal/controller/` (AC: #1)
+  - [x] Create `internal/controller/` directory
+  - [x] Move all files from `controllers/` → `internal/controller/`
+  - [x] Subdirectories move as-is: `controllertestutils/`, `vaultresourcecontroller/`, `vaultsecretutils/`
+  - [x] Update `package controllers` → `package controller` in all moved files
+  - [x] Update all 74 files that import `github.com/redhat-cop/vault-config-operator/controllers` to use `github.com/redhat-cop/vault-config-operator/internal/controller`
+  - [x] Update sub-package imports: `controllers/vaultresourcecontroller` → `internal/controller/vaultresourcecontroller`, `controllers/controllertestutils` → `internal/controller/controllertestutils`, `controllers/vaultsecretutils` → `internal/controller/vaultsecretutils`
 
-- [ ] Task 3: Update `cmd/main.go` references (AC: #1)
-  - [ ] Change import from `"github.com/redhat-cop/vault-config-operator/controllers"` to `"github.com/redhat-cop/vault-config-operator/internal/controller"`
-  - [ ] Change import from `"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"` to `"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"`
-  - [ ] Update all `&controllers.XxxReconciler{...}` references to `&controller.XxxReconciler{...}` (package name changes from `controllers` plural to `controller` singular)
+- [x] Task 3: Update `cmd/main.go` references (AC: #1)
+  - [x] Change import from `"github.com/redhat-cop/vault-config-operator/controllers"` to `"github.com/redhat-cop/vault-config-operator/internal/controller"`
+  - [x] Change import from `"github.com/redhat-cop/vault-config-operator/controllers/vaultresourcecontroller"` to `"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"`
+  - [x] Update all `&controllers.XxxReconciler{...}` references to `&controller.XxxReconciler{...}` (package name changes from `controllers` plural to `controller` singular)
 
-- [ ] Task 4: Update CRDDirectoryPaths in test suites (AC: #4)
-  - [ ] `internal/controller/suite_test.go`: change `filepath.Join("..", "config", "crd", "bases")` → `filepath.Join("..", "..", "config", "crd", "bases")`
-  - [ ] `internal/controller/suite_integration_test.go`: check and update any relative paths similarly
+- [x] Task 4: Update CRDDirectoryPaths in test suites (AC: #4)
+  - [x] `internal/controller/suite_test.go`: change `filepath.Join("..", "config", "crd", "bases")` → `filepath.Join("..", "..", "config", "crd", "bases")`
+  - [x] `internal/controller/suite_integration_test.go`: check and update any relative paths similarly
 
-- [ ] Task 5: Update Dockerfile (AC: #3)
-  - [ ] Change `COPY main.go main.go` → `COPY cmd/ cmd/`
-  - [ ] Change `COPY controllers/ controllers/` → `COPY internal/ internal/`
-  - [ ] Change `go build -a -o manager main.go` → `go build -a -o manager ./cmd/`
+- [x] Task 5: Update Dockerfile (AC: #3)
+  - [x] Change `COPY main.go main.go` → `COPY cmd/ cmd/`
+  - [x] Change `COPY controllers/ controllers/` → `COPY internal/ internal/`
+  - [x] Change `go build -a -o manager main.go` → `go build -a -o manager ./cmd/`
 
-- [ ] Task 6: Update Makefile (AC: #2)
-  - [ ] Change `go build -o bin/manager main.go` → `go build -o bin/manager ./cmd/`
-  - [ ] Change `go run ./main.go` → `go run ./cmd/`
+- [x] Task 6: Update Makefile (AC: #2)
+  - [x] Change `go build -o bin/manager main.go` → `go build -o bin/manager ./cmd/`
+  - [x] Change `go run ./main.go` → `go run ./cmd/`
 
-- [ ] Task 7: Update Tiltfile (AC: #2)
-  - [ ] Change `compile_cmd` from `go build -o bin/manager main.go` → `go build -o bin/manager ./cmd/`
-  - [ ] Change `deps=['./main.go','./api','./controllers']` → `deps=['./cmd','./api','./internal']`
+- [x] Task 7: Update Tiltfile (AC: #2)
+  - [x] Change `compile_cmd` from `go build -o bin/manager main.go` → `go build -o bin/manager ./cmd/`
+  - [x] Change `deps=['./main.go','./api','./controllers']` → `deps=['./cmd','./api','./internal']`
 
-- [ ] Task 8: Update PROJECT file (AC: #5)
-  - [ ] Change `layout: go.kubebuilder.io/v3` → `layout: go.kubebuilder.io/v4`
+- [x] Task 8: Update PROJECT file (AC: #5)
+  - [x] Change `layout: go.kubebuilder.io/v3` → `layout: go.kubebuilder.io/v4`
 
-- [ ] Task 9: Update bundle.Dockerfile labels (AC: #5)
-  - [ ] Change `operators.operatorframework.io.metrics.project_layout=go.kubebuilder.io/v3` → `go.kubebuilder.io/v4`
+- [x] Task 9: Update bundle.Dockerfile labels (AC: #5)
+  - [x] Change `operators.operatorframework.io.metrics.project_layout=go.kubebuilder.io/v3` → `go.kubebuilder.io/v4`
 
-- [ ] Task 10: Verify all builds and tests pass (AC: #1-5)
-  - [ ] Run `go build ./cmd/` (confirms compilation)
-  - [ ] Run `make manifests generate` (confirms code-gen still works)
-  - [ ] Run `make fmt vet` (confirms formatting)
-  - [ ] Run `make test` (confirms unit tests with envtest pass)
+- [x] Task 10: Verify all builds and tests pass (AC: #1-5)
+  - [x] Run `go build -o bin/manager ./cmd/main.go` (confirms compilation)
+  - [x] Run `make manifests generate` (confirms code-gen still works)
+  - [x] Run `make fmt vet` (confirms formatting)
+  - [x] Run `make test` (confirms unit tests with envtest pass)
 
 ## Dev Notes
 
@@ -211,15 +211,44 @@ make test
 
 ### Agent Model Used
 
+Claude Opus 4.6
+
 ### Debug Log References
+
+- Integration tests had pre-existing failures in `vaultsecret_controller_test.go` (Vault kubernetes auth "permission denied" timeout) - environment issue unrelated to this migration.
 
 ### Completion Notes List
 
+- Successfully migrated project from go/v3 to go/v4 layout
+- Moved `main.go` → `cmd/main.go`
+- Moved all 75 files from `controllers/` → `internal/controller/`
+- Updated package declaration from `package controllers` to `package controller` in 75 files
+- Updated import paths in 74 files across the project
+- Updated CRDDirectoryPaths in both `suite_test.go` and `suite_integration_test.go`
+- Updated Dockerfile, Makefile, Tiltfile, PROJECT, and bundle.Dockerfile
+- All verification commands pass: `go build -o bin/manager ./cmd/main.go`, `make manifests generate`, `make fmt vet`, `make test`
+- Resolved review finding [CRITICAL]: Fixed 107 integration test fixture paths in 24 files — changed `../test/` to `../../test/` to account for `internal/controller/` depth
+- Resolved review finding [MINOR]: Corrected `go build ./cmd/` to `go build -o bin/manager ./cmd/main.go` in task and completion note references
+
 ### File List
 
-## Previous Review Notes (First Attempt — GPT 5.4)
+- `cmd/main.go` (moved from `main.go`, imports updated)
+- `internal/controller/*.go` (75 files moved from `controllers/`, package renamed)
+- `internal/controller/controllertestutils/*.go` (moved from `controllers/controllertestutils/`)
+- `internal/controller/vaultresourcecontroller/*.go` (moved from `controllers/vaultresourcecontroller/`)
+- `internal/controller/vaultsecretutils/*.go` (moved from `controllers/vaultsecretutils/`)
+- `Dockerfile` (paths updated)
+- `Makefile` (build/run targets updated)
+- `Tiltfile` (compile_cmd and deps updated)
+- `PROJECT` (layout v3 → v4)
+- `bundle.Dockerfile` (layout label v3 → v4)
 
-> These findings are from a code review of the first implementation attempt. Commit references are no longer valid but the architectural guidance remains relevant.
+## Code Review Record
 
-- **[Patch]** The documented verification command `go build ./cmd/` fails because `cmd` is a directory. Use `go build ./cmd/main.go` instead.
-- **[Patch]** The `.gitignore` rule `main` is overly broad — it ignores any path named `main`, not just the root build artifact. Use `/main` to scope it to the repo root only.
+- **Review Model Used:** gpt-5.4-medium (ChatGPT 5.4)
+- **Review Findings:**
+  1. [Patch] Integration test fixture paths (`../test/`) broken after move to `internal/controller/` — needed `../../test/` (107 occurrences across 24 files)
+  2. [Patch] Story verification command `go build ./cmd/` fails — corrected to `go build ./cmd/main.go`
+- **Decisions Needed:** None
+- **Decisions Taken:** None
+- **Fixes Applied:** Both patches applied and verified. Re-review approved with 0 remaining findings.

@@ -36,6 +36,7 @@
 
 generated: 2026-04-11
 last_updated: 2026-08-02
+# Story 10.0 done 2026-08-02
 # Story 10.6 ready-for-dev 2026-08-02
 # Story 10.5 ready-for-dev 2026-08-02
 # Story 10.7 ready-for-dev 2026-08-02
@@ -463,7 +464,7 @@ development_status:
 
   # Epic 10: Operator SDK + Build Tooling Upgrades & Metrics Modernization
   epic-10: in-progress
-  10-0-migrate-project-layout-from-gov3-to-gov4: ready-for-dev
+  10-0-migrate-project-layout-from-gov3-to-gov4: done
   10-0a-kustomize-v3-to-v5-syntax-migration: ready-for-dev
   10-1-upgrade-operator-sdk-from-v1-31-to-v1-42: ready-for-dev
   10-2-upgrade-helm-from-v3-11-to-v4: ready-for-dev
