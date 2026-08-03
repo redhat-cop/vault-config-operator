@@ -2,7 +2,7 @@ KUBECTL_WAIT_TIMEOUT ?= 5m
 CHART_REPO_URL ?= http://example.com
 HELM_REPO_DEST ?= /tmp/gh-pages
 OPERATOR_NAME ?=$(shell basename -z `pwd`)
-HELM_VERSION ?= v3.11.0
+HELM_VERSION ?= v4.2.3
 KIND_VERSION ?= v0.32.0
 KIND_CLUSTER_NAME ?= vault-config-operator
 KUBECTL_VERSION ?= v1.36.1
@@ -140,7 +140,7 @@ integration: kind-setup deploy-vault deploy-ingress deploy-postgresql deploy-rab
 
 .PHONY: deploy-ingress
 deploy-ingress: kubectl helm
-	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i ingress-nginx ./integration/helm/ingress-nginx -n vault --atomic --create-namespace
+	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i ingress-nginx ./integration/helm/ingress-nginx -n vault --rollback-on-failure --create-namespace
 	$(KUBECTL) --context $(KUBE_CONTEXT) apply -f ./integration/manifests/ingress-nginx-kind-deploy.yaml
 	$(KUBECTL) --context $(KUBE_CONTEXT) rollout status deployment ingress-nginx-controller -n ingress-nginx -w
 	$(KUBECTL) --context $(KUBE_CONTEXT) wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=${KUBECTL_WAIT_TIMEOUT}
@@ -149,9 +149,9 @@ deploy-ingress: kubectl helm
 deploy-vault: kubectl helm
 	$(KUBECTL) --context $(KUBE_CONTEXT) create namespace vault --dry-run=client -o yaml | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f -
 	$(KUBECTL) --context $(KUBE_CONTEXT) apply -f ./integration/rolebinding-admin.yaml -n vault
-	$(HELM) --kube-context $(KUBE_CONTEXT) repo add hashicorp https://helm.releases.hashicorp.com
+	$(HELM) --kube-context $(KUBE_CONTEXT) repo add hashicorp https://helm.releases.hashicorp.com --force-update
 	$(HELM) --kube-context $(KUBE_CONTEXT) show chart hashicorp/vault --version $(VAULT_CHART_VERSION)
-	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade vault hashicorp/vault --version $(VAULT_CHART_VERSION) -i --create-namespace -n vault --atomic -f ./integration/vault-values.yaml
+	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade vault hashicorp/vault --version $(VAULT_CHART_VERSION) -i --create-namespace -n vault --rollback-on-failure -f ./integration/vault-values.yaml
 	$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready pod/vault-0 -n vault --timeout=${KUBECTL_WAIT_TIMEOUT}
 
 .PHONY: kind-setup
@@ -178,9 +178,9 @@ kind-setup: kind
 
 .PHONY: deploy-postgresql
 deploy-postgresql: kubectl helm
-	$(HELM) --kube-context $(KUBE_CONTEXT) repo add bitnami https://charts.bitnami.com/bitnami || true
+	$(HELM) --kube-context $(KUBE_CONTEXT) repo add bitnami https://charts.bitnami.com/bitnami --force-update
 	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i postgresql bitnami/postgresql \
-		-n test-vault-config-operator --create-namespace --atomic \
+		-n test-vault-config-operator --create-namespace --rollback-on-failure \
 		-f ./integration/postgresql-values.yaml
 	$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready pod -l app.kubernetes.io/instance=postgresql \
 		-n test-vault-config-operator --timeout=$(KUBECTL_WAIT_TIMEOUT)
@@ -438,9 +438,9 @@ helmchart-test: kind-setup deploy-vault helmchart
 	$(CONTAINER_RUNTIME) tag ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
 	$(CONTAINER_RUNTIME) pull ${HELM_TEST_SIDECAR_IMG}
 	$(KIND) load docker-image --name $(KIND_CLUSTER_NAME) ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} ${HELM_TEST_SIDECAR_IMG}
-	$(HELM) --kube-context $(KUBE_CONTEXT) repo add jetstack https://charts.jetstack.io
-	$(HELM) --kube-context $(KUBE_CONTEXT) install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.7.1 --set installCRDs=true
-	$(HELM) --kube-context $(KUBE_CONTEXT) repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	$(HELM) --kube-context $(KUBE_CONTEXT) repo add jetstack https://charts.jetstack.io --force-update
+	$(HELM) --kube-context $(KUBE_CONTEXT) install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.21.1 --set crds.enabled=true
+	$(HELM) --kube-context $(KUBE_CONTEXT) repo add prometheus-community https://prometheus-community.github.io/helm-charts --force-update
 	$(HELM) --kube-context $(KUBE_CONTEXT) install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n default -f integration/kube-prometheus-stack-values.yaml
 	$(HELM) --kube-context $(KUBE_CONTEXT) install prometheus-rbac integration/helm/prometheus-rbac -n default
 	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i ${OPERATOR_NAME}-local charts/${OPERATOR_NAME} -n ${OPERATOR_NAME}-local --create-namespace \
@@ -494,14 +494,18 @@ vault: ## Download vault cli locally if necessary.
 .PHONY: helm
 HELM ?= $(LOCALBIN)/helm
 helm: ## Download helm locally if necessary.
-ifeq (,$(wildcard $(HELM)))
-	echo "Downloading helm to ${HELM}..."
+	@[ -f "$(HELM)-$(HELM_VERSION)" ] || { \
+	set -e ;\
+	echo "Downloading helm $(HELM_VERSION) to $(HELM)..." ;\
 	OS=$(shell go env GOOS) ;\
 	ARCH=$(shell go env GOARCH) ;\
-	curl --create-dirs -sSLo ${HELM}.tar.gz https://get.helm.sh/helm-${HELM_VERSION}-$${OS}-$${ARCH}.tar.gz ;\
-	tar -xf ${HELM}.tar.gz -C $(LOCALBIN)/ ;\
-	mv ./bin/$${OS}-$${ARCH}/helm ${HELM}
-endif
+	curl --create-dirs -sSLo $(HELM).tar.gz https://get.helm.sh/helm-$(HELM_VERSION)-$${OS}-$${ARCH}.tar.gz ;\
+	tar -xf $(HELM).tar.gz -C $(LOCALBIN)/ ;\
+	mv $(LOCALBIN)/$${OS}-$${ARCH}/helm $(HELM)-$(HELM_VERSION) ;\
+	rm -f $(HELM).tar.gz ;\
+	rm -rf $(LOCALBIN)/$${OS}-$${ARCH} ;\
+	} ;\
+	ln -sf $(HELM)-$(HELM_VERSION) $(HELM)
 
 .PHONY: clean
 clean:

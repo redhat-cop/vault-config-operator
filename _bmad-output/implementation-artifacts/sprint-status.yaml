@@ -35,8 +35,11 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-08-02
+last_updated: 2026-08-03
+# Story 10.2 review 2026-08-03
+# Story 10.2 in-progress 2026-08-03
 # Story 10.0a review 2026-08-02
+# Story 10.2 done 2026-08-03
 # Story 10.0a done 2026-08-03
 # Story 10.0 done 2026-08-02
 # Story 10.6 ready-for-dev 2026-08-02
@@ -469,7 +472,7 @@ development_status:
   10-0-migrate-project-layout-from-gov3-to-gov4: done
   10-0a-kustomize-v3-to-v5-syntax-migration: done
   10-1-upgrade-operator-sdk-from-v1-31-to-v1-42: ready-for-dev
-  10-2-upgrade-helm-from-v3-11-to-v4: ready-for-dev
+  10-2-upgrade-helm-from-v3-11-to-v4: done
   10-3-upgrade-golangci-lint-from-v1-59-to-v2: ready-for-dev
   10-4-upgrade-opm-and-kustomize: ready-for-dev
   10-5-remove-kube-rbac-proxy-enable-authn-authz: ready-for-dev
