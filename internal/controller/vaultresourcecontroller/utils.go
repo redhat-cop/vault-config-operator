@@ -125,7 +125,7 @@ func NewReconcilerBase(client client.Client, scheme *runtime.Scheme, restConfig 
 
 // NewReconcilerBase is a contruction function to create a new ReconcilerBase.
 func NewFromManager(mgr manager.Manager, controllerName string) ReconcilerBase {
-	return NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor(controllerName), mgr.GetAPIReader(), mgr.GetLogger().WithName("controllers").WithName(controllerName), controllerName)
+	return NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor(controllerName), mgr.GetAPIReader(), mgr.GetLogger().WithName("controllers").WithName(controllerName), controllerName) //nolint:staticcheck // SA1019: GetEventRecorderFor replacement requires controller-runtime upgrade
 }
 
 func ManageOutcomeWithRequeue(context context.Context, r ReconcilerBase, obj client.Object, issue error, requeueAfter time.Duration) (reconcile.Result, error) {

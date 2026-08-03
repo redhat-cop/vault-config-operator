@@ -76,7 +76,7 @@ func (r *NamespaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// You can be authenticated in mynamespace but create namespace under mynamespace/somechildnamespace
 	vaultClient := ctx1.Value("vaultClient").(*vault.Client)
 	vaultClient.WithNamespace(string(instance.Spec.Path))
-	ctx2 := context.WithValue(ctx1, "vaultClient", vaultClient)
+	ctx2 := context.WithValue(ctx1, "vaultClient", vaultClient) //nolint:staticcheck // SA1029+SA4017: pre-existing bug — uses string key instead of typed VaultClientKey, and ignores WithNamespace return value. Fix tracked in Story R1.1.
 
 	return vaultResource.Reconcile(ctx2, instance)
 }

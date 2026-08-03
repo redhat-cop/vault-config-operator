@@ -105,11 +105,11 @@ func TestIsDriftDetectionEnabled(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Set up environment
 			if tt.envValue != "" {
-				os.Setenv("ENABLE_DRIFT_DETECTION", tt.envValue)
+				os.Setenv("ENABLE_DRIFT_DETECTION", tt.envValue) //nolint:errcheck // test setup
 			} else {
-				os.Unsetenv("ENABLE_DRIFT_DETECTION")
+				os.Unsetenv("ENABLE_DRIFT_DETECTION") //nolint:errcheck // test setup
 			}
-			defer os.Unsetenv("ENABLE_DRIFT_DETECTION")
+			defer os.Unsetenv("ENABLE_DRIFT_DETECTION") //nolint:errcheck // test cleanup
 
 			result := IsDriftDetectionEnabled()
 			if result != tt.expected {

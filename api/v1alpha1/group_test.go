@@ -242,7 +242,7 @@ func TestGroupEnrichStatus(t *testing.T) {
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{
+		json.NewEncoder(w).Encode(map[string]any{ //nolint:errcheck // test helper
 			"data": map[string]any{
 				"id":   wantID,
 				"name": "my-group",
@@ -267,7 +267,7 @@ func TestGroupEnrichStatus(t *testing.T) {
 func TestGroupEnrichStatusNoIDField(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{
+		json.NewEncoder(w).Encode(map[string]any{ //nolint:errcheck // test helper
 			"data": map[string]any{
 				"name": "my-group", // no "id" key
 			},
