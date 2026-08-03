@@ -18,7 +18,7 @@ VAULT_VERSION ?= 2.0.3
 VAULT_CHART_VERSION ?= 0.34.0
 # Set the Operator SDK version to use. By default, what is installed on the system is used.
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
-OPERATOR_SDK_VERSION ?= v1.31.0
+OPERATOR_SDK_VERSION ?= v1.42.3
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION ?= 1.36.0
 
@@ -327,19 +327,20 @@ endef
 
 .PHONY: operator-sdk
 OPERATOR_SDK ?= $(LOCALBIN)/operator-sdk
+ifeq ($(OPERATOR_SDK),$(LOCALBIN)/operator-sdk)
 operator-sdk: ## Download operator-sdk locally if necessary.
-ifeq (,$(wildcard $(OPERATOR_SDK)))
-ifeq (, $(shell which operator-sdk 2>/dev/null))
-	@{ \
+	@[ -f "$(OPERATOR_SDK)-$(OPERATOR_SDK_VERSION)" ] || { \
 	set -e ;\
+	echo "Downloading operator-sdk $(OPERATOR_SDK_VERSION) to $(OPERATOR_SDK)..." ;\
 	mkdir -p $(dir $(OPERATOR_SDK)) ;\
 	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
-	curl -sSLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_$${OS}_$${ARCH} ;\
-	chmod +x $(OPERATOR_SDK) ;\
-	}
+	curl -sSLo $(OPERATOR_SDK)-$(OPERATOR_SDK_VERSION) https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_$${OS}_$${ARCH} ;\
+	chmod +x $(OPERATOR_SDK)-$(OPERATOR_SDK_VERSION) ;\
+	} ;\
+	ln -sf $(OPERATOR_SDK)-$(OPERATOR_SDK_VERSION) $(OPERATOR_SDK)
 else
-OPERATOR_SDK = $(shell which operator-sdk)
-endif
+operator-sdk:
+	@echo "Using operator-sdk from $(OPERATOR_SDK)"
 endif
 
 .PHONY: bundle

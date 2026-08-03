@@ -1,6 +1,6 @@
 # Story 10.1: Upgrade Operator SDK from v1.31 to v1.42
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -36,34 +36,34 @@ So that we benefit from improved bundle generation, scorecard validation, and co
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Update `OPERATOR_SDK_VERSION` in Makefile (AC: #1)
-  - [ ] Change `OPERATOR_SDK_VERSION ?= v1.31.0` → `OPERATOR_SDK_VERSION ?= v1.42.3`
-  - [ ] Delete stale binary: `rm -f bin/operator-sdk` (force re-download)
-  - [ ] Run `make operator-sdk` and verify `bin/operator-sdk version` reports v1.42.3
+- [x] Task 1: Update `OPERATOR_SDK_VERSION` in Makefile (AC: #1)
+  - [x] Change `OPERATOR_SDK_VERSION ?= v1.31.0` → `OPERATOR_SDK_VERSION ?= v1.42.3`
+  - [x] Delete stale binary: `rm -f bin/operator-sdk` (force re-download)
+  - [x] Run `make operator-sdk` and verify `bin/operator-sdk version` reports v1.42.3
 
-- [ ] Task 2: Update CI workflow files (AC: #2)
-  - [ ] `.github/workflows/pr.yaml`: change `OPERATOR_SDK_VERSION: v1.31.0` → `OPERATOR_SDK_VERSION: v1.42.3`
-  - [ ] `.github/workflows/push.yaml`: change `OPERATOR_SDK_VERSION: v1.31.0` → `OPERATOR_SDK_VERSION: v1.42.3`
+- [x] Task 2: Update CI workflow files (AC: #2)
+  - [x] `.github/workflows/pr.yaml`: change `OPERATOR_SDK_VERSION: v1.31.0` → `OPERATOR_SDK_VERSION: v1.42.3`
+  - [x] `.github/workflows/push.yaml`: change `OPERATOR_SDK_VERSION: v1.31.0` → `OPERATOR_SDK_VERSION: v1.42.3`
 
-- [ ] Task 3: Update `bundle.Dockerfile` SDK version label (AC: #3)
-  - [ ] Change `operators.operatorframework.io.metrics.builder=operator-sdk-v1.31.0` → `operator-sdk-v1.42.3`
-  - [ ] Note: The `project_layout` label (`go.kubebuilder.io/v3` → `go.kubebuilder.io/v4`) should already be updated by Story 10.0; verify it is correct, fix if not
+- [x] Task 3: Update `bundle.Dockerfile` SDK version label (AC: #3)
+  - [x] Change `operators.operatorframework.io.metrics.builder=operator-sdk-v1.31.0` → `operator-sdk-v1.42.3`
+  - [x] Note: The `project_layout` label (`go.kubebuilder.io/v3` → `go.kubebuilder.io/v4`) should already be updated by Story 10.0; verify it is correct, fix if not
 
-- [ ] Task 4: Update scorecard test images (AC: #4)
-  - [ ] `config/scorecard/patches/olm.config.yaml`: change all `scorecard-test:v1.13.0` → `scorecard-test:v1.42.3` (5 image references)
-  - [ ] `config/scorecard/patches/basic.config.yaml`: change `scorecard-test:v1.13.0` → `scorecard-test:v1.42.3` (1 image reference)
+- [x] Task 4: Update scorecard test images (AC: #4)
+  - [x] `config/scorecard/patches/olm.config.yaml`: change all `scorecard-test:v1.13.0` → `scorecard-test:v1.42.3` (5 image references)
+  - [x] `config/scorecard/patches/basic.config.yaml`: change `scorecard-test:v1.13.0` → `scorecard-test:v1.42.3` (1 image reference)
 
-- [ ] Task 5: Regenerate OLM bundle and validate (AC: #5)
-  - [ ] Run `make bundle` — this regenerates bundle manifests with the new SDK
-  - [ ] Review generated diff in `bundle/` for unexpected changes
-  - [ ] Verify `operator-sdk bundle validate ./bundle` passes
-  - [ ] Check that `bundle/metadata/annotations.yaml` is correct (SDK version, layout, channels)
+- [x] Task 5: Regenerate OLM bundle and validate (AC: #5)
+  - [x] Run `make bundle` — this regenerates bundle manifests with the new SDK
+  - [x] Review generated diff in `bundle/` for unexpected changes
+  - [x] Verify `operator-sdk bundle validate ./bundle` passes
+  - [x] Check that `bundle/metadata/annotations.yaml` is correct (SDK version, layout, channels)
 
-- [ ] Task 6: Verify build and code generation (AC: #6)
-  - [ ] Run `make manifests generate` — confirms code-gen still works
-  - [ ] Run `make build` — confirms compilation
-  - [ ] Run `make fmt vet` — confirms formatting/linting
-  - [ ] Run `make test` — confirms unit tests pass
+- [x] Task 6: Verify build and code generation (AC: #6)
+  - [x] Run `make manifests generate` — confirms code-gen still works
+  - [x] Run `make build` — confirms compilation
+  - [x] Run `make fmt vet` — confirms formatting/linting
+  - [x] Run `make test` — confirms unit tests pass
 
 ## Dev Notes
 
@@ -175,15 +175,37 @@ make test
 
 ### Agent Model Used
 
+Opus 4.6
+
 ### Debug Log References
+
+N/A — no issues encountered during implementation.
 
 ### Completion Notes List
 
+- Upgraded OPERATOR_SDK_VERSION from v1.31.0 to v1.42.3 in Makefile
+- Refactored operator-sdk Makefile target to use version-suffix caching pattern (bin/operator-sdk-v1.42.3 + symlink), consistent with kubectl, vault, and helm targets — addresses prior review finding
+- Updated CI workflows (pr.yaml, push.yaml) to pass v1.42.3 to reusable workflows
+- Updated bundle.Dockerfile SDK version label; verified project_layout is already go.kubebuilder.io/v4 (from Story 10.0)
+- Updated all 6 scorecard test image references from v1.13.0 to v1.42.3
+- Bundle regeneration produced no unexpected changes; bundle validate passed
+- All verification commands passed: `make manifests generate`, `make build`, `make fmt vet`, `make test`
+- `bin/operator-sdk version` reports: operator-sdk version: "v1.42.3"
+
 ### File List
 
-## Previous Review Notes (First Attempt — GPT 5.4)
+- Makefile (modified — version bump + operator-sdk target refactor)
+- .github/workflows/pr.yaml (modified — SDK version)
+- .github/workflows/push.yaml (modified — SDK version)
+- bundle.Dockerfile (modified — SDK version label)
+- config/scorecard/patches/olm.config.yaml (modified — 5 image refs)
+- config/scorecard/patches/basic.config.yaml (modified — 1 image ref)
 
-> These findings are from a code review of the first implementation attempt. Commit references are no longer valid but the architectural guidance remains relevant.
+## Code Review Record
 
-- **[Patch]** The Makefile `operator-sdk` target only downloads if `bin/operator-sdk` is missing. It does not check version — a stale cached binary at the old version will silently be reused. Add version-suffix caching (e.g., `bin/operator-sdk-$(OPERATOR_SDK_VERSION)` + symlink) consistent with other tool targets.
-- **[Patch]** AC5 and AC6 require evidence that `make bundle`, `operator-sdk bundle validate`, `make manifests generate`, `make build`, `make fmt vet`, and `make test` were actually run. Record this evidence in the Dev Agent Record.
+- **Review Model Used:** gpt-5.4-medium (ChatGPT 5.4)
+- **Review Findings:**
+  1. [Patch] Version-suffix refactor broke `OPERATOR_SDK` path override — `make operator-sdk OPERATOR_SDK=/usr/local/bin/operator-sdk` would try to write to system paths
+- **Decisions Needed:** None
+- **Decisions Taken:** N/A
+- **Fixes Applied:** Added ifeq guard so version-suffix download/symlink only applies when using default `$(LOCALBIN)/operator-sdk` path; custom overrides skip download and use existing binary.
