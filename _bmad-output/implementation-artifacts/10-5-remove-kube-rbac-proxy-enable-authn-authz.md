@@ -1,6 +1,6 @@
 # Story 10.5: Remove kube-rbac-proxy and Enable controller-runtime authn/authz
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -32,38 +32,38 @@ So that the operator no longer depends on an external proxy image for metrics se
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Remove kube-rbac-proxy files (AC: #1)
-  - [ ] Delete `config/default/manager_auth_proxy_patch.yaml`
-  - [ ] Delete `config/rbac/auth_proxy_service.yaml`
-  - [ ] Delete `config/rbac/auth_proxy_role.yaml`
-  - [ ] Delete `config/rbac/auth_proxy_role_binding.yaml`
-  - [ ] Delete `config/rbac/auth_proxy_client_clusterrole.yaml`
+- [x] Task 1: Remove kube-rbac-proxy files (AC: #1)
+  - [x] Delete `config/default/manager_auth_proxy_patch.yaml`
+  - [x] Delete `config/rbac/auth_proxy_service.yaml`
+  - [x] Delete `config/rbac/auth_proxy_role.yaml`
+  - [x] Delete `config/rbac/auth_proxy_role_binding.yaml`
+  - [x] Delete `config/rbac/auth_proxy_client_clusterrole.yaml`
 
-- [ ] Task 2: Create new metrics RBAC files (AC: #4)
-  - [ ] Create `config/rbac/metrics_auth_role.yaml` — ClusterRole granting `tokenreviews` and `subjectaccessreviews` create
-  - [ ] Create `config/rbac/metrics_auth_role_binding.yaml` — ClusterRoleBinding for the controller-manager ServiceAccount
-  - [ ] Create `config/rbac/metrics_reader_role.yaml` — ClusterRole with GET access to `/metrics` nonResourceURL
+- [x] Task 2: Create new metrics RBAC files (AC: #4)
+  - [x] Create `config/rbac/metrics_auth_role.yaml` — ClusterRole granting `tokenreviews` and `subjectaccessreviews` create
+  - [x] Create `config/rbac/metrics_auth_role_binding.yaml` — ClusterRoleBinding for the controller-manager ServiceAccount
+  - [x] Create `config/rbac/metrics_reader_role.yaml` — ClusterRole with GET access to `/metrics` nonResourceURL
 
-- [ ] Task 3: Create metrics Service and Deployment patch (AC: #1)
-  - [ ] Create `config/default/metrics_service.yaml` — Service on port 8443 targeting the manager container directly (replaces `auth_proxy_service.yaml` that was in `config/rbac/`)
-  - [ ] Create `config/default/manager_metrics_patch.yaml` — Deployment patch adding `--metrics-bind-address=:8443`, `--metrics-secure`, `--health-probe-bind-address=:8081`, `--leader-elect` args, and containerPort 8443
+- [x] Task 3: Create metrics Service and Deployment patch (AC: #1)
+  - [x] Create `config/default/metrics_service.yaml` — Service on port 8443 targeting the manager container directly (replaces `auth_proxy_service.yaml` that was in `config/rbac/`)
+  - [x] Create `config/default/manager_metrics_patch.yaml` — Deployment patch adding `--metrics-bind-address=:8443`, `--metrics-secure`, `--health-probe-bind-address=:8081`, `--leader-elect` args, and containerPort 8443
 
-- [ ] Task 4: Update kustomization files (AC: #1, #4)
-  - [ ] `config/rbac/kustomization.yaml`: remove 4 `auth_proxy_*` entries, add 3 `metrics_*` entries
-  - [ ] `config/default/kustomization.yaml`: remove `manager_auth_proxy_patch.yaml` from patches, add `metrics_service.yaml` to resources, add `manager_metrics_patch.yaml` to patches
+- [x] Task 4: Update kustomization files (AC: #1, #4)
+  - [x] `config/rbac/kustomization.yaml`: remove 4 `auth_proxy_*` entries, add 3 `metrics_*` entries
+  - [x] `config/default/kustomization.yaml`: remove `manager_auth_proxy_patch.yaml` from patches, add `metrics_service.yaml` to resources, add `manager_metrics_patch.yaml` to patches
 
-- [ ] Task 5: Update `cmd/main.go` for authn/authz (AC: #2, #3)
-  - [ ] Add import `"sigs.k8s.io/controller-runtime/pkg/metrics/filters"`
-  - [ ] Add `flag.BoolVar(&secureMetrics, "metrics-secure", true, "If set, the metrics endpoint is served securely via HTTPS. Use --metrics-secure=false to use HTTP instead.")`
-  - [ ] Change `metrics-bind-address` default from `":8080"` to `":8443"`
-  - [ ] After `metricsServerOptions` struct initialization, add: `if secureMetrics { metricsServerOptions.FilterProvider = filters.WithAuthenticationAndAuthorization }`
+- [x] Task 5: Update `cmd/main.go` for authn/authz (AC: #2, #3)
+  - [x] Add import `"sigs.k8s.io/controller-runtime/pkg/metrics/filters"`
+  - [x] Add `flag.BoolVar(&secureMetrics, "metrics-secure", true, "If set, the metrics endpoint is served securely via HTTPS. Use --metrics-secure=false to use HTTP instead.")`
+  - [x] Change `metrics-bind-address` default from `":8080"` to `":8443"`
+  - [x] After `metricsServerOptions` struct initialization, add: `if secureMetrics { metricsServerOptions.FilterProvider = filters.WithAuthenticationAndAuthorization }`
 
-- [ ] Task 6: Verify builds and kustomize output (AC: #1-5)
-  - [ ] Run `go build ./cmd/` (confirms compilation with new import)
-  - [ ] Run `kustomize build config/default` and verify: only manager container (no sidecar), args include `--metrics-secure`, Service for metrics present
-  - [ ] Run `make manifests generate`
-  - [ ] Run `make fmt vet`
-  - [ ] Run `make test`
+- [x] Task 6: Verify builds and kustomize output (AC: #1-5)
+  - [x] Run `go build ./cmd/` (confirms compilation with new import)
+  - [x] Run `kustomize build config/default` and verify: only manager container (no sidecar), args include `--metrics-secure`, Service for metrics present
+  - [x] Run `make manifests generate`
+  - [x] Run `make fmt vet`
+  - [x] Run `make test`
 
 ## Dev Notes
 
@@ -372,14 +372,46 @@ After this change:
 
 ### Agent Model Used
 
+Claude Opus 4.6
+
 ### Debug Log References
+
+- Needed `go get sigs.k8s.io/controller-runtime/pkg/metrics/filters@v0.24.1` to resolve missing go.sum entries for k8s.io/apiserver transitive dependencies
 
 ### Completion Notes List
 
+- Removed kube-rbac-proxy sidecar entirely (5 files deleted)
+- Created 3 new RBAC files for metrics authn/authz (tokenreviews, subjectaccessreviews, metrics-reader)
+- Created metrics Service (port 8443) and Deployment patch in config/default/
+- Updated kustomization files to reference new resources/patches
+- Updated cmd/main.go: added filters import, --metrics-secure flag (default true), changed metrics port to 8443, added FilterProvider conditional
+- All acceptance criteria verified: `make manifests generate`, `make fmt vet`, `make test` all pass
+- kustomize output verified: single manager container, correct args, metrics Service present, RBAC ClusterRoles present
+
 ### File List
 
-## Previous Review Notes (First Attempt — GPT 5.4)
+- config/rbac/metrics_auth_role.yaml (new)
+- config/rbac/metrics_auth_role_binding.yaml (new)
+- config/rbac/metrics_reader_role.yaml (new)
+- config/default/metrics_service.yaml (new)
+- config/default/manager_metrics_patch.yaml (new)
+- config/rbac/kustomization.yaml (modified)
+- config/default/kustomization.yaml (modified)
+- cmd/main.go (modified)
+- go.mod (modified — added k8s.io/apiserver indirect dependency)
+- go.sum (modified)
+- config/default/manager_auth_proxy_patch.yaml (deleted)
+- config/rbac/auth_proxy_service.yaml (deleted)
+- config/rbac/auth_proxy_role.yaml (deleted)
+- config/rbac/auth_proxy_role_binding.yaml (deleted)
+- config/rbac/auth_proxy_client_clusterrole.yaml (deleted)
 
-> These findings are from a code review of the first implementation attempt. Commit references are no longer valid but the architectural guidance remains relevant.
+## Code Review Record
 
-- **[Decision]** After removing the kube-rbac-proxy sidecar, `config/prometheus/monitor.yaml` still references the old serving-cert trust anchor (`vault-config-operator-certs`), but this story moves metrics to controller-runtime self-signed HTTPS. This may temporarily break the default Prometheus scrape path. Decide whether Story 10.5 must maintain scrape continuity or if it's acceptable to fix in Story 10.6/10.7.
+- **Review Model Used:** gpt-5.4-medium (ChatGPT 5.4)
+- **Review Findings:**
+  1. [Patch/High] `metrics_auth_role_binding.yaml` subjects referenced `namespace: system` but kustomize wasn't transforming it because `service_account.yaml` was commented out in `config/rbac/kustomization.yaml`
+  2. [Decision] Story 10.5 changes kustomize metrics path but Helm chart still references kube-rbac-proxy — sequencing concern with Story 10.6
+- **Decisions Needed:** Whether 10.5 can land before 10.6 (Helm chart update)
+- **Decisions Taken:** Yes — they're on the same epic branch and 10.6 follows immediately in Layer 3. They ship together.
+- **Fixes Applied:** Uncommented `service_account.yaml` in `config/rbac/kustomization.yaml` so kustomize properly transforms namespace references in all bindings. This also fixed a pre-existing latent bug in `role_binding.yaml` and `leader_election_role_binding.yaml`.

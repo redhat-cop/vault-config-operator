@@ -3,8 +3,6 @@ kind: Service
 metadata:
   labels:
     control-plane: vault-config-operator
-  annotations:
-    service.alpha.openshift.io/serving-cert-secret-name: vault-config-operator-certs    
   name: controller-manager-metrics-service
   namespace: system
 spec:
@@ -12,6 +10,6 @@ spec:
   - name: https
     port: 8443
     protocol: TCP
-    targetPort: https
+    targetPort: 8443
   selector:
     control-plane: vault-config-operator
