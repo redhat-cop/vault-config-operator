@@ -19,7 +19,7 @@ spec:
             key: 'tls.crt'
             name: vault-config-operator-certs
             optional: false
-        serverName: $(METRICS_SERVICE_NAME).$(METRICS_SERVICE_NAMESPACE).svc
+        serverName: METRICS_SERVICE_NAME.METRICS_SERVICE_NAMESPACE.svc
   selector:
     matchLabels:
       control-plane: vault-config-operator

@@ -9,12 +9,9 @@ resources:
 - ../../default
 - ./service-account.yaml
 
-patchesStrategicMerge:
-- ./remove-namespace.yaml
-- ./replace-image.yaml
-
-
-patchesJson6902:
+patches:
+- path: ./remove-namespace.yaml
+- path: ./replace-image.yaml
 - target:
     group: admissionregistration.k8s.io
     version: v1

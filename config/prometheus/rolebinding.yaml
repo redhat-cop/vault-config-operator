@@ -6,7 +6,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: $(ROLE_NAME)
+  name: prometheus-k8s
 subjects:
   - kind: ServiceAccount
     name: prometheus-k8s

@@ -1,10 +1,26 @@
 # Adds namespace to all resources.
 namespace: release-namespace
 
-bases:
+resources:
 - ../local-development/tilt
 
-patchesJson6902:
+replacements:
+- source:
+    kind: Service
+    version: v1
+    name: controller-manager-metrics-service
+    fieldPath: metadata.namespace
+  targets:
+  - select:
+      kind: ServiceMonitor
+      name: controller-manager-metrics-monitor
+    fieldPaths:
+    - spec.endpoints.0.tlsConfig.serverName
+    options:
+      delimiter: "."
+      index: 1
+
+patches:
 - target:
     group: admissionregistration.k8s.io
     version: v1
