@@ -36,11 +36,14 @@
 
 generated: 2026-04-11
 last_updated: 2026-08-03
+# Story 10.4 review 2026-08-03
+# Story 10.4 in-progress 2026-08-03
 # Story 10.1 review 2026-08-03
 # Story 10.3 review 2026-08-03
 # Story 10.2 review 2026-08-03
 # Story 10.2 in-progress 2026-08-03
 # Story 10.0a review 2026-08-02
+# Story 10.4 done 2026-08-03
 # Story 10.1 done 2026-08-03
 # Story 10.3 done 2026-08-03
 # Story 10.2 done 2026-08-03
@@ -478,7 +481,7 @@ development_status:
   10-1-upgrade-operator-sdk-from-v1-31-to-v1-42: done
   10-2-upgrade-helm-from-v3-11-to-v4: done
   10-3-upgrade-golangci-lint-from-v1-59-to-v2: done
-  10-4-upgrade-opm-and-kustomize: ready-for-dev
+  10-4-upgrade-opm-and-kustomize: done
   10-5-remove-kube-rbac-proxy-enable-authn-authz: ready-for-dev
   10-6-helm-chart-kube-rbac-proxy-removal-and-metrics-rearchitecture: ready-for-dev
   10-7-ci-pipeline-adaptation-and-end-to-end-validation: ready-for-dev

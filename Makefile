@@ -6,7 +6,7 @@ HELM_VERSION ?= v4.2.3
 KIND_VERSION ?= v0.32.0
 KIND_CLUSTER_NAME ?= vault-config-operator
 KUBECTL_VERSION ?= v1.36.1
-KUSTOMIZE_VERSION ?= v5.4.3
+KUSTOMIZE_VERSION ?= v5.8.1
 VAULT_HOST_PORT ?= 8200
 KUBE_CONTEXT ?= kind-$(KIND_CLUSTER_NAME)
 KUBE_CONFIG_FILE ?= /tmp/$(KIND_CLUSTER_NAME)-kubeconfig
@@ -19,6 +19,7 @@ VAULT_CHART_VERSION ?= 0.34.0
 # Set the Operator SDK version to use. By default, what is installed on the system is used.
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
 OPERATOR_SDK_VERSION ?= v1.42.3
+OPM_VERSION ?= v1.73.0
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION ?= 1.36.0
 
@@ -361,19 +362,20 @@ bundle-push: ## Push the bundle image.
 
 .PHONY: opm
 OPM ?= $(LOCALBIN)/opm
+ifeq ($(OPM),$(LOCALBIN)/opm)
 opm: ## Download opm locally if necessary.
-ifeq (,$(wildcard $(OPM)))
-ifeq (,$(shell which opm 2>/dev/null))
-	@{ \
+	@[ -f "$(OPM)-$(OPM_VERSION)" ] || { \
 	set -e ;\
+	echo "Downloading opm $(OPM_VERSION) to $(OPM)..." ;\
 	mkdir -p $(dir $(OPM)) ;\
 	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
-	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v1.23.0/$${OS}-$${ARCH}-opm ;\
-	chmod +x $(OPM) ;\
-	}
+	curl -sSLo $(OPM)-$(OPM_VERSION) https://github.com/operator-framework/operator-registry/releases/download/$(OPM_VERSION)/$${OS}-$${ARCH}-opm ;\
+	chmod +x $(OPM)-$(OPM_VERSION) ;\
+	} ;\
+	ln -sf $(OPM)-$(OPM_VERSION) $(OPM)
 else
-OPM = $(shell which opm)
-endif
+opm:
+	@echo "Using opm from $(OPM)"
 endif
 
 # A comma-separated list of bundle images (e.g. make catalog-build BUNDLE_IMGS=example.com/operator-bundle:v0.1.0,example.com/operator-bundle:v0.2.0).
