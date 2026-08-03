@@ -156,7 +156,7 @@ deploy-vault: kubectl helm
 	$(KUBECTL) --context $(KUBE_CONTEXT) apply -f ./integration/rolebinding-admin.yaml -n vault
 	$(HELM) --kube-context $(KUBE_CONTEXT) repo add hashicorp https://helm.releases.hashicorp.com --force-update
 	$(HELM) --kube-context $(KUBE_CONTEXT) show chart hashicorp/vault --version $(VAULT_CHART_VERSION)
-	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade vault hashicorp/vault --version $(VAULT_CHART_VERSION) -i --create-namespace -n vault --rollback-on-failure -f ./integration/vault-values.yaml
+	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade vault hashicorp/vault --version $(VAULT_CHART_VERSION) -i --create-namespace -n vault --rollback-on-failure --force-conflicts -f ./integration/vault-values.yaml
 	$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready pod/vault-0 -n vault --timeout=${KUBECTL_WAIT_TIMEOUT}
 
 .PHONY: kind-setup
@@ -453,7 +453,7 @@ helmchart-test: kind-setup deploy-vault helmchart
 	$(HELM) --kube-context $(KUBE_CONTEXT) repo add prometheus-community https://prometheus-community.github.io/helm-charts --force-update
 	$(HELM) --kube-context $(KUBE_CONTEXT) install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n default -f integration/kube-prometheus-stack-values.yaml
 	$(HELM) --kube-context $(KUBE_CONTEXT) install prometheus-rbac integration/helm/prometheus-rbac -n default
-	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i ${OPERATOR_NAME}-local charts/${OPERATOR_NAME} -n ${OPERATOR_NAME}-local --create-namespace \
+	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i ${OPERATOR_NAME}-local charts/${OPERATOR_NAME} -n ${OPERATOR_NAME}-local --create-namespace --force-conflicts \
 	  --set enableCertManager=true \
 	  --set image.repository=${HELM_TEST_IMG_NAME} \
 	  --set image.tag=${HELM_TEST_IMG_TAG} \

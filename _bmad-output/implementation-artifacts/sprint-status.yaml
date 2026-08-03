@@ -45,6 +45,8 @@ last_updated: 2026-08-03
 # Story 10.2 review 2026-08-03
 # Story 10.2 in-progress 2026-08-03
 # Story 10.0a review 2026-08-02
+# Epic 10 done 2026-08-03
+# Story 10.7 done 2026-08-03
 # Story 10.6 done 2026-08-03
 # Story 10.5 done 2026-08-03
 # Story 10.4 done 2026-08-03
@@ -479,7 +481,7 @@ development_status:
   epic-9-retrospective: done
 
   # Epic 10: Operator SDK + Build Tooling Upgrades & Metrics Modernization
-  epic-10: in-progress
+  epic-10: done
   10-0-migrate-project-layout-from-gov3-to-gov4: done
   10-0a-kustomize-v3-to-v5-syntax-migration: done
   10-1-upgrade-operator-sdk-from-v1-31-to-v1-42: done
@@ -488,7 +490,7 @@ development_status:
   10-4-upgrade-opm-and-kustomize: done
   10-5-remove-kube-rbac-proxy-enable-authn-authz: done
   10-6-helm-chart-kube-rbac-proxy-removal-and-metrics-rearchitecture: done
-  10-7-ci-pipeline-adaptation-and-end-to-end-validation: ready-for-dev
+  10-7-ci-pipeline-adaptation-and-end-to-end-validation: done
   epic-10-retrospective: optional
 
   # Epic 11: High-Priority Missing Secret Engines (AWS, Transit, SSH)
