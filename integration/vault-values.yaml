@@ -1,3 +1,8 @@
+# WARNING: Vault Helm in-place upgrade from 1.x to 2.0 is NOT supported in
+# integration test environments. Major Vault version upgrades require a clean
+# install: helm uninstall vault -n vault && kubectl delete pvc -n vault -l app.kubernetes.io/name=vault
+# followed by a fresh helm install. Attempting helm upgrade across major versions
+# will time out and roll back. (Documented: Epic 9 Story 9.5, 2026-07-31)
 global:
   openshift: false
   tlsDisable: true

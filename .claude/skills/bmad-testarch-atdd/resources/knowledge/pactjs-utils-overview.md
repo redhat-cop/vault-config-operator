@@ -28,6 +28,7 @@ Use production-ready utilities from `@seontechnologies/pactjs-utils` to eliminat
 - **`getProviderVersionTags`**: CI-aware version tagging (extracts branch/tag from GitHub Actions, GitLab CI, etc.)
 - **`createRequestFilter`**: Pluggable token generator pattern — prevents double-Bearer bugs by contract
 - **`noOpRequestFilter`**: Pass-through for providers that don't require auth injection
+- **`zodToPactMatchers`**: Converts a Zod schema (+ optional example values or `.openapi({ example })` metadata) into Pact V3 matchers — single source of truth for response shape, no hand-written matcher helpers
 
 ## Installation
 
@@ -42,18 +43,19 @@ npm install -D @pact-foundation/pact
 
 ## Available Utilities
 
-| Category          | Function                          | Description                                          | Use Case                                                         |
-| ----------------- | --------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------- |
-| Consumer Helpers  | `createProviderState`             | Builds `[stateName, JsonMap]` tuple from typed input | Consumer tests: `.given(...createProviderState(input))`          |
-| Consumer Helpers  | `toJsonMap`                       | Converts any object to Pact-compatible `JsonMap`     | Explicit type coercion for provider state params                 |
-| Consumer Helpers  | `setJsonContent`                  | Curried request/response JSON callback helper        | PactV4 `.withRequest(...)` and `.willRespondWith(...)` builders  |
-| Consumer Helpers  | `setJsonBody`                     | Body-only alias of `setJsonContent`                  | Body-only `.willRespondWith(...)` responses                      |
-| Provider Verifier | `buildVerifierOptions`            | Assembles complete HTTP `VerifierOptions`            | Provider verification: `new Verifier(buildVerifierOptions(...))` |
-| Provider Verifier | `buildMessageVerifierOptions`     | Assembles message `VerifierOptions`                  | Kafka/async provider verification                                |
-| Provider Verifier | `handlePactBrokerUrlAndSelectors` | Resolves broker URL + selectors from env vars        | Env-aware broker configuration                                   |
-| Provider Verifier | `getProviderVersionTags`          | CI-aware version tag extraction                      | Provider version tagging in CI                                   |
-| Request Filter    | `createRequestFilter`             | Express middleware with pluggable token generator    | Auth injection for provider verification                         |
-| Request Filter    | `noOpRequestFilter`               | Pass-through filter (no-op)                          | Providers without auth requirements                              |
+| Category          | Function                          | Description                                          | Use Case                                                                                                  |
+| ----------------- | --------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Consumer Helpers  | `createProviderState`             | Builds `[stateName, JsonMap]` tuple from typed input | Consumer tests: `.given(...createProviderState(input))`                                                   |
+| Consumer Helpers  | `toJsonMap`                       | Converts any object to Pact-compatible `JsonMap`     | Explicit type coercion for provider state params                                                          |
+| Consumer Helpers  | `setJsonContent`                  | Curried request/response JSON callback helper        | PactV4 `.withRequest(...)` and `.willRespondWith(...)` builders                                           |
+| Consumer Helpers  | `setJsonBody`                     | Body-only alias of `setJsonContent`                  | Body-only `.willRespondWith(...)` responses                                                               |
+| Provider Verifier | `buildVerifierOptions`            | Assembles complete HTTP `VerifierOptions`            | Provider verification: `new Verifier(buildVerifierOptions(...))`                                          |
+| Provider Verifier | `buildMessageVerifierOptions`     | Assembles message `VerifierOptions`                  | Kafka/async provider verification                                                                         |
+| Provider Verifier | `handlePactBrokerUrlAndSelectors` | Resolves broker URL + selectors from env vars        | Env-aware broker configuration                                                                            |
+| Provider Verifier | `getProviderVersionTags`          | CI-aware version tag extraction                      | Provider version tagging in CI                                                                            |
+| Request Filter    | `createRequestFilter`             | Express middleware with pluggable token generator    | Auth injection for provider verification                                                                  |
+| Request Filter    | `noOpRequestFilter`               | Pass-through filter (no-op)                          | Providers without auth requirements                                                                       |
+| Schema → Matchers | `zodToPactMatchers`               | Derives Pact V3 matchers from a Zod schema           | Consumer tests: response body matchers from a consumer-curated Zod schema instead of hand-written helpers |
 
 ## Decision Tree: Which Flow?
 
@@ -153,6 +155,7 @@ await new Verifier(opts).verifyProvider();
 - `pactjs-utils-consumer-helpers.md` — detailed createProviderState, toJsonMap, setJsonContent, and setJsonBody usage
 - `pactjs-utils-provider-verifier.md` — detailed buildVerifierOptions and broker configuration
 - `pactjs-utils-request-filter.md` — detailed createRequestFilter and auth patterns
+- `pactjs-utils-zod-to-pact.md` — detailed zodToPactMatchers usage, consumer-curated schema pattern, and anti-patterns
 - `contract-testing.md` — foundational contract testing patterns (raw Pact.js approach)
 - `test-levels-framework.md` — where contract tests fit in the testing pyramid
 

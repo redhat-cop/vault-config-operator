@@ -180,6 +180,7 @@ During CI workflow design, reference the can-i-deploy tool:
 
 - `pactjs-utils-overview.md` — runtime utilities that pact tests import
 - `pactjs-utils-provider-verifier.md` — verifier options that reference broker config
+- `pact-broker-webhooks.md` — PactFlow → GitHub webhook auth pattern and staleness monitoring; `Metrics - All` / `Matrix` MCP tools are useful here for dashboards
 - `contract-testing.md` — foundational contract testing patterns
 
 ## Anti-Patterns

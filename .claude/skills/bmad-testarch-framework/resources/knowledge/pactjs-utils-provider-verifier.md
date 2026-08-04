@@ -220,6 +220,54 @@ const tags = getProviderVersionTags();
 //   tags = ['local']
 ```
 
+### Example 7: Provider Vitest Configuration (Required for Multi-File Verification)
+
+**Context**: The Pact Rust FFI that powers the JS `Verifier` holds process-wide state (native handles for messages, matchers, mocks). Vitest's default parallel file workers each spin up their own FFI instance and quickly corrupt that state — causing `MessagePact`/`Verifier` errors like `"Unable to get the MessageHandle"`, or non-deterministic verification passes/fails — as soon as you have more than one provider `.spec.ts` file.
+
+**Rule**: Provider verification suites **must** run in a single fork. Use Vitest's `forks` pool with `singleFork: true` in `vitest.config.contract.ts` (or equivalent).
+
+```typescript
+// vitest.config.contract.ts — provider verification config
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    environment: 'node',
+    include: ['tests/contract/**/*.spec.ts'],
+    testTimeout: 60000,
+    // MANDATORY for multi-file provider verification.
+    // The Pact Rust FFI backing the Verifier holds process-wide state; parallel workers corrupt it
+    // and produce flaky verification results / "Unable to get the MessageHandle" errors.
+    // This is especially important for message providers (Kafka/async) where verifier construction
+    // allocates native handles per file — singleFork keeps them in one process so state is coherent.
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
+  },
+});
+```
+
+**Key Points**:
+
+- **Required for message providers** (`buildMessageVerifierOptions`) — the message-handle FFI state is almost guaranteed to corrupt under parallel workers.
+- **Required for HTTP providers with multiple contract test files** — even if each file works in isolation, running them together in parallel produces intermittent failures.
+- `pool: 'forks'` (rather than `threads`) + `singleFork: true` is the exact combo that keeps all verifier runs in a single child process with a single FFI instance.
+- Treat `pool: 'forks'` + `singleFork: true` as the required baseline for all provider suites, including single-file HTTP-only ones. A suite that works today with one file will flake the moment a second file is added, and removing the setting later introduces a regression window.
+- **The same `pool: 'forks'` + `singleFork: true` rule applies on the consumer side.** Consumer `vitest.config.pact.ts` sets it alongside `fileParallelism: false` — see `pact-consumer-framework-setup.md` Example 2. The rule is needed on either side wherever more than one pact test file exists per consumer+provider pair.
+- Use a dedicated `vitest.config.contract.ts` so unit tests still get full parallelism — only contract tests pay the serialization cost.
+- Related `package.json` entry:
+
+  ```json
+  {
+    "scripts": {
+      "test:pact:provider": "vitest run --config vitest.config.contract.ts"
+    }
+  }
+  ```
+
 ## Environment Variables Reference
 
 | Variable               | Required        | Description                                                                                                                           | Default     |
@@ -241,12 +289,15 @@ const tags = getProviderVersionTags();
 - **Webhook support**: `PACT_PAYLOAD_URL` takes precedence — verifies only the specific pact that triggered the webhook
 - **State handler types**: Both `async (params) => void` and `{ setup: async (params) => void, teardown: async () => void }` are supported
 - **Version publishing**: Verification results are published by default (`publishVerificationResult` defaults to `true`)
+- **Provider Vitest config is MANDATORY for multi-file suites**: Set `pool: 'forks'` + `poolOptions.forks.singleFork: true` in `vitest.config.contract.ts`. Without this the Rust FFI corrupts under parallel workers (see Example 7).
 
 ## Related Fragments
 
 - `pactjs-utils-overview.md` — installation, decision tree, design philosophy
-- `pactjs-utils-consumer-helpers.md` — consumer-side state parameter creation
+- `pactjs-utils-consumer-helpers.md` — consumer-side state parameter creation, **one-interaction-per-`it()` rule**
 - `pactjs-utils-request-filter.md` — auth injection for provider verification
+- `pact-consumer-framework-setup.md` — consumer-side framework setup, Vitest `fileParallelism: false`, determinism gate
+- `pact-broker-webhooks.md` — PactFlow → GitHub webhook auth/staleness for webhook-triggered provider verification (`contract_requiring_verification_published`)
 - `contract-testing.md` — foundational patterns with raw Pact.js
 
 ## Anti-Patterns
@@ -310,6 +361,37 @@ const opts = buildVerifierOptions({
   /* ... */
 });
 // Selectors chosen automatically based on environment
+```
+
+### Wrong: Parallel Vitest workers for provider verification
+
+```typescript
+// ❌ vitest.config.contract.ts — uses default parallel workers
+import { defineConfig } from 'vitest/config';
+export default defineConfig({
+  test: {
+    environment: 'node',
+    include: ['tests/contract/**/*.spec.ts'],
+    // NO pool/singleFork config — defaults to parallel file workers
+  },
+});
+// Symptoms: "Unable to get the MessageHandle", non-deterministic verification pass/fail,
+// green locally on single-file run but red in CI with multiple files
+```
+
+### Right: Single fork for provider verification
+
+```typescript
+// ✅ vitest.config.contract.ts — serializes provider verification files
+import { defineConfig } from 'vitest/config';
+export default defineConfig({
+  test: {
+    environment: 'node',
+    include: ['tests/contract/**/*.spec.ts'],
+    pool: 'forks',
+    poolOptions: { forks: { singleFork: true } },
+  },
+});
 ```
 
 _Source: @seontechnologies/pactjs-utils provider-verifier module, pact-js-example-provider CI workflows_
