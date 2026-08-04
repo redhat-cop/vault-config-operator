@@ -35,8 +35,8 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-08-03
-# Story 10.6 review 2026-08-03
+last_updated: 2026-08-04
+# Epic 10 retrospective 2026-08-04
 # Story 10.5 review 2026-08-03
 # Story 10.4 review 2026-08-03
 # Story 10.4 in-progress 2026-08-03
@@ -491,7 +491,7 @@ development_status:
   10-5-remove-kube-rbac-proxy-enable-authn-authz: done
   10-6-helm-chart-kube-rbac-proxy-removal-and-metrics-rearchitecture: done
   10-7-ci-pipeline-adaptation-and-end-to-end-validation: done
-  epic-10-retrospective: optional
+  epic-10-retrospective: done
 
   # Epic 11: High-Priority Missing Secret Engines (AWS, Transit, SSH)
   epic-11: backlog
