@@ -1,0 +1,9 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Namespace
+metadata:
+  name: namespace-sample
+spec:
+  authentication:
+    path: kubernetes
+    role: namespace-admin
+  path: "admin"

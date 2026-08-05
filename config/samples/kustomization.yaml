@@ -47,5 +47,6 @@ resources:
 - redhatcop_v1alpha1_identitytokenrole.yaml
 - redhatcop_v1alpha1_entity.yaml
 - redhatcop_v1alpha1_entityalias.yaml
+- redhatcop_v1alpha1_namespace.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
 
