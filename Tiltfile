@@ -1,13 +1,13 @@
 # -*- mode: Python -*-
 
-compile_cmd = 'CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/manager main.go'
+compile_cmd = 'CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/manager ./cmd/'
 image = 'quay.io/' + os.environ['repo'] + '/vault-config-operator'
 
 # Go Build
 local_resource(
   'vault-config-operator-compile',
   compile_cmd,
-  deps=['./main.go','./api','./controllers']
+  deps=['./cmd','./api','./internal']
 )
 
 # Container Build

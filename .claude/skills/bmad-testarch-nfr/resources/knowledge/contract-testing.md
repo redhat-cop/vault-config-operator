@@ -167,7 +167,8 @@ describe('User API Contract', () => {
 ```json
 {
   "scripts": {
-    "test:pact:consumer": "vitest run --config vitest.config.pact.ts",
+    "test:pact:consumer": "./scripts/check-pact-determinism.sh 'npm run test:pact:consumer:run' 3 ./pacts",
+    "test:pact:consumer:run": "vitest run --config vitest.config.pact.ts",
     "publish:pact": ". ./scripts/env-setup.sh && ./scripts/publish-pact.sh"
   }
 }
@@ -1024,7 +1025,7 @@ Before implementing contract testing, verify:
 ## Integration Points
 
 - Used in workflows: `*automate` (integration test generation), `*ci` (contract CI setup)
-- Related fragments: `test-levels-framework.md`, `ci-burn-in.md`, `pact-consumer-framework-setup.md`
+- Related fragments: `test-levels-framework.md`, `ci-burn-in.md`, `pact-consumer-framework-setup.md` (consumer vitest `fileParallelism: false` + `pool: 'forks'` + `singleFork: true`), `pactjs-utils-consumer-helpers.md` (PactV4 one-interaction-per-`it()` rule), `pactjs-utils-provider-verifier.md` (provider vitest `pool: 'forks'` + `singleFork: true` — same rule as consumer), `pact-broker-webhooks.md` (PactFlow → GitHub webhook auth, PAT rotation, staleness monitoring)
 - Tools: Pact.js, Pact Broker (Pactflow or self-hosted), Pact CLI
 
 ---
@@ -1046,5 +1047,20 @@ When `tea_use_pactjs_utils` is enabled, the following utilities replace manual b
 | Inline no-op filter `(req, res, next) => next()`         | `noOpRequestFilter`                                                               | Pre-built pass-through for no-auth providers                          |
 
 See the `pactjs-utils-*.md` knowledge fragments for complete examples and anti-patterns.
+
+### PactV4 Determinism & FFI Safety (Mandatory)
+
+Four rules that together prevent both (a) non-deterministic pact generation failures that cause `Cannot change pact content for already published pact` errors at PactFlow publish, and (b) "request was expected but not received" flakes observed on Linux CI once a consumer+provider pair has more than one `.pacttest.ts` file:
+
+1. **Consumer Vitest `fileParallelism: false`** in `vitest.config.pact.ts` — prevents parallel workers from racing on the shared pact JSON. See `pact-consumer-framework-setup.md` Example 2.
+2. **Consumer Vitest `pool: 'forks'` + `poolOptions.forks.singleFork: true`** in `vitest.config.pact.ts` — same config as the provider side (`pactjs-utils-provider-verifier.md` Example 7). Best current understanding: the `@pact-foundation/pact` napi-rs binding is not robust across Vitest worker threads sharing a process; serialization alone (via `fileParallelism: false`) is insufficient on the default threads pool in Vitest v1. Forks + `singleFork: true` runs every pact file in one subprocess with a coherent FFI handle and eliminated a reproducible Linux-CI flake across multiple repos. Single-file consumer suites have not been observed to flake; this rule is still recommended as a future-proof. See `pact-consumer-framework-setup.md` Example 2.
+3. **One `addInteraction()` per `it()` block** — see `pactjs-utils-consumer-helpers.md` Example 6.
+4. **Determinism gate** runs the consumer suite N times and fails on byte-different pact JSON before publish — see `pact-consumer-framework-setup.md` Example 10 (`scripts/check-pact-determinism.sh`).
+
+Provider suites require the same `pool: 'forks'` + `singleFork: true` combination — see `pactjs-utils-provider-verifier.md` Example 7.
+
+### Webhook Auth & Staleness
+
+When `can-i-deploy` in a consumer repo times out with `There is no verified pact between <consumer> and the version of <provider> currently in <env>` — check the provider's PactFlow webhook. Silent failures from an expired/revoked GitHub PAT are the most common non-code cause of this symptom. See `pact-broker-webhooks.md` for the dedicated-machine-user pattern, classic-PAT-with-`repo`-scope rationale, rotation runbook, and staleness monitoring options.
 
 _Source: Pact consumer/provider sample repos, Murat contract testing blog, Pact official documentation, @seontechnologies/pactjs-utils library_

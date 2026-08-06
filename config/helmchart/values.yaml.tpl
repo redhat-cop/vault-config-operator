@@ -39,23 +39,6 @@ tolerations: []
 
 affinity: {}
 
-kube_rbac_proxy:
-  image:
-    repository: quay.io/redhat-cop/kube-rbac-proxy
-    pullPolicy: IfNotPresent
-    tag: v0.11.0
-  resources:
-    limits:
-      cpu: 500m
-      memory: 128Mi
-    requests:
-      cpu: 5m
-      memory: 64Mi
-  securityContext:
-    allowPrivilegeEscalation: false
-    capabilities:
-      drop:
-        - "ALL"
-
 enableMonitoring: true
+metricsSecure: true
 enableCertManager: false

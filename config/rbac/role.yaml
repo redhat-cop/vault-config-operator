@@ -7,6 +7,16 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - events
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - namespaces
   verbs:
   - get
@@ -32,16 +42,6 @@ rules:
   - create
   - get
   - list
-  - watch
-- apiGroups:
-  - events.k8s.io
-  resources:
-  - events
-  verbs:
-  - create
-  - get
-  - list
-  - patch
   - watch
 - apiGroups:
   - redhatcop.redhat.io

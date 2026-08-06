@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: system
+spec:
+  template:
+    spec:
+      containers:
+      - name: manager
+        args:
+        - "--metrics-bind-address=:8443"
+        - "--metrics-secure"
+        - "--health-probe-bind-address=:8081"
+        - "--leader-elect"
+        ports:
+        - containerPort: 8443
+          name: https
+          protocol: TCP

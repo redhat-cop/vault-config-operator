@@ -12,5 +12,5 @@ namePrefix: vault-config-operator-
 #commonLabels:
 #  someName: someValue
 
-bases:
+resources:
 - ../rbac

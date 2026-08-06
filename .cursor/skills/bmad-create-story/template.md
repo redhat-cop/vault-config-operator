@@ -1,49 +1,43 @@
-# Story {{epic_num}}.{{story_num}}: {{story_title}}
+commit c4164bbdc5898d252878314008cbbc57373c827c
+Author: Raffaele Spazzoli <raffaele.spazzoli@gmail.com>
+Date:   Sun Aug 2 18:18:53 2026 +0530
 
-Status: ready-for-dev
+    chore(epic-10): improve bmad-epic-dev workflow and add review tracking
+    
+    Add Decision Relay Protocol to bmad-epic-dev phase-logic with explicit
+    mechanics for detecting decision_needed, relaying to user via AskQuestion,
+    resuming subagents, and recording decisions in story files.
+    
+    Strengthen worktree merge process: enforce --no-ff merges, add post-merge
+    story file status updates, worktree cleanup verification, orphaned worktree
+    detection on resume, and story file status consistency checks.
+    
+    Add Code Review Record section to story template (Review Model, Findings,
+    Decisions Needed/Taken, Fixes Applied) across all three template copies.
+    
+    Record GPT 5.4 code review findings for stories 10.0 and 10.0a.
+    
+    Co-authored-by: Cursor <cursoragent@cursor.com>
 
-<!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
-
-## Story
-
-As a {{role}},
-I want {{action}},
-so that {{benefit}}.
-
-## Acceptance Criteria
-
-1. [Add acceptance criteria from epics/PRD]
-
-## Tasks / Subtasks
-
-- [ ] Task 1 (AC: #)
-  - [ ] Subtask 1.1
-- [ ] Task 2 (AC: #)
-  - [ ] Subtask 2.1
-
-## Dev Notes
-
-- Relevant architecture patterns and constraints
-- Source tree components to touch
-- Testing standards summary
-
-### Project Structure Notes
-
-- Alignment with unified project structure (paths, modules, naming)
-- Detected conflicts or variances (with rationale)
-
-### References
-
-- Cite all technical details with source paths and sections, e.g. [Source: docs/<file>.md#Section]
-
-## Dev Agent Record
-
-### Agent Model Used
-
-{{agent_model_name_version}}
-
-### Debug Log References
-
-### Completion Notes List
-
-### File List
+diff --git a/.cursor/skills/bmad-create-story/template.md b/.cursor/skills/bmad-create-story/template.md
+index c4e129f..3012727 100644
+--- a/.cursor/skills/bmad-create-story/template.md
++++ b/.cursor/skills/bmad-create-story/template.md
+@@ -47,3 +47,17 @@ so that {{benefit}}.
+ ### Completion Notes List
+ 
+ ### File List
++
++## Code Review Record
++
++### Review Model Used
++
++{{review_model_name_version}}
++
++### Review Findings
++
++### Decisions Needed
++
++### Decisions Taken
++
++### Fixes Applied

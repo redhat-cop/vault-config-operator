@@ -2,11 +2,11 @@ KUBECTL_WAIT_TIMEOUT ?= 5m
 CHART_REPO_URL ?= http://example.com
 HELM_REPO_DEST ?= /tmp/gh-pages
 OPERATOR_NAME ?=$(shell basename -z `pwd`)
-HELM_VERSION ?= v3.11.0
+HELM_VERSION ?= v4.2.3
 KIND_VERSION ?= v0.32.0
 KIND_CLUSTER_NAME ?= vault-config-operator
 KUBECTL_VERSION ?= v1.36.1
-KUSTOMIZE_VERSION ?= v5.4.3
+KUSTOMIZE_VERSION ?= v5.8.1
 VAULT_HOST_PORT ?= 8200
 KUBE_CONTEXT ?= kind-$(KIND_CLUSTER_NAME)
 KUBE_CONFIG_FILE ?= /tmp/$(KIND_CLUSTER_NAME)-kubeconfig
@@ -18,13 +18,14 @@ VAULT_VERSION ?= 2.0.3
 VAULT_CHART_VERSION ?= 0.34.0
 # Set the Operator SDK version to use. By default, what is installed on the system is used.
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
-OPERATOR_SDK_VERSION ?= v1.31.0
+OPERATOR_SDK_VERSION ?= v1.42.3
+OPM_VERSION ?= v1.73.0
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION ?= 1.36.0
 
 CONTROLLER_TOOLS_VERSION ?= v0.21.0
 ENVTEST_VERSION ?= release-0.24
-GOLANGCI_LINT_VERSION ?= v1.64.8
+GOLANGCI_LINT_VERSION ?= v2.12.2
 
 # VERSION defines the project version for the bundle.
 # Update this value when you upgrade the version of your project.
@@ -127,6 +128,10 @@ fmt: ## Run go fmt against code.
 vet: ## Run go vet against code.
 	go vet ./...
 
+.PHONY: lint
+lint: golangci-lint ## Run golangci-lint against code.
+	GOTOOLCHAIN=go1.26.4 $(GOLANGCI_LINT) run ./...
+
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
@@ -140,7 +145,7 @@ integration: kind-setup deploy-vault deploy-ingress deploy-postgresql deploy-rab
 
 .PHONY: deploy-ingress
 deploy-ingress: kubectl helm
-	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i ingress-nginx ./integration/helm/ingress-nginx -n vault --atomic --create-namespace
+	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i ingress-nginx ./integration/helm/ingress-nginx -n vault --rollback-on-failure --create-namespace
 	$(KUBECTL) --context $(KUBE_CONTEXT) apply -f ./integration/manifests/ingress-nginx-kind-deploy.yaml
 	$(KUBECTL) --context $(KUBE_CONTEXT) rollout status deployment ingress-nginx-controller -n ingress-nginx -w
 	$(KUBECTL) --context $(KUBE_CONTEXT) wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=${KUBECTL_WAIT_TIMEOUT}
@@ -149,9 +154,9 @@ deploy-ingress: kubectl helm
 deploy-vault: kubectl helm
 	$(KUBECTL) --context $(KUBE_CONTEXT) create namespace vault --dry-run=client -o yaml | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f -
 	$(KUBECTL) --context $(KUBE_CONTEXT) apply -f ./integration/rolebinding-admin.yaml -n vault
-	$(HELM) --kube-context $(KUBE_CONTEXT) repo add hashicorp https://helm.releases.hashicorp.com
+	$(HELM) --kube-context $(KUBE_CONTEXT) repo add hashicorp https://helm.releases.hashicorp.com --force-update
 	$(HELM) --kube-context $(KUBE_CONTEXT) show chart hashicorp/vault --version $(VAULT_CHART_VERSION)
-	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade vault hashicorp/vault --version $(VAULT_CHART_VERSION) -i --create-namespace -n vault --atomic -f ./integration/vault-values.yaml
+	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade vault hashicorp/vault --version $(VAULT_CHART_VERSION) -i --create-namespace -n vault --rollback-on-failure --force-conflicts -f ./integration/vault-values.yaml
 	$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready pod/vault-0 -n vault --timeout=${KUBECTL_WAIT_TIMEOUT}
 
 .PHONY: kind-setup
@@ -178,9 +183,9 @@ kind-setup: kind
 
 .PHONY: deploy-postgresql
 deploy-postgresql: kubectl helm
-	$(HELM) --kube-context $(KUBE_CONTEXT) repo add bitnami https://charts.bitnami.com/bitnami || true
+	$(HELM) --kube-context $(KUBE_CONTEXT) repo add bitnami https://charts.bitnami.com/bitnami --force-update
 	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i postgresql bitnami/postgresql \
-		-n test-vault-config-operator --create-namespace --atomic \
+		-n test-vault-config-operator --create-namespace --rollback-on-failure \
 		-f ./integration/postgresql-values.yaml
 	$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready pod -l app.kubernetes.io/instance=postgresql \
 		-n test-vault-config-operator --timeout=$(KUBECTL_WAIT_TIMEOUT)
@@ -224,11 +229,11 @@ ldap-setup: kind-setup vault
 
 .PHONY: build
 build: manifests generate fmt vet ## Build manager binary.
-	go build -o bin/manager main.go
+	go build -o bin/manager ./cmd/
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
-	go run ./main.go
+	go run ./cmd/
 
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.
@@ -302,7 +307,7 @@ $(ENVTEST): $(LOCALBIN)
 .PHONY: golangci-lint
 golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
 $(GOLANGCI_LINT): $(LOCALBIN)
-	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION))
+	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/v2/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION))
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary
@@ -323,19 +328,20 @@ endef
 
 .PHONY: operator-sdk
 OPERATOR_SDK ?= $(LOCALBIN)/operator-sdk
+ifeq ($(OPERATOR_SDK),$(LOCALBIN)/operator-sdk)
 operator-sdk: ## Download operator-sdk locally if necessary.
-ifeq (,$(wildcard $(OPERATOR_SDK)))
-ifeq (, $(shell which operator-sdk 2>/dev/null))
-	@{ \
+	@[ -f "$(OPERATOR_SDK)-$(OPERATOR_SDK_VERSION)" ] || { \
 	set -e ;\
+	echo "Downloading operator-sdk $(OPERATOR_SDK_VERSION) to $(OPERATOR_SDK)..." ;\
 	mkdir -p $(dir $(OPERATOR_SDK)) ;\
 	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
-	curl -sSLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_$${OS}_$${ARCH} ;\
-	chmod +x $(OPERATOR_SDK) ;\
-	}
+	curl -sSLo $(OPERATOR_SDK)-$(OPERATOR_SDK_VERSION) https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_$${OS}_$${ARCH} ;\
+	chmod +x $(OPERATOR_SDK)-$(OPERATOR_SDK_VERSION) ;\
+	} ;\
+	ln -sf $(OPERATOR_SDK)-$(OPERATOR_SDK_VERSION) $(OPERATOR_SDK)
 else
-OPERATOR_SDK = $(shell which operator-sdk)
-endif
+operator-sdk:
+	@echo "Using operator-sdk from $(OPERATOR_SDK)"
 endif
 
 .PHONY: bundle
@@ -356,19 +362,20 @@ bundle-push: ## Push the bundle image.
 
 .PHONY: opm
 OPM ?= $(LOCALBIN)/opm
+ifeq ($(OPM),$(LOCALBIN)/opm)
 opm: ## Download opm locally if necessary.
-ifeq (,$(wildcard $(OPM)))
-ifeq (,$(shell which opm 2>/dev/null))
-	@{ \
+	@[ -f "$(OPM)-$(OPM_VERSION)" ] || { \
 	set -e ;\
+	echo "Downloading opm $(OPM_VERSION) to $(OPM)..." ;\
 	mkdir -p $(dir $(OPM)) ;\
 	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
-	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v1.23.0/$${OS}-$${ARCH}-opm ;\
-	chmod +x $(OPM) ;\
-	}
+	curl -sSLo $(OPM)-$(OPM_VERSION) https://github.com/operator-framework/operator-registry/releases/download/$(OPM_VERSION)/$${OS}-$${ARCH}-opm ;\
+	chmod +x $(OPM)-$(OPM_VERSION) ;\
+	} ;\
+	ln -sf $(OPM)-$(OPM_VERSION) $(OPM)
 else
-OPM = $(shell which opm)
-endif
+opm:
+	@echo "Using opm from $(OPM)"
 endif
 
 # A comma-separated list of bundle images (e.g. make catalog-build BUNDLE_IMGS=example.com/operator-bundle:v0.1.0,example.com/operator-bundle:v0.2.0).
@@ -410,7 +417,7 @@ helmchart: helmchart-clean kustomize helm
 	version=${VERSION} image_repo=$${IMG%:*} envsubst < ./config/helmchart/values.yaml.tpl  > ./charts/${OPERATOR_NAME}/values.yaml
 	sed -i '1s/^/{{- if .Values.enableMonitoring }}\n/' ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_${OPERATOR_NAME}-controller-manager-metrics-monitor.yaml
 	echo {{- end }} >> ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_${OPERATOR_NAME}-controller-manager-metrics-monitor.yaml
-	sed -i 's/name: vault-config-operator-certs/{{- if .Values.enableCertManager }}\n          name: vault-config-operator-metrics-service-cert\n          {{- else }}\n          name: vault-config-operator-certs\n          {{- end }}/' ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_${OPERATOR_NAME}-controller-manager-metrics-monitor.yaml
+	rm -f ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_${OPERATOR_NAME}-controller-manager-metrics-monitor.yaml
 	$(HELM) lint ./charts/${OPERATOR_NAME}
 
 .PHONY: helmchart-repo
@@ -437,13 +444,22 @@ helmchart-test: kind-setup deploy-vault helmchart
 	$(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker-build
 	$(CONTAINER_RUNTIME) tag ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
 	$(CONTAINER_RUNTIME) pull ${HELM_TEST_SIDECAR_IMG}
-	$(KIND) load docker-image --name $(KIND_CLUSTER_NAME) ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} ${HELM_TEST_SIDECAR_IMG}
-	$(HELM) --kube-context $(KUBE_CONTEXT) repo add jetstack https://charts.jetstack.io
-	$(HELM) --kube-context $(KUBE_CONTEXT) install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.7.1 --set installCRDs=true
-	$(HELM) --kube-context $(KUBE_CONTEXT) repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	@if [ "$(CONTAINER_RUNTIME)" = "podman" ]; then \
+	  echo "Using podman: saving images to archive for kind load..."; \
+	  for img in ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} ${HELM_TEST_SIDECAR_IMG}; do \
+	    $(CONTAINER_RUNTIME) save $$img -o /tmp/kind-helm-image.tar && \
+	    $(KIND) load image-archive --name $(KIND_CLUSTER_NAME) /tmp/kind-helm-image.tar && \
+	    rm -f /tmp/kind-helm-image.tar; \
+	  done; \
+	else \
+	  $(KIND) load docker-image --name $(KIND_CLUSTER_NAME) ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} ${HELM_TEST_SIDECAR_IMG}; \
+	fi
+	$(HELM) --kube-context $(KUBE_CONTEXT) repo add jetstack https://charts.jetstack.io --force-update
+	$(HELM) --kube-context $(KUBE_CONTEXT) install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.21.1 --set crds.enabled=true
+	$(HELM) --kube-context $(KUBE_CONTEXT) repo add prometheus-community https://prometheus-community.github.io/helm-charts --force-update
 	$(HELM) --kube-context $(KUBE_CONTEXT) install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n default -f integration/kube-prometheus-stack-values.yaml
 	$(HELM) --kube-context $(KUBE_CONTEXT) install prometheus-rbac integration/helm/prometheus-rbac -n default
-	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i ${OPERATOR_NAME}-local charts/${OPERATOR_NAME} -n ${OPERATOR_NAME}-local --create-namespace \
+	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i ${OPERATOR_NAME}-local charts/${OPERATOR_NAME} -n ${OPERATOR_NAME}-local --create-namespace --force-conflicts \
 	  --set enableCertManager=true \
 	  --set image.repository=${HELM_TEST_IMG_NAME} \
 	  --set image.tag=${HELM_TEST_IMG_TAG} \
@@ -494,14 +510,18 @@ vault: ## Download vault cli locally if necessary.
 .PHONY: helm
 HELM ?= $(LOCALBIN)/helm
 helm: ## Download helm locally if necessary.
-ifeq (,$(wildcard $(HELM)))
-	echo "Downloading helm to ${HELM}..."
+	@[ -f "$(HELM)-$(HELM_VERSION)" ] || { \
+	set -e ;\
+	echo "Downloading helm $(HELM_VERSION) to $(HELM)..." ;\
 	OS=$(shell go env GOOS) ;\
 	ARCH=$(shell go env GOARCH) ;\
-	curl --create-dirs -sSLo ${HELM}.tar.gz https://get.helm.sh/helm-${HELM_VERSION}-$${OS}-$${ARCH}.tar.gz ;\
-	tar -xf ${HELM}.tar.gz -C $(LOCALBIN)/ ;\
-	mv ./bin/$${OS}-$${ARCH}/helm ${HELM}
-endif
+	curl --create-dirs -sSLo $(HELM).tar.gz https://get.helm.sh/helm-$(HELM_VERSION)-$${OS}-$${ARCH}.tar.gz ;\
+	tar -xf $(HELM).tar.gz -C $(LOCALBIN)/ ;\
+	mv $(LOCALBIN)/$${OS}-$${ARCH}/helm $(HELM)-$(HELM_VERSION) ;\
+	rm -f $(HELM).tar.gz ;\
+	rm -rf $(LOCALBIN)/$${OS}-$${ARCH} ;\
+	} ;\
+	ln -sf $(HELM)-$(HELM_VERSION) $(HELM)
 
 .PHONY: clean
 clean:
