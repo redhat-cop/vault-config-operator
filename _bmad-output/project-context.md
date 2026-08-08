@@ -251,9 +251,22 @@ These rules govern the interaction between `kubebuilder:default`, `omitempty`, a
 - `make fmt && make vet` — format and static analysis.
 - `make test` — unit tests with envtest (excludes `//go:build integration`).
 - `make integration` — full integration suite: Kind cluster, Vault, cert-manager, ingress, then runs integration-tagged tests.
+- `make kind-teardown` — delete the Kind cluster and its kubeconfig. Accepts `KIND_CLUSTER_NAME` override.
 - `make docker-build` — builds container image (runs `test` first).
 - `make bundle` — regenerates OLM bundle manifests.
 - `make helmchart` — generates Helm chart from kustomize overlays.
+
+#### Parallel Integration Test Isolation
+When running integration tests in parallel across multiple git worktrees (e.g., via `bmad-epic-dev` Phase B), each worktree **must** use its own Kind cluster to avoid race conditions. The Makefile supports this via variable overrides:
+- `KIND_CLUSTER_NAME` — unique cluster name per worktree (convention: `vault-config-operator-s{story_key}`, e.g., `vault-config-operator-s13-1`)
+- `VAULT_HOST_PORT` — unique HTTP port per worktree (convention: `8200 + (story_index + 1) * 10`)
+- `HTTPS_HOST_PORT` — unique HTTPS port per worktree (convention: `VAULT_HOST_PORT + 1`)
+
+Example: `make integration KIND_CLUSTER_NAME=vault-config-operator-s13-1 VAULT_HOST_PORT=8210 HTTPS_HOST_PORT=8211`
+
+After merge, clean up per-worktree clusters: `make kind-teardown KIND_CLUSTER_NAME=vault-config-operator-s13-1`
+
+The base port `8200` and default cluster name `vault-config-operator` are reserved for single-run / sequential use and must not be assigned to parallel worktrees. The port formula assumes single-epic parallelism; concurrent epics would require coordination or a hash-based port scheme.
 
 #### Local Development
 - **Tiltfile** for live-reload development: uses `podman` build with `ci.Dockerfile`, deploys via kustomize `config/local-development/tilt`.

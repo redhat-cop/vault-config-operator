@@ -13,5 +13,5 @@ nodes:
     hostPort: VAULT_HOST_PORT_PLACEHOLDER
     protocol: TCP
   - containerPort: 443
-    hostPort: 8443
+    hostPort: HTTPS_HOST_PORT_PLACEHOLDER
     protocol: TCP
