@@ -50,6 +50,11 @@ resources:
 - bases/redhatcop.redhat.io_identitytokenkeys.yaml
 - bases/redhatcop.redhat.io_identitytokenroles.yaml
 - bases/redhatcop.redhat.io_namespaces.yaml
+- bases/redhatcop.redhat.io_awssecretengineconfigs.yaml
+- bases/redhatcop.redhat.io_awssecretengineroles.yaml
+- bases/redhatcop.redhat.io_transitsecretenginekeys.yaml
+- bases/redhatcop.redhat.io_sshsecretengineconfigs.yaml
+- bases/redhatcop.redhat.io_sshsecretengineroles.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches: []
