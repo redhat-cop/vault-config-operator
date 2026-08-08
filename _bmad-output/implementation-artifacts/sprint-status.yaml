@@ -36,6 +36,7 @@
 
 generated: 2026-04-11
 last_updated: 2026-08-08
+# Story 11.3 review 2026-08-08
 # Story 11.1 ready-for-dev 2026-08-08
 # Story 11.2 ready-for-dev 2026-08-08
 # Epic 11 in-progress 2026-08-08
@@ -501,7 +502,7 @@ development_status:
   epic-11: in-progress
   11-1-aws-secret-engine-config-and-role-crds: in-progress
   11-2-transit-secret-engine-config-and-key-crds: ready-for-dev
-  11-3-ssh-secret-engine-config-and-role-crds: ready-for-dev
+  11-3-ssh-secret-engine-config-and-role-crds: review
   epic-11-retrospective: optional
 
   # Epic 12: Medium-Priority Missing Secret Engines (Consul, GCP, LDAP/AD)

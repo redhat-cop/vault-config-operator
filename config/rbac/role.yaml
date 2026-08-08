@@ -95,6 +95,8 @@ rules:
   - rabbitmqsecretengineroles
   - randomsecrets
   - secretenginemounts
+  - sshsecretengineconfigs
+  - sshsecretengineroles
   - transitsecretenginekeys
   - vaultsecrets
   verbs:
@@ -156,6 +158,8 @@ rules:
   - rabbitmqsecretengineroles/finalizers
   - randomsecrets/finalizers
   - secretenginemounts/finalizers
+  - sshsecretengineconfigs/finalizers
+  - sshsecretengineroles/finalizers
   - transitsecretenginekeys/finalizers
   - vaultsecrets/finalizers
   verbs:
@@ -212,6 +216,8 @@ rules:
   - rabbitmqsecretengineroles/status
   - randomsecrets/status
   - secretenginemounts/status
+  - sshsecretengineconfigs/status
+  - sshsecretengineroles/status
   - transitsecretenginekeys/status
   - vaultsecrets/status
   verbs:
