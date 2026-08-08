@@ -528,8 +528,8 @@ func TestAWSSecretEngineRole_IsValid_AssumedRoleRejectsIAMUserFields(t *testing.
 		{
 			name: "rejects permissionsBoundaryARN",
 			role: AWSRole{
-				CredentialType: "assumed_role",
-				RoleArns:       []string{"arn:aws:iam::123456789012:role/Role"},
+				CredentialType:         "assumed_role",
+				RoleArns:               []string{"arn:aws:iam::123456789012:role/Role"},
 				PermissionsBoundaryARN: "arn:aws:iam::123456789012:policy/Boundary",
 			},
 		},
@@ -680,7 +680,7 @@ func TestAWSSecretEngineRole_IsValid_FederationTokenRejectsInapplicableFields(t 
 		{
 			name: "rejects permissionsBoundaryARN",
 			role: AWSRole{
-				CredentialType: "federation_token",
+				CredentialType:         "federation_token",
 				PermissionsBoundaryARN: "arn:aws:iam::123456789012:policy/Boundary",
 			},
 		},
@@ -749,7 +749,7 @@ func TestAWSSecretEngineRole_IsValid_SessionTokenRejectsInapplicableFields(t *te
 		{
 			name: "rejects permissionsBoundaryARN",
 			role: AWSRole{
-				CredentialType: "session_token",
+				CredentialType:         "session_token",
 				PermissionsBoundaryARN: "arn:aws:iam::123456789012:policy/Boundary",
 			},
 		},

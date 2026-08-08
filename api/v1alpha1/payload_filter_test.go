@@ -165,7 +165,7 @@ func TestRemoveUnsetFields_EmptySliceKeptWhenPresentInPayload(t *testing.T) {
 
 func TestRemoveUnsetFields_NonZeroValuesNeverRemoved(t *testing.T) {
 	desiredState := map[string]any{
-		"region":     "us-west-2",
+		"region":      "us-west-2",
 		"policy_arns": []any{"arn:aws:iam::123456789012:policy/Pol"},
 	}
 	payload := map[string]any{}

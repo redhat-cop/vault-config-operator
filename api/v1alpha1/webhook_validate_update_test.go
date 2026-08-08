@@ -429,13 +429,13 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 				r := &AWSSecretEngineRole{}
 				return r.ValidateUpdate(context.Background(),
 					&AWSSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: AWSSecretEngineRoleSpec{
-						Path: "same/path",
-						Name: "same-name",
+						Path:    "same/path",
+						Name:    "same-name",
 						AWSRole: AWSRole{CredentialType: "iam_user"},
 					}},
 					&AWSSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: AWSSecretEngineRoleSpec{
-						Path: "same/path",
-						Name: "same-name",
+						Path:    "same/path",
+						Name:    "same-name",
 						AWSRole: AWSRole{CredentialType: "iam_user"},
 					}},
 				)
