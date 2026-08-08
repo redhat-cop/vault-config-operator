@@ -379,6 +379,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controller.TransitSecretEngineKeyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "TransitSecretEngineKey")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "TransitSecretEngineKey")
+		os.Exit(1)
+	}
+
 	if webhooks, ok := os.LookupEnv("ENABLE_WEBHOOKS"); !ok || webhooks != "false" {
 		if err = (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "RandomSecret")
@@ -580,6 +585,11 @@ func main() {
 
 		if err = (&redhatcopv1alpha1.AWSSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "AWSSecretEngineRole")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.TransitSecretEngineKey{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "TransitSecretEngineKey")
 			os.Exit(1)
 		}
 	}

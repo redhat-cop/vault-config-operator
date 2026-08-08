@@ -246,6 +246,9 @@ var _ = BeforeSuite(func() {
 	err = (&AuditRequestHeaderReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AuditRequestHeader")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
+	err = (&TransitSecretEngineKeyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "TransitSecretEngineKey")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
 	By(fmt.Sprintf("Creating the %v namespace", vaultAdminNamespaceName))
 	vaultAdminNamespace = &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{

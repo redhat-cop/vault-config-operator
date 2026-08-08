@@ -1,6 +1,7 @@
 # Story 11.2: Transit Secret Engine — Config and Key CRDs
 
-Status: ready-for-dev
+baseline_commit: 042adfc0e7e5e819d85e82fc5ec8bd41513cdd54
+Status: review
 
 ## Story
 
@@ -24,57 +25,57 @@ so that Vault's Transit encryption-as-a-service can be managed declaratively.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define CRD type (AC: #1, #2, #3)
-  - [ ] Create `api/v1alpha1/transitsecretenginekey_types.go`
-  - [ ] Define `TransitSecretEngineKeySpec` with `Connection`, `Authentication`, `Path`, inline `TransitKeyConfig`, `Name`
-  - [ ] Define `TransitKeyConfig` struct with create-time and config-time fields
-  - [ ] Implement `VaultObject` interface: `GetPath()`, `GetPayload()`, `IsEquivalentToDesiredState()`, etc.
-  - [ ] Implement a `TransitKeyVaultObject` interface with `GetConfigPath()` and `GetConfigPayload()`
-  - [ ] Implement `ConditionsAware` interface on status
-  - [ ] Register type in `init()`
+- [x] Task 1: Define CRD type (AC: #1, #2, #3)
+  - [x] Create `api/v1alpha1/transitsecretenginekey_types.go`
+  - [x] Define `TransitSecretEngineKeySpec` with `Connection`, `Authentication`, `Path`, inline `TransitKeyConfig`, `Name`
+  - [x] Define `TransitKeyConfig` struct with create-time and config-time fields
+  - [x] Implement `VaultObject` interface: `GetPath()`, `GetPayload()`, `IsEquivalentToDesiredState()`, etc.
+  - [x] Implement a `TransitKeyVaultObject` interface with `GetConfigPath()` and `GetConfigPayload()`
+  - [x] Implement `ConditionsAware` interface on status
+  - [x] Register type in `init()`
 
-- [ ] Task 2: Implement reconciliation endpoint (AC: #1, #2)
-  - [ ] Create `api/v1alpha1/utils/vaulttransitkeyobject.go` with `VaultTransitKeyEndpoint`
-  - [ ] Implement custom `CreateOrUpdate`: read from `GetPath()`, if not found create at `GetPath()`, if found and config differs write to `GetConfigPath()`
-  - [ ] Implement `DeleteIfExists` using standard `VaultEndpoint.DeleteIfExists` pattern
+- [x] Task 2: Implement reconciliation endpoint (AC: #1, #2)
+  - [x] Create `api/v1alpha1/utils/vaulttransitkeyobject.go` with `VaultTransitKeyEndpoint`
+  - [x] Implement custom `CreateOrUpdate`: read from `GetPath()`, if not found create at `GetPath()`, if found and config differs write to `GetConfigPath()`
+  - [x] Implement `DeleteIfExists` using standard `VaultEndpoint.DeleteIfExists` pattern
 
-- [ ] Task 3: Implement controller (AC: #1, #2, #3)
-  - [ ] Create `internal/controller/transitsecretenginekey_controller.go`
-  - [ ] Embed `ReconcilerBase`, standard reconcile flow using `ReconcileWithFunctions`
-  - [ ] Use custom `VaultTransitKeyEndpoint` instead of standard `VaultResource`
-  - [ ] Add RBAC markers
-  - [ ] Implement `SetupWithManager`
+- [x] Task 3: Implement controller (AC: #1, #2, #3)
+  - [x] Create `internal/controller/transitsecretenginekey_controller.go`
+  - [x] Embed `ReconcilerBase`, standard reconcile flow using `ReconcileWithFunctions`
+  - [x] Use custom `VaultTransitKeyEndpoint` instead of standard `VaultResource`
+  - [x] Add RBAC markers
+  - [x] Implement `SetupWithManager`
 
-- [ ] Task 4: Implement webhook (AC: #1, #2, #3)
-  - [ ] Create `api/v1alpha1/transitsecretenginekey_webhook.go`
-  - [ ] Implement `admission.Defaulter[*TransitSecretEngineKey]` and `admission.Validator[*TransitSecretEngineKey]`
-  - [ ] `ValidateUpdate`: reject `spec.path` changes (immutable) and reject changes to create-time-only fields (`type`, `derived`, `convergentEncryption`)
-  - [ ] Kubebuilder webhook markers for mutate and validate paths
+- [x] Task 4: Implement webhook (AC: #1, #2, #3)
+  - [x] Create `api/v1alpha1/transitsecretenginekey_webhook.go`
+  - [x] Implement `admission.Defaulter[*TransitSecretEngineKey]` and `admission.Validator[*TransitSecretEngineKey]`
+  - [x] `ValidateUpdate`: reject `spec.path` changes (immutable) and reject changes to create-time-only fields (`type`, `derived`, `convergentEncryption`)
+  - [x] Kubebuilder webhook markers for mutate and validate paths
 
-- [ ] Task 5: Register in main.go (AC: #1)
-  - [ ] Add controller registration in `main.go`
-  - [ ] Add webhook registration in `ENABLE_WEBHOOKS` block
+- [x] Task 5: Register in main.go (AC: #1)
+  - [x] Add controller registration in `main.go`
+  - [x] Add webhook registration in `ENABLE_WEBHOOKS` block
 
-- [ ] Task 6: Unit tests for toMap/IsEquivalentToDesiredState (AC: #1, #2)
-  - [ ] Create `api/v1alpha1/transitsecretenginekey_types_test.go`
-  - [ ] Test `toMap()` produces correct Vault payload (snake_case keys)
-  - [ ] Test `IsEquivalentToDesiredState()` with Vault-read-shaped payload (only config fields)
-  - [ ] Negative test: full key metadata (including `keys`, `name`, `supports_*`) returns true (extra fields filtered)
-  - [ ] Negative test: mismatched config field returns false
+- [x] Task 6: Unit tests for toMap/IsEquivalentToDesiredState (AC: #1, #2)
+  - [x] Create `api/v1alpha1/transitsecretenginekey_types_test.go`
+  - [x] Test `toMap()` produces correct Vault payload (snake_case keys)
+  - [x] Test `IsEquivalentToDesiredState()` with Vault-read-shaped payload (only config fields)
+  - [x] Negative test: full key metadata (including `keys`, `name`, `supports_*`) returns true (extra fields filtered)
+  - [x] Negative test: mismatched config field returns false
 
-- [ ] Task 7: Integration tests (AC: #1, #2, #3)
-  - [ ] Create `internal/controller/transitsecretenginekey_controller_test.go` with `//go:build integration`
-  - [ ] Create test YAML fixtures in `test/transit/`
-  - [ ] Test create: CR → key exists in Vault → ReconcileSuccessful=True
-  - [ ] Test update: change `minDecryptionVersion` → config updated in Vault
-  - [ ] Test delete: set `deletionAllowed=true`, delete CR → key removed from Vault
-  - [ ] Register controller in integration test suite
+- [x] Task 7: Integration tests (AC: #1, #2, #3)
+  - [x] Create `internal/controller/transitsecretenginekey_controller_test.go` with `//go:build integration`
+  - [x] Create test YAML fixtures in `test/transit/`
+  - [x] Test create: CR → key exists in Vault → ReconcileSuccessful=True
+  - [x] Test update: change `minDecryptionVersion` → config updated in Vault
+  - [x] Test delete: set `deletionAllowed=true`, delete CR → key removed from Vault
+  - [x] Register controller in integration test suite
 
-- [ ] Task 8: Run code generation and verify (AC: all)
-  - [ ] `make manifests generate fmt vet test`
-  - [ ] Verify CRD generated in `config/crd/bases/`
-  - [ ] Verify RBAC generated
-  - [ ] Verify deepcopy generated
+- [x] Task 8: Run code generation and verify (AC: all)
+  - [x] `make manifests generate fmt vet test`
+  - [x] Verify CRD generated in `config/crd/bases/`
+  - [x] Verify RBAC generated
+  - [x] Verify deepcopy generated
 
 ## Dev Notes
 
@@ -295,3 +296,11 @@ Note: Enterprise-only key types (`aes128-cmac`, `aes256-cmac`, `ml-dsa`, `hybrid
 ### Completion Notes List
 
 ### File List
+
+### Review Findings
+
+- [ ] [Review][Patch] `spec.name` remains mutable and can orphan Vault keys [api/v1alpha1/transitsecretenginekey_webhook.go:58]
+- [ ] [Review][Patch] Transit key equivalence compares `int` desired values against Vault numeric payload types and can re-write `/config` forever under drift detection [api/v1alpha1/transitsecretenginekey_types.go:177]
+- [ ] [Review][Patch] One-way Transit flags can be changed from `true` back to `false` even though the story constrains them as irreversible [api/v1alpha1/transitsecretenginekey_webhook.go:58]
+- [ ] [Review][Patch] Transit-specific create/update invariants are documented but not enforced by schema or validating webhook [api/v1alpha1/transitsecretenginekey_webhook.go:47]
+- [ ] [Review][Patch] Shared Kind defaults were changed to worktree-local ports instead of using per-run overrides [integration/cluster-kind.yaml:13]

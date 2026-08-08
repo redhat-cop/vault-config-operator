@@ -95,6 +95,7 @@ rules:
   - rabbitmqsecretengineroles
   - randomsecrets
   - secretenginemounts
+  - transitsecretenginekeys
   - vaultsecrets
   verbs:
   - create
@@ -155,6 +156,7 @@ rules:
   - rabbitmqsecretengineroles/finalizers
   - randomsecrets/finalizers
   - secretenginemounts/finalizers
+  - transitsecretenginekeys/finalizers
   - vaultsecrets/finalizers
   verbs:
   - update
@@ -210,6 +212,7 @@ rules:
   - rabbitmqsecretengineroles/status
   - randomsecrets/status
   - secretenginemounts/status
+  - transitsecretenginekeys/status
   - vaultsecrets/status
   verbs:
   - get
