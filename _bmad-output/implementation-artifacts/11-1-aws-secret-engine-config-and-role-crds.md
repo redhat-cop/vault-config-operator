@@ -1,6 +1,10 @@
+---
+baseline_commit: 042adfc0e7e5e819d85e82fc5ec8bd41513cdd54
+---
+
 # Story 11.1: AWS Secret Engine — Config and Role CRDs
 
-Status: ready-for-dev
+Status: in-progress
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -26,45 +30,52 @@ So that Vault's AWS secret engine can be managed declaratively.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `AWSSecretEngineConfig` type (AC: 1, 3, 6)
-  - [ ] 1.1: Create `api/v1alpha1/awssecretengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `AWSRootConfig` struct, `RootCredentials` (RootCredentialConfig), `Name`
-  - [ ] 1.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/config/root`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()`, `IsDeletable()=false`
-  - [ ] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
-  - [ ] 1.4: Implement `setInternalCredentials()` — resolve AWS access_key/secret_key from K8s Secret, VaultSecret, or RandomSecret
-  - [ ] 1.5: Implement `toMap()` on `AWSRootConfig` — convert to Vault API snake_case fields
-  - [ ] 1.6: Implement `IsEquivalentToDesiredState()` — must delete `secret_key` from desired state (Vault never returns it on read), then `filterPayloadToDesiredKeys`
+- [x] Task 1: Create `AWSSecretEngineConfig` type (AC: 1, 3, 6)
+  - [x] 1.1: Create `api/v1alpha1/awssecretengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `AWSRootConfig` struct, `RootCredentials` (RootCredentialConfig), `Name`
+  - [x] 1.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/config/root`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()`, `IsDeletable()=false`
+  - [x] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
+  - [x] 1.4: Implement `setInternalCredentials()` — resolve AWS access_key/secret_key from K8s Secret, VaultSecret, or RandomSecret
+  - [x] 1.5: Implement `toMap()` on `AWSRootConfig` — convert to Vault API snake_case fields
+  - [x] 1.6: Implement `IsEquivalentToDesiredState()` — must delete `secret_key` from desired state (Vault never returns it on read), then `filterPayloadToDesiredKeys`
 
-- [ ] Task 2: Create `AWSSecretEngineRole` type (AC: 2, 4, 5)
-  - [ ] 2.1: Create `api/v1alpha1/awssecretenginerole_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `AWSRole` struct, `Name`
-  - [ ] 2.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/roles/{name}`, `IsDeletable()=true`
-  - [ ] 2.3: Implement `ConditionsAware` interface
-  - [ ] 2.4: Implement `toMap()` on `AWSRole` — handle conditional fields based on `credential_type`
-  - [ ] 2.5: Implement `IsEquivalentToDesiredState()` — handle `credential_types` (plural array) vs `credential_type` (singular string) mapping from Vault read response
+- [x] Task 2: Create `AWSSecretEngineRole` type (AC: 2, 4, 5)
+  - [x] 2.1: Create `api/v1alpha1/awssecretenginerole_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `AWSRole` struct, `Name`
+  - [x] 2.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/roles/{name}`, `IsDeletable()=true`
+  - [x] 2.3: Implement `ConditionsAware` interface
+  - [x] 2.4: Implement `toMap()` on `AWSRole` — handle conditional fields based on `credential_type`
+  - [x] 2.5: Implement `IsEquivalentToDesiredState()` — handle `credential_types` (plural array) vs `credential_type` (singular string) mapping from Vault read response
 
-- [ ] Task 3: Create webhooks (AC: 6)
-  - [ ] 3.1: Create `api/v1alpha1/awssecretengineconfig_webhook.go` — `admission.Defaulter[*AWSSecretEngineConfig]`, `admission.Validator[*AWSSecretEngineConfig]`, immutable `spec.path`, credential validation via `ValidateCredentialSource()`
-  - [ ] 3.2: Create `api/v1alpha1/awssecretenginerole_webhook.go` — `admission.Defaulter[*AWSSecretEngineRole]`, `admission.Validator[*AWSSecretEngineRole]`, immutable `spec.path`
+- [x] Task 3: Create webhooks (AC: 6)
+  - [x] 3.1: Create `api/v1alpha1/awssecretengineconfig_webhook.go` — `admission.Defaulter[*AWSSecretEngineConfig]`, `admission.Validator[*AWSSecretEngineConfig]`, immutable `spec.path`, credential validation via `ValidateCredentialSource()`
+  - [x] 3.2: Create `api/v1alpha1/awssecretenginerole_webhook.go` — `admission.Defaulter[*AWSSecretEngineRole]`, `admission.Validator[*AWSSecretEngineRole]`, immutable `spec.path`
 
-- [ ] Task 4: Create controllers (AC: 1, 2, 3, 4, 5)
-  - [ ] 4.1: Create `internal/controller/awssecretengineconfig_controller.go` — embed `ReconcilerBase`, standard reconcile flow with `NewVaultResource`, watches on `corev1.Secret` and `RandomSecret`
-  - [ ] 4.2: Create `internal/controller/awssecretenginerole_controller.go` — embed `ReconcilerBase`, standard reconcile flow with `NewVaultResource`
+- [x] Task 4: Create controllers (AC: 1, 2, 3, 4, 5)
+  - [x] 4.1: Create `internal/controller/awssecretengineconfig_controller.go` — embed `ReconcilerBase`, standard reconcile flow with `NewVaultResource`, watches on `corev1.Secret` and `RandomSecret`
+  - [x] 4.2: Create `internal/controller/awssecretenginerole_controller.go` — embed `ReconcilerBase`, standard reconcile flow with `NewVaultResource`
 
-- [ ] Task 5: Register in main.go (AC: 1, 2)
-  - [ ] 5.1: Add controller registrations for `AWSSecretEngineConfigReconciler` and `AWSSecretEngineRoleReconciler`
-  - [ ] 5.2: Add webhook registrations inside `ENABLE_WEBHOOKS` guard for both types
+- [x] Task 5: Register in main.go (AC: 1, 2)
+  - [x] 5.1: Add controller registrations for `AWSSecretEngineConfigReconciler` and `AWSSecretEngineRoleReconciler`
+  - [x] 5.2: Add webhook registrations inside `ENABLE_WEBHOOKS` guard for both types
 
-- [ ] Task 6: Unit tests (AC: 1, 2, 5, 6)
-  - [ ] 6.1: Create `api/v1alpha1/awssecretengineconfig_test.go` — test `toMap()` output, test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures (including secret_key stripping), negative test proving managed field mismatch returns `false`
-  - [ ] 6.2: Create `api/v1alpha1/awssecretenginerole_test.go` — test `toMap()` for each credential_type, test `IsEquivalentToDesiredState()` with `credential_types` (plural array) mapping, negative tests
-  - [ ] 6.3: Webhook validation tests (immutable path, credential source validation)
+- [x] Task 6: Unit tests (AC: 1, 2, 5, 6)
+  - [x] 6.1: Create `api/v1alpha1/awssecretengineconfig_test.go` — test `toMap()` output, test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures (including secret_key stripping), negative test proving managed field mismatch returns `false`
+  - [x] 6.2: Create `api/v1alpha1/awssecretenginerole_test.go` — test `toMap()` for each credential_type, test `IsEquivalentToDesiredState()` with `credential_types` (plural array) mapping, negative tests
+  - [x] 6.3: Webhook validation tests (immutable path, credential source validation)
 
-- [ ] Task 7: Test fixtures and integration tests (AC: 1, 2, 4, 5)
-  - [ ] 7.1: Create test YAML fixtures in `test/awssecretengine/` — config and role CRs
-  - [ ] 7.2: Integration tests — **SKIP** (see Dev Notes: AWS is a cloud provider, cannot run in Kind, falls under "Skip it" per integration test philosophy)
+- [x] Task 7: Test fixtures and integration tests (AC: 1, 2, 4, 5)
+  - [x] 7.1: Create test YAML fixtures in `test/awssecretengine/` — config and role CRs
+  - [x] 7.2: Integration tests — **SKIP** (see Dev Notes: AWS is a cloud provider, cannot run in Kind, falls under "Skip it" per integration test philosophy)
 
-- [ ] Task 8: Code generation and validation (AC: all)
-  - [ ] 8.1: Run `make manifests generate fmt vet test`
-  - [ ] 8.2: Verify all existing tests still pass
+- [x] Task 8: Code generation and validation (AC: all)
+  - [x] 8.1: Run `make manifests generate fmt vet test`
+  - [x] 8.2: Verify all existing tests still pass
+
+### Review Findings
+
+- [ ] [Review][Patch] AWS root credential rotations never propagate to Vault after the initial write [`api/v1alpha1/awssecretengineconfig_types.go:108`]
+- [ ] [Review][Patch] Clearing optional AWS config or role fields leaves stale state behind in Vault [`api/v1alpha1/awssecretenginerole_types.go:136`]
+- [ ] [Review][Patch] `randomSecret` credentials are accepted without the required `spec.accessKey` override [`api/v1alpha1/awssecretengineconfig_webhook.go:50`]
+- [ ] [Review][Patch] AWS role admission accepts invalid credential-type field combinations that the story marks as required/prohibited [`api/v1alpha1/awssecretenginerole_webhook.go:50`]
 
 ## Dev Notes
 
@@ -356,9 +367,38 @@ Role controller:
 ## Dev Agent Record
 
 ### Agent Model Used
+Opus 4.6
 
 ### Debug Log References
+No debug issues encountered. All code generation, formatting, vetting, and tests passed on first attempt.
 
 ### Completion Notes List
+- Implemented `AWSSecretEngineConfig` CRD type with `VaultObject` interface (`IsDeletable()=false`, fixed path `{path}/config/root`), `ConditionsAware` interface, credential resolution via `RootCredentialConfig` (K8s Secret, VaultSecret, RandomSecret), and `IsEquivalentToDesiredState` with `secret_key` and `access_key` stripping
+- Implemented `AWSSecretEngineRole` CRD type with `VaultObject` interface (`IsDeletable()=true`, path `{path}/roles/{name}`), `ConditionsAware`, conditional `toMap()` that only includes non-zero optional fields, and `IsEquivalentToDesiredState` with `credential_type` → `credential_types` (singular to plural array) mapping
+- Created webhooks for both types: `admission.Defaulter[*T]` + `admission.Validator[*T]`, immutable `spec.path` on updates, `ValidateCredentialSource()` on config
+- Created controllers: config controller with Secret and RandomSecret watches (following QuaySecretEngineConfig pattern), role controller with standard VaultResource pattern
+- Registered both controllers and webhooks in `cmd/main.go`
+- Wrote comprehensive unit tests: config tests cover `toMap()`, `IsEquivalentToDesiredState` (match, mismatch, extra Vault fields, secret_key in payload), `PrepareInternalValues` (K8s Secret, VaultSecret, spec override), `IsValid` validation; role tests cover `toMap()` for all 4 credential types (iam_user, assumed_role, federation_token, session_token), `IsEquivalentToDesiredState` with credential_types mapping, mismatch, extra fields
+- Integration tests SKIPPED per project policy (AWS is a cloud provider, cannot run in Kind)
+- `make manifests generate fmt vet test` passed with 0 failures
+
+### Change Log
+- 2026-08-08: Implemented AWS Secret Engine Config and Role CRDs with full VaultObject/ConditionsAware interfaces, webhooks, controllers, and comprehensive unit tests
 
 ### File List
+- `api/v1alpha1/awssecretengineconfig_types.go` (NEW)
+- `api/v1alpha1/awssecretengineconfig_webhook.go` (NEW)
+- `api/v1alpha1/awssecretengineconfig_test.go` (NEW)
+- `api/v1alpha1/awssecretenginerole_types.go` (NEW)
+- `api/v1alpha1/awssecretenginerole_webhook.go` (NEW)
+- `api/v1alpha1/awssecretenginerole_test.go` (NEW)
+- `api/v1alpha1/zz_generated.deepcopy.go` (MODIFIED — auto-generated)
+- `internal/controller/awssecretengineconfig_controller.go` (NEW)
+- `internal/controller/awssecretenginerole_controller.go` (NEW)
+- `cmd/main.go` (MODIFIED — added controller + webhook registrations)
+- `config/crd/bases/redhatcop.redhat.io_awssecretengineconfigs.yaml` (NEW — auto-generated)
+- `config/crd/bases/redhatcop.redhat.io_awssecretengineroles.yaml` (NEW — auto-generated)
+- `config/rbac/role.yaml` (MODIFIED — auto-generated RBAC)
+- `config/webhook/manifests.yaml` (MODIFIED — auto-generated webhook config)
+- `test/awssecretengine/aws-secret-engine-config.yaml` (NEW)
+- `test/awssecretengine/aws-secret-engine-role.yaml` (NEW)

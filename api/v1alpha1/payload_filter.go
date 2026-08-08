@@ -13,3 +13,29 @@ func filterPayloadToDesiredKeys(desiredState, payload map[string]any) map[string
 	}
 	return filtered
 }
+
+// removeUnsetFields removes keys from desiredState whose values are zero (empty string,
+// empty slice, or default numeric sentinel) and that are also absent from the Vault payload.
+// This prevents false drift when the operator includes all managed fields with zero defaults
+// but Vault omits fields that were never set.
+func removeUnsetFields(desiredState, payload map[string]any) {
+	for key, val := range desiredState {
+		if _, inPayload := payload[key]; inPayload {
+			continue
+		}
+		switch v := val.(type) {
+		case string:
+			if v == "" {
+				delete(desiredState, key)
+			}
+		case []any:
+			if len(v) == 0 {
+				delete(desiredState, key)
+			}
+		case int:
+			if v == -1 {
+				delete(desiredState, key)
+			}
+		}
+	}
+}

@@ -97,3 +97,132 @@ func TestFilterPayloadToDesiredKeysDoesNotMutateInputs(t *testing.T) {
 		t.Error("expected 'extra' key to remain in original payload")
 	}
 }
+
+func TestRemoveUnsetFields_ZeroStringRemovedWhenAbsentFromPayload(t *testing.T) {
+	desiredState := map[string]any{
+		"region":       "us-west-2",
+		"iam_endpoint": "",
+	}
+	payload := map[string]any{
+		"region": "us-west-2",
+	}
+
+	removeUnsetFields(desiredState, payload)
+
+	if _, ok := desiredState["iam_endpoint"]; ok {
+		t.Error("expected iam_endpoint to be removed (zero-valued and absent from payload)")
+	}
+	if _, ok := desiredState["region"]; !ok {
+		t.Error("expected region to remain (present in payload)")
+	}
+}
+
+func TestRemoveUnsetFields_ZeroStringKeptWhenPresentInPayload(t *testing.T) {
+	desiredState := map[string]any{
+		"region": "",
+	}
+	payload := map[string]any{
+		"region": "us-west-2",
+	}
+
+	removeUnsetFields(desiredState, payload)
+
+	if _, ok := desiredState["region"]; !ok {
+		t.Error("expected region to remain (present in payload, needed for drift detection)")
+	}
+}
+
+func TestRemoveUnsetFields_EmptySliceRemovedWhenAbsentFromPayload(t *testing.T) {
+	desiredState := map[string]any{
+		"credential_types": []any{"iam_user"},
+		"policy_arns":      []any{},
+	}
+	payload := map[string]any{
+		"credential_types": []any{"iam_user"},
+	}
+
+	removeUnsetFields(desiredState, payload)
+
+	if _, ok := desiredState["policy_arns"]; ok {
+		t.Error("expected policy_arns to be removed (empty slice and absent from payload)")
+	}
+}
+
+func TestRemoveUnsetFields_EmptySliceKeptWhenPresentInPayload(t *testing.T) {
+	desiredState := map[string]any{
+		"policy_arns": []any{},
+	}
+	payload := map[string]any{
+		"policy_arns": []any{"arn:aws:iam::123456789012:policy/OldPolicy"},
+	}
+
+	removeUnsetFields(desiredState, payload)
+
+	if _, ok := desiredState["policy_arns"]; !ok {
+		t.Error("expected policy_arns to remain (present in payload with stale value)")
+	}
+}
+
+func TestRemoveUnsetFields_NonZeroValuesNeverRemoved(t *testing.T) {
+	desiredState := map[string]any{
+		"region":     "us-west-2",
+		"policy_arns": []any{"arn:aws:iam::123456789012:policy/Pol"},
+	}
+	payload := map[string]any{}
+
+	removeUnsetFields(desiredState, payload)
+
+	if _, ok := desiredState["region"]; !ok {
+		t.Error("expected non-zero region to remain even when absent from payload")
+	}
+	if _, ok := desiredState["policy_arns"]; !ok {
+		t.Error("expected non-empty policy_arns to remain even when absent from payload")
+	}
+}
+
+func TestRemoveUnsetFields_DefaultIntRemovedWhenAbsentFromPayload(t *testing.T) {
+	desiredState := map[string]any{
+		"region":      "us-west-2",
+		"max_retries": -1,
+	}
+	payload := map[string]any{
+		"region": "us-west-2",
+	}
+
+	removeUnsetFields(desiredState, payload)
+
+	if _, ok := desiredState["max_retries"]; ok {
+		t.Error("expected max_retries (-1 default) to be removed when absent from payload")
+	}
+	if _, ok := desiredState["region"]; !ok {
+		t.Error("expected region to remain")
+	}
+}
+
+func TestRemoveUnsetFields_IntKeptWhenPresentInPayload(t *testing.T) {
+	desiredState := map[string]any{
+		"max_retries": -1,
+	}
+	payload := map[string]any{
+		"max_retries": 5,
+	}
+
+	removeUnsetFields(desiredState, payload)
+
+	if _, ok := desiredState["max_retries"]; !ok {
+		t.Error("expected max_retries to remain (present in payload, needed for drift detection)")
+	}
+}
+
+func TestRemoveUnsetFields_NonDefaultIntNeverRemoved(t *testing.T) {
+	desiredState := map[string]any{
+		"max_retries": 3,
+	}
+	payload := map[string]any{}
+
+	removeUnsetFields(desiredState, payload)
+
+	if _, ok := desiredState["max_retries"]; !ok {
+		t.Error("expected non-default max_retries (3) to remain even when absent from payload")
+	}
+}

@@ -499,7 +499,7 @@ development_status:
 
   # Epic 11: High-Priority Missing Secret Engines (AWS, Transit, SSH)
   epic-11: in-progress
-  11-1-aws-secret-engine-config-and-role-crds: ready-for-dev
+  11-1-aws-secret-engine-config-and-role-crds: in-progress
   11-2-transit-secret-engine-config-and-key-crds: ready-for-dev
   11-3-ssh-secret-engine-config-and-role-crds: ready-for-dev
   epic-11-retrospective: optional
