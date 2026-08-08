@@ -35,7 +35,11 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-08-04
+last_updated: 2026-08-08
+# Story 11.1 ready-for-dev 2026-08-08
+# Story 11.2 ready-for-dev 2026-08-08
+# Epic 11 in-progress 2026-08-08
+# Story 11.3 ready-for-dev 2026-08-08
 # Epic 10 retrospective 2026-08-04
 # Story 10.5 review 2026-08-03
 # Story 10.4 review 2026-08-03
@@ -494,10 +498,10 @@ development_status:
   epic-10-retrospective: done
 
   # Epic 11: High-Priority Missing Secret Engines (AWS, Transit, SSH)
-  epic-11: backlog
-  11-1-aws-secret-engine-config-and-role-crds: backlog
-  11-2-transit-secret-engine-config-and-key-crds: backlog
-  11-3-ssh-secret-engine-config-and-role-crds: backlog
+  epic-11: in-progress
+  11-1-aws-secret-engine-config-and-role-crds: ready-for-dev
+  11-2-transit-secret-engine-config-and-key-crds: ready-for-dev
+  11-3-ssh-secret-engine-config-and-role-crds: ready-for-dev
   epic-11-retrospective: optional
 
   # Epic 12: Medium-Priority Missing Secret Engines (Consul, GCP, LDAP/AD)
