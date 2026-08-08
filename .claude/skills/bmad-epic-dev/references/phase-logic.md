@@ -160,6 +160,33 @@ Stories within the same dependency layer are independent — their dependencies 
 
 **Subagent type:** Use `best-of-n-runner` subagents when available — they run in isolated git worktrees automatically. Fall back to sequential `generalPurpose` subagents on the main branch if worktree subagents aren't available.
 
+### Integration Test Isolation Protocol
+
+When multiple stories run integration tests in parallel (each in its own worktree), each worktree **must** use its own Kind cluster to avoid race conditions on shared Kubernetes namespaces, Vault state, and host port bindings.
+
+**Port and cluster assignment:** Before launching parallel worktrees for a dependency layer, the orchestrator assigns each story a unique port offset based on its position within the layer (0-indexed):
+
+| Variable | Formula | Example (story index 0, 1, 2) |
+|---|---|---|
+| `KIND_CLUSTER_NAME` | `vault-config-operator-{story_key}` | `vault-config-operator-s13-1` |
+| `VAULT_HOST_PORT` | `8200 + (layer_story_index + 1) * 10` | `8210`, `8220`, `8230` |
+| `HTTPS_HOST_PORT` | `VAULT_HOST_PORT + 1` | `8211`, `8221`, `8231` |
+
+The base port `8200` (offset 0) is reserved for the default cluster (`vault-config-operator`) and is never assigned to a worktree. The formula assumes single-epic parallelism; concurrent epics could collide on ports.
+
+**How to pass overrides:** Each `best-of-n-runner` subagent prompt must include an environment instruction block that the dev-story subagent applies when running `make integration`:
+
+```
+INTEGRATION TEST ISOLATION:
+When running integration tests (make integration), use these overrides:
+  KIND_CLUSTER_NAME={assigned_cluster_name}
+  VAULT_HOST_PORT={assigned_vault_port}
+  HTTPS_HOST_PORT={assigned_https_port}
+Run as: make integration KIND_CLUSTER_NAME={assigned_cluster_name} VAULT_HOST_PORT={assigned_vault_port} HTTPS_HOST_PORT={assigned_https_port}
+```
+
+**Sequential fallback:** When stories run sequentially on the main branch (B.5), no overrides are needed — the default cluster name and ports are used.
+
 For each dependency layer (in topological order):
 
 ### B.1: Launch Parallel Development
@@ -175,6 +202,13 @@ For each dependency layer (in topological order):
    Process the story fully — implement all tasks, run all tests, mark complete.
    If you encounter a blocking issue requiring a human decision, describe it
    clearly and halt. Do NOT make assumptions on behalf of the user.
+
+   INTEGRATION TEST ISOLATION:
+   When running integration tests (make integration), use these overrides:
+     KIND_CLUSTER_NAME={assigned_cluster_name}
+     VAULT_HOST_PORT={assigned_vault_port}
+     HTTPS_HOST_PORT={assigned_https_port}
+   Run as: make integration KIND_CLUSTER_NAME={assigned_cluster_name} VAULT_HOST_PORT={assigned_vault_port} HTTPS_HOST_PORT={assigned_https_port}
 
    IMPORTANT: If you need a decision, your output MUST include:
    - status: decision_needed
@@ -274,7 +308,9 @@ For each dependency layer (in topological order):
 
    This ensures story file status is always consistent with `sprint-status.yaml`, regardless of whether the work was done in a worktree.
 
-8. Clean up worktrees after successful merge:
+8. Clean up worktrees and Kind clusters after successful merge:
+
+   **Worktree cleanup:**
    ```
    git worktree remove <worktree-path>
    git branch -d epic-{N}/story-{N.M}
@@ -284,6 +320,12 @@ For each dependency layer (in topological order):
    ```
    git worktree remove --force <worktree-path>
    ```
+
+   **Kind cluster cleanup:** If the story used a dedicated Kind cluster (parallel worktree execution), tear it down to free resources:
+   ```
+   make kind-teardown KIND_CLUSTER_NAME={assigned_cluster_name}
+   ```
+   This deletes the Kind cluster and removes its kubeconfig file. Skip this step for the default cluster (`vault-config-operator`) or when running in sequential fallback mode.
 
 9. Update `sprint-status.yaml`: mark each merged story as `done`.
 
@@ -371,21 +413,25 @@ When invoked for an epic that's already `in-progress`, the workflow detects the 
 
 The dependency graph is re-parsed on resume. Stories whose dependencies aren't yet `done` are deferred until their dependencies complete — the topological sort handles this naturally.
 
-### Orphaned Worktree Detection
+### Orphaned Worktree and Kind Cluster Detection
 
 On resume, **always** run `git worktree list` and check for orphaned worktrees from a previous interrupted run (any worktree whose path contains `epic-{N}` or `story-{N}`).
 
-If orphaned worktrees are found:
-1. Report them to the user with their paths and HEAD commits
+Also check for orphaned Kind clusters by running `kind get clusters` and looking for any cluster whose name starts with `vault-config-operator-s` (the per-worktree naming convention).
+
+If orphaned worktrees or Kind clusters are found:
+1. Report them to the user with their paths/names and HEAD commits
 2. Ask the user to choose:
-   - **Resume**: keep the worktrees and continue from where they left off
-   - **Clean up**: remove the worktrees and restart the affected stories from `ready-for-dev`
+   - **Resume**: keep the worktrees and clusters and continue from where they left off
+   - **Clean up**: remove the worktrees and clusters and restart the affected stories from `ready-for-dev`
 3. If cleaning up:
    ```
    git worktree remove --force <worktree-path>
    git branch -D <branch-name>   # only if the branch was not merged
+   make kind-teardown KIND_CLUSTER_NAME=<cluster-name>   # for each orphaned cluster
    ```
 4. Verify with `git worktree list` that only the main working tree remains
+5. Verify with `kind get clusters` that no orphaned per-story clusters remain
 
 ### Story File Status Consistency
 

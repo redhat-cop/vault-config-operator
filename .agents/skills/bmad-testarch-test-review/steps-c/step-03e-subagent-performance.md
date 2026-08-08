@@ -18,8 +18,11 @@ This is an **isolated subagent** running in parallel with other quality dimensio
 ## MANDATORY EXECUTION RULES
 
 - ✅ Check PERFORMANCE only (not other quality dimensions)
+- ✅ Read `criteria_registry` before evaluating anything; severities come from it
 - ✅ Output structured JSON to temp file
 - ❌ Do NOT check determinism, isolation, maintainability, or coverage
+- ❌ Do NOT choose a severity or invent a row
+- ❌ Do NOT emit a hard-wait violation; H1 belongs to the determinism worker
 
 ---
 
@@ -27,31 +30,53 @@ This is an **isolated subagent** running in parallel with other quality dimensio
 
 ### 1. Identify Performance Violations
 
-**HIGH SEVERITY Violations**:
+Evaluate exactly these registry rows and no others. Load
+`{skill-root}/steps-c/criteria-registry.md` for each row's firing predicate, its
+pinned severity, and its gate.
 
-- Tests not parallelizable (using test.describe.serial unnecessarily)
-- Slow setup/teardown (creating fresh DB for every test)
-- Excessive navigation (reloading pages unnecessarily)
-- No fixture reuse (repeating expensive operations)
+| Row | Criterion                       | Severity | Gate          |
+| --- | ------------------------------- | -------: | ------------- |
+| M1  | Network-first violated          |   MEDIUM | Applicability |
+| M6  | Unawaited async                 |   MEDIUM | Absolute      |
+| H5  | Oversize test file (>300 lines) |     HIGH | Absolute      |
 
-**MEDIUM SEVERITY Violations**:
+**The hard-wait double count is fixed here.** This worker used to score
+`waitForTimeout(5000)` as MEDIUM while the determinism worker scored the identical
+line as HIGH and the published criteria table called it a FAIL. One `waitForTimeout`
+could therefore deduct 5 and 2 from the same file, at two severities, in one run.
+H1 now lives only in the determinism worker. Report a genuinely slow wait as
+evidence in your notes, never as a second violation.
 
-- Hard waits >2 seconds (waitForTimeout(5000))
-- Inefficient selectors (page.$$ instead of locators)
-- Large data sets in tests without pagination
-- Missing performance optimizations
+Four entries from the old list are deliberately gone:
 
-**LOW SEVERITY Violations**:
+- **"Slow setup/teardown (creating fresh DB for every test)"** describes correct
+  isolation. Deducting for it pushed reviewers toward shared mutable state, which
+  H4 then penalizes. The rubric was arguing with itself.
+- **"Tests not parallelizable (`describe.serial`)"** is often the right call, and
+  for pact suites it is mandatory (H6-H8 require serialization). A blanket
+  deduction contradicted the contract-testing rules in the determinism worker.
+- **"Missing performance optimizations"** and **"minor inefficiencies"** are
+  unfalsifiable.
+- **"Excessive logging"** is a style preference with no risk behind it.
 
-- Could use parallelization (test.describe.configure({ mode: 'parallel' }))
-- Minor inefficiencies
-- Excessive logging
+Test duration is published in the criteria table but is not independently
+measurable from a static read. Report `PASS` with the note that no excessive loops,
+sleeps, or repeated navigation were found, or cite the specific M1/H1 evidence that
+suggests otherwise. Never assert a measured runtime the run did not measure.
 
 ### 2. Calculate Performance Score
 
 ```javascript
-const severityWeights = { HIGH: 10, MEDIUM: 5, LOW: 2 };
-const totalPenalty = violations.reduce((sum, v) => sum + severityWeights[v.severity], 0);
+// CRITICAL is present because the registry now defines CRITICAL rows. Without the
+// key, `sum + undefined` makes this dimension score NaN the first time a reviewer
+// finds a skipped test. This per-dimension number is informational; step-03f's
+// deduction ledger remains the authoritative score.
+const severityWeights = { CRITICAL: 20, HIGH: 10, MEDIUM: 5, LOW: 2 };
+const totalPenalty = violations.reduce((sum, v) => {
+  const weight = severityWeights[v.severity];
+  if (weight === undefined) throw new Error(`unknown severity "${v.severity}" on ${v.row ?? 'an unattributed violation'}`);
+  return sum + weight;
+}, 0);
 const score = Math.max(0, 100 - totalPenalty);
 ```
 
@@ -62,34 +87,37 @@ const score = Math.max(0, 100 - totalPenalty);
 ```json
 {
   "dimension": "performance",
-  "score": 80,
+  "score": 90,
   "max_score": 100,
-  "grade": "B",
+  "grade": "A",
   "violations": [
     {
       "file": "tests/e2e/search.spec.ts",
       "line": 10,
-      "severity": "HIGH",
-      "category": "not-parallelizable",
-      "description": "Tests use test.describe.serial unnecessarily - reduces parallel execution",
-      "suggestion": "Remove .serial unless tests truly share state",
-      "code_snippet": "test.describe.serial('Search tests', () => { ... });"
+      "row": "M1",
+      "severity": "MEDIUM",
+      "category": "network-first-violated",
+      "description": "Navigates and then reads result rows with no intercept or readiness signal registered first",
+      "suggestion": "Register the search response before page.goto, then await it before asserting",
+      "code_snippet": "await page.goto('/search'); await expect(page.getByRole('row')).toHaveCount(3);"
     },
     {
       "file": "tests/api/bulk-operations.spec.ts",
       "line": 35,
+      "row": "M6",
       "severity": "MEDIUM",
-      "category": "slow-setup",
-      "description": "Test creates 1000 records in setup - very slow",
-      "suggestion": "Use smaller data sets or fixture factories",
-      "code_snippet": "beforeEach(async () => { for (let i=0; i<1000; i++) { ... } });"
+      "category": "unawaited-async",
+      "description": "A promise-returning call is neither awaited nor returned, so the assertion may run before the effect",
+      "suggestion": "Await the call, or return the promise from the test",
+      "code_snippet": "service.bulkCreate(payload); expect(repository.create).toHaveBeenCalled();"
     }
   ],
   "passed_checks": 13,
   "failed_checks": 2,
   "violation_summary": {
-    "HIGH": 1,
-    "MEDIUM": 1,
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "MEDIUM": 2,
     "LOW": 0
   },
   "performance_metrics": {

@@ -61,6 +61,22 @@ func read(context context.Context, path string) (map[string]any, bool, error) {
 	return secret.Data, true, nil
 }
 
+func deleteIfExists(context context.Context, path string) error {
+	log := log.FromContext(context)
+	vaultClient := VaultClientFromContext(context)
+	_, err := vaultClient.Logical().Delete(path)
+	if err != nil {
+		if respErr, ok := err.(*vault.ResponseError); ok {
+			if respErr.StatusCode == 404 {
+				return nil
+			}
+		}
+		log.Error(err, "unable to delete object at", "path", path)
+		return err
+	}
+	return nil
+}
+
 func ReadSecret(context context.Context, path string) (*vault.Secret, bool, error) {
 	log := log.FromContext(context)
 	vaultClient := VaultClientFromContext(context)

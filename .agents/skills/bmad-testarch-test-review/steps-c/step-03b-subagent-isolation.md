@@ -18,9 +18,11 @@ This is an **isolated subagent** running in parallel with other quality dimensio
 ## MANDATORY EXECUTION RULES
 
 - ✅ Check ISOLATION only (not other quality dimensions)
+- ✅ Read `criteria_registry` before evaluating anything; severities come from it
 - ✅ Output structured JSON to temp file
 - ❌ Do NOT check determinism, maintainability, coverage, or performance
 - ❌ Do NOT modify test files (read-only analysis)
+- ❌ Do NOT choose a severity or invent a row
 
 ---
 
@@ -28,35 +30,49 @@ This is an **isolated subagent** running in parallel with other quality dimensio
 
 ### 1. Identify Isolation Violations
 
-**Scan test files for isolation issues:**
+Evaluate exactly these registry rows and no others. Load
+`{skill-root}/steps-c/criteria-registry.md` for each row's firing predicate, its
+pinned severity, and its gate.
 
-**HIGH SEVERITY Violations**:
+| Row | Criterion                    | Severity | Gate     |
+| --- | ---------------------------- | -------: | -------- |
+| C5  | Mock asserted against itself | CRITICAL | Absolute |
+| H4  | Unreset shared state         |     HIGH | Absolute |
+| M4  | Ungrouped suite              |   MEDIUM | Absolute |
 
-- Global state mutations (global variables modified)
-- Test order dependencies (test B depends on test A running first)
-- Shared database records without cleanup
-- beforeAll/afterAll with side effects leaking to other tests
+**H4 covers every shape the old prose list spread across three tiers**: a mutated
+global, an order dependency, a shared record with no cleanup, a leaking
+`beforeAll`/`afterAll`, an unrestored environment variable, a mutating shared
+fixture. Each is the same defect, state surviving a test, and each makes the result
+depend on execution order. The old list scored that one defect HIGH, MEDIUM, or LOW
+depending on which sentence a reviewer happened to match it against, which is
+exactly the variance this registry removes.
 
-**MEDIUM SEVERITY Violations**:
+Two entries from the old list are deliberately gone:
 
-- Missing test cleanup (created data not deleted)
-- Shared fixtures that mutate state
-- Tests that assume specific execution order
-- Environment variables modified without restoration
+- **"Tests sharing test data (but not mutating)"** is not a defect. Shared immutable
+  data is what a fixture is for.
+- **"Tests that could be more isolated"** is unfalsifiable. Every suite could be
+  more isolated, so a row that always fires carries no information.
 
-**LOW SEVERITY Violations**:
-
-- Tests sharing test data (but not mutating)
-- Missing test.describe grouping
-- Tests that could be more isolated
+**M4 is published under maintainability but detectable here.** Emit it once; the
+aggregation step deduplicates by `(file, line, row)` when two workers both find it.
 
 ### 2. Calculate Isolation Score
 
 ```javascript
 const totalChecks = testFiles.length * checksPerFile;
 const failedChecks = violations.length;
-const severityWeights = { HIGH: 10, MEDIUM: 5, LOW: 2 };
-const totalPenalty = violations.reduce((sum, v) => sum + severityWeights[v.severity], 0);
+// CRITICAL is present because the registry now defines CRITICAL rows. Without the
+// key, `sum + undefined` makes this dimension score NaN the first time a reviewer
+// finds a skipped test. This per-dimension number is informational; step-03f's
+// deduction ledger remains the authoritative score.
+const severityWeights = { CRITICAL: 20, HIGH: 10, MEDIUM: 5, LOW: 2 };
+const totalPenalty = violations.reduce((sum, v) => {
+  const weight = severityWeights[v.severity];
+  if (weight === undefined) throw new Error(`unknown severity "${v.severity}" on ${v.row ?? 'an unattributed violation'}`);
+  return sum + weight;
+}, 0);
 const score = Math.max(0, 100 - totalPenalty);
 ```
 
@@ -74,11 +90,12 @@ const score = Math.max(0, 100 - totalPenalty);
     {
       "file": "tests/api/integration.spec.ts",
       "line": 15,
+      "row": "H4",
       "severity": "HIGH",
-      "category": "test-order-dependency",
-      "description": "Test depends on previous test creating user record",
-      "suggestion": "Each test should create its own test data in beforeEach",
-      "code_snippet": "test('should update user', async () => { /* assumes user exists */ });"
+      "category": "unreset-shared-state",
+      "description": "Test reads a user record the previous test created, so the result depends on test order",
+      "suggestion": "Create the record this test needs in beforeEach, and reset it after",
+      "code_snippet": "test('updates the user', async () => { /* assumes the record from the test above */ });"
     }
   ],
   "passed_checks": 14,

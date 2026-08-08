@@ -49,6 +49,8 @@ rules:
   - auditrequestheaders
   - audits
   - authenginemounts
+  - awssecretengineconfigs
+  - awssecretengineroles
   - azureauthengineconfigs
   - azureauthengineroles
   - azuresecretengineconfigs
@@ -93,6 +95,9 @@ rules:
   - rabbitmqsecretengineroles
   - randomsecrets
   - secretenginemounts
+  - sshsecretengineconfigs
+  - sshsecretengineroles
+  - transitsecretenginekeys
   - vaultsecrets
   verbs:
   - create
@@ -108,6 +113,8 @@ rules:
   - auditrequestheaders/finalizers
   - audits/finalizers
   - authenginemounts/finalizers
+  - awssecretengineconfigs/finalizers
+  - awssecretengineroles/finalizers
   - azureauthengineconfigs/finalizers
   - azureauthengineroles/finalizers
   - azuresecretengineconfigs/finalizers
@@ -151,6 +158,9 @@ rules:
   - rabbitmqsecretengineroles/finalizers
   - randomsecrets/finalizers
   - secretenginemounts/finalizers
+  - sshsecretengineconfigs/finalizers
+  - sshsecretengineroles/finalizers
+  - transitsecretenginekeys/finalizers
   - vaultsecrets/finalizers
   verbs:
   - update
@@ -160,6 +170,8 @@ rules:
   - auditrequestheaders/status
   - audits/status
   - authenginemounts/status
+  - awssecretengineconfigs/status
+  - awssecretengineroles/status
   - azureauthengineconfigs/status
   - azureauthengineroles/status
   - azuresecretengineconfigs/status
@@ -204,6 +216,9 @@ rules:
   - rabbitmqsecretengineroles/status
   - randomsecrets/status
   - secretenginemounts/status
+  - sshsecretengineconfigs/status
+  - sshsecretengineroles/status
+  - transitsecretenginekeys/status
   - vaultsecrets/status
   verbs:
   - get

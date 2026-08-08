@@ -35,7 +35,22 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-08-04
+last_updated: 2026-08-08
+# Epic 11 retrospective 2026-08-08
+# Epic 11 done 2026-08-08
+# Story 11.3 done 2026-08-08
+# Story 11.2 done 2026-08-08
+# Story 11.1 done 2026-08-08
+# Story 11.3 review 2026-08-08
+# Story 11.2 review 2026-08-08
+# Story 11.1 review 2026-08-08
+# Story 11.3 in-progress 2026-08-08
+# Story 11.2 in-progress 2026-08-08
+# Story 11.1 in-progress 2026-08-08
+# Story 11.1 ready-for-dev 2026-08-08
+# Story 11.2 ready-for-dev 2026-08-08
+# Story 11.3 ready-for-dev 2026-08-08
+# Epic 11 in-progress 2026-08-08
 # Epic 10 retrospective 2026-08-04
 # Story 10.5 review 2026-08-03
 # Story 10.4 review 2026-08-03
@@ -494,11 +509,11 @@ development_status:
   epic-10-retrospective: done
 
   # Epic 11: High-Priority Missing Secret Engines (AWS, Transit, SSH)
-  epic-11: backlog
-  11-1-aws-secret-engine-config-and-role-crds: backlog
-  11-2-transit-secret-engine-config-and-key-crds: backlog
-  11-3-ssh-secret-engine-config-and-role-crds: backlog
-  epic-11-retrospective: optional
+  epic-11: done
+  11-1-aws-secret-engine-config-and-role-crds: done
+  11-2-transit-secret-engine-config-and-key-crds: done
+  11-3-ssh-secret-engine-config-and-role-crds: done
+  epic-11-retrospective: done
 
   # Epic 12: Medium-Priority Missing Secret Engines (Consul, GCP, LDAP/AD)
   epic-12: backlog
@@ -536,3 +551,32 @@ development_status:
   16-4-kerberos-auth-engine-config-and-ldap-group-crds: backlog
   16-5-cloud-foundry-auth-engine-config-and-role-crds: backlog
   epic-16-retrospective: optional
+
+action_items:
+  # Epic 10 action items (status from Epic 11 retro follow-through)
+  - epic: 10
+    action: "Continue just-in-time version audits — mandatory for every dependency upgrade epic"
+    owner: "Bob (Scrum Master)"
+    status: done
+  - epic: 10
+    action: "Add grep-based deprecated-syntax discovery step to migration stories"
+    owner: "Bob (Scrum Master)"
+    status: done
+
+  # Epic 11 action items (all applied during retro session)
+  - epic: 11
+    action: "Shared framework protection rule — story specs must mark shared framework files as off-limits for behavioral changes"
+    owner: "Amelia (Developer)"
+    status: done
+  - epic: 11
+    action: "CRD registration checklist — after make manifests, add new CRDs to config/crd/kustomization.yaml"
+    owner: "Amelia (Developer)"
+    status: done
+  - epic: 11
+    action: "spec.name immutability rule — every type with Name override must include spec.name in ValidateUpdate"
+    owner: "Amelia (Developer)"
+    status: done
+  - epic: 11
+    action: "json.Number programming rule — all numeric fields in toMap() must emit json.Number, nil maps must return empty maps"
+    owner: "Amelia (Developer)"
+    status: done
