@@ -28,6 +28,68 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 		// --- Rejection tests (path changed) ---
 
 		{
+			name: "AWSSecretEngineConfig rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &AWSSecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&AWSSecretEngineConfig{Spec: AWSSecretEngineConfigSpec{
+						Path:            "old/path",
+						RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+					&AWSSecretEngineConfig{Spec: AWSSecretEngineConfigSpec{
+						Path:            "new/path",
+						RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.path cannot be updated",
+		},
+		{
+			name: "AWSSecretEngineConfig rejects name change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &AWSSecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&AWSSecretEngineConfig{Spec: AWSSecretEngineConfigSpec{
+						Path:            "same/path",
+						Name:            "old-name",
+						RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+					&AWSSecretEngineConfig{Spec: AWSSecretEngineConfigSpec{
+						Path:            "same/path",
+						Name:            "new-name",
+						RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.name cannot be updated",
+		},
+		{
+			name: "AWSSecretEngineRole rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &AWSSecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&AWSSecretEngineRole{Spec: AWSSecretEngineRoleSpec{Path: "old/path", AWSRole: AWSRole{CredentialType: "iam_user"}}},
+					&AWSSecretEngineRole{Spec: AWSSecretEngineRoleSpec{Path: "new/path", AWSRole: AWSRole{CredentialType: "iam_user"}}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.path cannot be updated",
+		},
+		{
+			name: "AWSSecretEngineRole rejects name change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &AWSSecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&AWSSecretEngineRole{Spec: AWSSecretEngineRoleSpec{Path: "same/path", Name: "old-name", AWSRole: AWSRole{CredentialType: "iam_user"}}},
+					&AWSSecretEngineRole{Spec: AWSSecretEngineRoleSpec{Path: "same/path", Name: "new-name", AWSRole: AWSRole{CredentialType: "iam_user"}}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.name cannot be updated",
+		},
+		{
 			name: "AuthEngineMount rejects path change",
 			validateFn: func() (admission.Warnings, error) {
 				r := &AuthEngineMount{}
@@ -342,6 +404,44 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 
 		// --- Allowance tests (path unchanged, other field changed) ---
 
+		{
+			name: "AWSSecretEngineConfig allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &AWSSecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&AWSSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: AWSSecretEngineConfigSpec{
+						Path:            "same/path",
+						Name:            "same-name",
+						RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+					&AWSSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: AWSSecretEngineConfigSpec{
+						Path:            "same/path",
+						Name:            "same-name",
+						RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+				)
+			},
+			expectErr: false,
+		},
+		{
+			name: "AWSSecretEngineRole allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &AWSSecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&AWSSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: AWSSecretEngineRoleSpec{
+						Path:    "same/path",
+						Name:    "same-name",
+						AWSRole: AWSRole{CredentialType: "iam_user"},
+					}},
+					&AWSSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: AWSSecretEngineRoleSpec{
+						Path:    "same/path",
+						Name:    "same-name",
+						AWSRole: AWSRole{CredentialType: "iam_user"},
+					}},
+				)
+			},
+			expectErr: false,
+		},
 		{
 			name: "AuthEngineMount allows config-only update",
 			validateFn: func() (admission.Warnings, error) {

@@ -8,6 +8,9 @@ KIND_CLUSTER_NAME ?= vault-config-operator
 KUBECTL_VERSION ?= v1.36.1
 KUSTOMIZE_VERSION ?= v5.8.1
 VAULT_HOST_PORT ?= 8200
+# Override HTTPS_HOST_PORT and VAULT_HOST_PORT (along with KIND_CLUSTER_NAME) to run
+# parallel integration tests in separate Kind clusters — see project-context.md.
+HTTPS_HOST_PORT ?= 8443
 KUBE_CONTEXT ?= kind-$(KIND_CLUSTER_NAME)
 KUBE_CONFIG_FILE ?= /tmp/$(KIND_CLUSTER_NAME)-kubeconfig
 # Container runtime: use docker in CI (GitHub Actions), podman on local dev machines.
@@ -161,14 +164,15 @@ deploy-vault: kubectl helm
 
 .PHONY: kind-setup
 kind-setup: kind
-	@sed 's/VAULT_HOST_PORT_PLACEHOLDER/$(VAULT_HOST_PORT)/' ./integration/cluster-kind.yaml.tpl > ./integration/cluster-kind.yaml
+	@sed -e 's/VAULT_HOST_PORT_PLACEHOLDER/$(VAULT_HOST_PORT)/' -e 's/HTTPS_HOST_PORT_PLACEHOLDER/$(HTTPS_HOST_PORT)/' ./integration/cluster-kind.yaml.tpl > ./integration/cluster-kind.yaml
 	@if $(KIND) get clusters 2>/dev/null | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
 	  CURRENT_IMAGE=$$($(CONTAINER_RUNTIME) inspect $(KIND_CLUSTER_NAME)-control-plane --format='{{.Config.Image}}' 2>/dev/null || echo ""); \
 	  CURRENT_PORT=$$($(CONTAINER_RUNTIME) inspect $(KIND_CLUSTER_NAME)-control-plane --format='{{(index (index .HostConfig.PortBindings "80/tcp") 0).HostPort}}' 2>/dev/null || echo ""); \
-	  if [ "$$CURRENT_IMAGE" = "docker.io/kindest/node:$(KUBECTL_VERSION)" ] && [ "$$CURRENT_PORT" = "$(VAULT_HOST_PORT)" ]; then \
-	    echo "Kind cluster '$(KIND_CLUSTER_NAME)' already exists with correct image and port, skipping recreation"; \
+	  CURRENT_HTTPS_PORT=$$($(CONTAINER_RUNTIME) inspect $(KIND_CLUSTER_NAME)-control-plane --format='{{(index (index .HostConfig.PortBindings "443/tcp") 0).HostPort}}' 2>/dev/null || echo ""); \
+	  if [ "$$CURRENT_IMAGE" = "docker.io/kindest/node:$(KUBECTL_VERSION)" ] && [ "$$CURRENT_PORT" = "$(VAULT_HOST_PORT)" ] && [ "$$CURRENT_HTTPS_PORT" = "$(HTTPS_HOST_PORT)" ]; then \
+	    echo "Kind cluster '$(KIND_CLUSTER_NAME)' already exists with correct image and ports, skipping recreation"; \
 	  else \
-	    echo "Kind cluster '$(KIND_CLUSTER_NAME)' exists but config mismatch (image=$$CURRENT_IMAGE, port=$$CURRENT_PORT), recreating..."; \
+	    echo "Kind cluster '$(KIND_CLUSTER_NAME)' exists but config mismatch (image=$$CURRENT_IMAGE, port=$$CURRENT_PORT, https_port=$$CURRENT_HTTPS_PORT), recreating..."; \
 	    $(KIND) delete cluster --name $(KIND_CLUSTER_NAME); \
 	    $(KIND) create cluster --name $(KIND_CLUSTER_NAME) --image docker.io/kindest/node:$(KUBECTL_VERSION) --config=./integration/cluster-kind.yaml; \
 	  fi \
@@ -180,6 +184,16 @@ kind-setup: kind
 	@echo "Switching Kind node to iptables-nft (required for nftables-only hosts)..."
 	@$(CONTAINER_RUNTIME) exec $(KIND_CLUSTER_NAME)-control-plane update-alternatives --set iptables /usr/sbin/iptables-nft >/dev/null 2>&1 || true
 	@$(CONTAINER_RUNTIME) exec $(KIND_CLUSTER_NAME)-control-plane update-alternatives --set ip6tables /usr/sbin/ip6tables-nft >/dev/null 2>&1 || true
+
+.PHONY: kind-teardown
+kind-teardown: kind ## Delete the Kind cluster and its kubeconfig.
+	@if $(KIND) get clusters 2>/dev/null | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
+	  echo "Deleting Kind cluster '$(KIND_CLUSTER_NAME)'..."; \
+	  $(KIND) delete cluster --name $(KIND_CLUSTER_NAME); \
+	else \
+	  echo "Kind cluster '$(KIND_CLUSTER_NAME)' does not exist, nothing to delete"; \
+	fi
+	@rm -f $(KUBE_CONFIG_FILE)
 
 .PHONY: deploy-postgresql
 deploy-postgresql: kubectl helm

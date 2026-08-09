@@ -20,6 +20,10 @@ planning_artifacts = "{project-root}/_bmad-output/planning-artifacts"
 implementation_artifacts = "{project-root}/_bmad-output/implementation-artifacts"
 project_knowledge = "{project-root}/docs"
 
+[modules.bmb]
+bmad_builder_output_folder = "{project-root}/skills"
+bmad_builder_reports = "{project-root}/skills/reports"
+
 [modules.tea]
 test_artifacts = "{project-root}/_bmad-output/test-artifacts"
 tea_use_playwright_utils = true
@@ -35,10 +39,6 @@ risk_threshold = "p1"
 test_design_output = "_bmad-output/test-artifacts/test-design"
 test_review_output = "_bmad-output/test-artifacts/test-reviews"
 trace_output = "_bmad-output/test-artifacts/traceability"
-
-[modules.bmb]
-bmad_builder_output_folder = "{project-root}/skills"
-bmad_builder_reports = "{project-root}/skills/reports"
 
 [modules.cis]
 visual_tools = "intermediate"

@@ -51,6 +51,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
   - `//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-<lowercase>,mutating=true,...`
   - `//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-<lowercase>,mutating=false,...`
 - **Critical rule:** `ValidateUpdate` must **always** reject changes to `spec.path` — immutable after creation: `errors.New("spec.path cannot be updated")`
+- **Critical rule:** `ValidateUpdate` must **also** reject changes to `spec.name` (when the type has a `Name` override field) — immutable after creation: `errors.New("spec.name cannot be updated")`. Changing `spec.name` would orphan the Vault object at the old path.
 - **Credential validation:** Types with `RootCredentialConfig` fields (e.g., LDAP, Database, Azure, Quay, Kubernetes Secret Engine) must call `credentials.ValidateCredentialSource()` in `ValidateCreate`/`ValidateUpdate` — this ensures exactly one of `secret`, `vaultSecret`, or `randomSecret` is set (mutual exclusivity).
 - Types with mount semantics (engines) may additionally restrict updates to only the config sub-struct.
 - Webhook must be registered in `main.go` inside the `ENABLE_WEBHOOKS` env-var guard block.
@@ -72,6 +73,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - `GetPayload()` calls `d.Spec.toMap()` to produce the map sent to Vault on write.
 - `IsEquivalentToDesiredState(payload)` compares the current Vault state (read response) against the desired state (from `toMap()`) using `reflect.DeepEqual`. This is the core declarative reconciliation check — if equivalent, no write is issued.
 - **Critical nuance:** Vault often returns extra fields not sent by the operator, or restructures fields (e.g., DB config moves `connection_url`/`username` into a `connection_details` sub-map). `IsEquivalentToDesiredState` must account for these transformations — filter payload to only managed keys, remap fields as Vault returns them.
+- **Critical rule — `json.Number` for Vault-facing numeric fields:** Vault's Go client (`hashicorp/vault/api`) uses `json.Decoder.UseNumber()`, so all JSON numbers in Vault read responses arrive as `json.Number` (not `float64` or `int`). Therefore, `toMap()` must emit `json.Number` for all numeric fields — use `json.Number(strconv.Itoa(v))` for integers and a `durationToSeconds()` helper returning `json.Number` for duration strings. Map fields with numeric values (e.g., `map[string]int`) must be converted to `map[string]any` with `json.Number` values. Nil maps must return empty `map[string]any{}` (not `nil`) because Vault returns `{}` for unset map fields. Unit tests for `IsEquivalentToDesiredState` must use `json.Number` in simulated Vault payloads — using Go `int` or `float64` would mask real type-mismatch bugs.
 - For engine mounts (`VaultEngineObject`), `IsEquivalentToDesiredState` compares the **tune config** (`Config.toMap()`) not the full mount spec, because Vault's read response for mounts returns only tune-level fields.
 
 #### Context-Carried Values
@@ -122,6 +124,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - It encapsulates: deletion/finalizer management, create-or-update via Vault resource, and `ManageOutcome` for condition management and requeue.
 - Controllers pass type-specific functions (create, update, delete) and the skeleton handles the common lifecycle flow.
 - `ManageOutcome` returns `Result{RequeueAfter: SyncPeriod}` when drift detection is enabled and reconcile succeeds — enabling automatic periodic drift checks via the controller-runtime work queue.
+- **Critical rule — Shared framework protection:** Story-scoped work must not **modify existing behavior** in shared framework files. Adding new exported functions or types is acceptable. Any behavioral change to existing functions (e.g., finalizer timing, deletion gates, condition management) affects all 40+ reconcilers and requires explicit escalation to the user before implementation. Shared framework files include: `reconcile_skeleton.go`, `vaultresourcereconciler.go`, `vaultobject.go`, `vaultutils.go`, `payload_filter.go`, `commons.go`.
 
 #### Kubebuilder RBAC Markers
 - Every controller must declare RBAC markers for its resource (get/list/watch/create/update/patch/delete), status subresource, and finalizers.
@@ -192,6 +195,7 @@ This rule applies to all current and future integration tests. When adding a new
 - Use `controllertestutils.DecodeInstance[T]` (generic) — no new decoder methods needed.
 - Create YAML fixtures in `test/<feature>/` directory.
 - Write integration test in `controllers/<newtype>_controller_test.go` with `//go:build integration` tag.
+- **CRD registration checklist:** After generating CRD manifests with `make manifests`, add the new CRD YAML files to `config/crd/kustomization.yaml` under the `resources` list. This is required for the Helm chart build (`make helmchart`) to include the CRDs. Missing this step causes operator crash-loops in Helm-deployed environments.
 
 ### Code Quality & Style Rules
 
@@ -251,9 +255,22 @@ These rules govern the interaction between `kubebuilder:default`, `omitempty`, a
 - `make fmt && make vet` — format and static analysis.
 - `make test` — unit tests with envtest (excludes `//go:build integration`).
 - `make integration` — full integration suite: Kind cluster, Vault, cert-manager, ingress, then runs integration-tagged tests.
+- `make kind-teardown` — delete the Kind cluster and its kubeconfig. Accepts `KIND_CLUSTER_NAME` override.
 - `make docker-build` — builds container image (runs `test` first).
 - `make bundle` — regenerates OLM bundle manifests.
 - `make helmchart` — generates Helm chart from kustomize overlays.
+
+#### Parallel Integration Test Isolation
+When running integration tests in parallel across multiple git worktrees (e.g., via `bmad-epic-dev` Phase B), each worktree **must** use its own Kind cluster to avoid race conditions. The Makefile supports this via variable overrides:
+- `KIND_CLUSTER_NAME` — unique cluster name per worktree (convention: `vault-config-operator-s{story_key}`, e.g., `vault-config-operator-s13-1`)
+- `VAULT_HOST_PORT` — unique HTTP port per worktree (convention: `8200 + (story_index + 1) * 10`)
+- `HTTPS_HOST_PORT` — unique HTTPS port per worktree (convention: `VAULT_HOST_PORT + 1`)
+
+Example: `make integration KIND_CLUSTER_NAME=vault-config-operator-s13-1 VAULT_HOST_PORT=8210 HTTPS_HOST_PORT=8211`
+
+After merge, clean up per-worktree clusters: `make kind-teardown KIND_CLUSTER_NAME=vault-config-operator-s13-1`
+
+The base port `8200` and default cluster name `vault-config-operator` are reserved for single-run / sequential use and must not be assigned to parallel worktrees. The port formula assumes single-epic parallelism; concurrent epics would require coordination or a hash-based port scheme.
 
 #### Local Development
 - **Tiltfile** for live-reload development: uses `podman` build with `ci.Dockerfile`, deploys via kustomize `config/local-development/tilt`.

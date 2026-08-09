@@ -69,6 +69,14 @@ const parseBooleanFlag = (value, defaultValue = true) => {
 const subagentContext = {
   test_files: /* from Step 2 */,
   knowledge_fragments_loaded: ['test-quality'],
+  // The single rule registry. Every worker reads severities from it and chooses
+  // none of its own, so two vendors that agree on a defect cannot disagree on
+  // the deduction it carries. A required input, not a hint.
+  criteria_registry: '{skill-root}/steps-c/criteria-registry.md',
+  // Measured in step-2b over the corpus OUTSIDE the review set. Convention rows
+  // score against this rather than an absolute standard, which is what stops
+  // "no priority markers" from firing in a repo that never used one.
+  convention_baseline: /* from Step 2b */,
   config: {
     execution_mode: config.tea_execution_mode || 'auto',  // "auto" | "subagent" | "agent-team" | "sequential"
     capability_probe: parseBooleanFlag(config.tea_capability_probe, true),  // supports booleans and "false"/"true" strings
@@ -76,6 +84,13 @@ const subagentContext = {
   timestamp: timestamp
 };
 ```
+
+**Every worker loads `criteria-registry.md` before evaluating anything, and every
+worker receives `convention_baseline` verbatim.** A worker that scores from its own
+sense of severity, or that consults repo adoption for an `Absolute` row, has broken
+the contract this step exists to hold. A worker handed no baseline reports
+`unknown` and passes its Convention rows as `n/a`; it never infers a convention
+from the reviewed files, which would be circular.
 
 ---
 

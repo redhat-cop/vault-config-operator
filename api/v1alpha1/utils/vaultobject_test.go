@@ -75,6 +75,11 @@ func (s *fakeVaultStore) handler() http.Handler {
 			}
 			s.set(path, body)
 			w.WriteHeader(http.StatusNoContent)
+		case http.MethodDelete:
+			s.mu.Lock()
+			delete(s.data, path)
+			s.mu.Unlock()
+			w.WriteHeader(http.StatusNoContent)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
