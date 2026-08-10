@@ -523,7 +523,7 @@ development_status:
   epic-12: in-progress
   12-1-consul-secret-engine-config-and-role-crds: ready-for-dev
   12-2-gcp-secret-engine-config-and-role-crds: ready-for-dev
-  12-3-ldap-ad-secret-engine-config-and-role-crds: ready-for-dev
+  12-3-ldap-ad-secret-engine-config-and-role-crds: in-progress
   epic-12-retrospective: optional
 
   # Epic 13: Lower-Priority Missing Secret Engines (Nomad, TOTP, MongoDB Atlas, Terraform Cloud)

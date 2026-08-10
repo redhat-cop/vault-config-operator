@@ -1,6 +1,6 @@
 # Story 12.3: LDAP/AD Secret Engine — Config and Role CRDs
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -75,6 +75,13 @@ So that Vault's LDAP/AD secret engine (password rotation, dynamic credentials) c
   - [ ] 9.1: Run `make manifests generate fmt vet test`
   - [ ] 9.2: Add new CRD YAML files to `config/crd/kustomization.yaml` (CRD registration checklist)
   - [ ] 9.3: Verify all existing tests still pass
+
+### Review Findings
+
+- [ ] [Review][Patch] Dynamic-role TTL comparison never converges against Vault readback [api/v1alpha1/ldapsecretengine_dynamicrole_types.go:123]
+- [ ] [Review][Patch] `RandomSecret` credential configs are admitted without a required `bindDN` [api/v1alpha1/ldapsecretengineconfig_types.go:193]
+- [ ] [Review][Patch] Story-local work changed shared Kind integration default ports [integration/cluster-kind.yaml:13]
+- [ ] [Review][Patch] AC6/AC7 update and webhook behaviors remain under-tested [internal/controller/ldapsecretengine_controller_test.go:97]
 
 ## Dev Notes
 
