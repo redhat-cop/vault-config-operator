@@ -187,6 +187,29 @@ Run as: make integration KIND_CLUSTER_NAME={assigned_cluster_name} VAULT_HOST_PO
 
 **Sequential fallback:** When stories run sequentially on the main branch (B.5), no overrides are needed — the default cluster name and ports are used.
 
+### Worktree Path Isolation (CRITICAL)
+
+The `best-of-n-runner` creates a real git worktree (separate branch + separate directory), but does **not** sandbox file operations. If the subagent receives absolute paths pointing to the original repository, it will read/write there — defeating isolation entirely.
+
+**Rules for the orchestrator when spawning worktree subagents:**
+
+1. **Use relative paths only.** Never pass an absolute path to the original repository in subagent prompts. Use paths relative to the project root (e.g., `{implementation_artifacts}/{story_key}.md`).
+
+2. **Include the worktree isolation block** (below) in every `best-of-n-runner` subagent prompt. This instructs the subagent to resolve `{project-root}` from its current working directory, not from any hardcoded path.
+
+3. **The commit (Step 4) happens on the story branch** inside the worktree. The orchestrator must NOT commit on behalf of the subagent on the main branch — the worktree subagent owns its own branch.
+
+**Worktree isolation block** (include verbatim in every `best-of-n-runner` prompt):
+```
+WORKTREE ISOLATION (CRITICAL):
+You are running in an isolated git worktree on branch epic-{N}/story-{N.M}.
+Your project root is your current working directory — do NOT use absolute
+paths to any other repository copy. All file reads and writes MUST use paths
+relative to your CWD or resolved from your CWD. If the skill resolves
+{project-root}, it MUST resolve to your current working directory.
+Run `git rev-parse --show-toplevel` if you need to confirm your project root.
+```
+
 For each dependency layer (in topological order):
 
 ### B.1: Launch Parallel Development
@@ -202,6 +225,14 @@ For each dependency layer (in topological order):
    Process the story fully — implement all tasks, run all tests, mark complete.
    If you encounter a blocking issue requiring a human decision, describe it
    clearly and halt. Do NOT make assumptions on behalf of the user.
+
+   WORKTREE ISOLATION (CRITICAL):
+   You are running in an isolated git worktree on branch epic-{N}/story-{N.M}.
+   Your project root is your current working directory — do NOT use absolute
+   paths to any other repository copy. All file reads and writes MUST use paths
+   relative to your CWD or resolved from your CWD. If the skill resolves
+   {project-root}, it MUST resolve to your current working directory.
+   Run `git rev-parse --show-toplevel` if you need to confirm your project root.
 
    INTEGRATION TEST ISOLATION:
    When running integration tests (make integration), use these overrides:
@@ -230,6 +261,14 @@ For each dependency layer (in topological order):
    triage report.
    If the review raises a design/requirements question (not a code fix),
    describe it and halt — do NOT resolve design questions yourself.
+
+   WORKTREE ISOLATION (CRITICAL):
+   You are running in an isolated git worktree on branch epic-{N}/story-{N.M}.
+   Your project root is your current working directory — do NOT use absolute
+   paths to any other repository copy. All file reads and writes MUST use paths
+   relative to your CWD or resolved from your CWD. If the skill resolves
+   {project-root}, it MUST resolve to your current working directory.
+   Run `git rev-parse --show-toplevel` if you need to confirm your project root.
 
    IMPORTANT: If you need a decision, your output MUST include:
    - status: decision_needed
@@ -288,7 +327,21 @@ For each dependency layer (in topological order):
 
 ### B.3: Merge Branches
 
-6. After all stories in the layer succeed, merge each story branch back to the main branch **sequentially** (to maintain a clean linear history):
+6. After all stories in the layer succeed, **verify each worktree branch** before merging:
+
+   For each completed story branch, run from the **main branch**:
+   ```
+   git log --oneline epic-{N}/story-{N.M} --not HEAD | head -20
+   ```
+   Confirm at least one commit exists on the story branch beyond the merge base. If the branch has no commits (empty branch), the worktree subagent failed to commit — halt and report the issue.
+
+   Also verify the worktree is clean (no uncommitted changes that were missed):
+   ```
+   git -C <worktree-path> status --porcelain
+   ```
+   If dirty files exist, either the subagent forgot to commit or the worktree isolation failed. Halt and report.
+
+7. Merge each story branch back to the main branch **sequentially** (to maintain a clean linear history):
 
    For each completed story branch:
    ```
@@ -300,7 +353,9 @@ For each dependency layer (in topological order):
 
    If merge conflicts occur: halt with details. The user resolves conflicts manually, then re-invokes to resume. The conflicting branch is preserved for inspection.
 
-7. **Update story file status on the main branch.** After each successful merge, on the main branch:
+8. **Post-merge test verification.** After each merge, run the project's test suite on the main branch to confirm the merge didn't introduce regressions. If tests fail, halt with the merge SHA and failure details — the user must resolve before continuing.
+
+9. **Update story file status on the main branch.** After each successful merge, on the main branch:
    - Set the story file's `Status:` field to `done`
    - Populate the **Code Review Record** section if not already filled by the review subagent:
      - **Review Model Used**: the model slug used for code review
@@ -314,7 +369,7 @@ For each dependency layer (in topological order):
 
    This ensures story file status is always consistent with `sprint-status.yaml`, regardless of whether the work was done in a worktree.
 
-8. Clean up worktrees and Kind clusters after successful merge:
+10. Clean up worktrees and Kind clusters after successful merge:
 
    **Worktree cleanup:**
    ```
@@ -333,11 +388,11 @@ For each dependency layer (in topological order):
    ```
    This deletes the Kind cluster and removes its kubeconfig file. Skip this step for the default cluster (`vault-config-operator`) or when running in sequential fallback mode.
 
-9. Update `sprint-status.yaml`: mark each merged story as `done`.
+11. Update `sprint-status.yaml`: mark each merged story as `done`.
 
    **HARD GUARD — Status Atomicity:** The orchestrator MUST NOT update sprint-status.yaml to `done` for a story unless the story file's `Status:` field has ALREADY been set to `done` in the same commit or an earlier commit on the main branch. If the story file still shows `in-progress`, `review`, or any other non-done status, HALT and fix the story file first. This prevents drift between the two tracking systems.
 
-10. **Final consistency check (BLOCKING GATE):** After all stories in the layer are merged, verify that:
+12. **Final consistency check (BLOCKING GATE):** After all stories in the layer are merged, verify that:
     - Every merged story's file has `Status: done`
     - Every merged story in `sprint-status.yaml` is `done`
     - `git worktree list` shows only the main working tree (no orphaned worktrees)
@@ -345,14 +400,14 @@ For each dependency layer (in topological order):
 
 ### B.4: Report Layer Progress
 
-9. Report to the user:
+13. Report to the user:
    ```
    Layer {L} complete: {count} stories merged
    {story_list with review patch counts and file counts}
    Progress: {done}/{total} stories in epic {N}
    ```
 
-10. Continue to the next dependency layer.
+14. Continue to the next dependency layer.
 
 ### B.5: Sequential Fallback
 
