@@ -88,6 +88,9 @@ rules:
   - kubernetessecretengineroles
   - ldapauthengineconfigs
   - ldapauthenginegroups
+  - ldapsecretengineconfigs
+  - ldapsecretenginedynamicroles
+  - ldapsecretenginestaticroles
   - namespaces
   - passwordpolicies
   - pkisecretengineconfigs
@@ -157,6 +160,9 @@ rules:
   - kubernetessecretengineroles/finalizers
   - ldapauthengineconfigs/finalizers
   - ldapauthenginegroups/finalizers
+  - ldapsecretengineconfigs/finalizers
+  - ldapsecretenginedynamicroles/finalizers
+  - ldapsecretenginestaticroles/finalizers
   - namespaces/finalizers
   - passwordpolicies/finalizers
   - pkisecretengineconfigs/finalizers
@@ -219,6 +225,9 @@ rules:
   - kubernetessecretengineroles/status
   - ldapauthengineconfigs/status
   - ldapauthenginegroups/status
+  - ldapsecretengineconfigs/status
+  - ldapsecretenginedynamicroles/status
+  - ldapsecretenginestaticroles/status
   - namespaces/status
   - passwordpolicies/status
   - pkisecretengineconfigs/status

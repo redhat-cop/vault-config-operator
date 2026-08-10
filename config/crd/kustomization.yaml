@@ -60,6 +60,9 @@ resources:
 - bases/redhatcop.redhat.io_gcpsecretengineconfigs.yaml
 - bases/redhatcop.redhat.io_gcpsecretenginerolesets.yaml
 - bases/redhatcop.redhat.io_gcpsecretenginestaticaccounts.yaml
+- bases/redhatcop.redhat.io_ldapsecretengineconfigs.yaml
+- bases/redhatcop.redhat.io_ldapsecretenginestaticroles.yaml
+- bases/redhatcop.redhat.io_ldapsecretenginedynamicroles.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches: []
