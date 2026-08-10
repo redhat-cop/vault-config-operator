@@ -37,6 +37,7 @@
 generated: 2026-04-11
 last_updated: 2026-08-10
 # Story 12.1 done 2026-08-10
+# Epic 12 done 2026-08-10
 # Story 12.3 done 2026-08-10
 # Story 12.2 done 2026-08-10
 # Story 12.2 ready-for-dev 2026-08-10
@@ -522,7 +523,7 @@ development_status:
   epic-11-retrospective: done
 
   # Epic 12: Medium-Priority Missing Secret Engines (Consul, GCP, LDAP/AD)
-  epic-12: in-progress
+  epic-12: done
   12-1-consul-secret-engine-config-and-role-crds: done
   12-2-gcp-secret-engine-config-and-role-crds: done
   12-3-ldap-ad-secret-engine-config-and-role-crds: done
