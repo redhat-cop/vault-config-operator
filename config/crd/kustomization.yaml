@@ -55,6 +55,8 @@ resources:
 - bases/redhatcop.redhat.io_transitsecretenginekeys.yaml
 - bases/redhatcop.redhat.io_sshsecretengineconfigs.yaml
 - bases/redhatcop.redhat.io_sshsecretengineroles.yaml
+- bases/redhatcop.redhat.io_consulsecretengineconfigs.yaml
+- bases/redhatcop.redhat.io_consulsecretengineroles.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches: []

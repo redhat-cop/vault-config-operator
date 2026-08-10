@@ -1,6 +1,10 @@
+---
+baseline_commit: ca700b0aa88667935b521720bbea4b8063d6715e
+---
+
 # Story 12.1: Consul Secret Engine — Config and Role CRDs
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -36,45 +40,45 @@ So that Vault's Consul secret engine can be managed declaratively.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `ConsulSecretEngineConfig` type (AC: 1, 3, 6)
-  - [ ] 1.1: Create `api/v1alpha1/consulsecretengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `ConsulSEConfig` struct, `RootCredentials` (RootCredentialConfig)
-  - [ ] 1.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/config/access`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()`, `IsDeletable()=false`
-  - [ ] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
-  - [ ] 1.4: Implement `setInternalCredentials()` — resolve Consul token from K8s Secret, VaultSecret, or RandomSecret
-  - [ ] 1.5: Implement `toMap()` on `ConsulSEConfig` — convert to Vault API snake_case fields
-  - [ ] 1.6: Implement `IsEquivalentToDesiredState()` — must delete `token` from desired state (Vault never returns it on read), then `filterPayloadToDesiredKeys`
+- [x] Task 1: Create `ConsulSecretEngineConfig` type (AC: 1, 3, 6)
+  - [x] 1.1: Create `api/v1alpha1/consulsecretengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `ConsulSEConfig` struct, `RootCredentials` (RootCredentialConfig)
+  - [x] 1.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/config/access`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()`, `IsDeletable()=false`
+  - [x] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
+  - [x] 1.4: Implement `setInternalCredentials()` — resolve Consul token from K8s Secret, VaultSecret, or RandomSecret
+  - [x] 1.5: Implement `toMap()` on `ConsulSEConfig` — convert to Vault API snake_case fields
+  - [x] 1.6: Implement `IsEquivalentToDesiredState()` — must delete `token` from desired state (Vault never returns it on read), then `filterPayloadToDesiredKeys`
 
-- [ ] Task 2: Create `ConsulSecretEngineRole` type (AC: 2, 4, 5)
-  - [ ] 2.1: Create `api/v1alpha1/consulsecretenginerole_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `ConsulSERole` struct, `Name`
-  - [ ] 2.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/roles/{name}`, `IsDeletable()=true`
-  - [ ] 2.3: Implement `ConditionsAware` interface
-  - [ ] 2.4: Implement `toMap()` on `ConsulSERole` — include all role fields with correct snake_case mapping
-  - [ ] 2.5: Implement `IsEquivalentToDesiredState()` — use `removeUnsetFields` + `filterPayloadToDesiredKeys`
+- [x] Task 2: Create `ConsulSecretEngineRole` type (AC: 2, 4, 5)
+  - [x] 2.1: Create `api/v1alpha1/consulsecretenginerole_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `ConsulSERole` struct, `Name`
+  - [x] 2.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/roles/{name}`, `IsDeletable()=true`
+  - [x] 2.3: Implement `ConditionsAware` interface
+  - [x] 2.4: Implement `toMap()` on `ConsulSERole` — include all role fields with correct snake_case mapping
+  - [x] 2.5: Implement `IsEquivalentToDesiredState()` — use `removeUnsetFields` + `filterPayloadToDesiredKeys`
 
-- [ ] Task 3: Create webhooks (AC: 6)
-  - [ ] 3.1: Create `api/v1alpha1/consulsecretengineconfig_webhook.go` — `admission.Defaulter[*ConsulSecretEngineConfig]`, `admission.Validator[*ConsulSecretEngineConfig]`, immutable `spec.path`, credential validation via `ValidateCredentialSource()`
-  - [ ] 3.2: Create `api/v1alpha1/consulsecretenginerole_webhook.go` — `admission.Defaulter[*ConsulSecretEngineRole]`, `admission.Validator[*ConsulSecretEngineRole]`, immutable `spec.path` + `spec.name`
+- [x] Task 3: Create webhooks (AC: 6)
+  - [x] 3.1: Create `api/v1alpha1/consulsecretengineconfig_webhook.go` — `admission.Defaulter[*ConsulSecretEngineConfig]`, `admission.Validator[*ConsulSecretEngineConfig]`, immutable `spec.path`, credential validation via `ValidateCredentialSource()`
+  - [x] 3.2: Create `api/v1alpha1/consulsecretenginerole_webhook.go` — `admission.Defaulter[*ConsulSecretEngineRole]`, `admission.Validator[*ConsulSecretEngineRole]`, immutable `spec.path` + `spec.name`
 
-- [ ] Task 4: Create controllers (AC: 1, 2, 3, 4, 5)
-  - [ ] 4.1: Create `internal/controller/consulsecretengineconfig_controller.go` — embed `ReconcilerBase`, config reconcile flow (always-write pattern for token, same as AWS config), watches on `corev1.Secret` and `RandomSecret`
-  - [ ] 4.2: Create `internal/controller/consulsecretenginerole_controller.go` — embed `ReconcilerBase`, standard VaultResource reconcile flow
+- [x] Task 4: Create controllers (AC: 1, 2, 3, 4, 5)
+  - [x] 4.1: Create `internal/controller/consulsecretengineconfig_controller.go` — embed `ReconcilerBase`, config reconcile flow (always-write pattern for token, same as AWS config), watches on `corev1.Secret` and `RandomSecret`
+  - [x] 4.2: Create `internal/controller/consulsecretenginerole_controller.go` — embed `ReconcilerBase`, standard VaultResource reconcile flow
 
-- [ ] Task 5: Register in main.go (AC: 1, 2)
-  - [ ] 5.1: Add controller registrations for `ConsulSecretEngineConfigReconciler` and `ConsulSecretEngineRoleReconciler`
-  - [ ] 5.2: Add webhook registrations inside `ENABLE_WEBHOOKS` guard for both types
+- [x] Task 5: Register in main.go (AC: 1, 2)
+  - [x] 5.1: Add controller registrations for `ConsulSecretEngineConfigReconciler` and `ConsulSecretEngineRoleReconciler`
+  - [x] 5.2: Add webhook registrations inside `ENABLE_WEBHOOKS` guard for both types
 
-- [ ] Task 6: Unit tests (AC: 1, 2, 5, 6)
-  - [ ] 6.1: Create `api/v1alpha1/consulsecretengineconfig_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures (token stripping), negative test proving managed field mismatch returns `false`
-  - [ ] 6.2: Create `api/v1alpha1/consulsecretenginerole_test.go` — test `toMap()` for consul_policies, consul_roles, service_identities, node_identities variants; test `IsEquivalentToDesiredState()`; negative tests
+- [x] Task 6: Unit tests (AC: 1, 2, 5, 6)
+  - [x] 6.1: Create `api/v1alpha1/consulsecretengineconfig_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures (token stripping), negative test proving managed field mismatch returns `false`
+  - [x] 6.2: Create `api/v1alpha1/consulsecretenginerole_test.go` — test `toMap()` for consul_policies, consul_roles, service_identities, node_identities variants; test `IsEquivalentToDesiredState()`; negative tests
 
-- [ ] Task 7: Test fixtures and integration tests (AC: 1, 2, 4, 5)
-  - [ ] 7.1: Create test YAML fixtures in `test/consulsecretengine/` — config and role CRs
-  - [ ] 7.2: Integration tests — **SKIP** (see Dev Notes: Consul is an external service that cannot be trivially installed in Kind for this secret engine's purposes; falls under "Skip it")
+- [x] Task 7: Test fixtures and integration tests (AC: 1, 2, 4, 5)
+  - [x] 7.1: Create test YAML fixtures in `test/consulsecretengine/` — config and role CRs
+  - [x] 7.2: Integration tests — **SKIP** (see Dev Notes: Consul is an external service that cannot be trivially installed in Kind for this secret engine's purposes; falls under "Skip it")
 
-- [ ] Task 8: Code generation and validation (AC: all)
-  - [ ] 8.1: Run `make manifests generate fmt vet test`
-  - [ ] 8.2: Verify all existing tests still pass
-  - [ ] 8.3: Add new CRDs to `config/crd/kustomization.yaml` under `resources` list
+- [x] Task 8: Code generation and validation (AC: all)
+  - [x] 8.1: Run `make manifests generate fmt vet test`
+  - [x] 8.2: Verify all existing tests still pass
+  - [x] 8.3: Add new CRDs to `config/crd/kustomization.yaml` under `resources` list
 
 ## Dev Notes
 
@@ -527,22 +531,66 @@ Role controller:
 
 ### Review Model Used
 
-(To be filled during review — must differ from dev model)
+GPT-5.4 (Cursor)
 
 ### Review Findings
 
+✅ Clean review — all layers passed.
+
 ### Decisions Needed / Decisions Taken
+
+None.
 
 ### Fixes Applied
 
+None during this review pass.
 ## Dev Agent Record
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4 (Cursor)
 
 ### Debug Log References
 
+No debug issues encountered.
+
 ### Completion Notes List
 
+- Implemented ConsulSecretEngineConfig type with VaultObject interface (IsDeletable=false, fixed path at config/access, token/ca_cert/client_cert/client_key stripping in IsEquivalentToDesiredState)
+- Implemented ConsulSecretEngineRole type with VaultObject interface (IsDeletable=true, path at roles/{name}, sortAnyStringSlice for set fields, removeUnsetFields for clean drift detection)
+- Implemented credential resolution via RootCredentialConfig (K8s Secret, VaultSecret, RandomSecret) — single field (token) unlike AWS's dual-field pattern
+- Created always-write config controller with Secret and RandomSecret watches (following AWS config pattern)
+- Created standard VaultResource role controller
+- Created webhooks with spec.path immutability (config) and spec.path + spec.name immutability (role)
+- Registered both controllers and webhooks in main.go
+- Added CRDs to config/crd/kustomization.yaml
+- All unit tests pass: toMap(), IsEquivalentToDesiredState (match, mismatch, extra fields, token stripping, unsorted sets), PrepareInternalValues, credential validation
+- Integration tests SKIPPED per project policy (Consul requires external ACL-enabled cluster)
+- Full regression suite passes with no regressions
+
 ### File List
+
+New files:
+- api/v1alpha1/consulsecretengineconfig_types.go
+- api/v1alpha1/consulsecretengineconfig_webhook.go
+- api/v1alpha1/consulsecretengineconfig_test.go
+- api/v1alpha1/consulsecretenginerole_types.go
+- api/v1alpha1/consulsecretenginerole_webhook.go
+- api/v1alpha1/consulsecretenginerole_test.go
+- internal/controller/consulsecretengineconfig_controller.go
+- internal/controller/consulsecretenginerole_controller.go
+- test/consulsecretengine/consul-secret-engine-config.yaml
+- test/consulsecretengine/consul-secret-engine-role.yaml
+
+Modified files:
+- cmd/main.go (added controller + webhook registrations)
+- config/crd/kustomization.yaml (added CRD resources)
+- api/v1alpha1/zz_generated.deepcopy.go (auto-generated)
+- config/crd/bases/redhatcop.redhat.io_consulsecretengineconfigs.yaml (auto-generated)
+- config/crd/bases/redhatcop.redhat.io_consulsecretengineroles.yaml (auto-generated)
+- config/rbac/role.yaml (auto-generated)
+- config/webhook/manifests.yaml (auto-generated)
+
+### Change Log
+
+- 2026-08-10: Implemented ConsulSecretEngineConfig and ConsulSecretEngineRole CRDs with controllers, webhooks, and unit tests (Story 12.1)

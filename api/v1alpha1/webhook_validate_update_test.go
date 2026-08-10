@@ -378,6 +378,48 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
+			name: "ConsulSecretEngineConfig rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &ConsulSecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&ConsulSecretEngineConfig{Spec: ConsulSecretEngineConfigSpec{
+						Path:            "old/path",
+						RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+					&ConsulSecretEngineConfig{Spec: ConsulSecretEngineConfigSpec{
+						Path:            "new/path",
+						RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.path cannot be updated",
+		},
+		{
+			name: "ConsulSecretEngineRole rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &ConsulSecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&ConsulSecretEngineRole{Spec: ConsulSecretEngineRoleSpec{Path: "old/path"}},
+					&ConsulSecretEngineRole{Spec: ConsulSecretEngineRoleSpec{Path: "new/path"}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.path cannot be updated",
+		},
+		{
+			name: "ConsulSecretEngineRole rejects name change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &ConsulSecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&ConsulSecretEngineRole{Spec: ConsulSecretEngineRoleSpec{Path: "same/path", Name: "old-name"}},
+					&ConsulSecretEngineRole{Spec: ConsulSecretEngineRoleSpec{Path: "same/path", Name: "new-name"}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.name cannot be updated",
+		},
+		{
 			name: "RandomSecret rejects path change",
 			validateFn: func() (admission.Warnings, error) {
 				r := &RandomSecret{}
@@ -756,6 +798,40 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 				return r.ValidateUpdate(context.Background(),
 					&RabbitMQSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: RabbitMQSecretEngineRoleSpec{Path: "same/path"}},
 					&RabbitMQSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: RabbitMQSecretEngineRoleSpec{Path: "same/path"}},
+				)
+			},
+			expectErr: false,
+		},
+		{
+			name: "ConsulSecretEngineConfig allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &ConsulSecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&ConsulSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: ConsulSecretEngineConfigSpec{
+						Path:            "same/path",
+						RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+					&ConsulSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: ConsulSecretEngineConfigSpec{
+						Path:            "same/path",
+						RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+				)
+			},
+			expectErr: false,
+		},
+		{
+			name: "ConsulSecretEngineRole allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &ConsulSecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&ConsulSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: ConsulSecretEngineRoleSpec{
+						Path: "same/path",
+						Name: "same-name",
+					}},
+					&ConsulSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: ConsulSecretEngineRoleSpec{
+						Path: "same/path",
+						Name: "same-name",
+					}},
 				)
 			},
 			expectErr: false,
