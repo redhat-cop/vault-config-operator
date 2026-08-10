@@ -64,6 +64,9 @@ rules:
   - entityaliases
   - gcpauthengineconfigs
   - gcpauthengineroles
+  - gcpsecretengineconfigs
+  - gcpsecretenginerolesets
+  - gcpsecretenginestaticaccounts
   - githubsecretengineconfigs
   - githubsecretengineroles
   - groupaliases
@@ -128,6 +131,9 @@ rules:
   - entityaliases/finalizers
   - gcpauthengineconfigs/finalizers
   - gcpauthengineroles/finalizers
+  - gcpsecretengineconfigs/finalizers
+  - gcpsecretenginerolesets/finalizers
+  - gcpsecretenginestaticaccounts/finalizers
   - githubsecretengineconfigs/finalizers
   - githubsecretengineroles/finalizers
   - groupaliases/finalizers
@@ -185,6 +191,9 @@ rules:
   - entityaliases/status
   - gcpauthengineconfigs/status
   - gcpauthengineroles/status
+  - gcpsecretengineconfigs/status
+  - gcpsecretenginerolesets/status
+  - gcpsecretenginestaticaccounts/status
   - githubsecretengineconfigs/status
   - githubsecretengineroles/status
   - groupaliases/status

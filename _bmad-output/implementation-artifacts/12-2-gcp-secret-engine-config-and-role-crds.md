@@ -1,6 +1,10 @@
+---
+baseline_commit: ca700b0aa88667935b521720bbea4b8063d6715e
+---
+
 # Story 12.2: GCP Secret Engine — Config and Role CRDs
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -36,55 +40,55 @@ So that Vault's GCP secret engine can be managed declaratively (complementing th
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `GCPSecretEngineConfig` type (AC: #1, #4)
-  - [ ] 1.1: Create `api/v1alpha1/gcpsecretengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `GCPSEConfig` struct, `GCPCredentials` (RootCredentialConfig)
-  - [ ] 1.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/config`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()`, `IsDeletable()=false`
-  - [ ] 1.3: Implement `ConditionsAware` interface
-  - [ ] 1.4: Implement `setInternalCredentials()` — resolve GCP credentials JSON from K8s Secret, VaultSecret, or RandomSecret (follow existing `GCPAuthEngineConfig.setInternalCredentials()` pattern)
-  - [ ] 1.5: Implement `toMap()` on `GCPSEConfig` — convert to Vault API snake_case fields
-  - [ ] 1.6: Implement `IsEquivalentToDesiredState()` — must delete `credentials` from desiredState (Vault never returns credentials on read), then `filterPayloadToDesiredKeys`
+- [x] Task 1: Create `GCPSecretEngineConfig` type (AC: #1, #4)
+  - [x] 1.1: Create `api/v1alpha1/gcpsecretengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `GCPSEConfig` struct, `GCPCredentials` (RootCredentialConfig)
+  - [x] 1.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/config`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()`, `IsDeletable()=false`
+  - [x] 1.3: Implement `ConditionsAware` interface
+  - [x] 1.4: Implement `setInternalCredentials()` — resolve GCP credentials JSON from K8s Secret, VaultSecret, or RandomSecret (follow existing `GCPAuthEngineConfig.setInternalCredentials()` pattern)
+  - [x] 1.5: Implement `toMap()` on `GCPSEConfig` — convert to Vault API snake_case fields
+  - [x] 1.6: Implement `IsEquivalentToDesiredState()` — must delete `credentials` from desiredState (Vault never returns credentials on read), then `filterPayloadToDesiredKeys`
 
-- [ ] Task 2: Create `GCPSecretEngineRoleset` type (AC: #2, #5, #6)
-  - [ ] 2.1: Create `api/v1alpha1/gcpsecretengineroleset_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `GCPSERoleset` struct, `Name`
-  - [ ] 2.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/roleset/{name}`, `IsDeletable()=true`
-  - [ ] 2.3: Implement `ConditionsAware` interface
-  - [ ] 2.4: Implement `toMap()` on `GCPSERoleset`
-  - [ ] 2.5: Implement `IsEquivalentToDesiredState()` — delete `bindings` (write=string, read=map format mismatch) and delete `project` (Vault returns as `service_account_project`), then `removeUnsetFields` + `filterPayloadToDesiredKeys`
+- [x] Task 2: Create `GCPSecretEngineRoleset` type (AC: #2, #5, #6)
+  - [x] 2.1: Create `api/v1alpha1/gcpsecretengineroleset_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `GCPSERoleset` struct, `Name`
+  - [x] 2.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/roleset/{name}`, `IsDeletable()=true`
+  - [x] 2.3: Implement `ConditionsAware` interface
+  - [x] 2.4: Implement `toMap()` on `GCPSERoleset`
+  - [x] 2.5: Implement `IsEquivalentToDesiredState()` — delete `bindings` (write=string, read=map format mismatch) and delete `project` (Vault returns as `service_account_project`), then `removeUnsetFields` + `filterPayloadToDesiredKeys`
 
-- [ ] Task 3: Create `GCPSecretEngineStaticAccount` type (AC: #3, #5, #6)
-  - [ ] 3.1: Create `api/v1alpha1/gcpsecretenginestaticaccount_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `GCPSEStaticAccount` struct, `Name`
-  - [ ] 3.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/static-account/{name}`, `IsDeletable()=true`
-  - [ ] 3.3: Implement `ConditionsAware` interface
-  - [ ] 3.4: Implement `toMap()` on `GCPSEStaticAccount`
-  - [ ] 3.5: Implement `IsEquivalentToDesiredState()` — delete `bindings` (format mismatch), then `removeUnsetFields` + `filterPayloadToDesiredKeys`
+- [x] Task 3: Create `GCPSecretEngineStaticAccount` type (AC: #3, #5, #6)
+  - [x] 3.1: Create `api/v1alpha1/gcpsecretenginestaticaccount_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `GCPSEStaticAccount` struct, `Name`
+  - [x] 3.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/static-account/{name}`, `IsDeletable()=true`
+  - [x] 3.3: Implement `ConditionsAware` interface
+  - [x] 3.4: Implement `toMap()` on `GCPSEStaticAccount`
+  - [x] 3.5: Implement `IsEquivalentToDesiredState()` — delete `bindings` (format mismatch), then `removeUnsetFields` + `filterPayloadToDesiredKeys`
 
-- [ ] Task 4: Create webhooks (AC: #6)
-  - [ ] 4.1: Create `api/v1alpha1/gcpsecretengineconfig_webhook.go` — credential validation, immutable `spec.path`
-  - [ ] 4.2: Create `api/v1alpha1/gcpsecretengineroleset_webhook.go` — immutable `spec.path`, `spec.name`, `spec.secretType`, `spec.project`
-  - [ ] 4.3: Create `api/v1alpha1/gcpsecretenginestaticaccount_webhook.go` — immutable `spec.path`, `spec.name`, `spec.secretType`, `spec.serviceAccountEmail`
+- [x] Task 4: Create webhooks (AC: #6)
+  - [x] 4.1: Create `api/v1alpha1/gcpsecretengineconfig_webhook.go` — credential validation, immutable `spec.path`
+  - [x] 4.2: Create `api/v1alpha1/gcpsecretengineroleset_webhook.go` — immutable `spec.path`, `spec.name`, `spec.secretType`, `spec.project`
+  - [x] 4.3: Create `api/v1alpha1/gcpsecretenginestaticaccount_webhook.go` — immutable `spec.path`, `spec.name`, `spec.secretType`, `spec.serviceAccountEmail`
 
-- [ ] Task 5: Create controllers (AC: #1, #2, #3, #4, #5)
-  - [ ] 5.1: Create `internal/controller/gcpsecretengineconfig_controller.go` — with K8s Secret and RandomSecret watches (same pattern as AWSSecretEngineConfig controller)
-  - [ ] 5.2: Create `internal/controller/gcpsecretengineroleset_controller.go` — standard VaultResource pattern
-  - [ ] 5.3: Create `internal/controller/gcpsecretenginestaticaccount_controller.go` — standard VaultResource pattern
+- [x] Task 5: Create controllers (AC: #1, #2, #3, #4, #5)
+  - [x] 5.1: Create `internal/controller/gcpsecretengineconfig_controller.go` — with K8s Secret and RandomSecret watches (same pattern as AWSSecretEngineConfig controller)
+  - [x] 5.2: Create `internal/controller/gcpsecretengineroleset_controller.go` — standard VaultResource pattern
+  - [x] 5.3: Create `internal/controller/gcpsecretenginestaticaccount_controller.go` — standard VaultResource pattern
 
-- [ ] Task 6: Register in main.go (AC: all)
-  - [ ] 6.1: Register all three controllers (outside webhook guard)
-  - [ ] 6.2: Register all three webhooks (inside `ENABLE_WEBHOOKS` guard)
+- [x] Task 6: Register in main.go (AC: all)
+  - [x] 6.1: Register all three controllers (outside webhook guard)
+  - [x] 6.2: Register all three webhooks (inside `ENABLE_WEBHOOKS` guard)
 
-- [ ] Task 7: Unit tests (AC: #1, #2, #3, #6)
-  - [ ] 7.1: Create `api/v1alpha1/gcpsecretengineconfig_test.go` — toMap, IsEquivalentToDesiredState (match, mismatch, credentials-in-payload)
-  - [ ] 7.2: Create `api/v1alpha1/gcpsecretengineroleset_test.go` — toMap, IsEquivalentToDesiredState (match, mismatch, bindings excluded)
-  - [ ] 7.3: Create `api/v1alpha1/gcpsecretenginestaticaccount_test.go` — toMap, IsEquivalentToDesiredState (match, mismatch, bindings excluded)
+- [x] Task 7: Unit tests (AC: #1, #2, #3, #6)
+  - [x] 7.1: Create `api/v1alpha1/gcpsecretengineconfig_test.go` — toMap, IsEquivalentToDesiredState (match, mismatch, credentials-in-payload)
+  - [x] 7.2: Create `api/v1alpha1/gcpsecretengineroleset_test.go` — toMap, IsEquivalentToDesiredState (match, mismatch, bindings excluded)
+  - [x] 7.3: Create `api/v1alpha1/gcpsecretenginestaticaccount_test.go` — toMap, IsEquivalentToDesiredState (match, mismatch, bindings excluded)
 
-- [ ] Task 8: Test fixtures (AC: all)
-  - [ ] 8.1: Create test YAML fixtures in `test/gcpsecretengine/`
-  - [ ] 8.2: Integration tests — SKIP (GCP is a cloud provider, falls under "Skip it" per project integration test philosophy)
+- [x] Task 8: Test fixtures (AC: all)
+  - [x] 8.1: Create test YAML fixtures in `test/gcpsecretengine/`
+  - [x] 8.2: Integration tests — SKIP (GCP is a cloud provider, falls under "Skip it" per project integration test philosophy)
 
-- [ ] Task 9: Code generation and validation (AC: all)
-  - [ ] 9.1: Run `make manifests generate fmt vet`
-  - [ ] 9.2: Run `make test` — unit tests pass
-  - [ ] 9.3: Add new CRDs to `config/crd/kustomization.yaml`
+- [x] Task 9: Code generation and validation (AC: all)
+  - [x] 9.1: Run `make manifests generate fmt vet`
+  - [x] 9.2: Run `make test` — unit tests pass
+  - [x] 9.3: Add new CRDs to `config/crd/kustomization.yaml`
 
 ## Dev Notes
 
@@ -551,28 +555,87 @@ Static Account controller:
 
 ### Review Model Used
 
-(To be filled after code review — must use a different model than the dev model)
+GPT-5.4 with parallel Blind Hunter, Edge Case Hunter, and Acceptance Auditor passes.
 
 ### Review Findings
 
-(To be filled after code review)
+- [ ] [Review][Patch] GCP config uses the wrong default credentials key [`api/v1alpha1/gcpsecretengineconfig_types.go:174`]
+  The story requires the GCP secret engine config to follow the existing GCP auth pattern, where the credentials JSON lives under `credentials`. The generated CRD still defaults `spec.gcpCredentials.passwordKey` to `password`, so a user who omits that optional field will reconcile against the wrong secret key and fail even when the Secret matches the documented GCP shape.
+- [ ] [Review][Patch] Roleset and static-account bindings changes are never applied [`api/v1alpha1/gcpsecretengineroleset_types.go:95`]
+  Both `GCPSecretEngineRoleset.IsEquivalentToDesiredState()` and `GCPSecretEngineStaticAccount.IsEquivalentToDesiredState()` drop `bindings` before comparison, while the shared `CreateOrUpdate()` flow only writes when equivalence returns false. As a result, editing `spec.bindings` triggers reconciliation but still short-circuits the Vault write, so the new bindings never reach Vault.
+- [ ] [Review][Patch] Token scope comparison is order-sensitive despite set semantics [`api/v1alpha1/gcpsecretengineroleset_types.go:128`]
+  `tokenScopes` is modeled as a set in both CRDs, but the new equivalence checks compare the resulting `[]any` with `reflect.DeepEqual`. If Vault returns the same scopes in a different order, the operator will report false drift and rewrite the object unnecessarily on every reconciliation cycle.
+
+#### Re-review Iteration 2 (2026-08-10)
+
+- [ ] [Review][Decision] Bindings equivalence strategy is still unresolved — The reported fix re-includes `bindings` in `IsEquivalentToDesiredState()` for both `GCPSecretEngineRoleset` and `GCPSecretEngineStaticAccount`, but Vault reads `bindings` back as a map while writes send it as a string. Under the shared `CreateOrUpdate()` flow this means the objects will never converge and will be rewritten on every periodic reconcile if `bindings` is present. Restoring the story's original "delete bindings before comparison" rule avoids the false drift, but under the current framework it also means a bindings-only spec update will not trigger a Vault write because `CreateOrUpdate()` only writes when equivalence returns false. This needs an explicit decision on the intended reconciliation strategy.
+- [ ] [Review][Patch] Generated CRD still defaults `passwordKey` to `password` [`config/crd/bases/redhatcop.redhat.io_gcpsecretengineconfigs.yaml:143`]
+  The webhook now rewrites empty or legacy `password` values to `credentials`, but the generated CRD schema still advertises and defaults `spec.gcpCredentials.passwordKey` to `password`. That leaves the API contract inconsistent and breaks the documented GCP secret shape whenever webhooks are disabled (`ENABLE_WEBHOOKS=false`) or a client relies on schema defaults before admission mutation runs.
+
+#### Re-review Iteration 3 (2026-08-10)
+
+- [ ] [Review][Decision] HCL `bindings` updates still cannot be reconciled safely — The approved JSON-map normalization fixes perpetual drift for JSON-shaped `bindings`, but the graceful HCL fallback deletes `bindings` from comparison whenever the desired string is not JSON-parseable. Under the shared `CreateOrUpdate()` flow that means a roleset or static-account update that only changes HCL `bindings` can now be treated as already converged and never written to Vault. A follow-up decision is needed on the intended strategy for supported HCL updates: parse HCL into a comparable map, change the reconcile/write behavior for these resources, or explicitly narrow/document the supported update semantics.
+- [ ] [Review][Patch] Shared `RootCredentialConfig.PasswordKey` default was changed globally [`api/v1alpha1/utils/commons.go:389`]
+  The fix changed the shared `RootCredentialConfig` default from `password` to `credentials`, which regenerated unrelated CRDs such as AWS, Database, JWT/OIDC, LDAP, Quay, RabbitMQ, Kubernetes, and SSH. Those existing types still read `spec.*Credentials.passwordKey` directly and most of their defaulters are no-ops, so new or updated CRs that rely on the long-standing default `password` key will now look for `credentials` instead and fail reconciliation. SSH is additionally affected because its webhook only remaps empty or legacy `password` values to `private_key`, so the new global default bypasses that special-case path as well.
 
 ### Decisions Needed / Decisions Taken
 
-(To be filled after code review)
+Iteration 3 still requires a decision on the `bindings` reconciliation strategy for HCL updates in rolesets and static accounts before the remaining patch finding should be handled.
 
 ### Fixes Applied
 
-(To be filled after code review)
+No fixes applied during review.
 
 ## Dev Agent Record
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4 (Cursor)
 
 ### Debug Log References
 
+No debug issues encountered.
+
 ### Completion Notes List
 
+- Implemented GCPSecretEngineConfig with always-write pattern (credentials are write-only), IsDeletable=false, credential resolution from K8s Secret/VaultSecret/RandomSecret
+- Implemented GCPSecretEngineRoleset with standard VaultResource pattern, IsDeletable=true, bindings+project excluded from IsEquivalentToDesiredState
+- Implemented GCPSecretEngineStaticAccount with standard VaultResource pattern, IsDeletable=true, bindings excluded from IsEquivalentToDesiredState
+- All webhooks enforce immutability per Vault API constraints (path, name, secretType, project, serviceAccountEmail)
+- Config controller uses always-write reconcile pattern (same as AWSSecretEngineConfig) with Secret and RandomSecret watches
+- Roleset and StaticAccount controllers use standard VaultResource reconcile pattern
+- 40 unit tests pass covering toMap, IsEquivalentToDesiredState, GetPath, IsDeletable, Conditions, PrepareInternalValues, webhook validation
+- Integration tests intentionally SKIPPED per project philosophy (GCP is cloud provider — "Skip it" category)
+- All code generation (manifests, deepcopy, fmt, vet) passes cleanly
+- Full test suite passes with no regressions
+
 ### File List
+
+- api/v1alpha1/gcpsecretengineconfig_types.go (NEW)
+- api/v1alpha1/gcpsecretengineconfig_webhook.go (NEW)
+- api/v1alpha1/gcpsecretengineconfig_test.go (NEW)
+- api/v1alpha1/gcpsecretengineroleset_types.go (NEW)
+- api/v1alpha1/gcpsecretengineroleset_webhook.go (NEW)
+- api/v1alpha1/gcpsecretengineroleset_test.go (NEW)
+- api/v1alpha1/gcpsecretenginestaticaccount_types.go (NEW)
+- api/v1alpha1/gcpsecretenginestaticaccount_webhook.go (NEW)
+- api/v1alpha1/gcpsecretenginestaticaccount_test.go (NEW)
+- api/v1alpha1/zz_generated.deepcopy.go (MODIFIED — auto-generated)
+- internal/controller/gcpsecretengineconfig_controller.go (NEW)
+- internal/controller/gcpsecretengineroleset_controller.go (NEW)
+- internal/controller/gcpsecretenginestaticaccount_controller.go (NEW)
+- cmd/main.go (MODIFIED — registered 3 controllers + 3 webhooks)
+- config/crd/bases/redhatcop.redhat.io_gcpsecretengineconfigs.yaml (NEW — auto-generated)
+- config/crd/bases/redhatcop.redhat.io_gcpsecretenginerolesets.yaml (NEW — auto-generated)
+- config/crd/bases/redhatcop.redhat.io_gcpsecretenginestaticaccounts.yaml (NEW — auto-generated)
+- config/crd/kustomization.yaml (MODIFIED — added 3 CRD resources)
+- config/rbac/role.yaml (MODIFIED — auto-generated RBAC)
+- test/gcpsecretengine/gcp-secret-engine-config.yaml (NEW)
+- test/gcpsecretengine/gcp-secret-engine-roleset.yaml (NEW)
+- test/gcpsecretengine/gcp-secret-engine-static-account.yaml (NEW)
+- _bmad-output/implementation-artifacts/sprint-status.yaml (MODIFIED)
+- _bmad-output/implementation-artifacts/12-2-gcp-secret-engine-config-and-role-crds.md (MODIFIED)
+
+### Change Log
+
+- 2026-08-10: Implemented GCP Secret Engine CRDs (Config, Roleset, StaticAccount) with full VaultObject/ConditionsAware interfaces, webhooks with immutability enforcement, controllers (always-write for config, standard for roleset/static-account), 40 unit tests, test fixtures, code generation, and CRD registration.
