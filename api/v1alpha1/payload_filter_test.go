@@ -226,3 +226,54 @@ func TestRemoveUnsetFields_NonDefaultIntNeverRemoved(t *testing.T) {
 		t.Error("expected non-default max_retries (3) to remain even when absent from payload")
 	}
 }
+
+func TestSortAnyStringSlice_SortsInPlace(t *testing.T) {
+	m := map[string]any{
+		"scopes": []any{"z-scope", "a-scope", "m-scope"},
+	}
+
+	sortAnyStringSlice(m, "scopes")
+
+	got := m["scopes"].([]any)
+	want := []any{"a-scope", "m-scope", "z-scope"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("sortAnyStringSlice() = %v, want %v", got, want)
+	}
+}
+
+func TestSortAnyStringSlice_MissingKey(t *testing.T) {
+	m := map[string]any{
+		"other": "val",
+	}
+
+	sortAnyStringSlice(m, "scopes")
+
+	if _, ok := m["scopes"]; ok {
+		t.Error("expected key to remain absent")
+	}
+}
+
+func TestSortAnyStringSlice_SingleElement(t *testing.T) {
+	m := map[string]any{
+		"scopes": []any{"only-one"},
+	}
+
+	sortAnyStringSlice(m, "scopes")
+
+	got := m["scopes"].([]any)
+	if len(got) != 1 || got[0] != "only-one" {
+		t.Errorf("sortAnyStringSlice() single element = %v", got)
+	}
+}
+
+func TestSortAnyStringSlice_NonSliceType(t *testing.T) {
+	m := map[string]any{
+		"scopes": "not-a-slice",
+	}
+
+	sortAnyStringSlice(m, "scopes")
+
+	if m["scopes"] != "not-a-slice" {
+		t.Error("expected non-slice value to remain unchanged")
+	}
+}
