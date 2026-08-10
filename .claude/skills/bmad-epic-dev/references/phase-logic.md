@@ -247,6 +247,7 @@ For each dependency layer (in topological order):
    1. Spawn a new Step 1 subagent (Opus 4.6) to address the findings
    2. **ALWAYS re-run Step 2** (ChatGPT 5.4 code review) after fixes are applied — never skip the re-review even if the fixes seem trivial
    3. Repeat Steps 1→2 until the review returns `approved` or is halted
+   4. **HARD CAP: maximum 5 review iterations per story.** Track the iteration count (first review = iteration 1). If iteration 5 still returns `changes_requested`: apply only critical fixes (security, correctness, compilation), document remaining findings as "Deferred Review Debt" in the story's Code Review Record, and proceed to Step 4. Output: ⚠️ Review cap reached (5/5 iterations).
 
    **CRITICAL:** Do NOT commit after applying fixes without a re-review pass. Every fix must be verified by a fresh code review subagent before it can be committed. Skipping re-review defeats the purpose of adversarial review — fix subagents can introduce new issues that only a second review would catch.
 
@@ -355,7 +356,7 @@ For each story:
 2. If `decision_needed`: follow the **Decision Relay Protocol** — present to user, wait, resume subagent
 3. On success, spawn a `generalPurpose` subagent for `bmad-code-review` (model: **ChatGPT 5.4**)
 4. If `decision_needed`: follow the **Decision Relay Protocol**
-5. If `changes_requested`: re-run dev-story (Opus 4.6) to address findings, then **ALWAYS** re-run code-review (ChatGPT 5.4) — never skip the re-review, even if the fixes seem trivial. Repeat until approved or halted.
+5. If `changes_requested`: re-run dev-story (Opus 4.6) to address findings, then **ALWAYS** re-run code-review (ChatGPT 5.4) — never skip the re-review, even if the fixes seem trivial. Repeat until approved or halted. **HARD CAP: 5 review iterations max.** If iteration 5 still returns `changes_requested`: apply only critical fixes, document remaining findings as "Deferred Review Debt" in the Code Review Record, and proceed.
 6. **Update story file** on the main branch:
    - Set `Status:` to `done`
    - Populate the **Code Review Record** section (Review Model, Findings, Decisions, Fixes)

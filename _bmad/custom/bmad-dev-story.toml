@@ -1,0 +1,34 @@
+# Team overrides for bmad-dev-story workflow.
+# Committed to the repo — applies to every developer on the project.
+# Survives BMad framework upgrades (never touched by the installer).
+
+[workflow]
+
+# Pre-flight gates: run after greeting, before story execution begins.
+# The agent interprets these as sequential instructions.
+activation_steps_append = [
+  """GATE — Clean working tree required.
+Run `git status --porcelain` in the project root.
+If output is non-empty (modified, staged, or untracked files exist):
+  Output: 🚫 Cannot start story development — working tree is not clean.
+  List the uncommitted changes detected.
+  HALT: "Working tree must be clean before starting story development."
+Otherwise output: ✅ Working tree is clean — safe to proceed.""",
+
+  """GATE — Integration/test suite baseline.
+Determine the project's primary test command from project-context.md or project structure
+(e.g. `make integration`, `pytest`, `npm test`, etc.).
+Run the full test suite to establish a green baseline.
+If any tests fail:
+  Output: 🚫 Cannot start story development — tests are failing before any changes.
+  HALT: "Test suite must pass before starting story development."
+Otherwise output: ✅ Test suite passes — baseline established.""",
+]
+
+# Post-completion gate: executed at the final step, after story is marked for review.
+on_complete = """GATE — Post-completion regression check.
+Run the same full test suite used in the pre-flight baseline.
+If any tests fail:
+  Output: 🚫 Integration/test suite is failing after story implementation.
+  HALT: "Tests must pass before the story can be marked for review. Fix regressions."
+Otherwise output: ✅ Test suite passes — no regressions introduced."""

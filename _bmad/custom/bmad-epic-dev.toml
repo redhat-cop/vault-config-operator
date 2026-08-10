@@ -1,0 +1,27 @@
+# Team overrides for bmad-epic-dev workflow.
+# Committed to the repo — applies to every developer on the project.
+# Survives BMad framework upgrades (never touched by the installer).
+#
+# NOTE: bmad-epic-dev does not auto-resolve customize.toml (yet).
+# This file documents a binding team rule that the orchestrator agent
+# MUST respect when running the review loop in Phase B.
+
+[workflow]
+
+persistent_facts = [
+  """CODE REVIEW ITERATION CAP (MANDATORY — max 5 rounds):
+The review-fix loop (Phase B Steps 2→3→2→3…) is capped at 5 iterations per story.
+Track the iteration count starting at 1 for the first code review pass.
+
+- Iterations 1–4: normal behavior — if changes_requested, fix and re-review.
+- Iteration 5 (FINAL): run code review one last time. Regardless of the outcome:
+  - If approved: proceed normally.
+  - If changes_requested: do NOT start a 6th iteration. Instead:
+    1. Apply only critical/blocking fixes (security, correctness, compilation errors).
+    2. Document all remaining non-critical findings as "Deferred Review Debt" in the
+       story file's Code Review Record section.
+    3. Commit and proceed to the next step.
+    4. Output: ⚠️ Review cap reached (5/5 iterations). Remaining findings documented as deferred debt.
+
+This prevents infinite review loops where fix attempts introduce new findings.""",
+]
