@@ -1,6 +1,6 @@
 # Story 12.3: LDAP/AD Secret Engine — Config and Role CRDs
 
-Status: in-progress
+Status: done
 
 ## Story
 

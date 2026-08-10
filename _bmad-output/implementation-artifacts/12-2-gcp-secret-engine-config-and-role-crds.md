@@ -4,7 +4,7 @@ baseline_commit: ca700b0aa88667935b521720bbea4b8063d6715e
 
 # Story 12.2: GCP Secret Engine — Config and Role CRDs
 
-Status: review
+Status: done
 
 ## Story
 

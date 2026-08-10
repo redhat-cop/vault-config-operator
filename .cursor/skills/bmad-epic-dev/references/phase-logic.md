@@ -247,7 +247,12 @@ For each dependency layer (in topological order):
    1. Spawn a new Step 1 subagent (Opus 4.6) to address the findings
    2. **ALWAYS re-run Step 2** (ChatGPT 5.4 code review) after fixes are applied — never skip the re-review even if the fixes seem trivial
    3. Repeat Steps 1→2 until the review returns `approved` or is halted
-   4. **HARD CAP: maximum 5 review iterations per story.** Track the iteration count (first review = iteration 1). If iteration 5 still returns `changes_requested`: apply only critical fixes (security, correctness, compilation), document remaining findings as "Deferred Review Debt" in the story's Code Review Record, and proceed to Step 4. Output: ⚠️ Review cap reached (5/5 iterations).
+   4. **HARD CAP: maximum 5 review iterations per story.** Track the iteration count (first review = iteration 1). If iteration 5 still returns `changes_requested`: **HALT the story pipeline immediately.** Do NOT proceed to Step 4. Instead:
+      - Summarize ALL open/unresolved review findings for this story in a clear list
+      - Include the iteration history (what was fixed in each round, what persists)
+      - Present this summary to the user with the message: "⚠️ Review cap reached (5/5 iterations) for story {story_key}. Human intervention needed."
+      - Wait for the user to decide: resolve the issues manually, accept as-is, or abandon
+      - Only proceed to Step 4 after explicit user approval
 
    **CRITICAL:** Do NOT commit after applying fixes without a re-review pass. Every fix must be verified by a fresh code review subagent before it can be committed. Skipping re-review defeats the purpose of adversarial review — fix subagents can introduce new issues that only a second review would catch.
 
@@ -330,11 +335,13 @@ For each dependency layer (in topological order):
 
 9. Update `sprint-status.yaml`: mark each merged story as `done`.
 
-10. **Final consistency check:** After all stories in the layer are merged, verify that:
+   **HARD GUARD — Status Atomicity:** The orchestrator MUST NOT update sprint-status.yaml to `done` for a story unless the story file's `Status:` field has ALREADY been set to `done` in the same commit or an earlier commit on the main branch. If the story file still shows `in-progress`, `review`, or any other non-done status, HALT and fix the story file first. This prevents drift between the two tracking systems.
+
+10. **Final consistency check (BLOCKING GATE):** After all stories in the layer are merged, verify that:
     - Every merged story's file has `Status: done`
     - Every merged story in `sprint-status.yaml` is `done`
     - `git worktree list` shows only the main working tree (no orphaned worktrees)
-    If any inconsistency is found, fix it before proceeding to the next layer.
+    If ANY inconsistency is found: **HALT immediately.** Do NOT proceed to the next layer. Report the inconsistency to the user and fix it before continuing. This is a blocking gate, not advisory.
 
 ### B.4: Report Layer Progress
 
@@ -356,7 +363,7 @@ For each story:
 2. If `decision_needed`: follow the **Decision Relay Protocol** — present to user, wait, resume subagent
 3. On success, spawn a `generalPurpose` subagent for `bmad-code-review` (model: **ChatGPT 5.4**)
 4. If `decision_needed`: follow the **Decision Relay Protocol**
-5. If `changes_requested`: re-run dev-story (Opus 4.6) to address findings, then **ALWAYS** re-run code-review (ChatGPT 5.4) — never skip the re-review, even if the fixes seem trivial. Repeat until approved or halted. **HARD CAP: 5 review iterations max.** If iteration 5 still returns `changes_requested`: apply only critical fixes, document remaining findings as "Deferred Review Debt" in the Code Review Record, and proceed.
+5. If `changes_requested`: re-run dev-story (Opus 4.6) to address findings, then **ALWAYS** re-run code-review (ChatGPT 5.4) — never skip the re-review, even if the fixes seem trivial. Repeat until approved or halted. **HARD CAP: 5 review iterations max.** If iteration 5 still returns `changes_requested`: **HALT immediately.** Summarize all open/unresolved findings, present to the user with "⚠️ Review cap reached (5/5 iterations) for story {story_key}. Human intervention needed.", and wait for explicit user decision before proceeding.
 6. **Update story file** on the main branch:
    - Set `Status:` to `done`
    - Populate the **Code Review Record** section (Review Model, Findings, Decisions, Fixes)
@@ -364,8 +371,8 @@ For each story:
    ```
    feat(epic-{N}): {story_key} — {story title}
    ```
-8. Update `sprint-status.yaml`: mark story as `done`
-9. **Verify consistency:** Confirm story file status and sprint-status agree before continuing
+8. Update `sprint-status.yaml`: mark story as `done`. **HARD GUARD:** Do NOT update sprint-status until the story file's `Status:` field is already `done` in a committed state.
+9. **Verify consistency (BLOCKING GATE):** Confirm story file status and sprint-status agree before continuing. If they disagree, HALT and fix — do NOT proceed.
 10. Report progress, continue to next story
 
 ### B.6: Check for New Stories

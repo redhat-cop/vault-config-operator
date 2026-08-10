@@ -527,7 +527,7 @@ development_status:
   12-1-consul-secret-engine-config-and-role-crds: done
   12-2-gcp-secret-engine-config-and-role-crds: done
   12-3-ldap-ad-secret-engine-config-and-role-crds: done
-  epic-12-retrospective: optional
+  epic-12-retrospective: done
 
   # Epic 13: Lower-Priority Missing Secret Engines (Nomad, TOTP, MongoDB Atlas, Terraform Cloud)
   epic-13: backlog
@@ -586,4 +586,22 @@ action_items:
   - epic: 11
     action: "json.Number programming rule — all numeric fields in toMap() must emit json.Number, nil maps must return empty maps"
     owner: "Amelia (Developer)"
+    status: done
+
+  # Epic 12 action items (applied during retro session)
+  - epic: 12
+    action: "toMap() normalization rule — emit Vault-read format (durationToSeconds, JSON/HCL string→map) for correct IsEquivalentToDesiredState comparison"
+    owner: "Amelia (Developer)"
+    status: done
+  - epic: 12
+    action: "5-iteration review cap escalation — halt pipeline and present open findings to user instead of force-merging"
+    owner: "Bob (Scrum Master)"
+    status: done
+  - epic: 12
+    action: "Sprint-status/story-file atomicity guard — orchestrator must not mark sprint-status done unless story file is already done"
+    owner: "Bob (Scrum Master)"
+    status: done
+  - epic: 12
+    action: "Final consistency check as blocking gate — halt on any status inconsistency between story files and sprint-status"
+    owner: "Bob (Scrum Master)"
     status: done
