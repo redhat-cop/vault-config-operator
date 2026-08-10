@@ -35,7 +35,11 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-08-08
+last_updated: 2026-08-10
+# Story 12.3 ready-for-dev 2026-08-10
+# Story 12.2 ready-for-dev 2026-08-10
+# Story 12.1 ready-for-dev 2026-08-10
+# Epic 12 in-progress 2026-08-10
 # Epic 11 retrospective 2026-08-08
 # Epic 11 done 2026-08-08
 # Story 11.3 done 2026-08-08
@@ -516,10 +520,10 @@ development_status:
   epic-11-retrospective: done
 
   # Epic 12: Medium-Priority Missing Secret Engines (Consul, GCP, LDAP/AD)
-  epic-12: backlog
-  12-1-consul-secret-engine-config-and-role-crds: backlog
-  12-2-gcp-secret-engine-config-and-role-crds: backlog
-  12-3-ldap-ad-secret-engine-config-and-role-crds: backlog
+  epic-12: in-progress
+  12-1-consul-secret-engine-config-and-role-crds: ready-for-dev
+  12-2-gcp-secret-engine-config-and-role-crds: ready-for-dev
+  12-3-ldap-ad-secret-engine-config-and-role-crds: ready-for-dev
   epic-12-retrospective: optional
 
   # Epic 13: Lower-Priority Missing Secret Engines (Nomad, TOTP, MongoDB Atlas, Terraform Cloud)
