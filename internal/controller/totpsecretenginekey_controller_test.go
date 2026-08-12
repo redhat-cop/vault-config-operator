@@ -135,18 +135,95 @@ var _ = Describe("TOTPSecretEngineKey controller", Ordered, func() {
 		})
 	})
 
+	Context("When creating a TOTPSecretEngineKey in import mode", func() {
+		It("Should create the imported key in Vault with ReconcileSuccessful=True", func() {
+			name, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../../test/totpsecretengine/totp-secret-engine-key-import.yaml", vaultTestNamespaceName)
+			Expect(err).To(BeNil())
+			instance := &redhatcopv1alpha1.TOTPSecretEngineKey{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: name, Namespace: vaultTestNamespaceName}, instance)).Should(Succeed())
+
+			lookupKey := types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}
+			created := &redhatcopv1alpha1.TOTPSecretEngineKey{}
+
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, lookupKey, created)
+				if err != nil {
+					return false
+				}
+				for _, condition := range created.Status.Conditions {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+						return true
+					}
+				}
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			By("Verifying the imported key exists in Vault")
+			secret, err := vaultClient.Logical().Read("test-vault-config-operator/totp/keys/my-totp-import-key")
+			Expect(err).To(BeNil())
+			Expect(secret).NotTo(BeNil())
+			Expect(secret.Data["issuer"]).To(Equal("ImportOrg"))
+			Expect(secret.Data["account_name"]).To(Equal("importuser@example.com"))
+		})
+	})
+
+	Context("When updating a TOTPSecretEngineKey", func() {
+		It("Should reconcile changes to Vault", func() {
+			By("Updating the issuer field on the import-mode key")
+			instance := &redhatcopv1alpha1.TOTPSecretEngineKey{}
+			lookupKey := types.NamespacedName{Name: "my-totp-import-key", Namespace: vaultTestNamespaceName}
+			Expect(k8sIntegrationClient.Get(ctx, lookupKey, instance)).Should(Succeed())
+
+			instance.Spec.Issuer = "UpdatedOrg"
+			Expect(k8sIntegrationClient.Update(ctx, instance)).Should(Succeed())
+
+			By("Verifying Vault reflects the updated issuer")
+			Eventually(func() string {
+				secret, err := vaultClient.Logical().Read("test-vault-config-operator/totp/keys/my-totp-import-key")
+				if err != nil || secret == nil {
+					return ""
+				}
+				issuer, _ := secret.Data["issuer"].(string)
+				return issuer
+			}, timeout, interval).Should(Equal("UpdatedOrg"))
+		})
+	})
+
 	Context("When deleting a TOTPSecretEngineKey", func() {
 		It("Should remove the key from Vault", func() {
-			By("Deleting TOTPSecretEngineKey")
+			By("Deleting the generate-mode TOTPSecretEngineKey")
 			keyInstance, err := controllertestutils.DecodeInstance[*redhatcopv1alpha1.TOTPSecretEngineKey]("../../test/totpsecretengine/totp-secret-engine-key-generate.yaml")
 			Expect(err).To(BeNil())
 			keyInstance.Namespace = vaultTestNamespaceName
 
 			Expect(k8sIntegrationClient.Delete(ctx, keyInstance)).Should(Succeed())
 
-			By("Verifying the key is removed from Vault")
+			By("Verifying the generate-mode key is removed from Vault")
 			Eventually(func() error {
 				secret, err := vaultClient.Logical().Read("test-vault-config-operator/totp/keys/my-totp-key")
+				if err != nil {
+					return err
+				}
+				if secret == nil {
+					return nil
+				}
+				out, err := json.Marshal(secret)
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Errorf("secret is not nil %s", string(out))
+			}, timeout, interval).Should(Succeed())
+
+			By("Deleting the import-mode TOTPSecretEngineKey")
+			importKeyInstance, err := controllertestutils.DecodeInstance[*redhatcopv1alpha1.TOTPSecretEngineKey]("../../test/totpsecretengine/totp-secret-engine-key-import.yaml")
+			Expect(err).To(BeNil())
+			importKeyInstance.Namespace = vaultTestNamespaceName
+
+			Expect(k8sIntegrationClient.Delete(ctx, importKeyInstance)).Should(Succeed())
+
+			By("Verifying the import-mode key is removed from Vault")
+			Eventually(func() error {
+				secret, err := vaultClient.Logical().Read("test-vault-config-operator/totp/keys/my-totp-import-key")
 				if err != nil {
 					return err
 				}

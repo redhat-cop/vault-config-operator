@@ -109,17 +109,18 @@ type TOTPKeyConfig struct {
 	Digits int `json:"digits"`
 
 	// Skew specifies the number of delay periods allowed when validating a TOTP code (0 or 1).
-	// Only used when generate is true.
+	// Only used when generate is true. If unset, Vault defaults to 1.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=1
-	Skew int `json:"skew,omitempty"`
+	Skew *int `json:"skew,omitempty"`
 
-	// QRSize specifies the pixel size of the square QR code.
-	// Only used when generate is true and exported is true. 0 means no QR code.
+	// QRSize specifies the pixel size of the square QR code when generating a key.
+	// Only used when generate is true and exported is true.
+	// Set to 0 explicitly to suppress QR code generation; omit to use Vault's default (200).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	QRSize int `json:"qrSize,omitempty"`
+	QRSize *int `json:"qrSize,omitempty"`
 }
 
 // TOTPSecretEngineKeyStatus defines the observed state of TOTPSecretEngineKey
@@ -241,13 +242,6 @@ func (c *TOTPKeyConfig) keySizeOrDefault() int {
 	return c.KeySize
 }
 
-func (c *TOTPKeyConfig) qrSizeOrDefault() int {
-	if c.QRSize == 0 {
-		return 200
-	}
-	return c.QRSize
-}
-
 // readVisibleMap returns only the fields Vault returns on GET {path}/keys/{name}.
 // Vault returns exactly: account_name, algorithm, digits, issuer, period.
 func (c *TOTPKeyConfig) readVisibleMap() map[string]any {
@@ -276,8 +270,12 @@ func (c *TOTPKeyConfig) toMap() map[string]any {
 		}
 		payload["exported"] = exported
 		payload["key_size"] = json.Number(strconv.Itoa(c.keySizeOrDefault()))
-		payload["skew"] = json.Number(strconv.Itoa(c.Skew))
-		payload["qr_size"] = json.Number(strconv.Itoa(c.qrSizeOrDefault()))
+		if c.Skew != nil {
+			payload["skew"] = json.Number(strconv.Itoa(*c.Skew))
+		}
+		if c.QRSize != nil {
+			payload["qr_size"] = json.Number(strconv.Itoa(*c.QRSize))
+		}
 	} else {
 		if c.Key != "" {
 			payload["key"] = c.Key

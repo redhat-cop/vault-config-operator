@@ -5,6 +5,8 @@ import (
 	"testing"
 )
 
+func intPtr(i int) *int { return &i }
+
 func TestTOTPSecretEngineKey_toMap_GenerateMode(t *testing.T) {
 	exported := true
 	cfg := TOTPKeyConfig{
@@ -16,8 +18,8 @@ func TestTOTPSecretEngineKey_toMap_GenerateMode(t *testing.T) {
 		Period:      30,
 		Algorithm:   "SHA1",
 		Digits:      6,
-		Skew:        1,
-		QRSize:      200,
+		Skew:        intPtr(1),
+		QRSize:      intPtr(200),
 	}
 
 	result := cfg.toMap()
@@ -156,11 +158,48 @@ func TestTOTPSecretEngineKey_toMap_Defaults(t *testing.T) {
 	if result["key_size"] != json.Number("20") {
 		t.Errorf("expected default key_size=json.Number(\"20\"), got %v", result["key_size"])
 	}
-	if result["qr_size"] != json.Number("200") {
-		t.Errorf("expected default qr_size=json.Number(\"200\"), got %v", result["qr_size"])
+	if _, exists := result["qr_size"]; exists {
+		t.Error("qr_size should NOT be in output when QRSize is nil (let Vault default)")
+	}
+	if _, exists := result["skew"]; exists {
+		t.Error("skew should NOT be in output when Skew is nil (let Vault default)")
 	}
 	if result["exported"] != false {
 		t.Errorf("expected exported=false, got %v", result["exported"])
+	}
+}
+
+func TestTOTPSecretEngineKey_toMap_QRSizeZero(t *testing.T) {
+	exported := true
+	cfg := TOTPKeyConfig{
+		Generate:    true,
+		Exported:    &exported,
+		Issuer:      "TestOrg",
+		AccountName: "user@test.com",
+		QRSize:      intPtr(0),
+	}
+
+	result := cfg.toMap()
+
+	if result["qr_size"] != json.Number("0") {
+		t.Errorf("expected qr_size=json.Number(\"0\") for explicit zero, got %v (type %T)", result["qr_size"], result["qr_size"])
+	}
+}
+
+func TestTOTPSecretEngineKey_toMap_SkewZero(t *testing.T) {
+	exported := true
+	cfg := TOTPKeyConfig{
+		Generate:    true,
+		Exported:    &exported,
+		Issuer:      "TestOrg",
+		AccountName: "user@test.com",
+		Skew:        intPtr(0),
+	}
+
+	result := cfg.toMap()
+
+	if result["skew"] != json.Number("0") {
+		t.Errorf("expected skew=json.Number(\"0\") for explicit zero, got %v (type %T)", result["skew"], result["skew"])
 	}
 }
 
@@ -176,8 +215,8 @@ func TestTOTPSecretEngineKey_readVisibleMap(t *testing.T) {
 		Period:      30,
 		Algorithm:   "SHA1",
 		Digits:      6,
-		Skew:        1,
-		QRSize:      200,
+		Skew:        intPtr(1),
+		QRSize:      intPtr(200),
 	}
 
 	result := cfg.readVisibleMap()

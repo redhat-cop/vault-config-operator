@@ -51,11 +51,23 @@ var _ admission.Validator[*TOTPSecretEngineKey] = &TOTPSecretEngineKey{}
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
 func (r *TOTPSecretEngineKey) ValidateCreate(ctx context.Context, obj *TOTPSecretEngineKey) (admission.Warnings, error) {
 	totpsecretenginekeylog.Info("validate create", "name", obj.Name)
+	return nil, obj.isValid()
+}
 
-	if !obj.Spec.Generate && obj.Spec.Key == "" && obj.Spec.URL == "" {
-		return nil, errors.New("one of spec.key or spec.url is required when spec.generate is false")
+func (r *TOTPSecretEngineKey) isValid() error {
+	if r.Spec.Generate {
+		if r.Spec.Issuer == "" {
+			return errors.New("spec.issuer is required when spec.generate is true")
+		}
+		if r.Spec.AccountName == "" {
+			return errors.New("spec.accountName is required when spec.generate is true")
+		}
+	} else {
+		if r.Spec.Key == "" && r.Spec.URL == "" {
+			return errors.New("one of spec.key or spec.url is required when spec.generate is false")
+		}
 	}
-	return nil, nil
+	return nil
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
@@ -68,10 +80,7 @@ func (r *TOTPSecretEngineKey) ValidateUpdate(ctx context.Context, oldObj, newObj
 	if newObj.Spec.Name != oldObj.Spec.Name {
 		return nil, errors.New("spec.name cannot be updated")
 	}
-	if !newObj.Spec.Generate && newObj.Spec.Key == "" && newObj.Spec.URL == "" {
-		return nil, errors.New("one of spec.key or spec.url is required when spec.generate is false")
-	}
-	return nil, nil
+	return nil, newObj.isValid()
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
