@@ -107,7 +107,7 @@ Currently this operator covers the following Vault APIs:
 24. [LDAPSecretEngineConfig](./docs/secret-engines/ldap.md#ldapsecretengineconfig) Configures an [LDAP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ldap) Connection
 25. [LDAPSecretEngineStaticRole](./docs/secret-engines/ldap.md#ldapsecretenginestaticrole) Configures an [LDAP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ldap) Static Role
 26. [LDAPSecretEngineDynamicRole](./docs/secret-engines/ldap.md#ldapsecretenginedynamicrole) Configures an [LDAP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ldap) Dynamic Role
-27. [SSHSecretEngineConfig](./docs/secret-engines/ssh.md#sshsecretengineconfig) Configures an [SSH Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ssh) Connection
+27. [SSHSecretEngineConfig](./docs/secret-engines/ssh.md#sshsecretengineconfig) Configures an [SSH Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ssh) CA (certificate signing key behavior)
 28. [SSHSecretEngineRole](./docs/secret-engines/ssh.md#sshsecretenginerole) Configures an [SSH Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ssh) Role
 29. [TransitSecretEngineKey](./docs/secret-engines/transit.md#transitsecretenginekey) Configures a [Transit Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/transit) Key
 

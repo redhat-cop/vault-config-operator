@@ -33,7 +33,7 @@ vault secrets enable -path [namespace/]postgresql-vault-demo/database database
 
 ## Supported Secret Engines
 
-| Engine | Config CRD | Role CRD(s) | File |
+| Engine | Config CRD | Additional CRD(s) | File |
 |--------|-----------|-------------|------|
 | AWS | AWSSecretEngineConfig | AWSSecretEngineRole | [aws.md](aws.md) |
 | Azure | AzureSecretEngineConfig | AzureSecretEngineRole | [azure.md](azure.md) |

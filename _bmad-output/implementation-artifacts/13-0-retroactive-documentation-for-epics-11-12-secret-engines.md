@@ -4,7 +4,7 @@ baseline_commit: 2ccad3a67685ec8bdd0c585247ee148143415e6c
 
 # Story 13.0: Retroactive Documentation for Epics 11-12 Secret Engines
 
-Status: review
+Status: in-progress
 
 ## Story
 
@@ -77,13 +77,9 @@ So that I can discover and correctly use AWS, Transit, SSH, Consul, GCP, and LDA
 
 ### Review Findings
 
-- [ ] [Review][Decision] Clarify whether `gcpCredentials.randomSecret` should be documented as supported — `GCPSecretEngineConfig` validates `randomSecret` as an allowed source and reads a single string into the `credentials` payload, but `RandomSecret` is documented as generating one password-like value rather than a full GCP service-account JSON document. The new `docs/secret-engines/gcp.md` example matches the schema yet appears unusable in practice without a clearer product decision on intended support.
-- [ ] [Review][Patch] Remove misleading `name` override documentation from config CRDs [`docs/secret-engines/aws.md`, `docs/secret-engines/gcp.md`, `docs/secret-engines/ldap.md`]
-- [ ] [Review][Patch] Fix Vault Secret examples that use KV v2-style `/data/` paths incompatible with the current credential readers [`docs/secret-engines/aws.md`, `docs/secret-engines/gcp.md`, `docs/secret-engines/ldap.md`, `docs/secret-engines/ssh.md`]
-- [ ] [Review][Patch] Document SSH CA config write-once behavior so updates are not overstated [`docs/secret-engines/ssh.md`]
-- [ ] [Review][Patch] Add missing path caveats and OTP CLI coverage in SSH/Transit docs [`docs/secret-engines/ssh.md`, `docs/secret-engines/transit.md`]
-- [ ] [Review][Patch] Fix `docs/secret-engines/index.md` intro text so it does not claim every supported secret engine has both Config and Role CRDs now that Transit is listed as key-only [`docs/secret-engines/index.md`]
-- [ ] [Review][Patch] Update the top-level secret-engine inventory so the newly documented AWS, Consul, GCP, LDAP, SSH, and Transit pages are discoverable from `readme.md` [`readme.md`]
+- [x] [Review][Patch] Rename the `Role CRD(s)` column in the secret-engine index table so it also fits key and static-account resources [`docs/secret-engines/index.md:36`]
+- [x] [Review][Patch] Correct the `SSHSecretEngineConfig` README description so it describes CA configuration instead of an SSH "Connection" [`readme.md:110`]
+- [x] [Review][Patch] Add `readme.md` to the story artifact `File List` so the review record matches the actual patch [`_bmad-output/implementation-artifacts/13-0-retroactive-documentation-for-epics-11-12-secret-engines.md:251`]
 
 ## Dev Notes
 
@@ -208,13 +204,13 @@ GPT-5.4
 
 ### Review Findings
 
-- [ ] [Review][Decision] Clarify whether `gcpCredentials.randomSecret` should remain intentionally undocumented or be restored as a supported path — iteration 1 removed it from `docs/secret-engines/gcp.md`, but `api/v1alpha1/gcpsecretengineconfig_types.go` still validates and resolves `spec.gcpCredentials.randomSecret`, so the docs and runtime currently disagree.
-- [ ] [Review][Patch] Add `docs/secret-engines/consul.md` to the tracked story change set so the new links in `docs/secret-engines/index.md` and `readme.md` do not point at a file omitted from the current reviewable patch [`docs/secret-engines/index.md:40`]
-- [ ] [Review][Patch] Fix the KV v2 `vaultSecret.path` examples in `docs/secret-engines/aws.md`, `docs/secret-engines/gcp.md`, and `docs/secret-engines/ldap.md` — those examples use `/data/` paths, but the current credential readers fetch VaultSecret keys directly from `secret.Data[...]` instead of nested `secret.Data["data"]` [`docs/secret-engines/gcp.md:162`]
+- [x] [Review][Patch] Rename the `Role CRD(s)` column in the secret-engine index table so it also fits key and static-account resources [`docs/secret-engines/index.md:36`]
+- [x] [Review][Patch] Correct the `SSHSecretEngineConfig` README description so it describes CA configuration instead of an SSH "Connection" [`readme.md:110`]
+- [x] [Review][Patch] Add `readme.md` to the story artifact `File List` so the review record matches the actual patch [`_bmad-output/implementation-artifacts/13-0-retroactive-documentation-for-epics-11-12-secret-engines.md:251`]
 
 ### Decisions Needed / Decisions Taken
 
-- Pending: Should Story 13.0 document `gcpCredentials.randomSecret` as supported behavior, or should runtime/schema support be tightened later so the docs remain intentionally limited to `secret` and `vaultSecret`?
+- Iteration 4: No decision-needed findings remain. The previously discussed GCP `randomSecret` scope is treated as a follow-up bug outside this documentation story.
 
 ### Fixes Applied
 
@@ -257,5 +253,6 @@ No debug issues — documentation-only story with straightforward implementation
 - `docs/secret-engines/gcp.md` (new)
 - `docs/secret-engines/ldap.md` (new)
 - `docs/secret-engines/index.md` (modified)
+- `readme.md` (modified)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified)
 - `_bmad-output/implementation-artifacts/13-0-retroactive-documentation-for-epics-11-12-secret-engines.md` (modified)
