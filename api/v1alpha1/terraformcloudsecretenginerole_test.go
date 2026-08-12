@@ -359,6 +359,23 @@ func TestTerraformCloudSecretEngineRole_isValid_ValidOrganizationSpec(t *testing
 	}
 }
 
+func TestTerraformCloudSecretEngineRole_isValid_OrganizationWithTeamID(t *testing.T) {
+	role := &TerraformCloudSecretEngineRole{
+		Spec: TerraformCloudSecretEngineRoleSpec{
+			Path: "terraform",
+			TFCSERole: TFCSERole{
+				CredentialType: "organization",
+				Organization:   "my-org",
+				TeamID:         "team-123",
+			},
+		},
+	}
+	_, err := role.IsValid()
+	if err == nil {
+		t.Error("expected error when credentialType is 'organization' but teamID is set")
+	}
+}
+
 func TestTerraformCloudSecretEngineRole_isValid_TeamWithoutOrganization(t *testing.T) {
 	role := &TerraformCloudSecretEngineRole{
 		Spec: TerraformCloudSecretEngineRoleSpec{

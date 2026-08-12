@@ -153,6 +153,9 @@ func (d *TerraformCloudSecretEngineRole) isValid() error {
 		if d.Spec.Organization == "" {
 			return errors.New("spec.organization is required when credentialType is \"organization\"")
 		}
+		if d.Spec.TeamID != "" {
+			return errors.New("spec.teamID is not allowed when credentialType is \"organization\"")
+		}
 	}
 
 	return nil
