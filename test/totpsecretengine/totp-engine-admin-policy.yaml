@@ -1,0 +1,29 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: Policy
+metadata:
+  name: totp-engine-admin
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  policy: |
+    # query existing mounts
+    path "/sys/mounts" {
+      capabilities = [ "list", "read"]
+      allowed_parameters = {
+        "type" = ["totp"]
+        "*"   = []
+      }
+    }
+
+    path "/sys/mounts/test-vault-config-operator/totp*" {
+      capabilities = ["create", "read", "update", "delete", "list"]
+    }
+
+    path "/sys/mounts/test-vault-config-operator/totp/tune" {
+      capabilities = [ "create", "read", "update", "delete"]
+    }
+
+    path "test-vault-config-operator/totp/*" {
+      capabilities = ["create", "read", "update", "delete", "list"]
+    }

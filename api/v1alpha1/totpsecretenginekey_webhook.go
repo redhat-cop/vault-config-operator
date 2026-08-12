@@ -1,0 +1,81 @@
+/*
+Copyright 2021.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package v1alpha1
+
+import (
+	"context"
+	"errors"
+
+	ctrl "sigs.k8s.io/controller-runtime"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
+)
+
+var totpsecretenginekeylog = logf.Log.WithName("totpsecretenginekey-resource")
+
+func (r *TOTPSecretEngineKey) SetupWebhookWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewWebhookManagedBy(mgr, r).
+		WithDefaulter(r).
+		WithValidator(r).
+		Complete()
+}
+
+//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-totpsecretenginekey,mutating=true,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=totpsecretenginekeys,verbs=create,versions=v1alpha1,name=mtotpsecretenginekey.kb.io,admissionReviewVersions={v1,v1beta1}
+
+var _ admission.Defaulter[*TOTPSecretEngineKey] = &TOTPSecretEngineKey{}
+
+// Default implements webhook.CustomDefaulter so a webhook will be registered for the type
+func (r *TOTPSecretEngineKey) Default(ctx context.Context, obj *TOTPSecretEngineKey) error {
+	totpsecretenginekeylog.Info("default", "name", obj.Name)
+	return nil
+}
+
+//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-totpsecretenginekey,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=totpsecretenginekeys,verbs=create;update,versions=v1alpha1,name=vtotpsecretenginekey.kb.io,admissionReviewVersions={v1,v1beta1}
+
+var _ admission.Validator[*TOTPSecretEngineKey] = &TOTPSecretEngineKey{}
+
+// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *TOTPSecretEngineKey) ValidateCreate(ctx context.Context, obj *TOTPSecretEngineKey) (admission.Warnings, error) {
+	totpsecretenginekeylog.Info("validate create", "name", obj.Name)
+
+	if !obj.Spec.Generate && obj.Spec.Key == "" && obj.Spec.URL == "" {
+		return nil, errors.New("one of spec.key or spec.url is required when spec.generate is false")
+	}
+	return nil, nil
+}
+
+// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *TOTPSecretEngineKey) ValidateUpdate(ctx context.Context, oldObj, newObj *TOTPSecretEngineKey) (admission.Warnings, error) {
+	totpsecretenginekeylog.Info("validate update", "name", newObj.Name)
+
+	if newObj.Spec.Path != oldObj.Spec.Path {
+		return nil, errors.New("spec.path cannot be updated")
+	}
+	if newObj.Spec.Name != oldObj.Spec.Name {
+		return nil, errors.New("spec.name cannot be updated")
+	}
+	if !newObj.Spec.Generate && newObj.Spec.Key == "" && newObj.Spec.URL == "" {
+		return nil, errors.New("one of spec.key or spec.url is required when spec.generate is false")
+	}
+	return nil, nil
+}
+
+// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *TOTPSecretEngineKey) ValidateDelete(ctx context.Context, obj *TOTPSecretEngineKey) (admission.Warnings, error) {
+	totpsecretenginekeylog.Info("validate delete", "name", obj.Name)
+	return nil, nil
+}

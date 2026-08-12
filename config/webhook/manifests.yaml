@@ -1070,6 +1070,26 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-totpsecretenginekey
+  failurePolicy: Fail
+  name: mtotpsecretenginekey.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - totpsecretenginekeys
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /mutate-redhatcop-redhat-io-v1alpha1-transitsecretenginekey
   failurePolicy: Fail
   name: mtransitsecretenginekey.kb.io
@@ -2194,6 +2214,27 @@ webhooks:
     - UPDATE
     resources:
     - sshsecretengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-totpsecretenginekey
+  failurePolicy: Fail
+  name: vtotpsecretenginekey.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - totpsecretenginekeys
   sideEffects: None
 - admissionReviewVersions:
   - v1
