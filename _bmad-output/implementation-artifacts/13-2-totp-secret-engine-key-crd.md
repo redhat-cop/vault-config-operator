@@ -75,6 +75,12 @@ So that TOTP key generation and management can be managed declaratively.
 - [ ] [Review][Patch] URL-only import mode can never reach a stable desired state [`api/v1alpha1/totpsecretenginekey_types.go:247`]
 - [ ] [Review][Patch] Documentation omits mode-specific required fields for generate vs import flows [`docs/secret-engines/totp.md:76`]
 
+#### Iteration 3
+
+- [ ] [Review][Patch] AC3 update fields are incorrectly immutable [`api/v1alpha1/totpsecretenginekey_webhook.go:93`]
+- [ ] [Review][Patch] `skew` and `qrSize` updates are accepted but never reconciled [`api/v1alpha1/totpsecretenginekey_webhook.go:89`]
+- [ ] [Review][Patch] Field table still marks `issuer` and `accountName` as not required [`docs/secret-engines/totp.md:76`]
+
 ## Dev Notes
 
 ### Integration Test Classification: Vault-Only (Self-Contained)

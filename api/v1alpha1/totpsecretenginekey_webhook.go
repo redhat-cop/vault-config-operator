@@ -90,15 +90,6 @@ func validateTOTPImmutableFields(oldObj, newObj *TOTPSecretEngineKey) error {
 	if newObj.Spec.Generate != oldObj.Spec.Generate {
 		return fmt.Errorf("spec.generate cannot be updated after key creation")
 	}
-	if newObj.Spec.Algorithm != oldObj.Spec.Algorithm {
-		return fmt.Errorf("spec.algorithm cannot be updated after key creation")
-	}
-	if newObj.Spec.Digits != oldObj.Spec.Digits {
-		return fmt.Errorf("spec.digits cannot be updated after key creation")
-	}
-	if newObj.Spec.Period != oldObj.Spec.Period {
-		return fmt.Errorf("spec.period cannot be updated after key creation")
-	}
 	if newObj.Spec.Key != oldObj.Spec.Key {
 		return fmt.Errorf("spec.key cannot be updated after key creation")
 	}
@@ -111,10 +102,26 @@ func validateTOTPImmutableFields(oldObj, newObj *TOTPSecretEngineKey) error {
 	if !boolPtrEqual(newObj.Spec.Exported, oldObj.Spec.Exported) {
 		return fmt.Errorf("spec.exported cannot be updated after key creation")
 	}
+	if !intPtrEqual(newObj.Spec.Skew, oldObj.Spec.Skew) {
+		return fmt.Errorf("spec.skew cannot be updated after key creation")
+	}
+	if !intPtrEqual(newObj.Spec.QRSize, oldObj.Spec.QRSize) {
+		return fmt.Errorf("spec.qrSize cannot be updated after key creation")
+	}
 	return nil
 }
 
 func boolPtrEqual(a, b *bool) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return *a == *b
+}
+
+func intPtrEqual(a, b *int) bool {
 	if a == nil && b == nil {
 		return true
 	}

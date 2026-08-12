@@ -84,8 +84,8 @@ vault write [namespace/]my-totp-mount/keys/my-totp-key \
 | keySize | int | No | Key size in bytes for generated keys. Only used when `generate=true` (default: 20) |
 | url | string | No | TOTP key URL (`otpauth://` format). Only used when `generate=false` |
 | key | string | No | Base32-encoded root key for importing. Only used when `generate=false` |
-| issuer | string | No | Name of the key's issuing organization |
-| accountName | string | No | Name of the account associated with the key |
+| issuer | string | Yes | Name of the key's issuing organization |
+| accountName | string | Yes | Name of the account associated with the key |
 | period | int | No | Counter period in seconds (default: 30) |
 | algorithm | string | No | Hash algorithm: `SHA1`, `SHA256`, or `SHA512` (default: `SHA1`) |
 | digits | int | No | Number of digits in the TOTP code: `6` or `8` (default: 6) |
@@ -99,15 +99,14 @@ The following fields cannot be changed after creation:
 - `spec.path` — The engine mount path
 - `spec.name` — The Vault object name override
 - `spec.generate` — Generation mode (generate vs import)
-- `spec.algorithm` — Hash algorithm
-- `spec.digits` — Number of TOTP digits
-- `spec.period` — Counter period
 - `spec.key` — Base32-encoded root key (import mode)
 - `spec.url` — TOTP key URL (import mode)
 - `spec.keySize` — Generated key size
 - `spec.exported` — QR code export flag
+- `spec.skew` — Allowed delay periods (write-only, not verifiable via drift detection)
+- `spec.qrSize` — QR code pixel size (write-only, not verifiable via drift detection)
 
-Only `spec.issuer`, `spec.accountName`, `spec.skew`, and `spec.qrSize` may be updated after creation.
+Fields `spec.algorithm`, `spec.digits`, `spec.period`, `spec.issuer`, and `spec.accountName` may be updated after creation.
 
 ### Required Fields by Mode
 
