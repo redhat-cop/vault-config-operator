@@ -91,6 +91,8 @@ rules:
   - ldapsecretengineconfigs
   - ldapsecretenginedynamicroles
   - ldapsecretenginestaticroles
+  - mongodbatlassecretengineconfigs
+  - mongodbatlassecretengineroles
   - namespaces
   - passwordpolicies
   - pkisecretengineconfigs
@@ -163,6 +165,8 @@ rules:
   - ldapsecretengineconfigs/finalizers
   - ldapsecretenginedynamicroles/finalizers
   - ldapsecretenginestaticroles/finalizers
+  - mongodbatlassecretengineconfigs/finalizers
+  - mongodbatlassecretengineroles/finalizers
   - namespaces/finalizers
   - passwordpolicies/finalizers
   - pkisecretengineconfigs/finalizers
@@ -228,6 +232,8 @@ rules:
   - ldapsecretengineconfigs/status
   - ldapsecretenginedynamicroles/status
   - ldapsecretenginestaticroles/status
+  - mongodbatlassecretengineconfigs/status
+  - mongodbatlassecretengineroles/status
   - namespaces/status
   - passwordpolicies/status
   - pkisecretengineconfigs/status
