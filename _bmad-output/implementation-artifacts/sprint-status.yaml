@@ -35,7 +35,14 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-08-08
+last_updated: 2026-08-10
+# Story 12.1 done 2026-08-10
+# Epic 12 done 2026-08-10
+# Story 12.3 done 2026-08-10
+# Story 12.2 done 2026-08-10
+# Story 12.2 ready-for-dev 2026-08-10
+# Story 12.1 ready-for-dev 2026-08-10
+# Epic 12 in-progress 2026-08-10
 # Epic 11 retrospective 2026-08-08
 # Epic 11 done 2026-08-08
 # Story 11.3 done 2026-08-08
@@ -516,11 +523,11 @@ development_status:
   epic-11-retrospective: done
 
   # Epic 12: Medium-Priority Missing Secret Engines (Consul, GCP, LDAP/AD)
-  epic-12: backlog
-  12-1-consul-secret-engine-config-and-role-crds: backlog
-  12-2-gcp-secret-engine-config-and-role-crds: backlog
-  12-3-ldap-ad-secret-engine-config-and-role-crds: backlog
-  epic-12-retrospective: optional
+  epic-12: done
+  12-1-consul-secret-engine-config-and-role-crds: done
+  12-2-gcp-secret-engine-config-and-role-crds: done
+  12-3-ldap-ad-secret-engine-config-and-role-crds: done
+  epic-12-retrospective: done
 
   # Epic 13: Lower-Priority Missing Secret Engines (Nomad, TOTP, MongoDB Atlas, Terraform Cloud)
   epic-13: backlog
@@ -579,4 +586,22 @@ action_items:
   - epic: 11
     action: "json.Number programming rule — all numeric fields in toMap() must emit json.Number, nil maps must return empty maps"
     owner: "Amelia (Developer)"
+    status: done
+
+  # Epic 12 action items (applied during retro session)
+  - epic: 12
+    action: "toMap() normalization rule — emit Vault-read format (durationToSeconds, JSON/HCL string→map) for correct IsEquivalentToDesiredState comparison"
+    owner: "Amelia (Developer)"
+    status: done
+  - epic: 12
+    action: "5-iteration review cap escalation — halt pipeline and present open findings to user instead of force-merging"
+    owner: "Bob (Scrum Master)"
+    status: done
+  - epic: 12
+    action: "Sprint-status/story-file atomicity guard — orchestrator must not mark sprint-status done unless story file is already done"
+    owner: "Bob (Scrum Master)"
+    status: done
+  - epic: 12
+    action: "Final consistency check as blocking gate — halt on any status inconsistency between story files and sprint-status"
+    owner: "Bob (Scrum Master)"
     status: done

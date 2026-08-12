@@ -1,0 +1,39 @@
+# Team overrides for bmad-create-story workflow.
+# Committed to the repo — applies to every developer on the project.
+# Survives BMad framework upgrades (never touched by the installer).
+
+[workflow]
+
+# Persistent facts the workflow keeps in mind for the whole run.
+# These enforce proven story quality practices established across 60+ stories.
+persistent_facts = [
+  """Story Intelligence Chain (MANDATORY):
+Every story's Dev Notes section MUST explicitly cross-reference predecessor stories.
+Include: what the predecessor accomplished, what it deferred, what patterns it established,
+and what context the current story inherits. This is the primary velocity multiplier —
+validated across 60+ consecutive stories. Never start a story in isolation.""",
+
+  """Anti-Pattern Prevention Sections (MANDATORY):
+Every story MUST include an explicit "Anti-Patterns / DO NOT" section in Dev Notes
+that lists what is OUT OF SCOPE for this specific story. Examples:
+- "DO NOT upgrade dependency X — that is Story Y's responsibility"
+- "DO NOT modify shared framework behavior — only add new functions"
+- "DO NOT refactor existing tests — only add new ones for new behavior"
+This prevents scope creep. Zero scope creep incidents when present.""",
+
+  """Code Review Record Section (MANDATORY):
+Every story MUST include a '## Code Review Record' section with:
+- Review Model Used (must differ from dev model to prevent self-review blind spots)
+- Review Findings
+- Decisions Needed / Decisions Taken
+- Fixes Applied""",
+]
+
+# Post-completion: remind the author to verify anti-pattern and intelligence sections exist.
+on_complete = """QUALITY CHECK — Story completeness verification.
+Before finalizing the story file, verify:
+1. Dev Notes contain a 'Story Intelligence Chain' or 'Previous Story Intelligence' subsection
+   that references predecessor stories (what they accomplished, deferred, established).
+2. Dev Notes contain an 'Anti-Patterns' or 'DO NOT' subsection listing explicit scope boundaries.
+3. A '## Code Review Record' section exists (can be empty template if review hasn't happened yet).
+If any are missing, add them before saving. Output which sections were added or confirmed."""

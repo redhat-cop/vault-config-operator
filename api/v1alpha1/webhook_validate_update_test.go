@@ -306,6 +306,128 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 			errSubstring: "spec.path cannot be updated",
 		},
 		{
+			name: "LDAPSecretEngineConfig rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &LDAPSecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&LDAPSecretEngineConfig{Spec: LDAPSecretEngineConfigSpec{
+						Path:            "old/path",
+						BindCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+					&LDAPSecretEngineConfig{Spec: LDAPSecretEngineConfigSpec{
+						Path:            "new/path",
+						BindCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.path cannot be updated",
+		},
+		{
+			name: "LDAPSecretEngineConfig rejects name change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &LDAPSecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&LDAPSecretEngineConfig{Spec: LDAPSecretEngineConfigSpec{
+						Path:            "same/path",
+						Name:            "old-name",
+						BindCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+					&LDAPSecretEngineConfig{Spec: LDAPSecretEngineConfigSpec{
+						Path:            "same/path",
+						Name:            "new-name",
+						BindCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.name cannot be updated",
+		},
+		{
+			name: "LDAPSecretEngineDynamicRole rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &LDAPSecretEngineDynamicRole{}
+				return r.ValidateUpdate(context.Background(),
+					&LDAPSecretEngineDynamicRole{Spec: LDAPSecretEngineDynamicRoleSpec{Path: "old/path"}},
+					&LDAPSecretEngineDynamicRole{Spec: LDAPSecretEngineDynamicRoleSpec{Path: "new/path"}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.path cannot be updated",
+		},
+		{
+			name: "LDAPSecretEngineDynamicRole rejects name change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &LDAPSecretEngineDynamicRole{}
+				return r.ValidateUpdate(context.Background(),
+					&LDAPSecretEngineDynamicRole{Spec: LDAPSecretEngineDynamicRoleSpec{Path: "same/path", Name: "old-name"}},
+					&LDAPSecretEngineDynamicRole{Spec: LDAPSecretEngineDynamicRoleSpec{Path: "same/path", Name: "new-name"}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.name cannot be updated",
+		},
+		{
+			name: "LDAPSecretEngineStaticRole rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &LDAPSecretEngineStaticRole{}
+				return r.ValidateUpdate(context.Background(),
+					&LDAPSecretEngineStaticRole{Spec: LDAPSecretEngineStaticRoleSpec{Path: "old/path"}},
+					&LDAPSecretEngineStaticRole{Spec: LDAPSecretEngineStaticRoleSpec{Path: "new/path"}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.path cannot be updated",
+		},
+		{
+			name: "LDAPSecretEngineStaticRole rejects name change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &LDAPSecretEngineStaticRole{}
+				return r.ValidateUpdate(context.Background(),
+					&LDAPSecretEngineStaticRole{Spec: LDAPSecretEngineStaticRoleSpec{Path: "same/path", Name: "old-name"}},
+					&LDAPSecretEngineStaticRole{Spec: LDAPSecretEngineStaticRoleSpec{Path: "same/path", Name: "new-name"}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.name cannot be updated",
+		},
+		{
+			name: "LDAPSecretEngineStaticRole rejects username change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &LDAPSecretEngineStaticRole{}
+				return r.ValidateUpdate(context.Background(),
+					&LDAPSecretEngineStaticRole{Spec: LDAPSecretEngineStaticRoleSpec{
+						Path:             "same/path",
+						LDAPSEStaticRole: LDAPSEStaticRole{Username: "old-user"},
+					}},
+					&LDAPSecretEngineStaticRole{Spec: LDAPSecretEngineStaticRoleSpec{
+						Path:             "same/path",
+						LDAPSEStaticRole: LDAPSEStaticRole{Username: "new-user"},
+					}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.username cannot be updated",
+		},
+		{
+			name: "LDAPSecretEngineStaticRole rejects dn change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &LDAPSecretEngineStaticRole{}
+				return r.ValidateUpdate(context.Background(),
+					&LDAPSecretEngineStaticRole{Spec: LDAPSecretEngineStaticRoleSpec{
+						Path:             "same/path",
+						LDAPSEStaticRole: LDAPSEStaticRole{DN: "uid=old,dc=example,dc=com"},
+					}},
+					&LDAPSecretEngineStaticRole{Spec: LDAPSecretEngineStaticRoleSpec{
+						Path:             "same/path",
+						LDAPSEStaticRole: LDAPSEStaticRole{DN: "uid=new,dc=example,dc=com"},
+					}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.dn cannot be updated",
+		},
+		{
 			name: "PKISecretEngineConfig rejects path change",
 			validateFn: func() (admission.Warnings, error) {
 				r := &PKISecretEngineConfig{}
@@ -376,6 +498,48 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 			},
 			expectErr:    true,
 			errSubstring: "spec.path cannot be updated",
+		},
+		{
+			name: "ConsulSecretEngineConfig rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &ConsulSecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&ConsulSecretEngineConfig{Spec: ConsulSecretEngineConfigSpec{
+						Path:            "old/path",
+						RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+					&ConsulSecretEngineConfig{Spec: ConsulSecretEngineConfigSpec{
+						Path:            "new/path",
+						RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.path cannot be updated",
+		},
+		{
+			name: "ConsulSecretEngineRole rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &ConsulSecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&ConsulSecretEngineRole{Spec: ConsulSecretEngineRoleSpec{Path: "old/path"}},
+					&ConsulSecretEngineRole{Spec: ConsulSecretEngineRoleSpec{Path: "new/path"}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.path cannot be updated",
+		},
+		{
+			name: "ConsulSecretEngineRole rejects name change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &ConsulSecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&ConsulSecretEngineRole{Spec: ConsulSecretEngineRoleSpec{Path: "same/path", Name: "old-name"}},
+					&ConsulSecretEngineRole{Spec: ConsulSecretEngineRoleSpec{Path: "same/path", Name: "new-name"}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.name cannot be updated",
 		},
 		{
 			name: "RandomSecret rejects path change",
@@ -672,12 +836,85 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 			expectErr: false,
 		},
 		{
-			name: "LDAPAuthEngineConfig allows non-path update",
+			name: "LDAPAuthEngineConfig allows mutable field update",
 			validateFn: func() (admission.Warnings, error) {
 				r := &LDAPAuthEngineConfig{}
 				return r.ValidateUpdate(context.Background(),
-					&LDAPAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: LDAPAuthEngineConfigSpec{Path: "same/path"}},
-					&LDAPAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: LDAPAuthEngineConfigSpec{Path: "same/path"}},
+					&LDAPAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "cfg"}, Spec: LDAPAuthEngineConfigSpec{
+						Path:       "same/path",
+						LDAPConfig: LDAPConfig{URL: "ldap://old.example.com"},
+					}},
+					&LDAPAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "cfg"}, Spec: LDAPAuthEngineConfigSpec{
+						Path:       "same/path",
+						LDAPConfig: LDAPConfig{URL: "ldap://new.example.com"},
+					}},
+				)
+			},
+			expectErr: false,
+		},
+		{
+			name: "LDAPSecretEngineConfig allows mutable field update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &LDAPSecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&LDAPSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "cfg"}, Spec: LDAPSecretEngineConfigSpec{
+						Path:            "same/path",
+						Name:            "same-name",
+						LDAPSEConfig:    LDAPSEConfig{URL: "ldap://old.example.com", Schema: "openldap"},
+						BindCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+					&LDAPSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "cfg"}, Spec: LDAPSecretEngineConfigSpec{
+						Path:            "same/path",
+						Name:            "same-name",
+						LDAPSEConfig:    LDAPSEConfig{URL: "ldaps://new.example.com:636", Schema: "openldap", StartTLS: true},
+						BindCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+				)
+			},
+			expectErr: false,
+		},
+		{
+			name: "LDAPSecretEngineDynamicRole allows mutable field update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &LDAPSecretEngineDynamicRole{}
+				return r.ValidateUpdate(context.Background(),
+					&LDAPSecretEngineDynamicRole{ObjectMeta: metav1.ObjectMeta{Name: "role"}, Spec: LDAPSecretEngineDynamicRoleSpec{
+						Path: "same/path",
+						Name: "same-name",
+						LDAPSEDynamicRole: LDAPSEDynamicRole{
+							CreationLDIF: "dn: cn={{.Username}},ou=Users,dc=example,dc=com",
+							DeletionLDIF: "dn: cn={{.Username}},ou=Users,dc=example,dc=com\nchangetype: delete",
+							DefaultTTL:   "1h",
+						},
+					}},
+					&LDAPSecretEngineDynamicRole{ObjectMeta: metav1.ObjectMeta{Name: "role"}, Spec: LDAPSecretEngineDynamicRoleSpec{
+						Path: "same/path",
+						Name: "same-name",
+						LDAPSEDynamicRole: LDAPSEDynamicRole{
+							CreationLDIF: "dn: cn={{.Username}},ou=Users,dc=example,dc=com",
+							DeletionLDIF: "dn: cn={{.Username}},ou=Users,dc=example,dc=com\nchangetype: delete",
+							DefaultTTL:   "2h",
+						},
+					}},
+				)
+			},
+			expectErr: false,
+		},
+		{
+			name: "LDAPSecretEngineStaticRole allows mutable field update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &LDAPSecretEngineStaticRole{}
+				return r.ValidateUpdate(context.Background(),
+					&LDAPSecretEngineStaticRole{ObjectMeta: metav1.ObjectMeta{Name: "role"}, Spec: LDAPSecretEngineStaticRoleSpec{
+						Path:             "same/path",
+						Name:             "same-name",
+						LDAPSEStaticRole: LDAPSEStaticRole{Username: "same-user", DN: "uid=same,dc=example,dc=com", RotationPeriod: 86400},
+					}},
+					&LDAPSecretEngineStaticRole{ObjectMeta: metav1.ObjectMeta{Name: "role"}, Spec: LDAPSecretEngineStaticRoleSpec{
+						Path:             "same/path",
+						Name:             "same-name",
+						LDAPSEStaticRole: LDAPSEStaticRole{Username: "same-user", DN: "uid=same,dc=example,dc=com", RotationPeriod: 43200},
+					}},
 				)
 			},
 			expectErr: false,
@@ -756,6 +993,40 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 				return r.ValidateUpdate(context.Background(),
 					&RabbitMQSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: RabbitMQSecretEngineRoleSpec{Path: "same/path"}},
 					&RabbitMQSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: RabbitMQSecretEngineRoleSpec{Path: "same/path"}},
+				)
+			},
+			expectErr: false,
+		},
+		{
+			name: "ConsulSecretEngineConfig allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &ConsulSecretEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&ConsulSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: ConsulSecretEngineConfigSpec{
+						Path:            "same/path",
+						RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+					&ConsulSecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: ConsulSecretEngineConfigSpec{
+						Path:            "same/path",
+						RootCredentials: vaultutils.RootCredentialConfig{Secret: &corev1.LocalObjectReference{Name: "cred"}},
+					}},
+				)
+			},
+			expectErr: false,
+		},
+		{
+			name: "ConsulSecretEngineRole allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &ConsulSecretEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&ConsulSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: ConsulSecretEngineRoleSpec{
+						Path: "same/path",
+						Name: "same-name",
+					}},
+					&ConsulSecretEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: ConsulSecretEngineRoleSpec{
+						Path: "same/path",
+						Name: "same-name",
+					}},
 				)
 			},
 			expectErr: false,

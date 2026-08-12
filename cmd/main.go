@@ -389,8 +389,48 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controller.ConsulSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "ConsulSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ConsulSecretEngineConfig")
+		os.Exit(1)
+	}
+
+	if err = (&controller.ConsulSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "ConsulSecretEngineRole")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ConsulSecretEngineRole")
+		os.Exit(1)
+	}
+
+	if err = (&controller.LDAPSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LDAPSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "LDAPSecretEngineConfig")
+		os.Exit(1)
+	}
+
+	if err = (&controller.LDAPSecretEngineStaticRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LDAPSecretEngineStaticRole")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "LDAPSecretEngineStaticRole")
+		os.Exit(1)
+	}
+
+	if err = (&controller.LDAPSecretEngineDynamicRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LDAPSecretEngineDynamicRole")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "LDAPSecretEngineDynamicRole")
+		os.Exit(1)
+	}
+
 	if err = (&controller.TransitSecretEngineKeyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "TransitSecretEngineKey")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "TransitSecretEngineKey")
+		os.Exit(1)
+	}
+
+	if err = (&controller.GCPSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GCPSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GCPSecretEngineConfig")
+		os.Exit(1)
+	}
+
+	if err = (&controller.GCPSecretEngineRolesetReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GCPSecretEngineRoleset")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GCPSecretEngineRoleset")
+		os.Exit(1)
+	}
+
+	if err = (&controller.GCPSecretEngineStaticAccountReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GCPSecretEngineStaticAccount")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GCPSecretEngineStaticAccount")
 		os.Exit(1)
 	}
 
@@ -608,8 +648,48 @@ func main() {
 			os.Exit(1)
 		}
 
+		if err = (&redhatcopv1alpha1.ConsulSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "ConsulSecretEngineConfig")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.ConsulSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "ConsulSecretEngineRole")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.LDAPSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "LDAPSecretEngineConfig")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.LDAPSecretEngineStaticRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "LDAPSecretEngineStaticRole")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.LDAPSecretEngineDynamicRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "LDAPSecretEngineDynamicRole")
+			os.Exit(1)
+		}
+
 		if err = (&redhatcopv1alpha1.TransitSecretEngineKey{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "TransitSecretEngineKey")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.GCPSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "GCPSecretEngineConfig")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.GCPSecretEngineRoleset{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "GCPSecretEngineRoleset")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.GCPSecretEngineStaticAccount{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "GCPSecretEngineStaticAccount")
 			os.Exit(1)
 		}
 	}

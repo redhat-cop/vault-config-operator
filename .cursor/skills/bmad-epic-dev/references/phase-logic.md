@@ -187,6 +187,29 @@ Run as: make integration KIND_CLUSTER_NAME={assigned_cluster_name} VAULT_HOST_PO
 
 **Sequential fallback:** When stories run sequentially on the main branch (B.5), no overrides are needed — the default cluster name and ports are used.
 
+### Worktree Path Isolation (CRITICAL)
+
+The `best-of-n-runner` creates a real git worktree (separate branch + separate directory), but does **not** sandbox file operations. If the subagent receives absolute paths pointing to the original repository, it will read/write there — defeating isolation entirely.
+
+**Rules for the orchestrator when spawning worktree subagents:**
+
+1. **Use relative paths only.** Never pass an absolute path to the original repository in subagent prompts. Use paths relative to the project root (e.g., `{implementation_artifacts}/{story_key}.md`).
+
+2. **Include the worktree isolation block** (below) in every `best-of-n-runner` subagent prompt. This instructs the subagent to resolve `{project-root}` from its current working directory, not from any hardcoded path.
+
+3. **The commit (Step 4) happens on the story branch** inside the worktree. The orchestrator must NOT commit on behalf of the subagent on the main branch — the worktree subagent owns its own branch.
+
+**Worktree isolation block** (include verbatim in every `best-of-n-runner` prompt):
+```
+WORKTREE ISOLATION (CRITICAL):
+You are running in an isolated git worktree on branch epic-{N}/story-{N.M}.
+Your project root is your current working directory — do NOT use absolute
+paths to any other repository copy. All file reads and writes MUST use paths
+relative to your CWD or resolved from your CWD. If the skill resolves
+{project-root}, it MUST resolve to your current working directory.
+Run `git rev-parse --show-toplevel` if you need to confirm your project root.
+```
+
 For each dependency layer (in topological order):
 
 ### B.1: Launch Parallel Development
@@ -202,6 +225,14 @@ For each dependency layer (in topological order):
    Process the story fully — implement all tasks, run all tests, mark complete.
    If you encounter a blocking issue requiring a human decision, describe it
    clearly and halt. Do NOT make assumptions on behalf of the user.
+
+   WORKTREE ISOLATION (CRITICAL):
+   You are running in an isolated git worktree on branch epic-{N}/story-{N.M}.
+   Your project root is your current working directory — do NOT use absolute
+   paths to any other repository copy. All file reads and writes MUST use paths
+   relative to your CWD or resolved from your CWD. If the skill resolves
+   {project-root}, it MUST resolve to your current working directory.
+   Run `git rev-parse --show-toplevel` if you need to confirm your project root.
 
    INTEGRATION TEST ISOLATION:
    When running integration tests (make integration), use these overrides:
@@ -231,6 +262,14 @@ For each dependency layer (in topological order):
    If the review raises a design/requirements question (not a code fix),
    describe it and halt — do NOT resolve design questions yourself.
 
+   WORKTREE ISOLATION (CRITICAL):
+   You are running in an isolated git worktree on branch epic-{N}/story-{N.M}.
+   Your project root is your current working directory — do NOT use absolute
+   paths to any other repository copy. All file reads and writes MUST use paths
+   relative to your CWD or resolved from your CWD. If the skill resolves
+   {project-root}, it MUST resolve to your current working directory.
+   Run `git rev-parse --show-toplevel` if you need to confirm your project root.
+
    IMPORTANT: If you need a decision, your output MUST include:
    - status: decision_needed
    - decision_question: <the exact question for the user>
@@ -247,6 +286,12 @@ For each dependency layer (in topological order):
    1. Spawn a new Step 1 subagent (Opus 4.6) to address the findings
    2. **ALWAYS re-run Step 2** (ChatGPT 5.4 code review) after fixes are applied — never skip the re-review even if the fixes seem trivial
    3. Repeat Steps 1→2 until the review returns `approved` or is halted
+   4. **HARD CAP: maximum 5 review iterations per story.** Track the iteration count (first review = iteration 1). If iteration 5 still returns `changes_requested`: **HALT the story pipeline immediately.** Do NOT proceed to Step 4. Instead:
+      - Summarize ALL open/unresolved review findings for this story in a clear list
+      - Include the iteration history (what was fixed in each round, what persists)
+      - Present this summary to the user with the message: "⚠️ Review cap reached (5/5 iterations) for story {story_key}. Human intervention needed."
+      - Wait for the user to decide: resolve the issues manually, accept as-is, or abandon
+      - Only proceed to Step 4 after explicit user approval
 
    **CRITICAL:** Do NOT commit after applying fixes without a re-review pass. Every fix must be verified by a fresh code review subagent before it can be committed. Skipping re-review defeats the purpose of adversarial review — fix subagents can introduce new issues that only a second review would catch.
 
@@ -282,7 +327,21 @@ For each dependency layer (in topological order):
 
 ### B.3: Merge Branches
 
-6. After all stories in the layer succeed, merge each story branch back to the main branch **sequentially** (to maintain a clean linear history):
+6. After all stories in the layer succeed, **verify each worktree branch** before merging:
+
+   For each completed story branch, run from the **main branch**:
+   ```
+   git log --oneline epic-{N}/story-{N.M} --not HEAD | head -20
+   ```
+   Confirm at least one commit exists on the story branch beyond the merge base. If the branch has no commits (empty branch), the worktree subagent failed to commit — halt and report the issue.
+
+   Also verify the worktree is clean (no uncommitted changes that were missed):
+   ```
+   git -C <worktree-path> status --porcelain
+   ```
+   If dirty files exist, either the subagent forgot to commit or the worktree isolation failed. Halt and report.
+
+7. Merge each story branch back to the main branch **sequentially** (to maintain a clean linear history):
 
    For each completed story branch:
    ```
@@ -294,7 +353,9 @@ For each dependency layer (in topological order):
 
    If merge conflicts occur: halt with details. The user resolves conflicts manually, then re-invokes to resume. The conflicting branch is preserved for inspection.
 
-7. **Update story file status on the main branch.** After each successful merge, on the main branch:
+8. **Post-merge test verification.** After each merge, run the project's test suite on the main branch to confirm the merge didn't introduce regressions. If tests fail, halt with the merge SHA and failure details — the user must resolve before continuing.
+
+9. **Update story file status on the main branch.** After each successful merge, on the main branch:
    - Set the story file's `Status:` field to `done`
    - Populate the **Code Review Record** section if not already filled by the review subagent:
      - **Review Model Used**: the model slug used for code review
@@ -308,7 +369,7 @@ For each dependency layer (in topological order):
 
    This ensures story file status is always consistent with `sprint-status.yaml`, regardless of whether the work was done in a worktree.
 
-8. Clean up worktrees and Kind clusters after successful merge:
+10. Clean up worktrees and Kind clusters after successful merge:
 
    **Worktree cleanup:**
    ```
@@ -327,24 +388,26 @@ For each dependency layer (in topological order):
    ```
    This deletes the Kind cluster and removes its kubeconfig file. Skip this step for the default cluster (`vault-config-operator`) or when running in sequential fallback mode.
 
-9. Update `sprint-status.yaml`: mark each merged story as `done`.
+11. Update `sprint-status.yaml`: mark each merged story as `done`.
 
-10. **Final consistency check:** After all stories in the layer are merged, verify that:
+   **HARD GUARD — Status Atomicity:** The orchestrator MUST NOT update sprint-status.yaml to `done` for a story unless the story file's `Status:` field has ALREADY been set to `done` in the same commit or an earlier commit on the main branch. If the story file still shows `in-progress`, `review`, or any other non-done status, HALT and fix the story file first. This prevents drift between the two tracking systems.
+
+12. **Final consistency check (BLOCKING GATE):** After all stories in the layer are merged, verify that:
     - Every merged story's file has `Status: done`
     - Every merged story in `sprint-status.yaml` is `done`
     - `git worktree list` shows only the main working tree (no orphaned worktrees)
-    If any inconsistency is found, fix it before proceeding to the next layer.
+    If ANY inconsistency is found: **HALT immediately.** Do NOT proceed to the next layer. Report the inconsistency to the user and fix it before continuing. This is a blocking gate, not advisory.
 
 ### B.4: Report Layer Progress
 
-9. Report to the user:
+13. Report to the user:
    ```
    Layer {L} complete: {count} stories merged
    {story_list with review patch counts and file counts}
    Progress: {done}/{total} stories in epic {N}
    ```
 
-10. Continue to the next dependency layer.
+14. Continue to the next dependency layer.
 
 ### B.5: Sequential Fallback
 
@@ -355,7 +418,7 @@ For each story:
 2. If `decision_needed`: follow the **Decision Relay Protocol** — present to user, wait, resume subagent
 3. On success, spawn a `generalPurpose` subagent for `bmad-code-review` (model: **ChatGPT 5.4**)
 4. If `decision_needed`: follow the **Decision Relay Protocol**
-5. If `changes_requested`: re-run dev-story (Opus 4.6) to address findings, then **ALWAYS** re-run code-review (ChatGPT 5.4) — never skip the re-review, even if the fixes seem trivial. Repeat until approved or halted.
+5. If `changes_requested`: re-run dev-story (Opus 4.6) to address findings, then **ALWAYS** re-run code-review (ChatGPT 5.4) — never skip the re-review, even if the fixes seem trivial. Repeat until approved or halted. **HARD CAP: 5 review iterations max.** If iteration 5 still returns `changes_requested`: **HALT immediately.** Summarize all open/unresolved findings, present to the user with "⚠️ Review cap reached (5/5 iterations) for story {story_key}. Human intervention needed.", and wait for explicit user decision before proceeding.
 6. **Update story file** on the main branch:
    - Set `Status:` to `done`
    - Populate the **Code Review Record** section (Review Model, Findings, Decisions, Fixes)
@@ -363,8 +426,8 @@ For each story:
    ```
    feat(epic-{N}): {story_key} — {story title}
    ```
-8. Update `sprint-status.yaml`: mark story as `done`
-9. **Verify consistency:** Confirm story file status and sprint-status agree before continuing
+8. Update `sprint-status.yaml`: mark story as `done`. **HARD GUARD:** Do NOT update sprint-status until the story file's `Status:` field is already `done` in a committed state.
+9. **Verify consistency (BLOCKING GATE):** Confirm story file status and sprint-status agree before continuing. If they disagree, HALT and fix — do NOT proceed.
 10. Report progress, continue to next story
 
 ### B.6: Check for New Stories

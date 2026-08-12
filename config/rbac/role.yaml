@@ -57,6 +57,8 @@ rules:
   - azuresecretengineroles
   - certauthengineconfigs
   - certauthengineroles
+  - consulsecretengineconfigs
+  - consulsecretengineroles
   - databasesecretengineconfigs
   - databasesecretengineroles
   - databasesecretenginestaticroles
@@ -64,6 +66,9 @@ rules:
   - entityaliases
   - gcpauthengineconfigs
   - gcpauthengineroles
+  - gcpsecretengineconfigs
+  - gcpsecretenginerolesets
+  - gcpsecretenginestaticaccounts
   - githubsecretengineconfigs
   - githubsecretengineroles
   - groupaliases
@@ -83,6 +88,9 @@ rules:
   - kubernetessecretengineroles
   - ldapauthengineconfigs
   - ldapauthenginegroups
+  - ldapsecretengineconfigs
+  - ldapsecretenginedynamicroles
+  - ldapsecretenginestaticroles
   - namespaces
   - passwordpolicies
   - pkisecretengineconfigs
@@ -121,6 +129,8 @@ rules:
   - azuresecretengineroles/finalizers
   - certauthengineconfigs/finalizers
   - certauthengineroles/finalizers
+  - consulsecretengineconfigs/finalizers
+  - consulsecretengineroles/finalizers
   - databasesecretengineconfigs/finalizers
   - databasesecretengineroles/finalizers
   - databasesecretenginestaticroles/finalizers
@@ -128,6 +138,9 @@ rules:
   - entityaliases/finalizers
   - gcpauthengineconfigs/finalizers
   - gcpauthengineroles/finalizers
+  - gcpsecretengineconfigs/finalizers
+  - gcpsecretenginerolesets/finalizers
+  - gcpsecretenginestaticaccounts/finalizers
   - githubsecretengineconfigs/finalizers
   - githubsecretengineroles/finalizers
   - groupaliases/finalizers
@@ -147,6 +160,9 @@ rules:
   - kubernetessecretengineroles/finalizers
   - ldapauthengineconfigs/finalizers
   - ldapauthenginegroups/finalizers
+  - ldapsecretengineconfigs/finalizers
+  - ldapsecretenginedynamicroles/finalizers
+  - ldapsecretenginestaticroles/finalizers
   - namespaces/finalizers
   - passwordpolicies/finalizers
   - pkisecretengineconfigs/finalizers
@@ -178,6 +194,8 @@ rules:
   - azuresecretengineroles/status
   - certauthengineconfigs/status
   - certauthengineroles/status
+  - consulsecretengineconfigs/status
+  - consulsecretengineroles/status
   - databasesecretengineconfigs/status
   - databasesecretengineroles/status
   - databasesecretenginestaticroles/status
@@ -185,6 +203,9 @@ rules:
   - entityaliases/status
   - gcpauthengineconfigs/status
   - gcpauthengineroles/status
+  - gcpsecretengineconfigs/status
+  - gcpsecretenginerolesets/status
+  - gcpsecretenginestaticaccounts/status
   - githubsecretengineconfigs/status
   - githubsecretengineroles/status
   - groupaliases/status
@@ -204,6 +225,9 @@ rules:
   - kubernetessecretengineroles/status
   - ldapauthengineconfigs/status
   - ldapauthenginegroups/status
+  - ldapsecretengineconfigs/status
+  - ldapsecretenginedynamicroles/status
+  - ldapsecretenginestaticroles/status
   - namespaces/status
   - passwordpolicies/status
   - pkisecretengineconfigs/status

@@ -187,6 +187,46 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-consulsecretengineconfig
+  failurePolicy: Fail
+  name: mconsulsecretengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - consulsecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-consulsecretenginerole
+  failurePolicy: Fail
+  name: mconsulsecretenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - consulsecretengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /mutate-redhatcop-redhat-io-v1alpha1-databasesecretengineconfig
   failurePolicy: Fail
   name: mdatabasesecretengineconfig.kb.io
@@ -276,6 +316,66 @@ webhooks:
     - CREATE
     resources:
     - gcpauthengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-gcpsecretengineconfig
+  failurePolicy: Fail
+  name: mgcpsecretengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - gcpsecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-gcpsecretengineroleset
+  failurePolicy: Fail
+  name: mgcpsecretengineroleset.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - gcpsecretenginerolesets
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-gcpsecretenginestaticaccount
+  failurePolicy: Fail
+  name: mgcpsecretenginestaticaccount.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - gcpsecretenginestaticaccounts
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -648,6 +748,66 @@ webhooks:
     - CREATE
     resources:
     - ldapauthenginegroups
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-ldapsecretengineconfig
+  failurePolicy: Fail
+  name: mldapsecretengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - ldapsecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-ldapsecretenginedynamicrole
+  failurePolicy: Fail
+  name: mldapsecretenginedynamicrole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - ldapsecretenginedynamicroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-ldapsecretenginestaticrole
+  failurePolicy: Fail
+  name: mldapsecretenginestaticrole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - ldapsecretenginestaticroles
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -1136,6 +1296,48 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-consulsecretengineconfig
+  failurePolicy: Fail
+  name: vconsulsecretengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - consulsecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-consulsecretenginerole
+  failurePolicy: Fail
+  name: vconsulsecretenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - consulsecretengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /validate-redhatcop-redhat-io-v1alpha1-databasesecretengineconfig
   failurePolicy: Fail
   name: vdatabasesecretengineconfig.kb.io
@@ -1227,6 +1429,69 @@ webhooks:
     - UPDATE
     resources:
     - gcpauthengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-gcpsecretengineconfig
+  failurePolicy: Fail
+  name: vgcpsecretengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - gcpsecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-gcpsecretengineroleset
+  failurePolicy: Fail
+  name: vgcpsecretengineroleset.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - gcpsecretenginerolesets
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-gcpsecretenginestaticaccount
+  failurePolicy: Fail
+  name: vgcpsecretenginestaticaccount.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - gcpsecretenginestaticaccounts
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -1604,6 +1869,69 @@ webhooks:
     - UPDATE
     resources:
     - ldapauthenginegroups
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-ldapsecretengineconfig
+  failurePolicy: Fail
+  name: vldapsecretengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - ldapsecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-ldapsecretenginedynamicrole
+  failurePolicy: Fail
+  name: vldapsecretenginedynamicrole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - ldapsecretenginedynamicroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-ldapsecretenginestaticrole
+  failurePolicy: Fail
+  name: vldapsecretenginestaticrole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - ldapsecretenginestaticroles
   sideEffects: None
 - admissionReviewVersions:
   - v1
