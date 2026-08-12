@@ -42,6 +42,7 @@ vault secrets enable -path [namespace/]postgresql-vault-demo/database database
 | Quay | QuaySecretEngineConfig | QuaySecretEngineRole, QuaySecretEngineStaticRole | [quay.md](quay.md) |
 | Kubernetes | KubernetesSecretEngineConfig | KubernetesSecretEngineRole | [kubernetes.md](kubernetes.md) |
 | Azure | AzureSecretEngineConfig | AzureSecretEngineRole | [azure.md](azure.md) |
+| Terraform Cloud | TerraformCloudSecretEngineConfig | TerraformCloudSecretEngineRole | [terraform-cloud.md](terraform-cloud.md) |
 
 ## Common Configuration
 

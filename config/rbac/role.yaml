@@ -105,6 +105,8 @@ rules:
   - secretenginemounts
   - sshsecretengineconfigs
   - sshsecretengineroles
+  - terraformcloudsecretengineconfigs
+  - terraformcloudsecretengineroles
   - transitsecretenginekeys
   - vaultsecrets
   verbs:
@@ -176,6 +178,8 @@ rules:
   - secretenginemounts/finalizers
   - sshsecretengineconfigs/finalizers
   - sshsecretengineroles/finalizers
+  - terraformcloudsecretengineconfigs/finalizers
+  - terraformcloudsecretengineroles/finalizers
   - transitsecretenginekeys/finalizers
   - vaultsecrets/finalizers
   verbs:
@@ -242,6 +246,8 @@ rules:
   - secretenginemounts/status
   - sshsecretengineconfigs/status
   - sshsecretengineroles/status
+  - terraformcloudsecretengineconfigs/status
+  - terraformcloudsecretengineroles/status
   - transitsecretenginekeys/status
   - vaultsecrets/status
   verbs:
