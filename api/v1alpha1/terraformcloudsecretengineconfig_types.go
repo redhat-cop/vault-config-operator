@@ -93,6 +93,15 @@ func (c *TFCCredentialConfig) ValidateCredentialSource() error {
 	if count != 1 {
 		return errors.New("exactly one of spec.tfcCredentials.vaultSecret, spec.tfcCredentials.secret, or spec.tfcCredentials.randomSecret must be specified")
 	}
+	if c.VaultSecret != nil && c.VaultSecret.Path == "" {
+		return errors.New("spec.tfcCredentials.vaultSecret.path must not be empty")
+	}
+	if c.Secret != nil && c.Secret.Name == "" {
+		return errors.New("spec.tfcCredentials.secret.name must not be empty")
+	}
+	if c.RandomSecret != nil && c.RandomSecret.Name == "" {
+		return errors.New("spec.tfcCredentials.randomSecret.name must not be empty")
+	}
 	return nil
 }
 
@@ -141,7 +150,13 @@ func (d *TerraformCloudSecretEngineConfig) IsValid() (bool, error) {
 }
 
 func (d *TerraformCloudSecretEngineConfig) isValid() error {
-	return d.Spec.TFCCredentials.ValidateCredentialSource()
+	if err := d.Spec.TFCCredentials.ValidateCredentialSource(); err != nil {
+		return err
+	}
+	if (d.Spec.TFCCredentials.Secret != nil || d.Spec.TFCCredentials.VaultSecret != nil) && d.Spec.TFCCredentials.PasswordKey == "" {
+		return errors.New("spec.tfcCredentials.passwordKey must not be empty when a credential source is specified")
+	}
+	return nil
 }
 
 func (d *TerraformCloudSecretEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {

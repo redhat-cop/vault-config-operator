@@ -139,7 +139,8 @@ func TestTerraformCloudSecretEngineConfig_IsValid(t *testing.T) {
 	config := &TerraformCloudSecretEngineConfig{
 		Spec: TerraformCloudSecretEngineConfigSpec{
 			TFCCredentials: TFCCredentialConfig{
-				Secret: &corev1.LocalObjectReference{Name: "tfc-token"},
+				Secret:      &corev1.LocalObjectReference{Name: "tfc-token"},
+				PasswordKey: "token",
 			},
 		},
 	}
@@ -347,5 +348,116 @@ func TestTerraformCloudSecretEngineConfig_ValidateUpdate_RejectsNameChange(t *te
 	_, err := r.ValidateUpdate(nil, oldObj, newObj)
 	if err == nil {
 		t.Error("expected error when spec.name is changed")
+	}
+}
+
+func TestTFCCredentialConfig_ValidateCredentialSource_EmptySecretName(t *testing.T) {
+	cred := TFCCredentialConfig{
+		Secret: &corev1.LocalObjectReference{Name: ""},
+	}
+	err := cred.ValidateCredentialSource()
+	if err == nil {
+		t.Error("expected error when secret.name is empty")
+	}
+}
+
+func TestTFCCredentialConfig_ValidateCredentialSource_EmptyRandomSecretName(t *testing.T) {
+	cred := TFCCredentialConfig{
+		RandomSecret: &corev1.LocalObjectReference{Name: ""},
+	}
+	err := cred.ValidateCredentialSource()
+	if err == nil {
+		t.Error("expected error when randomSecret.name is empty")
+	}
+}
+
+func TestTFCCredentialConfig_ValidateCredentialSource_EmptyVaultSecretPath(t *testing.T) {
+	cred := TFCCredentialConfig{
+		VaultSecret: &vaultutils.VaultSecretReference{Path: ""},
+	}
+	err := cred.ValidateCredentialSource()
+	if err == nil {
+		t.Error("expected error when vaultSecret.path is empty")
+	}
+}
+
+func TestTFCCredentialConfig_ValidateCredentialSource_ValidSecretName(t *testing.T) {
+	cred := TFCCredentialConfig{
+		Secret: &corev1.LocalObjectReference{Name: "my-secret"},
+	}
+	err := cred.ValidateCredentialSource()
+	if err != nil {
+		t.Errorf("unexpected error for valid secret name: %v", err)
+	}
+}
+
+func TestTerraformCloudSecretEngineConfig_IsValid_EmptyPasswordKeyWithSecret(t *testing.T) {
+	config := &TerraformCloudSecretEngineConfig{
+		Spec: TerraformCloudSecretEngineConfigSpec{
+			TFCCredentials: TFCCredentialConfig{
+				Secret:      &corev1.LocalObjectReference{Name: "tfc-token"},
+				PasswordKey: "",
+			},
+		},
+	}
+	ok, err := config.IsValid()
+	if ok || err == nil {
+		t.Error("expected invalid when passwordKey is empty with a secret credential source")
+	}
+}
+
+func TestTerraformCloudSecretEngineConfig_IsValid_EmptyPasswordKeyWithVaultSecret(t *testing.T) {
+	config := &TerraformCloudSecretEngineConfig{
+		Spec: TerraformCloudSecretEngineConfigSpec{
+			TFCCredentials: TFCCredentialConfig{
+				VaultSecret: &vaultutils.VaultSecretReference{Path: "secret/tfc"},
+				PasswordKey: "",
+			},
+		},
+	}
+	ok, err := config.IsValid()
+	if ok || err == nil {
+		t.Error("expected invalid when passwordKey is empty with a vaultSecret credential source")
+	}
+}
+
+func TestTerraformCloudSecretEngineConfig_IsValid_EmptyPasswordKeyWithRandomSecret(t *testing.T) {
+	config := &TerraformCloudSecretEngineConfig{
+		Spec: TerraformCloudSecretEngineConfigSpec{
+			TFCCredentials: TFCCredentialConfig{
+				RandomSecret: &corev1.LocalObjectReference{Name: "random-cred"},
+				PasswordKey:  "",
+			},
+		},
+	}
+	ok, err := config.IsValid()
+	if !ok || err != nil {
+		t.Errorf("expected valid when passwordKey is empty with randomSecret (does not use passwordKey), got ok=%v err=%v", ok, err)
+	}
+}
+
+func TestTerraformCloudSecretEngineConfig_ValidateUpdate_RejectsEmptyPasswordKey(t *testing.T) {
+	r := &TerraformCloudSecretEngineConfig{}
+	oldObj := &TerraformCloudSecretEngineConfig{
+		Spec: TerraformCloudSecretEngineConfigSpec{
+			Path: "terraform",
+			TFCCredentials: TFCCredentialConfig{
+				Secret:      &corev1.LocalObjectReference{Name: "cred"},
+				PasswordKey: "token",
+			},
+		},
+	}
+	newObj := &TerraformCloudSecretEngineConfig{
+		Spec: TerraformCloudSecretEngineConfigSpec{
+			Path: "terraform",
+			TFCCredentials: TFCCredentialConfig{
+				Secret:      &corev1.LocalObjectReference{Name: "cred"},
+				PasswordKey: "",
+			},
+		},
+	}
+	_, err := r.ValidateUpdate(nil, oldObj, newObj)
+	if err == nil {
+		t.Error("expected error when passwordKey is blanked on update")
 	}
 }
