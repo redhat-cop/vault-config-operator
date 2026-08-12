@@ -35,7 +35,13 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-08-10
+last_updated: 2026-08-12
+# Story 13.3 ready-for-dev 2026-08-12
+# Story 13.1 ready-for-dev 2026-08-12
+# Story 13.2 ready-for-dev 2026-08-12
+# Story 13.4 ready-for-dev 2026-08-12
+# Story 13.0 ready-for-dev 2026-08-12
+# Epic 13 in-progress 2026-08-12
 # Story 12.1 done 2026-08-10
 # Epic 12 done 2026-08-10
 # Story 12.3 done 2026-08-10
@@ -530,11 +536,12 @@ development_status:
   epic-12-retrospective: done
 
   # Epic 13: Lower-Priority Missing Secret Engines (Nomad, TOTP, MongoDB Atlas, Terraform Cloud)
-  epic-13: backlog
-  13-1-nomad-secret-engine-config-and-role-crds: backlog
-  13-2-totp-secret-engine-key-crd: backlog
-  13-3-mongodb-atlas-secret-engine-config-and-role-crds: backlog
-  13-4-terraform-cloud-secret-engine-config-and-role-crds: backlog
+  epic-13: in-progress
+  13-0-retroactive-documentation-for-epics-11-12-secret-engines: ready-for-dev
+  13-1-nomad-secret-engine-config-and-role-crds: ready-for-dev
+  13-2-totp-secret-engine-key-crd: ready-for-dev
+  13-3-mongodb-atlas-secret-engine-config-and-role-crds: ready-for-dev
+  13-4-terraform-cloud-secret-engine-config-and-role-crds: ready-for-dev
   epic-13-retrospective: optional
 
   # Epic 14: High-Priority Missing Auth Methods (AppRole, AWS)
