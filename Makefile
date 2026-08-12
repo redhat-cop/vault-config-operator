@@ -228,16 +228,16 @@ deploy-nomad: kubectl
 		echo "Nomad ACL already bootstrapped or bootstrap failed, trying to read existing secret..." ;\
 		NOMAD_TOKEN=$$($(KUBECTL) --context $(KUBE_CONTEXT) get secret nomad-token-secret -n vault-admin -o jsonpath='{.data.token}' 2>/dev/null | base64 -d) ;\
 	fi ;\
-	if [ -n "$$NOMAD_TOKEN" ]; then \
-		echo "Creating readonly ACL policy in Nomad..." ;\
-		echo 'namespace "default" { policy = "read" }' | $(KUBECTL) --context $(KUBE_CONTEXT) exec -i -n nomad $$NOMAD_POD -- sh -c "NOMAD_TOKEN=$$NOMAD_TOKEN nomad acl policy apply readonly -" ;\
-		echo "Creating Nomad token K8s secret..." ;\
-		$(KUBECTL) --context $(KUBE_CONTEXT) create namespace vault-admin --dry-run=client -o yaml | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f - ;\
-		$(KUBECTL) --context $(KUBE_CONTEXT) create secret generic nomad-token-secret --from-literal=token=$$NOMAD_TOKEN -n vault-admin --dry-run=client -o yaml | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f - ;\
-		echo "Nomad ACL bootstrapped successfully." ;\
-	else \
-		echo "WARNING: Could not obtain Nomad management token." ;\
-	fi
+	if [ -z "$$NOMAD_TOKEN" ]; then \
+		echo "ERROR: Could not obtain Nomad management token." ;\
+		exit 1 ;\
+	fi ;\
+	echo "Creating readonly ACL policy in Nomad..." ;\
+	echo 'namespace "default" { policy = "read" }' | $(KUBECTL) --context $(KUBE_CONTEXT) exec -i -n nomad $$NOMAD_POD -- sh -c "NOMAD_TOKEN=$$NOMAD_TOKEN nomad acl policy apply readonly -" ;\
+	echo "Creating Nomad token K8s secret..." ;\
+	$(KUBECTL) --context $(KUBE_CONTEXT) create namespace vault-admin --dry-run=client -o yaml | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f - ;\
+	$(KUBECTL) --context $(KUBE_CONTEXT) create secret generic nomad-token-secret --from-literal=token=$$NOMAD_TOKEN -n vault-admin --dry-run=client -o yaml | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f - ;\
+	echo "Nomad ACL bootstrapped successfully."
 
 .PHONY: deploy-keycloak
 deploy-keycloak: kubectl

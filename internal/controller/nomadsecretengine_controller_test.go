@@ -140,6 +140,48 @@ var _ = Describe("NomadSecretEngine controllers", Ordered, func() {
 		})
 	})
 
+	Context("When updating a NomadSecretEngineRole", func() {
+		It("Should reflect updated policies in Vault", func() {
+
+			Expect(roleInstance).NotTo(BeNil(), "expected role to be created before update phase")
+
+			By("Updating the role's policies to include an additional policy")
+			lookupKey := types.NamespacedName{Name: roleInstance.Name, Namespace: roleInstance.Namespace}
+			Expect(k8sIntegrationClient.Get(ctx, lookupKey, roleInstance)).Should(Succeed())
+			roleInstance.Spec.Policies = []string{"readonly", "default"}
+			Expect(k8sIntegrationClient.Update(ctx, roleInstance)).Should(Succeed())
+
+			By("Waiting for ReconcileSuccessful=True after update")
+			updated := &redhatcopv1alpha1.NomadSecretEngineRole{}
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, lookupKey, updated)
+				if err != nil {
+					return false
+				}
+				for _, condition := range updated.Status.Conditions {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+						if updated.Generation == updated.Status.Conditions[0].ObservedGeneration {
+							return true
+						}
+					}
+				}
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			By("Verifying the updated policies in Vault")
+			secret, err := vaultClient.Logical().Read("test-nomadse/test-nomadse-mount/role/nomad-role-test")
+			Expect(err).To(BeNil())
+			Expect(secret).NotTo(BeNil())
+			policies, ok := secret.Data["policies"]
+			Expect(ok).To(BeTrue(), "expected policies field in Vault role")
+			policyList, ok := policies.([]any)
+			Expect(ok).To(BeTrue(), "expected policies to be a list")
+			Expect(policyList).To(ContainElement("readonly"))
+			Expect(policyList).To(ContainElement("default"))
+			Expect(secret.Data["token_type"]).To(Equal("client"))
+		})
+	})
+
 	Context("When generating dynamic Nomad credentials", func() {
 		It("Should generate a Nomad ACL token via creds/{name}", func() {
 

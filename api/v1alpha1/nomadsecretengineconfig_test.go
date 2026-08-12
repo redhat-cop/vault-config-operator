@@ -395,6 +395,27 @@ func TestNomadSecretEngineConfig_IsValid_BothClientCertAndKey(t *testing.T) {
 	}
 }
 
+func TestNomadSecretEngineConfig_IsEquivalentToDesiredState_MaxTokenNameLength(t *testing.T) {
+	config := &NomadSecretEngineConfig{
+		Spec: NomadSecretEngineConfigSpec{
+			Path: "nomad",
+			NomadSEConfig: NomadSEConfig{
+				Address:            "http://127.0.0.1:4646",
+				MaxTokenNameLength: 128,
+				retrievedToken:     "tok",
+			},
+		},
+	}
+
+	vaultPayload := map[string]any{
+		"address": "http://127.0.0.1:4646",
+	}
+
+	if config.IsEquivalentToDesiredState(vaultPayload) {
+		t.Error("expected false: non-zero max_token_name_length absent from Vault response should detect drift")
+	}
+}
+
 func TestNomadSecretEngineConfig_IsEquivalentToDesiredState_TLSRedaction_CACert(t *testing.T) {
 	config := &NomadSecretEngineConfig{
 		Spec: NomadSecretEngineConfigSpec{
