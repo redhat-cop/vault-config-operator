@@ -122,7 +122,7 @@ func (r *NomadSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) e
 			return ok
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
-			return false
+			return true
 		},
 
 		GenericFunc: func(e event.GenericEvent) bool {
@@ -153,7 +153,7 @@ func (r *NomadSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) e
 			return true
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
-			return false
+			return true
 		},
 
 		GenericFunc: func(e event.GenericEvent) bool {

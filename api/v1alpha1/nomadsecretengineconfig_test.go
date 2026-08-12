@@ -416,6 +416,27 @@ func TestNomadSecretEngineConfig_IsEquivalentToDesiredState_MaxTokenNameLength(t
 	}
 }
 
+func TestNomadSecretEngineConfig_IsEquivalentToDesiredState_ZeroMaxTokenNameLengthOmitted(t *testing.T) {
+	config := &NomadSecretEngineConfig{
+		Spec: NomadSecretEngineConfigSpec{
+			Path: "nomad",
+			NomadSEConfig: NomadSEConfig{
+				Address:            "http://127.0.0.1:4646",
+				MaxTokenNameLength: 0,
+				retrievedToken:     "tok",
+			},
+		},
+	}
+
+	vaultPayload := map[string]any{
+		"address": "http://127.0.0.1:4646",
+	}
+
+	if !config.IsEquivalentToDesiredState(vaultPayload) {
+		t.Error("expected true: zero max_token_name_length should be omitted from toMap and not cause false drift when Vault omits it")
+	}
+}
+
 func TestNomadSecretEngineConfig_IsEquivalentToDesiredState_TLSRedaction_CACert(t *testing.T) {
 	config := &NomadSecretEngineConfig{
 		Spec: NomadSecretEngineConfigSpec{
