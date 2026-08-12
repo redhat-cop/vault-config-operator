@@ -98,6 +98,21 @@ The following fields cannot be changed after creation:
 
 - `spec.path` — The engine mount path
 - `spec.name` — The Vault object name override
+- `spec.generate` — Generation mode (generate vs import)
+- `spec.algorithm` — Hash algorithm
+- `spec.digits` — Number of TOTP digits
+- `spec.period` — Counter period
+- `spec.key` — Base32-encoded root key (import mode)
+- `spec.url` — TOTP key URL (import mode)
+- `spec.keySize` — Generated key size
+- `spec.exported` — QR code export flag
+
+Only `spec.issuer`, `spec.accountName`, `spec.skew`, and `spec.qrSize` may be updated after creation.
+
+### Required Fields by Mode
+
+- **Generate mode** (`generate: true`): `issuer` and `accountName` are required.
+- **Import mode** (`generate: false`): `key` or `url` is required, plus `issuer` and `accountName` (required even when `url` is provided, to ensure drift detection works correctly).
 
 ### Deletion Behavior
 

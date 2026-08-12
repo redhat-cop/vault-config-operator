@@ -4,7 +4,7 @@ baseline_commit: 2ccad3a67685ec8bdd0c585247ee148143415e6c
 
 # Story 13.2: TOTP Secret Engine — Key CRD
 
-Status: review
+Status: in-progress
 
 ## Story
 
@@ -61,6 +61,19 @@ So that TOTP key generation and management can be managed declaratively.
 - [x] Task 8: Documentation (AC: 6)
   - [x] 8.1: Create `docs/secret-engines/totp.md` following `docs/engine-doc-template.md`
   - [x] 8.2: Update `docs/secret-engines/index.md` with link to new doc
+
+### Review Findings
+
+- [ ] [Review][Patch] Generate-mode `skew` default is forced to `0` instead of Vault's documented `1` [`api/v1alpha1/totpsecretenginekey_types.go`]
+- [ ] [Review][Patch] `qrSize: 0` cannot be represented because zero is treated as the "use default 200" sentinel [`api/v1alpha1/totpsecretenginekey_types.go`]
+- [ ] [Review][Patch] Generate mode does not validate required `issuer` and `accountName` inputs before reconcile [`api/v1alpha1/totpsecretenginekey_webhook.go`]
+- [ ] [Review][Patch] AC2 and AC3 lack integration coverage for import mode and update reconciliation paths [`internal/controller/totpsecretenginekey_controller_test.go`]
+
+#### Iteration 2
+
+- [ ] [Review][Patch] Write-only spec fields are accepted on update but never reconciled [`api/v1alpha1/totpsecretenginekey_types.go:192`]
+- [ ] [Review][Patch] URL-only import mode can never reach a stable desired state [`api/v1alpha1/totpsecretenginekey_types.go:247`]
+- [ ] [Review][Patch] Documentation omits mode-specific required fields for generate vs import flows [`docs/secret-engines/totp.md:76`]
 
 ## Dev Notes
 
