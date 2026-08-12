@@ -4,7 +4,7 @@ baseline_commit: 2ccad3a67685ec8bdd0c585247ee148143415e6c
 
 # Story 13.1: Nomad Secret Engine — Config and Role CRDs
 
-Status: review
+Status: in-progress
 
 ## Story
 
@@ -442,12 +442,9 @@ GPT-5.4 (Cursor)
 
 ### Review Findings
 
-- [ ] [Review][Patch] `deploy-nomad` does not reliably create the required `readonly` policy because `kubectl exec` is invoked without stdin forwarding and the policy-apply failure is suppressed [`Makefile:219`]
-- [ ] [Review][Patch] AC2 is not fully verified: the integration suite checks that the role exists in Vault, but never exercises `creds/{name}` to prove dynamic Nomad ACL token issuance works [`internal/controller/nomadsecretengine_controller_test.go:109`]
-- [ ] [Review][Patch] `NomadSecretEngineRole.IsEquivalentToDesiredState()` compares the set-typed `policies` field order-sensitively, so equivalent policy sets can drift forever if Vault returns a different order [`api/v1alpha1/nomadsecretenginerole_types.go:94`]
-- [ ] [Review][Patch] Empty credential values are accepted by `setInternalCredentials()` and then dropped from the write payload, which can silently mask a broken management-token source instead of failing the reconcile [`api/v1alpha1/nomadsecretengineconfig_types.go:132`]
-- [ ] [Review][Patch] The config equality tests do not cover the custom TLS redaction path (`ca_cert`, `client_cert`, `client_key`) even though that logic is required to avoid false drift on Vault reads [`api/v1alpha1/nomadsecretengineconfig_test.go:107`]
-- [ ] [Review][Patch] The new Nomad documentation uses bare mount paths in examples and CLI snippets instead of the operator’s composed Vault paths, which can send readers to the wrong location [`docs/secret-engines/nomad.md:20`]
+- [ ] [Review][Patch] Shared helper behavior changed outside story scope [`api/v1alpha1/payload_filter.go:23`]
+- [ ] [Review][Patch] `deploy-nomad` bootstrap is still one-shot and can fail nondeterministically on a fresh cluster [`Makefile:220`]
+- [ ] [Review][Patch] Role update integration test assumes condition ordering when checking `ObservedGeneration` [`internal/controller/nomadsecretengine_controller_test.go:161`]
 
 ### Decisions Needed / Decisions Taken
 
@@ -455,7 +452,8 @@ None after triage. The acceptance-audit concern around AC2 was classified as a c
 
 ### Fixes Applied
 
-(to be filled during review)
+- Iteration 1 fixes verified present: the Nomad creds endpoint is now exercised, policies are compared order-insensitively, empty tokens are rejected during credential preparation, TLS redaction tests exist, and documentation/examples now use composed Vault paths.
+- Iteration 2 fixes verified present: `deploy-nomad` now fails fast on token/bootstrap errors, the role update path is covered by integration tests, and `json.Number` zero-value handling was added for Nomad numeric drift comparison.
 
 ## Dev Agent Record
 

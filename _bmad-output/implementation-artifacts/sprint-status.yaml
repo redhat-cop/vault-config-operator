@@ -538,7 +538,7 @@ development_status:
   # Epic 13: Lower-Priority Missing Secret Engines (Nomad, TOTP, MongoDB Atlas, Terraform Cloud)
   epic-13: in-progress
   13-0-retroactive-documentation-for-epics-11-12-secret-engines: ready-for-dev
-  13-1-nomad-secret-engine-config-and-role-crds: review
+  13-1-nomad-secret-engine-config-and-role-crds: in-progress
   13-2-totp-secret-engine-key-crd: ready-for-dev
   13-3-mongodb-atlas-secret-engine-config-and-role-crds: ready-for-dev
   13-4-terraform-cloud-secret-engine-config-and-role-crds: ready-for-dev

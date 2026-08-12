@@ -1,7 +1,6 @@
 package v1alpha1
 
 import (
-	"encoding/json"
 	"reflect"
 	"testing"
 )
@@ -225,56 +224,6 @@ func TestRemoveUnsetFields_NonDefaultIntNeverRemoved(t *testing.T) {
 
 	if _, ok := desiredState["max_retries"]; !ok {
 		t.Error("expected non-default max_retries (3) to remain even when absent from payload")
-	}
-}
-
-func TestRemoveUnsetFields_ZeroJsonNumberRemovedWhenAbsentFromPayload(t *testing.T) {
-	desiredState := map[string]any{
-		"address":               "http://127.0.0.1:4646",
-		"max_token_name_length": json.Number("0"),
-	}
-	payload := map[string]any{
-		"address": "http://127.0.0.1:4646",
-	}
-
-	removeUnsetFields(desiredState, payload)
-
-	if _, ok := desiredState["max_token_name_length"]; ok {
-		t.Error("expected json.Number(\"0\") to be removed when absent from payload")
-	}
-	if _, ok := desiredState["address"]; !ok {
-		t.Error("expected address to remain")
-	}
-}
-
-func TestRemoveUnsetFields_NonZeroJsonNumberKeptWhenAbsentFromPayload(t *testing.T) {
-	desiredState := map[string]any{
-		"address":               "http://127.0.0.1:4646",
-		"max_token_name_length": json.Number("128"),
-	}
-	payload := map[string]any{
-		"address": "http://127.0.0.1:4646",
-	}
-
-	removeUnsetFields(desiredState, payload)
-
-	if _, ok := desiredState["max_token_name_length"]; !ok {
-		t.Error("expected non-zero json.Number to remain even when absent from payload")
-	}
-}
-
-func TestRemoveUnsetFields_JsonNumberKeptWhenPresentInPayload(t *testing.T) {
-	desiredState := map[string]any{
-		"port": json.Number("0"),
-	}
-	payload := map[string]any{
-		"port": json.Number("22"),
-	}
-
-	removeUnsetFields(desiredState, payload)
-
-	if _, ok := desiredState["port"]; !ok {
-		t.Error("expected json.Number to remain when present in payload")
 	}
 }
 

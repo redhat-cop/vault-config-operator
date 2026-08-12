@@ -223,7 +223,13 @@ deploy-nomad: kubectl
 	$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready -n nomad pod -l app=nomad --timeout=$(KUBECTL_WAIT_TIMEOUT)
 	@echo "Bootstrapping Nomad ACLs..."
 	@NOMAD_POD=$$($(KUBECTL) --context $(KUBE_CONTEXT) get pods -n nomad -l app=nomad -o jsonpath='{.items[0].metadata.name}') ;\
-	NOMAD_TOKEN=$$($(KUBECTL) --context $(KUBE_CONTEXT) exec -n nomad $$NOMAD_POD -- sh -c 'nomad acl bootstrap -json 2>/dev/null | grep -o "\"SecretID\":\"[^\"]*\"" | cut -d\" -f4' 2>/dev/null || echo "") ;\
+	NOMAD_TOKEN="" ;\
+	for i in 1 2 3 4 5 6 7 8 9 10; do \
+		NOMAD_TOKEN=$$($(KUBECTL) --context $(KUBE_CONTEXT) exec -n nomad $$NOMAD_POD -- sh -c 'nomad acl bootstrap -json 2>/dev/null | grep -o "\"SecretID\":\"[^\"]*\"" | cut -d\" -f4' 2>/dev/null || echo "") ;\
+		if [ -n "$$NOMAD_TOKEN" ]; then break; fi ;\
+		echo "Waiting for Nomad ACL system to be ready (attempt $$i/10)..." ;\
+		sleep 2 ;\
+	done ;\
 	if [ -z "$$NOMAD_TOKEN" ]; then \
 		echo "Nomad ACL already bootstrapped or bootstrap failed, trying to read existing secret..." ;\
 		NOMAD_TOKEN=$$($(KUBECTL) --context $(KUBE_CONTEXT) get secret nomad-token-secret -n vault-admin -o jsonpath='{.data.token}' 2>/dev/null | base64 -d) ;\

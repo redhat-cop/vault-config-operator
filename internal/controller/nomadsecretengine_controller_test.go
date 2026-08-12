@@ -12,6 +12,7 @@ import (
 	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -158,14 +159,8 @@ var _ = Describe("NomadSecretEngine controllers", Ordered, func() {
 				if err != nil {
 					return false
 				}
-				for _, condition := range updated.Status.Conditions {
-					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
-						if updated.Generation == updated.Status.Conditions[0].ObservedGeneration {
-							return true
-						}
-					}
-				}
-				return false
+				cond := apimeta.FindStatusCondition(updated.Status.Conditions, vaultresourcecontroller.ReconcileSuccessful)
+				return cond != nil && cond.Status == metav1.ConditionTrue && cond.ObservedGeneration == updated.Generation
 			}, timeout, interval).Should(BeTrue())
 
 			By("Verifying the updated policies in Vault")

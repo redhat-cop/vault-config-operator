@@ -1,7 +1,5 @@
 package v1alpha1
 
-import "encoding/json"
-
 // filterPayloadToDesiredKeys returns a new map containing only the keys present in desiredState,
 // with values taken from payload. This allows reflect.DeepEqual to compare only the fields the
 // operator manages, ignoring extra fields Vault adds to its read responses (timestamps, IDs,
@@ -17,9 +15,9 @@ func filterPayloadToDesiredKeys(desiredState, payload map[string]any) map[string
 }
 
 // removeUnsetFields removes keys from desiredState whose values are zero (empty string,
-// empty slice, default numeric sentinel, or zero json.Number) and that are also absent from
-// the Vault payload. This prevents false drift when the operator includes all managed fields
-// with zero defaults but Vault omits fields that were never set.
+// empty slice, or default numeric sentinel) and that are also absent from the Vault payload.
+// This prevents false drift when the operator includes all managed fields with zero defaults
+// but Vault omits fields that were never set.
 func removeUnsetFields(desiredState, payload map[string]any) {
 	for key, val := range desiredState {
 		if _, inPayload := payload[key]; inPayload {
@@ -36,10 +34,6 @@ func removeUnsetFields(desiredState, payload map[string]any) {
 			}
 		case int:
 			if v == -1 {
-				delete(desiredState, key)
-			}
-		case json.Number:
-			if v == json.Number("0") {
 				delete(desiredState, key)
 			}
 		}
