@@ -238,6 +238,143 @@ func TestTerraformCloudSecretEngineRole_Conditions(t *testing.T) {
 	}
 }
 
+func TestTerraformCloudSecretEngineRole_isValid_EmptyCredentialType(t *testing.T) {
+	role := &TerraformCloudSecretEngineRole{
+		Spec: TerraformCloudSecretEngineRoleSpec{
+			Path: "terraform",
+			TFCSERole: TFCSERole{
+				Organization: "my-org",
+			},
+		},
+	}
+	_, err := role.IsValid()
+	if err == nil {
+		t.Error("expected error when credentialType is empty")
+	}
+}
+
+func TestTerraformCloudSecretEngineRole_isValid_InvalidCredentialType(t *testing.T) {
+	role := &TerraformCloudSecretEngineRole{
+		Spec: TerraformCloudSecretEngineRoleSpec{
+			Path: "terraform",
+			TFCSERole: TFCSERole{
+				CredentialType: "bogus",
+				Organization:   "my-org",
+			},
+		},
+	}
+	_, err := role.IsValid()
+	if err == nil {
+		t.Error("expected error for invalid credentialType")
+	}
+}
+
+func TestTerraformCloudSecretEngineRole_isValid_UserWithoutUserID(t *testing.T) {
+	role := &TerraformCloudSecretEngineRole{
+		Spec: TerraformCloudSecretEngineRoleSpec{
+			Path: "terraform",
+			TFCSERole: TFCSERole{
+				CredentialType: "user",
+			},
+		},
+	}
+	_, err := role.IsValid()
+	if err == nil {
+		t.Error("expected error when credentialType is 'user' but userID is empty")
+	}
+}
+
+func TestTerraformCloudSecretEngineRole_isValid_UserIDWithOrganization(t *testing.T) {
+	role := &TerraformCloudSecretEngineRole{
+		Spec: TerraformCloudSecretEngineRoleSpec{
+			Path: "terraform",
+			TFCSERole: TFCSERole{
+				CredentialType: "user",
+				UserID:         "user-abc",
+				Organization:   "my-org",
+			},
+		},
+	}
+	_, err := role.IsValid()
+	if err == nil {
+		t.Error("expected error when userID conflicts with organization")
+	}
+}
+
+func TestTerraformCloudSecretEngineRole_isValid_ValidUserSpec(t *testing.T) {
+	role := &TerraformCloudSecretEngineRole{
+		Spec: TerraformCloudSecretEngineRoleSpec{
+			Path: "terraform",
+			TFCSERole: TFCSERole{
+				CredentialType: "user",
+				UserID:         "user-abc",
+			},
+		},
+	}
+	valid, err := role.IsValid()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if !valid {
+		t.Error("expected valid user spec to be accepted")
+	}
+}
+
+func TestTerraformCloudSecretEngineRole_isValid_ValidTeamSpec(t *testing.T) {
+	role := &TerraformCloudSecretEngineRole{
+		Spec: TerraformCloudSecretEngineRoleSpec{
+			Path: "terraform",
+			TFCSERole: TFCSERole{
+				CredentialType: "team",
+				Organization:   "my-org",
+				TeamID:         "team-123",
+			},
+		},
+	}
+	valid, err := role.IsValid()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if !valid {
+		t.Error("expected valid team spec to be accepted")
+	}
+}
+
+func TestTerraformCloudSecretEngineRole_isValid_ValidOrganizationSpec(t *testing.T) {
+	role := &TerraformCloudSecretEngineRole{
+		Spec: TerraformCloudSecretEngineRoleSpec{
+			Path: "terraform",
+			TFCSERole: TFCSERole{
+				CredentialType: "organization",
+				Organization:   "my-org",
+			},
+		},
+	}
+	valid, err := role.IsValid()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if !valid {
+		t.Error("expected valid organization spec to be accepted")
+	}
+}
+
+func TestTerraformCloudSecretEngineRole_isValid_TeamWithoutOrganization(t *testing.T) {
+	role := &TerraformCloudSecretEngineRole{
+		Spec: TerraformCloudSecretEngineRoleSpec{
+			Path: "terraform",
+			TFCSERole: TFCSERole{
+				CredentialType: "team",
+				TeamID:         "team-123",
+			},
+		},
+	}
+	_, err := role.IsValid()
+	if err == nil {
+		t.Error("expected error when credentialType is 'team' but organization is empty")
+	}
+}
+
 func TestTerraformCloudSecretEngineRole_ValidateUpdate_RejectsPathChange(t *testing.T) {
 	r := &TerraformCloudSecretEngineRole{}
 	oldObj := &TerraformCloudSecretEngineRole{

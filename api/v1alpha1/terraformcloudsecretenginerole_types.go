@@ -118,6 +118,10 @@ func (d *TerraformCloudSecretEngineRole) IsValid() (bool, error) {
 }
 
 func (d *TerraformCloudSecretEngineRole) isValid() error {
+	if d.Spec.CredentialType == "" {
+		return errors.New("spec.credentialType is required and must be one of: team, team_legacy, user, organization")
+	}
+
 	validCredentialTypes := map[string]bool{
 		"team":         true,
 		"team_legacy":  true,
@@ -125,7 +129,7 @@ func (d *TerraformCloudSecretEngineRole) isValid() error {
 		"organization": true,
 	}
 
-	if d.Spec.CredentialType != "" && !validCredentialTypes[d.Spec.CredentialType] {
+	if !validCredentialTypes[d.Spec.CredentialType] {
 		return errors.New("spec.credentialType must be one of: team, team_legacy, user, organization")
 	}
 
