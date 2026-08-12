@@ -1,6 +1,10 @@
+---
+baseline_commit: 2ccad3a67685ec8bdd0c585247ee148143415e6c
+---
+
 # Story 13.0: Retroactive Documentation for Epics 11-12 Secret Engines
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -24,52 +28,62 @@ So that I can discover and correctly use AWS, Transit, SSH, Consul, GCP, and LDA
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `docs/secret-engines/aws.md` (AC: 1, 2)
-  - [ ] 1.1: Overview section — Vault AWS secrets engine generates IAM credentials on-demand
-  - [ ] 1.2: AWSSecretEngineConfig section — YAML example, Vault CLI equivalent, field descriptions from `awssecretengineconfig_types.go`
-  - [ ] 1.3: AWSSecretEngineRole section — YAML example, Vault CLI equivalent, field descriptions from `awssecretenginerole_types.go`
-  - [ ] 1.4: Credential Resolution section — Pattern A (`rootCredentials` field: K8s Secret, VaultSecret, RandomSecret)
-  - [ ] 1.5: See Also links
+- [x] Task 1: Create `docs/secret-engines/aws.md` (AC: 1, 2)
+  - [x] 1.1: Overview section — Vault AWS secrets engine generates IAM credentials on-demand
+  - [x] 1.2: AWSSecretEngineConfig section — YAML example, Vault CLI equivalent, field descriptions from `awssecretengineconfig_types.go`
+  - [x] 1.3: AWSSecretEngineRole section — YAML example, Vault CLI equivalent, field descriptions from `awssecretenginerole_types.go`
+  - [x] 1.4: Credential Resolution section — Pattern A (`rootCredentials` field: K8s Secret, VaultSecret, RandomSecret)
+  - [x] 1.5: See Also links
 
-- [ ] Task 2: Create `docs/secret-engines/transit.md` (AC: 1, 2)
-  - [ ] 2.1: Overview section — Vault Transit engine provides encryption-as-a-service
-  - [ ] 2.2: TransitSecretEngineKey section — YAML example, Vault CLI equivalent, field descriptions from `transitsecretenginekey_types.go`
-  - [ ] 2.3: Note on create-time vs config-time field mutability
-  - [ ] 2.4: See Also links (no credential resolution needed)
+- [x] Task 2: Create `docs/secret-engines/transit.md` (AC: 1, 2)
+  - [x] 2.1: Overview section — Vault Transit engine provides encryption-as-a-service
+  - [x] 2.2: TransitSecretEngineKey section — YAML example, Vault CLI equivalent, field descriptions from `transitsecretenginekey_types.go`
+  - [x] 2.3: Note on create-time vs config-time field mutability
+  - [x] 2.4: See Also links (no credential resolution needed)
 
-- [ ] Task 3: Create `docs/secret-engines/ssh.md` (AC: 1, 2)
-  - [ ] 3.1: Overview section — Vault SSH engine provides signed certificates for SSH access
-  - [ ] 3.2: SSHSecretEngineConfig section — YAML example, Vault CLI equivalent, field descriptions from `sshsecretengineconfig_types.go`
-  - [ ] 3.3: SSHSecretEngineRole section — YAML example, Vault CLI equivalent, field descriptions from `sshsecretenginerole_types.go`
-  - [ ] 3.4: Credential Resolution section — Pattern A (optional `caKeyReference` for externally-managed CA key)
-  - [ ] 3.5: See Also links
+- [x] Task 3: Create `docs/secret-engines/ssh.md` (AC: 1, 2)
+  - [x] 3.1: Overview section — Vault SSH engine provides signed certificates for SSH access
+  - [x] 3.2: SSHSecretEngineConfig section — YAML example, Vault CLI equivalent, field descriptions from `sshsecretengineconfig_types.go`
+  - [x] 3.3: SSHSecretEngineRole section — YAML example, Vault CLI equivalent, field descriptions from `sshsecretenginerole_types.go`
+  - [x] 3.4: Credential Resolution section — Pattern A (optional `caKeyReference` for externally-managed CA key)
+  - [x] 3.5: See Also links
 
-- [ ] Task 4: Create `docs/secret-engines/consul.md` (AC: 1, 2)
-  - [ ] 4.1: Overview section — Vault Consul engine generates Consul ACL tokens on-demand
-  - [ ] 4.2: ConsulSecretEngineConfig section — YAML example, Vault CLI equivalent, field descriptions from `consulsecretengineconfig_types.go`
-  - [ ] 4.3: ConsulSecretEngineRole section — YAML example, Vault CLI equivalent, field descriptions from `consulsecretenginerole_types.go`
-  - [ ] 4.4: Credential Resolution section — Pattern A (`rootCredentials` for Consul ACL management token)
-  - [ ] 4.5: See Also links
+- [x] Task 4: Create `docs/secret-engines/consul.md` (AC: 1, 2)
+  - [x] 4.1: Overview section — Vault Consul engine generates Consul ACL tokens on-demand
+  - [x] 4.2: ConsulSecretEngineConfig section — YAML example, Vault CLI equivalent, field descriptions from `consulsecretengineconfig_types.go`
+  - [x] 4.3: ConsulSecretEngineRole section — YAML example, Vault CLI equivalent, field descriptions from `consulsecretenginerole_types.go`
+  - [x] 4.4: Credential Resolution section — Pattern A (`rootCredentials` for Consul ACL management token)
+  - [x] 4.5: See Also links
 
-- [ ] Task 5: Create `docs/secret-engines/gcp.md` (AC: 1, 2)
-  - [ ] 5.1: Overview section — Vault GCP engine generates GCP service account credentials
-  - [ ] 5.2: GCPSecretEngineConfig section — YAML example, Vault CLI equivalent, field descriptions from `gcpsecretengineconfig_types.go`
-  - [ ] 5.3: GCPSecretEngineRoleset section — YAML example, Vault CLI equivalent, field descriptions from `gcpsecretengineroleset_types.go`
-  - [ ] 5.4: GCPSecretEngineStaticAccount section — YAML example, Vault CLI equivalent, field descriptions from `gcpsecretenginestaticaccount_types.go`
-  - [ ] 5.5: Credential Resolution section — Pattern B (nested `gcpCredentials` object with passwordKey defaulting to "credentials")
-  - [ ] 5.6: See Also links
+- [x] Task 5: Create `docs/secret-engines/gcp.md` (AC: 1, 2)
+  - [x] 5.1: Overview section — Vault GCP engine generates GCP service account credentials
+  - [x] 5.2: GCPSecretEngineConfig section — YAML example, Vault CLI equivalent, field descriptions from `gcpsecretengineconfig_types.go`
+  - [x] 5.3: GCPSecretEngineRoleset section — YAML example, Vault CLI equivalent, field descriptions from `gcpsecretengineroleset_types.go`
+  - [x] 5.4: GCPSecretEngineStaticAccount section — YAML example, Vault CLI equivalent, field descriptions from `gcpsecretenginestaticaccount_types.go`
+  - [x] 5.5: Credential Resolution section — Pattern B (nested `gcpCredentials` object with passwordKey defaulting to "credentials")
+  - [x] 5.6: See Also links
 
-- [ ] Task 6: Create `docs/secret-engines/ldap.md` (AC: 1, 2)
-  - [ ] 6.1: Overview section — Vault LDAP secrets engine manages LDAP passwords (static rotation + dynamic credentials)
-  - [ ] 6.2: LDAPSecretEngineConfig section — YAML example, Vault CLI equivalent, field descriptions from `ldapsecretengineconfig_types.go`
-  - [ ] 6.3: LDAPSecretEngineStaticRole section — YAML example, Vault CLI equivalent, field descriptions from `ldapsecretenginestaticrole_types.go`
-  - [ ] 6.4: LDAPSecretEngineDynamicRole section — YAML example, Vault CLI equivalent, field descriptions from `ldapsecretengine_dynamicrole_types.go`
-  - [ ] 6.5: Credential Resolution section — Pattern A (`bindCredentials` for LDAP bind credentials)
-  - [ ] 6.6: See Also links
+- [x] Task 6: Create `docs/secret-engines/ldap.md` (AC: 1, 2)
+  - [x] 6.1: Overview section — Vault LDAP secrets engine manages LDAP passwords (static rotation + dynamic credentials)
+  - [x] 6.2: LDAPSecretEngineConfig section — YAML example, Vault CLI equivalent, field descriptions from `ldapsecretengineconfig_types.go`
+  - [x] 6.3: LDAPSecretEngineStaticRole section — YAML example, Vault CLI equivalent, field descriptions from `ldapsecretenginestaticrole_types.go`
+  - [x] 6.4: LDAPSecretEngineDynamicRole section — YAML example, Vault CLI equivalent, field descriptions from `ldapsecretengine_dynamicrole_types.go`
+  - [x] 6.5: Credential Resolution section — Pattern A (`bindCredentials` for LDAP bind credentials)
+  - [x] 6.6: See Also links
 
-- [ ] Task 7: Update `docs/secret-engines/index.md` (AC: 3)
-  - [ ] 7.1: Add rows to "Supported Secret Engines" table for all 6 new engines
-  - [ ] 7.2: Maintain alphabetical order within the table
+- [x] Task 7: Update `docs/secret-engines/index.md` (AC: 3)
+  - [x] 7.1: Add rows to "Supported Secret Engines" table for all 6 new engines
+  - [x] 7.2: Maintain alphabetical order within the table
+
+### Review Findings
+
+- [ ] [Review][Decision] Clarify whether `gcpCredentials.randomSecret` should be documented as supported — `GCPSecretEngineConfig` validates `randomSecret` as an allowed source and reads a single string into the `credentials` payload, but `RandomSecret` is documented as generating one password-like value rather than a full GCP service-account JSON document. The new `docs/secret-engines/gcp.md` example matches the schema yet appears unusable in practice without a clearer product decision on intended support.
+- [ ] [Review][Patch] Remove misleading `name` override documentation from config CRDs [`docs/secret-engines/aws.md`, `docs/secret-engines/gcp.md`, `docs/secret-engines/ldap.md`]
+- [ ] [Review][Patch] Fix Vault Secret examples that use KV v2-style `/data/` paths incompatible with the current credential readers [`docs/secret-engines/aws.md`, `docs/secret-engines/gcp.md`, `docs/secret-engines/ldap.md`, `docs/secret-engines/ssh.md`]
+- [ ] [Review][Patch] Document SSH CA config write-once behavior so updates are not overstated [`docs/secret-engines/ssh.md`]
+- [ ] [Review][Patch] Add missing path caveats and OTP CLI coverage in SSH/Transit docs [`docs/secret-engines/ssh.md`, `docs/secret-engines/transit.md`]
+- [ ] [Review][Patch] Fix `docs/secret-engines/index.md` intro text so it does not claim every supported secret engine has both Config and Role CRDs now that Transit is listed as key-only [`docs/secret-engines/index.md`]
+- [ ] [Review][Patch] Update the top-level secret-engine inventory so the newly documented AWS, Consul, GCP, LDAP, SSH, and Transit pages are discoverable from `readme.md` [`readme.md`]
 
 ## Dev Notes
 
@@ -190,11 +204,17 @@ New rows to add (maintain logical grouping):
 
 ### Review Model Used
 
-(To be filled during review — must differ from dev model)
+GPT-5.4
 
 ### Review Findings
 
+- [ ] [Review][Decision] Clarify whether `gcpCredentials.randomSecret` should remain intentionally undocumented or be restored as a supported path — iteration 1 removed it from `docs/secret-engines/gcp.md`, but `api/v1alpha1/gcpsecretengineconfig_types.go` still validates and resolves `spec.gcpCredentials.randomSecret`, so the docs and runtime currently disagree.
+- [ ] [Review][Patch] Add `docs/secret-engines/consul.md` to the tracked story change set so the new links in `docs/secret-engines/index.md` and `readme.md` do not point at a file omitted from the current reviewable patch [`docs/secret-engines/index.md:40`]
+- [ ] [Review][Patch] Fix the KV v2 `vaultSecret.path` examples in `docs/secret-engines/aws.md`, `docs/secret-engines/gcp.md`, and `docs/secret-engines/ldap.md` — those examples use `/data/` paths, but the current credential readers fetch VaultSecret keys directly from `secret.Data[...]` instead of nested `secret.Data["data"]` [`docs/secret-engines/gcp.md:162`]
+
 ### Decisions Needed / Decisions Taken
+
+- Pending: Should Story 13.0 document `gcpCredentials.randomSecret` as supported behavior, or should runtime/schema support be tightened later so the docs remain intentionally limited to `secret` and `vaultSecret`?
 
 ### Fixes Applied
 
@@ -202,10 +222,40 @@ New rows to add (maintain logical grouping):
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+No debug issues — documentation-only story with straightforward implementation.
+
 ### Completion Notes List
 
+- Created 6 secret engine documentation files following the established template and quality bar (database.md reference):
+  - `docs/secret-engines/aws.md` — AWSSecretEngineConfig + AWSSecretEngineRole with credential resolution (Pattern A, rootCredentials)
+  - `docs/secret-engines/transit.md` — TransitSecretEngineKey with create-time vs config-time field mutability note (no credential resolution)
+  - `docs/secret-engines/ssh.md` — SSHSecretEngineConfig + SSHSecretEngineRole with credential resolution (Pattern A, optional caKeyReference); includes separate OTP and CA examples
+  - `docs/secret-engines/consul.md` — ConsulSecretEngineConfig + ConsulSecretEngineRole with credential resolution (Pattern A, rootCredentials)
+  - `docs/secret-engines/gcp.md` — GCPSecretEngineConfig + GCPSecretEngineRoleset + GCPSecretEngineStaticAccount with credential resolution (Pattern B, gcpCredentials with passwordKey defaulting to "credentials")
+  - `docs/secret-engines/ldap.md` — LDAPSecretEngineConfig + LDAPSecretEngineStaticRole + LDAPSecretEngineDynamicRole with credential resolution (Pattern A, bindCredentials)
+- Updated `docs/secret-engines/index.md` — added all 6 engines to the Supported Secret Engines table in alphabetical order (table now has 13 engines total)
+- All field descriptions derived directly from CRD type source files using camelCase field names
+- All YAML examples include authentication block and engine-specific fields
+- All Vault CLI equivalents show the correct Vault API path for each CRD
+- IsDeletable behavior documented where relevant (AWS config and Consul config persist after CR deletion)
+- Documentation-only story: no Go code changes, no tests, no make manifests/generate required
+
+### Change Log
+
+- 2026-08-12: Created documentation for 6 secret engines (AWS, Transit, SSH, Consul, GCP, LDAP) and updated index — DNFR5 remediation for Epics 11-12
+
 ### File List
+
+- `docs/secret-engines/aws.md` (new)
+- `docs/secret-engines/transit.md` (new)
+- `docs/secret-engines/ssh.md` (new)
+- `docs/secret-engines/consul.md` (new)
+- `docs/secret-engines/gcp.md` (new)
+- `docs/secret-engines/ldap.md` (new)
+- `docs/secret-engines/index.md` (modified)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified)
+- `_bmad-output/implementation-artifacts/13-0-retroactive-documentation-for-epics-11-12-secret-engines.md` (modified)
