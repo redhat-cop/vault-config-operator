@@ -183,7 +183,7 @@ Specify the `vaultSecret` field to retrieve the credentials from another Vault p
 spec:
   gcpCredentials:
     vaultSecret:
-      path: secret/gcp-credentials
+      path: secret/data/gcp-credentials
     passwordKey: credentials
 ```
 

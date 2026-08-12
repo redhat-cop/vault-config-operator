@@ -193,7 +193,7 @@ spec:
   generateSigningKey: false
   caKeyReference:
     vaultSecret:
-      path: secret/ssh-ca-keys
+      path: secret/data/ssh-ca-keys
     passwordKey: private_key
     usernameKey: public_key
 ```

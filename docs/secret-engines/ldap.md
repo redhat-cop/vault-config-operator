@@ -202,7 +202,7 @@ Specify the `vaultSecret` field to retrieve credentials from another Vault path.
 spec:
   bindCredentials:
     vaultSecret:
-      path: secret/ldap-bind
+      path: secret/data/ldap-bind
     usernameKey: username
     passwordKey: password
 ```

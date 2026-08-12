@@ -138,7 +138,7 @@ Specify the `vaultSecret` field to retrieve credentials from another Vault path.
 spec:
   rootCredentials:
     vaultSecret:
-      path: secret/aws-credentials
+      path: secret/data/aws-credentials
     usernameKey: username
     passwordKey: password
 ```
