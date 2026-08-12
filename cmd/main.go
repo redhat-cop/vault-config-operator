@@ -399,6 +399,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controller.NomadSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "NomadSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "NomadSecretEngineConfig")
+		os.Exit(1)
+	}
+
+	if err = (&controller.NomadSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "NomadSecretEngineRole")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "NomadSecretEngineRole")
+		os.Exit(1)
+	}
+
 	if err = (&controller.LDAPSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LDAPSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "LDAPSecretEngineConfig")
 		os.Exit(1)
@@ -655,6 +665,16 @@ func main() {
 
 		if err = (&redhatcopv1alpha1.ConsulSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "ConsulSecretEngineRole")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.NomadSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "NomadSecretEngineConfig")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.NomadSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "NomadSecretEngineRole")
 			os.Exit(1)
 		}
 

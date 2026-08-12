@@ -92,6 +92,8 @@ rules:
   - ldapsecretenginedynamicroles
   - ldapsecretenginestaticroles
   - namespaces
+  - nomadsecretengineconfigs
+  - nomadsecretengineroles
   - passwordpolicies
   - pkisecretengineconfigs
   - pkisecretengineroles
@@ -164,6 +166,8 @@ rules:
   - ldapsecretenginedynamicroles/finalizers
   - ldapsecretenginestaticroles/finalizers
   - namespaces/finalizers
+  - nomadsecretengineconfigs/finalizers
+  - nomadsecretengineroles/finalizers
   - passwordpolicies/finalizers
   - pkisecretengineconfigs/finalizers
   - pkisecretengineroles/finalizers
@@ -229,6 +233,8 @@ rules:
   - ldapsecretenginedynamicroles/status
   - ldapsecretenginestaticroles/status
   - namespaces/status
+  - nomadsecretengineconfigs/status
+  - nomadsecretengineroles/status
   - passwordpolicies/status
   - pkisecretengineconfigs/status
   - pkisecretengineroles/status
