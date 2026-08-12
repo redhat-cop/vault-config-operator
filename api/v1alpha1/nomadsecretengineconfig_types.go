@@ -117,7 +117,13 @@ func (d *NomadSecretEngineConfig) IsInitialized() bool {
 }
 
 func (d *NomadSecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
-	return d.setInternalCredentials(context)
+	if err := d.setInternalCredentials(context); err != nil {
+		return err
+	}
+	if d.Spec.NomadSEConfig.retrievedToken == "" {
+		return fmt.Errorf("credential source resolved to an empty token; verify the referenced Secret/VaultSecret/RandomSecret contains a valid non-empty value")
+	}
+	return nil
 }
 
 func (d *NomadSecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
@@ -227,9 +233,7 @@ func (i *NomadSEConfig) toMap() map[string]any {
 	if i.MaxTokenNameLength != 0 {
 		payload["max_token_name_length"] = json.Number(strconv.Itoa(i.MaxTokenNameLength))
 	}
-	if i.retrievedToken != "" {
-		payload["token"] = i.retrievedToken
-	}
+	payload["token"] = i.retrievedToken
 	payload["ca_cert"] = i.CACert
 	payload["client_cert"] = i.ClientCert
 	payload["client_key"] = i.ClientKey

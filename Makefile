@@ -230,7 +230,7 @@ deploy-nomad: kubectl
 	fi ;\
 	if [ -n "$$NOMAD_TOKEN" ]; then \
 		echo "Creating readonly ACL policy in Nomad..." ;\
-		$(KUBECTL) --context $(KUBE_CONTEXT) exec -n nomad $$NOMAD_POD -- sh -c "NOMAD_TOKEN=$$NOMAD_TOKEN nomad acl policy apply readonly -" <<< 'namespace "default" { policy = "read" }' 2>/dev/null || true ;\
+		echo 'namespace "default" { policy = "read" }' | $(KUBECTL) --context $(KUBE_CONTEXT) exec -i -n nomad $$NOMAD_POD -- sh -c "NOMAD_TOKEN=$$NOMAD_TOKEN nomad acl policy apply readonly -" ;\
 		echo "Creating Nomad token K8s secret..." ;\
 		$(KUBECTL) --context $(KUBE_CONTEXT) create namespace vault-admin --dry-run=client -o yaml | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f - ;\
 		$(KUBECTL) --context $(KUBE_CONTEXT) create secret generic nomad-token-secret --from-literal=token=$$NOMAD_TOKEN -n vault-admin --dry-run=client -o yaml | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f - ;\

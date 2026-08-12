@@ -76,15 +76,19 @@ func TestNomadSEConfig_toMap(t *testing.T) {
 	}
 }
 
-func TestNomadSEConfig_toMap_NoToken(t *testing.T) {
+func TestNomadSEConfig_toMap_EmptyToken(t *testing.T) {
 	config := NomadSEConfig{
 		Address: "http://127.0.0.1:4646",
 	}
 
 	result := config.toMap()
 
-	if _, ok := result["token"]; ok {
-		t.Error("expected token to be absent when retrievedToken is empty")
+	token, ok := result["token"]
+	if !ok {
+		t.Fatal("expected token key to be present in toMap() output")
+	}
+	if token != "" {
+		t.Errorf("expected empty token value, got %v", token)
 	}
 	if result["address"] != "http://127.0.0.1:4646" {
 		t.Errorf("address = %v, expected http://127.0.0.1:4646", result["address"])
@@ -391,6 +395,77 @@ func TestNomadSecretEngineConfig_IsValid_BothClientCertAndKey(t *testing.T) {
 	}
 }
 
+func TestNomadSecretEngineConfig_IsEquivalentToDesiredState_TLSRedaction_CACert(t *testing.T) {
+	config := &NomadSecretEngineConfig{
+		Spec: NomadSecretEngineConfigSpec{
+			Path: "nomad",
+			NomadSEConfig: NomadSEConfig{
+				Address: "http://127.0.0.1:4646",
+				CACert:  "-----BEGIN CERTIFICATE-----\nNEW_CA...",
+			},
+		},
+	}
+
+	vaultPayload := map[string]any{
+		"address": "http://127.0.0.1:4646",
+		"ca_cert": "-----BEGIN CERTIFICATE-----\nOLD_CA...",
+	}
+
+	if !config.IsEquivalentToDesiredState(vaultPayload) {
+		t.Error("expected true: ca_cert should be excluded from drift comparison")
+	}
+}
+
+func TestNomadSecretEngineConfig_IsEquivalentToDesiredState_TLSRedaction_ClientCert(t *testing.T) {
+	config := &NomadSecretEngineConfig{
+		Spec: NomadSecretEngineConfigSpec{
+			Path: "nomad",
+			NomadSEConfig: NomadSEConfig{
+				Address:    "http://127.0.0.1:4646",
+				ClientCert: "-----BEGIN CERTIFICATE-----\nNEW_CERT...",
+				ClientKey:  "-----BEGIN RSA PRIVATE KEY-----\nNEW_KEY...",
+			},
+		},
+	}
+
+	vaultPayload := map[string]any{
+		"address":     "http://127.0.0.1:4646",
+		"client_cert": "-----BEGIN CERTIFICATE-----\nOLD_CERT...",
+		"client_key":  "-----BEGIN RSA PRIVATE KEY-----\nOLD_KEY...",
+	}
+
+	if !config.IsEquivalentToDesiredState(vaultPayload) {
+		t.Error("expected true: client_cert and client_key should be excluded from drift comparison")
+	}
+}
+
+func TestNomadSecretEngineConfig_IsEquivalentToDesiredState_TLSRedaction_AllFields(t *testing.T) {
+	config := &NomadSecretEngineConfig{
+		Spec: NomadSecretEngineConfigSpec{
+			Path: "nomad",
+			NomadSEConfig: NomadSEConfig{
+				Address:        "http://127.0.0.1:4646",
+				CACert:         "new-ca",
+				ClientCert:     "new-cert",
+				ClientKey:      "new-key",
+				retrievedToken: "tok",
+			},
+		},
+	}
+
+	vaultPayload := map[string]any{
+		"address":     "http://127.0.0.1:4646",
+		"ca_cert":     "old-ca",
+		"client_cert": "old-cert",
+		"client_key":  "old-key",
+		"token":       "redacted-token",
+	}
+
+	if !config.IsEquivalentToDesiredState(vaultPayload) {
+		t.Error("expected true: all TLS fields and token should be excluded from drift comparison")
+	}
+}
+
 func TestNomadSecretEngineConfig_SetInternalCredentials_K8sSecretMissingKey(t *testing.T) {
 	ns := "ns-nomad"
 	sec := newK8sSecret(ns, "nomad-creds", map[string][]byte{
@@ -441,5 +516,34 @@ func TestNomadSecretEngineConfig_SetInternalCredentials_VaultSecretMissingKey(t 
 	err := config.PrepareInternalValues(ctx, config)
 	if err == nil {
 		t.Fatal("expected error when VaultSecret is missing password key")
+	}
+}
+
+func TestNomadSecretEngineConfig_PrepareInternalValues_EmptyTokenErrors(t *testing.T) {
+	ns := "ns-nomad"
+	sec := newK8sSecret(ns, "nomad-creds", map[string][]byte{
+		"token": []byte(""),
+	})
+	kube := newFakeKubeClient(sec)
+	hc := newFakeVaultHandler()
+	vc, ts := newFakeVaultClient(t, hc)
+	defer ts.Close()
+	ctx := pivContext(kube, vc)
+	config := &NomadSecretEngineConfig{
+		ObjectMeta: metav1.ObjectMeta{Namespace: ns},
+		Spec: NomadSecretEngineConfigSpec{
+			Path: "nomad",
+			NomadSEConfig: NomadSEConfig{
+				Address: "http://127.0.0.1:4646",
+			},
+			RootCredentials: vaultutils.RootCredentialConfig{
+				Secret:      &corev1.LocalObjectReference{Name: "nomad-creds"},
+				PasswordKey: "token",
+			},
+		},
+	}
+	err := config.PrepareInternalValues(ctx, config)
+	if err == nil {
+		t.Fatal("expected error when credential source resolves to an empty token")
 	}
 }

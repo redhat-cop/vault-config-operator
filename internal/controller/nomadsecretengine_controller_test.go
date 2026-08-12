@@ -140,6 +140,17 @@ var _ = Describe("NomadSecretEngine controllers", Ordered, func() {
 		})
 	})
 
+	Context("When generating dynamic Nomad credentials", func() {
+		It("Should generate a Nomad ACL token via creds/{name}", func() {
+
+			By("Requesting dynamic credentials from the role")
+			secret, err := vaultClient.Logical().Read("test-nomadse/test-nomadse-mount/creds/nomad-role-test")
+			Expect(err).To(BeNil())
+			Expect(secret).NotTo(BeNil(), "expected creds endpoint to return a secret")
+			Expect(secret.Data["secret_id"]).NotTo(BeEmpty(), "expected a non-empty secret_id (Nomad ACL token)")
+		})
+	})
+
 	Context("When deleting NomadSecretEngine resources", func() {
 		It("Should clean up role from Vault and preserve config", func() {
 

@@ -103,7 +103,10 @@ func (d *NomadSecretEngineRole) IsEquivalentToDesiredState(payload map[string]an
 			delete(desiredState, "global")
 		}
 	}
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
+	filteredPayload := filterPayloadToDesiredKeys(desiredState, payload)
+	sortAnyStringSlice(desiredState, "policies")
+	sortAnyStringSlice(filteredPayload, "policies")
+	return reflect.DeepEqual(desiredState, filteredPayload)
 }
 
 func (d *NomadSecretEngineRole) IsInitialized() bool {

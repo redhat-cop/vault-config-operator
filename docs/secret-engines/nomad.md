@@ -37,16 +37,18 @@ spec:
 ### Vault CLI Equivalent
 
 ```shell
-vault write [namespace/]nomad/config/access \
+vault write [namespace/]{path}/config/access \
     address="http://nomad.example.com:4646" \
-    token=<retrieved from K8s Secret>
+    token=<retrieved from credentials>
 ```
+
+> **`spec.authentication.path` vs `spec.path`:** `spec.authentication.path` is the auth mount the operator itself uses to authenticate with Vault. `spec.path` is the mount path of the secret engine being configured. They may point to different mounts.
 
 ### Field Descriptions
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| path | string | Yes | Path where the Nomad engine is mounted. Full path: `[namespace/]{path}/config/access` |
+| path | string | Yes | Mount path of the secret engine. Full Vault path: `[namespace/]{path}/config/access` |
 | authentication | object | Yes | Kubernetes auth configuration. See [Authentication](../auth-section.md) |
 | connection | object | No | Override Vault connection settings. See [Vault Connection](../contributing-vault-apis.md) |
 | address | string | Yes | Nomad instance address as `"protocol://host:port"` (e.g., `"http://127.0.0.1:4646"`) |
@@ -80,7 +82,7 @@ spec:
 ### Vault CLI Equivalent
 
 ```shell
-vault write [namespace/]nomad/role/nomad-readonly \
+vault write [namespace/]{path}/role/nomad-readonly \
     policies="readonly" \
     type="client"
 ```
@@ -89,7 +91,7 @@ vault write [namespace/]nomad/role/nomad-readonly \
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| path | string | Yes | Path of the Nomad engine mount where the role will be created |
+| path | string | Yes | Mount path of the secret engine. Full Vault path: `[namespace/]{path}/role/{name}` |
 | authentication | object | Yes | Kubernetes auth configuration. See [Authentication](../auth-section.md) |
 | connection | object | No | Override Vault connection settings. See [Vault Connection](../contributing-vault-apis.md) |
 | name | string | No | Override the Vault object name (defaults to metadata.name) |

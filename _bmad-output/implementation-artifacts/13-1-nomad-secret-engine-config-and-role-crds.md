@@ -438,15 +438,20 @@ No existing behavior is changed — this is purely additive.
 
 ### Review Model Used
 
-(to be filled during review — must differ from dev model)
+GPT-5.4 (Cursor)
 
 ### Review Findings
 
-(to be filled during review)
+- [ ] [Review][Patch] `deploy-nomad` does not reliably create the required `readonly` policy because `kubectl exec` is invoked without stdin forwarding and the policy-apply failure is suppressed [`Makefile:219`]
+- [ ] [Review][Patch] AC2 is not fully verified: the integration suite checks that the role exists in Vault, but never exercises `creds/{name}` to prove dynamic Nomad ACL token issuance works [`internal/controller/nomadsecretengine_controller_test.go:109`]
+- [ ] [Review][Patch] `NomadSecretEngineRole.IsEquivalentToDesiredState()` compares the set-typed `policies` field order-sensitively, so equivalent policy sets can drift forever if Vault returns a different order [`api/v1alpha1/nomadsecretenginerole_types.go:94`]
+- [ ] [Review][Patch] Empty credential values are accepted by `setInternalCredentials()` and then dropped from the write payload, which can silently mask a broken management-token source instead of failing the reconcile [`api/v1alpha1/nomadsecretengineconfig_types.go:132`]
+- [ ] [Review][Patch] The config equality tests do not cover the custom TLS redaction path (`ca_cert`, `client_cert`, `client_key`) even though that logic is required to avoid false drift on Vault reads [`api/v1alpha1/nomadsecretengineconfig_test.go:107`]
+- [ ] [Review][Patch] The new Nomad documentation uses bare mount paths in examples and CLI snippets instead of the operator’s composed Vault paths, which can send readers to the wrong location [`docs/secret-engines/nomad.md:20`]
 
 ### Decisions Needed / Decisions Taken
 
-(to be filled during review)
+None after triage. The acceptance-audit concern around AC2 was classified as a concrete test/verification gap rather than a requirements ambiguity.
 
 ### Fixes Applied
 
