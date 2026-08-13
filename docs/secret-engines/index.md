@@ -1,6 +1,6 @@
 # Secret Engines
 
-The vault-config-operator manages Vault [secret engine](https://www.vaultproject.io/docs/secrets) configuration through Kubernetes Custom Resources. Each supported secret engine has a Config CRD (to configure the engine connection) and one or more Role CRDs (to define dynamic credential generation roles). The operator reconciles these CRs against the Vault API, ensuring the desired secret engine configuration is always applied.
+The vault-config-operator manages Vault [secret engine](https://www.vaultproject.io/docs/secrets) configuration through Kubernetes Custom Resources. Each supported secret engine has one or more CRDs (typically a Config CRD for the engine connection and one or more Role/Key CRDs for credential generation). The operator reconciles these CRs against the Vault API, ensuring the desired secret engine configuration is always applied.
 
 ## SecretEngineMount
 
@@ -33,15 +33,21 @@ vault secrets enable -path [namespace/]postgresql-vault-demo/database database
 
 ## Supported Secret Engines
 
-| Engine | Config CRD | Role CRD(s) | File |
+| Engine | Config CRD | Additional CRD(s) | File |
 |--------|-----------|-------------|------|
-| Database | DatabaseSecretEngineConfig | DatabaseSecretEngineRole, DatabaseSecretEngineStaticRole | [database.md](database.md) |
-| PKI | PKISecretEngineConfig | PKISecretEngineRole | [pki.md](pki.md) |
-| RabbitMQ | RabbitMQSecretEngineConfig | RabbitMQSecretEngineRole | [rabbitmq.md](rabbitmq.md) |
-| GitHub | GitHubSecretEngineConfig | GitHubSecretEngineRole | [github.md](github.md) |
-| Quay | QuaySecretEngineConfig | QuaySecretEngineRole, QuaySecretEngineStaticRole | [quay.md](quay.md) |
-| Kubernetes | KubernetesSecretEngineConfig | KubernetesSecretEngineRole | [kubernetes.md](kubernetes.md) |
+| AWS | AWSSecretEngineConfig | AWSSecretEngineRole | [aws.md](aws.md) |
 | Azure | AzureSecretEngineConfig | AzureSecretEngineRole | [azure.md](azure.md) |
+| Consul | ConsulSecretEngineConfig | ConsulSecretEngineRole | [consul.md](consul.md) |
+| Database | DatabaseSecretEngineConfig | DatabaseSecretEngineRole, DatabaseSecretEngineStaticRole | [database.md](database.md) |
+| GCP | GCPSecretEngineConfig | GCPSecretEngineRoleset, GCPSecretEngineStaticAccount | [gcp.md](gcp.md) |
+| GitHub | GitHubSecretEngineConfig | GitHubSecretEngineRole | [github.md](github.md) |
+| Kubernetes | KubernetesSecretEngineConfig | KubernetesSecretEngineRole | [kubernetes.md](kubernetes.md) |
+| LDAP | LDAPSecretEngineConfig | LDAPSecretEngineStaticRole, LDAPSecretEngineDynamicRole | [ldap.md](ldap.md) |
+| PKI | PKISecretEngineConfig | PKISecretEngineRole | [pki.md](pki.md) |
+| Quay | QuaySecretEngineConfig | QuaySecretEngineRole, QuaySecretEngineStaticRole | [quay.md](quay.md) |
+| RabbitMQ | RabbitMQSecretEngineConfig | RabbitMQSecretEngineRole | [rabbitmq.md](rabbitmq.md) |
+| SSH | SSHSecretEngineConfig | SSHSecretEngineRole | [ssh.md](ssh.md) |
+| Transit | — | TransitSecretEngineKey | [transit.md](transit.md) |
 
 ## Common Configuration
 
