@@ -1,5 +1,5 @@
 # generated: 2026-04-11
-# last_updated: 2026-07-03
+# last_updated: 2026-08-12
 # project: vault-config-operator
 # project_key: NOKEY
 # tracking_system: file-system
@@ -542,7 +542,7 @@ development_status:
   13-1-nomad-secret-engine-config-and-role-crds: ready-for-dev
   13-2-totp-secret-engine-key-crd: ready-for-dev
   13-3-mongodb-atlas-secret-engine-config-and-role-crds: ready-for-dev
-  13-4-terraform-cloud-secret-engine-config-and-role-crds: review
+  13-4-terraform-cloud-secret-engine-config-and-role-crds: in-progress
   epic-13-retrospective: optional
 
   # Epic 14: High-Priority Missing Auth Methods (AppRole, AWS)

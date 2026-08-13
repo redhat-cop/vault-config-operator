@@ -4,7 +4,7 @@ baseline_commit: 2ccad3a67685ec8bdd0c585247ee148143415e6c
 
 # Story 13.4: Terraform Cloud Secret Engine — Config and Role CRDs
 
-Status: review
+Status: in-progress
 
 ## Story
 
@@ -78,6 +78,17 @@ So that Vault's Terraform Cloud secret engine can be managed declaratively.
 
 - [ ] [Review][Decision] Terraform Cloud role TTL write format is ambiguous — The story and local implementation notes require `toMap()` to normalize `ttl`/`max_ttl` with `durationToSeconds()` so drift detection matches Vault read payloads, but the Terraform Cloud API docs and the generated user-facing documentation both present role writes as duration strings like `ttl=1h` and `max_ttl=24h`. The current code follows the story guidance, but this creates a requirements-level conflict about whether write payloads should optimize for read-shape comparison or adhere strictly to the documented write contract.
 - [ ] [Review][Patch] Add semantic validation for Terraform Cloud role specs [`api/v1alpha1/terraformcloudsecretenginerole_webhook.go`] — `ValidateCreate()` currently accepts every role and `IsValid()` is a no-op, so manifests with no identifier, conflicting identifiers, or mismatched `credentialType`/identifier combinations are admitted despite the story requiring a role to be created with the appropriate identifier and webhook validation to protect invalid specs.
+
+#### Re-review Iteration 4 (2026-08-12)
+
+- [ ] [Review][Patch] Reject empty credential source object names [`api/v1alpha1/terraformcloudsecretengineconfig_types.go:82`] — `ValidateCredentialSource()` only checks that exactly one source pointer is non-nil, so `spec.tfcCredentials.secret: {}` or `spec.tfcCredentials.randomSecret: {}` is admitted and later reconciles with an empty object name.
+- [ ] [Review][Patch] Reject empty `passwordKey` on config updates [`api/v1alpha1/terraformcloudsecretengineconfig_webhook.go:58`] — create defaulting normalizes an omitted `passwordKey`, but update validation still accepts an explicit empty string. With `secret` or `vaultSecret` sources, `setInternalCredentials()` then looks up key `""` and fails reconciliation.
+
+#### Re-review Iteration 5 (2026-08-12)
+
+- [ ] [Review][Patch] Reject whitespace-only credential references and keyed password values [`api/v1alpha1/terraformcloudsecretengineconfig_types.go:96`] — iteration-4 added direct empty-string checks for secret names and `passwordKey`, but the validator still treats `"   "` as present. A config using `secret.name: "   "`, `randomSecret.name: "   "`, or `passwordKey: "   "` is admitted and then fails later during Kubernetes/Vault lookup instead of being rejected at admission.
+- [ ] [Review][Patch] Reject the legacy `passwordKey: "password"` value on updates [`api/v1alpha1/terraformcloudsecretengineconfig_webhook.go:41`] — the mutating webhook rewrites `"password"` to `"token"` only on create, because the mutating webhook is registered for `verbs=create` only. Update validation calls `isValid()` directly, so an update can still persist the legacy value and drive reconciliation against the wrong secret key.
+- [ ] [Review][Patch] Do not require `spec.credentialType` when Vault can infer it [`api/v1alpha1/terraformcloudsecretenginerole_types.go:120`] — the role validator now rejects every manifest with an omitted `credentialType`, but the story's field reference and generated user documentation both describe that field as optional and state that Vault infers it from the provided identifier. This over-constrains the CRD and blocks valid role specs.
 
 ## Dev Notes
 
