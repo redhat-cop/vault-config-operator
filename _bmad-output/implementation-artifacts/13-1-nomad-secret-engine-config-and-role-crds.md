@@ -446,6 +446,11 @@ GPT-5.4 (Cursor)
 - [ ] [Review][Patch] `deploy-nomad` bootstrap is still one-shot and can fail nondeterministically on a fresh cluster [`Makefile:220`]
 - [ ] [Review][Patch] Role update integration test assumes condition ordering when checking `ObservedGeneration` [`internal/controller/nomadsecretengine_controller_test.go:161`]
 
+#### Iteration 5 (Final)
+
+- [ ] [Review][Patch] `max_token_name_length` handling still contradicts the story contract [`api/v1alpha1/nomadsecretengineconfig_types.go:105`]
+- [ ] [Review][Patch] Credential delete-trigger reconcile path is still untested [`internal/controller/nomadsecretengine_controller_test.go:191`]
+
 ### Decisions Needed / Decisions Taken
 
 None after triage. The acceptance-audit concern around AC2 was classified as a concrete test/verification gap rather than a requirements ambiguity.
@@ -454,6 +459,8 @@ None after triage. The acceptance-audit concern around AC2 was classified as a c
 
 - Iteration 1 fixes verified present: the Nomad creds endpoint is now exercised, policies are compared order-insensitively, empty tokens are rejected during credential preparation, TLS redaction tests exist, and documentation/examples now use composed Vault paths.
 - Iteration 2 fixes verified present: `deploy-nomad` now fails fast on token/bootstrap errors, the role update path is covered by integration tests, and `json.Number` zero-value handling was added for Nomad numeric drift comparison.
+- Iteration 3 fixes verified present: the bootstrap path now retries, shared framework behavior was not changed, and the role update test now uses condition lookup instead of assuming condition ordering.
+- Iteration 4 runtime fixes verified present: watched credential `Secret` and `RandomSecret` deletes now pass the controller predicates, and dedicated `max_token_name_length` tests were added. Final review still found one remaining semantic issue in the max-token drift expectation and one remaining coverage gap for delete-triggered reconcile behavior.
 
 ## Dev Agent Record
 
