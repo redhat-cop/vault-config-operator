@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nomad
+  labels:
+    app: nomad
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nomad
+  template:
+    metadata:
+      labels:
+        app: nomad
+    spec:
+      containers:
+        - name: nomad
+          image: hashicorp/nomad:1.9
+          command:
+            - nomad
+            - agent
+            - -dev
+            - -bind=0.0.0.0
+            - -config=/etc/nomad.d/nomad.hcl
+          ports:
+            - containerPort: 4646
+              name: http
+            - containerPort: 4647
+              name: rpc
+            - containerPort: 4648
+              name: serf
+          volumeMounts:
+            - name: nomad-config
+              mountPath: /etc/nomad.d
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "200m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /v1/agent/health
+              port: 4646
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: nomad-config
+          configMap:
+            name: nomad-config

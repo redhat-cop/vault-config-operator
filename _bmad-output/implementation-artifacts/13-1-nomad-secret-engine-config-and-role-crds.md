@@ -1,6 +1,10 @@
+---
+baseline_commit: 2ccad3a67685ec8bdd0c585247ee148143415e6c
+---
+
 # Story 13.1: Nomad Secret Engine — Config and Role CRDs
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -26,49 +30,49 @@ So that Vault's Nomad secret engine can be managed declaratively.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `NomadSecretEngineConfig` type (AC: 1, 3, 6)
-  - [ ] 1.1: Create `api/v1alpha1/nomadsecretengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `NomadSEConfig` struct, `RootCredentials` (RootCredentialConfig)
-  - [ ] 1.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/config/access`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()`, `IsDeletable()=false`
-  - [ ] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
-  - [ ] 1.4: Implement `setInternalCredentials()` — resolve Nomad management token from K8s Secret, VaultSecret, or RandomSecret (follow ConsulSecretEngineConfig pattern)
-  - [ ] 1.5: Implement `toMap()` on `NomadSEConfig` — convert to Vault API snake_case fields, include resolved token
-  - [ ] 1.6: Implement `IsEquivalentToDesiredState()` — must delete `token`, `ca_cert`, `client_cert`, `client_key` from desired state (token is write-only, TLS certs not returned on read), then `removeUnsetFields` + `filterPayloadToDesiredKeys`
+- [x] Task 1: Create `NomadSecretEngineConfig` type (AC: 1, 3, 6)
+  - [x] 1.1: Create `api/v1alpha1/nomadsecretengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `NomadSEConfig` struct, `RootCredentials` (RootCredentialConfig)
+  - [x] 1.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/config/access`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()`, `IsDeletable()=false`
+  - [x] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
+  - [x] 1.4: Implement `setInternalCredentials()` — resolve Nomad management token from K8s Secret, VaultSecret, or RandomSecret (follow ConsulSecretEngineConfig pattern)
+  - [x] 1.5: Implement `toMap()` on `NomadSEConfig` — convert to Vault API snake_case fields, include resolved token
+  - [x] 1.6: Implement `IsEquivalentToDesiredState()` — must delete `token`, `ca_cert`, `client_cert`, `client_key` from desired state (token is write-only, TLS certs not returned on read), then `removeUnsetFields` + `filterPayloadToDesiredKeys`
 
-- [ ] Task 2: Create `NomadSecretEngineRole` type (AC: 2, 4, 5)
-  - [ ] 2.1: Create `api/v1alpha1/nomadsecretenginerole_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `NomadSERole` struct, `Name`
-  - [ ] 2.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/role/{name}`, `IsDeletable()=true`
-  - [ ] 2.3: Implement `ConditionsAware` interface
-  - [ ] 2.4: Implement `toMap()` on `NomadSERole` — handle `type` → `token_type` field mapping in IsEquivalentToDesiredState, `policies` as comma-joined string
-  - [ ] 2.5: Implement `IsEquivalentToDesiredState()` — remap `type` key to `token_type` (Vault returns `token_type` on read, not `type`), convert `policies` string to `[]any` array for comparison, then `removeUnsetFields` + `filterPayloadToDesiredKeys`
+- [x] Task 2: Create `NomadSecretEngineRole` type (AC: 2, 4, 5)
+  - [x] 2.1: Create `api/v1alpha1/nomadsecretenginerole_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `NomadSERole` struct, `Name`
+  - [x] 2.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/role/{name}`, `IsDeletable()=true`
+  - [x] 2.3: Implement `ConditionsAware` interface
+  - [x] 2.4: Implement `toMap()` on `NomadSERole` — handle `type` → `token_type` field mapping in IsEquivalentToDesiredState, `policies` as comma-joined string
+  - [x] 2.5: Implement `IsEquivalentToDesiredState()` — remap `type` key to `token_type` (Vault returns `token_type` on read, not `type`), convert `policies` string to `[]any` array for comparison, then `removeUnsetFields` + `filterPayloadToDesiredKeys`
 
-- [ ] Task 3: Create webhooks (AC: 6)
-  - [ ] 3.1: Create `api/v1alpha1/nomadsecretengineconfig_webhook.go` — `admission.Defaulter[*NomadSecretEngineConfig]`, `admission.Validator[*NomadSecretEngineConfig]`, immutable `spec.path`, credential validation via `ValidateCredentialSource()`
-  - [ ] 3.2: Create `api/v1alpha1/nomadsecretenginerole_webhook.go` — `admission.Defaulter[*NomadSecretEngineRole]`, `admission.Validator[*NomadSecretEngineRole]`, immutable `spec.path`/`spec.name`
+- [x] Task 3: Create webhooks (AC: 6)
+  - [x] 3.1: Create `api/v1alpha1/nomadsecretengineconfig_webhook.go` — `admission.Defaulter[*NomadSecretEngineConfig]`, `admission.Validator[*NomadSecretEngineConfig]`, immutable `spec.path`, credential validation via `ValidateCredentialSource()`
+  - [x] 3.2: Create `api/v1alpha1/nomadsecretenginerole_webhook.go` — `admission.Defaulter[*NomadSecretEngineRole]`, `admission.Validator[*NomadSecretEngineRole]`, immutable `spec.path`/`spec.name`
 
-- [ ] Task 4: Create controllers (AC: 1, 2, 3, 4, 5)
-  - [ ] 4.1: Create `internal/controller/nomadsecretengineconfig_controller.go` — embed `ReconcilerBase`, always-write reconcile logic (token is write-only like AWS secret_key/Consul token), watches on `corev1.Secret` and `RandomSecret`
-  - [ ] 4.2: Create `internal/controller/nomadsecretenginerole_controller.go` — standard `For()` with default periodic reconcile predicate
+- [x] Task 4: Create controllers (AC: 1, 2, 3, 4, 5)
+  - [x] 4.1: Create `internal/controller/nomadsecretengineconfig_controller.go` — embed `ReconcilerBase`, always-write reconcile logic (token is write-only like AWS secret_key/Consul token), watches on `corev1.Secret` and `RandomSecret`
+  - [x] 4.2: Create `internal/controller/nomadsecretenginerole_controller.go` — standard `For()` with default periodic reconcile predicate
 
-- [ ] Task 5: Register in main.go (AC: 1, 2)
-  - [ ] 5.1: Add controller registrations for both reconcilers
-  - [ ] 5.2: Add webhook registrations inside `ENABLE_WEBHOOKS` guard for both types
+- [x] Task 5: Register in main.go (AC: 1, 2)
+  - [x] 5.1: Add controller registrations for both reconcilers
+  - [x] 5.2: Add webhook registrations inside `ENABLE_WEBHOOKS` guard for both types
 
-- [ ] Task 6: Unit tests (AC: 1, 2, 5, 6)
-  - [ ] 6.1: Create `api/v1alpha1/nomadsecretengineconfig_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures (including token/TLS stripping), negative tests
-  - [ ] 6.2: Create `api/v1alpha1/nomadsecretenginerole_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with `token_type` mapping and `policies` array conversion, negative tests
+- [x] Task 6: Unit tests (AC: 1, 2, 5, 6)
+  - [x] 6.1: Create `api/v1alpha1/nomadsecretengineconfig_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures (including token/TLS stripping), negative tests
+  - [x] 6.2: Create `api/v1alpha1/nomadsecretenginerole_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with `token_type` mapping and `policies` array conversion, negative tests
 
-- [ ] Task 7: Test fixtures and integration tests (AC: 1, 2, 4, 5)
-  - [ ] 7.1: Create test YAML fixtures in `test/nomadsecretengine/` — config and role CRs
-  - [ ] 7.2: Create integration tests — deploy Nomad in Kind cluster (see Integration Test Classification); tests: config create/verify, role create/verify/delete, config non-deletable verification
+- [x] Task 7: Test fixtures and integration tests (AC: 1, 2, 4, 5)
+  - [x] 7.1: Create test YAML fixtures in `test/nomadsecretengine/` — config and role CRs
+  - [x] 7.2: Create integration tests — deploy Nomad in Kind cluster (see Integration Test Classification); tests: config create/verify, role create/verify/delete, config non-deletable verification
 
-- [ ] Task 8: CRD registration and code generation (AC: all)
-  - [ ] 8.1: Run `make manifests generate fmt vet test`
-  - [ ] 8.2: Add new CRD YAML files to `config/crd/kustomization.yaml` (CRD registration checklist)
-  - [ ] 8.3: Verify all existing tests still pass
+- [x] Task 8: CRD registration and code generation (AC: all)
+  - [x] 8.1: Run `make manifests generate fmt vet test`
+  - [x] 8.2: Add new CRD YAML files to `config/crd/kustomization.yaml` (CRD registration checklist)
+  - [x] 8.3: Verify all existing tests still pass
 
-- [ ] Task 9: Documentation (AC: 7)
-  - [ ] 9.1: Create `docs/secret-engines/nomad.md` following `docs/engine-doc-template.md`
-  - [ ] 9.2: Update `docs/secret-engines/index.md` with link to new doc file
+- [x] Task 9: Documentation (AC: 7)
+  - [x] 9.1: Create `docs/secret-engines/nomad.md` following `docs/engine-doc-template.md`
+  - [x] 9.2: Update `docs/secret-engines/index.md` with link to new doc file
 
 ## Dev Notes
 
@@ -434,30 +438,79 @@ No existing behavior is changed — this is purely additive.
 
 ### Review Model Used
 
-(to be filled during review — must differ from dev model)
+GPT-5.4 (Cursor)
 
 ### Review Findings
 
-(to be filled during review)
+- [ ] [Review][Patch] Shared helper behavior changed outside story scope [`api/v1alpha1/payload_filter.go:23`]
+- [ ] [Review][Patch] `deploy-nomad` bootstrap is still one-shot and can fail nondeterministically on a fresh cluster [`Makefile:220`]
+- [ ] [Review][Patch] Role update integration test assumes condition ordering when checking `ObservedGeneration` [`internal/controller/nomadsecretengine_controller_test.go:161`]
+
+#### Iteration 5 (Final)
+
+- [ ] [Review][Patch] `max_token_name_length` handling still contradicts the story contract [`api/v1alpha1/nomadsecretengineconfig_types.go:105`]
+- [ ] [Review][Patch] Credential delete-trigger reconcile path is still untested [`internal/controller/nomadsecretengine_controller_test.go:191`]
 
 ### Decisions Needed / Decisions Taken
 
-(to be filled during review)
+None after triage. The acceptance-audit concern around AC2 was classified as a concrete test/verification gap rather than a requirements ambiguity.
 
 ### Fixes Applied
 
-(to be filled during review)
+- Iteration 1 fixes verified present: the Nomad creds endpoint is now exercised, policies are compared order-insensitively, empty tokens are rejected during credential preparation, TLS redaction tests exist, and documentation/examples now use composed Vault paths.
+- Iteration 2 fixes verified present: `deploy-nomad` now fails fast on token/bootstrap errors, the role update path is covered by integration tests, and `json.Number` zero-value handling was added for Nomad numeric drift comparison.
+- Iteration 3 fixes verified present: the bootstrap path now retries, shared framework behavior was not changed, and the role update test now uses condition lookup instead of assuming condition ordering.
+- Iteration 4 runtime fixes verified present: watched credential `Secret` and `RandomSecret` deletes now pass the controller predicates, and dedicated `max_token_name_length` tests were added. Final review still found one remaining semantic issue in the max-token drift expectation and one remaining coverage gap for delete-triggered reconcile behavior.
 
 ## Dev Agent Record
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (via Cursor)
 
 ### Debug Log References
 
+- Initial `make test` failed: `global` bool field in NomadSERole not handled by `removeUnsetFields` (bools not covered). Fixed by adding explicit `global` false-value handling in `IsEquivalentToDesiredState`, following the Consul `local` field pattern.
+
 ### Completion Notes List
+
+- NomadSecretEngineConfig implements the always-write controller pattern (token is write-only) with Secret/RandomSecret watches, following ConsulSecretEngineConfig exactly
+- NomadSecretEngineRole implements standard VaultResource pattern with `type` → `token_type` field remapping in `IsEquivalentToDesiredState` (Vault API returns `token_type` on read but accepts `type` on write)
+- `policies` emitted as `toInterfaceArray()` matching Vault's array read format
+- `max_token_name_length` emitted as `json.Number` per project conventions, only when non-zero
+- Config `IsDeletable()=false` (no DELETE endpoint for `/nomad/config/access`)
+- Role `IsDeletable()=true` with standard delete via `DELETE /nomad/role/{name}`
+- Integration test verifies config persists in Vault after CR deletion (non-deletable contract)
+- All 30+ unit tests pass, no regressions in existing tests
 
 ### Change Log
 
+- 2026-08-12: Implemented NomadSecretEngineConfig and NomadSecretEngineRole CRDs with webhooks, controllers, unit tests, integration tests, and documentation
+
 ### File List
+
+- api/v1alpha1/nomadsecretengineconfig_types.go (NEW)
+- api/v1alpha1/nomadsecretengineconfig_webhook.go (NEW)
+- api/v1alpha1/nomadsecretengineconfig_test.go (NEW)
+- api/v1alpha1/nomadsecretenginerole_types.go (NEW)
+- api/v1alpha1/nomadsecretenginerole_webhook.go (NEW)
+- api/v1alpha1/nomadsecretenginerole_test.go (NEW)
+- api/v1alpha1/zz_generated.deepcopy.go (MODIFIED - auto-generated)
+- internal/controller/nomadsecretengineconfig_controller.go (NEW)
+- internal/controller/nomadsecretenginerole_controller.go (NEW)
+- internal/controller/nomadsecretengine_controller_test.go (NEW)
+- cmd/main.go (MODIFIED - added controller and webhook registrations)
+- config/crd/bases/redhatcop.redhat.io_nomadsecretengineconfigs.yaml (NEW - auto-generated)
+- config/crd/bases/redhatcop.redhat.io_nomadsecretengineroles.yaml (NEW - auto-generated)
+- config/crd/kustomization.yaml (MODIFIED - added new CRD resources)
+- config/rbac/role.yaml (MODIFIED - auto-generated RBAC for new controllers)
+- config/webhook/manifests.yaml (MODIFIED - auto-generated webhook configs)
+- test/nomadsecretengine/nomad-secret-engine-config.yaml (NEW)
+- test/nomadsecretengine/nomad-secret-engine-role.yaml (NEW)
+- test/nomadsecretengine/nomad-secret-engine-mount.yaml (NEW)
+- integration/nomad/deployment.yaml (NEW)
+- integration/nomad/service.yaml (NEW)
+- integration/nomad/configmap.yaml (NEW)
+- Makefile (MODIFIED - added deploy-nomad target)
+- docs/secret-engines/nomad.md (NEW)
+- docs/secret-engines/index.md (MODIFIED - added Nomad link)

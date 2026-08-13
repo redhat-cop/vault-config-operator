@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nomad
+  labels:
+    app: nomad
+spec:
+  selector:
+    app: nomad
+  ports:
+    - name: http
+      port: 4646
+      targetPort: 4646

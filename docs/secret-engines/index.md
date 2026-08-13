@@ -43,6 +43,7 @@ vault secrets enable -path [namespace/]postgresql-vault-demo/database database
 | GitHub | GitHubSecretEngineConfig | GitHubSecretEngineRole | [github.md](github.md) |
 | Kubernetes | KubernetesSecretEngineConfig | KubernetesSecretEngineRole | [kubernetes.md](kubernetes.md) |
 | LDAP | LDAPSecretEngineConfig | LDAPSecretEngineStaticRole, LDAPSecretEngineDynamicRole | [ldap.md](ldap.md) |
+| Nomad | NomadSecretEngineConfig | NomadSecretEngineRole | [nomad.md](nomad.md) |
 | PKI | PKISecretEngineConfig | PKISecretEngineRole | [pki.md](pki.md) |
 | Quay | QuaySecretEngineConfig | QuaySecretEngineRole, QuaySecretEngineStaticRole | [quay.md](quay.md) |
 | RabbitMQ | RabbitMQSecretEngineConfig | RabbitMQSecretEngineRole | [rabbitmq.md](rabbitmq.md) |
