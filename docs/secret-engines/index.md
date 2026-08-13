@@ -49,6 +49,7 @@ vault secrets enable -path [namespace/]postgresql-vault-demo/database database
 | Quay | QuaySecretEngineConfig | QuaySecretEngineRole, QuaySecretEngineStaticRole | [quay.md](quay.md) |
 | RabbitMQ | RabbitMQSecretEngineConfig | RabbitMQSecretEngineRole | [rabbitmq.md](rabbitmq.md) |
 | SSH | SSHSecretEngineConfig | SSHSecretEngineRole | [ssh.md](ssh.md) |
+| Terraform Cloud | TerraformCloudSecretEngineConfig | TerraformCloudSecretEngineRole | [terraform-cloud.md](terraform-cloud.md) |
 | TOTP | — | TOTPSecretEngineKey | [totp.md](totp.md) |
 | Transit | — | TransitSecretEngineKey | [transit.md](transit.md) |
 

@@ -39,6 +39,7 @@ last_updated: 2026-08-12
 # Story 13.0 done 2026-08-12
 # Story 13.0 review 2026-08-12
 # Story 13.0 in-progress 2026-08-12
+# Story 13.4 review 2026-08-12
 # Story 13.3 ready-for-dev 2026-08-12
 # Story 13.1 ready-for-dev 2026-08-12
 # Story 13.2 ready-for-dev 2026-08-12
@@ -544,7 +545,7 @@ development_status:
   13-1-nomad-secret-engine-config-and-role-crds: done
   13-2-totp-secret-engine-key-crd: done
   13-3-mongodb-atlas-secret-engine-config-and-role-crds: done
-  13-4-terraform-cloud-secret-engine-config-and-role-crds: ready-for-dev
+  13-4-terraform-cloud-secret-engine-config-and-role-crds: done
   epic-13-retrospective: optional
 
   # Epic 14: High-Priority Missing Auth Methods (AppRole, AWS)

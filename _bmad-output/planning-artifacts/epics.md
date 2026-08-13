@@ -1554,8 +1554,8 @@ Implement CRD types for Consul, GCP, and LDAP/AD secret engines.
 **FRs covered:** SE4, SE5, SE6
 
 ### Epic 13: Lower-Priority Missing Secret Engines (Nomad, TOTP, MongoDB Atlas, Terraform Cloud)
-Implement CRD types for remaining secret engines with lower community demand.
-**FRs covered:** SE7, SE8, SE9, SE10
+Implement CRD types for remaining secret engines with lower community demand. Includes a remediation story (13.0) to backfill documentation for Epics 11-12 engines shipped without docs.
+**FRs covered:** SE7, SE8, SE9, SE10, DNFR5 (remediation)
 
 ### Epic 14: High-Priority Missing Auth Methods (AppRole, AWS)
 Implement CRD types for AppRole and AWS auth methods — the two most commonly used auth methods not yet supported.
@@ -2467,6 +2467,35 @@ So that Vault's LDAP/AD secret engine (password rotation, dynamic credentials) c
 
 ## Epic 13: Lower-Priority Missing Secret Engines (Nomad, TOTP, MongoDB Atlas, Terraform Cloud)
 
+### Story 13.0: Retroactive Documentation for Epics 11-12 Secret Engines
+
+As a user of the vault-config-operator,
+I want documentation for the 6 secret engine types shipped in Epics 11-12,
+So that I can discover and correctly use AWS, Transit, SSH, Consul, GCP, and LDAP secret engines.
+
+**Acceptance Criteria:**
+
+**Given** Epics 11 and 12 shipped AWSSecretEngineConfig/Role, TransitSecretEngineKey, SSHSecretEngineConfig/Role, ConsulSecretEngineConfig/Role, GCPSecretEngineConfig/Role, and LDAPSecretEngineConfig/StaticRole/DynamicRole without documentation (violating DNFR5)
+**When** documentation is created following `docs/engine-doc-template.md`
+**Then** the following files exist and comply with DNFR1-DNFR3:
+  - `docs/secret-engines/aws.md` — AWSSecretEngineConfig, AWSSecretEngineRole
+  - `docs/secret-engines/transit.md` — TransitSecretEngineKey
+  - `docs/secret-engines/ssh.md` — SSHSecretEngineConfig, SSHSecretEngineRole
+  - `docs/secret-engines/consul.md` — ConsulSecretEngineConfig, ConsulSecretEngineRole
+  - `docs/secret-engines/gcp.md` — GCPSecretEngineConfig, GCPSecretEngineRole
+  - `docs/secret-engines/ldap.md` — LDAPSecretEngineConfig, LDAPSecretEngineStaticRole, LDAPSecretEngineDynamicRole
+
+**Given** each doc file is created
+**Then** each contains: overview with Vault docs link, config CRD section (YAML example, Vault CLI equivalent, field descriptions table), role/key CRD section(s), credential resolution section (where applicable), and See Also links
+
+**Given** `docs/secret-engines/index.md` exists
+**When** the new doc files are created
+**Then** the index page is updated to include links to all 6 new engine docs
+
+**Implementation notes:** This is a documentation-only story — no Go code changes. All CRD types are already implemented; reference the `*_types.go` files for field definitions. Each doc can be written independently (parallelizable across worktrees). Use the existing `docs/secret-engines/database.md` or `docs/secret-engines/kubernetes.md` as reference for quality bar.
+
+---
+
 ### Story 13.1: Nomad Secret Engine — Config and Role CRDs
 
 As an operator developer,
@@ -2480,6 +2509,10 @@ So that Vault's Nomad secret engine can be managed declaratively.
 **Given** config and role CRs are created
 **When** the reconcilers process them
 **Then** both exist in Vault with ReconcileSuccessful=True and can generate dynamic Nomad tokens
+
+**Given** the CRD types are implemented
+**When** the story is marked done
+**Then** a documentation file exists at `docs/secret-engines/nomad.md` following `docs/engine-doc-template.md` (DNFR5)
 
 ### Story 13.2: TOTP Secret Engine — Key CRD
 
@@ -2495,6 +2528,10 @@ So that TOTP key generation and management can be managed declaratively.
 **When** the reconciler processes it
 **Then** the TOTP key exists in Vault
 
+**Given** the CRD type is implemented
+**When** the story is marked done
+**Then** a documentation file exists at `docs/secret-engines/totp.md` following `docs/engine-doc-template.md` (DNFR5)
+
 ### Story 13.3: MongoDB Atlas Secret Engine — Config and Role CRDs
 
 As an operator developer,
@@ -2509,6 +2546,10 @@ So that Vault's MongoDB Atlas secret engine can be managed declaratively.
 **When** the reconcilers process them
 **Then** both exist in Vault and can generate dynamic Atlas API keys
 
+**Given** the CRD types are implemented
+**When** the story is marked done
+**Then** a documentation file exists at `docs/secret-engines/mongodb-atlas.md` following `docs/engine-doc-template.md` (DNFR5)
+
 ### Story 13.4: Terraform Cloud Secret Engine — Config and Role CRDs
 
 As an operator developer,
@@ -2522,6 +2563,10 @@ So that Vault's Terraform Cloud secret engine can be managed declaratively.
 **Given** config and role CRs are created
 **When** the reconcilers process them
 **Then** both exist in Vault and can generate dynamic Terraform Cloud API tokens
+
+**Given** the CRD types are implemented
+**When** the story is marked done
+**Then** a documentation file exists at `docs/secret-engines/terraform-cloud.md` following `docs/engine-doc-template.md` (DNFR5)
 
 ---
 
@@ -2549,6 +2594,10 @@ So that Vault's AppRole auth method (the #1 machine-to-machine auth) can be mana
 **When** the reconciler processes deletion
 **Then** the role is removed from Vault
 
+**Given** the CRD types are implemented
+**When** the story is marked done
+**Then** a documentation file exists at `docs/auth-engines/approle.md` following `docs/engine-doc-template.md` (DNFR5)
+
 **Implementation notes:** AppRole has no separate "config" endpoint — the mount itself is the config. Roles are the primary resource. Secret-ID management is operational (generate, list, destroy) — the CRD manages the role definition, not individual secret-IDs. Consider whether a separate CRD for secret-id generation is needed.
 
 ### Story 14.2: AWS Auth Engine — Config and Role CRDs
@@ -2568,6 +2617,10 @@ So that Vault's AWS auth method can be managed declaratively.
 **Given** an AWSAuthEngineRole CR is created with auth_type (iam | ec2) and bound constraints
 **When** the reconciler processes it
 **Then** the role exists in Vault
+
+**Given** the CRD types are implemented
+**When** the story is marked done
+**Then** a documentation file exists at `docs/auth-engines/aws.md` following `docs/engine-doc-template.md` (DNFR5)
 
 **Implementation notes:** AWSAuthEngineConfig has PrepareInternalValues for AWS credentials from K8s Secret. Roles have two auth types (IAM, EC2) with different bound constraint fields — toMap must handle conditional fields.
 
@@ -2589,6 +2642,10 @@ So that Vault userpass accounts can be managed declaratively.
 **When** the reconciler processes it
 **Then** the user exists in Vault (password from K8s Secret via PrepareInternalValues)
 
+**Given** the CRD type is implemented
+**When** the story is marked done
+**Then** a documentation file exists at `docs/auth-engines/userpass.md` following `docs/engine-doc-template.md` (DNFR5)
+
 **Implementation notes:** Userpass has no separate config endpoint. The user CRD manages user accounts. Password should come from K8s Secret reference, not inline in the CR spec.
 
 ### Story 15.2: GitHub Auth Engine — Config and Team/Org Mapping CRDs
@@ -2609,6 +2666,10 @@ So that Vault's GitHub auth method can be managed declaratively.
 **When** the reconciler processes them
 **Then** the mappings exist in Vault
 
+**Given** the CRD types are implemented
+**When** the story is marked done
+**Then** a documentation file exists at `docs/auth-engines/github.md` following `docs/engine-doc-template.md` (DNFR5)
+
 ### Story 15.3: Okta Auth Engine — Config and Group CRDs
 
 As an operator developer,
@@ -2626,6 +2687,10 @@ So that Vault's Okta auth method can be managed declaratively.
 **Given** group mapping CRs are created
 **When** the reconciler processes them
 **Then** the group mappings exist in Vault
+
+**Given** the CRD types are implemented
+**When** the story is marked done
+**Then** a documentation file exists at `docs/auth-engines/okta.md` following `docs/engine-doc-template.md` (DNFR5)
 
 **Implementation notes:** OktaAuthEngineConfig has PrepareInternalValues for API token from K8s Secret.
 
@@ -2647,6 +2712,10 @@ So that Vault's RADIUS auth method can be managed declaratively.
 **When** the reconcilers process them
 **Then** the RADIUS config and user policies exist in Vault
 
+**Given** the CRD types are implemented
+**When** the story is marked done
+**Then** a documentation file exists at `docs/auth-engines/radius.md` following `docs/engine-doc-template.md` (DNFR5)
+
 ### Story 16.2: AliCloud Auth Engine — Config and Role CRDs
 
 As an operator developer,
@@ -2660,6 +2729,10 @@ So that Vault's AliCloud auth method can be managed declaratively.
 **Given** config and role CRs are created
 **When** the reconcilers process them
 **Then** both exist in Vault with ReconcileSuccessful=True
+
+**Given** the CRD types are implemented
+**When** the story is marked done
+**Then** a documentation file exists at `docs/auth-engines/alicloud.md` following `docs/engine-doc-template.md` (DNFR5)
 
 ### Story 16.3: OCI Auth Engine — Config and Role CRDs
 
@@ -2675,6 +2748,10 @@ So that Vault's OCI auth method can be managed declaratively.
 **When** the reconcilers process them
 **Then** both exist in Vault with ReconcileSuccessful=True
 
+**Given** the CRD types are implemented
+**When** the story is marked done
+**Then** a documentation file exists at `docs/auth-engines/oci.md` following `docs/engine-doc-template.md` (DNFR5)
+
 ### Story 16.4: Kerberos Auth Engine — Config and LDAP Group CRDs
 
 As an operator developer,
@@ -2688,6 +2765,10 @@ So that Vault's Kerberos auth method can be managed declaratively.
 **Given** a KerberosAuthEngineConfig CR is created with keytab and service account
 **When** the reconciler processes it
 **Then** the Kerberos config is written to Vault
+
+**Given** the CRD types are implemented
+**When** the story is marked done
+**Then** a documentation file exists at `docs/auth-engines/kerberos.md` following `docs/engine-doc-template.md` (DNFR5)
 
 **Implementation notes:** Kerberos has a two-part config (Kerberos config + LDAP config). Keytab content via K8s Secret PrepareInternalValues.
 
@@ -2704,3 +2785,7 @@ So that Vault's Cloud Foundry auth method can be managed declaratively.
 **Given** config and role CRs are created
 **When** the reconcilers process them
 **Then** both exist in Vault with ReconcileSuccessful=True
+
+**Given** the CRD types are implemented
+**When** the story is marked done
+**Then** a documentation file exists at `docs/auth-engines/cloud-foundry.md` following `docs/engine-doc-template.md` (DNFR5)

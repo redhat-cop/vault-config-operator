@@ -67,6 +67,8 @@ resources:
 - bases/redhatcop.redhat.io_ldapsecretenginedynamicroles.yaml
 - bases/redhatcop.redhat.io_mongodbatlassecretengineconfigs.yaml
 - bases/redhatcop.redhat.io_mongodbatlassecretengineroles.yaml
+- bases/redhatcop.redhat.io_terraformcloudsecretengineconfigs.yaml
+- bases/redhatcop.redhat.io_terraformcloudsecretengineroles.yaml
 - bases/redhatcop.redhat.io_totpsecretenginekeys.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
