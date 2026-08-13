@@ -4,7 +4,7 @@ baseline_commit: 2ccad3a67685ec8bdd0c585247ee148143415e6c
 
 # Story 13.0: Retroactive Documentation for Epics 11-12 Secret Engines
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -74,12 +74,6 @@ So that I can discover and correctly use AWS, Transit, SSH, Consul, GCP, and LDA
 - [x] Task 7: Update `docs/secret-engines/index.md` (AC: 3)
   - [x] 7.1: Add rows to "Supported Secret Engines" table for all 6 new engines
   - [x] 7.2: Maintain alphabetical order within the table
-
-### Review Findings
-
-- [x] [Review][Patch] Rename the `Role CRD(s)` column in the secret-engine index table so it also fits key and static-account resources [`docs/secret-engines/index.md:36`]
-- [x] [Review][Patch] Correct the `SSHSecretEngineConfig` README description so it describes CA configuration instead of an SSH "Connection" [`readme.md:110`]
-- [x] [Review][Patch] Add `readme.md` to the story artifact `File List` so the review record matches the actual patch [`_bmad-output/implementation-artifacts/13-0-retroactive-documentation-for-epics-11-12-secret-engines.md:251`]
 
 ## Dev Notes
 
