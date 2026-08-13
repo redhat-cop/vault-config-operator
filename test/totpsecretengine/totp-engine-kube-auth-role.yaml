@@ -1,0 +1,16 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KubernetesAuthEngineRole
+metadata:
+  name: totp-engine-auth-role
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  path: kubernetes
+  policies:
+    - totp-engine-admin
+  targetServiceAccounts:
+    - default
+  targetNamespaces:
+    targetNamespaces:
+      - test-vault-config-operator

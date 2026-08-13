@@ -65,6 +65,7 @@ resources:
 - bases/redhatcop.redhat.io_ldapsecretengineconfigs.yaml
 - bases/redhatcop.redhat.io_ldapsecretenginestaticroles.yaml
 - bases/redhatcop.redhat.io_ldapsecretenginedynamicroles.yaml
+- bases/redhatcop.redhat.io_totpsecretenginekeys.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches: []

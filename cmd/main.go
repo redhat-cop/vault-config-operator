@@ -429,6 +429,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controller.TOTPSecretEngineKeyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "TOTPSecretEngineKey")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "TOTPSecretEngineKey")
+		os.Exit(1)
+	}
+
 	if err = (&controller.GCPSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GCPSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GCPSecretEngineConfig")
 		os.Exit(1)
@@ -695,6 +700,11 @@ func main() {
 
 		if err = (&redhatcopv1alpha1.TransitSecretEngineKey{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "TransitSecretEngineKey")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.TOTPSecretEngineKey{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "TOTPSecretEngineKey")
 			os.Exit(1)
 		}
 

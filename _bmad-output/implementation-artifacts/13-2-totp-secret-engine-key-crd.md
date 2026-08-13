@@ -1,6 +1,10 @@
+---
+baseline_commit: 2ccad3a67685ec8bdd0c585247ee148143415e6c
+---
+
 # Story 13.2: TOTP Secret Engine — Key CRD
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -24,39 +28,71 @@ So that TOTP key generation and management can be managed declaratively.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `TOTPSecretEngineKey` type (AC: 1, 2, 3, 4)
-  - [ ] 1.1: Create `api/v1alpha1/totpsecretenginekey_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `TOTPKeyConfig` struct, `Name`
-  - [ ] 1.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/keys/{name}`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()` (no-op), `IsDeletable()=true`
-  - [ ] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
-  - [ ] 1.4: Implement `toMap()` on `TOTPKeyConfig` — convert to Vault API snake_case fields, emit `digits` and `period` as `json.Number`, emit `key_size` and `skew` and `qr_size` as `json.Number`
-  - [ ] 1.5: Implement `IsEquivalentToDesiredState()` — compare only Vault-read-visible fields (`account_name`, `algorithm`, `digits`, `issuer`, `period`); write-only fields (`key`, `url`, `generate`, `exported`, `key_size`, `qr_size`, `skew`) are never returned by Vault
+- [x] Task 1: Create `TOTPSecretEngineKey` type (AC: 1, 2, 3, 4)
+  - [x] 1.1: Create `api/v1alpha1/totpsecretenginekey_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `TOTPKeyConfig` struct, `Name`
+  - [x] 1.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/keys/{name}`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()` (no-op), `IsDeletable()=true`
+  - [x] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
+  - [x] 1.4: Implement `toMap()` on `TOTPKeyConfig` — convert to Vault API snake_case fields, emit `digits` and `period` as `json.Number`, emit `key_size` and `skew` and `qr_size` as `json.Number`
+  - [x] 1.5: Implement `IsEquivalentToDesiredState()` — compare only Vault-read-visible fields (`account_name`, `algorithm`, `digits`, `issuer`, `period`); write-only fields (`key`, `url`, `generate`, `exported`, `key_size`, `qr_size`, `skew`) are never returned by Vault
 
-- [ ] Task 2: Create webhook (AC: 5)
-  - [ ] 2.1: Create `api/v1alpha1/totpsecretenginekey_webhook.go` — `admission.Defaulter[*TOTPSecretEngineKey]`, `admission.Validator[*TOTPSecretEngineKey]`, immutable `spec.path`/`spec.name`, validate `digits` is 6 or 8, validate `algorithm` is SHA1/SHA256/SHA512, validate `skew` is 0 or 1
+- [x] Task 2: Create webhook (AC: 5)
+  - [x] 2.1: Create `api/v1alpha1/totpsecretenginekey_webhook.go` — `admission.Defaulter[*TOTPSecretEngineKey]`, `admission.Validator[*TOTPSecretEngineKey]`, immutable `spec.path`/`spec.name`, validate `digits` is 6 or 8, validate `algorithm` is SHA1/SHA256/SHA512, validate `skew` is 0 or 1
 
-- [ ] Task 3: Create controller (AC: 1, 2, 3, 4)
-  - [ ] 3.1: Create `internal/controller/totpsecretenginekey_controller.go` — embed `ReconcilerBase`, standard `VaultResource` reconcile flow (no always-write needed), `For()` with default periodic reconcile predicate
+- [x] Task 3: Create controller (AC: 1, 2, 3, 4)
+  - [x] 3.1: Create `internal/controller/totpsecretenginekey_controller.go` — embed `ReconcilerBase`, standard `VaultResource` reconcile flow (no always-write needed), `For()` with default periodic reconcile predicate
 
-- [ ] Task 4: Register in main.go (AC: 1, 2)
-  - [ ] 4.1: Add controller registration for `TOTPSecretEngineKeyReconciler`
-  - [ ] 4.2: Add webhook registration inside `ENABLE_WEBHOOKS` guard
+- [x] Task 4: Register in main.go (AC: 1, 2)
+  - [x] 4.1: Add controller registration for `TOTPSecretEngineKeyReconciler`
+  - [x] 4.2: Add webhook registration inside `ENABLE_WEBHOOKS` guard
 
-- [ ] Task 5: Unit tests (AC: 1, 2, 3, 5)
-  - [ ] 5.1: Create `api/v1alpha1/totpsecretenginekey_test.go` — test `toMap()` output with snake_case keys and `json.Number` for numeric fields; test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures; negative tests proving mismatched managed fields return false
-  - [ ] 5.2: Test `readVisibleMap()` output separately to verify only read-visible fields are compared
+- [x] Task 5: Unit tests (AC: 1, 2, 3, 5)
+  - [x] 5.1: Create `api/v1alpha1/totpsecretenginekey_test.go` — test `toMap()` output with snake_case keys and `json.Number` for numeric fields; test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures; negative tests proving mismatched managed fields return false
+  - [x] 5.2: Test `readVisibleMap()` output separately to verify only read-visible fields are compared
 
-- [ ] Task 6: Test fixtures and integration tests (AC: 1, 2, 4)
-  - [ ] 6.1: Create test YAML fixtures in `test/totpsecretengine/` — generate-mode and import-mode key CRs
-  - [ ] 6.2: Create integration tests in `internal/controller/totpsecretenginekey_controller_test.go` — key create (generate mode)/verify/delete lifecycle
+- [x] Task 6: Test fixtures and integration tests (AC: 1, 2, 4)
+  - [x] 6.1: Create test YAML fixtures in `test/totpsecretengine/` — generate-mode and import-mode key CRs
+  - [x] 6.2: Create integration tests in `internal/controller/totpsecretenginekey_controller_test.go` — key create (generate mode)/verify/delete lifecycle
 
-- [ ] Task 7: CRD registration and code generation (AC: all)
-  - [ ] 7.1: Run `make manifests generate fmt vet test`
-  - [ ] 7.2: Add new CRD YAML file to `config/crd/kustomization.yaml` (CRD registration checklist)
-  - [ ] 7.3: Verify all existing tests still pass
+- [x] Task 7: CRD registration and code generation (AC: all)
+  - [x] 7.1: Run `make manifests generate fmt vet test`
+  - [x] 7.2: Add new CRD YAML file to `config/crd/kustomization.yaml` (CRD registration checklist)
+  - [x] 7.3: Verify all existing tests still pass
 
-- [ ] Task 8: Documentation (AC: 6)
-  - [ ] 8.1: Create `docs/secret-engines/totp.md` following `docs/engine-doc-template.md`
-  - [ ] 8.2: Update `docs/secret-engines/index.md` with link to new doc
+- [x] Task 8: Documentation (AC: 6)
+  - [x] 8.1: Create `docs/secret-engines/totp.md` following `docs/engine-doc-template.md`
+  - [x] 8.2: Update `docs/secret-engines/index.md` with link to new doc
+
+### Review Findings
+
+- [ ] [Review][Patch] Generate-mode `skew` default is forced to `0` instead of Vault's documented `1` [`api/v1alpha1/totpsecretenginekey_types.go`]
+- [ ] [Review][Patch] `qrSize: 0` cannot be represented because zero is treated as the "use default 200" sentinel [`api/v1alpha1/totpsecretenginekey_types.go`]
+- [ ] [Review][Patch] Generate mode does not validate required `issuer` and `accountName` inputs before reconcile [`api/v1alpha1/totpsecretenginekey_webhook.go`]
+- [ ] [Review][Patch] AC2 and AC3 lack integration coverage for import mode and update reconciliation paths [`internal/controller/totpsecretenginekey_controller_test.go`]
+
+#### Iteration 2
+
+- [ ] [Review][Patch] Write-only spec fields are accepted on update but never reconciled [`api/v1alpha1/totpsecretenginekey_types.go:192`]
+- [ ] [Review][Patch] URL-only import mode can never reach a stable desired state [`api/v1alpha1/totpsecretenginekey_types.go:247`]
+- [ ] [Review][Patch] Documentation omits mode-specific required fields for generate vs import flows [`docs/secret-engines/totp.md:76`]
+
+#### Iteration 3
+
+- [ ] [Review][Patch] AC3 update fields are incorrectly immutable [`api/v1alpha1/totpsecretenginekey_webhook.go:93`]
+- [ ] [Review][Patch] `skew` and `qrSize` updates are accepted but never reconciled [`api/v1alpha1/totpsecretenginekey_webhook.go:89`]
+- [ ] [Review][Patch] Field table still marks `issuer` and `accountName` as not required [`docs/secret-engines/totp.md:76`]
+
+#### Iteration 4
+
+- [ ] [Review][Decision] Define authoritative URL-import behavior for read-visible fields — `spec.url` can embed `issuer`, `account_name`, `algorithm`, `digits`, and `period`, but `readVisibleMap()` compares only the top-level spec fields. Decide whether the operator should parse and normalize those values from `spec.url` or reject URLs whose embedded values conflict with the explicit spec, because the current behavior can leave URL-based imports permanently out of sync.
+- [ ] [Review][Patch] Reject incompatible cross-mode fields during validation [`api/v1alpha1/totpsecretenginekey_webhook.go:58`]
+- [ ] [Review][Patch] Add coverage for URL import and TOTP webhook invariants [`internal/controller/totpsecretenginekey_controller_test.go:138`]
+
+#### Iteration 5
+
+- [ ] [Review][Patch] Import-mode validation still accepts generate-only `spec.skew` and `spec.qrSize` [`api/v1alpha1/totpsecretenginekey_webhook.go:72`]
+- [ ] [Review][Patch] URL import coverage is still missing from the new import-mode controller test path [`internal/controller/totpsecretenginekey_controller_test.go:138`]
+- [ ] [Review][Patch] URL import drift note still omits `algorithm`, `digits`, and `period` convergence requirements [`docs/secret-engines/totp.md:116`]
+- [ ] [Review][Patch] TOTP update-time webhook invariants are still uncovered in webhook validation tests [`api/v1alpha1/webhook_validate_update_test.go`]
 
 ## Dev Notes
 
@@ -444,12 +480,47 @@ No existing behavior is changed — purely additive.
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (via Cursor)
 
 ### Debug Log References
 
+- Initial integration test run failed: TOTP controller was not registered in `suite_integration_test.go`. Fixed by adding controller registration. Second run passed 112/112 specs (exit code 0).
+
 ### Completion Notes List
+
+- Implemented TOTPSecretEngineKey CRD with full VaultObject interface (GetPath, GetPayload, IsEquivalentToDesiredState, IsDeletable=true)
+- Implemented `toMap()` with generate/import mode split — generate-mode emits exported, key_size, skew, qr_size; import-mode emits key/url
+- Implemented `readVisibleMap()` comparing only the 5 Vault-read-visible fields (issuer, account_name, algorithm, digits, period)
+- All numeric fields emit `json.Number` per project convention
+- Default helpers (algorithmOrDefault, digitsOrDefault, periodOrDefault, keySizeOrDefault, qrSizeOrDefault) prevent false drift
+- Webhook validates import-mode requires key or url, enforces immutable path/name on update
+- Controller uses standard `VaultEndpoint` (no custom endpoint, no always-write pattern)
+- Unit tests cover toMap generate/import modes, readVisibleMap, IsEquivalentToDesiredState match/mismatch/extra-fields/defaults
+- Integration tests cover create (generate mode) → verify Vault state → verify TOTP code generation → delete → verify removal
+- All 112 integration specs pass, all unit tests pass
 
 ### Change Log
 
+- 2026-08-12: Implemented all 8 tasks for Story 13.2 — TOTP Secret Engine Key CRD
+
 ### File List
+
+- api/v1alpha1/totpsecretenginekey_types.go (NEW)
+- api/v1alpha1/totpsecretenginekey_webhook.go (NEW)
+- api/v1alpha1/totpsecretenginekey_test.go (NEW)
+- api/v1alpha1/zz_generated.deepcopy.go (MODIFIED — auto-generated)
+- internal/controller/totpsecretenginekey_controller.go (NEW)
+- internal/controller/totpsecretenginekey_controller_test.go (NEW)
+- internal/controller/suite_integration_test.go (MODIFIED — added TOTP controller registration)
+- cmd/main.go (MODIFIED — added controller + webhook registration)
+- config/crd/bases/redhatcop.redhat.io_totpsecretenginekeys.yaml (NEW — auto-generated)
+- config/crd/kustomization.yaml (MODIFIED — added CRD to resources list)
+- config/rbac/role.yaml (MODIFIED — auto-generated RBAC rules)
+- config/webhook/manifests.yaml (MODIFIED — auto-generated webhook configs)
+- test/totpsecretengine/totp-engine-admin-policy.yaml (NEW)
+- test/totpsecretengine/totp-engine-kube-auth-role.yaml (NEW)
+- test/totpsecretengine/totp-secret-engine.yaml (NEW)
+- test/totpsecretengine/totp-secret-engine-key-generate.yaml (NEW)
+- test/totpsecretengine/totp-secret-engine-key-import.yaml (NEW)
+- docs/secret-engines/totp.md (NEW)
+- docs/secret-engines/index.md (MODIFIED — added TOTP link)
