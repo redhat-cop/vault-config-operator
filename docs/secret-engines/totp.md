@@ -113,6 +113,8 @@ Fields `spec.algorithm`, `spec.digits`, `spec.period`, `spec.issuer`, and `spec.
 - **Generate mode** (`generate: true`): `issuer` and `accountName` are required.
 - **Import mode** (`generate: false`): `key` or `url` is required, plus `issuer` and `accountName` (required even when `url` is provided, to ensure drift detection works correctly).
 
+> **Note:** When using `spec.url` for import, the explicit `spec.issuer` and `spec.accountName` values should match the values encoded in the `otpauth://` URL. The operator uses the spec fields (not parsed URL values) for drift detection. A mismatch between spec fields and URL-encoded values will cause reconciliation drift on every sync cycle.
+
 ### Deletion Behavior
 
 When a `TOTPSecretEngineKey` CR is deleted from Kubernetes, the corresponding key is also deleted from Vault (`IsDeletable=true`).

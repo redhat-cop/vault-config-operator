@@ -360,3 +360,162 @@ func TestTOTPSecretEngineKey_IsEquivalentToDesiredState_DefaultValues(t *testing
 		t.Error("expected IsEquivalentToDesiredState to match with default values for algorithm/digits/period")
 	}
 }
+
+func TestTOTPSecretEngineKey_Validation_GenerateModeRejectsImportFields(t *testing.T) {
+	tests := []struct {
+		name    string
+		key     *TOTPSecretEngineKey
+		wantErr string
+	}{
+		{
+			name: "generate=true rejects spec.key",
+			key: &TOTPSecretEngineKey{
+				Spec: TOTPSecretEngineKeySpec{
+					TOTPKeyConfig: TOTPKeyConfig{
+						Generate:    true,
+						Key:         "JBSWY3DPEHPK3PXP",
+						Issuer:      "TestOrg",
+						AccountName: "user@test.com",
+					},
+				},
+			},
+			wantErr: "spec.key cannot be set when spec.generate is true",
+		},
+		{
+			name: "generate=true rejects spec.url",
+			key: &TOTPSecretEngineKey{
+				Spec: TOTPSecretEngineKeySpec{
+					TOTPKeyConfig: TOTPKeyConfig{
+						Generate:    true,
+						URL:         "otpauth://totp/Example:alice@example.com?secret=JBSWY3DPEHPK3PXP",
+						Issuer:      "TestOrg",
+						AccountName: "user@test.com",
+					},
+				},
+			},
+			wantErr: "spec.url cannot be set when spec.generate is true",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.key.isValid()
+			if err == nil {
+				t.Fatal("expected validation error but got nil")
+			}
+			if err.Error() != tt.wantErr {
+				t.Errorf("expected error %q, got %q", tt.wantErr, err.Error())
+			}
+		})
+	}
+}
+
+func TestTOTPSecretEngineKey_Validation_ImportModeRejectsGenerateFields(t *testing.T) {
+	exported := true
+	tests := []struct {
+		name    string
+		key     *TOTPSecretEngineKey
+		wantErr string
+	}{
+		{
+			name: "import mode rejects spec.exported",
+			key: &TOTPSecretEngineKey{
+				Spec: TOTPSecretEngineKeySpec{
+					TOTPKeyConfig: TOTPKeyConfig{
+						Generate:    false,
+						Key:         "JBSWY3DPEHPK3PXP",
+						Exported:    &exported,
+						Issuer:      "TestOrg",
+						AccountName: "user@test.com",
+					},
+				},
+			},
+			wantErr: "spec.exported cannot be set when spec.generate is false",
+		},
+		{
+			name: "import mode rejects spec.keySize",
+			key: &TOTPSecretEngineKey{
+				Spec: TOTPSecretEngineKeySpec{
+					TOTPKeyConfig: TOTPKeyConfig{
+						Generate:    false,
+						Key:         "JBSWY3DPEHPK3PXP",
+						KeySize:     32,
+						Issuer:      "TestOrg",
+						AccountName: "user@test.com",
+					},
+				},
+			},
+			wantErr: "spec.keySize cannot be set when spec.generate is false",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.key.isValid()
+			if err == nil {
+				t.Fatal("expected validation error but got nil")
+			}
+			if err.Error() != tt.wantErr {
+				t.Errorf("expected error %q, got %q", tt.wantErr, err.Error())
+			}
+		})
+	}
+}
+
+func TestTOTPSecretEngineKey_Validation_URLImportWithIssuerAccountName(t *testing.T) {
+	key := &TOTPSecretEngineKey{
+		Spec: TOTPSecretEngineKeySpec{
+			TOTPKeyConfig: TOTPKeyConfig{
+				Generate:    false,
+				URL:         "otpauth://totp/Example:alice@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Example",
+				Issuer:      "Example",
+				AccountName: "alice@example.com",
+			},
+		},
+	}
+
+	err := key.isValid()
+	if err != nil {
+		t.Errorf("expected URL import with matching issuer/accountName to be valid, got: %v", err)
+	}
+}
+
+func TestTOTPSecretEngineKey_Validation_URLImportRequiresIssuer(t *testing.T) {
+	key := &TOTPSecretEngineKey{
+		Spec: TOTPSecretEngineKeySpec{
+			TOTPKeyConfig: TOTPKeyConfig{
+				Generate:    false,
+				URL:         "otpauth://totp/Example:alice@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Example",
+				AccountName: "alice@example.com",
+			},
+		},
+	}
+
+	err := key.isValid()
+	if err == nil {
+		t.Fatal("expected validation error for missing issuer, got nil")
+	}
+	if err.Error() != "spec.issuer is required to ensure drift detection works correctly" {
+		t.Errorf("unexpected error: %v", err)
+	}
+}
+
+func TestTOTPSecretEngineKey_Validation_URLImportRequiresAccountName(t *testing.T) {
+	key := &TOTPSecretEngineKey{
+		Spec: TOTPSecretEngineKeySpec{
+			TOTPKeyConfig: TOTPKeyConfig{
+				Generate: false,
+				URL:      "otpauth://totp/Example:alice@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Example",
+				Issuer:   "Example",
+			},
+		},
+	}
+
+	err := key.isValid()
+	if err == nil {
+		t.Fatal("expected validation error for missing accountName, got nil")
+	}
+	if err.Error() != "spec.accountName is required to ensure drift detection works correctly" {
+		t.Errorf("unexpected error: %v", err)
+	}
+}

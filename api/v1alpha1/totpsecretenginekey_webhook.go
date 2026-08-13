@@ -62,9 +62,22 @@ func (r *TOTPSecretEngineKey) isValid() error {
 	if r.Spec.AccountName == "" {
 		return errors.New("spec.accountName is required to ensure drift detection works correctly")
 	}
-	if !r.Spec.Generate {
+	if r.Spec.Generate {
+		if r.Spec.Key != "" {
+			return errors.New("spec.key cannot be set when spec.generate is true")
+		}
+		if r.Spec.URL != "" {
+			return errors.New("spec.url cannot be set when spec.generate is true")
+		}
+	} else {
 		if r.Spec.Key == "" && r.Spec.URL == "" {
 			return errors.New("one of spec.key or spec.url is required when spec.generate is false")
+		}
+		if r.Spec.Exported != nil {
+			return errors.New("spec.exported cannot be set when spec.generate is false")
+		}
+		if r.Spec.KeySize != 0 {
+			return errors.New("spec.keySize cannot be set when spec.generate is false")
 		}
 	}
 	return nil
