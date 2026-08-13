@@ -1,6 +1,10 @@
+---
+baseline_commit: 2ccad3a67685ec8bdd0c585247ee148143415e6c
+---
+
 # Story 13.3: MongoDB Atlas Secret Engine — Config and Role CRDs
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -36,49 +40,49 @@ So that Vault's MongoDB Atlas secret engine can be managed declaratively.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `MongoDBAtlasSecretEngineConfig` type (AC: 1, 3, 6)
-  - [ ] 1.1: Create `api/v1alpha1/mongodbatlassecretengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `MongoDBAtlasSEConfig` struct, `RootCredentials` (RootCredentialConfig)
-  - [ ] 1.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/config`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()`, `IsDeletable()=false`
-  - [ ] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
-  - [ ] 1.4: Implement `setInternalCredentials()` — resolve public_key (UsernameKey) + private_key (PasswordKey) from K8s Secret, VaultSecret, or RandomSecret (follow AWS dual-credential pattern)
-  - [ ] 1.5: Implement `toMap()` on `MongoDBAtlasSEConfig` — convert to Vault API snake_case fields (`public_key`, `private_key`)
-  - [ ] 1.6: Implement `IsEquivalentToDesiredState()` — must delete `private_key` from desired state (Vault never returns it on read), then `removeUnsetFields` + `filterPayloadToDesiredKeys`
+- [x] Task 1: Create `MongoDBAtlasSecretEngineConfig` type (AC: 1, 3, 6)
+  - [x] 1.1: Create `api/v1alpha1/mongodbatlassecretengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `MongoDBAtlasSEConfig` struct, `RootCredentials` (RootCredentialConfig)
+  - [x] 1.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/config`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()`, `IsDeletable()=false`
+  - [x] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
+  - [x] 1.4: Implement `setInternalCredentials()` — resolve public_key (UsernameKey) + private_key (PasswordKey) from K8s Secret, VaultSecret, or RandomSecret (follow AWS dual-credential pattern)
+  - [x] 1.5: Implement `toMap()` on `MongoDBAtlasSEConfig` — convert to Vault API snake_case fields (`public_key`, `private_key`)
+  - [x] 1.6: Implement `IsEquivalentToDesiredState()` — must delete `private_key` from desired state (Vault never returns it on read), then `removeUnsetFields` + `filterPayloadToDesiredKeys`
 
-- [ ] Task 2: Create `MongoDBAtlasSecretEngineRole` type (AC: 2, 4, 5)
-  - [ ] 2.1: Create `api/v1alpha1/mongodbatlassecretenginerole_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `MongoDBAtlasSERole` struct, `Name`
-  - [ ] 2.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/roles/{name}`, `IsDeletable()=true`
-  - [ ] 2.3: Implement `ConditionsAware` interface
-  - [ ] 2.4: Implement `toMap()` on `MongoDBAtlasSERole` — include all role fields with correct snake_case mapping, use `toInterfaceArray` for list fields
-  - [ ] 2.5: Implement `IsEquivalentToDesiredState()` — use `removeUnsetFields` + `filterPayloadToDesiredKeys`, sort set fields (`roles`, `ip_addresses`, `cidr_blocks`, `project_roles`)
+- [x] Task 2: Create `MongoDBAtlasSecretEngineRole` type (AC: 2, 4, 5)
+  - [x] 2.1: Create `api/v1alpha1/mongodbatlassecretenginerole_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `MongoDBAtlasSERole` struct, `Name`
+  - [x] 2.2: Implement `VaultObject` interface — `GetPath()` returns `{path}/roles/{name}`, `IsDeletable()=true`
+  - [x] 2.3: Implement `ConditionsAware` interface
+  - [x] 2.4: Implement `toMap()` on `MongoDBAtlasSERole` — include all role fields with correct snake_case mapping, use `toInterfaceArray` for list fields
+  - [x] 2.5: Implement `IsEquivalentToDesiredState()` — use `removeUnsetFields` + `filterPayloadToDesiredKeys`, sort set fields (`roles`, `ip_addresses`, `cidr_blocks`, `project_roles`)
 
-- [ ] Task 3: Create webhooks (AC: 6)
-  - [ ] 3.1: Create `api/v1alpha1/mongodbatlassecretengineconfig_webhook.go` — `admission.Defaulter[*MongoDBAtlasSecretEngineConfig]`, `admission.Validator[*MongoDBAtlasSecretEngineConfig]`, immutable `spec.path`, credential validation via `ValidateCredentialSource()`
-  - [ ] 3.2: Create `api/v1alpha1/mongodbatlassecretenginerole_webhook.go` — `admission.Defaulter[*MongoDBAtlasSecretEngineRole]`, `admission.Validator[*MongoDBAtlasSecretEngineRole]`, immutable `spec.path` + `spec.name`
+- [x] Task 3: Create webhooks (AC: 6)
+  - [x] 3.1: Create `api/v1alpha1/mongodbatlassecretengineconfig_webhook.go` — `admission.Defaulter[*MongoDBAtlasSecretEngineConfig]`, `admission.Validator[*MongoDBAtlasSecretEngineConfig]`, immutable `spec.path`, credential validation via `ValidateCredentialSource()`
+  - [x] 3.2: Create `api/v1alpha1/mongodbatlassecretenginerole_webhook.go` — `admission.Defaulter[*MongoDBAtlasSecretEngineRole]`, `admission.Validator[*MongoDBAtlasSecretEngineRole]`, immutable `spec.path` + `spec.name`
 
-- [ ] Task 4: Create controllers (AC: 1, 2, 3, 4, 5)
-  - [ ] 4.1: Create `internal/controller/mongodbatlassecretengineconfig_controller.go` — embed `ReconcilerBase`, always-write reconcile logic (private_key is write-only, same as AWS secret_key), watches on `corev1.Secret` and `RandomSecret`
-  - [ ] 4.2: Create `internal/controller/mongodbatlassecretenginerole_controller.go` — embed `ReconcilerBase`, standard VaultResource reconcile flow
+- [x] Task 4: Create controllers (AC: 1, 2, 3, 4, 5)
+  - [x] 4.1: Create `internal/controller/mongodbatlassecretengineconfig_controller.go` — embed `ReconcilerBase`, always-write reconcile logic (private_key is write-only, same as AWS secret_key), watches on `corev1.Secret` and `RandomSecret`
+  - [x] 4.2: Create `internal/controller/mongodbatlassecretenginerole_controller.go` — embed `ReconcilerBase`, standard VaultResource reconcile flow
 
-- [ ] Task 5: Register in main.go (AC: 1, 2)
-  - [ ] 5.1: Add controller registrations for `MongoDBAtlasSecretEngineConfigReconciler` and `MongoDBAtlasSecretEngineRoleReconciler`
-  - [ ] 5.2: Add webhook registrations inside `ENABLE_WEBHOOKS` guard for both types
+- [x] Task 5: Register in main.go (AC: 1, 2)
+  - [x] 5.1: Add controller registrations for `MongoDBAtlasSecretEngineConfigReconciler` and `MongoDBAtlasSecretEngineRoleReconciler`
+  - [x] 5.2: Add webhook registrations inside `ENABLE_WEBHOOKS` guard for both types
 
-- [ ] Task 6: Unit tests (AC: 1, 2, 5, 6)
-  - [ ] 6.1: Create `api/v1alpha1/mongodbatlassecretengineconfig_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures (private_key stripping), negative test proving managed field mismatch returns `false`
-  - [ ] 6.2: Create `api/v1alpha1/mongodbatlassecretenginerole_test.go` — test `toMap()` for roles, ip_addresses, cidr_blocks, project_roles variants; test `IsEquivalentToDesiredState()`; negative tests
+- [x] Task 6: Unit tests (AC: 1, 2, 5, 6)
+  - [x] 6.1: Create `api/v1alpha1/mongodbatlassecretengineconfig_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures (private_key stripping), negative test proving managed field mismatch returns `false`
+  - [x] 6.2: Create `api/v1alpha1/mongodbatlassecretenginerole_test.go` — test `toMap()` for roles, ip_addresses, cidr_blocks, project_roles variants; test `IsEquivalentToDesiredState()`; negative tests
 
-- [ ] Task 7: Test fixtures and integration tests (AC: 1, 2, 4, 5)
-  - [ ] 7.1: Create test YAML fixtures in `test/mongodbatlassecretengine/` — config and role CRs
-  - [ ] 7.2: Integration tests — **SKIP** (see Dev Notes: MongoDB Atlas is a cloud service that cannot be installed in Kind; falls under "Skip it")
+- [x] Task 7: Test fixtures and integration tests (AC: 1, 2, 4, 5)
+  - [x] 7.1: Create test YAML fixtures in `test/mongodbatlassecretengine/` — config and role CRs
+  - [x] 7.2: Integration tests — **SKIP** (see Dev Notes: MongoDB Atlas is a cloud service that cannot be installed in Kind; falls under "Skip it")
 
-- [ ] Task 8: Documentation (AC: all)
-  - [ ] 8.1: Create `docs/secret-engines/mongodb-atlas.md` following `docs/engine-doc-template.md` (DNFR5)
-  - [ ] 8.2: Update `docs/secret-engines/index.md` with link to new doc file
+- [x] Task 8: Documentation (AC: all)
+  - [x] 8.1: Create `docs/secret-engines/mongodb-atlas.md` following `docs/engine-doc-template.md` (DNFR5)
+  - [x] 8.2: Update `docs/secret-engines/index.md` with link to new doc file
 
-- [ ] Task 9: Code generation and validation (AC: all)
-  - [ ] 9.1: Run `make manifests generate fmt vet test`
-  - [ ] 9.2: Verify all existing tests still pass
-  - [ ] 9.3: Add new CRDs to `config/crd/kustomization.yaml` under `resources` list
+- [x] Task 9: Code generation and validation (AC: all)
+  - [x] 9.1: Run `make manifests generate fmt vet test`
+  - [x] 9.2: Verify all existing tests still pass
+  - [x] 9.3: Add new CRDs to `config/crd/kustomization.yaml` under `resources` list
 
 ## Dev Notes
 
@@ -547,10 +551,51 @@ None.
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+No blocking issues encountered.
+
 ### Completion Notes List
 
+- Implemented MongoDBAtlasSecretEngineConfig with dual-credential resolution (public_key + private_key) following the AWS config pattern exactly
+- Implemented MongoDBAtlasSecretEngineRole with all Vault API fields (organization_id, project_id, roles, ip_addresses, cidr_blocks, project_roles, ttl, max_ttl)
+- Config uses always-write controller pattern (private_key is write-only, never returned on read)
+- Config IsEquivalentToDesiredState correctly strips private_key before comparison
+- Role IsEquivalentToDesiredState sorts set fields (roles, ip_addresses, cidr_blocks, project_roles) for order-independent comparison
+- Config IsDeletable=false (Vault has no DELETE /mongodbatlas/config endpoint)
+- Role IsDeletable=true (Vault supports DELETE /roles/{name})
+- Webhooks enforce spec.path immutability on config, spec.path + spec.name immutability on role
+- Config webhook validates credential source and requires spec.publicKey when using RandomSecret
+- 36 unit tests all passing covering toMap(), IsEquivalentToDesiredState(), PrepareInternalValues(), validation, and webhook logic
+- Integration tests skipped per project policy (MongoDB Atlas is a cloud service that cannot be installed in Kind)
+- All existing tests pass with no regressions (make test succeeds)
+- CRDs generated and registered in kustomization.yaml
+- Controllers and webhooks registered in main.go
+
+### Change Log
+
+- 2026-08-12: Implemented story 13.3 — MongoDB Atlas Secret Engine Config and Role CRDs (all 9 tasks complete)
+
 ### File List
+
+- api/v1alpha1/mongodbatlassecretengineconfig_types.go (NEW)
+- api/v1alpha1/mongodbatlassecretengineconfig_webhook.go (NEW)
+- api/v1alpha1/mongodbatlassecretengineconfig_test.go (NEW)
+- api/v1alpha1/mongodbatlassecretenginerole_types.go (NEW)
+- api/v1alpha1/mongodbatlassecretenginerole_webhook.go (NEW)
+- api/v1alpha1/mongodbatlassecretenginerole_test.go (NEW)
+- api/v1alpha1/zz_generated.deepcopy.go (MODIFIED)
+- internal/controller/mongodbatlassecretengineconfig_controller.go (NEW)
+- internal/controller/mongodbatlassecretenginerole_controller.go (NEW)
+- cmd/main.go (MODIFIED)
+- config/crd/kustomization.yaml (MODIFIED)
+- config/crd/bases/redhatcop.redhat.io_mongodbatlassecretengineconfigs.yaml (NEW - generated)
+- config/crd/bases/redhatcop.redhat.io_mongodbatlassecretengineroles.yaml (NEW - generated)
+- config/rbac/role.yaml (MODIFIED - generated)
+- config/webhook/manifests.yaml (MODIFIED - generated)
+- test/mongodbatlassecretengine/mongodb-atlas-secret-engine-config.yaml (NEW)
+- test/mongodbatlassecretengine/mongodb-atlas-secret-engine-role.yaml (NEW)
+- docs/secret-engines/mongodb-atlas.md (NEW)
+- docs/secret-engines/index.md (MODIFIED)

@@ -91,6 +91,8 @@ rules:
   - ldapsecretengineconfigs
   - ldapsecretenginedynamicroles
   - ldapsecretenginestaticroles
+  - mongodbatlassecretengineconfigs
+  - mongodbatlassecretengineroles
   - namespaces
   - nomadsecretengineconfigs
   - nomadsecretengineroles
@@ -166,6 +168,8 @@ rules:
   - ldapsecretengineconfigs/finalizers
   - ldapsecretenginedynamicroles/finalizers
   - ldapsecretenginestaticroles/finalizers
+  - mongodbatlassecretengineconfigs/finalizers
+  - mongodbatlassecretengineroles/finalizers
   - namespaces/finalizers
   - nomadsecretengineconfigs/finalizers
   - nomadsecretengineroles/finalizers
@@ -234,6 +238,8 @@ rules:
   - ldapsecretengineconfigs/status
   - ldapsecretenginedynamicroles/status
   - ldapsecretenginestaticroles/status
+  - mongodbatlassecretengineconfigs/status
+  - mongodbatlassecretengineroles/status
   - namespaces/status
   - nomadsecretengineconfigs/status
   - nomadsecretengineroles/status
