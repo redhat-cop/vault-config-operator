@@ -81,6 +81,19 @@ So that TOTP key generation and management can be managed declaratively.
 - [ ] [Review][Patch] `skew` and `qrSize` updates are accepted but never reconciled [`api/v1alpha1/totpsecretenginekey_webhook.go:89`]
 - [ ] [Review][Patch] Field table still marks `issuer` and `accountName` as not required [`docs/secret-engines/totp.md:76`]
 
+#### Iteration 4
+
+- [ ] [Review][Decision] Define authoritative URL-import behavior for read-visible fields — `spec.url` can embed `issuer`, `account_name`, `algorithm`, `digits`, and `period`, but `readVisibleMap()` compares only the top-level spec fields. Decide whether the operator should parse and normalize those values from `spec.url` or reject URLs whose embedded values conflict with the explicit spec, because the current behavior can leave URL-based imports permanently out of sync.
+- [ ] [Review][Patch] Reject incompatible cross-mode fields during validation [`api/v1alpha1/totpsecretenginekey_webhook.go:58`]
+- [ ] [Review][Patch] Add coverage for URL import and TOTP webhook invariants [`internal/controller/totpsecretenginekey_controller_test.go:138`]
+
+#### Iteration 5
+
+- [ ] [Review][Patch] Import-mode validation still accepts generate-only `spec.skew` and `spec.qrSize` [`api/v1alpha1/totpsecretenginekey_webhook.go:72`]
+- [ ] [Review][Patch] URL import coverage is still missing from the new import-mode controller test path [`internal/controller/totpsecretenginekey_controller_test.go:138`]
+- [ ] [Review][Patch] URL import drift note still omits `algorithm`, `digits`, and `period` convergence requirements [`docs/secret-engines/totp.md:116`]
+- [ ] [Review][Patch] TOTP update-time webhook invariants are still uncovered in webhook validation tests [`api/v1alpha1/webhook_validate_update_test.go`]
+
 ## Dev Notes
 
 ### Integration Test Classification: Vault-Only (Self-Contained)
