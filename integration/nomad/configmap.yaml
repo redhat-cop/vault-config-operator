@@ -7,3 +7,7 @@ data:
     acl {
       enabled = true
     }
+
+    client {
+      enabled = false
+    }

@@ -30,6 +30,9 @@ spec:
               name: rpc
             - containerPort: 4648
               name: serf
+          securityContext:
+            capabilities:
+              add: ["IPC_LOCK"]
           volumeMounts:
             - name: nomad-config
               mountPath: /etc/nomad.d
@@ -41,8 +44,7 @@ spec:
               memory: "256Mi"
               cpu: "500m"
           readinessProbe:
-            httpGet:
-              path: /v1/agent/health
+            tcpSocket:
               port: 4646
             initialDelaySeconds: 5
             periodSeconds: 5
