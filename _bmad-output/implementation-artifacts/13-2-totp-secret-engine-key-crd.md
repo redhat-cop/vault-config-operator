@@ -4,7 +4,7 @@ baseline_commit: 2ccad3a67685ec8bdd0c585247ee148143415e6c
 
 # Story 13.2: TOTP Secret Engine — Key CRD
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -462,19 +462,23 @@ No existing behavior is changed — purely additive.
 
 ### Review Model Used
 
-(to be filled during review — must differ from dev model)
+GPT-5.4
 
 ### Review Findings
 
-(to be filled during review)
+See review findings listed under Tasks/Subtasks section above (iterations 1-5).
 
 ### Decisions Needed / Decisions Taken
 
-(to be filled during review)
+- Iteration 4 Decision: URL-import behavior for read-visible fields — decided to document as a known limitation and add a note to docs. URL-based imports may not converge if embedded values differ from explicit spec fields.
 
 ### Fixes Applied
 
-(to be filled during review)
+- Iteration 1: skew default corrected, qrSize sentinel handling, generate-mode validation for required fields, import-mode test coverage added
+- Iteration 2: Write-only spec field handling clarified, URL import convergence documented, docs updated for mode-specific required fields
+- Iteration 3: AC3 update field immutability corrected (algorithm/digits/period now updatable), skew/qrSize update handling addressed, docs field table corrected
+- Iteration 4: Cross-mode field rejection added, URL import and webhook invariant test coverage added
+- **Iteration 5 (cap reached):** 4 open findings accepted by user — import-mode validation edge cases, URL import test coverage gaps, docs convergence notes, webhook update-time invariant tests
 
 ## Dev Agent Record
 

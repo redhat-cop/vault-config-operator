@@ -8,3 +8,5 @@ spec:
     role: policy-admin
   type: kubernetes
   path: ""
+  config:
+    listingVisibility: hidden

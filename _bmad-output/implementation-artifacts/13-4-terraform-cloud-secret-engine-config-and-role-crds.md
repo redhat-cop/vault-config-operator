@@ -4,7 +4,7 @@ baseline_commit: 2ccad3a67685ec8bdd0c585247ee148143415e6c
 
 # Story 13.4: Terraform Cloud Secret Engine — Config and Role CRDs
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -427,19 +427,23 @@ No existing behavior is changed — this is purely additive.
 
 ### Review Model Used
 
-(to be filled during review — must differ from dev model)
+GPT-5.4
 
 ### Review Findings
 
-(to be filled during review)
+See review findings listed under Tasks/Subtasks section above (iterations 1-5).
 
 ### Decisions Needed / Decisions Taken
 
-(to be filled during review)
+- Iteration 1 Decision: TTL write format — decided to keep `durationToSeconds()` numeric seconds in `toMap()` to match Vault read format for correct drift detection, even though Vault docs show duration strings on write.
 
 ### Fixes Applied
 
-(to be filled during review)
+- Iteration 1: Semantic validation added for role specs (credentialType + identifier validation)
+- Iteration 2: CredentialType empty rejection fixed, 8 new unit tests
+- Iteration 3: Organization type rejects extra teamID, unit test added
+- Iteration 4: Empty credential source object name rejection, empty passwordKey on updates rejection, 8 new tests
+- **Iteration 5 (cap reached):** 3 open findings accepted by user — whitespace-only credential reference edge cases, legacy passwordKey value on updates, credentialType inference over-constraint
 
 ## Dev Agent Record
 

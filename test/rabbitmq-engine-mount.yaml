@@ -8,3 +8,5 @@ spec:
     role: rabbitmq-engine-admin
   type: rabbitmq
   path: test-vault-config-operator
+  config:
+    listingVisibility: hidden

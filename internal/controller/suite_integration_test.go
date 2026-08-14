@@ -267,6 +267,12 @@ var _ = BeforeSuite(func() {
 	err = (&TOTPSecretEngineKeyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "TOTPSecretEngineKey")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
+	err = (&NomadSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "NomadSecretEngineConfig")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&NomadSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "NomadSecretEngineRole")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
 	By(fmt.Sprintf("Creating the %v namespace", vaultAdminNamespaceName))
 	vaultAdminNamespace = &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{

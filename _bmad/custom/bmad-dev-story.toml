@@ -1,6 +1,14 @@
 # Team overrides for bmad-dev-story workflow.
 # Committed to the repo — applies to every developer on the project.
 # Survives BMad framework upgrades (never touched by the installer).
+#
+# NOTE on test responsibility split (updated 2026-08-14):
+# - Unit tests (`make test`): owned by the dev subagent — runs pre-flight, per-task, and on-complete.
+# - Integration tests (`make integration`): owned by the bmad-epic-dev orchestrator —
+#   runs once per layer as baseline and once per story as pre-merge gate.
+#   Dev subagents do NOT run `make integration`.
+# - When running bmad-dev-story standalone (not via bmad-epic-dev), the on_complete gate
+#   runs the full test suite including `make integration` as a safety net.
 
 [workflow]
 
@@ -10,25 +18,31 @@ activation_steps_append = [
   """GATE — Clean working tree required.
 Run `git status --porcelain` in the project root.
 If output is non-empty (modified, staged, or untracked files exist):
-  Output: 🚫 Cannot start story development — working tree is not clean.
+  Output: GATE_RESULT: clean_working_tree = FAIL
   List the uncommitted changes detected.
   HALT: "Working tree must be clean before starting story development."
-Otherwise output: ✅ Working tree is clean — safe to proceed.""",
+Otherwise output: GATE_RESULT: clean_working_tree = PASS""",
 
-  """GATE — Integration/test suite baseline.
-Determine the project's primary test command from project-context.md or project structure
-(e.g. `make integration`, `pytest`, `npm test`, etc.).
-Run the full test suite to establish a green baseline.
-If any tests fail:
-  Output: 🚫 Cannot start story development — tests are failing before any changes.
-  HALT: "Test suite must pass before starting story development."
-Otherwise output: ✅ Test suite passes — baseline established.""",
+  """GATE — Unit test baseline.
+Run `make test 2>&1` in the project root.
+If exit code is non-zero:
+  Output: GATE_RESULT: unit_test_baseline = FAIL
+  HALT: "Unit tests must pass before starting story development."
+Otherwise output: GATE_RESULT: unit_test_baseline = PASS""",
 ]
 
-# Post-completion gate: executed at the final step, after story is marked for review.
+# Post-completion gate: executed at Step 11, after story is marked for review.
+# When running standalone (not via bmad-epic-dev), also runs integration tests.
 on_complete = """GATE — Post-completion regression check.
-Run the same full test suite used in the pre-flight baseline.
-If any tests fail:
-  Output: 🚫 Integration/test suite is failing after story implementation.
-  HALT: "Tests must pass before the story can be marked for review. Fix regressions."
-Otherwise output: ✅ Test suite passes — no regressions introduced."""
+Run `make test 2>&1` in the project root.
+If exit code is non-zero:
+  Output: GATE_RESULT: post_completion_unit_tests = FAIL
+  HALT: "Unit tests must pass before the story can be marked for review. Fix regressions."
+Otherwise output: GATE_RESULT: post_completion_unit_tests = PASS
+
+If NOT running under the bmad-epic-dev orchestrator (i.e. standalone dev-story execution),
+also run `make integration 2>&1` as a safety net.
+If exit code is non-zero:
+  Output: GATE_RESULT: post_completion_integration_tests = FAIL
+  HALT: "Integration tests must pass before the story can be marked for review."
+Otherwise output: GATE_RESULT: post_completion_integration_tests = PASS"""

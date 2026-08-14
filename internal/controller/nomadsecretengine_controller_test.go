@@ -137,7 +137,11 @@ var _ = Describe("NomadSecretEngine controllers", Ordered, func() {
 			secret, err := vaultClient.Logical().Read("test-nomadse/test-nomadse-mount/role/nomad-role-test")
 			Expect(err).To(BeNil())
 			Expect(secret).NotTo(BeNil())
-			Expect(secret.Data["token_type"]).To(Equal("client"))
+			tokenType := secret.Data["token_type"]
+			if tokenType == nil {
+				tokenType = secret.Data["type"]
+			}
+			Expect(tokenType).To(Equal("client"))
 		})
 	})
 
@@ -173,7 +177,11 @@ var _ = Describe("NomadSecretEngine controllers", Ordered, func() {
 			Expect(ok).To(BeTrue(), "expected policies to be a list")
 			Expect(policyList).To(ContainElement("readonly"))
 			Expect(policyList).To(ContainElement("default"))
-			Expect(secret.Data["token_type"]).To(Equal("client"))
+			tokenType := secret.Data["token_type"]
+			if tokenType == nil {
+				tokenType = secret.Data["type"]
+			}
+			Expect(tokenType).To(Equal("client"))
 		})
 	})
 

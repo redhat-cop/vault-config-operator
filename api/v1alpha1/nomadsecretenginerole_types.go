@@ -94,8 +94,10 @@ func (d *NomadSecretEngineRole) GetPayload() map[string]any {
 func (d *NomadSecretEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.NomadSERole.toMap()
 	if typeVal, ok := desiredState["type"]; ok {
-		desiredState["token_type"] = typeVal
-		delete(desiredState, "type")
+		if _, hasTokenType := payload["token_type"]; hasTokenType {
+			desiredState["token_type"] = typeVal
+			delete(desiredState, "type")
+		}
 	}
 	removeUnsetFields(desiredState, payload)
 	if globalVal, ok := desiredState["global"].(bool); ok && !globalVal {

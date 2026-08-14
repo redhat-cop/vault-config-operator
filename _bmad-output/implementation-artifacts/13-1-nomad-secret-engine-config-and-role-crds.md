@@ -4,7 +4,7 @@ baseline_commit: 2ccad3a67685ec8bdd0c585247ee148143415e6c
 
 # Story 13.1: Nomad Secret Engine — Config and Role CRDs
 
-Status: in-progress
+Status: done
 
 ## Story
 
