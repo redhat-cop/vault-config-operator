@@ -220,7 +220,16 @@ deploy-ldap: kubectl
 deploy-nomad: kubectl
 	$(KUBECTL) --context $(KUBE_CONTEXT) create namespace nomad --dry-run=client -o yaml | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f -
 	$(KUBECTL) --context $(KUBE_CONTEXT) apply -f ./integration/nomad -n nomad
-	$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready -n nomad pod -l app=nomad --timeout=$(KUBECTL_WAIT_TIMEOUT)
+	@echo "=== Waiting for Nomad pod readiness (timeout=$(KUBECTL_WAIT_TIMEOUT)) ==="
+	$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready -n nomad pod -l app=nomad --timeout=$(KUBECTL_WAIT_TIMEOUT) || { \
+		echo "=== Nomad pod failed to become ready ===" ;\
+		$(KUBECTL) --context $(KUBE_CONTEXT) get pods -n nomad -o wide ;\
+		echo "=== Nomad pod describe ===" ;\
+		$(KUBECTL) --context $(KUBE_CONTEXT) describe pod -n nomad -l app=nomad ;\
+		echo "=== Nomad container logs ===" ;\
+		$(KUBECTL) --context $(KUBE_CONTEXT) logs -n nomad -l app=nomad --tail=100 ;\
+		exit 1 ;\
+	}
 	@echo "Bootstrapping Nomad ACLs..."
 	@NOMAD_POD=$$($(KUBECTL) --context $(KUBE_CONTEXT) get pods -n nomad -l app=nomad -o jsonpath='{.items[0].metadata.name}') ;\
 	NOMAD_TOKEN="" ;\
