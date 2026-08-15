@@ -119,6 +119,7 @@ type AppRoleRole struct {
 
 var _ vaultutils.VaultObject = &AppRoleAuthEngineRole{}
 var _ vaultutils.ConditionsAware = &AppRoleAuthEngineRole{}
+var _ vaultutils.CreateOnlyFieldsProvider = &AppRoleAuthEngineRole{}
 
 func (d *AppRoleAuthEngineRole) GetVaultConnection() *vaultutils.VaultConnection {
 	return d.Spec.Connection
@@ -137,6 +138,10 @@ func (d *AppRoleAuthEngineRole) GetPath() string {
 
 func (d *AppRoleAuthEngineRole) GetPayload() map[string]any {
 	return d.Spec.AppRoleRole.toMap()
+}
+
+func (d *AppRoleAuthEngineRole) GetCreateOnlyFields() []string {
+	return []string{"local_secret_ids"}
 }
 
 // appRoleVaultReadAliases maps Vault read-response keys to the canonical write keys.

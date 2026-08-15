@@ -482,6 +482,49 @@ func TestAppRoleAuthEngineRoleIsEquivalentToDesiredState_IgnoresLocalSecretIDs(t
 	}
 }
 
+func TestAppRoleAuthEngineRole_GetCreateOnlyFields(t *testing.T) {
+	role := &AppRoleAuthEngineRole{
+		Spec: AppRoleAuthEngineRoleSpec{
+			AppRoleRole: AppRoleRole{
+				BindSecretID:   true,
+				LocalSecretIDs: true,
+				TokenPolicies:  []string{"default"},
+			},
+		},
+	}
+
+	createOnlyFields := role.GetCreateOnlyFields()
+	if len(createOnlyFields) != 1 || createOnlyFields[0] != "local_secret_ids" {
+		t.Errorf("GetCreateOnlyFields() = %v, expected [\"local_secret_ids\"]", createOnlyFields)
+	}
+
+	// Verify GetPayload includes local_secret_ids (needed for create)
+	payload := role.GetPayload()
+	if _, ok := payload["local_secret_ids"]; !ok {
+		t.Error("GetPayload() must include local_secret_ids for initial creation")
+	}
+	if payload["local_secret_ids"] != true {
+		t.Errorf("GetPayload()[local_secret_ids] = %v, expected true", payload["local_secret_ids"])
+	}
+
+	// Simulate what CreateOrUpdate does on the update path:
+	// strip create-only fields from the payload
+	updatePayload := role.GetPayload()
+	for _, field := range createOnlyFields {
+		delete(updatePayload, field)
+	}
+	if _, ok := updatePayload["local_secret_ids"]; ok {
+		t.Error("update payload must NOT contain local_secret_ids after stripping create-only fields")
+	}
+	// Other fields should still be present
+	if _, ok := updatePayload["bind_secret_id"]; !ok {
+		t.Error("update payload should still contain bind_secret_id")
+	}
+	if _, ok := updatePayload["token_policies"]; !ok {
+		t.Error("update payload should still contain token_policies")
+	}
+}
+
 func TestAppRoleAuthEngineRoleIsDeletable(t *testing.T) {
 	role := &AppRoleAuthEngineRole{}
 	if !role.IsDeletable() {
