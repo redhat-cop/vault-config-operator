@@ -49,6 +49,9 @@ rules:
   - auditrequestheaders
   - audits
   - authenginemounts
+  - awsauthengineclientconfigs
+  - awsauthengineidentityconfigs
+  - awsauthengineroles
   - awssecretengineconfigs
   - awssecretengineroles
   - azureauthengineconfigs
@@ -128,6 +131,9 @@ rules:
   - auditrequestheaders/finalizers
   - audits/finalizers
   - authenginemounts/finalizers
+  - awsauthengineclientconfigs/finalizers
+  - awsauthengineidentityconfigs/finalizers
+  - awsauthengineroles/finalizers
   - awssecretengineconfigs/finalizers
   - awssecretengineroles/finalizers
   - azureauthengineconfigs/finalizers
@@ -200,6 +206,9 @@ rules:
   - auditrequestheaders/status
   - audits/status
   - authenginemounts/status
+  - awsauthengineclientconfigs/status
+  - awsauthengineidentityconfigs/status
+  - awsauthengineroles/status
   - awssecretengineconfigs/status
   - awssecretengineroles/status
   - azureauthengineconfigs/status

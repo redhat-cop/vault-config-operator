@@ -215,6 +215,19 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controller.AWSAuthEngineClientConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AWSAuthEngineClientConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AWSAuthEngineClientConfig")
+		os.Exit(1)
+	}
+	if err = (&controller.AWSAuthEngineIdentityConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AWSAuthEngineIdentityConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AWSAuthEngineIdentityConfig")
+		os.Exit(1)
+	}
+	if err = (&controller.AWSAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AWSAuthEngineRole")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AWSAuthEngineRole")
+		os.Exit(1)
+	}
+
 	if err = (&controller.CertAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "CertAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CertAuthEngineConfig")
 		os.Exit(1)
@@ -529,6 +542,19 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.GCPAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "GCPAuthEngineRole")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.AWSAuthEngineClientConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "AWSAuthEngineClientConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.AWSAuthEngineIdentityConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "AWSAuthEngineIdentityConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.AWSAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "AWSAuthEngineRole")
 			os.Exit(1)
 		}
 

@@ -1,0 +1,13 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AWSAuthEngineIdentityConfig
+metadata:
+  name: aws-auth-identity-config
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  path: aws
+  iamAlias: full_arn
+  iamMetadata: default
+  ec2Alias: instance_id
+  ec2Metadata: default
