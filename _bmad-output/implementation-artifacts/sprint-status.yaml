@@ -36,6 +36,9 @@
 
 generated: 2026-04-11
 last_updated: 2026-08-15
+# Epic 14 done 2026-08-15
+# Story 14.1 done 2026-08-15
+# Story 14.2 done 2026-08-15
 # Story 14.1 review 2026-08-15
 # Story 14.2 ready-for-dev 2026-08-15
 # Story 14.1 in-progress 2026-08-15
@@ -553,9 +556,9 @@ development_status:
   epic-13-retrospective: done
 
   # Epic 14: High-Priority Missing Auth Methods (AppRole, AWS)
-  epic-14: in-progress
-  14-1-approle-auth-engine-config-and-role-crds: in-progress
-  14-2-aws-auth-engine-config-and-role-crds: ready-for-dev
+  epic-14: done
+  14-1-approle-auth-engine-config-and-role-crds: done
+  14-2-aws-auth-engine-config-and-role-crds: done
   epic-14-retrospective: optional
 
   # Epic 15: Medium-Priority Missing Auth Methods (Userpass, GitHub, Okta)

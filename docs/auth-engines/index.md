@@ -33,6 +33,7 @@ The `path` field specifies the path at which the auth engine is mounted. The com
 | JWT/OIDC | JWTOIDCAuthEngineConfig | JWTOIDCAuthEngineRole | [jwt-oidc.md](jwt-oidc.md) |
 | GCP | GCPAuthEngineConfig | GCPAuthEngineRole | [gcp.md](gcp.md) |
 | Azure | AzureAuthEngineConfig | AzureAuthEngineRole | [azure.md](azure.md) |
+| AWS | AWSAuthEngineClientConfig, AWSAuthEngineIdentityConfig | AWSAuthEngineRole | [aws.md](aws.md) |
 | TLS Certificate | CertAuthEngineConfig | CertAuthEngineRole | [cert.md](cert.md) |
 
 ## Common Configuration

@@ -45,15 +45,27 @@ func removeUnsetFields(desiredState, payload map[string]any) {
 				delete(desiredState, key)
 			}
 		case json.Number:
-			if v == "0" {
+			if v == "0" || v == "-1" {
 				delete(desiredState, key)
 			}
 		case []any:
 			if len(v) == 0 {
 				delete(desiredState, key)
 			}
+		case map[string]any:
+			if len(v) == 0 {
+				delete(desiredState, key)
+			}
 		case int:
-			if v == -1 {
+			if v == 0 || v == -1 {
+				delete(desiredState, key)
+			}
+		case int64:
+			if v == 0 {
+				delete(desiredState, key)
+			}
+		case bool:
+			if !v {
 				delete(desiredState, key)
 			}
 		}
