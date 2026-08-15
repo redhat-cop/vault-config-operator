@@ -35,7 +35,10 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-08-12
+last_updated: 2026-08-15
+# Story 14.2 ready-for-dev 2026-08-15
+# Story 14.1 ready-for-dev 2026-08-15
+# Epic 14 in-progress 2026-08-15
 # Story 13.0 done 2026-08-12
 # Story 13.0 review 2026-08-12
 # Story 13.0 in-progress 2026-08-12
@@ -549,9 +552,9 @@ development_status:
   epic-13-retrospective: done
 
   # Epic 14: High-Priority Missing Auth Methods (AppRole, AWS)
-  epic-14: backlog
-  14-1-approle-auth-engine-config-and-role-crds: backlog
-  14-2-aws-auth-engine-config-and-role-crds: backlog
+  epic-14: in-progress
+  14-1-approle-auth-engine-config-and-role-crds: ready-for-dev
+  14-2-aws-auth-engine-config-and-role-crds: ready-for-dev
   epic-14-retrospective: optional
 
   # Epic 15: Medium-Priority Missing Auth Methods (Userpass, GitHub, Okta)
@@ -633,12 +636,12 @@ action_items:
   - epic: 13
     action: "Secret-ID CRD scoping decision — resolve whether 14.1 includes a SecretID CRD or scopes to role definitions only"
     owner: "Alice (Product Owner)"
-    status: pending
+    status: done  # Decision: Role definitions only — no SecretID CRD (ephemeral credentials don't fit declarative CRD model)
   - epic: 13
     action: "AWS Auth config endpoint decision — single CRD or two for config/client and config/identity"
     owner: "Charlie (Senior Dev)"
-    status: pending
+    status: done  # Decision: Two separate CRDs — AWSAuthEngineClientConfig + AWSAuthEngineIdentityConfig (1:1 API mapping)
   - epic: 13
     action: "Pre-epic baseline verification — run make test, make manifests, go vet before starting Epic 14"
     owner: "Dana (QA Engineer)"
-    status: pending
+    status: done
