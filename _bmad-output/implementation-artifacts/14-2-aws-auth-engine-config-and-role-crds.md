@@ -4,7 +4,7 @@ baseline_commit: f9a29804ec47227fd4271ae621a1a0f45669fc95
 
 # Story 14.2: AWS Auth Engine — Config and Role CRDs
 
-Status: review
+Status: done
 
 ## Story
 
@@ -703,20 +703,47 @@ All three CRD types follow well-established patterns from existing auth engine i
 
 ### Review Model Used
 
-(to be filled during code review)
+GPT-5.4 with Blind Hunter, Edge Case Hunter, and Acceptance Auditor review layers.
 
 ### Review Findings
 
-(to be filled during code review)
+- [ ] [Review][Decision] Normalize AWS auth role TTL fields to Vault read shape or keep user-supplied duration strings — the story text conflicts internally: the Vault API notes say `token_ttl`, `token_max_ttl`, `token_explicit_max_ttl`, and `token_period` should use `durationToSeconds()` because Vault reads integer seconds, but the later implementation note says to emit the TTL fields as-is. The current implementation writes raw strings and native integers in `api/v1alpha1/awsauthenginerole_types.go`, so the correct reconcile behavior depends on which requirement is authoritative.
+- [ ] [Review][Patch] AWS credential source defaults still use `username`/`password` instead of `access_key`/`secret_key` [api/v1alpha1/awsauthengineconfig_types.go:53]
+- [ ] [Review][Patch] Role webhook leaves invalid IAM/EC2 combinations admissible and does not require `inferredAWSRegion` for inferencing [api/v1alpha1/awsauthenginerole_webhook.go:72]
+- [ ] [Review][Patch] Client config drift comparison uses native Go integers for `max_retries` instead of Vault-shaped numeric values [api/v1alpha1/awsauthengineconfig_types.go:310]
+- [ ] [Review][Patch] Role drift comparison fails when Vault omits unset zero-value bool/int fields [api/v1alpha1/payload_filter.go:17]
+- [ ] [Review][Patch] Secret rotation watch ignores `kubernetes.io/basic-auth` Secrets and misses updates when both AWS keys change together [internal/controller/awsauthengineconfig_controller.go:76]
 
 ### Decisions Needed / Decisions Taken
 
 - Design decision (pre-resolved): Two separate config CRDs (AWSAuthEngineClientConfig + AWSAuthEngineIdentityConfig) for 1:1 Vault API mapping
 - Design decision (pre-resolved): Standard VaultResource reconcile for client config (NOT always-write), since read response provides meaningful drift detection
+- Review decision needed: confirm the authoritative representation for AWS auth role TTL fields during drift comparison (normalized integer seconds vs raw user-supplied duration strings)
 
 ### Fixes Applied
 
-(to be filled during code review)
+None during review. Findings recorded for follow-up.
+
+### Re-Review Findings (Iteration 2)
+
+- [ ] [Review][Decision] Clarify whether IAM+infer may use EC2-only role fields — the story's validation matrix marks `role_tag`, `allow_instance_migration`, and `disallow_reauthentication` as invalid for IAM+infer, but the webhook notes say EC2-only fields are allowed for `auth_type: iam` when `inferred_entity_type` enables EC2 inference. The current webhook in `api/v1alpha1/awsauthenginerole_webhook.go` allows those fields for IAM+infer, while `docs/auth-engines/aws.md` still documents them as EC2-only.
+- [ ] [Review][Patch] Secret-key-only rotations still do not reconcile client config writes [api/v1alpha1/awsauthengineconfig_types.go:161]
+- [ ] [Review][Patch] Secret watch predicate ignores custom credential key mappings [internal/controller/awsauthengineconfig_controller.go:76]
+- [ ] [Review][Patch] Client config defaulter rewrites explicit `username`/`password` overrides [api/v1alpha1/awsauthengineconfig_webhook.go:41]
+- [ ] [Review][Patch] Update validation still allows empty credential key lookups [api/v1alpha1/awsauthengineconfig_webhook.go:61]
+- [ ] [Review][Patch] Pure IAM roles still admit `boundAccountID` [api/v1alpha1/awsauthenginerole_webhook.go:105]
+- [ ] [Review][Patch] EC2 roles still admit and emit IAM-only `resolveAWSUniqueIDs` [api/v1alpha1/awsauthenginerole_types.go:287]
+
+### Re-Review Findings (Iteration 3)
+
+- [ ] [Review][Patch] Client config drift still compares write-only `secret_key` [api/v1alpha1/awsauthengineconfig_types.go:161] — `AWSAuthEngineClientConfig.IsEquivalentToDesiredState()` still leaves `secret_key` in `desiredState`, and the updated unit test now codifies the resulting always-reapply behavior instead of guarding against it. Secret-backed client configs will continue to rewrite credentials on steady-state reconciles even when Vault already matches every readable field.
+- [ ] [Review][Patch] AWS credential defaults still fall back to inherited `username` / `password` keys [api/v1alpha1/awsauthengineconfig_webhook.go:41] — the generated CRD still defaults `AWSCredentials.usernameKey/passwordKey` to the shared `RootCredentialConfig` values, while the webhook only rewrites empty strings. That leaves the documented AWS default secret keys (`access_key` / `secret_key`) unapplied for admitted objects that arrive with inherited defaults.
+- [ ] [Review][Patch] Secret watch still ignores supported non-Opaque credential Secrets [internal/controller/awsauthengineconfig_controller.go:76] — the controller now reacts to any data change, but only for `Opaque` Secrets. The credential reader itself accepts ordinary Kubernetes Secrets, and the shared credential contract/docs still describe `kubernetes.io/basic-auth`; rotations for those supported secret shapes will not enqueue reconcile until the periodic resync.
+
+### Re-Review Findings (Iteration 4)
+
+- [ ] [Review][Patch] Client config defaulter still overwrites explicit AWS credential key mappings [api/v1alpha1/awsauthengineconfig_webhook.go:41] — `Default()` still unconditionally rewrites `spec.AWSCredentials.usernameKey/passwordKey` to `access_key` and `secret_key`. Any valid create request that intentionally points at different Secret or VaultSecret keys is mutated into an unusable configuration, and reconcile later fails when `setInternalCredentials()` looks up the wrong keys.
+- [ ] [Review][Patch] Pure IAM roles still admit unsupported `boundAccountID` constraints [api/v1alpha1/awsauthenginerole_webhook.go:105] — the IAM validation path rejects several EC2-only bounds but still omits `boundAccountID`, even though the story matrix and docs limit it to EC2 or IAM with inferencing. Invalid `authType: iam` roles can therefore pass admission and fail later when written to Vault.
 
 ## Dev Agent Record
 

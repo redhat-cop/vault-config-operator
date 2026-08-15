@@ -40,6 +40,12 @@ var _ admission.Defaulter[*AWSAuthEngineClientConfig] = &AWSAuthEngineClientConf
 
 func (r *AWSAuthEngineClientConfig) Default(ctx context.Context, obj *AWSAuthEngineClientConfig) error {
 	awsauthengineclientconfiglog.Info("default", "name", obj.Name)
+	if obj.Spec.AWSCredentials.UsernameKey == "" || obj.Spec.AWSCredentials.UsernameKey == "username" {
+		obj.Spec.AWSCredentials.UsernameKey = "access_key"
+	}
+	if obj.Spec.AWSCredentials.PasswordKey == "" || obj.Spec.AWSCredentials.PasswordKey == "password" {
+		obj.Spec.AWSCredentials.PasswordKey = "secret_key"
+	}
 	return nil
 }
 

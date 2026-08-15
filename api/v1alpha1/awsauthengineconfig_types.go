@@ -18,9 +18,11 @@ package v1alpha1
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -287,6 +289,14 @@ func (r *AWSAuthEngineClientConfig) isValid() error {
 	if r.Spec.AWSCredentials.RandomSecret != nil && r.Spec.AccessKey == "" {
 		return errors.New("spec.accessKey must be set when using randomSecret credentials (randomSecret only provides the secret key)")
 	}
+	if r.Spec.AWSCredentials.Secret != nil || r.Spec.AWSCredentials.VaultSecret != nil {
+		if r.Spec.AWSCredentials.UsernameKey == "" {
+			return errors.New("spec.AWSCredentials.usernameKey cannot be empty")
+		}
+		if r.Spec.AWSCredentials.PasswordKey == "" {
+			return errors.New("spec.AWSCredentials.passwordKey cannot be empty")
+		}
+	}
 	return nil
 }
 
@@ -308,9 +318,9 @@ func (i *AWSAuthClientConfig) toMap() map[string]any {
 	payload["iam_server_id_header_value"] = i.IAMServerIDHeaderValue
 	payload["allowed_sts_header_values"] = i.AllowedSTSHeaderValues
 	if i.MaxRetries != nil {
-		payload["max_retries"] = *i.MaxRetries
+		payload["max_retries"] = json.Number(strconv.Itoa(*i.MaxRetries))
 	} else {
-		payload["max_retries"] = -1
+		payload["max_retries"] = json.Number("-1")
 	}
 	return payload
 }

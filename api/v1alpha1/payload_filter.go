@@ -1,5 +1,7 @@
 package v1alpha1
 
+import "encoding/json"
+
 // filterPayloadToDesiredKeys returns a new map containing only the keys present in desiredState,
 // with values taken from payload. This allows reflect.DeepEqual to compare only the fields the
 // operator manages, ignoring extra fields Vault adds to its read responses (timestamps, IDs,
@@ -32,8 +34,24 @@ func removeUnsetFields(desiredState, payload map[string]any) {
 			if len(v) == 0 {
 				delete(desiredState, key)
 			}
+		case map[string]any:
+			if len(v) == 0 {
+				delete(desiredState, key)
+			}
 		case int:
-			if v == -1 {
+			if v == 0 || v == -1 {
+				delete(desiredState, key)
+			}
+		case int64:
+			if v == 0 {
+				delete(desiredState, key)
+			}
+		case json.Number:
+			if v == "0" || v == "-1" {
+				delete(desiredState, key)
+			}
+		case bool:
+			if !v {
 				delete(desiredState, key)
 			}
 		}

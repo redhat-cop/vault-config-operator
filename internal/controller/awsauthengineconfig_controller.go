@@ -17,8 +17,8 @@ limitations under the License.
 package controller
 
 import (
-	"bytes"
 	"context"
+	"reflect"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -73,21 +73,21 @@ func (r *AWSAuthEngineClientConfigReconciler) Reconcile(ctx context.Context, req
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *AWSAuthEngineClientConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	isBasicAuthSecret := predicate.Funcs{
+	isAWSCredentialSecret := predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			newSecret, ok := e.ObjectNew.DeepCopyObject().(*corev1.Secret)
-			if !ok || newSecret.Type == "kubernetes.io/basic-auth" {
+			if !ok || (newSecret.Type != corev1.SecretTypeOpaque && newSecret.Type != corev1.SecretTypeBasicAuth) {
 				return false
 			}
 			oldSecret, ok := e.ObjectOld.DeepCopyObject().(*corev1.Secret)
 			if !ok {
 				return true
 			}
-			return bytes.Equal(oldSecret.Data["access_key"], newSecret.Data["access_key"]) || bytes.Equal(oldSecret.Data["secret_key"], newSecret.Data["secret_key"])
+			return !reflect.DeepEqual(oldSecret.Data, newSecret.Data)
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
 			newSecret, ok := e.Object.DeepCopyObject().(*corev1.Secret)
-			if !ok || newSecret.Type == "kubernetes.io/basic-auth" {
+			if !ok || (newSecret.Type != corev1.SecretTypeOpaque && newSecret.Type != corev1.SecretTypeBasicAuth) {
 				return false
 			}
 			return true
@@ -155,7 +155,7 @@ func (r *AWSAuthEngineClientConfigReconciler) SetupWithManager(mgr ctrl.Manager)
 				})
 			}
 			return res
-		}), builder.WithPredicates(isBasicAuthSecret)).
+		}), builder.WithPredicates(isAWSCredentialSecret)).
 		Watches(&redhatcopv1alpha1.RandomSecret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "RandomSecret",

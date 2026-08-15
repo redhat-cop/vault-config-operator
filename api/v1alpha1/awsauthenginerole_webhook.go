@@ -82,15 +82,46 @@ func validateAWSAuthRoleSpec(role *AWSAuthRole) error {
 		}
 	}
 	if role.AuthType == "iam" {
-		if role.InferredEntityType == "" {
-			if role.RoleTag != "" {
-				return fmt.Errorf("roleTag is not valid for auth_type iam without inferred_entity_type")
+		if role.RoleTag != "" {
+			return fmt.Errorf("roleTag is not valid for auth_type iam")
+		}
+		if role.AllowInstanceMigration {
+			return fmt.Errorf("allowInstanceMigration is not valid for auth_type iam")
+		}
+		if role.DisallowReauthentication {
+			return fmt.Errorf("disallowReauthentication is not valid for auth_type iam")
+		}
+		if role.InferredEntityType != "" {
+			if role.InferredEntityType != "ec2_instance" {
+				return fmt.Errorf("inferredEntityType must be \"ec2_instance\" when set")
 			}
-			if role.AllowInstanceMigration {
-				return fmt.Errorf("allowInstanceMigration is not valid for auth_type iam without inferred_entity_type")
+			if role.InferredAWSRegion == "" {
+				return fmt.Errorf("inferredAWSRegion is required when inferredEntityType is set")
 			}
-			if role.DisallowReauthentication {
-				return fmt.Errorf("disallowReauthentication is not valid for auth_type iam without inferred_entity_type")
+		} else {
+			if role.InferredAWSRegion != "" {
+				return fmt.Errorf("inferredAWSRegion is only valid when inferredEntityType is set")
+			}
+			// boundAccountID is intentionally omitted: Vault accepts bound_account_id
+			// for all role types (ec2, iam, and iam+inferred). The Vault API does not
+			// reject it for pure IAM roles, so the operator should not be stricter than
+			// Vault itself. See https://developer.hashicorp.com/vault/api-docs/auth/aws
+			ec2OnlyBounds := []struct {
+				name string
+				val  []string
+			}{
+				{"boundAmiID", role.BoundAmiID},
+				{"boundRegion", role.BoundRegion},
+				{"boundVpcID", role.BoundVpcID},
+				{"boundSubnetID", role.BoundSubnetID},
+				{"boundIAMRoleARN", role.BoundIAMRoleARN},
+				{"boundIAMInstanceProfileARN", role.BoundIAMInstanceProfileARN},
+				{"boundEC2InstanceID", role.BoundEC2InstanceID},
+			}
+			for _, b := range ec2OnlyBounds {
+				if len(b.val) > 0 {
+					return fmt.Errorf("%s is not valid for auth_type iam without inferred_entity_type", b.name)
+				}
 			}
 		}
 	}

@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 )
@@ -224,6 +225,100 @@ func TestRemoveUnsetFields_NonDefaultIntNeverRemoved(t *testing.T) {
 
 	if _, ok := desiredState["max_retries"]; !ok {
 		t.Error("expected non-default max_retries (3) to remain even when absent from payload")
+	}
+}
+
+func TestRemoveUnsetFields_BoolFalseRemovedWhenAbsentFromPayload(t *testing.T) {
+	desiredState := map[string]any{
+		"auth_type":                "iam",
+		"allow_instance_migration": false,
+	}
+	payload := map[string]any{
+		"auth_type": "iam",
+	}
+
+	removeUnsetFields(desiredState, payload)
+
+	if _, ok := desiredState["allow_instance_migration"]; ok {
+		t.Error("expected false bool to be removed when absent from payload")
+	}
+}
+
+func TestRemoveUnsetFields_BoolTrueKeptWhenAbsentFromPayload(t *testing.T) {
+	desiredState := map[string]any{
+		"resolve_aws_unique_ids": true,
+	}
+	payload := map[string]any{}
+
+	removeUnsetFields(desiredState, payload)
+
+	if _, ok := desiredState["resolve_aws_unique_ids"]; !ok {
+		t.Error("expected true bool to remain even when absent from payload")
+	}
+}
+
+func TestRemoveUnsetFields_JSONNumberZeroRemovedWhenAbsentFromPayload(t *testing.T) {
+	desiredState := map[string]any{
+		"auth_type":    "iam",
+		"token_ttl":    json.Number("0"),
+		"token_period": json.Number("0"),
+	}
+	payload := map[string]any{
+		"auth_type": "iam",
+	}
+
+	removeUnsetFields(desiredState, payload)
+
+	if _, ok := desiredState["token_ttl"]; ok {
+		t.Error("expected json.Number(0) to be removed when absent from payload")
+	}
+	if _, ok := desiredState["token_period"]; ok {
+		t.Error("expected json.Number(0) to be removed when absent from payload")
+	}
+}
+
+func TestRemoveUnsetFields_JSONNumberNonZeroKeptWhenAbsentFromPayload(t *testing.T) {
+	desiredState := map[string]any{
+		"token_ttl": json.Number("3600"),
+	}
+	payload := map[string]any{}
+
+	removeUnsetFields(desiredState, payload)
+
+	if _, ok := desiredState["token_ttl"]; !ok {
+		t.Error("expected non-zero json.Number to remain even when absent from payload")
+	}
+}
+
+func TestRemoveUnsetFields_Int64ZeroRemovedWhenAbsentFromPayload(t *testing.T) {
+	desiredState := map[string]any{
+		"auth_type":      "iam",
+		"token_num_uses": int64(0),
+	}
+	payload := map[string]any{
+		"auth_type": "iam",
+	}
+
+	removeUnsetFields(desiredState, payload)
+
+	if _, ok := desiredState["token_num_uses"]; ok {
+		t.Error("expected int64(0) to be removed when absent from payload")
+	}
+}
+
+func TestRemoveUnsetFields_EmptyMapRemovedWhenAbsentFromPayload(t *testing.T) {
+	desiredState := map[string]any{
+		"auth_type": "iam",
+		"metadata":  map[string]any{},
+	}
+	payload := map[string]any{
+		"auth_type": "iam",
+	}
+
+	removeUnsetFields(desiredState, payload)
+
+	if _, ok := desiredState["metadata"]; ok {
+		t.Error("expected empty map to be removed when absent from payload")
 	}
 }
 

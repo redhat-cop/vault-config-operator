@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 )
@@ -30,11 +31,11 @@ func TestAWSAuthEngineRole_toMap_IAM(t *testing.T) {
 	if result["resolve_aws_unique_ids"] != true {
 		t.Errorf("expected resolve_aws_unique_ids=true, got %v", result["resolve_aws_unique_ids"])
 	}
-	if result["token_ttl"] != "1h" {
-		t.Errorf("expected token_ttl=1h, got %v", result["token_ttl"])
+	if result["token_ttl"] != json.Number("3600") {
+		t.Errorf("expected token_ttl=3600, got %v", result["token_ttl"])
 	}
-	if result["token_max_ttl"] != "24h" {
-		t.Errorf("expected token_max_ttl=24h, got %v", result["token_max_ttl"])
+	if result["token_max_ttl"] != json.Number("86400") {
+		t.Errorf("expected token_max_ttl=86400, got %v", result["token_max_ttl"])
 	}
 	expectedPolicies := []any{"dev", "prod"}
 	if !reflect.DeepEqual(result["token_policies"], expectedPolicies) {
@@ -43,8 +44,8 @@ func TestAWSAuthEngineRole_toMap_IAM(t *testing.T) {
 	if result["token_type"] != "service" {
 		t.Errorf("expected token_type=service, got %v", result["token_type"])
 	}
-	if result["token_num_uses"] != int64(5) {
-		t.Errorf("expected token_num_uses=5, got %v", result["token_num_uses"])
+	if result["token_num_uses"] != json.Number("5") {
+		t.Errorf("expected token_num_uses=json.Number(5), got %v", result["token_num_uses"])
 	}
 	emptySlice := []any{}
 	if !reflect.DeepEqual(result["bound_ami_id"], emptySlice) {
@@ -91,6 +92,9 @@ func TestAWSAuthEngineRole_toMap_EC2(t *testing.T) {
 	if result["disallow_reauthentication"] != true {
 		t.Errorf("expected disallow_reauthentication=true, got %v", result["disallow_reauthentication"])
 	}
+	if _, exists := result["resolve_aws_unique_ids"]; exists {
+		t.Error("expected resolve_aws_unique_ids to not be emitted for EC2 roles")
+	}
 }
 
 func TestAWSAuthEngineRole_IsEquivalentToDesiredState_Match(t *testing.T) {
@@ -117,18 +121,17 @@ func TestAWSAuthEngineRole_IsEquivalentToDesiredState_Match(t *testing.T) {
 		"bound_iam_principal_arn":        []any{},
 		"inferred_entity_type":           "",
 		"inferred_aws_region":            "",
-		"resolve_aws_unique_ids":         true,
 		"allow_instance_migration":       false,
 		"disallow_reauthentication":      false,
-		"token_ttl":                      "",
-		"token_max_ttl":                  "",
+		"token_ttl":                      json.Number("0"),
+		"token_max_ttl":                  json.Number("0"),
 		"token_policies":                 []any{"default", "dev"},
 		"policies":                       []any{},
 		"token_bound_cidrs":              []any{},
-		"token_explicit_max_ttl":         "",
+		"token_explicit_max_ttl":         json.Number("0"),
 		"token_no_default_policy":        false,
-		"token_num_uses":                 int64(0),
-		"token_period":                   int64(0),
+		"token_num_uses":                 json.Number("0"),
+		"token_period":                   json.Number("0"),
 		"token_type":                     "",
 	}
 
@@ -171,8 +174,8 @@ func TestAWSAuthEngineRole_IsEquivalentToDesiredState_ExtraVaultFields(t *testin
 		"allow_instance_migration":  false,
 		"disallow_reauthentication": false,
 		"token_no_default_policy":   false,
-		"token_num_uses":            int64(0),
-		"token_period":              int64(0),
+		"token_num_uses":            json.Number("0"),
+		"token_period":              json.Number("0"),
 		"request_id":                "extra-field",
 		"lease_id":                  "",
 		"renewable":                 false,
@@ -220,9 +223,10 @@ func TestAWSAuthEngineRole_Webhook_IAMOnlyFields_EC2Rejected(t *testing.T) {
 
 func TestAWSAuthEngineRole_Webhook_EC2OnlyFields_IAMRejected(t *testing.T) {
 	role := &AWSAuthRole{
-		Name:     "test-role",
-		AuthType: "iam",
-		RoleTag:  "VaultRole",
+		Name:                "test-role",
+		AuthType:            "iam",
+		RoleTag:             "VaultRole",
+		ResolveAWSUniqueIDs: true,
 	}
 
 	err := validateAWSAuthRoleSpec(role)
@@ -234,6 +238,7 @@ func TestAWSAuthEngineRole_Webhook_EC2OnlyFields_IAMRejected(t *testing.T) {
 		Name:                   "test-role",
 		AuthType:               "iam",
 		AllowInstanceMigration: true,
+		ResolveAWSUniqueIDs:    true,
 	}
 
 	err = validateAWSAuthRoleSpec(role2)
@@ -245,11 +250,56 @@ func TestAWSAuthEngineRole_Webhook_EC2OnlyFields_IAMRejected(t *testing.T) {
 		Name:                     "test-role",
 		AuthType:                 "iam",
 		DisallowReauthentication: true,
+		ResolveAWSUniqueIDs:      true,
 	}
 
 	err = validateAWSAuthRoleSpec(role3)
 	if err == nil {
 		t.Error("expected validation error for EC2-only field disallowReauthentication on IAM role")
+	}
+}
+
+func TestAWSAuthEngineRole_Webhook_EC2OnlyFields_IAMInferredRejected(t *testing.T) {
+	role := &AWSAuthRole{
+		Name:                "test-role",
+		AuthType:            "iam",
+		InferredEntityType:  "ec2_instance",
+		InferredAWSRegion:   "us-east-1",
+		RoleTag:             "VaultRole",
+		ResolveAWSUniqueIDs: true,
+	}
+
+	err := validateAWSAuthRoleSpec(role)
+	if err == nil {
+		t.Error("expected validation error for roleTag on IAM role with inferredEntityType")
+	}
+
+	role2 := &AWSAuthRole{
+		Name:                   "test-role",
+		AuthType:               "iam",
+		InferredEntityType:     "ec2_instance",
+		InferredAWSRegion:      "us-east-1",
+		AllowInstanceMigration: true,
+		ResolveAWSUniqueIDs:    true,
+	}
+
+	err = validateAWSAuthRoleSpec(role2)
+	if err == nil {
+		t.Error("expected validation error for allowInstanceMigration on IAM role with inferredEntityType")
+	}
+
+	role3 := &AWSAuthRole{
+		Name:                     "test-role",
+		AuthType:                 "iam",
+		InferredEntityType:       "ec2_instance",
+		InferredAWSRegion:        "us-east-1",
+		DisallowReauthentication: true,
+		ResolveAWSUniqueIDs:      true,
+	}
+
+	err = validateAWSAuthRoleSpec(role3)
+	if err == nil {
+		t.Error("expected validation error for disallowReauthentication on IAM role with inferredEntityType")
 	}
 }
 
@@ -264,6 +314,94 @@ func TestAWSAuthEngineRole_Webhook_MutuallyExclusive(t *testing.T) {
 	err := validateAWSAuthRoleSpec(role)
 	if err == nil {
 		t.Error("expected validation error for mutually exclusive allowInstanceMigration and disallowReauthentication")
+	}
+}
+
+func TestAWSAuthEngineRole_Webhook_IAMInferredRequiresRegion(t *testing.T) {
+	role := &AWSAuthRole{
+		Name:                "test-role",
+		AuthType:            "iam",
+		InferredEntityType:  "ec2_instance",
+		ResolveAWSUniqueIDs: true,
+	}
+
+	err := validateAWSAuthRoleSpec(role)
+	if err == nil {
+		t.Error("expected validation error when inferredEntityType is set without inferredAWSRegion")
+	}
+}
+
+func TestAWSAuthEngineRole_Webhook_IAMInferredRegionWithoutEntityType(t *testing.T) {
+	role := &AWSAuthRole{
+		Name:                "test-role",
+		AuthType:            "iam",
+		InferredAWSRegion:   "us-east-1",
+		ResolveAWSUniqueIDs: true,
+	}
+
+	err := validateAWSAuthRoleSpec(role)
+	if err == nil {
+		t.Error("expected validation error for inferredAWSRegion without inferredEntityType")
+	}
+}
+
+func TestAWSAuthEngineRole_Webhook_IAMInferredInvalidEntityType(t *testing.T) {
+	role := &AWSAuthRole{
+		Name:                "test-role",
+		AuthType:            "iam",
+		InferredEntityType:  "invalid",
+		InferredAWSRegion:   "us-east-1",
+		ResolveAWSUniqueIDs: true,
+	}
+
+	err := validateAWSAuthRoleSpec(role)
+	if err == nil {
+		t.Error("expected validation error for invalid inferredEntityType")
+	}
+}
+
+func TestAWSAuthEngineRole_Webhook_IAMRejectsEC2BoundConstraints(t *testing.T) {
+	role := &AWSAuthRole{
+		Name:                "test-role",
+		AuthType:            "iam",
+		BoundAmiID:          []string{"ami-12345"},
+		ResolveAWSUniqueIDs: true,
+	}
+
+	err := validateAWSAuthRoleSpec(role)
+	if err == nil {
+		t.Error("expected validation error for EC2-only boundAmiID on pure IAM role")
+	}
+}
+
+func TestAWSAuthEngineRole_Webhook_IAMAcceptsBoundAccountID(t *testing.T) {
+	role := &AWSAuthRole{
+		Name:                 "test-role",
+		AuthType:             "iam",
+		BoundAccountID:       []string{"123456789012"},
+		BoundIAMPrincipalARN: []string{"arn:aws:iam::123456789012:role/MyRole"},
+		ResolveAWSUniqueIDs:  true,
+	}
+
+	err := validateAWSAuthRoleSpec(role)
+	if err != nil {
+		t.Errorf("expected no validation error for boundAccountID on IAM role (Vault accepts it for all role types), got: %v", err)
+	}
+}
+
+func TestAWSAuthEngineRole_Webhook_IAMInferredWithEC2Constraints(t *testing.T) {
+	role := &AWSAuthRole{
+		Name:                "test-role",
+		AuthType:            "iam",
+		InferredEntityType:  "ec2_instance",
+		InferredAWSRegion:   "us-east-1",
+		BoundAmiID:          []string{"ami-12345"},
+		ResolveAWSUniqueIDs: true,
+	}
+
+	err := validateAWSAuthRoleSpec(role)
+	if err != nil {
+		t.Errorf("expected no validation error for IAM+inferred with EC2 bounds, got: %v", err)
 	}
 }
 
@@ -284,12 +422,13 @@ func TestAWSAuthEngineRole_Webhook_ValidIAMRole(t *testing.T) {
 
 func TestAWSAuthEngineRole_Webhook_ValidEC2Role(t *testing.T) {
 	role := &AWSAuthRole{
-		Name:           "test-role",
-		AuthType:       "ec2",
-		BoundAmiID:     []string{"ami-12345"},
-		BoundAccountID: []string{"123456789012"},
-		RoleTag:        "VaultRole",
-		TokenPolicies:  []string{"default"},
+		Name:                "test-role",
+		AuthType:            "ec2",
+		BoundAmiID:          []string{"ami-12345"},
+		BoundAccountID:      []string{"123456789012"},
+		RoleTag:             "VaultRole",
+		ResolveAWSUniqueIDs: true,
+		TokenPolicies:       []string{"default"},
 	}
 
 	err := validateAWSAuthRoleSpec(role)
@@ -313,5 +452,31 @@ func TestAWSAuthEngineRole_IsDeletable(t *testing.T) {
 	instance := &AWSAuthEngineRole{}
 	if !instance.IsDeletable() {
 		t.Error("expected IsDeletable() to return true")
+	}
+}
+
+func TestAWSAuthEngineRole_Webhook_ResolveAWSUniqueIDs_IAMEmitted(t *testing.T) {
+	role := &AWSAuthRole{
+		Name:                "test-role",
+		AuthType:            "iam",
+		ResolveAWSUniqueIDs: true,
+	}
+
+	result := role.toMap()
+	if _, exists := result["resolve_aws_unique_ids"]; !exists {
+		t.Error("expected resolve_aws_unique_ids to be emitted for IAM roles")
+	}
+}
+
+func TestAWSAuthEngineRole_Webhook_ResolveAWSUniqueIDs_EC2NotEmitted(t *testing.T) {
+	role := &AWSAuthRole{
+		Name:                "test-role",
+		AuthType:            "ec2",
+		ResolveAWSUniqueIDs: true,
+	}
+
+	result := role.toMap()
+	if _, exists := result["resolve_aws_unique_ids"]; exists {
+		t.Error("expected resolve_aws_unique_ids to NOT be emitted for EC2 roles")
 	}
 }

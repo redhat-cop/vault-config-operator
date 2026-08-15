@@ -18,7 +18,9 @@ package v1alpha1
 
 import (
 	"context"
+	"encoding/json"
 	"reflect"
+	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -240,6 +242,14 @@ func (r *AWSAuthEngineRole) GetPayload() map[string]any {
 func (r *AWSAuthEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := r.Spec.AWSAuthRole.toMap()
 	removeUnsetFields(desiredState, payload)
+	boolFields := []string{"resolve_aws_unique_ids", "allow_instance_migration", "disallow_reauthentication", "token_no_default_policy"}
+	for _, key := range boolFields {
+		if boolVal, ok := desiredState[key].(bool); ok && !boolVal {
+			if _, inPayload := payload[key]; !inPayload {
+				delete(desiredState, key)
+			}
+		}
+	}
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
@@ -274,18 +284,20 @@ func (r *AWSAuthRole) toMap() map[string]any {
 	payload["bound_iam_principal_arn"] = toInterfaceArray(r.BoundIAMPrincipalARN)
 	payload["inferred_entity_type"] = r.InferredEntityType
 	payload["inferred_aws_region"] = r.InferredAWSRegion
-	payload["resolve_aws_unique_ids"] = r.ResolveAWSUniqueIDs
+	if r.AuthType != "ec2" {
+		payload["resolve_aws_unique_ids"] = r.ResolveAWSUniqueIDs
+	}
 	payload["allow_instance_migration"] = r.AllowInstanceMigration
 	payload["disallow_reauthentication"] = r.DisallowReauthentication
-	payload["token_ttl"] = r.TokenTTL
-	payload["token_max_ttl"] = r.TokenMaxTTL
+	payload["token_ttl"] = durationToSeconds(r.TokenTTL)
+	payload["token_max_ttl"] = durationToSeconds(r.TokenMaxTTL)
 	payload["token_policies"] = toInterfaceArray(r.TokenPolicies)
 	payload["policies"] = toInterfaceArray(r.Policies)
 	payload["token_bound_cidrs"] = toInterfaceArray(r.TokenBoundCIDRs)
-	payload["token_explicit_max_ttl"] = r.TokenExplicitMaxTTL
+	payload["token_explicit_max_ttl"] = durationToSeconds(r.TokenExplicitMaxTTL)
 	payload["token_no_default_policy"] = r.TokenNoDefaultPolicy
-	payload["token_num_uses"] = r.TokenNumUses
-	payload["token_period"] = r.TokenPeriod
+	payload["token_num_uses"] = json.Number(strconv.FormatInt(r.TokenNumUses, 10))
+	payload["token_period"] = json.Number(strconv.FormatInt(r.TokenPeriod, 10))
 	payload["token_type"] = r.TokenType
 	return payload
 }
