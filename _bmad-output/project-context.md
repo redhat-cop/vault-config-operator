@@ -290,8 +290,14 @@ The base port `8200` and default cluster name `vault-config-operator` are reserv
 8. Create test YAML fixtures in `test/`
 9. Write integration test with `//go:build integration` tag
 10. Run `make manifests generate fmt vet test`
+11. Create documentation file at `docs/{auth|secret}-engines/{name}.md` following `docs/engine-doc-template.md` (DNFR5) and update the corresponding `index.md`
 
 ### Critical Don't-Miss Rules
+
+#### Documentation Gate (DNFR5)
+- Every new CRD type **must** have a corresponding documentation file at `docs/{auth|secret}-engines/{name}.md` following `docs/engine-doc-template.md` before the story can be marked "done".
+- The corresponding `docs/{auth|secret}-engines/index.md` must be updated with a link to the new doc file.
+- Retrospectives must explicitly verify: "Did every new user-facing capability get documented?" If not, a remediation story is created in the next epic.
 
 #### Anti-Patterns to Avoid
 - **Never write directly to Vault without the `IsEquivalentToDesiredState` check.** The `CreateOrUpdate` flow reads first and only writes if state diverges. Writing unconditionally causes unnecessary Vault audit log noise and potential rate limiting.

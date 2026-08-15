@@ -811,6 +811,46 @@ webhooks:
   sideEffects: None
 - admissionReviewVersions:
   - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-mongodbatlassecretengineconfig
+  failurePolicy: Fail
+  name: mmongodbatlassecretengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - mongodbatlassecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-mongodbatlassecretenginerole
+  failurePolicy: Fail
+  name: mmongodbatlassecretenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - mongodbatlassecretengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
   clientConfig:
     service:
       name: webhook-service
@@ -827,6 +867,46 @@ webhooks:
     - CREATE
     resources:
     - namespaces
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-nomadsecretengineconfig
+  failurePolicy: Fail
+  name: mnomadsecretengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - nomadsecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-nomadsecretenginerole
+  failurePolicy: Fail
+  name: mnomadsecretenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - nomadsecretengineroles
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -1062,6 +1142,66 @@ webhooks:
     - CREATE
     resources:
     - sshsecretengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-terraformcloudsecretengineconfig
+  failurePolicy: Fail
+  name: mterraformcloudsecretengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - terraformcloudsecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-terraformcloudsecretenginerole
+  failurePolicy: Fail
+  name: mterraformcloudsecretenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - terraformcloudsecretengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-totpsecretenginekey
+  failurePolicy: Fail
+  name: mtotpsecretenginekey.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - totpsecretenginekeys
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -1935,6 +2075,48 @@ webhooks:
   sideEffects: None
 - admissionReviewVersions:
   - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-mongodbatlassecretengineconfig
+  failurePolicy: Fail
+  name: vmongodbatlassecretengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - mongodbatlassecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-mongodbatlassecretenginerole
+  failurePolicy: Fail
+  name: vmongodbatlassecretenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - mongodbatlassecretengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
   clientConfig:
     service:
       name: webhook-service
@@ -1951,6 +2133,48 @@ webhooks:
     - UPDATE
     resources:
     - namespaces
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-nomadsecretengineconfig
+  failurePolicy: Fail
+  name: vnomadsecretengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - nomadsecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-nomadsecretenginerole
+  failurePolicy: Fail
+  name: vnomadsecretenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - nomadsecretengineroles
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -2194,6 +2418,69 @@ webhooks:
     - UPDATE
     resources:
     - sshsecretengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-terraformcloudsecretengineconfig
+  failurePolicy: Fail
+  name: vterraformcloudsecretengineconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - terraformcloudsecretengineconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-terraformcloudsecretenginerole
+  failurePolicy: Fail
+  name: vterraformcloudsecretenginerole.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - terraformcloudsecretengineroles
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-totpsecretenginekey
+  failurePolicy: Fail
+  name: vtotpsecretenginekey.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - totpsecretenginekeys
   sideEffects: None
 - admissionReviewVersions:
   - v1

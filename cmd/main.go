@@ -399,6 +399,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controller.NomadSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "NomadSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "NomadSecretEngineConfig")
+		os.Exit(1)
+	}
+
+	if err = (&controller.NomadSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "NomadSecretEngineRole")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "NomadSecretEngineRole")
+		os.Exit(1)
+	}
+
 	if err = (&controller.LDAPSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LDAPSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "LDAPSecretEngineConfig")
 		os.Exit(1)
@@ -419,6 +429,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controller.TOTPSecretEngineKeyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "TOTPSecretEngineKey")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "TOTPSecretEngineKey")
+		os.Exit(1)
+	}
+
 	if err = (&controller.GCPSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GCPSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GCPSecretEngineConfig")
 		os.Exit(1)
@@ -431,6 +446,26 @@ func main() {
 
 	if err = (&controller.GCPSecretEngineStaticAccountReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GCPSecretEngineStaticAccount")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GCPSecretEngineStaticAccount")
+		os.Exit(1)
+	}
+
+	if err = (&controller.MongoDBAtlasSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "MongoDBAtlasSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "MongoDBAtlasSecretEngineConfig")
+		os.Exit(1)
+	}
+
+	if err = (&controller.MongoDBAtlasSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "MongoDBAtlasSecretEngineRole")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "MongoDBAtlasSecretEngineRole")
+		os.Exit(1)
+	}
+
+	if err = (&controller.TerraformCloudSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "TerraformCloudSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "TerraformCloudSecretEngineConfig")
+		os.Exit(1)
+	}
+
+	if err = (&controller.TerraformCloudSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "TerraformCloudSecretEngineRole")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "TerraformCloudSecretEngineRole")
 		os.Exit(1)
 	}
 
@@ -658,6 +693,16 @@ func main() {
 			os.Exit(1)
 		}
 
+		if err = (&redhatcopv1alpha1.NomadSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "NomadSecretEngineConfig")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.NomadSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "NomadSecretEngineRole")
+			os.Exit(1)
+		}
+
 		if err = (&redhatcopv1alpha1.LDAPSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "LDAPSecretEngineConfig")
 			os.Exit(1)
@@ -678,6 +723,11 @@ func main() {
 			os.Exit(1)
 		}
 
+		if err = (&redhatcopv1alpha1.TOTPSecretEngineKey{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "TOTPSecretEngineKey")
+			os.Exit(1)
+		}
+
 		if err = (&redhatcopv1alpha1.GCPSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "GCPSecretEngineConfig")
 			os.Exit(1)
@@ -690,6 +740,26 @@ func main() {
 
 		if err = (&redhatcopv1alpha1.GCPSecretEngineStaticAccount{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "GCPSecretEngineStaticAccount")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.MongoDBAtlasSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "MongoDBAtlasSecretEngineConfig")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.MongoDBAtlasSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "MongoDBAtlasSecretEngineRole")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.TerraformCloudSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "TerraformCloudSecretEngineConfig")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.TerraformCloudSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "TerraformCloudSecretEngineRole")
 			os.Exit(1)
 		}
 	}

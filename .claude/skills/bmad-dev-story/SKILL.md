@@ -85,6 +85,26 @@ Activation is complete. If `activation_steps_prepend` or `activation_steps_appen
   <critical>Do NOT schedule a "next session" or request review pauses unless a HALT condition applies. Only Step 9 decides completion.</critical>
   <critical>User skill level ({user_skill_level}) affects conversation style ONLY, not code updates.</critical>
 
+  <step n="0" goal="Execute activation gates — MUST complete before Step 1">
+    <critical>These gates are BLOCKING. Do NOT proceed to Step 1 until every gate passes. Do NOT skip this step.</critical>
+
+    <action>The workflow customization was resolved during On Activation (Steps 1-6 above).
+      If {workflow.activation_steps_append} contains entries, they MUST have been executed during Step 6.
+      Verify now: were all activation_steps_append entries executed? If not, execute them NOW before continuing.</action>
+
+    <action>Regardless of customization, run the unit test pre-flight gate:
+      Run `make test 2>&1` in the project root.
+      If exit code is non-zero:
+        Output: "Cannot start story development — unit tests are failing before any changes."
+        HALT: "Unit tests must pass before starting story development."
+      Otherwise output: "Unit test baseline established — all tests pass."</action>
+
+    <action>Output gate summary:
+      GATE_RESULT: activation_steps = EXECUTED ({count} entries) or SKIPPED (none configured)
+      GATE_RESULT: unit_test_baseline = PASS or FAIL
+      If any FAIL: HALT immediately.</action>
+  </step>
+
   <step n="1" goal="Find next ready story and load it" tag="sprint-status">
     <check if="{{story_path}} is provided">
       <action>Use {{story_path}} directly</action>
@@ -348,13 +368,11 @@ Activation is complete. If `activation_steps_prepend` or `activation_steps_appen
   </step>
 
   <step n="7" goal="Run validations and tests">
-    <action>Determine how to run tests for this repo (infer test framework from project structure)</action>
-    <action>Run all existing tests to ensure no regressions</action>
-    <action>Run the new tests to verify implementation correctness</action>
+    <action>Run `make test 2>&1` to execute the full unit test suite — this catches regressions and verifies new tests</action>
     <action>Run linting and code quality checks if configured in project</action>
     <action>Validate implementation meets ALL story acceptance criteria; enforce quantitative thresholds explicitly</action>
-    <action if="regression tests fail">STOP and fix before continuing - identify breaking changes immediately</action>
-    <action if="new tests fail">STOP and fix before continuing - ensure implementation correctness</action>
+    <action if="unit tests fail">STOP and fix before continuing - identify breaking changes immediately</action>
+    <action>Do NOT run `make integration` — integration tests are owned by the orchestrator and run separately</action>
   </step>
 
   <step n="8" goal="Validate and mark task complete ONLY when fully done">
@@ -494,7 +512,18 @@ Activation is complete. If `activation_steps_prepend` or `activation_steps_appen
       <action>Suggest checking {sprint_status} to see project progress</action>
     </check>
     <action>Remain flexible - allow user to choose their own path or ask for other assistance</action>
-  <action>Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete` — if the resolved value is non-empty, follow it as the final terminal instruction before exiting.</action>
+  </step>
+
+  <step n="11" goal="Execute on_complete gate — MUST run before exiting">
+    <critical>This step is MANDATORY. Do NOT skip it. Do NOT exit without executing this step.</critical>
+
+    <action>Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete`</action>
+    <action>If the resolved value is non-empty, execute it as a terminal instruction.
+      For this project, the on_complete gate runs the unit test suite as a final regression check:
+      Run `make test 2>&1` and verify exit code 0.
+      If tests fail: HALT — "Tests must pass before the story can be marked for review. Fix regressions."
+      If tests pass: Output "Post-completion regression check passed — no regressions introduced."</action>
+    <action>If the resolved value is empty or the script fails, skip silently and exit.</action>
   </step>
 
 </workflow>

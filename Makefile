@@ -141,7 +141,7 @@ test: manifests generate fmt vet envtest ## Run tests.
 
 # note: envtest requires a container runtime (docker or podman)
 .PHONY: integration
-integration: kind-setup deploy-vault deploy-ingress deploy-postgresql deploy-rabbitmq deploy-ldap deploy-keycloak vault manifests generate fmt vet envtest ## Run tests.
+integration: kind-setup deploy-vault deploy-ingress deploy-postgresql deploy-rabbitmq deploy-ldap deploy-keycloak deploy-nomad vault manifests generate fmt vet envtest ## Run tests.
 	export VAULT_TOKEN=$$(KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
 	export VAULT_ADDR="http://localhost:$(VAULT_HOST_PORT)" ;\
 	KUBECONFIG=$(KUBE_CONFIG_FILE) KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration -timeout 30m
@@ -215,6 +215,44 @@ deploy-ldap: kubectl
 	$(KUBECTL) --context $(KUBE_CONTEXT) create namespace ldap --dry-run=client -o yaml | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f -
 	$(KUBECTL) --context $(KUBE_CONTEXT) apply -f ./integration/ldap -n ldap
 	$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready -n ldap pod -l app=ldap --timeout=$(KUBECTL_WAIT_TIMEOUT)
+
+.PHONY: deploy-nomad
+deploy-nomad: kubectl
+	$(KUBECTL) --context $(KUBE_CONTEXT) create namespace nomad --dry-run=client -o yaml | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f -
+	$(KUBECTL) --context $(KUBE_CONTEXT) apply -f ./integration/nomad -n nomad
+	@echo "=== Waiting for Nomad pod readiness (timeout=$(KUBECTL_WAIT_TIMEOUT)) ==="
+	$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready -n nomad pod -l app=nomad --timeout=$(KUBECTL_WAIT_TIMEOUT) || { \
+		echo "=== Nomad pod failed to become ready ===" ;\
+		$(KUBECTL) --context $(KUBE_CONTEXT) get pods -n nomad -o wide ;\
+		echo "=== Nomad pod describe ===" ;\
+		$(KUBECTL) --context $(KUBE_CONTEXT) describe pod -n nomad -l app=nomad ;\
+		echo "=== Nomad container logs ===" ;\
+		$(KUBECTL) --context $(KUBE_CONTEXT) logs -n nomad -l app=nomad --tail=100 ;\
+		exit 1 ;\
+	}
+	@echo "Bootstrapping Nomad ACLs..."
+	@NOMAD_POD=$$($(KUBECTL) --context $(KUBE_CONTEXT) get pods -n nomad -l app=nomad -o jsonpath='{.items[0].metadata.name}') ;\
+	NOMAD_TOKEN="" ;\
+	for i in 1 2 3 4 5 6 7 8 9 10; do \
+		NOMAD_TOKEN=$$($(KUBECTL) --context $(KUBE_CONTEXT) exec -n nomad $$NOMAD_POD -- sh -c 'nomad acl bootstrap -json 2>/dev/null | grep -o "\"SecretID\":\"[^\"]*\"" | cut -d\" -f4' 2>/dev/null || echo "") ;\
+		if [ -n "$$NOMAD_TOKEN" ]; then break; fi ;\
+		echo "Waiting for Nomad ACL system to be ready (attempt $$i/10)..." ;\
+		sleep 2 ;\
+	done ;\
+	if [ -z "$$NOMAD_TOKEN" ]; then \
+		echo "Nomad ACL already bootstrapped or bootstrap failed, trying to read existing secret..." ;\
+		NOMAD_TOKEN=$$($(KUBECTL) --context $(KUBE_CONTEXT) get secret nomad-token-secret -n vault-admin -o jsonpath='{.data.token}' 2>/dev/null | base64 -d) ;\
+	fi ;\
+	if [ -z "$$NOMAD_TOKEN" ]; then \
+		echo "ERROR: Could not obtain Nomad management token." ;\
+		exit 1 ;\
+	fi ;\
+	echo "Creating readonly ACL policy in Nomad..." ;\
+	echo 'namespace "default" { policy = "read" }' | $(KUBECTL) --context $(KUBE_CONTEXT) exec -i -n nomad $$NOMAD_POD -- sh -c "NOMAD_TOKEN=$$NOMAD_TOKEN nomad acl policy apply readonly -" ;\
+	echo "Creating Nomad token K8s secret..." ;\
+	$(KUBECTL) --context $(KUBE_CONTEXT) create namespace vault-admin --dry-run=client -o yaml | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f - ;\
+	$(KUBECTL) --context $(KUBE_CONTEXT) create secret generic nomad-token-secret --from-literal=token=$$NOMAD_TOKEN -n vault-admin --dry-run=client -o yaml | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f - ;\
+	echo "Nomad ACL bootstrapped successfully."
 
 .PHONY: deploy-keycloak
 deploy-keycloak: kubectl

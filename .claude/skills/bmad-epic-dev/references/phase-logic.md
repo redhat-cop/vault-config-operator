@@ -162,7 +162,9 @@ Stories within the same dependency layer are independent — their dependencies 
 
 ### Integration Test Isolation Protocol
 
-When multiple stories run integration tests in parallel (each in its own worktree), each worktree **must** use its own Kind cluster to avoid race conditions on shared Kubernetes namespaces, Vault state, and host port bindings.
+Integration tests are an **orchestrator responsibility** — dev subagents run only unit tests (`make test`). The orchestrator runs `make integration` at two points: once per layer as a baseline (on the main branch before launching worktrees), and once per story as a pre-merge gate (in each worktree after code review is approved).
+
+When running pre-merge integration tests in parallel (multiple stories in the same layer completing around the same time), each worktree **must** use its own Kind cluster to avoid race conditions on shared Kubernetes namespaces, Vault state, and host port bindings.
 
 **Port and cluster assignment:** Before launching parallel worktrees for a dependency layer, the orchestrator assigns each story a unique port offset based on its position within the layer (0-indexed):
 
@@ -172,20 +174,9 @@ When multiple stories run integration tests in parallel (each in its own worktre
 | `VAULT_HOST_PORT` | `8200 + (layer_story_index + 1) * 10` | `8210`, `8220`, `8230` |
 | `HTTPS_HOST_PORT` | `VAULT_HOST_PORT + 1` | `8211`, `8221`, `8231` |
 
-The base port `8200` (offset 0) is reserved for the default cluster (`vault-config-operator`) and is never assigned to a worktree. The formula assumes single-epic parallelism; concurrent epics could collide on ports.
+The base port `8200` (offset 0) is reserved for the default cluster (`vault-config-operator`) and is used for the pre-layer baseline test on the main branch. The formula assumes single-epic parallelism; concurrent epics could collide on ports.
 
-**How to pass overrides:** Each `best-of-n-runner` subagent prompt must include an environment instruction block that the dev-story subagent applies when running `make integration`:
-
-```
-INTEGRATION TEST ISOLATION:
-When running integration tests (make integration), use these overrides:
-  KIND_CLUSTER_NAME={assigned_cluster_name}
-  VAULT_HOST_PORT={assigned_vault_port}
-  HTTPS_HOST_PORT={assigned_https_port}
-Run as: make integration KIND_CLUSTER_NAME={assigned_cluster_name} VAULT_HOST_PORT={assigned_vault_port} HTTPS_HOST_PORT={assigned_https_port}
-```
-
-**Sequential fallback:** When stories run sequentially on the main branch (B.5), no overrides are needed — the default cluster name and ports are used.
+**Sequential fallback:** When stories run sequentially on the main branch (B.5), no per-story overrides are needed — the default cluster name and ports are used. The orchestrator still runs integration tests before and after each story.
 
 ### Worktree Path Isolation (CRITICAL)
 
@@ -212,6 +203,21 @@ Run `git rev-parse --show-toplevel` if you need to confirm your project root.
 
 For each dependency layer (in topological order):
 
+### B.0: Pre-Layer Integration Baseline
+
+0. **Before launching any worktree subagents for this layer**, run integration tests on the current main branch state to establish a green baseline. This confirms the foundation is solid before anyone starts coding.
+
+   ```
+   make integration
+   ```
+
+   Use the default Kind cluster (`vault-config-operator`) on the default port (`8200`). If a default cluster is already running from a previous layer, reuse it.
+
+   - If tests **pass**: proceed to B.1. Log: "Layer {L} baseline: integration tests pass."
+   - If tests **fail**: **HALT the entire epic.** Report the failure and ask the user to resolve. Do NOT launch any worktree subagents on a broken baseline.
+
+   **On resume after a baseline failure:** The orchestrator re-runs the baseline before continuing.
+
 ### B.1: Launch Parallel Development
 
 1. Identify stories in this layer where status is `ready-for-dev` (or `in-progress`/`review` for resumption).
@@ -222,7 +228,9 @@ For each dependency layer (in topological order):
    ```
    Run the bmad-dev-story skill for story {epicNum}.{storyNum}.
    The story file is at: {implementation_artifacts}/{story_key}.md
-   Process the story fully — implement all tasks, run all tests, mark complete.
+   Process the story fully — implement all tasks, run unit tests (`make test`),
+   mark complete. Integration tests will be run by the orchestrator after
+   code review — do NOT run `make integration` yourself.
    If you encounter a blocking issue requiring a human decision, describe it
    clearly and halt. Do NOT make assumptions on behalf of the user.
 
@@ -233,13 +241,6 @@ For each dependency layer (in topological order):
    relative to your CWD or resolved from your CWD. If the skill resolves
    {project-root}, it MUST resolve to your current working directory.
    Run `git rev-parse --show-toplevel` if you need to confirm your project root.
-
-   INTEGRATION TEST ISOLATION:
-   When running integration tests (make integration), use these overrides:
-     KIND_CLUSTER_NAME={assigned_cluster_name}
-     VAULT_HOST_PORT={assigned_vault_port}
-     HTTPS_HOST_PORT={assigned_https_port}
-   Run as: make integration KIND_CLUSTER_NAME={assigned_cluster_name} VAULT_HOST_PORT={assigned_vault_port} HTTPS_HOST_PORT={assigned_https_port}
 
    IMPORTANT: If you need a decision, your output MUST include:
    - status: decision_needed
@@ -301,7 +302,53 @@ For each dependency layer (in topological order):
    ```
    Report: story_key, review_patches_count, files_changed_count, commit_sha.
 
-   Steps 1-4 run sequentially per story, but **multiple stories in the same layer run their pipelines in parallel** (each in its own worktree).
+   **Step 5 — PRE-MERGE INTEGRATION TEST** (orchestrator-owned, runs in worktree):
+
+   After commit, the **orchestrator itself** (not a subagent) runs integration tests in the story's worktree to verify the new code doesn't break anything before merging to main.
+
+   ```
+   cd <worktree-path>
+   make integration KIND_CLUSTER_NAME={assigned_cluster_name} VAULT_HOST_PORT={assigned_vault_port} HTTPS_HOST_PORT={assigned_https_port}
+   ```
+
+   - If tests **pass**: the story is ready for merge. Tear down the per-story Kind cluster:
+     ```
+     make kind-teardown KIND_CLUSTER_NAME={assigned_cluster_name}
+     ```
+
+   - If tests **fail**: spawn a **fix agent** (model: **Opus 4.6**) in the same worktree with the failure details:
+     ```
+     Integration tests failed in the worktree for story {epicNum}.{storyNum}.
+     The story file is at: {implementation_artifacts}/{story_key}.md
+
+     FAILURE OUTPUT:
+     {paste the relevant test failure output}
+
+     Fix the failing tests. The failures may be caused by:
+     - Incorrect test fixtures (wrong field values, missing config)
+     - Missing controller/webhook registrations in test suite setup
+     - Field name mismatches between CRD spec and Vault API responses
+     - Missing or incorrect test infrastructure (Makefile targets, deploy scripts)
+
+     After fixing, run `make test` to verify unit tests still pass.
+     Do NOT run `make integration` yourself — the orchestrator will re-run it.
+
+     WORKTREE ISOLATION (CRITICAL):
+     {include the standard worktree isolation block}
+
+     When complete, report: story_key, status (success/failed),
+     files_changed, and a summary of what was fixed.
+     ```
+
+     After the fix agent completes, commit the fixes and **re-run `make integration`** in the worktree. Repeat until tests pass or the cap is reached.
+
+     **HARD CAP: 3 integration-fix iterations per story.** If iteration 3 still fails:
+     - **HALT the story pipeline immediately.**
+     - Preserve the worktree and Kind cluster for manual debugging.
+     - Present the failure summary to the user: "Integration tests still failing after 3 fix attempts for story {story_key}. Human intervention needed."
+     - Wait for explicit user decision before proceeding.
+
+   Steps 1-5 run sequentially per story, but **multiple stories in the same layer run their pipelines in parallel** (each in its own worktree).
 
 3. Launch all stories in the layer simultaneously. Monitor for completion.
 
@@ -353,7 +400,7 @@ For each dependency layer (in topological order):
 
    If merge conflicts occur: halt with details. The user resolves conflicts manually, then re-invokes to resume. The conflicting branch is preserved for inspection.
 
-8. **Post-merge test verification.** After each merge, run the project's test suite on the main branch to confirm the merge didn't introduce regressions. If tests fail, halt with the merge SHA and failure details — the user must resolve before continuing.
+8. **Post-merge verification.** Integration tests already passed in the worktree (Step 5). After merge, run the fast unit test suite (`make test`) on the main branch as a quick sanity check that the merge itself didn't introduce issues. If tests fail, halt with the merge SHA and failure details — the user must resolve before continuing.
 
 9. **Update story file status on the main branch.** After each successful merge, on the main branch:
    - Set the story file's `Status:` field to `done`
@@ -369,7 +416,7 @@ For each dependency layer (in topological order):
 
    This ensures story file status is always consistent with `sprint-status.yaml`, regardless of whether the work was done in a worktree.
 
-10. Clean up worktrees and Kind clusters after successful merge:
+10. Clean up worktrees after successful merge:
 
    **Worktree cleanup:**
    ```
@@ -382,11 +429,7 @@ For each dependency layer (in topological order):
    git worktree remove --force <worktree-path>
    ```
 
-   **Kind cluster cleanup:** If the story used a dedicated Kind cluster (parallel worktree execution), tear it down to free resources:
-   ```
-   make kind-teardown KIND_CLUSTER_NAME={assigned_cluster_name}
-   ```
-   This deletes the Kind cluster and removes its kubeconfig file. Skip this step for the default cluster (`vault-config-operator`) or when running in sequential fallback mode.
+   **Kind cluster note:** Per-story Kind clusters are torn down in Step 5 after integration tests pass. If a story was halted before reaching Step 5, its Kind cluster may still be running — see the orphan detection protocol in the Resume Behavior section.
 
 11. Update `sprint-status.yaml`: mark each merged story as `done`.
 
@@ -413,22 +456,25 @@ For each dependency layer (in topological order):
 
 If `best-of-n-runner` subagents aren't available, process stories **sequentially on the main branch** within each layer:
 
+**B.0 still applies:** Run the pre-layer integration baseline (`make integration`) on the main branch before starting any story in the layer.
+
 For each story:
-1. Spawn a `generalPurpose` subagent for `bmad-dev-story`
+1. Spawn a `generalPurpose` subagent for `bmad-dev-story` (unit tests only — the subagent runs `make test`, not `make integration`)
 2. If `decision_needed`: follow the **Decision Relay Protocol** — present to user, wait, resume subagent
 3. On success, spawn a `generalPurpose` subagent for `bmad-code-review` (model: **ChatGPT 5.4**)
 4. If `decision_needed`: follow the **Decision Relay Protocol**
-5. If `changes_requested`: re-run dev-story (Opus 4.6) to address findings, then **ALWAYS** re-run code-review (ChatGPT 5.4) — never skip the re-review, even if the fixes seem trivial. Repeat until approved or halted. **HARD CAP: 5 review iterations max.** If iteration 5 still returns `changes_requested`: **HALT immediately.** Summarize all open/unresolved findings, present to the user with "⚠️ Review cap reached (5/5 iterations) for story {story_key}. Human intervention needed.", and wait for explicit user decision before proceeding.
-6. **Update story file** on the main branch:
-   - Set `Status:` to `done`
-   - Populate the **Code Review Record** section (Review Model, Findings, Decisions, Fixes)
+5. If `changes_requested`: re-run dev-story (Opus 4.6) to address findings, then **ALWAYS** re-run code-review (ChatGPT 5.4) — never skip the re-review, even if the fixes seem trivial. Repeat until approved or halted. **HARD CAP: 5 review iterations max.** If iteration 5 still returns `changes_requested`: **HALT immediately.** Summarize all open/unresolved findings, present to the user with "Review cap reached (5/5 iterations) for story {story_key}. Human intervention needed.", and wait for explicit user decision before proceeding.
+6. **Pre-commit integration test** (orchestrator-owned): Run `make integration` on the main branch (default cluster, default ports — sequential mode uses only one cluster). If tests fail, spawn a fix agent (Opus 4.6) to address failures. **HARD CAP: 3 integration-fix iterations.** If still failing after 3 attempts, HALT and escalate to user.
 7. Commit (respecting `--commit-policy`):
    ```
    feat(epic-{N}): {story_key} — {story title}
    ```
-8. Update `sprint-status.yaml`: mark story as `done`. **HARD GUARD:** Do NOT update sprint-status until the story file's `Status:` field is already `done` in a committed state.
-9. **Verify consistency (BLOCKING GATE):** Confirm story file status and sprint-status agree before continuing. If they disagree, HALT and fix — do NOT proceed.
-10. Report progress, continue to next story
+8. **Update story file** on the main branch:
+   - Set `Status:` to `done`
+   - Populate the **Code Review Record** section (Review Model, Findings, Decisions, Fixes)
+9. Update `sprint-status.yaml`: mark story as `done`. **HARD GUARD:** Do NOT update sprint-status until the story file's `Status:` field is already `done` in a committed state.
+10. **Verify consistency (BLOCKING GATE):** Confirm story file status and sprint-status agree before continuing. If they disagree, HALT and fix — do NOT proceed.
+11. Report progress, continue to next story
 
 ### B.6: Check for New Stories
 

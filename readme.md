@@ -97,6 +97,19 @@ Currently this operator covers the following Vault APIs:
 14. [KubernetesSecretEngineRole](./docs/secret-engines/kubernetes.md#kubernetessecretenginerole) Configures a [Kubernetes Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/kubernetes) Role
 15. [AzureSecretEngineConfig](./docs/secret-engines/azure.md#azuresecretengineconfig) Configures an [Azure Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/azure) Connection
 16. [AzureSecretEngineRole](./docs/secret-engines/azure.md#azuresecretenginerole) Configures an [Azure Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/azure) Role
+17. [AWSSecretEngineConfig](./docs/secret-engines/aws.md#awssecretengineconfig) Configures an [AWS Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/aws) Connection
+18. [AWSSecretEngineRole](./docs/secret-engines/aws.md#awssecretenginerole) Configures an [AWS Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/aws) Role
+19. [ConsulSecretEngineConfig](./docs/secret-engines/consul.md#consulsecretengineconfig) Configures a [Consul Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/consul) Connection
+20. [ConsulSecretEngineRole](./docs/secret-engines/consul.md#consulsecretenginerole) Configures a [Consul Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/consul) Role
+21. [GCPSecretEngineConfig](./docs/secret-engines/gcp.md#gcpsecretengineconfig) Configures a [GCP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/gcp) Connection
+22. [GCPSecretEngineRoleset](./docs/secret-engines/gcp.md#gcpsecretengineroleset) Configures a [GCP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/gcp) Roleset
+23. [GCPSecretEngineStaticAccount](./docs/secret-engines/gcp.md#gcpsecretenginestaticaccount) Configures a [GCP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/gcp) Static Account
+24. [LDAPSecretEngineConfig](./docs/secret-engines/ldap.md#ldapsecretengineconfig) Configures an [LDAP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ldap) Connection
+25. [LDAPSecretEngineStaticRole](./docs/secret-engines/ldap.md#ldapsecretenginestaticrole) Configures an [LDAP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ldap) Static Role
+26. [LDAPSecretEngineDynamicRole](./docs/secret-engines/ldap.md#ldapsecretenginedynamicrole) Configures an [LDAP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ldap) Dynamic Role
+27. [SSHSecretEngineConfig](./docs/secret-engines/ssh.md#sshsecretengineconfig) Configures an [SSH Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ssh) CA (certificate signing key behavior)
+28. [SSHSecretEngineRole](./docs/secret-engines/ssh.md#sshsecretenginerole) Configures an [SSH Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ssh) Role
+29. [TransitSecretEngineKey](./docs/secret-engines/transit.md#transitsecretenginekey) Configures a [Transit Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/transit) Key
 
 ## Secret Management
 

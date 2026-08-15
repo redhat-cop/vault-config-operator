@@ -57,12 +57,19 @@ resources:
 - bases/redhatcop.redhat.io_sshsecretengineroles.yaml
 - bases/redhatcop.redhat.io_consulsecretengineconfigs.yaml
 - bases/redhatcop.redhat.io_consulsecretengineroles.yaml
+- bases/redhatcop.redhat.io_nomadsecretengineconfigs.yaml
+- bases/redhatcop.redhat.io_nomadsecretengineroles.yaml
 - bases/redhatcop.redhat.io_gcpsecretengineconfigs.yaml
 - bases/redhatcop.redhat.io_gcpsecretenginerolesets.yaml
 - bases/redhatcop.redhat.io_gcpsecretenginestaticaccounts.yaml
 - bases/redhatcop.redhat.io_ldapsecretengineconfigs.yaml
 - bases/redhatcop.redhat.io_ldapsecretenginestaticroles.yaml
 - bases/redhatcop.redhat.io_ldapsecretenginedynamicroles.yaml
+- bases/redhatcop.redhat.io_mongodbatlassecretengineconfigs.yaml
+- bases/redhatcop.redhat.io_mongodbatlassecretengineroles.yaml
+- bases/redhatcop.redhat.io_terraformcloudsecretengineconfigs.yaml
+- bases/redhatcop.redhat.io_terraformcloudsecretengineroles.yaml
+- bases/redhatcop.redhat.io_totpsecretenginekeys.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches: []

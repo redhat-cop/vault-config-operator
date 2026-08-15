@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nomad-config
+data:
+  nomad.hcl: |
+    acl {
+      enabled = true
+    }
+
+    server {
+      enabled = true
+      bootstrap_expect = 1
+    }
+
+    client {
+      enabled = false
+    }
+
+    data_dir = "/tmp/nomad"

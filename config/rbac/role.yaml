@@ -91,7 +91,11 @@ rules:
   - ldapsecretengineconfigs
   - ldapsecretenginedynamicroles
   - ldapsecretenginestaticroles
+  - mongodbatlassecretengineconfigs
+  - mongodbatlassecretengineroles
   - namespaces
+  - nomadsecretengineconfigs
+  - nomadsecretengineroles
   - passwordpolicies
   - pkisecretengineconfigs
   - pkisecretengineroles
@@ -105,6 +109,9 @@ rules:
   - secretenginemounts
   - sshsecretengineconfigs
   - sshsecretengineroles
+  - terraformcloudsecretengineconfigs
+  - terraformcloudsecretengineroles
+  - totpsecretenginekeys
   - transitsecretenginekeys
   - vaultsecrets
   verbs:
@@ -163,7 +170,11 @@ rules:
   - ldapsecretengineconfigs/finalizers
   - ldapsecretenginedynamicroles/finalizers
   - ldapsecretenginestaticroles/finalizers
+  - mongodbatlassecretengineconfigs/finalizers
+  - mongodbatlassecretengineroles/finalizers
   - namespaces/finalizers
+  - nomadsecretengineconfigs/finalizers
+  - nomadsecretengineroles/finalizers
   - passwordpolicies/finalizers
   - pkisecretengineconfigs/finalizers
   - pkisecretengineroles/finalizers
@@ -176,6 +187,9 @@ rules:
   - secretenginemounts/finalizers
   - sshsecretengineconfigs/finalizers
   - sshsecretengineroles/finalizers
+  - terraformcloudsecretengineconfigs/finalizers
+  - terraformcloudsecretengineroles/finalizers
+  - totpsecretenginekeys/finalizers
   - transitsecretenginekeys/finalizers
   - vaultsecrets/finalizers
   verbs:
@@ -228,7 +242,11 @@ rules:
   - ldapsecretengineconfigs/status
   - ldapsecretenginedynamicroles/status
   - ldapsecretenginestaticroles/status
+  - mongodbatlassecretengineconfigs/status
+  - mongodbatlassecretengineroles/status
   - namespaces/status
+  - nomadsecretengineconfigs/status
+  - nomadsecretengineroles/status
   - passwordpolicies/status
   - pkisecretengineconfigs/status
   - pkisecretengineroles/status
@@ -242,6 +260,9 @@ rules:
   - secretenginemounts/status
   - sshsecretengineconfigs/status
   - sshsecretengineroles/status
+  - terraformcloudsecretengineconfigs/status
+  - terraformcloudsecretengineroles/status
+  - totpsecretenginekeys/status
   - transitsecretenginekeys/status
   - vaultsecrets/status
   verbs:

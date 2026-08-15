@@ -1,5 +1,5 @@
 # generated: 2026-04-11
-# last_updated: 2026-07-03
+# last_updated: 2026-08-12
 # project: vault-config-operator
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,17 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-08-10
+last_updated: 2026-08-12
+# Story 13.0 done 2026-08-12
+# Story 13.0 review 2026-08-12
+# Story 13.0 in-progress 2026-08-12
+# Story 13.4 review 2026-08-12
+# Story 13.3 ready-for-dev 2026-08-12
+# Story 13.1 ready-for-dev 2026-08-12
+# Story 13.2 ready-for-dev 2026-08-12
+# Story 13.4 ready-for-dev 2026-08-12
+# Story 13.0 ready-for-dev 2026-08-12
+# Epic 13 in-progress 2026-08-12
 # Story 12.1 done 2026-08-10
 # Epic 12 done 2026-08-10
 # Story 12.3 done 2026-08-10
@@ -530,12 +540,13 @@ development_status:
   epic-12-retrospective: done
 
   # Epic 13: Lower-Priority Missing Secret Engines (Nomad, TOTP, MongoDB Atlas, Terraform Cloud)
-  epic-13: backlog
-  13-1-nomad-secret-engine-config-and-role-crds: backlog
-  13-2-totp-secret-engine-key-crd: backlog
-  13-3-mongodb-atlas-secret-engine-config-and-role-crds: backlog
-  13-4-terraform-cloud-secret-engine-config-and-role-crds: backlog
-  epic-13-retrospective: optional
+  epic-13: done
+  13-0-retroactive-documentation-for-epics-11-12-secret-engines: done
+  13-1-nomad-secret-engine-config-and-role-crds: done
+  13-2-totp-secret-engine-key-crd: done
+  13-3-mongodb-atlas-secret-engine-config-and-role-crds: done
+  13-4-terraform-cloud-secret-engine-config-and-role-crds: done
+  epic-13-retrospective: done
 
   # Epic 14: High-Priority Missing Auth Methods (AppRole, AWS)
   epic-14: backlog
@@ -600,8 +611,34 @@ action_items:
   - epic: 12
     action: "Sprint-status/story-file atomicity guard — orchestrator must not mark sprint-status done unless story file is already done"
     owner: "Bob (Scrum Master)"
-    status: done
+    status: not-effective  # Implemented as documentation rule, not code enforcement; drift recurred in Epic 13
   - epic: 12
     action: "Final consistency check as blocking gate — halt on any status inconsistency between story files and sprint-status"
     owner: "Bob (Scrum Master)"
-    status: done
+    status: not-effective  # Same — not enforced in orchestrator code; subsumed by Epic 13 Action Item #1
+
+  # Epic 13 action items
+  - epic: 13
+    action: "Phase B story file finalization — orchestrator must set story Status to done, populate Code Review Record, verify consistency with sprint-status before final commit"
+    owner: "Bob (Scrum Master)"
+    status: pending
+  - epic: 13
+    action: "Validation matrix requirement — story specs with multi-mode/conditional-field types must include field acceptance/rejection matrix per mode"
+    owner: "Amelia (Developer)"
+    status: pending
+  - epic: 13
+    action: "Novelty risk flag — add Novelty Risk LOW/MEDIUM/HIGH field to story spec template"
+    owner: "Charlie (Senior Dev)"
+    status: pending
+  - epic: 13
+    action: "Secret-ID CRD scoping decision — resolve whether 14.1 includes a SecretID CRD or scopes to role definitions only"
+    owner: "Alice (Product Owner)"
+    status: pending
+  - epic: 13
+    action: "AWS Auth config endpoint decision — single CRD or two for config/client and config/identity"
+    owner: "Charlie (Senior Dev)"
+    status: pending
+  - epic: 13
+    action: "Pre-epic baseline verification — run make test, make manifests, go vet before starting Epic 14"
+    owner: "Dana (QA Engineer)"
+    status: pending
