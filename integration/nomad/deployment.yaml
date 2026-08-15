@@ -20,7 +20,8 @@ spec:
           command:
             - nomad
             - agent
-            - -dev
+            - -server
+            - -bootstrap-expect=1
             - -bind=0.0.0.0
             - -config=/etc/nomad.d/nomad.hcl
           ports:

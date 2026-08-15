@@ -8,6 +8,13 @@ data:
       enabled = true
     }
 
+    server {
+      enabled = true
+      bootstrap_expect = 1
+    }
+
     client {
       enabled = false
     }
+
+    data_dir = "/tmp/nomad"
