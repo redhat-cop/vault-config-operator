@@ -196,6 +196,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controller.AppRoleAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AppRoleAuthEngineRole")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AppRoleAuthEngineRole")
+		os.Exit(1)
+	}
+
 	if err = (&controller.AzureAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AzureAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AzureAuthEngineConfig")
 		os.Exit(1)
@@ -512,6 +517,10 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.JWTOIDCAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "JWTOIDCAuthEngineRole")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.AppRoleAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "AppRoleAuthEngineRole")
 			os.Exit(1)
 		}
 		if err = (&redhatcopv1alpha1.AzureAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {

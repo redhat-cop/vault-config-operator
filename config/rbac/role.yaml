@@ -46,6 +46,7 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
+  - approleauthengineroles
   - auditrequestheaders
   - audits
   - authenginemounts
@@ -125,6 +126,7 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
+  - approleauthengineroles/finalizers
   - auditrequestheaders/finalizers
   - audits/finalizers
   - authenginemounts/finalizers
@@ -197,6 +199,7 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
+  - approleauthengineroles/status
   - auditrequestheaders/status
   - audits/status
   - authenginemounts/status

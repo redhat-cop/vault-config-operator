@@ -1,6 +1,6 @@
 # Story 14.1: AppRole Auth Engine — Config and Role CRDs
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -30,38 +30,38 @@ Secret-ID management (generate, list, destroy) is operational — the CRD manage
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `AppRoleAuthEngineRole` type (AC: 1, 2, 3, 5)
-  - [ ] 1.1: Create `api/v1alpha1/approleauthenginerole_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `AppRoleRole` struct, `Name`
-  - [ ] 1.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/role/{name}`, `GetPayload()`, `IsEquivalentToDesiredState()`, `IsDeletable()=true`
-  - [ ] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
-  - [ ] 1.4: Implement `toMap()` on `AppRoleRole` — emit all fields in Vault API snake_case; use `durationToSeconds()` for duration fields, `json.Number` for integer fields
-  - [ ] 1.5: Implement `IsEquivalentToDesiredState()` — `removeUnsetFields` + `filterPayloadToDesiredKeys` + `reflect.DeepEqual`
+- [x] Task 1: Create `AppRoleAuthEngineRole` type (AC: 1, 2, 3, 5)
+  - [x] 1.1: Create `api/v1alpha1/approleauthenginerole_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `AppRoleRole` struct, `Name`
+  - [x] 1.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/role/{name}`, `GetPayload()`, `IsEquivalentToDesiredState()`, `IsDeletable()=true`
+  - [x] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
+  - [x] 1.4: Implement `toMap()` on `AppRoleRole` — emit all fields in Vault API snake_case; use `durationToSeconds()` for duration fields, `json.Number` for integer fields
+  - [x] 1.5: Implement `IsEquivalentToDesiredState()` — `removeUnsetFields` + `filterPayloadToDesiredKeys` + `reflect.DeepEqual`
 
-- [ ] Task 2: Create webhook (AC: 5)
-  - [ ] 2.1: Create `api/v1alpha1/approleauthenginerole_webhook.go` — `admission.Defaulter[*AppRoleAuthEngineRole]`, `admission.Validator[*AppRoleAuthEngineRole]`, immutable `spec.path`/`spec.name`, `local_secret_ids` immutable on update
+- [x] Task 2: Create webhook (AC: 5)
+  - [x] 2.1: Create `api/v1alpha1/approleauthenginerole_webhook.go` — `admission.Defaulter[*AppRoleAuthEngineRole]`, `admission.Validator[*AppRoleAuthEngineRole]`, immutable `spec.path`/`spec.name`, `local_secret_ids` immutable on update
 
-- [ ] Task 3: Create controller (AC: 1, 2, 3, 4)
-  - [ ] 3.1: Create `internal/controller/approleauthenginerole_controller.go` — embed `ReconcilerBase`, standard `VaultResource` reconcile pattern, `For()` with `NewDefaultPeriodicReconcilePredicate()`
+- [x] Task 3: Create controller (AC: 1, 2, 3, 4)
+  - [x] 3.1: Create `internal/controller/approleauthenginerole_controller.go` — embed `ReconcilerBase`, standard `VaultResource` reconcile pattern, `For()` with `NewDefaultPeriodicReconcilePredicate()`
 
-- [ ] Task 4: Register in main.go (AC: 1)
-  - [ ] 4.1: Add controller registration for the reconciler
-  - [ ] 4.2: Add webhook registration inside `ENABLE_WEBHOOKS` guard
+- [x] Task 4: Register in main.go (AC: 1)
+  - [x] 4.1: Add controller registration for the reconciler
+  - [x] 4.2: Add webhook registration inside `ENABLE_WEBHOOKS` guard
 
-- [ ] Task 5: Unit tests (AC: 1, 2, 3, 5)
-  - [ ] 5.1: Create `api/v1alpha1/approleauthenginerole_test.go` — test `toMap()` output, `IsEquivalentToDesiredState()` match/mismatch/extra-fields, `GetPath()`, `IsDeletable()`, `GetConditions()`/`SetConditions()`
+- [x] Task 5: Unit tests (AC: 1, 2, 3, 5)
+  - [x] 5.1: Create `api/v1alpha1/approleauthenginerole_test.go` — test `toMap()` output, `IsEquivalentToDesiredState()` match/mismatch/extra-fields, `GetPath()`, `IsDeletable()`, `GetConditions()`/`SetConditions()`
 
-- [ ] Task 6: Integration tests (AC: 1, 2, 3, 4)
-  - [ ] 6.1: Create test YAML fixtures in `test/approleauthengine/` — mount CR + role CR + updated role CR
-  - [ ] 6.2: Create `internal/controller/approleauthenginerole_controller_test.go` with `//go:build integration` — create, verify ReconcileSuccessful, update, verify update, delete, verify Vault cleanup
+- [x] Task 6: Integration tests (AC: 1, 2, 3, 4)
+  - [x] 6.1: Create test YAML fixtures in `test/approleauthengine/` — mount CR + role CR + updated role CR
+  - [x] 6.2: Create `internal/controller/approleauthenginerole_controller_test.go` with `//go:build integration` — create, verify ReconcileSuccessful, update, verify update, delete, verify Vault cleanup
 
-- [ ] Task 7: CRD registration and code generation (AC: all)
-  - [ ] 7.1: Run `make manifests generate fmt vet test`
-  - [ ] 7.2: Add new CRD YAML file to `config/crd/kustomization.yaml` (CRD registration checklist)
-  - [ ] 7.3: Verify all existing tests still pass
+- [x] Task 7: CRD registration and code generation (AC: all)
+  - [x] 7.1: Run `make manifests generate fmt vet test`
+  - [x] 7.2: Add new CRD YAML file to `config/crd/kustomization.yaml` (CRD registration checklist)
+  - [x] 7.3: Verify all existing tests still pass
 
-- [ ] Task 8: Documentation (AC: 6)
-  - [ ] 8.1: Create `docs/auth-engines/approle.md` following `docs/engine-doc-template.md`
-  - [ ] 8.2: Update `docs/auth-engines/index.md` — add AppRole row to Supported Auth Engines table
+- [x] Task 8: Documentation (AC: 6)
+  - [x] 8.1: Create `docs/auth-engines/approle.md` following `docs/engine-doc-template.md`
+  - [x] 8.2: Update `docs/auth-engines/index.md` — add AppRole row to Supported Auth Engines table
 
 ## Dev Notes
 
@@ -487,11 +487,12 @@ Note: Config CRD column shows "—" because AppRole has no config CRD (mount-lev
 
 ### Review Model Used
 
-(to be filled during code review)
+GPT-5.4 (via Cursor)
 
 ### Review Findings
 
-(to be filled during code review)
+- [ ] [Review][Patch] AppRole updates still cannot clear previously-set optional fields back to default or empty values, so stale Vault role settings remain after spec updates [api/v1alpha1/approleauthenginerole_types.go:181]
+- [ ] [Review][Patch] AppRole regression coverage still misses the clear-to-default update path, so the stale-state bug passes both unit and integration tests unnoticed [api/v1alpha1/approleauthenginerole_test.go:116]
 
 ### Decisions Needed / Decisions Taken
 
@@ -501,18 +502,48 @@ Note: Config CRD column shows "—" because AppRole has no config CRD (mount-lev
 
 ### Fixes Applied
 
-(to be filled during code review)
+None during review; findings recorded for follow-up.
 
 ## Dev Agent Record
 
 ### Agent Model Used
 
-(to be filled during implementation)
+Claude Opus 4.6 (via Cursor)
 
 ### Debug Log References
 
+No debug issues encountered.
+
 ### Completion Notes List
+
+- Implemented AppRoleAuthEngineRole CRD type with full VaultObject/ConditionsAware interface support
+- `toMap()` emits all fields in Vault API snake_case with proper `durationToSeconds()` for duration fields and `json.Number` for integer fields
+- `IsEquivalentToDesiredState()` uses standard pipeline: `removeUnsetFields` + `filterPayloadToDesiredKeys` + `reflect.DeepEqual`
+- Webhook enforces immutability on `spec.path`, `spec.name`, and `spec.localSecretIDs`
+- Controller follows simplest VaultResource pattern (no namespace watches, no credential resolution)
+- Unit tests cover: `GetPath()` (with/without name override), `toMap()` (full/minimal), `IsEquivalentToDesiredState()` (match/mismatch/extra-fields), `IsDeletable()`, `Get/SetConditions()`
+- Integration tests cover full lifecycle: create mount → create role → update role → delete role → delete mount
+- All existing tests pass with no regressions
 
 ### Change Log
 
+- 2026-08-15: Implemented AppRoleAuthEngineRole CRD — types, webhook, controller, unit tests, integration tests, documentation
+
 ### File List
+
+- api/v1alpha1/approleauthenginerole_types.go (NEW)
+- api/v1alpha1/approleauthenginerole_webhook.go (NEW)
+- api/v1alpha1/approleauthenginerole_test.go (NEW)
+- internal/controller/approleauthenginerole_controller.go (NEW)
+- internal/controller/approleauthenginerole_controller_test.go (NEW)
+- cmd/main.go (MODIFIED)
+- config/crd/kustomization.yaml (MODIFIED)
+- config/crd/bases/redhatcop.redhat.io_approleauthengineroles.yaml (GENERATED)
+- config/rbac/role.yaml (GENERATED)
+- config/webhook/manifests.yaml (GENERATED)
+- api/v1alpha1/zz_generated.deepcopy.go (GENERATED)
+- test/approleauthengine/test-approle-auth-mount.yaml (NEW)
+- test/approleauthengine/test-approle-auth-role.yaml (NEW)
+- test/approleauthengine/test-approle-auth-role-updated.yaml (NEW)
+- docs/auth-engines/approle.md (NEW)
+- docs/auth-engines/index.md (MODIFIED)

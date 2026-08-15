@@ -70,6 +70,7 @@ resources:
 - bases/redhatcop.redhat.io_terraformcloudsecretengineconfigs.yaml
 - bases/redhatcop.redhat.io_terraformcloudsecretengineroles.yaml
 - bases/redhatcop.redhat.io_totpsecretenginekeys.yaml
+- bases/redhatcop.redhat.io_approleauthengineroles.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches: []

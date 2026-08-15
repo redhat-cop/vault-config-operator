@@ -28,6 +28,48 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 		// --- Rejection tests (path changed) ---
 
 		{
+			name: "AppRoleAuthEngineRole rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &AppRoleAuthEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&AppRoleAuthEngineRole{Spec: AppRoleAuthEngineRoleSpec{Path: "old/path"}},
+					&AppRoleAuthEngineRole{Spec: AppRoleAuthEngineRoleSpec{Path: "new/path"}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.path cannot be updated",
+		},
+		{
+			name: "AppRoleAuthEngineRole rejects name change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &AppRoleAuthEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&AppRoleAuthEngineRole{Spec: AppRoleAuthEngineRoleSpec{Path: "same/path", Name: "old-name"}},
+					&AppRoleAuthEngineRole{Spec: AppRoleAuthEngineRoleSpec{Path: "same/path", Name: "new-name"}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.name cannot be updated",
+		},
+		{
+			name: "AppRoleAuthEngineRole rejects localSecretIDs change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &AppRoleAuthEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&AppRoleAuthEngineRole{Spec: AppRoleAuthEngineRoleSpec{
+						Path:        "same/path",
+						AppRoleRole: AppRoleRole{LocalSecretIDs: false},
+					}},
+					&AppRoleAuthEngineRole{Spec: AppRoleAuthEngineRoleSpec{
+						Path:        "same/path",
+						AppRoleRole: AppRoleRole{LocalSecretIDs: true},
+					}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.localSecretIDs cannot be updated",
+		},
+		{
 			name: "AWSSecretEngineConfig rejects path change",
 			validateFn: func() (admission.Warnings, error) {
 				r := &AWSSecretEngineConfig{}
@@ -568,6 +610,35 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 
 		// --- Allowance tests (path unchanged, other field changed) ---
 
+		{
+			name: "AppRoleAuthEngineRole allows mutable field update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &AppRoleAuthEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&AppRoleAuthEngineRole{Spec: AppRoleAuthEngineRoleSpec{
+						Path: "same/path",
+						Name: "same-name",
+						AppRoleRole: AppRoleRole{
+							BindSecretID:   true,
+							LocalSecretIDs: false,
+							TokenPolicies:  []string{"default"},
+							TokenTTL:       "1h",
+						},
+					}},
+					&AppRoleAuthEngineRole{Spec: AppRoleAuthEngineRoleSpec{
+						Path: "same/path",
+						Name: "same-name",
+						AppRoleRole: AppRoleRole{
+							BindSecretID:   true,
+							LocalSecretIDs: false,
+							TokenPolicies:  []string{"default", "new-policy"},
+							TokenTTL:       "2h",
+						},
+					}},
+				)
+			},
+			expectErr: false,
+		},
 		{
 			name: "AWSSecretEngineConfig allows non-path update",
 			validateFn: func() (admission.Warnings, error) {

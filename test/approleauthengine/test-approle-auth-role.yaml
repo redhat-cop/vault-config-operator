@@ -1,0 +1,17 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AppRoleAuthEngineRole
+metadata:
+  name: test-approle-role
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  path: test-approle-auth/test-approle-mount
+  bindSecretID: true
+  secretIDTTL: "10m"
+  secretIDNumUses: 40
+  tokenTTL: "20m"
+  tokenMaxTTL: "30m"
+  tokenPolicies:
+    - default
+    - app-policy
