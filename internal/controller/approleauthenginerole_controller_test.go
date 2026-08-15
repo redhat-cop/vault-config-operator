@@ -161,9 +161,9 @@ var _ = Describe("AppRoleAuthEngineRole controller", Ordered, func() {
 			Expect(secretIDTTL.String()).To(Equal("1800"), "expected secret_id_ttl=1800 (30m)")
 
 			By("Verifying period was set correctly")
-			tokenPeriod, ok := secret.Data["period"].(json.Number)
-			Expect(ok).To(BeTrue(), "expected period to be json.Number")
-			Expect(tokenPeriod.String()).To(Equal("14400"), "expected period=14400 (4h)")
+			tokenPeriod, ok := secret.Data["token_period"].(json.Number)
+			Expect(ok).To(BeTrue(), "expected token_period to be json.Number")
+			Expect(tokenPeriod.String()).To(Equal("14400"), "expected token_period=14400 (4h)")
 		})
 	})
 
