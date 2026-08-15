@@ -1,6 +1,10 @@
+---
+baseline_commit: f9a29804ec47227fd4271ae621a1a0f45669fc95
+---
+
 # Story 14.2: AWS Auth Engine — Config and Role CRDs
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -30,59 +34,59 @@ So that Vault's AWS auth method can be managed declaratively.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `AWSAuthEngineClientConfig` type (AC: 1, 4, 7, 8)
-  - [ ] 1.1: Create `api/v1alpha1/awsauthengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `AWSAuthClientConfig` struct, `AWSCredentials` (`RootCredentialConfig` with usernameKey="access_key", passwordKey="secret_key")
-  - [ ] 1.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/config/client`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()`, `IsDeletable()=true`
-  - [ ] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
-  - [ ] 1.4: Implement `setInternalCredentials()` — resolve access_key/secret_key from K8s Secret, VaultSecret, or RandomSecret (follow `AWSSecretEngineConfig` pattern)
-  - [ ] 1.5: Implement `toMap()` on `AWSAuthClientConfig` — convert to Vault API snake_case fields
-  - [ ] 1.6: Implement `IsEquivalentToDesiredState()` — must delete `secret_key` from desired state (Vault never returns it on read), then `filterPayloadToDesiredKeys`
+- [x] Task 1: Create `AWSAuthEngineClientConfig` type (AC: 1, 4, 7, 8)
+  - [x] 1.1: Create `api/v1alpha1/awsauthengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `AWSAuthClientConfig` struct, `AWSCredentials` (`RootCredentialConfig` with usernameKey="access_key", passwordKey="secret_key")
+  - [x] 1.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/config/client`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()`, `IsDeletable()=true`
+  - [x] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
+  - [x] 1.4: Implement `setInternalCredentials()` — resolve access_key/secret_key from K8s Secret, VaultSecret, or RandomSecret (follow `AWSSecretEngineConfig` pattern)
+  - [x] 1.5: Implement `toMap()` on `AWSAuthClientConfig` — convert to Vault API snake_case fields
+  - [x] 1.6: Implement `IsEquivalentToDesiredState()` — must delete `secret_key` from desired state (Vault never returns it on read), then `filterPayloadToDesiredKeys`
 
-- [ ] Task 2: Create `AWSAuthEngineIdentityConfig` type (AC: 2, 5, 7, 8)
-  - [ ] 2.1: Create `api/v1alpha1/awsauthengineidentityconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `AWSAuthIdentityConfig` struct
-  - [ ] 2.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/config/identity`, `IsDeletable()=false`, no `PrepareInternalValues` needed
-  - [ ] 2.3: Implement `ConditionsAware` interface
-  - [ ] 2.4: Implement `toMap()` on `AWSAuthIdentityConfig` — emit iam_alias, iam_metadata, ec2_alias, ec2_metadata
-  - [ ] 2.5: Implement `IsEquivalentToDesiredState()` — standard `filterPayloadToDesiredKeys`
+- [x] Task 2: Create `AWSAuthEngineIdentityConfig` type (AC: 2, 5, 7, 8)
+  - [x] 2.1: Create `api/v1alpha1/awsauthengineidentityconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `AWSAuthIdentityConfig` struct
+  - [x] 2.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/config/identity`, `IsDeletable()=false`, no `PrepareInternalValues` needed
+  - [x] 2.3: Implement `ConditionsAware` interface
+  - [x] 2.4: Implement `toMap()` on `AWSAuthIdentityConfig` — emit iam_alias, iam_metadata, ec2_alias, ec2_metadata
+  - [x] 2.5: Implement `IsEquivalentToDesiredState()` — standard `filterPayloadToDesiredKeys`
 
-- [ ] Task 3: Create `AWSAuthEngineRole` type (AC: 3, 6, 7, 8)
-  - [ ] 3.1: Create `api/v1alpha1/awsauthenginerole_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `AWSAuthRole` struct, `Name`
-  - [ ] 3.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/role/{name}`, `IsDeletable()=true`
-  - [ ] 3.3: Implement `ConditionsAware` interface
-  - [ ] 3.4: Implement `toMap()` on `AWSAuthRole` — handle auth_type, bound constraints (all as `toInterfaceArray`), token fields; use conditional inclusion for optional fields
-  - [ ] 3.5: Implement `IsEquivalentToDesiredState()` — `removeUnsetFields` + `filterPayloadToDesiredKeys`
+- [x] Task 3: Create `AWSAuthEngineRole` type (AC: 3, 6, 7, 8)
+  - [x] 3.1: Create `api/v1alpha1/awsauthenginerole_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `AWSAuthRole` struct, `Name`
+  - [x] 3.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/role/{name}`, `IsDeletable()=true`
+  - [x] 3.3: Implement `ConditionsAware` interface
+  - [x] 3.4: Implement `toMap()` on `AWSAuthRole` — handle auth_type, bound constraints (all as `toInterfaceArray`), token fields; use conditional inclusion for optional fields
+  - [x] 3.5: Implement `IsEquivalentToDesiredState()` — `removeUnsetFields` + `filterPayloadToDesiredKeys`
 
-- [ ] Task 4: Create webhooks (AC: 8)
-  - [ ] 4.1: Create `api/v1alpha1/awsauthengineconfig_webhook.go` — `admission.Defaulter[*AWSAuthEngineClientConfig]`, `admission.Validator[*AWSAuthEngineClientConfig]`, immutable `spec.path`, credential validation via `ValidateCredentialSource()`
-  - [ ] 4.2: Create `api/v1alpha1/awsauthengineidentityconfig_webhook.go` — `admission.Defaulter[*AWSAuthEngineIdentityConfig]`, `admission.Validator[*AWSAuthEngineIdentityConfig]`, immutable `spec.path`
-  - [ ] 4.3: Create `api/v1alpha1/awsauthenginerole_webhook.go` — `admission.Defaulter[*AWSAuthEngineRole]`, `admission.Validator[*AWSAuthEngineRole]`, immutable `spec.path`/`spec.name`, `auth_type` validation
+- [x] Task 4: Create webhooks (AC: 8)
+  - [x] 4.1: Create `api/v1alpha1/awsauthengineconfig_webhook.go` — `admission.Defaulter[*AWSAuthEngineClientConfig]`, `admission.Validator[*AWSAuthEngineClientConfig]`, immutable `spec.path`, credential validation via `ValidateCredentialSource()`
+  - [x] 4.2: Create `api/v1alpha1/awsauthengineidentityconfig_webhook.go` — `admission.Defaulter[*AWSAuthEngineIdentityConfig]`, `admission.Validator[*AWSAuthEngineIdentityConfig]`, immutable `spec.path`
+  - [x] 4.3: Create `api/v1alpha1/awsauthenginerole_webhook.go` — `admission.Defaulter[*AWSAuthEngineRole]`, `admission.Validator[*AWSAuthEngineRole]`, immutable `spec.path`/`spec.name`, `auth_type` validation
 
-- [ ] Task 5: Create controllers (AC: 1, 2, 3, 4, 5, 6, 7)
-  - [ ] 5.1: Create `internal/controller/awsauthengineconfig_controller.go` — embed `ReconcilerBase`, standard VaultResource reconcile, watches on `corev1.Secret` and `RandomSecret` for credential rotation
-  - [ ] 5.2: Create `internal/controller/awsauthengineidentityconfig_controller.go` — standard `For()` with default periodic reconcile predicate (simple, no watches)
-  - [ ] 5.3: Create `internal/controller/awsauthenginerole_controller.go` — standard `For()` with default periodic reconcile predicate (simple, no watches)
+- [x] Task 5: Create controllers (AC: 1, 2, 3, 4, 5, 6, 7)
+  - [x] 5.1: Create `internal/controller/awsauthengineconfig_controller.go` — embed `ReconcilerBase`, standard VaultResource reconcile, watches on `corev1.Secret` and `RandomSecret` for credential rotation
+  - [x] 5.2: Create `internal/controller/awsauthengineidentityconfig_controller.go` — standard `For()` with default periodic reconcile predicate (simple, no watches)
+  - [x] 5.3: Create `internal/controller/awsauthenginerole_controller.go` — standard `For()` with default periodic reconcile predicate (simple, no watches)
 
-- [ ] Task 6: Register in main.go (AC: 1, 2, 3)
-  - [ ] 6.1: Add controller registrations for all 3 reconcilers
-  - [ ] 6.2: Add webhook registrations inside `ENABLE_WEBHOOKS` guard for all 3 types
+- [x] Task 6: Register in main.go (AC: 1, 2, 3)
+  - [x] 6.1: Add controller registrations for all 3 reconcilers
+  - [x] 6.2: Add webhook registrations inside `ENABLE_WEBHOOKS` guard for all 3 types
 
-- [ ] Task 7: Unit tests (AC: 1, 2, 3, 7, 8)
-  - [ ] 7.1: Create `api/v1alpha1/awsauthengineconfig_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures (including secret_key stripping), negative tests
-  - [ ] 7.2: Create `api/v1alpha1/awsauthengineidentityconfig_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()`, negative tests
-  - [ ] 7.3: Create `api/v1alpha1/awsauthenginerole_test.go` — test `toMap()` output for both iam and ec2 auth_type roles, test `IsEquivalentToDesiredState()` with Vault-read fixture, negative tests for constraint validation
+- [x] Task 7: Unit tests (AC: 1, 2, 3, 7, 8)
+  - [x] 7.1: Create `api/v1alpha1/awsauthengineconfig_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures (including secret_key stripping), negative tests
+  - [x] 7.2: Create `api/v1alpha1/awsauthengineidentityconfig_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()`, negative tests
+  - [x] 7.3: Create `api/v1alpha1/awsauthenginerole_test.go` — test `toMap()` output for both iam and ec2 auth_type roles, test `IsEquivalentToDesiredState()` with Vault-read fixture, negative tests for constraint validation
 
-- [ ] Task 8: Test fixtures (AC: all)
-  - [ ] 8.1: Create test YAML fixtures in `test/awsauthengine/` — client config, identity config, and role CRs
-  - [ ] 8.2: Integration tests — SKIP (AWS is a cloud provider, falls under "Skip it" per project integration test philosophy)
+- [x] Task 8: Test fixtures (AC: all)
+  - [x] 8.1: Create test YAML fixtures in `test/awsauthengine/` — client config, identity config, and role CRs
+  - [x] 8.2: Integration tests — SKIP (AWS is a cloud provider, falls under "Skip it" per project integration test philosophy)
 
-- [ ] Task 9: CRD registration and code generation (AC: all)
-  - [ ] 9.1: Run `make manifests generate fmt vet test`
-  - [ ] 9.2: Add 3 new CRD YAML files to `config/crd/kustomization.yaml` (CRD registration checklist)
-  - [ ] 9.3: Verify all existing tests still pass
+- [x] Task 9: CRD registration and code generation (AC: all)
+  - [x] 9.1: Run `make manifests generate fmt vet test`
+  - [x] 9.2: Add 3 new CRD YAML files to `config/crd/kustomization.yaml` (CRD registration checklist)
+  - [x] 9.3: Verify all existing tests still pass
 
-- [ ] Task 10: Documentation (AC: 9)
-  - [ ] 10.1: Create `docs/auth-engines/aws.md` following `docs/engine-doc-template.md`
-  - [ ] 10.2: Update `docs/auth-engines/index.md` with link to new doc
+- [x] Task 10: Documentation (AC: 9)
+  - [x] 10.1: Create `docs/auth-engines/aws.md` following `docs/engine-doc-template.md`
+  - [x] 10.2: Update `docs/auth-engines/index.md` with link to new doc
 
 ## Dev Notes
 
@@ -718,12 +722,51 @@ All three CRD types follow well-established patterns from existing auth engine i
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+None — implementation completed without issues.
+
 ### Completion Notes List
+
+- Implemented all 3 CRD types following established patterns (GCPAuthEngine, AWSSecretEngine)
+- AWSAuthEngineClientConfig: IsDeletable=true, credential resolution via RootCredentialConfig, secret_key stripping in IsEquivalentToDesiredState
+- AWSAuthEngineIdentityConfig: IsDeletable=false, simple config with enum-validated alias fields
+- AWSAuthEngineRole: auth_type-specific webhook validation, removeUnsetFields+filterPayloadToDesiredKeys pipeline
+- Controllers: client config has Secret+RandomSecret watches; identity config and role are simple For() controllers
+- All unit tests pass including toMap, IsEquivalentToDesiredState (match/mismatch/extra fields), webhook validation
+- Integration tests intentionally skipped per project philosophy (AWS is cloud provider, cannot be installed in Kind)
 
 ### Change Log
 
+- 2026-08-15: Implemented Story 14.2 — all 10 tasks completed, all tests passing
+
 ### File List
+
+- api/v1alpha1/awsauthengineconfig_types.go (NEW)
+- api/v1alpha1/awsauthengineconfig_webhook.go (NEW)
+- api/v1alpha1/awsauthengineconfig_test.go (NEW)
+- api/v1alpha1/awsauthengineidentityconfig_types.go (NEW)
+- api/v1alpha1/awsauthengineidentityconfig_webhook.go (NEW)
+- api/v1alpha1/awsauthengineidentityconfig_test.go (NEW)
+- api/v1alpha1/awsauthenginerole_types.go (NEW)
+- api/v1alpha1/awsauthenginerole_webhook.go (NEW)
+- api/v1alpha1/awsauthenginerole_test.go (NEW)
+- api/v1alpha1/zz_generated.deepcopy.go (MODIFIED)
+- internal/controller/awsauthengineconfig_controller.go (NEW)
+- internal/controller/awsauthengineidentityconfig_controller.go (NEW)
+- internal/controller/awsauthenginerole_controller.go (NEW)
+- cmd/main.go (MODIFIED)
+- config/crd/bases/redhatcop.redhat.io_awsauthengineclientconfigs.yaml (NEW)
+- config/crd/bases/redhatcop.redhat.io_awsauthengineidentityconfigs.yaml (NEW)
+- config/crd/bases/redhatcop.redhat.io_awsauthengineroles.yaml (NEW)
+- config/crd/kustomization.yaml (MODIFIED)
+- config/rbac/role.yaml (MODIFIED)
+- config/webhook/manifests.yaml (MODIFIED)
+- test/awsauthengine/awsauthengineclientconfig.yaml (NEW)
+- test/awsauthengine/awsauthengineidentityconfig.yaml (NEW)
+- test/awsauthengine/awsauthenginerole-iam.yaml (NEW)
+- test/awsauthengine/awsauthenginerole-ec2.yaml (NEW)
+- docs/auth-engines/aws.md (NEW)
+- docs/auth-engines/index.md (MODIFIED)
