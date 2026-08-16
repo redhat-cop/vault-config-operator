@@ -36,6 +36,7 @@
 
 generated: 2026-04-11
 last_updated: 2026-08-15
+# Epic 14 retrospective 2026-08-15
 # Epic 14 done 2026-08-15
 # Story 14.1 done 2026-08-15
 # Story 14.2 done 2026-08-15
@@ -559,7 +560,7 @@ development_status:
   epic-14: done
   14-1-approle-auth-engine-config-and-role-crds: done
   14-2-aws-auth-engine-config-and-role-crds: done
-  epic-14-retrospective: optional
+  epic-14-retrospective: done
 
   # Epic 15: Medium-Priority Missing Auth Methods (Userpass, GitHub, Okta)
   epic-15: backlog
@@ -632,7 +633,7 @@ action_items:
   - epic: 13
     action: "Validation matrix requirement — story specs with multi-mode/conditional-field types must include field acceptance/rejection matrix per mode"
     owner: "Amelia (Developer)"
-    status: pending
+    status: in-progress  # Partially adopted: 14.2 included full matrix; not yet formalized in template
   - epic: 13
     action: "Novelty risk flag — add Novelty Risk LOW/MEDIUM/HIGH field to story spec template"
     owner: "Charlie (Senior Dev)"
@@ -649,3 +650,21 @@ action_items:
     action: "Pre-epic baseline verification — run make test, make manifests, go vet before starting Epic 14"
     owner: "Dana (QA Engineer)"
     status: done
+
+  # Epic 14 action items
+  - epic: 14
+    action: "Propagate durationToSeconds() to older auth engine types — KubernetesAuthEngineRole, JWTOIDCAuthEngineRole, GCPAuthEngineRole, LDAPAuthEngineConfig, AzureAuthEngineRole, CertAuthEngineRole"
+    owner: "Amelia (Developer)"
+    status: open
+  - epic: 14
+    action: "Document strict webhook validation philosophy in project-context.md — reject invalid field combinations at admission; relax only when Vault genuinely supports universally"
+    owner: "Charlie (Senior Dev)"
+    status: open
+  - epic: 14
+    action: "Fix bmad-epic-dev workflow — define and create epic branch in Step 0 before any commits"
+    owner: "Amelia (Developer)"
+    status: done  # Fixed during retrospective session
+  - epic: 14
+    action: "Address 14.2 credential defaults bug — webhook defaulter unconditionally overwrites explicit usernameKey/passwordKey mappings"
+    owner: "Amelia (Developer)"
+    status: open
