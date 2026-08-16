@@ -1,0 +1,24 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AWSAuthEngineRole
+metadata:
+  name: aws-auth-ec2-role
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  path: aws
+  name: my-ec2-role
+  authType: ec2
+  boundAmiID:
+    - "ami-fce36987"
+  boundAccountID:
+    - "123456789012"
+  boundRegion:
+    - "us-east-1"
+  roleTag: "VaultRole"
+  disallowReauthentication: true
+  tokenTTL: "30m"
+  tokenMaxTTL: "1h"
+  tokenPolicies:
+    - default
+    - dev

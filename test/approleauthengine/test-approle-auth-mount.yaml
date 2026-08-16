@@ -1,0 +1,12 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AuthEngineMount
+metadata:
+  name: test-approle-mount
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  type: approle
+  config:
+    listingVisibility: "hidden"
+  path: test-approle-auth

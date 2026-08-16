@@ -1,0 +1,20 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AWSAuthEngineRole
+metadata:
+  name: aws-auth-iam-role
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  path: aws
+  name: my-iam-role
+  authType: iam
+  boundIAMPrincipalARN:
+    - "arn:aws:iam::123456789012:role/MyRole"
+  resolveAWSUniqueIDs: true
+  tokenTTL: "1h"
+  tokenMaxTTL: "24h"
+  tokenPolicies:
+    - dev
+    - prod
+  tokenType: service

@@ -1,5 +1,7 @@
 package v1alpha1
 
+import "encoding/json"
+
 // filterPayloadToDesiredKeys returns a new map containing only the keys present in desiredState,
 // with values taken from payload. This allows reflect.DeepEqual to compare only the fields the
 // operator manages, ignoring extra fields Vault adds to its read responses (timestamps, IDs,
@@ -12,6 +14,20 @@ func filterPayloadToDesiredKeys(desiredState, payload map[string]any) map[string
 		}
 	}
 	return filtered
+}
+
+// normalizeVaultReadAliases copies values from known Vault read-response aliases into the
+// canonical write-key when the write-key is absent. For example, Vault returns "period"
+// on read but expects "token_period" on write — this prevents false drift detection.
+func normalizeVaultReadAliases(payload map[string]any, aliases map[string]string) {
+	for readKey, writeKey := range aliases {
+		if _, hasWriteKey := payload[writeKey]; hasWriteKey {
+			continue
+		}
+		if val, hasReadKey := payload[readKey]; hasReadKey {
+			payload[writeKey] = val
+		}
+	}
 }
 
 // removeUnsetFields removes keys from desiredState whose values are zero (empty string,
@@ -28,12 +44,28 @@ func removeUnsetFields(desiredState, payload map[string]any) {
 			if v == "" {
 				delete(desiredState, key)
 			}
+		case json.Number:
+			if v == "0" || v == "-1" {
+				delete(desiredState, key)
+			}
 		case []any:
 			if len(v) == 0 {
 				delete(desiredState, key)
 			}
+		case map[string]any:
+			if len(v) == 0 {
+				delete(desiredState, key)
+			}
 		case int:
-			if v == -1 {
+			if v == 0 || v == -1 {
+				delete(desiredState, key)
+			}
+		case int64:
+			if v == 0 {
+				delete(desiredState, key)
+			}
+		case bool:
+			if !v {
 				delete(desiredState, key)
 			}
 		}

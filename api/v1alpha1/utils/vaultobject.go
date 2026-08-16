@@ -46,6 +46,14 @@ type VaultStatusEnricher interface {
 	EnrichStatus(ctx context.Context) error
 }
 
+// CreateOnlyFieldsProvider is an optional interface that VaultObjects can
+// implement to declare payload fields that Vault only accepts during initial
+// creation. These fields are automatically stripped from update writes by
+// CreateOrUpdate.
+type CreateOnlyFieldsProvider interface {
+	GetCreateOnlyFields() []string
+}
+
 type VaultEndpoint struct {
 	vaultObject VaultObject
 }
@@ -174,7 +182,13 @@ func (ve *VaultEndpoint) CreateOrUpdate(context context.Context) error {
 		return write(context, ve.vaultObject.GetPath(), ve.vaultObject.GetPayload())
 	} else {
 		if !ve.vaultObject.IsEquivalentToDesiredState(currentPayload) {
-			return write(context, ve.vaultObject.GetPath(), ve.vaultObject.GetPayload())
+			payload := ve.vaultObject.GetPayload()
+			if provider, ok := ve.vaultObject.(CreateOnlyFieldsProvider); ok {
+				for _, field := range provider.GetCreateOnlyFields() {
+					delete(payload, field)
+				}
+			}
+			return write(context, ve.vaultObject.GetPath(), payload)
 		}
 	}
 	return nil

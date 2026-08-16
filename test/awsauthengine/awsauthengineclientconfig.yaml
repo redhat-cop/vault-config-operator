@@ -1,0 +1,20 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AWSAuthEngineClientConfig
+metadata:
+  name: aws-auth-client-config
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  path: aws
+  endpoint: ""
+  iamEndpoint: ""
+  stsEndpoint: "https://sts.us-east-1.amazonaws.com"
+  stsRegion: "us-east-1"
+  iamServerIDHeaderValue: "vault.example.com"
+  maxRetries: 3
+  AWSCredentials:
+    secret:
+      name: aws-credentials
+    usernameKey: access_key
+    passwordKey: secret_key

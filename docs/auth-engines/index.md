@@ -1,6 +1,6 @@
 # Authentication Engines
 
-The vault-config-operator manages Vault [authentication engine](https://www.vaultproject.io/docs/auth) configuration through Kubernetes Custom Resources. Each supported auth engine has a Config CRD (to configure the engine mount) and a Role or Group CRD (to define authentication roles or group policies). The operator reconciles these CRs against the Vault API, ensuring the desired auth configuration is always applied.
+The vault-config-operator manages Vault [authentication engine](https://www.vaultproject.io/docs/auth) configuration through Kubernetes Custom Resources. Most supported auth engines have a Config CRD (to configure the engine mount) and a Role or Group CRD (to define authentication roles or group policies). Some engines, like AppRole, have no separate configuration endpoint — the mount itself (via `AuthEngineMount`) is the configuration. The operator reconciles these CRs against the Vault API, ensuring the desired auth configuration is always applied.
 
 ## AuthEngineMount
 
@@ -27,11 +27,13 @@ The `path` field specifies the path at which the auth engine is mounted. The com
 
 | Engine | Config CRD | Role/Group CRD | File |
 |--------|-----------|----------------|------|
+| AppRole | — | AppRoleAuthEngineRole | [approle.md](approle.md) |
 | Kubernetes | KubernetesAuthEngineConfig | KubernetesAuthEngineRole | [kubernetes.md](kubernetes.md) |
 | LDAP | LDAPAuthEngineConfig | LDAPAuthEngineGroup | [ldap.md](ldap.md) |
 | JWT/OIDC | JWTOIDCAuthEngineConfig | JWTOIDCAuthEngineRole | [jwt-oidc.md](jwt-oidc.md) |
 | GCP | GCPAuthEngineConfig | GCPAuthEngineRole | [gcp.md](gcp.md) |
 | Azure | AzureAuthEngineConfig | AzureAuthEngineRole | [azure.md](azure.md) |
+| AWS | AWSAuthEngineClientConfig, AWSAuthEngineIdentityConfig | AWSAuthEngineRole | [aws.md](aws.md) |
 | TLS Certificate | CertAuthEngineConfig | CertAuthEngineRole | [cert.md](cert.md) |
 
 ## Common Configuration
