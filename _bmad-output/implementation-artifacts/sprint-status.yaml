@@ -35,7 +35,11 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-08-15
+last_updated: 2026-08-17
+# Story 15.2 ready-for-dev 2026-08-17
+# Story 15.3 ready-for-dev 2026-08-17
+# Story 15.1 ready-for-dev 2026-08-17
+# Epic 15 in-progress 2026-08-17
 # Epic 14 retrospective 2026-08-15
 # Epic 14 done 2026-08-15
 # Story 14.1 done 2026-08-15
@@ -563,10 +567,10 @@ development_status:
   epic-14-retrospective: done
 
   # Epic 15: Medium-Priority Missing Auth Methods (Userpass, GitHub, Okta)
-  epic-15: backlog
-  15-1-userpass-auth-engine-user-crd: backlog
-  15-2-github-auth-engine-config-and-team-org-mapping-crds: backlog
-  15-3-okta-auth-engine-config-and-group-crds: backlog
+  epic-15: in-progress
+  15-1-userpass-auth-engine-user-crd: ready-for-dev
+  15-2-github-auth-engine-config-and-team-org-mapping-crds: ready-for-dev
+  15-3-okta-auth-engine-config-and-group-crds: ready-for-dev
   epic-15-retrospective: optional
 
   # Epic 16: Lower-Priority Missing Auth Methods (RADIUS, AliCloud, OCI, Kerberos, CF)
