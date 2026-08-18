@@ -1,6 +1,10 @@
+---
+baseline_commit: ed5ac55b98d341d193b18cfa897f1321655805b7
+---
+
 # Story 15.2: GitHub Auth Engine — Config and Team/Org Mapping CRDs
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -30,56 +34,56 @@ So that Vault's GitHub auth method can be managed declaratively.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `GitHubAuthEngineConfig` type (AC: 1, 4, 7, 8)
-  - [ ] 1.1: Create `api/v1alpha1/githubauthengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `GitHubAuthConfig` struct (organization, organizationID, baseURL, token params)
-  - [ ] 1.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/config`, `GetPayload()`, `IsEquivalentToDesiredState()`, `IsDeletable()=false`
-  - [ ] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
-  - [ ] 1.4: Implement `toMap()` on `GitHubAuthConfig` — convert to Vault API snake_case fields; conditionally include `organization_id` only when non-zero
-  - [ ] 1.5: Implement `IsEquivalentToDesiredState()` — standard `filterPayloadToDesiredKeys` (no write-only secrets to strip)
+- [x] Task 1: Create `GitHubAuthEngineConfig` type (AC: 1, 4, 7, 8)
+  - [x] 1.1: Create `api/v1alpha1/githubauthengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `GitHubAuthConfig` struct (organization, organizationID, baseURL, token params)
+  - [x] 1.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/config`, `GetPayload()`, `IsEquivalentToDesiredState()`, `IsDeletable()=false`
+  - [x] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
+  - [x] 1.4: Implement `toMap()` on `GitHubAuthConfig` — convert to Vault API snake_case fields; conditionally include `organization_id` only when non-zero
+  - [x] 1.5: Implement `IsEquivalentToDesiredState()` — standard `filterPayloadToDesiredKeys` (no write-only secrets to strip)
 
-- [ ] Task 2: Create `GitHubAuthEngineTeamMap` type (AC: 2, 5, 7, 8)
-  - [ ] 2.1: Create `api/v1alpha1/githubauthengineteammap_types.go` — Spec with `Connection`, `Authentication`, `Path`, `Name` (team name slug), `Policies` (comma-separated string)
-  - [ ] 2.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/map/teams/{name}`, `IsDeletable()=true`
-  - [ ] 2.3: Implement `ConditionsAware` interface
-  - [ ] 2.4: Implement `toMap()` — emit `{"value": policies}` matching Vault's write payload
+- [x] Task 2: Create `GitHubAuthEngineTeamMap` type (AC: 2, 5, 7, 8)
+  - [x] 2.1: Create `api/v1alpha1/githubauthengineteammap_types.go` — Spec with `Connection`, `Authentication`, `Path`, `Name` (team name slug), `Policies` (comma-separated string)
+  - [x] 2.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/map/teams/{name}`, `IsDeletable()=true`
+  - [x] 2.3: Implement `ConditionsAware` interface
+  - [x] 2.4: Implement `toMap()` — emit `{"value": policies}` matching Vault's write payload
 
-- [ ] Task 3: Create `GitHubAuthEngineUserMap` type (AC: 3, 6, 7, 8)
-  - [ ] 3.1: Create `api/v1alpha1/githubauthenginerusermap_types.go` — Spec with `Connection`, `Authentication`, `Path`, `Name` (GitHub username), `Policies` (comma-separated string)
-  - [ ] 3.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/map/users/{name}`, `IsDeletable()=true`
-  - [ ] 3.3: Implement `ConditionsAware` interface
-  - [ ] 3.4: Implement `toMap()` — emit `{"value": policies}` matching Vault's write payload
+- [x] Task 3: Create `GitHubAuthEngineUserMap` type (AC: 3, 6, 7, 8)
+  - [x] 3.1: Create `api/v1alpha1/githubauthenginerusermap_types.go` — Spec with `Connection`, `Authentication`, `Path`, `Name` (GitHub username), `Policies` (comma-separated string)
+  - [x] 3.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/map/users/{name}`, `IsDeletable()=true`
+  - [x] 3.3: Implement `ConditionsAware` interface
+  - [x] 3.4: Implement `toMap()` — emit `{"value": policies}` matching Vault's write payload
 
-- [ ] Task 4: Create webhooks (AC: 8)
-  - [ ] 4.1: Create `api/v1alpha1/githubauthengineconfig_webhook.go` — `admission.Defaulter[*GitHubAuthEngineConfig]`, `admission.Validator[*GitHubAuthEngineConfig]`, immutable `spec.path`
-  - [ ] 4.2: Create `api/v1alpha1/githubauthengineteammap_webhook.go` — `admission.Defaulter[*GitHubAuthEngineTeamMap]`, `admission.Validator[*GitHubAuthEngineTeamMap]`, immutable `spec.path`/`spec.name`
-  - [ ] 4.3: Create `api/v1alpha1/githubauthenginerusermap_webhook.go` — `admission.Defaulter[*GitHubAuthEngineUserMap]`, `admission.Validator[*GitHubAuthEngineUserMap]`, immutable `spec.path`/`spec.name`
+- [x] Task 4: Create webhooks (AC: 8)
+  - [x] 4.1: Create `api/v1alpha1/githubauthengineconfig_webhook.go` — `admission.Defaulter[*GitHubAuthEngineConfig]`, `admission.Validator[*GitHubAuthEngineConfig]`, immutable `spec.path`
+  - [x] 4.2: Create `api/v1alpha1/githubauthengineteammap_webhook.go` — `admission.Defaulter[*GitHubAuthEngineTeamMap]`, `admission.Validator[*GitHubAuthEngineTeamMap]`, immutable `spec.path`/`spec.name`
+  - [x] 4.3: Create `api/v1alpha1/githubauthenginerusermap_webhook.go` — `admission.Defaulter[*GitHubAuthEngineUserMap]`, `admission.Validator[*GitHubAuthEngineUserMap]`, immutable `spec.path`/`spec.name`
 
-- [ ] Task 5: Create controllers (AC: 1, 2, 3, 4, 5, 6, 7)
-  - [ ] 5.1: Create `internal/controller/githubauthengineconfig_controller.go` — embed `ReconcilerBase`, standard VaultResource reconcile, simple `For()` with default periodic reconcile predicate (no credential watches needed)
-  - [ ] 5.2: Create `internal/controller/githubauthengineteammap_controller.go` — simple `For()` with default periodic reconcile predicate
-  - [ ] 5.3: Create `internal/controller/githubauthenginerusermap_controller.go` — simple `For()` with default periodic reconcile predicate
+- [x] Task 5: Create controllers (AC: 1, 2, 3, 4, 5, 6, 7)
+  - [x] 5.1: Create `internal/controller/githubauthengineconfig_controller.go` — embed `ReconcilerBase`, standard VaultResource reconcile, simple `For()` with default periodic reconcile predicate (no credential watches needed)
+  - [x] 5.2: Create `internal/controller/githubauthengineteammap_controller.go` — simple `For()` with default periodic reconcile predicate
+  - [x] 5.3: Create `internal/controller/githubauthenginerusermap_controller.go` — simple `For()` with default periodic reconcile predicate
 
-- [ ] Task 6: Register in main.go (AC: 1, 2, 3)
-  - [ ] 6.1: Add controller registrations for all 3 reconcilers
-  - [ ] 6.2: Add webhook registrations inside `ENABLE_WEBHOOKS` guard for all 3 types
+- [x] Task 6: Register in main.go (AC: 1, 2, 3)
+  - [x] 6.1: Add controller registrations for all 3 reconcilers
+  - [x] 6.2: Add webhook registrations inside `ENABLE_WEBHOOKS` guard for all 3 types
 
-- [ ] Task 7: Unit tests (AC: 1, 2, 3, 7, 8)
-  - [ ] 7.1: Create `api/v1alpha1/githubauthengineconfig_test.go` — test `toMap()` output, test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures, negative tests
-  - [ ] 7.2: Create `api/v1alpha1/githubauthengineteammap_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with Vault-read fixture (containing extra `key` field), negative tests
-  - [ ] 7.3: Create `api/v1alpha1/githubauthenginerusermap_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with Vault-read fixture, negative tests
+- [x] Task 7: Unit tests (AC: 1, 2, 3, 7, 8)
+  - [x] 7.1: Create `api/v1alpha1/githubauthengineconfig_test.go` — test `toMap()` output, test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures, negative tests
+  - [x] 7.2: Create `api/v1alpha1/githubauthengineteammap_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with Vault-read fixture (containing extra `key` field), negative tests
+  - [x] 7.3: Create `api/v1alpha1/githubauthenginerusermap_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with Vault-read fixture, negative tests
 
-- [ ] Task 8: Test fixtures (AC: all)
-  - [ ] 8.1: Create test YAML fixtures in `test/githubauthengine/` — config, team map, and user map CRs
-  - [ ] 8.2: Integration tests — SKIP (GitHub is a cloud service, falls under "Skip it" per project integration test philosophy)
+- [x] Task 8: Test fixtures (AC: all)
+  - [x] 8.1: Create test YAML fixtures in `test/githubauthengine/` — config, team map, and user map CRs
+  - [x] 8.2: Integration tests — SKIP (GitHub is a cloud service, falls under "Skip it" per project integration test philosophy)
 
-- [ ] Task 9: CRD registration and code generation (AC: all)
-  - [ ] 9.1: Run `make manifests generate fmt vet test`
-  - [ ] 9.2: Add 3 new CRD YAML files to `config/crd/kustomization.yaml` (CRD registration checklist)
-  - [ ] 9.3: Verify all existing tests still pass
+- [x] Task 9: CRD registration and code generation (AC: all)
+  - [x] 9.1: Run `make manifests generate fmt vet test`
+  - [x] 9.2: Add 3 new CRD YAML files to `config/crd/kustomization.yaml` (CRD registration checklist)
+  - [x] 9.3: Verify all existing tests still pass
 
-- [ ] Task 10: Documentation (AC: 9)
-  - [ ] 10.1: Create `docs/auth-engines/github.md` following `docs/engine-doc-template.md`
-  - [ ] 10.2: Update `docs/auth-engines/index.md` with link to new doc
+- [x] Task 10: Documentation (AC: 9)
+  - [x] 10.1: Create `docs/auth-engines/github.md` following `docs/engine-doc-template.md`
+  - [x] 10.2: Update `docs/auth-engines/index.md` with link to new doc
 
 ## Dev Notes
 
@@ -568,10 +572,52 @@ All three CRD types follow well-established patterns:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+None — clean implementation with no blocking issues.
+
 ### Completion Notes List
 
+- Implemented 3 CRDs: GitHubAuthEngineConfig, GitHubAuthEngineTeamMap, GitHubAuthEngineUserMap
+- Config type uses IsDeletable=false (tied to mount lifecycle), maps use IsDeletable=true
+- toMap() uses conditional field inclusion to avoid false drift with Vault auto-populated fields (e.g., organization_id)
+- TTL fields emit json.Number via durationToSeconds() matching Vault read format
+- Team/User maps emit only {"value": policies} — the "key" field in Vault reads is correctly filtered by filterPayloadToDesiredKeys
+- Webhooks enforce immutability on spec.path (all types) and spec.name (team/user map types)
+- All unit tests pass including toMap output verification, IsEquivalentToDesiredState positive/negative tests, GetPath composition
+- Integration tests skipped per project policy (GitHub is cloud service — "Skip it" classification)
+- Documentation created following engine-doc-template.md
+
+### Change Log
+
+- 2026-08-17: Implemented story 15.2 — GitHub Auth Engine Config and Team/User Map CRDs (all 10 tasks)
+
 ### File List
+
+- api/v1alpha1/githubauthengineconfig_types.go (NEW)
+- api/v1alpha1/githubauthengineteammap_types.go (NEW)
+- api/v1alpha1/githubauthenginerusermap_types.go (NEW)
+- api/v1alpha1/githubauthengineconfig_webhook.go (NEW)
+- api/v1alpha1/githubauthengineteammap_webhook.go (NEW)
+- api/v1alpha1/githubauthenginerusermap_webhook.go (NEW)
+- api/v1alpha1/githubauthengineconfig_test.go (NEW)
+- api/v1alpha1/githubauthengineteammap_test.go (NEW)
+- api/v1alpha1/githubauthenginerusermap_test.go (NEW)
+- api/v1alpha1/zz_generated.deepcopy.go (MODIFIED — auto-generated)
+- internal/controller/githubauthengineconfig_controller.go (NEW)
+- internal/controller/githubauthengineteammap_controller.go (NEW)
+- internal/controller/githubauthenginerusermap_controller.go (NEW)
+- cmd/main.go (MODIFIED — added 3 controller + 3 webhook registrations)
+- config/crd/bases/redhatcop.redhat.io_githubauthengineconfigs.yaml (NEW — auto-generated)
+- config/crd/bases/redhatcop.redhat.io_githubauthengineteammaps.yaml (NEW — auto-generated)
+- config/crd/bases/redhatcop.redhat.io_githubauthengineusermaps.yaml (NEW — auto-generated)
+- config/crd/kustomization.yaml (MODIFIED — added 3 CRD resources)
+- config/rbac/role.yaml (MODIFIED — auto-generated RBAC rules)
+- test/githubauthengine/githubauthengineconfig.yaml (NEW)
+- test/githubauthengine/githubauthengineteammap.yaml (NEW)
+- test/githubauthengine/githubauthenginerusermap.yaml (NEW)
+- docs/auth-engines/github.md (NEW)
+- docs/auth-engines/index.md (MODIFIED — added GitHub row)
+- _bmad-output/implementation-artifacts/15-2-github-auth-engine-config-and-team-org-mapping-crds.md (MODIFIED — status updates)

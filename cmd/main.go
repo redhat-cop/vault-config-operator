@@ -220,6 +220,19 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controller.GitHubAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GitHubAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GitHubAuthEngineConfig")
+		os.Exit(1)
+	}
+	if err = (&controller.GitHubAuthEngineTeamMapReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GitHubAuthEngineTeamMap")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GitHubAuthEngineTeamMap")
+		os.Exit(1)
+	}
+	if err = (&controller.GitHubAuthEngineUserMapReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GitHubAuthEngineUserMap")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GitHubAuthEngineUserMap")
+		os.Exit(1)
+	}
+
 	if err = (&controller.AWSAuthEngineClientConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AWSAuthEngineClientConfig")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AWSAuthEngineClientConfig")
 		os.Exit(1)
@@ -556,6 +569,19 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.GCPAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "GCPAuthEngineRole")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.GitHubAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "GitHubAuthEngineConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.GitHubAuthEngineTeamMap{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "GitHubAuthEngineTeamMap")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.GitHubAuthEngineUserMap{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "GitHubAuthEngineUserMap")
 			os.Exit(1)
 		}
 

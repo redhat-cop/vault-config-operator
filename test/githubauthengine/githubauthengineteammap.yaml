@@ -1,0 +1,11 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GitHubAuthEngineTeamMap
+metadata:
+  name: dev-team-mapping
+spec:
+  authentication:
+    path: kubernetes
+    role: vault-admin
+  path: github
+  name: dev-team
+  policies: "dev-policy,readonly"
