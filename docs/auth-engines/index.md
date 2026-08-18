@@ -34,6 +34,7 @@ The `path` field specifies the path at which the auth engine is mounted. The com
 | GCP | GCPAuthEngineConfig | GCPAuthEngineRole | [gcp.md](gcp.md) |
 | Azure | AzureAuthEngineConfig | AzureAuthEngineRole | [azure.md](azure.md) |
 | AWS | AWSAuthEngineClientConfig, AWSAuthEngineIdentityConfig | AWSAuthEngineRole | [aws.md](aws.md) |
+| Okta | OktaAuthEngineConfig | OktaAuthEngineGroup | [okta.md](okta.md) |
 | TLS Certificate | CertAuthEngineConfig | CertAuthEngineRole | [cert.md](cert.md) |
 
 ## Common Configuration

@@ -1,5 +1,5 @@
 # generated: 2026-04-11
-# last_updated: 2026-08-12
+# last_updated: 2026-08-18
 # project: vault-config-operator
 # project_key: NOKEY
 # tracking_system: file-system
@@ -570,7 +570,7 @@ development_status:
   epic-15: in-progress
   15-1-userpass-auth-engine-user-crd: ready-for-dev
   15-2-github-auth-engine-config-and-team-org-mapping-crds: ready-for-dev
-  15-3-okta-auth-engine-config-and-group-crds: ready-for-dev
+  15-3-okta-auth-engine-config-and-group-crds: done
   epic-15-retrospective: optional
 
   # Epic 16: Lower-Priority Missing Auth Methods (RADIUS, AliCloud, OCI, Kerberos, CF)

@@ -1,0 +1,17 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: OktaAuthEngineConfig
+metadata:
+  name: okta-config
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+    serviceAccount:
+      name: default
+  path: okta/test
+  orgName: "my-org"
+  baseURL: "okta.com"
+  oktaCredentials:
+    secret:
+      name: okta-api-token
+    passwordKey: api_token

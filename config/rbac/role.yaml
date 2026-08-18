@@ -100,6 +100,8 @@ rules:
   - namespaces
   - nomadsecretengineconfigs
   - nomadsecretengineroles
+  - oktaauthengineconfigs
+  - oktaauthenginegroups
   - passwordpolicies
   - pkisecretengineconfigs
   - pkisecretengineroles
@@ -183,6 +185,8 @@ rules:
   - namespaces/finalizers
   - nomadsecretengineconfigs/finalizers
   - nomadsecretengineroles/finalizers
+  - oktaauthengineconfigs/finalizers
+  - oktaauthenginegroups/finalizers
   - passwordpolicies/finalizers
   - pkisecretengineconfigs/finalizers
   - pkisecretengineroles/finalizers
@@ -259,6 +263,8 @@ rules:
   - namespaces/status
   - nomadsecretengineconfigs/status
   - nomadsecretengineroles/status
+  - oktaauthengineconfigs/status
+  - oktaauthenginegroups/status
   - passwordpolicies/status
   - pkisecretengineconfigs/status
   - pkisecretengineroles/status
