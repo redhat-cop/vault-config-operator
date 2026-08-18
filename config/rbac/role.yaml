@@ -73,6 +73,9 @@ rules:
   - gcpsecretengineconfigs
   - gcpsecretenginerolesets
   - gcpsecretenginestaticaccounts
+  - githubauthengineconfigs
+  - githubauthengineteammaps
+  - githubauthengineusermaps
   - githubsecretengineconfigs
   - githubsecretengineroles
   - groupaliases
@@ -156,6 +159,9 @@ rules:
   - gcpsecretengineconfigs/finalizers
   - gcpsecretenginerolesets/finalizers
   - gcpsecretenginestaticaccounts/finalizers
+  - githubauthengineconfigs/finalizers
+  - githubauthengineteammaps/finalizers
+  - githubauthengineusermaps/finalizers
   - githubsecretengineconfigs/finalizers
   - githubsecretengineroles/finalizers
   - groupaliases/finalizers
@@ -232,6 +238,9 @@ rules:
   - gcpsecretengineconfigs/status
   - gcpsecretenginerolesets/status
   - gcpsecretenginestaticaccounts/status
+  - githubauthengineconfigs/status
+  - githubauthengineteammaps/status
+  - githubauthengineusermaps/status
   - githubsecretengineconfigs/status
   - githubsecretengineroles/status
   - groupaliases/status

@@ -569,7 +569,7 @@ development_status:
   # Epic 15: Medium-Priority Missing Auth Methods (Userpass, GitHub, Okta)
   epic-15: in-progress
   15-1-userpass-auth-engine-user-crd: ready-for-dev
-  15-2-github-auth-engine-config-and-team-org-mapping-crds: ready-for-dev
+  15-2-github-auth-engine-config-and-team-org-mapping-crds: review
   15-3-okta-auth-engine-config-and-group-crds: ready-for-dev
   epic-15-retrospective: optional
 

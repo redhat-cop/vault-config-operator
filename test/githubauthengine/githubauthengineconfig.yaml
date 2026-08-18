@@ -1,0 +1,22 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GitHubAuthEngineConfig
+metadata:
+  name: github-config
+spec:
+  authentication:
+    path: kubernetes
+    role: vault-admin
+  path: github
+  organization: "acme-org"
+  organizationID: 12345
+  baseURL: "https://github.example.com/api/v3"
+  tokenTTL: "1h"
+  tokenMaxTTL: "4h"
+  tokenPolicies:
+    - default
+    - dev-policy
+  tokenBoundCIDRs:
+    - "10.0.0.0/8"
+  tokenNoDefaultPolicy: true
+  tokenNumUses: 5
+  tokenType: "service"
