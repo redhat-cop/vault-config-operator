@@ -242,6 +242,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controller.UserpassAuthEngineUserReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "UserpassAuthEngineUser")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "UserpassAuthEngineUser")
+		os.Exit(1)
+	}
+
 	if err = (&controller.VaultSecretReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "VaultSecret")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VaultSecret")
 		os.Exit(1)
@@ -573,6 +578,11 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.CertAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "CertAuthEngineRole")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.UserpassAuthEngineUser{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "UserpassAuthEngineUser")
 			os.Exit(1)
 		}
 

@@ -1,0 +1,18 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: UserpassAuthEngineUser
+metadata:
+  name: test-userpass-user
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  path: test-userpass-auth/test-userpass-mount
+  passwordCredentials:
+    secret:
+      name: test-userpass-password
+    passwordKey: password
+  tokenPolicies:
+    - default
+    - app-policy
+  tokenTTL: "20m"
+  tokenMaxTTL: "30m"
