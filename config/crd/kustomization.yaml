@@ -78,6 +78,8 @@ resources:
 - bases/redhatcop.redhat.io_githubauthengineconfigs.yaml
 - bases/redhatcop.redhat.io_githubauthengineteammaps.yaml
 - bases/redhatcop.redhat.io_githubauthengineusermaps.yaml
+- bases/redhatcop.redhat.io_oktaauthengineconfigs.yaml
+- bases/redhatcop.redhat.io_oktaauthenginegroups.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches: []

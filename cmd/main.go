@@ -505,6 +505,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controller.OktaAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "OktaAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "OktaAuthEngineConfig")
+		os.Exit(1)
+	}
+	if err = (&controller.OktaAuthEngineGroupReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "OktaAuthEngineGroup")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "OktaAuthEngineGroup")
+		os.Exit(1)
+	}
+
 	if webhooks, ok := os.LookupEnv("ENABLE_WEBHOOKS"); !ok || webhooks != "false" {
 		if err = (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "RandomSecret")
@@ -831,6 +840,15 @@ func main() {
 
 		if err = (&redhatcopv1alpha1.TerraformCloudSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "TerraformCloudSecretEngineRole")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.OktaAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "OktaAuthEngineConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.OktaAuthEngineGroup{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "OktaAuthEngineGroup")
 			os.Exit(1)
 		}
 	}
