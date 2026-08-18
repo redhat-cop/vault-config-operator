@@ -74,6 +74,7 @@ resources:
 - bases/redhatcop.redhat.io_awsauthengineclientconfigs.yaml
 - bases/redhatcop.redhat.io_awsauthengineidentityconfigs.yaml
 - bases/redhatcop.redhat.io_awsauthengineroles.yaml
+- bases/redhatcop.redhat.io_userpassauthengineusers.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches: []

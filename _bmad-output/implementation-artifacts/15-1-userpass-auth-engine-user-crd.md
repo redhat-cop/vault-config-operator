@@ -1,6 +1,10 @@
+---
+baseline_commit: ed5ac55b98d341d193b18cfa897f1321655805b7
+---
+
 # Story 15.1: Userpass Auth Engine — User CRD
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -28,39 +32,39 @@ Password **must** come from a K8s Secret reference (via `RootCredentialConfig`),
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `UserpassAuthEngineUser` type (AC: 1, 2, 4)
-  - [ ] 1.1: Create `api/v1alpha1/userpassauthengineuser_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `UserpassUser` struct, `Name`, `PasswordCredentials` (`RootCredentialConfig` with passwordKey="password")
-  - [ ] 1.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/users/{name}`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()`, `IsDeletable()=true`
-  - [ ] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
-  - [ ] 1.4: Implement `setInternalCredentials()` — resolve password from K8s Secret, VaultSecret, or RandomSecret using `RootCredentialConfig` pattern (follow `AWSAuthEngineClientConfig.setInternalCredentials()`)
-  - [ ] 1.5: Implement `toMap()` on `UserpassUser` — emit all fields in Vault API snake_case; include `password` from resolved credential; use `durationToSeconds()` for duration fields, `json.Number` for integer fields
-  - [ ] 1.6: Implement `IsEquivalentToDesiredState()` — must `delete(desiredState, "password")` (Vault never returns it on read), then `removeUnsetFields` + `filterPayloadToDesiredKeys` + `reflect.DeepEqual`
+- [x] Task 1: Create `UserpassAuthEngineUser` type (AC: 1, 2, 4)
+  - [x] 1.1: Create `api/v1alpha1/userpassauthengineuser_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `UserpassUser` struct, `Name`, `PasswordCredentials` (`RootCredentialConfig` with passwordKey="password")
+  - [x] 1.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/users/{name}`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()`, `IsDeletable()=true`
+  - [x] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
+  - [x] 1.4: Implement `setInternalCredentials()` — resolve password from K8s Secret, VaultSecret, or RandomSecret using `RootCredentialConfig` pattern (follow `AWSAuthEngineClientConfig.setInternalCredentials()`)
+  - [x] 1.5: Implement `toMap()` on `UserpassUser` — emit all fields in Vault API snake_case; include `password` from resolved credential; use `durationToSeconds()` for duration fields, `json.Number` for integer fields
+  - [x] 1.6: Implement `IsEquivalentToDesiredState()` — must `delete(desiredState, "password")` (Vault never returns it on read), then `removeUnsetFields` + `filterPayloadToDesiredKeys` + `reflect.DeepEqual`
 
-- [ ] Task 2: Create webhook (AC: 4)
-  - [ ] 2.1: Create `api/v1alpha1/userpassauthengineuser_webhook.go` — `admission.Defaulter[*UserpassAuthEngineUser]`, `admission.Validator[*UserpassAuthEngineUser]`, immutable `spec.path`/`spec.name`, credential source validation via `ValidateCredentialSource()`
+- [x] Task 2: Create webhook (AC: 4)
+  - [x] 2.1: Create `api/v1alpha1/userpassauthengineuser_webhook.go` — `admission.Defaulter[*UserpassAuthEngineUser]`, `admission.Validator[*UserpassAuthEngineUser]`, immutable `spec.path`/`spec.name`, credential source validation via `ValidateCredentialSource()`
 
-- [ ] Task 3: Create controller (AC: 1, 2, 3)
-  - [ ] 3.1: Create `internal/controller/userpassauthengineuser_controller.go` — embed `ReconcilerBase`, standard `VaultResource` reconcile, include Secret and RandomSecret watches for password rotation (follow `GCPAuthEngineConfigReconciler.SetupWithManager()` pattern)
+- [x] Task 3: Create controller (AC: 1, 2, 3)
+  - [x] 3.1: Create `internal/controller/userpassauthengineuser_controller.go` — embed `ReconcilerBase`, standard `VaultResource` reconcile, include Secret and RandomSecret watches for password rotation (follow `GCPAuthEngineConfigReconciler.SetupWithManager()` pattern)
 
-- [ ] Task 4: Register in main.go (AC: 1)
-  - [ ] 4.1: Add controller registration for the reconciler
-  - [ ] 4.2: Add webhook registration inside `ENABLE_WEBHOOKS` guard
+- [x] Task 4: Register in main.go (AC: 1)
+  - [x] 4.1: Add controller registration for the reconciler
+  - [x] 4.2: Add webhook registration inside `ENABLE_WEBHOOKS` guard
 
-- [ ] Task 5: Unit tests (AC: 1, 2, 4)
-  - [ ] 5.1: Create `api/v1alpha1/userpassauthengineuser_test.go` — test `toMap()` output, `IsEquivalentToDesiredState()` match/mismatch/extra-fields (including password stripping), `GetPath()`, `IsDeletable()`, `GetConditions()`/`SetConditions()`
+- [x] Task 5: Unit tests (AC: 1, 2, 4)
+  - [x] 5.1: Create `api/v1alpha1/userpassauthengineuser_test.go` — test `toMap()` output, `IsEquivalentToDesiredState()` match/mismatch/extra-fields (including password stripping), `GetPath()`, `IsDeletable()`, `GetConditions()`/`SetConditions()`
 
-- [ ] Task 6: Integration tests (AC: 1, 2, 3)
-  - [ ] 6.1: Create test YAML fixtures in `test/userpassauthengine/` — mount CR + user CR + updated user CR + password Secret
-  - [ ] 6.2: Create `internal/controller/userpassauthengineuser_controller_test.go` with `//go:build integration` — create, verify ReconcileSuccessful, update, verify update, delete, verify Vault cleanup
+- [x] Task 6: Integration tests (AC: 1, 2, 3)
+  - [x] 6.1: Create test YAML fixtures in `test/userpassauthengine/` — mount CR + user CR + updated user CR + password Secret
+  - [x] 6.2: Create `internal/controller/userpassauthengineuser_controller_test.go` with `//go:build integration` — create, verify ReconcileSuccessful, update, verify update, delete, verify Vault cleanup
 
-- [ ] Task 7: CRD registration and code generation (AC: all)
-  - [ ] 7.1: Run `make manifests generate fmt vet test`
-  - [ ] 7.2: Add new CRD YAML file to `config/crd/kustomization.yaml` (CRD registration checklist)
-  - [ ] 7.3: Verify all existing tests still pass
+- [x] Task 7: CRD registration and code generation (AC: all)
+  - [x] 7.1: Run `make manifests generate fmt vet test`
+  - [x] 7.2: Add new CRD YAML file to `config/crd/kustomization.yaml` (CRD registration checklist)
+  - [x] 7.3: Verify all existing tests still pass
 
-- [ ] Task 8: Documentation (AC: 5)
-  - [ ] 8.1: Create `docs/auth-engines/userpass.md` following `docs/engine-doc-template.md`
-  - [ ] 8.2: Update `docs/auth-engines/index.md` — add Userpass row to Supported Auth Engines table
+- [x] Task 8: Documentation (AC: 5)
+  - [x] 8.1: Create `docs/auth-engines/userpass.md` following `docs/engine-doc-template.md`
+  - [x] 8.2: Update `docs/auth-engines/index.md` — add Userpass row to Supported Auth Engines table
 
 ## Dev Notes
 
@@ -502,7 +506,17 @@ This type follows well-established patterns from AppRole (single CRD, no config 
 
 ### Review Model Used
 
+Claude Opus 4.6
+
 ### Review Findings
+
+Clean review — all three layers passed (Blind Hunter, Edge Case Hunter, Acceptance Auditor). 0 decision_needed, 0 patch, 0 defer, 2 dismissed as noise.
+
+Dismissed findings:
+- [x] [Review][Dismiss] Secret watch predicate hardcodes "password" key — consistent with project pattern (GCP hardcodes "credentials"), periodic reconcile ensures eventual consistency
+- [x] [Review][Dismiss] test-userpass-auth-user-updated.yaml fixture unused in integration test — Go-code update approach is better (supports generation tracking), fixture required by story spec
+
+AC verification: AC1 ✅, AC2 ✅, AC3 ✅, AC4 ✅, AC5 ✅ — all acceptance criteria fully satisfied.
 
 ### Decisions Needed / Decisions Taken
 
@@ -516,10 +530,44 @@ This type follows well-established patterns from AppRole (single CRD, no config 
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+None — clean implementation with no blocking issues.
+
 ### Completion Notes List
 
+- Implemented `UserpassAuthEngineUser` CRD type with full `VaultObject` interface following AppRole (single CRD, no config) + AWS Auth (credential resolution) patterns
+- `toMap()` uses conditional emission (only non-zero fields) with `durationToSeconds()` for TTL fields and `json.Number` for integer fields
+- `IsEquivalentToDesiredState()` strips `password` from desired state (write-only field), uses `removeUnsetFields` + `filterPayloadToDesiredKeys` + `sortAnyStringSlice` + `reflect.DeepEqual`
+- `setInternalCredentials()` resolves password from K8s Secret, VaultSecret, or RandomSecret — only password is resolved (username from spec.name/metadata.name)
+- Webhook: `Default()` sets `PasswordCredentials.PasswordKey` to "password" only if empty (avoids 14.2 credential defaults bug); `ValidateUpdate()` enforces immutable `spec.path` and `spec.name`
+- Controller: Standard VaultResource reconcile with Secret + RandomSecret watches for password rotation detection
+- 9 unit tests covering: GetPath, toMap (full/minimal), IsEquivalentToDesiredState (match/mismatch/extra-fields/password-stripping/unordered-policies), IsDeletable, Conditions
+- Integration test with 5 lifecycle phases: mount creation, password Secret creation, user creation+verification, user update+verification, delete+cleanup
+- All unit tests pass (`make test` exit 0), no regressions
+
+### Change Log
+
+- 2026-08-17: Implemented UserpassAuthEngineUser CRD — types, webhook, controller, tests, documentation
+
 ### File List
+
+- `api/v1alpha1/userpassauthengineuser_types.go` — NEW: CRD type, VaultObject, ConditionsAware, toMap, credential resolution
+- `api/v1alpha1/userpassauthengineuser_webhook.go` — NEW: Defaulter, Validator, immutable path/name, credential validation
+- `api/v1alpha1/userpassauthengineuser_test.go` — NEW: 9 unit tests for toMap, IsEquivalentToDesiredState, GetPath, IsDeletable, Conditions
+- `api/v1alpha1/zz_generated.deepcopy.go` — MODIFIED: Auto-generated deepcopy for new types
+- `internal/controller/userpassauthengineuser_controller.go` — NEW: Reconciler with Secret/RandomSecret watches
+- `internal/controller/userpassauthengineuser_controller_test.go` — NEW: Integration tests (create/update/delete lifecycle)
+- `cmd/main.go` — MODIFIED: Added controller + webhook registration
+- `config/crd/bases/redhatcop.redhat.io_userpassauthengineusers.yaml` — NEW: Generated CRD manifest
+- `config/crd/kustomization.yaml` — MODIFIED: Added new CRD to resources list
+- `config/rbac/role.yaml` — MODIFIED: Auto-generated RBAC for new type
+- `config/webhook/manifests.yaml` — MODIFIED: Auto-generated webhook manifests
+- `test/userpassauthengine/test-userpass-auth-mount.yaml` — NEW: Auth mount fixture
+- `test/userpassauthengine/test-userpass-password-secret.yaml` — NEW: Password Secret fixture
+- `test/userpassauthengine/test-userpass-auth-user.yaml` — NEW: User CR fixture
+- `test/userpassauthengine/test-userpass-auth-user-updated.yaml` — NEW: Updated user CR fixture
+- `docs/auth-engines/userpass.md` — NEW: Engine documentation per DNFR5
+- `docs/auth-engines/index.md` — MODIFIED: Added Userpass row to Supported Auth Engines table
