@@ -2698,6 +2698,15 @@ So that Vault's Okta auth method can be managed declaratively.
 
 ## Epic 16: Lower-Priority Missing Auth Methods (RADIUS, AliCloud, OCI, Kerberos, CF)
 
+**Epic 15 retrospective — mandatory implementation notes for every story in this epic:**
+
+- **TTL/`toMap()`:** All duration fields Vault returns as integer seconds MUST use `durationToSeconds()` (string specs) or `json.Number` (integer specs). Do not copy Okta's original raw-string pattern — that was a defect, corrected during the Epic 15 retro.
+- **Credential key defaulting:** If a type remaps `RootCredentialConfig` keys, default only keys omitted from the admission request. Preserve explicit `username`/`password` values. Follow `AWSAuthEngineClientConfig.Default()`.
+- **Strict webhook validation:** Reject invalid field combinations at admission. Relax only when Vault supports the combination universally.
+- **Novelty Risk:** Document LOW/MEDIUM/HIGH in the story spec. Kerberos is HIGH (two Vault config paths + keytab). RADIUS is MEDIUM if a Kind test double is used. AliCloud/OCI/CF are LOW pattern copies, Skip integration tests.
+- **Kerberos (16.4):** Two-part config (`auth/{path}/config` and `auth/{path}/config/ldap`) MUST be two CRDs (1:1 VaultObject contract), same decision as AWS Auth ClientConfig + IdentityConfig. Keytab via `PrepareInternalValues` from a K8s Secret. Groups CRD is a third type (`auth/{path}/groups/{name}`).
+- **RADIUS (16.1):** Classify integration tests explicitly. If a RADIUS test double can run in Kind, Install; otherwise document Skip. Host/secret/port credentials follow Userpass/Okta `RootCredentialConfig` + write-only stripping.
+
 ### Story 16.1: RADIUS Auth Engine — Config and User CRDs
 
 As an operator developer,

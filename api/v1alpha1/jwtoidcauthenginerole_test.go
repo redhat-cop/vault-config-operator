@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -106,14 +107,14 @@ func TestJWTOIDCRoleToMap(t *testing.T) {
 		"allowed_redirect_uris":   []string{"https://vault.example.com/callback"},
 		"verbose_oidc_logging":    false,
 		"max_age":                 int64(0),
-		"token_ttl":               "1h",
-		"token_max_ttl":           "24h",
+		"token_ttl":               json.Number("3600"),
+		"token_max_ttl":           json.Number("86400"),
 		"token_policies":          []string{"reader"},
 		"token_bound_cidrs":       []string{"10.0.0.0/8"},
-		"token_explicit_max_ttl":  "",
+		"token_explicit_max_ttl":  json.Number("0"),
 		"token_no_default_policy": false,
 		"token_num_uses":          int64(0),
-		"token_period":            int64(0),
+		"token_period":            json.Number("0"),
 		"token_type":              "service",
 	}
 

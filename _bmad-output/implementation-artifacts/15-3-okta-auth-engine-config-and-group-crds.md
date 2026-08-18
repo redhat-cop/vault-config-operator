@@ -517,7 +517,7 @@ Claude Opus 4.6 (via Cursor) — bmad-code-review skill, 3-layer adversarial rev
 
 ### Review Findings
 
-- [x] [Review][Defer] Duration fields format mismatch causes unnecessary Vault writes [api/v1alpha1/oktaauthengineconfig_types.go:282-296] — deferred, pre-existing. `toMap()` emits raw strings for token_ttl/token_max_ttl/token_explicit_max_ttl/token_period while Vault returns integer seconds as json.Number. Same pattern as LDAP/GCP/AWS auth configs. Not introduced by this story.
+- [x] [Review][Defer] Duration fields format mismatch causes unnecessary Vault writes [api/v1alpha1/oktaauthengineconfig_types.go:282-296] — **FIXED during Epic 15 retrospective.** `toMap()` now uses `durationToSeconds()` for token_ttl/token_max_ttl/token_explicit_max_ttl/token_period.
 
 ### Decisions Needed / Decisions Taken
 

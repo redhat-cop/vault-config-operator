@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -40,6 +41,21 @@ var _ admission.Defaulter[*AWSAuthEngineClientConfig] = &AWSAuthEngineClientConf
 
 func (r *AWSAuthEngineClientConfig) Default(ctx context.Context, obj *AWSAuthEngineClientConfig) error {
 	awsauthengineclientconfiglog.Info("default", "name", obj.Name)
+
+	usernameOmitted, hasRequest := awsCredentialKeyOmitted(ctx, "usernameKey")
+	passwordOmitted, _ := awsCredentialKeyOmitted(ctx, "passwordKey")
+	if hasRequest {
+		if usernameOmitted {
+			obj.Spec.AWSCredentials.UsernameKey = "access_key"
+		}
+		if passwordOmitted {
+			obj.Spec.AWSCredentials.PasswordKey = "secret_key"
+		}
+		return nil
+	}
+
+	// No admission request (unit tests / unexpected): apply AWS defaults only for
+	// empty values or the inherited RootCredentialConfig kubebuilder defaults.
 	if obj.Spec.AWSCredentials.UsernameKey == "" || obj.Spec.AWSCredentials.UsernameKey == "username" {
 		obj.Spec.AWSCredentials.UsernameKey = "access_key"
 	}
@@ -47,6 +63,32 @@ func (r *AWSAuthEngineClientConfig) Default(ctx context.Context, obj *AWSAuthEng
 		obj.Spec.AWSCredentials.PasswordKey = "secret_key"
 	}
 	return nil
+}
+
+// awsCredentialKeyOmitted reports whether spec.AWSCredentials.<key> was absent from
+// the admission request body. When the user omitted the key, the CRD may still
+// populate the inherited RootCredentialConfig default ("username"/"password");
+// those must be remapped to access_key/secret_key. When the user explicitly sent
+// the key, even if the value is "username" or "password", it must be preserved.
+func awsCredentialKeyOmitted(ctx context.Context, key string) (omitted bool, hasRequest bool) {
+	req, err := admission.RequestFromContext(ctx)
+	if err != nil {
+		return false, false
+	}
+	var raw map[string]any
+	if err := json.Unmarshal(req.Object.Raw, &raw); err != nil {
+		return false, false
+	}
+	spec, _ := raw["spec"].(map[string]any)
+	if spec == nil {
+		return true, true
+	}
+	creds, _ := spec["AWSCredentials"].(map[string]any)
+	if creds == nil {
+		return true, true
+	}
+	_, present := creds[key]
+	return !present, true
 }
 
 //+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-awsauthengineclientconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=awsauthengineclientconfigs,verbs=create;update,versions=v1alpha1,name=vawsauthengineclientconfig.kb.io,admissionReviewVersions=v1

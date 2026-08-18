@@ -37,11 +37,11 @@ func TestOktaAuthEngineConfig_toMap(t *testing.T) {
 	if result["bypass_okta_mfa"] != true {
 		t.Errorf("expected bypass_okta_mfa=true, got %v", result["bypass_okta_mfa"])
 	}
-	if result["token_ttl"] != "1h" {
-		t.Errorf("expected token_ttl=1h, got %v", result["token_ttl"])
+	if result["token_ttl"] != json.Number("3600") {
+		t.Errorf("expected token_ttl=3600, got %v", result["token_ttl"])
 	}
-	if result["token_max_ttl"] != "4h" {
-		t.Errorf("expected token_max_ttl=4h, got %v", result["token_max_ttl"])
+	if result["token_max_ttl"] != json.Number("14400") {
+		t.Errorf("expected token_max_ttl=14400, got %v", result["token_max_ttl"])
 	}
 
 	policies, ok := result["token_policies"].([]any)
@@ -60,8 +60,8 @@ func TestOktaAuthEngineConfig_toMap(t *testing.T) {
 		t.Errorf("expected token_bound_cidrs=[10.0.0.0/8], got %v", cidrs)
 	}
 
-	if result["token_explicit_max_ttl"] != "8h" {
-		t.Errorf("expected token_explicit_max_ttl=8h, got %v", result["token_explicit_max_ttl"])
+	if result["token_explicit_max_ttl"] != json.Number("28800") {
+		t.Errorf("expected token_explicit_max_ttl=28800, got %v", result["token_explicit_max_ttl"])
 	}
 	if result["token_no_default_policy"] != true {
 		t.Errorf("expected token_no_default_policy=true, got %v", result["token_no_default_policy"])
@@ -69,8 +69,8 @@ func TestOktaAuthEngineConfig_toMap(t *testing.T) {
 	if result["token_num_uses"] != json.Number("5") {
 		t.Errorf("expected token_num_uses=json.Number(5), got %v (type %T)", result["token_num_uses"], result["token_num_uses"])
 	}
-	if result["token_period"] != "24h" {
-		t.Errorf("expected token_period=24h, got %v", result["token_period"])
+	if result["token_period"] != json.Number("86400") {
+		t.Errorf("expected token_period=86400, got %v", result["token_period"])
 	}
 	if result["token_type"] != "service" {
 		t.Errorf("expected token_type=service, got %v", result["token_type"])
@@ -99,14 +99,14 @@ func TestOktaAuthEngineConfig_IsEquivalentToDesiredState_Match(t *testing.T) {
 		"org_name":                "my-org",
 		"base_url":                "okta.com",
 		"bypass_okta_mfa":         false,
-		"token_ttl":               "",
-		"token_max_ttl":           "",
+		"token_ttl":               json.Number("0"),
+		"token_max_ttl":           json.Number("0"),
 		"token_policies":          []any{},
 		"token_bound_cidrs":       []any{},
-		"token_explicit_max_ttl":  "",
+		"token_explicit_max_ttl":  json.Number("0"),
 		"token_no_default_policy": false,
 		"token_num_uses":          json.Number("0"),
-		"token_period":            "",
+		"token_period":            json.Number("0"),
 		"token_type":              "",
 	}
 
@@ -127,14 +127,14 @@ func TestOktaAuthEngineConfig_IsEquivalentToDesiredState_Mismatch(t *testing.T) 
 		"org_name":                "different-org",
 		"base_url":                "okta.com",
 		"bypass_okta_mfa":         false,
-		"token_ttl":               "",
-		"token_max_ttl":           "",
+		"token_ttl":               json.Number("0"),
+		"token_max_ttl":           json.Number("0"),
 		"token_policies":          []any{},
 		"token_bound_cidrs":       []any{},
-		"token_explicit_max_ttl":  "",
+		"token_explicit_max_ttl":  json.Number("0"),
 		"token_no_default_policy": false,
 		"token_num_uses":          json.Number("0"),
-		"token_period":            "",
+		"token_period":            json.Number("0"),
 		"token_type":              "",
 	}
 
@@ -155,14 +155,14 @@ func TestOktaAuthEngineConfig_IsEquivalentToDesiredState_ExtraVaultFields(t *tes
 		"org_name":                "my-org",
 		"base_url":                "okta.com",
 		"bypass_okta_mfa":         false,
-		"token_ttl":               "",
-		"token_max_ttl":           "",
+		"token_ttl":               json.Number("0"),
+		"token_max_ttl":           json.Number("0"),
 		"token_policies":          []any{},
 		"token_bound_cidrs":       []any{},
-		"token_explicit_max_ttl":  "",
+		"token_explicit_max_ttl":  json.Number("0"),
 		"token_no_default_policy": false,
 		"token_num_uses":          json.Number("0"),
-		"token_period":            "",
+		"token_period":            json.Number("0"),
 		"token_type":              "",
 		"request_id":              "extra-vault-field",
 		"lease_duration":          json.Number("0"),
@@ -185,14 +185,14 @@ func TestOktaAuthEngineConfig_IsEquivalentToDesiredState_APITokenStripping(t *te
 		"org_name":                "my-org",
 		"base_url":                "okta.com",
 		"bypass_okta_mfa":         false,
-		"token_ttl":               "",
-		"token_max_ttl":           "",
+		"token_ttl":               json.Number("0"),
+		"token_max_ttl":           json.Number("0"),
 		"token_policies":          []any{},
 		"token_bound_cidrs":       []any{},
-		"token_explicit_max_ttl":  "",
+		"token_explicit_max_ttl":  json.Number("0"),
 		"token_no_default_policy": false,
 		"token_num_uses":          json.Number("0"),
-		"token_period":            "",
+		"token_period":            json.Number("0"),
 		"token_type":              "",
 	}
 

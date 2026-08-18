@@ -4,7 +4,7 @@ baseline_commit: ed5ac55b98d341d193b18cfa897f1321655805b7
 
 # Story 15.2: GitHub Auth Engine — Config and Team/Org Mapping CRDs
 
-Status: review
+Status: done
 
 ## Story
 
@@ -567,6 +567,26 @@ All three CRD types follow well-established patterns:
 - [Source: docs/engine-doc-template.md — documentation template]
 - [Source: Vault GitHub Auth Method API — https://developer.hashicorp.com/vault/api-docs/auth/github]
 - [Source: _bmad-output/implementation-artifacts/14-2-aws-auth-engine-config-and-role-crds.md — most recent predecessor auth engine story]
+
+## Code Review Record
+
+### Review Model Used
+
+Not recorded during Phase B (story file left at `Status: review` while sprint-status was `done`). Implementation notes and unit tests were used as the quality gate. This gap is the Epic 13/14 Phase B finalization issue; corrected in this retrospective.
+
+### Review Findings
+
+No Code Review Record was written at merge. No patch/defer items were captured in the story file. `durationToSeconds()` was used correctly on GitHub config TTL fields.
+
+### Decisions Needed / Decisions Taken
+
+- Three CRDs (Config, TeamMap, UserMap) matching Vault API paths 1:1
+- Team/User maps emit only `{"value": policies}`; Vault's read `key` field is filtered
+- Integration tests skipped (GitHub is a cloud service)
+
+### Fixes Applied
+
+None recorded.
 
 ## Dev Agent Record
 

@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"context"
+	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -86,14 +87,14 @@ func TestLDAPConfigToMap(t *testing.T) {
 		"groupdn":                 "ou=Groups,dc=example,dc=com",
 		"groupattr":               "cn",
 		"username_as_alias":       false,
-		"token_ttl":               "1h",
-		"token_max_ttl":           "24h",
+		"token_ttl":               json.Number("3600"),
+		"token_max_ttl":           json.Number("86400"),
 		"token_policies":          "default",
 		"token_bound_cidrs":       "",
-		"token_explicit_max_ttl":  "",
+		"token_explicit_max_ttl":  json.Number("0"),
 		"token_no_default_policy": false,
 		"token_num_uses":          int64(0),
-		"token_period":            int64(0),
+		"token_period":            json.Number("0"),
 		"token_type":              "service",
 	}
 

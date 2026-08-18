@@ -285,14 +285,14 @@ func (c *OktaAuthConfig) toMap() map[string]any {
 	payload["api_token"] = c.retrievedAPIToken
 	payload["base_url"] = c.BaseURL
 	payload["bypass_okta_mfa"] = c.BypassOktaMFA
-	payload["token_ttl"] = c.TokenTTL
-	payload["token_max_ttl"] = c.TokenMaxTTL
+	payload["token_ttl"] = durationToSeconds(c.TokenTTL)
+	payload["token_max_ttl"] = durationToSeconds(c.TokenMaxTTL)
 	payload["token_policies"] = toInterfaceArray(c.TokenPolicies)
 	payload["token_bound_cidrs"] = toInterfaceArray(c.TokenBoundCIDRs)
-	payload["token_explicit_max_ttl"] = c.TokenExplicitMaxTTL
+	payload["token_explicit_max_ttl"] = durationToSeconds(c.TokenExplicitMaxTTL)
 	payload["token_no_default_policy"] = c.TokenNoDefaultPolicy
 	payload["token_num_uses"] = json.Number(strconv.FormatInt(c.TokenNumUses, 10))
-	payload["token_period"] = c.TokenPeriod
+	payload["token_period"] = durationToSeconds(c.TokenPeriod)
 	payload["token_type"] = c.TokenType
 	return payload
 }

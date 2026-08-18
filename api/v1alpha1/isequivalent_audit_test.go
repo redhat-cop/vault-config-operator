@@ -3,6 +3,7 @@
 package v1alpha1
 
 import (
+	"encoding/json"
 	"testing"
 
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -75,10 +76,10 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 				p := map[string]any{
 					"bound_service_account_names": []string{"default"}, "bound_service_account_namespaces": []string(nil),
 					"alias_name_source": "",
-					"token_ttl":         0, "token_max_ttl": 0, "token_policies": []string(nil),
-					"token_bound_cidrs": []string(nil), "token_explicit_max_ttl": 0,
+					"token_ttl":         json.Number("0"), "token_max_ttl": json.Number("0"), "token_policies": []string(nil),
+					"token_bound_cidrs": []string(nil), "token_explicit_max_ttl": json.Number("0"),
 					"token_no_default_policy": false, "token_num_uses": 0,
-					"token_period": 0, "token_type": "",
+					"token_period": json.Number("0"), "token_type": "",
 				}
 				return m, p
 			},
@@ -406,10 +407,10 @@ func TestAuditCategoryB_DesiredSideDeleteTypes_ExtraFieldTolerance(t *testing.T)
 					"binddn": "", "userdn": "", "discoverdn": false, "deny_null_bind": false,
 					"upndomain": "", "userfilter": "", "anonymous_group_search": false,
 					"groupfilter": "", "groupdn": "", "groupattr": "",
-					"username_as_alias": false, "token_ttl": "", "token_max_ttl": "",
+					"username_as_alias": false, "token_ttl": json.Number("0"), "token_max_ttl": json.Number("0"),
 					"token_policies": "", "token_bound_cidrs": "",
-					"token_explicit_max_ttl": "", "token_no_default_policy": false,
-					"token_num_uses": int64(0), "token_period": int64(0), "token_type": "",
+					"token_explicit_max_ttl": json.Number("0"), "token_no_default_policy": false,
+					"token_num_uses": int64(0), "token_period": json.Number("0"), "token_type": "",
 				}
 				return m, p
 			},
@@ -619,11 +620,11 @@ func TestAuditNegativeCases_WrongManagedFieldValues(t *testing.T) {
 			"userdn": "", "userattr": "", "discoverdn": false,
 			"deny_null_bind": false, "upndomain": "", "userfilter": "",
 			"anonymous_group_search": false, "groupfilter": "", "groupdn": "",
-			"groupattr": "", "username_as_alias": false, "token_ttl": "",
-			"token_max_ttl": "", "token_policies": "",
-			"token_bound_cidrs": "", "token_explicit_max_ttl": "",
+			"groupattr": "", "username_as_alias": false, "token_ttl": json.Number("0"),
+			"token_max_ttl": json.Number("0"), "token_policies": "",
+			"token_bound_cidrs": "", "token_explicit_max_ttl": json.Number("0"),
 			"token_no_default_policy": false, "token_num_uses": int64(0),
-			"token_period": int64(0), "token_type": "",
+			"token_period": json.Number("0"), "token_type": "",
 		}
 		if m.IsEquivalentToDesiredState(payload) {
 			t.Error("expected false: wrong URL should still trigger drift")
