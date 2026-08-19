@@ -543,6 +543,19 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controller.KerberosAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KerberosAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "KerberosAuthEngineConfig")
+		os.Exit(1)
+	}
+	if err = (&controller.KerberosAuthEngineLDAPConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KerberosAuthEngineLDAPConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "KerberosAuthEngineLDAPConfig")
+		os.Exit(1)
+	}
+	if err = (&controller.KerberosAuthEngineGroupReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KerberosAuthEngineGroup")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "KerberosAuthEngineGroup")
+		os.Exit(1)
+	}
+
 	if webhooks, ok := os.LookupEnv("ENABLE_WEBHOOKS"); !ok || webhooks != "false" {
 		if err = (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "RandomSecret")
@@ -906,6 +919,18 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.AliCloudAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "AliCloudAuthEngineRole")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.KerberosAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "KerberosAuthEngineConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.KerberosAuthEngineLDAPConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "KerberosAuthEngineLDAPConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.KerberosAuthEngineGroup{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "KerberosAuthEngineGroup")
 			os.Exit(1)
 		}
 	}

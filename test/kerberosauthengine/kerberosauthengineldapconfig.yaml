@@ -1,0 +1,21 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KerberosAuthEngineLDAPConfig
+metadata:
+  name: kerberos-ldap-config-test
+spec:
+  authentication:
+    path: kubernetes
+    role: vault-admin
+  path: kerberos
+  url: "ldaps://ldap.example.com:636"
+  tlsMinVersion: "tls12"
+  tlsMaxVersion: "tls12"
+  denyNullBind: true
+  userDN: "ou=Users,dc=example,dc=com"
+  userAttr: "samaccountname"
+  groupDN: "ou=Groups,dc=example,dc=com"
+  groupAttr: "cn"
+  groupFilter: "(&(objectClass=group)(member:1.2.840.113556.1.4.1941:={{.UserDN}}))"
+  ldapCredentials:
+    secret:
+      name: ldap-bind-credentials

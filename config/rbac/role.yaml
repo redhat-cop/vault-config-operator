@@ -92,6 +92,9 @@ rules:
   - identitytokenroles
   - jwtoidcauthengineconfigs
   - jwtoidcauthengineroles
+  - kerberosauthengineconfigs
+  - kerberosauthenginegroups
+  - kerberosauthengineldapconfigs
   - kubernetesauthengineconfigs
   - kubernetesauthengineroles
   - kubernetessecretengineconfigs
@@ -188,6 +191,9 @@ rules:
   - identitytokenroles/finalizers
   - jwtoidcauthengineconfigs/finalizers
   - jwtoidcauthengineroles/finalizers
+  - kerberosauthengineconfigs/finalizers
+  - kerberosauthenginegroups/finalizers
+  - kerberosauthengineldapconfigs/finalizers
   - kubernetesauthengineconfigs/finalizers
   - kubernetesauthengineroles/finalizers
   - kubernetessecretengineconfigs/finalizers
@@ -277,6 +283,9 @@ rules:
   - identitytokenroles/status
   - jwtoidcauthengineconfigs/status
   - jwtoidcauthengineroles/status
+  - kerberosauthengineconfigs/status
+  - kerberosauthenginegroups/status
+  - kerberosauthengineldapconfigs/status
   - kubernetesauthengineconfigs/status
   - kubernetesauthengineroles/status
   - kubernetessecretengineconfigs/status

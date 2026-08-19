@@ -40,6 +40,7 @@ The `path` field specifies the path at which the auth engine is mounted. The com
 | OCI | OCIAuthEngineConfig | OCIAuthEngineRole | [oci.md](oci.md) |
 | Cloud Foundry | CFAuthEngineConfig | CFAuthEngineRole | [cloud-foundry.md](cloud-foundry.md) |
 | RADIUS | RADIUSAuthEngineConfig | RADIUSAuthEngineUser | [radius.md](radius.md) |
+| Kerberos | KerberosAuthEngineConfig, KerberosAuthEngineLDAPConfig | KerberosAuthEngineGroup | [kerberos.md](kerberos.md) |
 | TLS Certificate | CertAuthEngineConfig | CertAuthEngineRole | [cert.md](cert.md) |
 | Userpass | — | UserpassAuthEngineUser | [userpass.md](userpass.md) |
 
