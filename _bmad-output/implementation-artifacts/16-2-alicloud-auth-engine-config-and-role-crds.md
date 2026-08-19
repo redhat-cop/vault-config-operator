@@ -1,6 +1,10 @@
+---
+baseline_commit: 2856f66ecd326a158496e9ffbe68c89c0c42b15c
+---
+
 # Story 16.2: AliCloud Auth Engine — Config and Role CRDs
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -33,38 +37,38 @@ This is identical to AppRole (Story 14.1), which also has no config endpoint. Th
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `AliCloudAuthEngineRole` type (AC: 1, 2, 4)
-  - [ ] 1.1: Create `api/v1alpha1/alicloudauthenginerole_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `AliCloudAuthRole` struct, `Name`
-  - [ ] 1.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/role/{name}`, `GetPayload()`, `IsEquivalentToDesiredState()`, `IsDeletable()=true`
-  - [ ] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
-  - [ ] 1.4: Implement `toMap()` on `AliCloudAuthRole` — emit `arn` plus standard token fields; use `durationToSeconds()` for duration fields, `json.Number` for integer fields
-  - [ ] 1.5: Implement `IsEquivalentToDesiredState()` — `normalizeVaultReadAliases` + `removeUnsetFields` + `filterPayloadToDesiredKeys` + set sorting + `reflect.DeepEqual`
+- [x] Task 1: Create `AliCloudAuthEngineRole` type (AC: 1, 2, 4)
+  - [x] 1.1: Create `api/v1alpha1/alicloudauthenginerole_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `AliCloudAuthRole` struct, `Name`
+  - [x] 1.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/role/{name}`, `GetPayload()`, `IsEquivalentToDesiredState()`, `IsDeletable()=true`
+  - [x] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
+  - [x] 1.4: Implement `toMap()` on `AliCloudAuthRole` — emit `arn` plus standard token fields; use `durationToSeconds()` for duration fields, `json.Number` for integer fields
+  - [x] 1.5: Implement `IsEquivalentToDesiredState()` — `normalizeVaultReadAliases` + `removeUnsetFields` + `filterPayloadToDesiredKeys` + set sorting + `reflect.DeepEqual`
 
-- [ ] Task 2: Create webhook (AC: 4)
-  - [ ] 2.1: Create `api/v1alpha1/alicloudauthenginerole_webhook.go` — `admission.Defaulter[*AliCloudAuthEngineRole]`, `admission.Validator[*AliCloudAuthEngineRole]`, immutable `spec.path`/`spec.name`
+- [x] Task 2: Create webhook (AC: 4)
+  - [x] 2.1: Create `api/v1alpha1/alicloudauthenginerole_webhook.go` — `admission.Defaulter[*AliCloudAuthEngineRole]`, `admission.Validator[*AliCloudAuthEngineRole]`, immutable `spec.path`/`spec.name`
 
-- [ ] Task 3: Create controller (AC: 1, 2, 3)
-  - [ ] 3.1: Create `internal/controller/alicloudauthenginerole_controller.go` — embed `ReconcilerBase`, standard `VaultResource` reconcile pattern, `For()` with `NewDefaultPeriodicReconcilePredicate()`
+- [x] Task 3: Create controller (AC: 1, 2, 3)
+  - [x] 3.1: Create `internal/controller/alicloudauthenginerole_controller.go` — embed `ReconcilerBase`, standard `VaultResource` reconcile pattern, `For()` with `NewDefaultPeriodicReconcilePredicate()`
 
-- [ ] Task 4: Register in main.go (AC: 1)
-  - [ ] 4.1: Add controller registration for the reconciler
-  - [ ] 4.2: Add webhook registration inside `ENABLE_WEBHOOKS` guard
+- [x] Task 4: Register in main.go (AC: 1)
+  - [x] 4.1: Add controller registration for the reconciler
+  - [x] 4.2: Add webhook registration inside `ENABLE_WEBHOOKS` guard
 
-- [ ] Task 5: Unit tests (AC: 1, 2, 4)
-  - [ ] 5.1: Create `api/v1alpha1/alicloudauthenginerole_test.go` — test `toMap()` output, `IsEquivalentToDesiredState()` match/mismatch/extra-fields, `GetPath()`, `IsDeletable()`, `GetConditions()`/`SetConditions()`
+- [x] Task 5: Unit tests (AC: 1, 2, 4)
+  - [x] 5.1: Create `api/v1alpha1/alicloudauthenginerole_test.go` — test `toMap()` output, `IsEquivalentToDesiredState()` match/mismatch/extra-fields, `GetPath()`, `IsDeletable()`, `GetConditions()`/`SetConditions()`
 
-- [ ] Task 6: Test fixtures (AC: all)
-  - [ ] 6.1: Create test YAML fixtures in `test/alicloudauthengine/` — role CR
-  - [ ] 6.2: Integration tests — SKIP (AliCloud is a cloud provider, no test double in Kind)
+- [x] Task 6: Test fixtures (AC: all)
+  - [x] 6.1: Create test YAML fixtures in `test/alicloudauthengine/` — role CR
+  - [x] 6.2: Integration tests — SKIP (AliCloud is a cloud provider, no test double in Kind)
 
-- [ ] Task 7: CRD registration and code generation (AC: all)
-  - [ ] 7.1: Run `make manifests generate fmt vet test`
-  - [ ] 7.2: Add 1 new CRD YAML file to `config/crd/kustomization.yaml` (CRD registration checklist)
-  - [ ] 7.3: Verify all existing tests still pass
+- [x] Task 7: CRD registration and code generation (AC: all)
+  - [x] 7.1: Run `make manifests generate fmt vet test`
+  - [x] 7.2: Add 1 new CRD YAML file to `config/crd/kustomization.yaml` (CRD registration checklist)
+  - [x] 7.3: Verify all existing tests still pass
 
-- [ ] Task 8: Documentation (AC: 5)
-  - [ ] 8.1: Create `docs/auth-engines/alicloud.md` following `docs/engine-doc-template.md`
-  - [ ] 8.2: Update `docs/auth-engines/index.md` — add AliCloud row to Supported Auth Engines table
+- [x] Task 8: Documentation (AC: 5)
+  - [x] 8.1: Create `docs/auth-engines/alicloud.md` following `docs/engine-doc-template.md`
+  - [x] 8.2: Update `docs/auth-engines/index.md` — add AliCloud row to Supported Auth Engines table
 
 ## Dev Notes
 
@@ -466,24 +470,71 @@ This is a direct pattern copy of AppRole (14.1). The AliCloud auth role has iden
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (via Cursor)
 
 ### Debug Log References
 
+No issues encountered. Clean implementation following AppRole (14.1) pattern exactly.
+
 ### Completion Notes List
 
+- Implemented `AliCloudAuthEngineRole` CRD with `VaultObject` and `ConditionsAware` interfaces
+- `toMap()` emits all 10 fields unconditionally with `durationToSeconds()` for TTL fields and `json.Number` for integer fields
+- `IsEquivalentToDesiredState()` uses full pipeline: `normalizeVaultReadAliases` (ttl→token_ttl, max_ttl→token_max_ttl, period→token_period), `removeUnsetFields`, `filterPayloadToDesiredKeys`, set sorting for token_policies and token_bound_cidrs
+- Webhook enforces immutability on `spec.path` and `spec.name`; no credential validation needed (AliCloud auth has no operator-configured secrets)
+- Controller follows standard `VaultResource` pattern with `ReconcilerBase` and `NewDefaultPeriodicReconcilePredicate()`
+- 9 unit tests covering: `GetPath` (with/without spec.name), `toMap` (full/minimal), `IsEquivalentToDesiredState` (match, mismatch, extra fields, deprecated aliases, alias mismatch, unordered policies), `IsDeletable`, `GetConditions`/`SetConditions`
+- Integration tests explicitly SKIP per "Skip it" rule — AliCloud is a cloud provider, cannot be installed in Kind
+- Documentation created at `docs/auth-engines/alicloud.md` and index updated
+- All unit tests pass, zero regressions
+
 ### File List
+
+- `api/v1alpha1/alicloudauthenginerole_types.go` — NEW — Role CRD type, VaultObject, ConditionsAware, toMap, IsEquivalentToDesiredState
+- `api/v1alpha1/alicloudauthenginerole_webhook.go` — NEW — Role webhook: defaulter, validator, immutable path/name
+- `api/v1alpha1/alicloudauthenginerole_test.go` — NEW — 9 unit tests for toMap, IsEquivalentToDesiredState, GetPath, IsDeletable, Conditions
+- `api/v1alpha1/zz_generated.deepcopy.go` — MODIFIED — Auto-generated deepcopy for new types
+- `internal/controller/alicloudauthenginerole_controller.go` — NEW — Role reconciler, standard VaultResource pattern
+- `cmd/main.go` — MODIFIED — Register 1 controller + 1 webhook
+- `config/crd/bases/redhatcop.redhat.io_alicloudauthengineroles.yaml` — NEW — Generated CRD manifest
+- `config/crd/kustomization.yaml` — MODIFIED — Added CRD to resources list
+- `config/rbac/role.yaml` — MODIFIED — Auto-generated RBAC for new controller
+- `config/webhook/manifests.yaml` — MODIFIED — Auto-generated webhook configuration
+- `test/alicloudauthengine/test-alicloud-auth-role.yaml` — NEW — Test YAML fixture
+- `docs/auth-engines/alicloud.md` — NEW — Engine documentation per DNFR5
+- `docs/auth-engines/index.md` — MODIFIED — Added AliCloud row to Supported Auth Engines table
+- `_bmad-output/implementation-artifacts/16-2-alicloud-auth-engine-config-and-role-crds.md` — MODIFIED — Story file updates
 
 ## Code Review Record
 
 ### Review Model Used
 
-{{review_model_name_version}}
+gpt-5.4-medium
 
 ### Review Findings
+
+1. **HIGH**: `aliCloudVaultReadAliases` was missing `"policies": "token_policies"` and `"bound_cidrs": "token_bound_cidrs"`. Vault returns the deprecated `policies` and `bound_cidrs` keys in read responses alongside the canonical `token_*` versions. Without these aliases, `IsEquivalentToDesiredState` would see a false mismatch and the operator would drift-loop forever when Vault returned only the deprecated keys.
+
+2. **MEDIUM**: Webhook `IsValid()` did not validate that the role name embedded in `spec.arn` matches the effective Vault role name (`spec.name` or `metadata.name`). The Vault AliCloud auth API requires these to correspond — a mismatch would cause a confusing runtime failure.
 
 ### Decisions Needed / Decisions Taken
 
 - No AliCloudAuthEngineConfig CRD — AliCloud auth has no config endpoint (confirmed via plugin source `backend.go` and official API docs). Decision taken pre-story (same as AppRole 14.1).
+- ARN role name comparison uses case-insensitive matching (`strings.EqualFold`) since AliCloud ARN role names may differ in case from Kubernetes resource names.
+- If the ARN does not contain a `role/` segment (non-standard ARN), validation rejects with a clear error (strict webhook enforcement per review iteration 3).
 
 ### Fixes Applied
+
+1. **HIGH fix**: Added `"policies": "token_policies"` and `"bound_cidrs": "token_bound_cidrs"` to `aliCloudVaultReadAliases` in `alicloudauthenginerole_types.go`. Added unit tests: `TestAliCloudAuthEngineRoleIsEquivalentToDesiredState_DeprecatedPoliciesAlias` and `TestAliCloudAuthEngineRoleIsEquivalentToDesiredState_DeprecatedBoundCIDRsAlias`.
+
+2. **MEDIUM fix**: Implemented ARN-to-role-name validation in `IsValid()` with `extractAliCloudARNRoleName` helper in `alicloudauthenginerole_types.go`. Webhook `ValidateCreate`/`ValidateUpdate` already call `IsValid()`, so the validation is automatically enforced. Added unit tests: `TestAliCloudAuthEngineRoleIsValid_ARNMatchesSpecName`, `TestAliCloudAuthEngineRoleIsValid_ARNMatchesMetadataName`, `TestAliCloudAuthEngineRoleIsValid_ARNMismatchRejects`, `TestAliCloudAuthEngineRoleIsValid_ARNMismatchWithSpecName`, `TestAliCloudAuthEngineRoleIsValid_CaseInsensitiveMatch`, `TestAliCloudAuthEngineRoleIsValid_NoRoleSegmentInARN`, `TestExtractAliCloudARNRoleName`.
+
+3. **MEDIUM fix (review iteration 2)**: Aligned ARN role segments to match `metadata.name` in docs and test fixture, fixing violations of the new `IsValid()` ARN-to-role-name check. Changed ARN from `role/dev-role` to `role/my-alicloud-role` in `docs/auth-engines/alicloud.md` (YAML example and CLI snippet) and from `role/dev-role` to `role/test-alicloud-role` in `test/alicloudauthengine/test-alicloud-auth-role.yaml`.
+
+4. **MEDIUM fix (review iteration 3)**: `IsValid()` now rejects when `extractAliCloudARNRoleName` fails (no `role/` segment or empty role name after prefix), instead of silently skipping validation. This ensures malformed/non-role ARNs (e.g. `policy/...`) are rejected at admission. Flipped `TestAliCloudAuthEngineRoleIsValid_NoRoleSegmentInARN` to expect rejection. Added `TestAliCloudAuthEngineRoleIsValid_EmptyRoleNameAfterPrefix` test.
+
+5. **MEDIUM fix (review iteration 4)**: `extractAliCloudARNRoleName` now matches `:role/` (colon-delimited resource type) instead of bare `role/` substring. This prevents false-positive parsing of policy ARNs that contain `role/` in a later path segment (e.g. `acs:ram::...:policy/team/role/dev-role`). Also clarified `Path` field comment to note `spec.name` override precedence. Added `TestAliCloudAuthEngineRoleIsValid_PolicyARNWithRoleInPath` and table-driven test case for the false-positive ARN.
+
+## Change Log
+
+- 2026-08-19: Implemented AliCloudAuthEngineRole CRD — type, webhook, controller, unit tests, test fixtures, CRD registration, documentation. Single CRD (no config) following AppRole 14.1 pattern. All unit tests pass, zero regressions.

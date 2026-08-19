@@ -46,6 +46,7 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
+  - alicloudauthengineroles
   - approleauthengineroles
   - auditrequestheaders
   - audits
@@ -135,6 +136,7 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
+  - alicloudauthengineroles/finalizers
   - approleauthengineroles/finalizers
   - auditrequestheaders/finalizers
   - audits/finalizers
@@ -217,6 +219,7 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
+  - alicloudauthengineroles/status
   - approleauthengineroles/status
   - auditrequestheaders/status
   - audits/status

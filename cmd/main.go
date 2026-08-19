@@ -514,6 +514,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controller.AliCloudAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AliCloudAuthEngineRole")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AliCloudAuthEngineRole")
+		os.Exit(1)
+	}
+
 	if webhooks, ok := os.LookupEnv("ENABLE_WEBHOOKS"); !ok || webhooks != "false" {
 		if err = (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "RandomSecret")
@@ -849,6 +854,10 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.OktaAuthEngineGroup{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "OktaAuthEngineGroup")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.AliCloudAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "AliCloudAuthEngineRole")
 			os.Exit(1)
 		}
 	}
