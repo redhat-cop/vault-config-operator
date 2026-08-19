@@ -1,6 +1,6 @@
 # Story 16.1: RADIUS Auth Engine — Config and User CRDs
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -681,3 +681,4 @@ gpt-5.4-medium
 - 2026-08-19: Iteration 2 review fixes — passwordKey admission-request omission detection, kubebuilder defaults for RADIUS numerics with always-emit in toMap(), set-valued field sorting in IsEquivalentToDesiredState.
 - 2026-08-19: Iteration 3 review fix — controller-side resolveRADIUSPasswordKey() for ENABLE_WEBHOOKS=false path, with unit tests.
 - 2026-08-19: Iteration 4 review fixes — toMap() always emits all optional fields for convergence correctness (stale Vault values now detected); mutating webhook verbs changed to create;update for passwordKey remapping on updates.
+- 2026-08-19: Merged to epic-16 after 5/5 review-cap accept-as-is (gpt-5.4-medium) and passing worktree integration tests. Residual: ENABLE_WEBHOOKS-dependent passwordKey remap; omitted tokenType vs Vault `"default"` false-drift.
