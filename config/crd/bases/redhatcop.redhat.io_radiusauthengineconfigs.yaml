@@ -273,7 +273,9 @@ spec:
                 description: TokenTTL is the incremental lifetime for generated tokens.
                 type: string
               tokenType:
-                description: TokenType is the type of token to generate.
+                description: |-
+                  TokenType is the type of token to generate.
+                  Omitted/empty is treated as Vault's read-default of "default".
                 enum:
                 - service
                 - batch

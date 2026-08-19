@@ -2,10 +2,13 @@ KUBECTL_WAIT_TIMEOUT ?= 5m
 CHART_REPO_URL ?= http://example.com
 HELM_REPO_DEST ?= /tmp/gh-pages
 OPERATOR_NAME ?=$(shell basename -z `pwd`)
-HELM_VERSION ?= v4.2.3
+HELM_VERSION ?= v4.2.4
 KIND_VERSION ?= v0.32.0
 KIND_CLUSTER_NAME ?= vault-config-operator
-KUBECTL_VERSION ?= v1.36.1
+# kubectl client patch. Kind v0.32.0's published node image is still v1.36.1
+# (no kindest/node:v1.36.3 tag), so KIND_NODE_VERSION is pinned separately.
+KUBECTL_VERSION ?= v1.36.3
+KIND_NODE_VERSION ?= v1.36.1
 KUSTOMIZE_VERSION ?= v5.8.1
 VAULT_HOST_PORT ?= 8200
 # Override HTTPS_HOST_PORT and VAULT_HOST_PORT (along with KIND_CLUSTER_NAME) to run
@@ -16,19 +19,22 @@ KUBE_CONFIG_FILE ?= /tmp/$(KIND_CLUSTER_NAME)-kubeconfig
 # Container runtime: use docker in CI (GitHub Actions), podman on local dev machines.
 CONTAINER_RUNTIME ?= $(shell if [ -n "$$GITHUB_ACTIONS" ]; then echo docker; else echo podman; fi)
 # Note changes to the vault version should also match image tags within the integration/vault-values.yaml and config/local-development/vault-values.yaml files
-VAULT_VERSION ?= 2.0.3
+VAULT_VERSION ?= 2.0.4
 # The vault version should also match the appVersion in the vault helm chart
-VAULT_CHART_VERSION ?= 0.34.0
+VAULT_CHART_VERSION ?= 0.34.1
 # Set the Operator SDK version to use. By default, what is installed on the system is used.
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
 OPERATOR_SDK_VERSION ?= v1.42.3
 OPM_VERSION ?= v1.73.0
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION ?= 1.36.0
+ENVTEST_K8S_VERSION ?= 1.36.2
 
 CONTROLLER_TOOLS_VERSION ?= v0.21.0
 ENVTEST_VERSION ?= release-0.24
 GOLANGCI_LINT_VERSION ?= v2.12.2
+# Follow-up when golang:1.27 is published and golangci-lint/staticcheck support
+# it: bump go.mod (`go` + `toolchain`), Dockerfile `FROM golang:1.26`,
+# CI `GO_VERSION: ~1.26`, and `GOTOOLCHAIN=go1.26.4` in the lint target.
 
 # VERSION defines the project version for the bundle.
 # Update this value when you upgrade the version of your project.
@@ -169,16 +175,16 @@ kind-setup: kind
 	  CURRENT_IMAGE=$$($(CONTAINER_RUNTIME) inspect $(KIND_CLUSTER_NAME)-control-plane --format='{{.Config.Image}}' 2>/dev/null || echo ""); \
 	  CURRENT_PORT=$$($(CONTAINER_RUNTIME) inspect $(KIND_CLUSTER_NAME)-control-plane --format='{{(index (index .HostConfig.PortBindings "80/tcp") 0).HostPort}}' 2>/dev/null || echo ""); \
 	  CURRENT_HTTPS_PORT=$$($(CONTAINER_RUNTIME) inspect $(KIND_CLUSTER_NAME)-control-plane --format='{{(index (index .HostConfig.PortBindings "443/tcp") 0).HostPort}}' 2>/dev/null || echo ""); \
-	  if [ "$$CURRENT_IMAGE" = "docker.io/kindest/node:$(KUBECTL_VERSION)" ] && [ "$$CURRENT_PORT" = "$(VAULT_HOST_PORT)" ] && [ "$$CURRENT_HTTPS_PORT" = "$(HTTPS_HOST_PORT)" ]; then \
+	  if [ "$$CURRENT_IMAGE" = "docker.io/kindest/node:$(KIND_NODE_VERSION)" ] && [ "$$CURRENT_PORT" = "$(VAULT_HOST_PORT)" ] && [ "$$CURRENT_HTTPS_PORT" = "$(HTTPS_HOST_PORT)" ]; then \
 	    echo "Kind cluster '$(KIND_CLUSTER_NAME)' already exists with correct image and ports, skipping recreation"; \
 	  else \
 	    echo "Kind cluster '$(KIND_CLUSTER_NAME)' exists but config mismatch (image=$$CURRENT_IMAGE, port=$$CURRENT_PORT, https_port=$$CURRENT_HTTPS_PORT), recreating..."; \
 	    $(KIND) delete cluster --name $(KIND_CLUSTER_NAME); \
-	    $(KIND) create cluster --name $(KIND_CLUSTER_NAME) --image docker.io/kindest/node:$(KUBECTL_VERSION) --config=./integration/cluster-kind.yaml; \
+	    $(KIND) create cluster --name $(KIND_CLUSTER_NAME) --image docker.io/kindest/node:$(KIND_NODE_VERSION) --config=./integration/cluster-kind.yaml; \
 	  fi \
 	else \
 	  echo "Creating Kind cluster '$(KIND_CLUSTER_NAME)'..."; \
-	  $(KIND) create cluster --name $(KIND_CLUSTER_NAME) --image docker.io/kindest/node:$(KUBECTL_VERSION) --config=./integration/cluster-kind.yaml; \
+	  $(KIND) create cluster --name $(KIND_CLUSTER_NAME) --image docker.io/kindest/node:$(KIND_NODE_VERSION) --config=./integration/cluster-kind.yaml; \
 	fi
 	$(KIND) export kubeconfig --name $(KIND_CLUSTER_NAME) --kubeconfig $(KUBE_CONFIG_FILE)
 	@echo "Switching Kind node to iptables-nft (required for nftables-only hosts)..."
