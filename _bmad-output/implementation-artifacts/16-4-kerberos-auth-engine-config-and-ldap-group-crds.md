@@ -1,6 +1,6 @@
 # Story 16.4: Kerberos Auth Engine — Config and LDAP Group CRDs
 
-Status: review
+Status: done
 
 ## Story
 
@@ -870,4 +870,6 @@ gpt-5.4-medium
 
 1. **AliasMetadata toMap() type mismatch (MEDIUM)**: Changed `toMap()` to emit `alias_metadata` via `toAnyMapString(c.AliasMetadata)` (existing helper from `sshsecretenginerole_types.go`) so the payload is `map[string]any`, matching the shape Vault returns after JSON deserialization. Updated existing test to assert `map[string]any` type. Added two new unit tests: `TestKerberosAuthEngineLDAPConfig_AliasMetadata_DeepEqualWithVaultPayload` (verifies `reflect.DeepEqual` succeeds between `toMap()` output and a Vault-shaped `map[string]any`) and `TestKerberosAuthEngineLDAPConfig_IsEquivalentToDesiredState_WithAliasMetadata` (end-to-end drift check with aliasMetadata set). [api/v1alpha1/kerberosauthengineconfig_ldap_types.go, api/v1alpha1/kerberosauthengineconfig_ldap_test.go]
 
-Status: review
+## Change Log
+
+- 2026-08-19: Merged to epic-16 after approved review (gpt-5.4-medium) and passing worktree integration tests.
