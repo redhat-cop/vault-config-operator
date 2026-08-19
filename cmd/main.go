@@ -513,6 +513,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "OktaAuthEngineGroup")
 		os.Exit(1)
 	}
+	if err = (&controller.RADIUSAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RADIUSAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "RADIUSAuthEngineConfig")
+		os.Exit(1)
+	}
+	if err = (&controller.RADIUSAuthEngineUserReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RADIUSAuthEngineUser")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "RADIUSAuthEngineUser")
+		os.Exit(1)
+	}
 
 	if webhooks, ok := os.LookupEnv("ENABLE_WEBHOOKS"); !ok || webhooks != "false" {
 		if err = (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(mgr); err != nil {
@@ -849,6 +857,14 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.OktaAuthEngineGroup{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "OktaAuthEngineGroup")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.RADIUSAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "RADIUSAuthEngineConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.RADIUSAuthEngineUser{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "RADIUSAuthEngineUser")
 			os.Exit(1)
 		}
 	}

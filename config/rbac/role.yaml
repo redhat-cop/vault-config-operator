@@ -114,6 +114,8 @@ rules:
   - quaysecretenginestaticroles
   - rabbitmqsecretengineconfigs
   - rabbitmqsecretengineroles
+  - radiusauthengineconfigs
+  - radiusauthengineusers
   - randomsecrets
   - secretenginemounts
   - sshsecretengineconfigs
@@ -202,6 +204,8 @@ rules:
   - quaysecretengineroles/finalizers
   - quaysecretenginestaticroles/finalizers
   - rabbitmqsecretengineroles/finalizers
+  - radiusauthengineconfigs/finalizers
+  - radiusauthengineusers/finalizers
   - randomsecrets/finalizers
   - secretenginemounts/finalizers
   - sshsecretengineconfigs/finalizers
@@ -285,6 +289,8 @@ rules:
   - quaysecretenginestaticroles/status
   - rabbitmqsecretengineconfigs/status
   - rabbitmqsecretengineroles/status
+  - radiusauthengineconfigs/status
+  - radiusauthengineusers/status
   - randomsecrets/status
   - secretenginemounts/status
   - sshsecretengineconfigs/status
