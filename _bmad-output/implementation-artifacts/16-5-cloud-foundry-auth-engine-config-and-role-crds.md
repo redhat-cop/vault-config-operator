@@ -4,7 +4,7 @@ baseline_commit: 2856f66ecd326a158496e9ffbe68c89c0c42b15c
 
 # Story 16.5: Cloud Foundry Auth Engine — Config and Role CRDs
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -649,6 +649,7 @@ No debug issues encountered. All tests passed on first run after implementation.
 ### Change Log
 
 - 2026-08-19: Initial implementation of CFAuthEngineConfig and CFAuthEngineRole CRDs with full VaultObject interface, webhooks, controllers, unit tests, test fixtures, CRD generation, and documentation. All 9 tasks completed. All unit tests pass.
+- 2026-08-19: Merged to epic-16 after approved review (gpt-5.4-medium) and passing worktree integration tests.
 
 ## Code Review Record
 
