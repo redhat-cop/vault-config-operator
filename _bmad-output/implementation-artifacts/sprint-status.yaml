@@ -36,6 +36,8 @@
 
 generated: 2026-04-11
 last_updated: 2026-08-19
+# Epic 16 done 2026-08-19
+# Story 16.4 done 2026-08-19
 # Story 16.2 done 2026-08-19
 # Story 16.1 done 2026-08-19
 # Story 16.5 done 2026-08-19
@@ -579,11 +581,11 @@ development_status:
   epic-15-retrospective: done
 
   # Epic 16: Lower-Priority Missing Auth Methods (RADIUS, AliCloud, OCI, Kerberos, CF)
-  epic-16: in-progress
+  epic-16: done
   16-1-radius-auth-engine-config-and-user-crds: done
   16-2-alicloud-auth-engine-config-and-role-crds: done
   16-3-oci-auth-engine-config-and-role-crds: done
-  16-4-kerberos-auth-engine-config-and-ldap-group-crds: ready-for-dev
+  16-4-kerberos-auth-engine-config-and-ldap-group-crds: done
   16-5-cloud-foundry-auth-engine-config-and-role-crds: done
   epic-16-retrospective: optional
 
