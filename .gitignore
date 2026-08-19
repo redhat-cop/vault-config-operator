@@ -41,3 +41,7 @@ integration/cluster-kind.yaml
 .bmad-loop/cache/
 .bmad-loop/policy.toml
 _bmad/render/
+
+# Python bytecode (skill scripts)
+__pycache__/
+*.py[cod]

@@ -25,4 +25,17 @@ Track the iteration count starting at 1 for the first code review pass.
     6. Only proceed after explicit user approval.
 
 This prevents infinite review loops and ensures human judgment on unresolvable findings.""",
+
+  """PHASE B STORY FINALIZATION (MANDATORY — code gate, not a doc rule):
+After a story is reviewed (approved or accept-as-is), the orchestrator MUST run:
+  python3 ./scripts/finalize-story.py {story-key} --impl-dir {implementation_artifacts}
+Do NOT hand-edit sprint-status.yaml to `done`. The script:
+  1. Requires ## Code Review Record with a non-empty Review Model Used
+  2. Sets the story file Status: to done
+  3. Sets the matching sprint-status key to done in the same invocation
+  4. Exits non-zero if the review record is missing — HALT, fill the record, re-run
+After each layer, and on resume, run:
+  python3 ./scripts/finalize-story.py --check-epic {N} --impl-dir {implementation_artifacts}
+If that check fails, HALT. Do not start the next layer or continue the epic.
+This replaces the documentation-only atomicity guards that failed in Epics 12–15.""",
 ]

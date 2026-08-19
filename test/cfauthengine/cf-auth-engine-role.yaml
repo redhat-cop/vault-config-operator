@@ -1,0 +1,23 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: CFAuthEngineRole
+metadata:
+  name: cf-role-sample
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+    serviceAccount:
+      name: default
+  path: cf/test
+  name: "my-cf-role"
+  boundApplicationIDs:
+    - "09d7eb6a-afc2-49a0-bb32-858c22f2b346"
+  boundSpaceIDs:
+    - "21005ebb-8943-433e-84e6-d9d9d7338853"
+  boundOrganizationIDs:
+    - "9785a884-5e93-49bd-97ee-57bf7c2b20e0"
+  tokenPolicies:
+    - "default"
+    - "cf-app-policy"
+  tokenTTL: "1h"
+  tokenMaxTTL: "4h"

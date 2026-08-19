@@ -17,26 +17,37 @@ _This file contains critical rules and patterns that AI agents must follow when 
 ## Technology Stack & Versions
 
 ### Core
-- **Language:** Go 1.26
+- **Language:** Go 1.26 (toolchain go1.26.4)
 - **K8s Framework:** controller-runtime v0.24.1, Kubebuilder v3 layout
-- **OLM/SDK:** Operator SDK v1.31.0
-- **K8s API libs:** k8s.io/api, apimachinery, client-go v0.36.0
+- **OLM/SDK:** Operator SDK v1.42.3
+- **K8s API libs:** k8s.io/api, apimachinery, client-go v0.36.3
 - **Vault Client:** hashicorp/vault/api v1.23.0
 
 ### Key Dependencies
 - Masterminds/sprig/v3 v3.3.0 (template functions for VaultSecret)
-- hashicorp/hcl/v2 v2.24.0, BurntSushi/toml v1.4.0 (config parsing)
+- hashicorp/hcl/v2 v2.24.0, BurntSushi/toml v1.6.0 (config parsing)
 - go-logr/logr v1.4.4 (structured logging via controller-runtime/zap)
-- onsi/ginkgo/v2 v2.32.0 + onsi/gomega v1.42.1 (BDD testing)
+- onsi/ginkgo/v2 v2.32.1 + onsi/gomega v1.42.1 (BDD testing)
+- stretchr/testify v1.12.1
 - scylladb/go-set v1.0.2 (set data structures)
 
 ### Build & Dev Tooling
 - controller-gen v0.21.0 (CRD/RBAC generation)
-- kustomize v5.4.3, Helm v3.11.0
-- golangci-lint v1.64.8 (no committed config — uses defaults or shared workflow config)
-- Kind v0.32.0, kubectl v1.36.1, Vault 2.0.3 (integration testing)
+- kustomize v5.8.1, Helm v4.2.4
+- golangci-lint v2.12.2 (`make lint` pins `GOTOOLCHAIN=go1.26.4`)
+- Kind v0.32.0, kubectl v1.36.3, Kind node image `kindest/node:v1.36.1` (no v1.36.3 node tag yet)
+- Vault 2.0.4, Vault Helm chart 0.34.1 (integration testing)
+- envtest K8s assets 1.36.2
 - Container: golang:1.26 builder → registry.access.redhat.com/ubi9/ubi-minimal runtime
-- CI: GitHub Actions via reusable workflows from redhat-cop/github-workflows-operators
+- CI: GitHub Actions via reusable workflows from redhat-cop/github-workflows-operators (`GO_VERSION: ~1.26`)
+
+### Pending — Go 1.27 runtime
+Go 1.27.0 released 2026-08-19. **Do not bump yet** until the official `golang:1.27` image is published and golangci-lint/staticcheck support 1.27. When that lands, update together:
+- `go.mod` `go` / `toolchain` directives
+- Dockerfile builder `FROM golang:1.26`
+- CI `GO_VERSION: ~1.26` in `.github/workflows/pr.yaml` and `push.yaml`
+- Makefile `GOTOOLCHAIN=go1.26.4` on the `lint` target
+The UBI9 runtime image does not need a Go version bump (it only packages the compiled binary), but rebuild it on the new builder so the manager is compiled with 1.27.
 
 ## Critical Implementation Rules
 

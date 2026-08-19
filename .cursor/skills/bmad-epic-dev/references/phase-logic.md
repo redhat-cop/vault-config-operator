@@ -8,6 +8,7 @@ Communicate with the user in `{communication_language}`.
 - Subagents run autonomously but you **relay "decision needed" questions** back to the user — see **Decision Relay Protocol** below
 - On any failure: **halt** with what failed, which story, and instructions to re-invoke
 - `sprint-status.yaml` is the sole checkpoint — story statuses determine resume position
+- **Never hand-edit sprint-status to `done`.** Run `python3 ./scripts/finalize-story.py {story-key}` after the Code Review Record is filled. After each layer run `--check-epic {N}` and HALT on failure.
 - Respect `--commit-policy` and `--skip-confirmations` args from SKILL.md
 - **Model assignment:** `bmad-create-story` and `bmad-dev-story` subagents use **Opus 4.6** (high reasoning). `bmad-code-review` subagents use **ChatGPT 5.4** (medium reasoning, different model to prevent self-review bias). Pass the model when spawning each subagent. If a model isn't available, warn the user and fall back — but always log when review runs on the same model as development.
 
@@ -418,19 +419,24 @@ For each dependency layer (in topological order):
 
 8. **Post-merge verification.** Integration tests already passed in the worktree (Step 5). After merge, run the fast unit test suite (`make test`) on the epic branch as a quick sanity check that the merge itself didn't introduce issues. If tests fail, halt with the merge SHA and failure details — the user must resolve before continuing.
 
-9. **Update story file status on the epic branch.** After each successful merge, on the epic branch:
-   - Set the story file's `Status:` field to `done`
-   - Populate the **Code Review Record** section if not already filled by the review subagent:
-     - **Review Model Used**: the model slug used for code review
-     - **Review Findings**: summary of findings from the review
-     - **Decisions Needed / Taken**: any decisions that were relayed to the user
-     - **Fixes Applied**: list of fixes applied after review
-   - Commit these story-file updates as part of the merge or as a follow-up:
-     ```
-     chore(epic-{N}): update story {N.M} status and review record
-     ```
+9. **Populate Code Review Record, then finalize atomically.** After each successful merge, on the epic branch:
 
-   This ensures story file status is always consistent with `sprint-status.yaml`, regardless of whether the work was done in a worktree.
+   First, if the review subagent did not already fill the story file's **Code Review Record**, write it:
+   - **Review Model Used**: the model slug used for code review
+   - **Review Findings**: summary of findings from the review
+   - **Decisions Needed / Taken**: any decisions that were relayed to the user
+   - **Fixes Applied**: list of fixes applied after review
+
+   Then run the finalization script. **Do NOT hand-edit `sprint-status.yaml` to `done`.** The script is the only allowed way to mark a story done in sprint-status:
+   ```
+   python3 ./scripts/finalize-story.py {story-key} --impl-dir {implementation_artifacts}
+   ```
+   The script requires a non-empty Review Model Used, sets the story file `Status:` to `done`, and sets the matching sprint-status key to `done` in the same invocation. If it exits non-zero: **HALT.** Populate the missing Code Review Record and re-run. Do not proceed with a partial update.
+
+   Commit the script's edits:
+   ```
+   chore(epic-{N}): finalize story {N.M} status and review record
+   ```
 
 10. Clean up worktrees after successful merge:
 
@@ -447,15 +453,14 @@ For each dependency layer (in topological order):
 
    **Kind cluster note:** Per-story Kind clusters are torn down in Step 5 after integration tests pass. If a story was halted before reaching Step 5, its Kind cluster may still be running — see the orphan detection protocol in the Resume Behavior section.
 
-11. Update `sprint-status.yaml`: mark each merged story as `done`.
+11. Sprint-status `done` is already set by `finalize-story.py` in Step 9. Do not apply a second hand-edit.
 
-   **HARD GUARD — Status Atomicity:** The orchestrator MUST NOT update sprint-status.yaml to `done` for a story unless the story file's `Status:` field has ALREADY been set to `done` in the same commit or an earlier commit on the epic branch. If the story file still shows `in-progress`, `review`, or any other non-done status, HALT and fix the story file first. This prevents drift between the two tracking systems.
-
-12. **Final consistency check (BLOCKING GATE):** After all stories in the layer are merged, verify that:
-    - Every merged story's file has `Status: done`
-    - Every merged story in `sprint-status.yaml` is `done`
-    - `git worktree list` shows only the main working tree (no orphaned worktrees)
-    If ANY inconsistency is found: **HALT immediately.** Do NOT proceed to the next layer. Report the inconsistency to the user and fix it before continuing. This is a blocking gate, not advisory.
+12. **Final consistency check (BLOCKING GATE):** After all stories in the layer are merged, run:
+    ```
+    python3 ./scripts/finalize-story.py --check-epic {N} --impl-dir {implementation_artifacts}
+    git worktree list
+    ```
+    If `--check-epic` exits non-zero: **HALT immediately.** Do NOT proceed to the next layer. The script reports which story files drifted from sprint-status or are missing a Code Review Record. Fix, re-run the script, then continue. Also confirm `git worktree list` shows only the main working tree (no orphaned worktrees).
 
 ### B.4: Report Layer Progress
 
@@ -485,11 +490,17 @@ For each story:
    ```
    feat(epic-{N}): {story_key} — {story title}
    ```
-8. **Update story file** on the epic branch:
-   - Set `Status:` to `done`
-   - Populate the **Code Review Record** section (Review Model, Findings, Decisions, Fixes)
-9. Update `sprint-status.yaml`: mark story as `done`. **HARD GUARD:** Do NOT update sprint-status until the story file's `Status:` field is already `done` in a committed state.
-10. **Verify consistency (BLOCKING GATE):** Confirm story file status and sprint-status agree before continuing. If they disagree, HALT and fix — do NOT proceed.
+8. **Populate Code Review Record** on the epic branch (Review Model, Findings, Decisions, Fixes) if the review subagent did not already write it.
+9. **Finalize atomically** — do NOT hand-edit sprint-status to `done`:
+   ```
+   python3 ./scripts/finalize-story.py {story-key} --impl-dir {implementation_artifacts}
+   ```
+   If the script exits non-zero, HALT and fix the Code Review Record. Do not mark sprint-status done by hand.
+10. **Verify consistency (BLOCKING GATE):**
+    ```
+    python3 ./scripts/finalize-story.py --check-epic {N} --impl-dir {implementation_artifacts}
+    ```
+    If it fails, HALT and fix — do NOT proceed.
 11. Report progress, continue to next story
 
 ### B.6: Check for New Stories
@@ -560,4 +571,8 @@ If orphaned worktrees or Kind clusters are found:
 
 ### Story File Status Consistency
 
-On resume, also verify that story file `Status:` fields are consistent with `sprint-status.yaml`. If a story is marked `done` in sprint-status but its file shows a different status (e.g., `review`, `in-progress`), fix the story file to match sprint-status before proceeding.
+On resume, run:
+```
+python3 ./scripts/finalize-story.py --check-epic {N} --impl-dir {implementation_artifacts}
+```
+If a story is marked `done` in sprint-status but its file is not `done` or is missing a Code Review Record, **HALT** and run `finalize-story.py {story-key}` (after filling the review record if needed). Do not continue the epic while drift remains.

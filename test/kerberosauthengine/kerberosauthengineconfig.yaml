@@ -1,0 +1,15 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KerberosAuthEngineConfig
+metadata:
+  name: kerberos-config-test
+spec:
+  authentication:
+    path: kubernetes
+    role: vault-admin
+  path: kerberos
+  serviceAccount: vault_svc
+  removeInstanceName: false
+  addGroupAliases: true
+  keytabSecret:
+    name: kerberos-keytab
+  keytabKey: keytab

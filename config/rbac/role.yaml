@@ -46,6 +46,7 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
+  - alicloudauthengineroles
   - approleauthengineroles
   - auditrequestheaders
   - audits
@@ -61,6 +62,8 @@ rules:
   - azuresecretengineroles
   - certauthengineconfigs
   - certauthengineroles
+  - cfauthengineconfigs
+  - cfauthengineroles
   - consulsecretengineconfigs
   - consulsecretengineroles
   - databasesecretengineconfigs
@@ -89,6 +92,9 @@ rules:
   - identitytokenroles
   - jwtoidcauthengineconfigs
   - jwtoidcauthengineroles
+  - kerberosauthengineconfigs
+  - kerberosauthenginegroups
+  - kerberosauthengineldapconfigs
   - kubernetesauthengineconfigs
   - kubernetesauthengineroles
   - kubernetessecretengineconfigs
@@ -103,6 +109,8 @@ rules:
   - namespaces
   - nomadsecretengineconfigs
   - nomadsecretengineroles
+  - ociauthengineconfigs
+  - ociauthengineroles
   - oktaauthengineconfigs
   - oktaauthenginegroups
   - passwordpolicies
@@ -114,6 +122,8 @@ rules:
   - quaysecretenginestaticroles
   - rabbitmqsecretengineconfigs
   - rabbitmqsecretengineroles
+  - radiusauthengineconfigs
+  - radiusauthengineusers
   - randomsecrets
   - secretenginemounts
   - sshsecretengineconfigs
@@ -135,6 +145,7 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
+  - alicloudauthengineroles/finalizers
   - approleauthengineroles/finalizers
   - auditrequestheaders/finalizers
   - audits/finalizers
@@ -150,6 +161,8 @@ rules:
   - azuresecretengineroles/finalizers
   - certauthengineconfigs/finalizers
   - certauthengineroles/finalizers
+  - cfauthengineconfigs/finalizers
+  - cfauthengineroles/finalizers
   - consulsecretengineconfigs/finalizers
   - consulsecretengineroles/finalizers
   - databasesecretengineconfigs/finalizers
@@ -178,6 +191,9 @@ rules:
   - identitytokenroles/finalizers
   - jwtoidcauthengineconfigs/finalizers
   - jwtoidcauthengineroles/finalizers
+  - kerberosauthengineconfigs/finalizers
+  - kerberosauthenginegroups/finalizers
+  - kerberosauthengineldapconfigs/finalizers
   - kubernetesauthengineconfigs/finalizers
   - kubernetesauthengineroles/finalizers
   - kubernetessecretengineconfigs/finalizers
@@ -192,6 +208,8 @@ rules:
   - namespaces/finalizers
   - nomadsecretengineconfigs/finalizers
   - nomadsecretengineroles/finalizers
+  - ociauthengineconfigs/finalizers
+  - ociauthengineroles/finalizers
   - oktaauthengineconfigs/finalizers
   - oktaauthenginegroups/finalizers
   - passwordpolicies/finalizers
@@ -202,6 +220,8 @@ rules:
   - quaysecretengineroles/finalizers
   - quaysecretenginestaticroles/finalizers
   - rabbitmqsecretengineroles/finalizers
+  - radiusauthengineconfigs/finalizers
+  - radiusauthengineusers/finalizers
   - randomsecrets/finalizers
   - secretenginemounts/finalizers
   - sshsecretengineconfigs/finalizers
@@ -217,6 +237,7 @@ rules:
 - apiGroups:
   - redhatcop.redhat.io
   resources:
+  - alicloudauthengineroles/status
   - approleauthengineroles/status
   - auditrequestheaders/status
   - audits/status
@@ -232,6 +253,8 @@ rules:
   - azuresecretengineroles/status
   - certauthengineconfigs/status
   - certauthengineroles/status
+  - cfauthengineconfigs/status
+  - cfauthengineroles/status
   - consulsecretengineconfigs/status
   - consulsecretengineroles/status
   - databasesecretengineconfigs/status
@@ -260,6 +283,9 @@ rules:
   - identitytokenroles/status
   - jwtoidcauthengineconfigs/status
   - jwtoidcauthengineroles/status
+  - kerberosauthengineconfigs/status
+  - kerberosauthenginegroups/status
+  - kerberosauthengineldapconfigs/status
   - kubernetesauthengineconfigs/status
   - kubernetesauthengineroles/status
   - kubernetessecretengineconfigs/status
@@ -274,6 +300,8 @@ rules:
   - namespaces/status
   - nomadsecretengineconfigs/status
   - nomadsecretengineroles/status
+  - ociauthengineconfigs/status
+  - ociauthengineroles/status
   - oktaauthengineconfigs/status
   - oktaauthenginegroups/status
   - passwordpolicies/status
@@ -285,6 +313,8 @@ rules:
   - quaysecretenginestaticroles/status
   - rabbitmqsecretengineconfigs/status
   - rabbitmqsecretengineroles/status
+  - radiusauthengineconfigs/status
+  - radiusauthengineusers/status
   - randomsecrets/status
   - secretenginemounts/status
   - sshsecretengineconfigs/status

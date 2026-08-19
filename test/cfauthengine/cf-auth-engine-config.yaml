@@ -1,0 +1,23 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: CFAuthEngineConfig
+metadata:
+  name: cf-config
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+    serviceAccount:
+      name: default
+  path: cf/test
+  identityCACertificates:
+    - "-----BEGIN CERTIFICATE-----\nMIIBxTCCAWugAwIBAgIJAJd...\n-----END CERTIFICATE-----"
+  cfAPIAddr: "https://api.sys.example.cf-app.com"
+  cfAPITrustedCertificates:
+    - "-----BEGIN CERTIFICATE-----\nMIIBxTCCAWugAwIBAgIJAJd...\n-----END CERTIFICATE-----"
+  loginMaxSecondsNotBefore: 300
+  loginMaxSecondsNotAfter: 60
+  cfCredentials:
+    secret:
+      name: cf-api-credentials
+    usernameKey: cf_username
+    passwordKey: cf_password

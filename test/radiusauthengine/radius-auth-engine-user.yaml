@@ -1,0 +1,13 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: RADIUSAuthEngineUser
+metadata:
+  name: radius-user-sample
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+    serviceAccount:
+      name: default
+  path: radius/test
+  name: "testuser"
+  policies: "default,dev"

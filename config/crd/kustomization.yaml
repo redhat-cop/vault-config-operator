@@ -80,6 +80,16 @@ resources:
 - bases/redhatcop.redhat.io_githubauthengineusermaps.yaml
 - bases/redhatcop.redhat.io_oktaauthengineconfigs.yaml
 - bases/redhatcop.redhat.io_oktaauthenginegroups.yaml
+- bases/redhatcop.redhat.io_ociauthengineconfigs.yaml
+- bases/redhatcop.redhat.io_ociauthengineroles.yaml
+- bases/redhatcop.redhat.io_cfauthengineconfigs.yaml
+- bases/redhatcop.redhat.io_cfauthengineroles.yaml
+- bases/redhatcop.redhat.io_radiusauthengineconfigs.yaml
+- bases/redhatcop.redhat.io_radiusauthengineusers.yaml
+- bases/redhatcop.redhat.io_alicloudauthengineroles.yaml
+- bases/redhatcop.redhat.io_kerberosauthengineconfigs.yaml
+- bases/redhatcop.redhat.io_kerberosauthengineldapconfigs.yaml
+- bases/redhatcop.redhat.io_kerberosauthenginegroups.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches: []

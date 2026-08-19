@@ -27,6 +27,7 @@ The `path` field specifies the path at which the auth engine is mounted. The com
 
 | Engine | Config CRD | Role/Group CRD | File |
 |--------|-----------|----------------|------|
+| AliCloud | — | AliCloudAuthEngineRole | [alicloud.md](alicloud.md) |
 | AppRole | — | AppRoleAuthEngineRole | [approle.md](approle.md) |
 | Kubernetes | KubernetesAuthEngineConfig | KubernetesAuthEngineRole | [kubernetes.md](kubernetes.md) |
 | LDAP | LDAPAuthEngineConfig | LDAPAuthEngineGroup | [ldap.md](ldap.md) |
@@ -36,6 +37,10 @@ The `path` field specifies the path at which the auth engine is mounted. The com
 | AWS | AWSAuthEngineClientConfig, AWSAuthEngineIdentityConfig | AWSAuthEngineRole | [aws.md](aws.md) |
 | GitHub | GitHubAuthEngineConfig | GitHubAuthEngineTeamMap, GitHubAuthEngineUserMap | [github.md](github.md) |
 | Okta | OktaAuthEngineConfig | OktaAuthEngineGroup | [okta.md](okta.md) |
+| OCI | OCIAuthEngineConfig | OCIAuthEngineRole | [oci.md](oci.md) |
+| Cloud Foundry | CFAuthEngineConfig | CFAuthEngineRole | [cloud-foundry.md](cloud-foundry.md) |
+| RADIUS | RADIUSAuthEngineConfig | RADIUSAuthEngineUser | [radius.md](radius.md) |
+| Kerberos | KerberosAuthEngineConfig, KerberosAuthEngineLDAPConfig | KerberosAuthEngineGroup | [kerberos.md](kerberos.md) |
 | TLS Certificate | CertAuthEngineConfig | CertAuthEngineRole | [cert.md](cert.md) |
 | Userpass | — | UserpassAuthEngineUser | [userpass.md](userpass.md) |
 

@@ -513,6 +513,48 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "OktaAuthEngineGroup")
 		os.Exit(1)
 	}
+	if err = (&controller.RADIUSAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RADIUSAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "RADIUSAuthEngineConfig")
+		os.Exit(1)
+	}
+	if err = (&controller.RADIUSAuthEngineUserReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RADIUSAuthEngineUser")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "RADIUSAuthEngineUser")
+		os.Exit(1)
+	}
+	if err = (&controller.CFAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "CFAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "CFAuthEngineConfig")
+		os.Exit(1)
+	}
+	if err = (&controller.CFAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "CFAuthEngineRole")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "CFAuthEngineRole")
+		os.Exit(1)
+	}
+	if err = (&controller.OCIAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "OCIAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "OCIAuthEngineConfig")
+		os.Exit(1)
+	}
+	if err = (&controller.OCIAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "OCIAuthEngineRole")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "OCIAuthEngineRole")
+		os.Exit(1)
+	}
+
+	if err = (&controller.AliCloudAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AliCloudAuthEngineRole")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AliCloudAuthEngineRole")
+		os.Exit(1)
+	}
+
+	if err = (&controller.KerberosAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KerberosAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "KerberosAuthEngineConfig")
+		os.Exit(1)
+	}
+	if err = (&controller.KerberosAuthEngineLDAPConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KerberosAuthEngineLDAPConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "KerberosAuthEngineLDAPConfig")
+		os.Exit(1)
+	}
+	if err = (&controller.KerberosAuthEngineGroupReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KerberosAuthEngineGroup")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "KerberosAuthEngineGroup")
+		os.Exit(1)
+	}
 
 	if webhooks, ok := os.LookupEnv("ENABLE_WEBHOOKS"); !ok || webhooks != "false" {
 		if err = (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(mgr); err != nil {
@@ -849,6 +891,46 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.OktaAuthEngineGroup{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "OktaAuthEngineGroup")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.OCIAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "OCIAuthEngineConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.OCIAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "OCIAuthEngineRole")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.CFAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "CFAuthEngineConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.CFAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "CFAuthEngineRole")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.RADIUSAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "RADIUSAuthEngineConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.RADIUSAuthEngineUser{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "RADIUSAuthEngineUser")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.AliCloudAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "AliCloudAuthEngineRole")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.KerberosAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "KerberosAuthEngineConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.KerberosAuthEngineLDAPConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "KerberosAuthEngineLDAPConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.KerberosAuthEngineGroup{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "KerberosAuthEngineGroup")
 			os.Exit(1)
 		}
 	}
