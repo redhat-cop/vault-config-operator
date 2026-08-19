@@ -513,6 +513,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "OktaAuthEngineGroup")
 		os.Exit(1)
 	}
+	if err = (&controller.RADIUSAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RADIUSAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "RADIUSAuthEngineConfig")
+		os.Exit(1)
+	}
+	if err = (&controller.RADIUSAuthEngineUserReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RADIUSAuthEngineUser")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "RADIUSAuthEngineUser")
+		os.Exit(1)
+	}
 	if err = (&controller.CFAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "CFAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CFAuthEngineConfig")
 		os.Exit(1)
@@ -521,7 +529,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "CFAuthEngineRole")
 		os.Exit(1)
 	}
-
 	if err = (&controller.OCIAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "OCIAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OCIAuthEngineConfig")
 		os.Exit(1)
@@ -882,6 +889,14 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.CFAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "CFAuthEngineRole")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.RADIUSAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "RADIUSAuthEngineConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.RADIUSAuthEngineUser{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "RADIUSAuthEngineUser")
 			os.Exit(1)
 		}
 	}

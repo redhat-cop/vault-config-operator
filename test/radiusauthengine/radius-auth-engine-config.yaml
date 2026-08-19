@@ -1,0 +1,20 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: RADIUSAuthEngineConfig
+metadata:
+  name: radius-config
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+    serviceAccount:
+      name: default
+  path: radius/test
+  host: "radius.example.com"
+  port: 1812
+  dialTimeout: 10
+  readTimeout: 10
+  nasPort: 10
+  radiusCredentials:
+    secret:
+      name: radius-shared-secret
+    passwordKey: secret

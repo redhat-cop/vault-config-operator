@@ -1,6 +1,6 @@
 # Story 16.1: RADIUS Auth Engine — Config and User CRDs
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -30,49 +30,49 @@ so that Vault's RADIUS auth method can be managed declaratively.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `RADIUSAuthEngineConfig` type (AC: 1, 3, 5, 6, 7)
-  - [ ] 1.1: Create `api/v1alpha1/radiusauthengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `RADIUSAuthConfig` struct, `RADIUSCredentials` (`RootCredentialConfig` with passwordKey="secret")
-  - [ ] 1.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/config`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()`, `IsDeletable()=false`
-  - [ ] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
-  - [ ] 1.4: Implement `setInternalCredentials()` — resolve RADIUS shared secret from K8s Secret, VaultSecret, or RandomSecret
-  - [ ] 1.5: Implement `toMap()` on `RADIUSAuthConfig` — convert to Vault API snake_case fields, include resolved `secret` from internal field, use `json.Number` for integer fields
-  - [ ] 1.6: Implement `IsEquivalentToDesiredState()` — must delete `secret` from desired state (Vault never returns it on read), then `filterPayloadToDesiredKeys` + `reflect.DeepEqual`
+- [x] Task 1: Create `RADIUSAuthEngineConfig` type (AC: 1, 3, 5, 6, 7)
+  - [x] 1.1: Create `api/v1alpha1/radiusauthengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `RADIUSAuthConfig` struct, `RADIUSCredentials` (`RootCredentialConfig` with passwordKey="secret")
+  - [x] 1.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/config`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()`, `IsDeletable()=false`
+  - [x] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
+  - [x] 1.4: Implement `setInternalCredentials()` — resolve RADIUS shared secret from K8s Secret, VaultSecret, or RandomSecret
+  - [x] 1.5: Implement `toMap()` on `RADIUSAuthConfig` — convert to Vault API snake_case fields, include resolved `secret` from internal field, use `json.Number` for integer fields
+  - [x] 1.6: Implement `IsEquivalentToDesiredState()` — must delete `secret` from desired state (Vault never returns it on read), then `filterPayloadToDesiredKeys` + `reflect.DeepEqual`
 
-- [ ] Task 2: Create `RADIUSAuthEngineUser` type (AC: 2, 4, 5, 6)
-  - [ ] 2.1: Create `api/v1alpha1/radiusauthengineuser_types.go` — Spec with `Connection`, `Authentication`, `Path`, `Name` (username override), `Policies` (comma-separated string)
-  - [ ] 2.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/users/{name}`, `IsDeletable()=true`, no `PrepareInternalValues` needed
-  - [ ] 2.3: Implement `ConditionsAware` interface
-  - [ ] 2.4: Implement `toMap()` — emit `policies` field
-  - [ ] 2.5: Implement `IsEquivalentToDesiredState()` — standard `filterPayloadToDesiredKeys`
+- [x] Task 2: Create `RADIUSAuthEngineUser` type (AC: 2, 4, 5, 6)
+  - [x] 2.1: Create `api/v1alpha1/radiusauthengineuser_types.go` — Spec with `Connection`, `Authentication`, `Path`, `Name` (username override), `Policies` (comma-separated string)
+  - [x] 2.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/users/{name}`, `IsDeletable()=true`, no `PrepareInternalValues` needed
+  - [x] 2.3: Implement `ConditionsAware` interface
+  - [x] 2.4: Implement `toMap()` — emit `policies` field
+  - [x] 2.5: Implement `IsEquivalentToDesiredState()` — standard `filterPayloadToDesiredKeys`
 
-- [ ] Task 3: Create webhooks (AC: 6)
-  - [ ] 3.1: Create `api/v1alpha1/radiusauthengineconfig_webhook.go` — `admission.Defaulter[*RADIUSAuthEngineConfig]`, `admission.Validator[*RADIUSAuthEngineConfig]`, immutable `spec.path`, credential validation via `ValidateCredentialSource()`
-  - [ ] 3.2: Create `api/v1alpha1/radiusauthengineuser_webhook.go` — `admission.Defaulter[*RADIUSAuthEngineUser]`, `admission.Validator[*RADIUSAuthEngineUser]`, immutable `spec.path`/`spec.name`
+- [x] Task 3: Create webhooks (AC: 6)
+  - [x] 3.1: Create `api/v1alpha1/radiusauthengineconfig_webhook.go` — `admission.Defaulter[*RADIUSAuthEngineConfig]`, `admission.Validator[*RADIUSAuthEngineConfig]`, immutable `spec.path`, credential validation via `ValidateCredentialSource()`
+  - [x] 3.2: Create `api/v1alpha1/radiusauthengineuser_webhook.go` — `admission.Defaulter[*RADIUSAuthEngineUser]`, `admission.Validator[*RADIUSAuthEngineUser]`, immutable `spec.path`/`spec.name`
 
-- [ ] Task 4: Create controllers (AC: 1, 2, 3, 4, 5, 7)
-  - [ ] 4.1: Create `internal/controller/radiusauthengineconfig_controller.go` — embed `ReconcilerBase`, standard VaultResource reconcile, watches on `corev1.Secret` and `RandomSecret` for shared secret rotation
-  - [ ] 4.2: Create `internal/controller/radiusauthengineuser_controller.go` — simple `For()` with default periodic reconcile predicate (no watches needed)
+- [x] Task 4: Create controllers (AC: 1, 2, 3, 4, 5, 7)
+  - [x] 4.1: Create `internal/controller/radiusauthengineconfig_controller.go` — embed `ReconcilerBase`, standard VaultResource reconcile, watches on `corev1.Secret` and `RandomSecret` for shared secret rotation
+  - [x] 4.2: Create `internal/controller/radiusauthengineuser_controller.go` — simple `For()` with default periodic reconcile predicate (no watches needed)
 
-- [ ] Task 5: Register in main.go (AC: 1, 2)
-  - [ ] 5.1: Add controller registrations for both reconcilers
-  - [ ] 5.2: Add webhook registrations inside `ENABLE_WEBHOOKS` guard for both types
+- [x] Task 5: Register in main.go (AC: 1, 2)
+  - [x] 5.1: Add controller registrations for both reconcilers
+  - [x] 5.2: Add webhook registrations inside `ENABLE_WEBHOOKS` guard for both types
 
-- [ ] Task 6: Unit tests (AC: 1, 2, 5, 6)
-  - [ ] 6.1: Create `api/v1alpha1/radiusauthengineconfig_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures (secret stripped), negative tests
-  - [ ] 6.2: Create `api/v1alpha1/radiusauthengineuser_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with Vault-read fixture, negative tests
+- [x] Task 6: Unit tests (AC: 1, 2, 5, 6)
+  - [x] 6.1: Create `api/v1alpha1/radiusauthengineconfig_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures (secret stripped), negative tests
+  - [x] 6.2: Create `api/v1alpha1/radiusauthengineuser_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with Vault-read fixture, negative tests
 
-- [ ] Task 7: Test fixtures (AC: all)
-  - [ ] 7.1: Create test YAML fixtures in `test/radiusauthengine/` — config and user CRs
-  - [ ] 7.2: Integration tests — SKIP (RADIUS server cannot be trivially installed in Kind; see Integration Test Classification below)
+- [x] Task 7: Test fixtures (AC: all)
+  - [x] 7.1: Create test YAML fixtures in `test/radiusauthengine/` — config and user CRs
+  - [x] 7.2: Integration tests — SKIP (RADIUS server cannot be trivially installed in Kind; see Integration Test Classification below)
 
-- [ ] Task 8: CRD registration and code generation (AC: all)
-  - [ ] 8.1: Run `make manifests generate fmt vet test`
-  - [ ] 8.2: Add 2 new CRD YAML files to `config/crd/kustomization.yaml` (CRD registration checklist)
-  - [ ] 8.3: Verify all existing tests still pass
+- [x] Task 8: CRD registration and code generation (AC: all)
+  - [x] 8.1: Run `make manifests generate fmt vet test`
+  - [x] 8.2: Add 2 new CRD YAML files to `config/crd/kustomization.yaml` (CRD registration checklist)
+  - [x] 8.3: Verify all existing tests still pass
 
-- [ ] Task 9: Documentation (AC: 8)
-  - [ ] 9.1: Create `docs/auth-engines/radius.md` following `docs/engine-doc-template.md`
-  - [ ] 9.2: Update `docs/auth-engines/index.md` — add RADIUS row to Supported Auth Engines table
+- [x] Task 9: Documentation (AC: 8)
+  - [x] 9.1: Create `docs/auth-engines/radius.md` following `docs/engine-doc-template.md`
+  - [x] 9.2: Update `docs/auth-engines/index.md` — add RADIUS row to Supported Auth Engines table
 
 ## Dev Notes
 
@@ -574,21 +574,55 @@ No existing behavior is changed — purely additive.
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- All 9 tasks implemented following OktaAuthEngineConfig/OktaAuthEngineGroup patterns
+- RADIUSAuthEngineConfig: VaultObject with credential resolution (RootCredentialConfig), `IsDeletable()=false`, write-only `secret` stripping in `IsEquivalentToDesiredState`
+- RADIUSAuthEngineUser: Simple VaultObject with `IsDeletable()=true`, policies as comma-separated string
+- Config controller includes Secret and RandomSecret watches for shared secret rotation
+- User controller is simple `For()` with periodic reconcile predicate
+- Webhooks enforce immutability on `spec.path` (config+user) and `spec.name` (user only)
+- Config webhook defaults `RADIUSCredentials.PasswordKey` to `"secret"` only when empty
+- All integer fields emit as `json.Number`, duration fields use `durationToSeconds()`, list fields use `toInterfaceArray()`; optional fields always emitted with zero values (Vault treats 0 as default); `removeUnsetFields()` handles comparison when both CR and Vault have zero/absent
+- Unit tests use independently constructed Vault-read-shaped fixtures with `json.Number` for numeric values
+- Integration tests skipped per RADIUS Integration Test Classification (external RADIUS server required)
+- Documentation follows `docs/engine-doc-template.md` structure
+
 ### File List
+
+| File | Action |
+|------|--------|
+| api/v1alpha1/radiusauthengineconfig_types.go | NEW |
+| api/v1alpha1/radiusauthengineuser_types.go | NEW |
+| api/v1alpha1/radiusauthengineconfig_webhook.go | NEW |
+| api/v1alpha1/radiusauthengineuser_webhook.go | NEW |
+| api/v1alpha1/radiusauthengineconfig_test.go | NEW |
+| api/v1alpha1/radiusauthengineuser_test.go | NEW |
+| api/v1alpha1/zz_generated.deepcopy.go | MODIFIED |
+| internal/controller/radiusauthengineconfig_controller.go | NEW |
+| internal/controller/radiusauthengineuser_controller.go | NEW |
+| cmd/main.go | MODIFIED |
+| config/crd/kustomization.yaml | MODIFIED |
+| config/crd/bases/redhatcop.redhat.io_radiusauthengineconfigs.yaml | NEW (generated) |
+| config/crd/bases/redhatcop.redhat.io_radiusauthengineusers.yaml | NEW (generated) |
+| test/radiusauthengine/radius-auth-engine-config.yaml | NEW |
+| test/radiusauthengine/radius-auth-engine-user.yaml | NEW |
+| docs/auth-engines/radius.md | NEW |
+| docs/auth-engines/index.md | MODIFIED |
 
 ## Code Review Record
 
 ### Review Model Used
 
-{{review_model_name_version}}
+gpt-5.4-medium
 
 ### Review Findings
+
+- Omitted optional RADIUS numeric fields written as zeros: `toMap()` always emitted `port`, `dial_timeout`, `read_timeout`, `nas_port` even when unset (Go zero = 0), which could send invalid values (e.g. port=0) and broke omit-optional semantics (AC1/AC5). Same issue for `token_ttl`, `token_max_ttl`, `token_explicit_max_ttl`, `token_period`, `token_num_uses`, `token_no_default_policy`, `token_type`, `unregistered_user_policies`, `token_policies`, and `token_bound_cidrs` when at zero/empty values.
 
 ### Decisions Needed / Decisions Taken
 
@@ -596,6 +630,54 @@ No existing behavior is changed — purely additive.
 - RADIUS shared secret via `RootCredentialConfig` only — no inline secret in CR spec. Default key: `"secret"` (matching Vault API field name).
 - Integration tests SKIP — RADIUS server cannot be trivially installed in Kind. Unit tests are the quality gate.
 - RADIUSAuthEngineUser follows OktaAuthEngineGroup pattern (policies as comma-separated string, IsDeletable=true).
-- Config integer fields (`port`, `dial_timeout`, `read_timeout`, `nas_port`) use Go `int` with `json.Number` emission in `toMap()` — zero-value omission not needed because these have Vault-side defaults and will match on read even at zero.
+- 2026-08-19: Review cap 5/5 — user accepted remaining findings as-is: ENABLE_WEBHOOKS-dependent passwordKey remap, and omitted tokenType vs Vault `"default"` false-drift.
 
 ### Fixes Applied
+
+- Changed `RADIUSAuthConfig.toMap()` to conditionally include optional fields only when non-zero/non-empty (port, dial_timeout, read_timeout, nas_port, unregistered_user_policies, token_ttl, token_max_ttl, token_policies, token_bound_cidrs, token_explicit_max_ttl, token_no_default_policy, token_num_uses, token_period, token_type). Only `host` and `secret` (required) are always emitted.
+- Added `removeUnsetFields(desiredState, payload)` call in `IsEquivalentToDesiredState()` for drift-detection robustness, consistent with sibling auth configs.
+- Added `TestRADIUSAuthEngineConfig_toMap_SparseConfig` unit test: verifies sparse config with only host+secret produces exactly 2 keys and does NOT include port/dial_timeout/read_timeout/nas_port or any other optional field as 0.
+- Added `TestRADIUSAuthEngineConfig_IsEquivalentToDesiredState_SparseConfig` unit test: verifies sparse config matches a Vault payload containing Vault defaults (port=1812, dial_timeout=10, etc.).
+- Updated existing `IsEquivalentToDesiredState` test fixtures to remove zero-valued optional fields that are no longer emitted by `toMap()`.
+
+### Review Findings (Iteration 2 of 5)
+
+- [ ] [Review][Patch] Shared-secret key still defaults to `password`, not `secret` [`api/v1alpha1/radiusauthengineconfig_webhook.go:43`] — `RootCredentialConfig.PasswordKey` still has a CRD schema default of `"password"`, so an omitted `radiusCredentials.passwordKey` may arrive prefilled and never be remapped to `"secret"`. That breaks Secret/VaultSecret lookup for the RADIUS shared secret when schema defaulting wins or webhooks are disabled.
+- [ ] [Review][Patch] Zero-valued optional settings cannot be expressed or cleared [`api/v1alpha1/radiusauthengineconfig_types.go:180`] — the new sparse `toMap()` logic omits zero/false values, and `IsEquivalentToDesiredState()` then drops absent keys from comparison. Updates that should set `dialTimeout`, `readTimeout`, `nasPort`, or `tokenNumUses` to `0`, or clear an earlier non-default value back to the Vault default, are treated as already converged and leave stale data in Vault, violating AC5.
+- [ ] [Review][Patch] Set-valued token fields can false-drift on order [`api/v1alpha1/radiusauthengineconfig_types.go:180`] — `token_policies` and `token_bound_cidrs` are modeled as sets but compared with raw `reflect.DeepEqual` without order normalization, unlike sibling auth types. Equivalent values returned in a different order will trigger unnecessary rewrites.
+
+### Fixes Applied (Iteration 2)
+
+- **Finding 1 (HIGH):** Rewrote RADIUS webhook `Default()` to use `radiusCredentialKeyOmitted()` helper (same pattern as `awsCredentialKeyOmitted()`). When `passwordKey` is OMITTED from the admission request, it is remapped to `"secret"`; when explicitly present (even if the value is `"password"`), it is preserved. Fallback path for no-admission-request (unit tests) remaps both `""` and `"password"` to `"secret"`. Added tests: `TestRADIUSAuthEngineConfig_Default_InheritedSchemaDefault`, `TestRADIUSAuthEngineConfig_Default_PreservesExplicitPasswordKey`, `TestRADIUSAuthEngineConfig_Default_RemapsOmittedPasswordKey`.
+- **Finding 2 (HIGH):** Added `+kubebuilder:default` annotations and removed `omitempty` from JSON tags for four RADIUS numeric fields: `port` (default 1812), `dialTimeout` (default 10), `readTimeout` (default 10), `nasPort` (default 10). Updated `toMap()` to always emit these four fields unconditionally — they are never unset after defaulting, so clearing back to Vault defaults is correctly represented. Updated sparse-config test to expect these fields present with Vault-default values. Ran `make manifests generate`.
+- **Finding 3 (MEDIUM):** Added `sortAnyStringSlice()` calls for `token_policies` and `token_bound_cidrs` in `IsEquivalentToDesiredState()` before `reflect.DeepEqual`, consistent with `AWSSecretEngineRole` pattern. Added `TestRADIUSAuthEngineConfig_IsEquivalentToDesiredState_SetOrderIndependent` unit test verifying different-order sets are treated as equivalent.
+
+### Review Findings (Iteration 3 of 5)
+
+- [ ] [Review][Patch] ENABLE_WEBHOOKS=false / local-run path still leaves omitted passwordKey as inherited CRD default "password", so setInternalCredentials looks up the wrong secret key [`api/v1alpha1/radiusauthengineconfig_types.go:226`] — When webhooks are disabled the mutating webhook never runs; the CRD schema default "password" from RootCredentialConfig remains, causing Secret/VaultSecret lookups to use the wrong key for the RADIUS shared secret.
+
+### Fixes Applied (Iteration 3)
+
+- **Finding 1 (MEDIUM):** Added `resolveRADIUSPasswordKey()` helper in `radiusauthengineconfig_types.go` called at the top of `setInternalCredentials()`. Empty `PasswordKey` is always remapped to `"secret"`. When `ENABLE_WEBHOOKS=false`, inherited CRD default `"password"` is remapped to `"secret"`. When webhooks are enabled, `"password"` is preserved (the webhook already distinguished omit vs explicit). Added 5 unit tests: `TestResolveRADIUSPasswordKey_EmptyDefaultsToSecret`, `TestResolveRADIUSPasswordKey_PasswordRemappedWhenWebhooksDisabled`, `TestResolveRADIUSPasswordKey_PasswordPreservedWhenWebhooksEnabled`, `TestResolveRADIUSPasswordKey_CustomKeyPreserved`, `TestResolveRADIUSPasswordKey_PasswordPreservedWhenWebhooksExplicitlyTrue`. All existing webhook tests remain passing.
+
+### Review Findings (Iteration 4 of 5)
+
+- [ ] [Review][Patch] Clearing optional RADIUS config fields cannot converge [`api/v1alpha1/radiusauthengineconfig_types.go:329`] — `toMap()` omits empty token_*/unregistered_user_policies, then `removeUnsetFields` drops those keys from comparison, so stale Vault values remain. Operator never rewrites to clear them.
+- [ ] [Review][Patch] Mutating webhook is verbs=create only [`api/v1alpha1/radiusauthengineconfig_webhook.go:38`] — `Default()` that remaps omitted `passwordKey` only fires on CREATE. Updates that omit `passwordKey` will leave the inherited CRD default `"password"` and break credential lookups.
+
+### Fixes Applied (Iteration 4)
+
+- **Finding 1 (HIGH):** Changed `toMap()` to always emit ALL optional fields (token_ttl, token_max_ttl, token_policies, token_bound_cidrs, token_explicit_max_ttl, token_no_default_policy, token_num_uses, token_period, token_type, unregistered_user_policies) with their zero/empty values. `removeUnsetFields()` still correctly handles the case where both CR and Vault have zero/absent (removes from comparison), but now when Vault has a stale value the key IS in payload so it won't be removed and `DeepEqual` detects drift. Port/dial_timeout/read_timeout/nas_port remain always-emitted with kubebuilder defaults (never zero). Added `TestRADIUSAuthEngineConfig_IsEquivalentToDesiredState_StaleTokenTTL` unit test. Updated sparse toMap() test to verify always-emit behavior.
+- **Finding 2 (MEDIUM):** Changed mutating webhook marker from `verbs=create` to `verbs=create;update` so `Default()` fires on UPDATE too, remapping omitted `passwordKey` on update operations. Regenerated webhook manifests via `make manifests`. Added `TestRADIUSAuthEngineConfig_Default_RemapsOmittedPasswordKeyOnUpdate` and `TestRADIUSAuthEngineConfig_Default_PreservesExplicitPasswordKeyOnUpdate` unit tests.
+
+### Review Findings (Iteration 5 of 5)
+
+- [ ] [Review][Patch] Credential key resolution still depends on runtime webhook mode [`api/v1alpha1/radiusauthengineconfig_types.go:232`] — `resolveRADIUSPasswordKey()` rewrites persisted `"password"` based on the current `ENABLE_WEBHOOKS` setting instead of the original omit-vs-explicit user intent. That makes an explicit `passwordKey: "password"` unusable when webhooks are disabled, and it can also break previously created objects if the operator's webhook mode changes between reconciles.
+- [ ] [Review][Patch] Omitted `tokenType` does not converge against Vault's default read shape [`api/v1alpha1/radiusauthengineconfig_types.go:346`] — `toMap()` always emits `token_type: ""`, but the story's documented Vault read payload uses `token_type: "default"` when unset. Because that key is present in the Vault payload, `removeUnsetFields()` will not drop it, so sparse/default configs can false-drift and be rewritten on every reconcile instead of converging.
+
+## Change Log
+
+- 2026-08-19: Initial implementation of RADIUSAuthEngineConfig and RADIUSAuthEngineUser CRDs — types, webhooks, controllers, unit tests, test fixtures, documentation. All tasks complete, all unit tests pass.
+- 2026-08-19: Iteration 2 review fixes — passwordKey admission-request omission detection, kubebuilder defaults for RADIUS numerics with always-emit in toMap(), set-valued field sorting in IsEquivalentToDesiredState.
+- 2026-08-19: Iteration 3 review fix — controller-side resolveRADIUSPasswordKey() for ENABLE_WEBHOOKS=false path, with unit tests.
+- 2026-08-19: Iteration 4 review fixes — toMap() always emits all optional fields for convergence correctness (stale Vault values now detected); mutating webhook verbs changed to create;update for passwordKey remapping on updates.
