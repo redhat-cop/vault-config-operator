@@ -1,6 +1,6 @@
 # Story 16.4: Kerberos Auth Engine — Config and LDAP Group CRDs
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -34,61 +34,61 @@ So that Vault's Kerberos auth method can be managed declaratively.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `KerberosAuthEngineConfig` type (AC: 1, 4, 7, 8, 9)
-  - [ ] 1.1: Create `api/v1alpha1/kerberosauthengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `KerberosAuthConfig` struct, `KeytabSecret` (corev1.LocalObjectReference)
-  - [ ] 1.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/config`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()` (reads keytab from K8s Secret), `IsDeletable()=false`
-  - [ ] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
-  - [ ] 1.4: Implement `PrepareInternalValues()` — resolve base64 keytab from K8s Secret (`keytabSecret` reference), store in unexported `retrievedKeytab` field
-  - [ ] 1.5: Implement `toMap()` on `KerberosAuthConfig` — emit `keytab`, `service_account`, `remove_instance_name`, `add_group_aliases`
-  - [ ] 1.6: Implement `IsEquivalentToDesiredState()` — must delete `keytab` from desired state (Vault never returns it on read), then `filterPayloadToDesiredKeys`
+- [x] Task 1: Create `KerberosAuthEngineConfig` type (AC: 1, 4, 7, 8, 9)
+  - [x] 1.1: Create `api/v1alpha1/kerberosauthengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `KerberosAuthConfig` struct, `KeytabSecret` (corev1.LocalObjectReference)
+  - [x] 1.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/config`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()` (reads keytab from K8s Secret), `IsDeletable()=false`
+  - [x] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
+  - [x] 1.4: Implement `PrepareInternalValues()` — resolve base64 keytab from K8s Secret (`keytabSecret` reference), store in unexported `retrievedKeytab` field
+  - [x] 1.5: Implement `toMap()` on `KerberosAuthConfig` — emit `keytab`, `service_account`, `remove_instance_name`, `add_group_aliases`
+  - [x] 1.6: Implement `IsEquivalentToDesiredState()` — must delete `keytab` from desired state (Vault never returns it on read), then `filterPayloadToDesiredKeys`
 
-- [ ] Task 2: Create `KerberosAuthEngineLDAPConfig` type (AC: 2, 5, 7, 8, 10)
-  - [ ] 2.1: Create `api/v1alpha1/kerberosauthengineconfig_ldap_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `KerberosLDAPConfig` struct, `LDAPCredentials` (`RootCredentialConfig`), `TLSConfig`
-  - [ ] 2.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/config/ldap`, `IsDeletable()=false`, `PrepareInternalValues()` resolves binddn/bindpass credentials, `PrepareTLSConfig()` resolves certificate from K8s Secret
-  - [ ] 2.3: Implement `ConditionsAware` interface
-  - [ ] 2.4: Implement `toMap()` on `KerberosLDAPConfig` — emit all LDAP fields in snake_case; use `durationToSeconds()` for TTL fields, `json.Number` for `token_num_uses`
-  - [ ] 2.5: Implement `IsEquivalentToDesiredState()` — must delete `bindpass` from desired state (Vault returns empty string on read), then `filterPayloadToDesiredKeys`
-  - [ ] 2.6: Implement `setInternalCredentials()` — resolve binddn/bindpass from K8s Secret, VaultSecret, or RandomSecret. Follow `LDAPAuthEngineConfig.setInternalCredentials()` pattern
-  - [ ] 2.7: Implement `setTLSConfig()` — resolve certificate/clientTLSCert/clientTLSKey from K8s Secret. Follow `LDAPAuthEngineConfig.setTLSConfig()` pattern
+- [x] Task 2: Create `KerberosAuthEngineLDAPConfig` type (AC: 2, 5, 7, 8, 10)
+  - [x] 2.1: Create `api/v1alpha1/kerberosauthengineconfig_ldap_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `KerberosLDAPConfig` struct, `LDAPCredentials` (`RootCredentialConfig`), `TLSConfig`
+  - [x] 2.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/config/ldap`, `IsDeletable()=false`, `PrepareInternalValues()` resolves binddn/bindpass credentials, `PrepareTLSConfig()` resolves certificate from K8s Secret
+  - [x] 2.3: Implement `ConditionsAware` interface
+  - [x] 2.4: Implement `toMap()` on `KerberosLDAPConfig` — emit all LDAP fields in snake_case; use `durationToSeconds()` for TTL fields, `json.Number` for `token_num_uses`
+  - [x] 2.5: Implement `IsEquivalentToDesiredState()` — must delete `bindpass` from desired state (Vault returns empty string on read), then `filterPayloadToDesiredKeys`
+  - [x] 2.6: Implement `setInternalCredentials()` — resolve binddn/bindpass from K8s Secret, VaultSecret, or RandomSecret. Follow `LDAPAuthEngineConfig.setInternalCredentials()` pattern
+  - [x] 2.7: Implement `setTLSConfig()` — resolve certificate/clientTLSCert/clientTLSKey from K8s Secret. Follow `LDAPAuthEngineConfig.setTLSConfig()` pattern
 
-- [ ] Task 3: Create `KerberosAuthEngineGroup` type (AC: 3, 6, 7, 8)
-  - [ ] 3.1: Create `api/v1alpha1/kerberosauthenginegroup_types.go` — Spec with `Connection`, `Authentication`, `Path`, `Name` (group name override), `Policies` (comma-separated string)
-  - [ ] 3.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/groups/{name}`, `IsDeletable()=true`, no `PrepareInternalValues` needed
-  - [ ] 3.3: Implement `ConditionsAware` interface
-  - [ ] 3.4: Implement `toMap()` — emit `policies` field (string, NOT array — matches LDAPAuthEngineGroup pattern)
-  - [ ] 3.5: Implement `IsEquivalentToDesiredState()` — standard `filterPayloadToDesiredKeys`
+- [x] Task 3: Create `KerberosAuthEngineGroup` type (AC: 3, 6, 7, 8)
+  - [x] 3.1: Create `api/v1alpha1/kerberosauthenginegroup_types.go` — Spec with `Connection`, `Authentication`, `Path`, `Name` (group name override), `Policies` (comma-separated string)
+  - [x] 3.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/groups/{name}`, `IsDeletable()=true`, no `PrepareInternalValues` needed
+  - [x] 3.3: Implement `ConditionsAware` interface
+  - [x] 3.4: Implement `toMap()` — emit `policies` field (string, NOT array — matches LDAPAuthEngineGroup pattern)
+  - [x] 3.5: Implement `IsEquivalentToDesiredState()` — standard `filterPayloadToDesiredKeys`
 
-- [ ] Task 4: Create webhooks (AC: 8)
-  - [ ] 4.1: Create `api/v1alpha1/kerberosauthengineconfig_webhook.go` — `admission.Defaulter[*KerberosAuthEngineConfig]`, `admission.Validator[*KerberosAuthEngineConfig]`, immutable `spec.path`
-  - [ ] 4.2: Create `api/v1alpha1/kerberosauthengineconfig_ldap_webhook.go` — `admission.Defaulter[*KerberosAuthEngineLDAPConfig]`, `admission.Validator[*KerberosAuthEngineLDAPConfig]`, immutable `spec.path`, credential validation via `ValidateCredentialSource()`
-  - [ ] 4.3: Create `api/v1alpha1/kerberosauthenginegroup_webhook.go` — `admission.Defaulter[*KerberosAuthEngineGroup]`, `admission.Validator[*KerberosAuthEngineGroup]`, immutable `spec.path`/`spec.name`
+- [x] Task 4: Create webhooks (AC: 8)
+  - [x] 4.1: Create `api/v1alpha1/kerberosauthengineconfig_webhook.go` — `admission.Defaulter[*KerberosAuthEngineConfig]`, `admission.Validator[*KerberosAuthEngineConfig]`, immutable `spec.path`
+  - [x] 4.2: Create `api/v1alpha1/kerberosauthengineconfig_ldap_webhook.go` — `admission.Defaulter[*KerberosAuthEngineLDAPConfig]`, `admission.Validator[*KerberosAuthEngineLDAPConfig]`, immutable `spec.path`, credential validation via `ValidateCredentialSource()`
+  - [x] 4.3: Create `api/v1alpha1/kerberosauthenginegroup_webhook.go` — `admission.Defaulter[*KerberosAuthEngineGroup]`, `admission.Validator[*KerberosAuthEngineGroup]`, immutable `spec.path`/`spec.name`
 
-- [ ] Task 5: Create controllers (AC: 1, 2, 3, 4, 5, 6, 7, 9, 10)
-  - [ ] 5.1: Create `internal/controller/kerberosauthengineconfig_controller.go` — embed `ReconcilerBase`, standard VaultResource reconcile, watches on `corev1.Secret` for keytab rotation
-  - [ ] 5.2: Create `internal/controller/kerberosauthengineconfig_ldap_controller.go` — embed `ReconcilerBase`, standard VaultResource reconcile, watches on `corev1.Secret` and `RandomSecret` for bind credential rotation
-  - [ ] 5.3: Create `internal/controller/kerberosauthenginegroup_controller.go` — simple `For()` with default periodic reconcile predicate (no watches needed)
+- [x] Task 5: Create controllers (AC: 1, 2, 3, 4, 5, 6, 7, 9, 10)
+  - [x] 5.1: Create `internal/controller/kerberosauthengineconfig_controller.go` — embed `ReconcilerBase`, standard VaultResource reconcile, watches on `corev1.Secret` for keytab rotation
+  - [x] 5.2: Create `internal/controller/kerberosauthengineconfig_ldap_controller.go` — embed `ReconcilerBase`, standard VaultResource reconcile, watches on `corev1.Secret` and `RandomSecret` for bind credential rotation
+  - [x] 5.3: Create `internal/controller/kerberosauthenginegroup_controller.go` — simple `For()` with default periodic reconcile predicate (no watches needed)
 
-- [ ] Task 6: Register in main.go (AC: 1, 2, 3)
-  - [ ] 6.1: Add controller registrations for all 3 reconcilers
-  - [ ] 6.2: Add webhook registrations inside `ENABLE_WEBHOOKS` guard for all 3 types
+- [x] Task 6: Register in main.go (AC: 1, 2, 3)
+  - [x] 6.1: Add controller registrations for all 3 reconcilers
+  - [x] 6.2: Add webhook registrations inside `ENABLE_WEBHOOKS` guard for all 3 types
 
-- [ ] Task 7: Unit tests (AC: 1, 2, 3, 7, 8)
-  - [ ] 7.1: Create `api/v1alpha1/kerberosauthengineconfig_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures (keytab stripped), negative tests
-  - [ ] 7.2: Create `api/v1alpha1/kerberosauthengineconfig_ldap_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with Vault-read-shaped fixtures (bindpass stripped), negative tests
-  - [ ] 7.3: Create `api/v1alpha1/kerberosauthenginegroup_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with Vault-read fixture, negative tests
+- [x] Task 7: Unit tests (AC: 1, 2, 3, 7, 8)
+  - [x] 7.1: Create `api/v1alpha1/kerberosauthengineconfig_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures (keytab stripped), negative tests
+  - [x] 7.2: Create `api/v1alpha1/kerberosauthengineconfig_ldap_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with Vault-read-shaped fixtures (bindpass stripped), negative tests
+  - [x] 7.3: Create `api/v1alpha1/kerberosauthenginegroup_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with Vault-read fixture, negative tests
 
-- [ ] Task 8: Test fixtures (AC: all)
-  - [ ] 8.1: Create test YAML fixtures in `test/kerberosauthengine/` — config, LDAP config, and group CRs
-  - [ ] 8.2: Integration tests — SKIP (Kerberos is a network auth protocol that cannot be installed in Kind, falls under "Skip it" per project integration test philosophy)
+- [x] Task 8: Test fixtures (AC: all)
+  - [x] 8.1: Create test YAML fixtures in `test/kerberosauthengine/` — config, LDAP config, and group CRs
+  - [x] 8.2: Integration tests — SKIP (Kerberos is a network auth protocol that cannot be installed in Kind, falls under "Skip it" per project integration test philosophy)
 
-- [ ] Task 9: CRD registration and code generation (AC: all)
-  - [ ] 9.1: Run `make manifests generate fmt vet test`
-  - [ ] 9.2: Add 3 new CRD YAML files to `config/crd/kustomization.yaml` (CRD registration checklist)
-  - [ ] 9.3: Verify all existing tests still pass
+- [x] Task 9: CRD registration and code generation (AC: all)
+  - [x] 9.1: Run `make manifests generate fmt vet test`
+  - [x] 9.2: Add 3 new CRD YAML files to `config/crd/kustomization.yaml` (CRD registration checklist)
+  - [x] 9.3: Verify all existing tests still pass
 
-- [ ] Task 10: Documentation (AC: 11)
-  - [ ] 10.1: Create `docs/auth-engines/kerberos.md` following `docs/engine-doc-template.md`
-  - [ ] 10.2: Update `docs/auth-engines/index.md` with link to new doc
+- [x] Task 10: Documentation (AC: 11)
+  - [x] 10.1: Create `docs/auth-engines/kerberos.md` following `docs/engine-doc-template.md`
+  - [x] 10.2: Update `docs/auth-engines/index.md` with link to new doc
 
 ## Dev Notes
 
@@ -781,21 +781,61 @@ No existing behavior is changed — this is purely additive.
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Implemented all three CRDs (KerberosAuthEngineConfig, KerberosAuthEngineLDAPConfig, KerberosAuthEngineGroup) following established patterns
+- KerberosAuthEngineConfig: keytab resolved via PrepareInternalValues from K8s Secret, keytab stripped in IsEquivalentToDesiredState, IsDeletable=false
+- KerberosAuthEngineLDAPConfig: credentials via setInternalCredentials (K8s Secret, VaultSecret, RandomSecret), TLS via setTLSConfig, bindpass stripped in IsEquivalentToDesiredState, durationToSeconds for TTLs, json.Number for token_num_uses, IsDeletable=false
+- KerberosAuthEngineGroup: simple toMap with policies only (no name), IsDeletable=true, follows Okta group pattern
+- Config controller watches corev1.Secret for keytab rotation; LDAP controller watches Secret + RandomSecret for credential rotation; Group controller has no watches
+- Webhooks enforce immutable spec.path (all three) and immutable spec.name (group only); LDAP config validates credential source via ValidateCredentialSource
+- All unit tests pass: toMap, IsEquivalentToDesiredState (match, mismatch, keytab/bindpass stripping, extra vault fields)
+- CRDs registered in config/crd/kustomization.yaml; controllers and webhooks registered in main.go
+- Documentation created at docs/auth-engines/kerberos.md and index.md updated
+
 ### File List
+
+- api/v1alpha1/kerberosauthengineconfig_types.go (NEW)
+- api/v1alpha1/kerberosauthengineconfig_ldap_types.go (NEW)
+- api/v1alpha1/kerberosauthenginegroup_types.go (NEW)
+- api/v1alpha1/kerberosauthengineconfig_webhook.go (NEW)
+- api/v1alpha1/kerberosauthengineconfig_ldap_webhook.go (NEW)
+- api/v1alpha1/kerberosauthenginegroup_webhook.go (NEW)
+- api/v1alpha1/kerberosauthengineconfig_test.go (NEW)
+- api/v1alpha1/kerberosauthengineconfig_ldap_test.go (NEW)
+- api/v1alpha1/kerberosauthenginegroup_test.go (NEW)
+- api/v1alpha1/zz_generated.deepcopy.go (MODIFIED - auto-generated)
+- internal/controller/kerberosauthengineconfig_controller.go (NEW)
+- internal/controller/kerberosauthengineconfig_ldap_controller.go (NEW)
+- internal/controller/kerberosauthenginegroup_controller.go (NEW)
+- cmd/main.go (MODIFIED)
+- config/crd/bases/redhatcop.redhat.io_kerberosauthengineconfigs.yaml (NEW - auto-generated)
+- config/crd/bases/redhatcop.redhat.io_kerberosauthengineldapconfigs.yaml (NEW - auto-generated)
+- config/crd/bases/redhatcop.redhat.io_kerberosauthenginegroups.yaml (NEW - auto-generated)
+- config/crd/kustomization.yaml (MODIFIED)
+- config/rbac/role.yaml (MODIFIED - auto-generated)
+- test/kerberosauthengine/kerberosauthengineconfig.yaml (NEW)
+- test/kerberosauthengine/kerberosauthengineldapconfig.yaml (NEW)
+- test/kerberosauthengine/kerberosauthenginegroup.yaml (NEW)
+- docs/auth-engines/kerberos.md (NEW)
+- docs/auth-engines/index.md (MODIFIED)
 
 ## Code Review Record
 
 ### Review Model Used
 
-{{review_model_name_version}}
+gpt-5.4-medium
 
 ### Review Findings
+
+- [x] [Review][Patch] LDAP credential Secret watch filters the wrong Secret type and the wrong change condition [internal/controller/kerberosauthengineconfig_ldap_controller.go:79] — The predicate excludes `kubernetes.io/basic-auth` Secrets and returns `bytes.Equal(...)` instead of change detection, so real bind-credential rotations are missed while unrelated or TLS Secret updates can enqueue reconciles spuriously, violating AC 10.
+- [x] [Review][Patch] Kerberos group drift detection does not normalize Vault's array-shaped `policies` response [api/v1alpha1/kerberosauthenginegroup_types.go:70] — Vault reads group policies back as an array, but `IsEquivalentToDesiredState()` compares that payload directly against the CR's comma-delimited string, which will produce perpetual false drift and repeated writes.
+- [x] [Review][Patch] Kerberos LDAP config omits required `clientTLSCert` / `clientTLSKey` / `aliasMetadata` support [api/v1alpha1/kerberosauthengineconfig_ldap_types.go:60] — The new struct and `toMap()` only model `certificate`, so the CRD cannot express the full Kerberos LDAP API surface described in the story and Vault docs, including client certificate authentication and alias metadata.
+- [x] [Review][Patch] Keytab Secret watch ignores custom `keytabKey` [internal/controller/kerberosauthengineconfig_controller.go:86] — The update predicate hard-codes `Data["keytab"]`, so CRs using a non-default `spec.keytabKey` never reconcile on Secret rotation, violating AC 9 for supported custom key names.
 
 ### Decisions Needed / Decisions Taken
 
@@ -803,5 +843,31 @@ No existing behavior is changed — this is purely additive.
 - Design decision (pre-resolved): Keytab sourced from K8s Secret via PrepareInternalValues, not via RootCredentialConfig (keytab is binary data, not a username/password pair)
 - Design decision (pre-resolved): Both config CRDs have `IsDeletable()=false` — no DELETE endpoints exist for `auth/{path}/config` or `auth/{path}/config/ldap`
 - Design decision: KerberosLDAPConfig is a new struct (NOT reusing LDAPConfig from ldapauthengineconfig_types.go) because the Kerberos LDAP endpoint has a different field set
+- Decision taken: none required — all fixes are straightforward corrections
 
 ### Fixes Applied
+
+1. **LDAP Secret watch predicate (HIGH)**: Removed `kubernetes.io/basic-auth` type exclusion from both UpdateFunc and CreateFunc. Negated `bytes.Equal` calls so reconciliation triggers on credential CHANGE (`!bytes.Equal`), not on unchanged data. [internal/controller/kerberosauthengineconfig_ldap_controller.go]
+2. **Group policies drift detection (HIGH)**: Added `normalizePoliciesField()` helper that converts both CR comma-delimited strings and Vault `[]interface{}` arrays to sorted comma-separated strings before DeepEqual comparison. Updated `IsEquivalentToDesiredState` to call it on both sides. Added three unit tests covering Vault-shaped array match, reordered array match, and array mismatch. [api/v1alpha1/kerberosauthenginegroup_types.go, api/v1alpha1/kerberosauthenginegroup_test.go]
+3. **KerberosLDAPConfig missing fields (MEDIUM)**: Added `ClientTLSCert`, `ClientTLSKey`, and `AliasMetadata` spec fields to `KerberosLDAPConfig` struct. Updated `toMap()` to emit `client_tls_cert`, `client_tls_key`, and `alias_metadata`. Updated `setTLSConfig()` to copy spec-level TLS cert/key when no TLSSecret is configured (following LDAPAuthEngineConfig pattern). Added `client_tls_key` to write-only stripping in `IsEquivalentToDesiredState`. Updated all tests. [api/v1alpha1/kerberosauthengineconfig_ldap_types.go, api/v1alpha1/kerberosauthengineconfig_ldap_test.go]
+4. **Keytab Secret watch custom key (MEDIUM)**: Replaced hard-coded `Data["keytab"]` comparison with `reflect.DeepEqual(oldSecret.Data, newSecret.Data)` so any data change in the keytab Secret triggers reconciliation regardless of which key stores the keytab. The reconciler's `setKeytabFromSecret` already reads the correct key from `spec.keytabKey`. [internal/controller/kerberosauthengineconfig_controller.go]
+
+### Review Findings
+
+- [x] [Review][Patch] Kerberos LDAP Secret watch still misses custom credential keys and TLS Secret rotations [internal/controller/kerberosauthengineconfig_ldap_controller.go:76] — The prior inversion bug is fixed, but the reconciler still only compares `Data["username"]` and `Data["password"]` in its sole Secret predicate while `findApplicableKLDAPForSecret()` also maps TLS Secrets. That means credentials using non-default `usernameKey`/`passwordKey` and TLS-only changes to `ca.crt`/`tls.crt`/`tls.key` will not enqueue reconciles, so AC 10 and the Secret-backed TLS support remain incomplete.
+- [x] [Review][Patch] `aliasMetadata` is still modeled with the wrong shape [api/v1alpha1/kerberosauthengineconfig_ldap_types.go:101] — The story spec requires Kerberos LDAP `alias_metadata` to be a `map[string]string`, but the CRD type, generated manifest, and tests all implement it as a single string. Any user who sets alias metadata cannot express the Vault API's expected payload shape, and drift checks for that field will be incorrect.
+
+### Fixes Applied (Iteration 3)
+
+1. **LDAP Secret watch predicate (HIGH)**: Replaced `isBasicAuthSecret` predicate that only compared `Data["username"]` and `Data["password"]` with `isSecretDataChanged` predicate using `reflect.DeepEqual(oldSecret.Data, newSecret.Data)` — same approach as the keytab watch. This triggers reconciliation on any data change in credential or TLS Secrets, regardless of key names. Create/Delete enqueueing preserved as in sibling controllers. [internal/controller/kerberosauthengineconfig_ldap_controller.go]
+2. **AliasMetadata type correction (MEDIUM)**: Changed `AliasMetadata` field type from `string` to `map[string]string` in `KerberosLDAPConfig` struct. Updated `toMap()` to only emit `alias_metadata` when the map is non-empty (omitempty semantics). Regenerated deepcopy via `make generate` (now uses `make(map[string]string, ...)` copy). Regenerated CRD manifests via `make manifests` (now `type: object` with `additionalProperties: type: string`). Updated test to use map literal and type-assert the result. [api/v1alpha1/kerberosauthengineconfig_ldap_types.go, api/v1alpha1/kerberosauthengineconfig_ldap_test.go, api/v1alpha1/zz_generated.deepcopy.go, config/crd/bases/redhatcop.redhat.io_kerberosauthengineldapconfigs.yaml]
+
+### Review Findings (Iteration 4)
+
+- [x] [Review][Patch] `toMap()` emits `alias_metadata` as `map[string]string`, but Vault reads it as `map[string]any`, so `DeepEqual` always fails when `aliasMetadata` is set [api/v1alpha1/kerberosauthengineconfig_ldap_types.go:386]
+
+### Fixes Applied (Iteration 4)
+
+1. **AliasMetadata toMap() type mismatch (MEDIUM)**: Changed `toMap()` to emit `alias_metadata` via `toAnyMapString(c.AliasMetadata)` (existing helper from `sshsecretenginerole_types.go`) so the payload is `map[string]any`, matching the shape Vault returns after JSON deserialization. Updated existing test to assert `map[string]any` type. Added two new unit tests: `TestKerberosAuthEngineLDAPConfig_AliasMetadata_DeepEqualWithVaultPayload` (verifies `reflect.DeepEqual` succeeds between `toMap()` output and a Vault-shaped `map[string]any`) and `TestKerberosAuthEngineLDAPConfig_IsEquivalentToDesiredState_WithAliasMetadata` (end-to-end drift check with aliasMetadata set). [api/v1alpha1/kerberosauthengineconfig_ldap_types.go, api/v1alpha1/kerberosauthengineconfig_ldap_test.go]
+
+Status: review
