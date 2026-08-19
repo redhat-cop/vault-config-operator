@@ -1,6 +1,10 @@
+---
+baseline_commit: 2856f66ecd326a158496e9ffbe68c89c0c42b15c
+---
+
 # Story 16.5: Cloud Foundry Auth Engine — Config and Role CRDs
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -30,49 +34,55 @@ So that Vault's Cloud Foundry auth method can be managed declaratively.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `CFAuthEngineConfig` type (AC: 1, 3, 5, 6, 7)
-  - [ ] 1.1: Create `api/v1alpha1/cfauthengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `CFAuthConfig` struct, `CFCredentials` (`RootCredentialConfig` with usernameKey="cf_username", passwordKey="cf_password")
-  - [ ] 1.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/config`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()`, `IsDeletable()=true`
-  - [ ] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
-  - [ ] 1.4: Implement `setInternalCredentials()` — resolve cf_username/cf_password from K8s Secret, VaultSecret, or RandomSecret (follow `AWSAuthEngineClientConfig` two-credential pattern)
-  - [ ] 1.5: Implement `toMap()` on `CFAuthConfig` — convert to Vault API snake_case fields; use `json.Number` for integer fields (`login_max_seconds_not_before`, `login_max_seconds_not_after`); emit `toInterfaceArray()` for `identity_ca_certificates` and `cf_api_trusted_certificates`
-  - [ ] 1.6: Implement `IsEquivalentToDesiredState()` — must delete `cf_password` from desired state (Vault never returns it on read), then `filterPayloadToDesiredKeys`
+- [x] Task 1: Create `CFAuthEngineConfig` type (AC: 1, 3, 5, 6, 7)
+  - [x] 1.1: Create `api/v1alpha1/cfauthengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `CFAuthConfig` struct, `CFCredentials` (`RootCredentialConfig` with usernameKey="cf_username", passwordKey="cf_password")
+  - [x] 1.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/config`, `GetPayload()`, `IsEquivalentToDesiredState()`, `PrepareInternalValues()`, `IsDeletable()=true`
+  - [x] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
+  - [x] 1.4: Implement `setInternalCredentials()` — resolve cf_username/cf_password from K8s Secret, VaultSecret, or RandomSecret (follow `AWSAuthEngineClientConfig` two-credential pattern)
+  - [x] 1.5: Implement `toMap()` on `CFAuthConfig` — convert to Vault API snake_case fields; use `json.Number` for integer fields (`login_max_seconds_not_before`, `login_max_seconds_not_after`); emit `toInterfaceArray()` for `identity_ca_certificates` and `cf_api_trusted_certificates`
+  - [x] 1.6: Implement `IsEquivalentToDesiredState()` — must delete `cf_password` from desired state (Vault never returns it on read), then `filterPayloadToDesiredKeys`
 
-- [ ] Task 2: Create `CFAuthEngineRole` type (AC: 2, 4, 5, 6)
-  - [ ] 2.1: Create `api/v1alpha1/cfauthenginerole_types.go` — Spec with `Connection`, `Authentication`, `Path`, `Name` (role name override), inline `CFAuthRole` struct
-  - [ ] 2.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/roles/{name}`, `IsDeletable()=true`, no `PrepareInternalValues` needed
-  - [ ] 2.3: Implement `ConditionsAware` interface
-  - [ ] 2.4: Implement `toMap()` on `CFAuthRole` — emit bound constraint arrays via `toInterfaceArray()`, `disable_ip_matching` bool, token fields with `durationToSeconds()` for TTLs, `json.Number` for `token_num_uses`
-  - [ ] 2.5: Implement `IsEquivalentToDesiredState()` — `removeUnsetFields` + `filterPayloadToDesiredKeys`
+- [x] Task 2: Create `CFAuthEngineRole` type (AC: 2, 4, 5, 6)
+  - [x] 2.1: Create `api/v1alpha1/cfauthenginerole_types.go` — Spec with `Connection`, `Authentication`, `Path`, `Name` (role name override), inline `CFAuthRole` struct
+  - [x] 2.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/roles/{name}`, `IsDeletable()=true`, no `PrepareInternalValues` needed
+  - [x] 2.3: Implement `ConditionsAware` interface
+  - [x] 2.4: Implement `toMap()` on `CFAuthRole` — emit bound constraint arrays via `toInterfaceArray()`, `disable_ip_matching` bool, token fields with `durationToSeconds()` for TTLs, `json.Number` for `token_num_uses`
+  - [x] 2.5: Implement `IsEquivalentToDesiredState()` — `removeUnsetFields` + `filterPayloadToDesiredKeys`
 
-- [ ] Task 3: Create webhooks (AC: 6)
-  - [ ] 3.1: Create `api/v1alpha1/cfauthengineconfig_webhook.go` — `admission.Defaulter[*CFAuthEngineConfig]`, `admission.Validator[*CFAuthEngineConfig]`, immutable `spec.path`, credential validation via `ValidateCredentialSource()`, default `CFCredentials.UsernameKey` to `"cf_username"` and `PasswordKey` to `"cf_password"` only when empty
-  - [ ] 3.2: Create `api/v1alpha1/cfauthenginerole_webhook.go` — `admission.Defaulter[*CFAuthEngineRole]`, `admission.Validator[*CFAuthEngineRole]`, immutable `spec.path`/`spec.name`
+- [x] Task 3: Create webhooks (AC: 6)
+  - [x] 3.1: Create `api/v1alpha1/cfauthengineconfig_webhook.go` — `admission.Defaulter[*CFAuthEngineConfig]`, `admission.Validator[*CFAuthEngineConfig]`, immutable `spec.path`, credential validation via `ValidateCredentialSource()`, default `CFCredentials.UsernameKey` to `"cf_username"` and `PasswordKey` to `"cf_password"` only when empty
+  - [x] 3.2: Create `api/v1alpha1/cfauthenginerole_webhook.go` — `admission.Defaulter[*CFAuthEngineRole]`, `admission.Validator[*CFAuthEngineRole]`, immutable `spec.path`/`spec.name`
 
-- [ ] Task 4: Create controllers (AC: 1, 2, 3, 4, 5, 7)
-  - [ ] 4.1: Create `internal/controller/cfauthengineconfig_controller.go` — embed `ReconcilerBase`, standard VaultResource reconcile, watches on `corev1.Secret` and `RandomSecret` for credential rotation
-  - [ ] 4.2: Create `internal/controller/cfauthenginerole_controller.go` — simple `For()` with default periodic reconcile predicate (no watches needed)
+- [x] Task 4: Create controllers (AC: 1, 2, 3, 4, 5, 7)
+  - [x] 4.1: Create `internal/controller/cfauthengineconfig_controller.go` — embed `ReconcilerBase`, standard VaultResource reconcile, watches on `corev1.Secret` and `RandomSecret` for credential rotation
+  - [x] 4.2: Create `internal/controller/cfauthenginerole_controller.go` — simple `For()` with default periodic reconcile predicate (no watches needed)
 
-- [ ] Task 5: Register in main.go (AC: 1, 2)
-  - [ ] 5.1: Add controller registrations for both reconcilers
-  - [ ] 5.2: Add webhook registrations inside `ENABLE_WEBHOOKS` guard for both types
+- [x] Task 5: Register in main.go (AC: 1, 2)
+  - [x] 5.1: Add controller registrations for both reconcilers
+  - [x] 5.2: Add webhook registrations inside `ENABLE_WEBHOOKS` guard for both types
 
-- [ ] Task 6: Unit tests (AC: 1, 2, 5, 6)
-  - [ ] 6.1: Create `api/v1alpha1/cfauthengineconfig_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures (cf_password stripped), negative tests
-  - [ ] 6.2: Create `api/v1alpha1/cfauthenginerole_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with Vault-read fixture (TTLs as `json.Number` integer seconds), negative tests
+- [x] Task 6: Unit tests (AC: 1, 2, 5, 6)
+  - [x] 6.1: Create `api/v1alpha1/cfauthengineconfig_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures (cf_password stripped), negative tests
+  - [x] 6.2: Create `api/v1alpha1/cfauthenginerole_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with Vault-read fixture (TTLs as `json.Number` integer seconds), negative tests
 
-- [ ] Task 7: Test fixtures (AC: all)
-  - [ ] 7.1: Create test YAML fixtures in `test/cfauthengine/` — config and role CRs
-  - [ ] 7.2: Integration tests — SKIP (CF is a cloud platform, no CF test double in Kind)
+- [x] Task 7: Test fixtures (AC: all)
+  - [x] 7.1: Create test YAML fixtures in `test/cfauthengine/` — config and role CRs
+  - [x] 7.2: Integration tests — SKIP (CF is a cloud platform, no CF test double in Kind)
 
-- [ ] Task 8: CRD registration and code generation (AC: all)
-  - [ ] 8.1: Run `make manifests generate fmt vet test`
-  - [ ] 8.2: Add 2 new CRD YAML files to `config/crd/kustomization.yaml` (CRD registration checklist)
-  - [ ] 8.3: Verify all existing tests still pass
+- [x] Task 8: CRD registration and code generation (AC: all)
+  - [x] 8.1: Run `make manifests generate fmt vet test`
+  - [x] 8.2: Add 2 new CRD YAML files to `config/crd/kustomization.yaml` (CRD registration checklist)
+  - [x] 8.3: Verify all existing tests still pass
 
-- [ ] Task 9: Documentation (AC: 8)
-  - [ ] 9.1: Create `docs/auth-engines/cloud-foundry.md` following `docs/engine-doc-template.md`
-  - [ ] 9.2: Update `docs/auth-engines/index.md` with link to new doc
+- [x] Task 9: Documentation (AC: 8)
+  - [x] 9.1: Create `docs/auth-engines/cloud-foundry.md` following `docs/engine-doc-template.md`
+  - [x] 9.2: Update `docs/auth-engines/index.md` with link to new doc
+
+### Review Findings
+
+- [ ] [Review][Patch] Explicit empty credential keys skip CF defaulting and later break reconciliation [`api/v1alpha1/cfauthengineconfig_webhook.go:45`]
+- [ ] [Review][Patch] CF role drift detection still treats set-valued lists as order-sensitive [`api/v1alpha1/cfauthenginerole_types.go:202`]
+- [ ] [Review][Patch] RandomSecret `cfUsername` contract is inconsistent across shipped docs and generated schema [`docs/auth-engines/cloud-foundry.md:158`]
 
 ## Dev Notes
 
@@ -595,21 +605,63 @@ Role integer field (`token_num_uses`) → `json.Number(strconv.FormatInt(..., 10
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (via Cursor)
 
 ### Debug Log References
 
+No debug issues encountered. All tests passed on first run after implementation.
+
 ### Completion Notes List
 
+- Implemented CFAuthEngineConfig with full VaultObject interface, two-credential resolution (cf_username/cf_password via RootCredentialConfig), IsDeletable()=true, and write-only field stripping (cf_password, cf_api_mutual_tls_key) in IsEquivalentToDesiredState
+- Implemented CFAuthEngineRole with VaultObject interface, GetPath() using plural `roles/{name}` path, removeUnsetFields + filterPayloadToDesiredKeys for drift detection, durationToSeconds for all TTL fields, json.Number for integer fields
+- Created webhooks: config defaults UsernameKey/PasswordKey only when empty (per Epic 15 retro), immutable path; role validates immutable path and name
+- Created config controller with Secret and RandomSecret watches for credential rotation, and simple role controller with periodic reconcile
+- Registered both controllers and webhooks in main.go
+- Created comprehensive unit tests: 8 config tests (toMap, IsEquivalentToDesiredState match/mismatch/extra fields/password stripping, GetPath, IsDeletable, Default empty/custom keys), 7 role tests (toMap, IsEquivalentToDesiredState match/mismatch/extra fields, GetPath with name/metadata, IsDeletable)
+- Created test YAML fixtures in test/cfauthengine/
+- Generated CRDs via `make manifests generate fmt vet`, added to config/crd/kustomization.yaml
+- Created documentation at docs/auth-engines/cloud-foundry.md and updated index.md
+- All tests pass (make test exit code 0)
+- Integration tests: SKIP — CF is a cloud platform, no CF test double in Kind
+
 ### File List
+
+- api/v1alpha1/cfauthengineconfig_types.go (NEW)
+- api/v1alpha1/cfauthenginerole_types.go (NEW)
+- api/v1alpha1/cfauthengineconfig_webhook.go (NEW)
+- api/v1alpha1/cfauthenginerole_webhook.go (NEW)
+- api/v1alpha1/cfauthengineconfig_test.go (NEW)
+- api/v1alpha1/cfauthenginerole_test.go (NEW)
+- api/v1alpha1/zz_generated.deepcopy.go (MODIFIED — generated)
+- internal/controller/cfauthengineconfig_controller.go (NEW)
+- internal/controller/cfauthenginerole_controller.go (NEW)
+- cmd/main.go (MODIFIED — added controller + webhook registrations)
+- config/crd/bases/redhatcop.redhat.io_cfauthengineconfigs.yaml (NEW — generated)
+- config/crd/bases/redhatcop.redhat.io_cfauthengineroles.yaml (NEW — generated)
+- config/crd/kustomization.yaml (MODIFIED — added 2 CRD entries)
+- config/rbac/role.yaml (MODIFIED — generated RBAC rules)
+- test/cfauthengine/cf-auth-engine-config.yaml (NEW)
+- test/cfauthengine/cf-auth-engine-role.yaml (NEW)
+- docs/auth-engines/cloud-foundry.md (NEW)
+- docs/auth-engines/index.md (MODIFIED — added Cloud Foundry row)
+
+### Change Log
+
+- 2026-08-19: Initial implementation of CFAuthEngineConfig and CFAuthEngineRole CRDs with full VaultObject interface, webhooks, controllers, unit tests, test fixtures, CRD generation, and documentation. All 9 tasks completed. All unit tests pass.
 
 ## Code Review Record
 
 ### Review Model Used
 
-{{review_model_name_version}}
+gpt-5.4-medium
 
 ### Review Findings
+
+- [x] [Review][Patch] HIGH: CFAuthEngineConfig RandomSecret branch never resolves a CF username — only password; retrievedCFUsername stays empty [`api/v1alpha1/cfauthengineconfig_types.go:188`]
+- [x] [Review][Patch] HIGH: CFAuthEngineConfig webhook defaulting does not remap inherited `username`/`password` defaults to `cf_username`/`cf_password` when keys are omitted from the admission request [`api/v1alpha1/cfauthengineconfig_webhook.go:41`]
+- [x] [Review][Patch] HIGH: CFAuthEngineRole drift detection compares against write-shape keys (`token_ttl`, `token_max_ttl`, `token_period`, `token_bound_cidrs`) but Vault CF role READ returns aliases (`ttl`, `max_ttl`, `period`, `bound_cidrs`) [`api/v1alpha1/cfauthenginerole_types.go:193`]
+- [x] [Review][Patch] MEDIUM: CFAuthEngineConfig.IsEquivalentToDesiredState() never calls removeUnsetFields() — empty optional fields cause false drift [`api/v1alpha1/cfauthengineconfig_types.go:160`]
 
 ### Decisions Needed / Decisions Taken
 
@@ -619,3 +671,33 @@ Role integer field (`token_num_uses`) → `json.Number(strconv.FormatInt(..., 10
 - Design decision (pre-resolved): Skip integration tests — no CF test double can run in Kind
 
 ### Fixes Applied
+
+1. **RandomSecret username resolution (HIGH):** Added `CFUsername` field to `CFAuthConfig` (mirroring AWS `AccessKey` pattern). RandomSecret branch now uses `r.Spec.CFUsername` instead of empty `retrievedCFUsername`. Added validation requiring `cfUsername` when using randomSecret. Updated `toMap()` to use `retrievedCFUsername` with fallback to `CFUsername` (matching AWS `toMap()` pattern).
+
+2. **Credential-key defaulting (HIGH):** Replaced simple empty-string check with `cfCredentialKeyOmitted()` function that inspects the raw admission request to distinguish truly omitted keys from explicitly set values. Omitted keys default to `cf_username`/`cf_password`; explicit values (even `"username"`/`"password"`) are preserved. Fallback path (no admission request) also remaps inherited schema defaults. Added test for inherited "username"/"password" defaults.
+
+3. **Vault read aliases for CFAuthEngineRole (HIGH):** Added `cfRoleVaultReadAliases` map (`ttl`→`token_ttl`, `max_ttl`→`token_max_ttl`, `period`→`token_period`, `bound_cidrs`→`token_bound_cidrs`) and call to `normalizeVaultReadAliases()` in `IsEquivalentToDesiredState()`. Updated all role drift-detection tests to use Vault-read-shaped payloads (with read aliases) so they exercise the normalization.
+
+4. **removeUnsetFields for CFAuthEngineConfig (MEDIUM):** Added `removeUnsetFields(desiredState, payload)` call in `IsEquivalentToDesiredState()` after write-only field deletion. Updated config drift-detection tests to omit empty optional fields from Vault payloads (matching real Vault read behavior). Added dedicated test for unset optionals.
+
+### Review Iteration 2 Fixes Applied
+
+5. **Default() skips remapping for explicit empty string (HIGH):** Updated `cfCredentialKeyOmitted()` to treat a key present with an empty-string value as omitted for remapping purposes. Previously, sending `usernameKey: ""` or `passwordKey: ""` in the admission request would bypass remapping. Added unit test `TestCFAuthEngineConfig_Default_ExplicitEmptyStringGetsRemapped` that constructs an admission context with explicit empty values and verifies remapping to `cf_username`/`cf_password`.
+
+6. **CFAuthEngineRole.IsEquivalentToDesiredState order-sensitive (MEDIUM):** Added `sortAnyStringSlice` calls for all set-like fields (`bound_application_ids`, `bound_space_ids`, `bound_organization_ids`, `bound_instance_ids`, `token_policies`, `policies`, `token_bound_cidrs`) on both `desiredState` and `filteredPayload` before `DeepEqual`, following the same pattern used by other types (AWS, AppRole, Consul, etc.). Added unit test `TestCFAuthEngineRole_IsEquivalentToDesiredState_DifferentOrderEquivalent`.
+
+7. **Document cfUsername for RandomSecret (MEDIUM):** Updated `docs/auth-engines/cloud-foundry.md` RandomSecret guidance to require `spec.cfUsername` (not `spec.username`), added `cfUsername` to the field descriptions table, and fixed the kubebuilder comment on `CFUsername` in `cfauthengineconfig_types.go` to explicitly state "Use spec.cfUsername (not spec.username)". Ran `make manifests` to regenerate CRDs.
+
+### Review Iteration 3 Findings
+
+- [x] [Review][Patch] Update admission still allows blank credential keys, so remapping only holds on create [`api/v1alpha1/cfauthengineconfig_webhook.go:109`]
+- [x] [Review][Patch] Config drift detection still treats certificate set fields as order-sensitive [`api/v1alpha1/cfauthengineconfig_types.go:167`]
+- [x] [Review][Patch] Generated CF config CRD schema still documents `spec.username` instead of `spec.cfUsername` [`config/crd/bases/redhatcop.redhat.io_cfauthengineconfigs.yaml:112`]
+
+### Review Iteration 3 Fixes Applied
+
+8. **Default() now runs on update (MEDIUM):** Changed the mutating webhook marker from `verbs=create` to `verbs=create;update` so `Default()` remaps empty/omitted usernameKey/passwordKey to `cf_username`/`cf_password` on both create and update. Added test `TestCFAuthEngineConfig_Default_UpdateRemapsEmptyKeys`.
+
+9. **Sort cert set fields in IsEquivalentToDesiredState (MEDIUM):** Added `sortAnyStringSlice` calls for `identity_ca_certificates` and `cf_api_trusted_certificates` on both `desiredState` and `filteredPayload` before `DeepEqual`, matching the pattern used for CFAuthEngineRole set fields. Added test `TestCFAuthEngineConfig_IsEquivalentToDesiredState_ReorderedCertsEquivalent`.
+
+10. **CRD `spec.username` references — inherited description limitation (LOW):** The `spec.username` text in the generated CRD `cfCredentials.randomSecret`, `cfCredentials.secret`, and `cfCredentials.vaultSecret` descriptions is inherited from the shared `RootCredentialConfig` type comments in `api/v1alpha1/utils/commons.go`. Kubebuilder does not support overriding sub-field descriptions of a referenced type from the embedding site. The CF-local `cfUsername` field description already explicitly states "Use spec.cfUsername (not spec.username)" in the generated CRD, and `docs/auth-engines/cloud-foundry.md` documents the correct usage. Changing `commons.go` would affect all other types that embed `RootCredentialConfig` and is out of scope. Ran `make manifests` to confirm no further local fixes are possible.
