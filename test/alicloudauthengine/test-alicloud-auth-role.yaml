@@ -1,0 +1,15 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AliCloudAuthEngineRole
+metadata:
+  name: test-alicloud-role
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  path: test-alicloud-auth/test-alicloud-mount
+  arn: "acs:ram::5138828231865461:role/test-alicloud-role"
+  tokenTTL: "20m"
+  tokenMaxTTL: "30m"
+  tokenPolicies:
+    - default
+    - app-policy

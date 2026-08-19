@@ -86,6 +86,7 @@ resources:
 - bases/redhatcop.redhat.io_cfauthengineroles.yaml
 - bases/redhatcop.redhat.io_radiusauthengineconfigs.yaml
 - bases/redhatcop.redhat.io_radiusauthengineusers.yaml
+- bases/redhatcop.redhat.io_alicloudauthengineroles.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches: []

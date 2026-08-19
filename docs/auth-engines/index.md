@@ -27,6 +27,7 @@ The `path` field specifies the path at which the auth engine is mounted. The com
 
 | Engine | Config CRD | Role/Group CRD | File |
 |--------|-----------|----------------|------|
+| AliCloud | — | AliCloudAuthEngineRole | [alicloud.md](alicloud.md) |
 | AppRole | — | AppRoleAuthEngineRole | [approle.md](approle.md) |
 | Kubernetes | KubernetesAuthEngineConfig | KubernetesAuthEngineRole | [kubernetes.md](kubernetes.md) |
 | LDAP | LDAPAuthEngineConfig | LDAPAuthEngineGroup | [ldap.md](ldap.md) |
