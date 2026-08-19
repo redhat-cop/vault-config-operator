@@ -514,6 +514,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controller.OCIAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "OCIAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "OCIAuthEngineConfig")
+		os.Exit(1)
+	}
+	if err = (&controller.OCIAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "OCIAuthEngineRole")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "OCIAuthEngineRole")
+		os.Exit(1)
+	}
+
 	if webhooks, ok := os.LookupEnv("ENABLE_WEBHOOKS"); !ok || webhooks != "false" {
 		if err = (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "RandomSecret")
@@ -849,6 +858,15 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.OktaAuthEngineGroup{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "OktaAuthEngineGroup")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.OCIAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "OCIAuthEngineConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.OCIAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "OCIAuthEngineRole")
 			os.Exit(1)
 		}
 	}

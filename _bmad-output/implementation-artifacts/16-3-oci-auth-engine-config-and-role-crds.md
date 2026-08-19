@@ -1,6 +1,10 @@
+---
+baseline_commit: 2856f66ecd326a158496e9ffbe68c89c0c42b15c
+---
+
 # Story 16.3: OCI Auth Engine — Config and Role CRDs
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -26,48 +30,48 @@ So that Vault's OCI auth method can be managed declaratively.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `OCIAuthEngineConfig` type (AC: 1, 3, 5, 6)
-  - [ ] 1.1: Create `api/v1alpha1/ociauthengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `OCIAuthConfig` struct (single field: `HomeTenancyID`)
-  - [ ] 1.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/config`, `GetPayload()`, `IsEquivalentToDesiredState()`, `IsDeletable()=false`
-  - [ ] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
-  - [ ] 1.4: Implement `toMap()` on `OCIAuthConfig` — emit `home_tenancy_id`
-  - [ ] 1.5: Implement `IsEquivalentToDesiredState()` — standard `filterPayloadToDesiredKeys` (no write-only fields to strip)
+- [x] Task 1: Create `OCIAuthEngineConfig` type (AC: 1, 3, 5, 6)
+  - [x] 1.1: Create `api/v1alpha1/ociauthengineconfig_types.go` — Spec with `Connection`, `Authentication`, `Path`, inline `OCIAuthConfig` struct (single field: `HomeTenancyID`)
+  - [x] 1.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/config`, `GetPayload()`, `IsEquivalentToDesiredState()`, `IsDeletable()=false`
+  - [x] 1.3: Implement `ConditionsAware` interface — Status with `Conditions []metav1.Condition`
+  - [x] 1.4: Implement `toMap()` on `OCIAuthConfig` — emit `home_tenancy_id`
+  - [x] 1.5: Implement `IsEquivalentToDesiredState()` — standard `filterPayloadToDesiredKeys` (no write-only fields to strip)
 
-- [ ] Task 2: Create `OCIAuthEngineRole` type (AC: 2, 4, 5, 6)
-  - [ ] 2.1: Create `api/v1alpha1/ociauthenginerole_types.go` — Spec with `Connection`, `Authentication`, `Path`, `Name` (role name override), inline `OCIAuthRole` struct
-  - [ ] 2.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/role/{name}`, `IsDeletable()=true`
-  - [ ] 2.3: Implement `ConditionsAware` interface
-  - [ ] 2.4: Implement `toMap()` on `OCIAuthRole` — emit `ocid_list` via `toInterfaceArray`, token fields via `durationToSeconds`/`json.Number`
-  - [ ] 2.5: Implement `IsEquivalentToDesiredState()` — standard `filterPayloadToDesiredKeys`
+- [x] Task 2: Create `OCIAuthEngineRole` type (AC: 2, 4, 5, 6)
+  - [x] 2.1: Create `api/v1alpha1/ociauthenginerole_types.go` — Spec with `Connection`, `Authentication`, `Path`, `Name` (role name override), inline `OCIAuthRole` struct
+  - [x] 2.2: Implement `VaultObject` interface — `GetPath()` returns `auth/{path}/role/{name}`, `IsDeletable()=true`
+  - [x] 2.3: Implement `ConditionsAware` interface
+  - [x] 2.4: Implement `toMap()` on `OCIAuthRole` — emit `ocid_list` via `toInterfaceArray`, token fields via `durationToSeconds`/`json.Number`
+  - [x] 2.5: Implement `IsEquivalentToDesiredState()` — standard `filterPayloadToDesiredKeys`
 
-- [ ] Task 3: Create webhooks (AC: 6)
-  - [ ] 3.1: Create `api/v1alpha1/ociauthengineconfig_webhook.go` — `admission.Defaulter[*OCIAuthEngineConfig]`, `admission.Validator[*OCIAuthEngineConfig]`, immutable `spec.path`
-  - [ ] 3.2: Create `api/v1alpha1/ociauthenginerole_webhook.go` — `admission.Defaulter[*OCIAuthEngineRole]`, `admission.Validator[*OCIAuthEngineRole]`, immutable `spec.path`/`spec.name`
+- [x] Task 3: Create webhooks (AC: 6)
+  - [x] 3.1: Create `api/v1alpha1/ociauthengineconfig_webhook.go` — `admission.Defaulter[*OCIAuthEngineConfig]`, `admission.Validator[*OCIAuthEngineConfig]`, immutable `spec.path`
+  - [x] 3.2: Create `api/v1alpha1/ociauthenginerole_webhook.go` — `admission.Defaulter[*OCIAuthEngineRole]`, `admission.Validator[*OCIAuthEngineRole]`, immutable `spec.path`/`spec.name`
 
-- [ ] Task 4: Create controllers (AC: 1, 2, 3, 4, 5)
-  - [ ] 4.1: Create `internal/controller/ociauthengineconfig_controller.go` — embed `ReconcilerBase`, simple `For()` with default periodic reconcile predicate (no credentials → no watches)
-  - [ ] 4.2: Create `internal/controller/ociauthenginerole_controller.go` — simple `For()` with default periodic reconcile predicate (no watches)
+- [x] Task 4: Create controllers (AC: 1, 2, 3, 4, 5)
+  - [x] 4.1: Create `internal/controller/ociauthengineconfig_controller.go` — embed `ReconcilerBase`, simple `For()` with default periodic reconcile predicate (no credentials → no watches)
+  - [x] 4.2: Create `internal/controller/ociauthenginerole_controller.go` — simple `For()` with default periodic reconcile predicate (no watches)
 
-- [ ] Task 5: Register in main.go (AC: 1, 2)
-  - [ ] 5.1: Add controller registrations for both reconcilers
-  - [ ] 5.2: Add webhook registrations inside `ENABLE_WEBHOOKS` guard for both types
+- [x] Task 5: Register in main.go (AC: 1, 2)
+  - [x] 5.1: Add controller registrations for both reconcilers
+  - [x] 5.2: Add webhook registrations inside `ENABLE_WEBHOOKS` guard for both types
 
-- [ ] Task 6: Unit tests (AC: 1, 2, 5, 6)
-  - [ ] 6.1: Create `api/v1alpha1/ociauthengineconfig_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures, negative tests
-  - [ ] 6.2: Create `api/v1alpha1/ociauthenginerole_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with Vault-read-shaped fixtures (integer seconds as `json.Number`, `ocid_list` as `[]any`), negative tests
+- [x] Task 6: Unit tests (AC: 1, 2, 5, 6)
+  - [x] 6.1: Create `api/v1alpha1/ociauthengineconfig_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with independently constructed Vault-read-shaped fixtures, negative tests
+  - [x] 6.2: Create `api/v1alpha1/ociauthenginerole_test.go` — test `toMap()`, test `IsEquivalentToDesiredState()` with Vault-read-shaped fixtures (integer seconds as `json.Number`, `ocid_list` as `[]any`), negative tests
 
-- [ ] Task 7: Test fixtures (AC: all)
-  - [ ] 7.1: Create test YAML fixtures in `test/ociauthengine/` — config and role CRs
-  - [ ] 7.2: Integration tests — SKIP (OCI is a cloud provider, cannot be installed in Kind)
+- [x] Task 7: Test fixtures (AC: all)
+  - [x] 7.1: Create test YAML fixtures in `test/ociauthengine/` — config and role CRs
+  - [x] 7.2: Integration tests — SKIP (OCI is a cloud provider, cannot be installed in Kind)
 
-- [ ] Task 8: CRD registration and code generation (AC: all)
-  - [ ] 8.1: Run `make manifests generate fmt vet test`
-  - [ ] 8.2: Add 2 new CRD YAML files to `config/crd/kustomization.yaml` (CRD registration checklist)
-  - [ ] 8.3: Verify all existing tests still pass
+- [x] Task 8: CRD registration and code generation (AC: all)
+  - [x] 8.1: Run `make manifests generate fmt vet test`
+  - [x] 8.2: Add 2 new CRD YAML files to `config/crd/kustomization.yaml` (CRD registration checklist)
+  - [x] 8.3: Verify all existing tests still pass
 
-- [ ] Task 9: Documentation (AC: 7)
-  - [ ] 9.1: Create `docs/auth-engines/oci.md` following `docs/engine-doc-template.md`
-  - [ ] 9.2: Update `docs/auth-engines/index.md` with link to new doc
+- [x] Task 9: Documentation (AC: 7)
+  - [x] 9.1: Create `docs/auth-engines/oci.md` following `docs/engine-doc-template.md`
+  - [x] 9.2: Update `docs/auth-engines/index.md` with link to new doc
 
 ## Dev Notes
 
@@ -469,26 +473,72 @@ Both CRD types follow well-established patterns from existing auth engine implem
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Implemented OCIAuthEngineConfig with single field `homeTenancyID`, `IsDeletable()=false`, no credentials
+- Implemented OCIAuthEngineRole with `Name` override, `IsDeletable()=true`, all token params using `durationToSeconds`/`json.Number`/`toInterfaceArray`
+- Webhooks enforce immutable `spec.path` (config) and `spec.path`+`spec.name` (role)
+- Controllers follow simple `For()` pattern with no watches (no credential resolution)
+- Unit tests use independently constructed Vault-read-shaped fixtures with `json.Number` types
+- Integration tests SKIPPED per project policy (OCI is a cloud provider, cannot be installed in Kind)
+- All existing tests continue to pass (no regressions)
+
 ### File List
+
+- api/v1alpha1/ociauthengineconfig_types.go (NEW)
+- api/v1alpha1/ociauthenginerole_types.go (NEW)
+- api/v1alpha1/ociauthengineconfig_webhook.go (NEW)
+- api/v1alpha1/ociauthenginerole_webhook.go (NEW)
+- api/v1alpha1/ociauthengineconfig_test.go (NEW)
+- api/v1alpha1/ociauthenginerole_test.go (NEW)
+- api/v1alpha1/webhook_validate_update_test.go (MODIFIED - added OCI test cases to shared immutability matrix)
+- api/v1alpha1/zz_generated.deepcopy.go (MODIFIED - auto-generated)
+- internal/controller/ociauthengineconfig_controller.go (NEW)
+- internal/controller/ociauthenginerole_controller.go (NEW)
+- cmd/main.go (MODIFIED - added controller and webhook registrations)
+- config/crd/kustomization.yaml (MODIFIED - added 2 new CRD resources)
+- config/crd/bases/redhatcop.redhat.io_ociauthengineconfigs.yaml (NEW - auto-generated)
+- config/crd/bases/redhatcop.redhat.io_ociauthengineroles.yaml (NEW - auto-generated)
+- config/rbac/role.yaml (MODIFIED - auto-generated RBAC for new controllers)
+- config/webhook/manifests.yaml (MODIFIED - auto-generated webhook manifests)
+- test/ociauthengine/oci-auth-engine-config.yaml (NEW)
+- test/ociauthengine/oci-auth-engine-role.yaml (NEW)
+- docs/auth-engines/oci.md (NEW)
+- docs/auth-engines/index.md (MODIFIED - added OCI row to table)
+
+### Change Log
+
+- 2026-08-19: Initial implementation of OCIAuthEngineConfig and OCIAuthEngineRole CRDs with full VaultObject interface, webhooks, controllers, unit tests, test fixtures, and documentation.
+- 2026-08-19: Adversarial code review fixes — spec.name made optional override, drift detection fixed with removeUnsetFields, periodic reconcile predicate added to both controllers.
 
 ## Code Review Record
 
 ### Review Model Used
 
-{{review_model_name_version}}
+gpt-5.4-medium
 
 ### Review Findings
+
+1. **spec.name contract**: `OCIAuthRole.Name` was marked `+kubebuilder:validation:Required` with no `omitempty`, making it mandatory. Should follow KubernetesAuthEngineRole/AppRoleAuthEngineRole pattern: optional with path-name pattern validation, fallback to `metadata.name` in `GetPath()`, immutable on update when set.
+2. **HIGH — sparse role drift**: `toMap()` unconditionally emitted zero/default values for all optional token fields. When Vault omits unset fields from its read response, `IsEquivalentToDesiredState` (using `DeepEqual`) would never match, causing infinite reconcile loops for sparse roles. Fix: call `removeUnsetFields(desiredState, payload)` before comparison.
+3. **MEDIUM — missing periodic reconcile predicate**: Both OCI controllers (`OCIAuthEngineRoleReconciler`, `OCIAuthEngineConfigReconciler`) used bare `For()` without `builder.WithPredicates(vaultresourcecontroller.NewDefaultPeriodicReconcilePredicate())`, unlike all other vault resource controllers. This means they wouldn't participate in the periodic sync loop.
 
 ### Decisions Needed / Decisions Taken
 
 - Design decision: `OCIAuthEngineConfig.IsDeletable() = false` — consistent with all other auth engine configs (GCP, LDAP, JWT/OIDC, Azure, Kubernetes, Okta). No DELETE endpoint for `auth/{path}/config`.
 - Design decision: No credential resolution for config — `home_tenancy_id` is a plain OCID string, not a secret. OCI auth uses instance principal credentials from the compute instance (not managed by the operator).
 - Design decision: `ocid_list` modeled as `[]string` in CRD, emitted as `toInterfaceArray()` — Vault reads back an array even though write accepts comma-separated string. Vault's API accepts both formats. Array matches the read response shape for accurate drift detection.
+- **User decision (2026-08-19)**: spec.name is an OPTIONAL Vault-name override — optional+omitempty, path-name pattern validation, metadata.name fallback in GetPath(), immutable on update when set. Follows KubernetesAuthEngineRole/AppRoleAuthEngineRole pattern, NOT the GCP required-name pattern.
 
 ### Fixes Applied
+
+1. **spec.name → optional override**: Changed `OCIAuthRole.Name` from `+kubebuilder:validation:Required` / `json:"name"` to `+kubebuilder:validation:Optional` / `+kubebuilder:validation:Pattern` / `json:"name,omitempty"`. GetPath() fallback and ValidateUpdate immutability logic remain unchanged (already correct for optional pattern).
+2. **Drift fix**: Added `removeUnsetFields(desiredState, payload)` call in `OCIAuthEngineRole.IsEquivalentToDesiredState()` before the DeepEqual comparison. Added unit test `TestOCIAuthEngineRole_IsEquivalentToDesiredState_SparseRole` confirming a role with only `ocid_list` set is equivalent to a Vault payload that omits unset token fields.
+3. **Periodic reconcile predicate**: Added `builder.WithPredicates(vaultresourcecontroller.NewDefaultPeriodicReconcilePredicate())` to `SetupWithManager()` in both `ociauthenginerole_controller.go` and `ociauthengineconfig_controller.go`.
+4. **Set-field order-insensitive comparison**: Added `sortAnyStringSlice()` calls for `ocid_list`, `token_policies`, `policies`, and `token_bound_cidrs` in both desired and filtered payload maps inside `OCIAuthEngineRole.IsEquivalentToDesiredState()`. Added unit test `TestOCIAuthEngineRole_IsEquivalentToDesiredState_SetFieldOrderInsensitive`.
+5. **Docs name field**: Updated `docs/auth-engines/oci.md` to mark `name` as optional (No) with `metadata.name` fallback description.
+6. **Webhook immutability test coverage**: Added OCIAuthEngineConfig and OCIAuthEngineRole cases to the shared webhook immutability test matrix in `api/v1alpha1/webhook_validate_update_test.go` — 3 rejection tests (config path, role path, role name) and 2 allowance tests (config non-path, role non-path/non-name).

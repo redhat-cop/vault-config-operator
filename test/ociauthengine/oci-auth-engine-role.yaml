@@ -1,0 +1,21 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: OCIAuthEngineRole
+metadata:
+  name: oci-role
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+    serviceAccount:
+      name: default
+  path: oci/test
+  name: oci-role
+  ocidList:
+    - "ocid1.group.oc1..aaaaaaaaiqnblimpvmegkqh3bxilrdvjobr7qd223g275idcqhexamplefq"
+    - "ocid1.dynamicgroup.oc1..aaaaaaaa5hmfyrdaxvmt52ekju5n7ffamn2pdvxaq6esb2vzzoduexamplea"
+  tokenTTL: "30m"
+  tokenMaxTTL: "1h"
+  tokenPolicies:
+    - dev
+    - prod
+  tokenType: "service"

@@ -470,6 +470,42 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 			errSubstring: "spec.dn cannot be updated",
 		},
 		{
+			name: "OCIAuthEngineConfig rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &OCIAuthEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&OCIAuthEngineConfig{Spec: OCIAuthEngineConfigSpec{Path: "old/path"}},
+					&OCIAuthEngineConfig{Spec: OCIAuthEngineConfigSpec{Path: "new/path"}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.path cannot be updated",
+		},
+		{
+			name: "OCIAuthEngineRole rejects path change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &OCIAuthEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&OCIAuthEngineRole{Spec: OCIAuthEngineRoleSpec{Path: "old/path"}},
+					&OCIAuthEngineRole{Spec: OCIAuthEngineRoleSpec{Path: "new/path"}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.path cannot be updated",
+		},
+		{
+			name: "OCIAuthEngineRole rejects name change",
+			validateFn: func() (admission.Warnings, error) {
+				r := &OCIAuthEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&OCIAuthEngineRole{Spec: OCIAuthEngineRoleSpec{Path: "same/path", OCIAuthRole: OCIAuthRole{Name: "old-name"}}},
+					&OCIAuthEngineRole{Spec: OCIAuthEngineRoleSpec{Path: "same/path", OCIAuthRole: OCIAuthRole{Name: "new-name"}}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "spec.name cannot be updated",
+		},
+		{
 			name: "PKISecretEngineConfig rejects path change",
 			validateFn: func() (admission.Warnings, error) {
 				r := &PKISecretEngineConfig{}
@@ -985,6 +1021,34 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 						Path:             "same/path",
 						Name:             "same-name",
 						LDAPSEStaticRole: LDAPSEStaticRole{Username: "same-user", DN: "uid=same,dc=example,dc=com", RotationPeriod: 43200},
+					}},
+				)
+			},
+			expectErr: false,
+		},
+		{
+			name: "OCIAuthEngineConfig allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &OCIAuthEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&OCIAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: OCIAuthEngineConfigSpec{Path: "same/path"}},
+					&OCIAuthEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: OCIAuthEngineConfigSpec{Path: "same/path"}},
+				)
+			},
+			expectErr: false,
+		},
+		{
+			name: "OCIAuthEngineRole allows non-path update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &OCIAuthEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&OCIAuthEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: OCIAuthEngineRoleSpec{
+						Path:        "same/path",
+						OCIAuthRole: OCIAuthRole{Name: "same-name", OCIDList: []string{"ocid1.group.oc1..aaa"}},
+					}},
+					&OCIAuthEngineRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: OCIAuthEngineRoleSpec{
+						Path:        "same/path",
+						OCIAuthRole: OCIAuthRole{Name: "same-name", OCIDList: []string{"ocid1.group.oc1..aaa", "ocid1.group.oc1..bbb"}},
 					}},
 				)
 			},
