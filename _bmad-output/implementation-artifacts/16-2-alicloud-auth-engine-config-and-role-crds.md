@@ -4,7 +4,7 @@ baseline_commit: 2856f66ecd326a158496e9ffbe68c89c0c42b15c
 
 # Story 16.2: AliCloud Auth Engine — Config and Role CRDs
 
-Status: review
+Status: done
 
 ## Story
 
@@ -538,3 +538,4 @@ gpt-5.4-medium
 ## Change Log
 
 - 2026-08-19: Implemented AliCloudAuthEngineRole CRD — type, webhook, controller, unit tests, test fixtures, CRD registration, documentation. Single CRD (no config) following AppRole 14.1 pattern. All unit tests pass, zero regressions.
+- 2026-08-19: Merged to epic-16 after approved review (gpt-5.4-medium) and passing worktree integration tests.
