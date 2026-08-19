@@ -61,6 +61,8 @@ rules:
   - azuresecretengineroles
   - certauthengineconfigs
   - certauthengineroles
+  - cfauthengineconfigs
+  - cfauthengineroles
   - consulsecretengineconfigs
   - consulsecretengineroles
   - databasesecretengineconfigs
@@ -152,6 +154,8 @@ rules:
   - azuresecretengineroles/finalizers
   - certauthengineconfigs/finalizers
   - certauthengineroles/finalizers
+  - cfauthengineconfigs/finalizers
+  - cfauthengineroles/finalizers
   - consulsecretengineconfigs/finalizers
   - consulsecretengineroles/finalizers
   - databasesecretengineconfigs/finalizers
@@ -236,6 +240,8 @@ rules:
   - azuresecretengineroles/status
   - certauthengineconfigs/status
   - certauthengineroles/status
+  - cfauthengineconfigs/status
+  - cfauthengineroles/status
   - consulsecretengineconfigs/status
   - consulsecretengineroles/status
   - databasesecretengineconfigs/status

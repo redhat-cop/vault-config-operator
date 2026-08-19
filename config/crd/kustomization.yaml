@@ -82,6 +82,8 @@ resources:
 - bases/redhatcop.redhat.io_oktaauthenginegroups.yaml
 - bases/redhatcop.redhat.io_ociauthengineconfigs.yaml
 - bases/redhatcop.redhat.io_ociauthengineroles.yaml
+- bases/redhatcop.redhat.io_cfauthengineconfigs.yaml
+- bases/redhatcop.redhat.io_cfauthengineroles.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches: []
