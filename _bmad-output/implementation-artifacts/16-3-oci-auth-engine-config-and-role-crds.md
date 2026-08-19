@@ -4,7 +4,7 @@ baseline_commit: 2856f66ecd326a158496e9ffbe68c89c0c42b15c
 
 # Story 16.3: OCI Auth Engine — Config and Role CRDs
 
-Status: review
+Status: done
 
 ## Story
 
@@ -514,6 +514,7 @@ Claude Opus 4.6
 
 - 2026-08-19: Initial implementation of OCIAuthEngineConfig and OCIAuthEngineRole CRDs with full VaultObject interface, webhooks, controllers, unit tests, test fixtures, and documentation.
 - 2026-08-19: Adversarial code review fixes — spec.name made optional override, drift detection fixed with removeUnsetFields, periodic reconcile predicate added to both controllers.
+- 2026-08-19: Merged to epic-16 after approved review (gpt-5.4-medium) and passing worktree integration tests.
 
 ## Code Review Record
 
