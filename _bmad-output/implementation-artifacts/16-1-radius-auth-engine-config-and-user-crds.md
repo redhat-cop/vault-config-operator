@@ -631,6 +631,7 @@ gpt-5.4-medium
 - Integration tests SKIP — RADIUS server cannot be trivially installed in Kind. Unit tests are the quality gate.
 - RADIUSAuthEngineUser follows OktaAuthEngineGroup pattern (policies as comma-separated string, IsDeletable=true).
 - 2026-08-19: Review cap 5/5 — user accepted remaining findings as-is: ENABLE_WEBHOOKS-dependent passwordKey remap, and omitted tokenType vs Vault `"default"` false-drift.
+- 2026-08-19: Epic 16 retro — residual 1 (ENABLE_WEBHOOKS passwordKey) closed with no action (webhooks-on is the production contract). Residual 2 (tokenType) fixed: `toMap()` emits `"default"` when TokenType is empty.
 
 ### Fixes Applied
 
@@ -673,7 +674,7 @@ gpt-5.4-medium
 ### Review Findings (Iteration 5 of 5)
 
 - [ ] [Review][Patch] Credential key resolution still depends on runtime webhook mode [`api/v1alpha1/radiusauthengineconfig_types.go:232`] — `resolveRADIUSPasswordKey()` rewrites persisted `"password"` based on the current `ENABLE_WEBHOOKS` setting instead of the original omit-vs-explicit user intent. That makes an explicit `passwordKey: "password"` unusable when webhooks are disabled, and it can also break previously created objects if the operator's webhook mode changes between reconciles.
-- [ ] [Review][Patch] Omitted `tokenType` does not converge against Vault's default read shape [`api/v1alpha1/radiusauthengineconfig_types.go:346`] — `toMap()` always emits `token_type: ""`, but the story's documented Vault read payload uses `token_type: "default"` when unset. Because that key is present in the Vault payload, `removeUnsetFields()` will not drop it, so sparse/default configs can false-drift and be rewritten on every reconcile instead of converging.
+- [x] [Review][Patch] Omitted `tokenType` does not converge against Vault's default read shape [`api/v1alpha1/radiusauthengineconfig_types.go:346`] — `toMap()` always emits `token_type: ""`, but the story's documented Vault read payload uses `token_type: "default"` when unset. Because that key is present in the Vault payload, `removeUnsetFields()` will not drop it, so sparse/default configs can false-drift and be rewritten on every reconcile instead of converging. **Fixed in Epic 16 retro:** empty TokenType now emits `"default"`.
 
 ## Change Log
 
@@ -682,3 +683,4 @@ gpt-5.4-medium
 - 2026-08-19: Iteration 3 review fix — controller-side resolveRADIUSPasswordKey() for ENABLE_WEBHOOKS=false path, with unit tests.
 - 2026-08-19: Iteration 4 review fixes — toMap() always emits all optional fields for convergence correctness (stale Vault values now detected); mutating webhook verbs changed to create;update for passwordKey remapping on updates.
 - 2026-08-19: Merged to epic-16 after 5/5 review-cap accept-as-is (gpt-5.4-medium) and passing worktree integration tests. Residual: ENABLE_WEBHOOKS-dependent passwordKey remap; omitted tokenType vs Vault `"default"` false-drift.
+- 2026-08-19: Epic 16 retro — residual 1 no action (webhooks-on contract). Residual 2: `toMap()` emits `token_type: "default"` when TokenType is empty so sparse configs converge against Vault's read shape.

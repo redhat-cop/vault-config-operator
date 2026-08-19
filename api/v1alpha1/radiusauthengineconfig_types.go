@@ -126,6 +126,7 @@ type RADIUSAuthConfig struct {
 	TokenPeriod string `json:"tokenPeriod,omitempty"`
 
 	// TokenType is the type of token to generate.
+	// Omitted/empty is treated as Vault's read-default of "default".
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum={"service","batch","default","default-service","default-batch",""}
 	TokenType string `json:"tokenType,omitempty"`
@@ -343,7 +344,13 @@ func (c *RADIUSAuthConfig) toMap() map[string]any {
 	payload["token_no_default_policy"] = c.TokenNoDefaultPolicy
 	payload["token_num_uses"] = json.Number(strconv.Itoa(c.TokenNumUses))
 	payload["token_period"] = durationToSeconds(c.TokenPeriod)
-	payload["token_type"] = c.TokenType
+	// Vault reads omitted token_type back as "default". Emit that read shape so
+	// sparse configs converge instead of false-drifting on "" vs "default".
+	if c.TokenType == "" {
+		payload["token_type"] = "default"
+	} else {
+		payload["token_type"] = c.TokenType
+	}
 	return payload
 }
 

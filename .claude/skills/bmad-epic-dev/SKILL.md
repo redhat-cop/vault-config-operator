@@ -38,6 +38,7 @@ When spawning subagents, pass the appropriate model. If a specified model isn't 
 - **Code review subagents MUST use a different LLM model** than the development subagents
 - On any failure: **halt with resume instructions** — re-invoking with the same epic number picks up where it left off
 - `sprint-status.yaml` is the checkpoint — story statuses determine what's been done and what remains
+- **Phase B finalization is a script, not a doc rule.** After review, run `python3 ./scripts/finalize-story.py {story-key}`. Never hand-edit sprint-status to `done`. The script refuses unless the story file has a Code Review Record with a Review Model Used, then sets story `Status:` and sprint-status together. After each layer run `--check-epic {N}` and HALT on failure.
 - Interactive by default: report progress after each story, soft gates between phases
 - Phase A (story specs) parallelizes by dependency layer via concurrent subagents
 - Phase B (implementation) parallelizes by dependency layer via **git worktrees** — each story gets its own branch and working directory, merged back after review

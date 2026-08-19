@@ -36,6 +36,7 @@
 
 generated: 2026-04-11
 last_updated: 2026-08-19
+# Epic 16 retrospective 2026-08-19
 # Epic 16 done 2026-08-19
 # Story 16.4 done 2026-08-19
 # Story 16.2 done 2026-08-19
@@ -587,7 +588,7 @@ development_status:
   16-3-oci-auth-engine-config-and-role-crds: done
   16-4-kerberos-auth-engine-config-and-ldap-group-crds: done
   16-5-cloud-foundry-auth-engine-config-and-role-crds: done
-  epic-16-retrospective: optional
+  epic-16-retrospective: done
 
 action_items:
   # Epic 10 action items (status from Epic 11 retro follow-through)
@@ -640,7 +641,7 @@ action_items:
   - epic: 13
     action: "Phase B story file finalization — orchestrator must set story Status to done, populate Code Review Record, verify consistency with sprint-status before final commit"
     owner: "Bob (Scrum Master)"
-    status: pending
+    status: done  # Implemented as finalize-story.py during Epic 16 retro (code gate, not a doc rule)
   - epic: 13
     action: "Validation matrix requirement — story specs with multi-mode/conditional-field types must include field acceptance/rejection matrix per mode"
     owner: "Amelia (Developer)"
@@ -700,4 +701,22 @@ action_items:
   - epic: 15
     action: "Phase B story file finalization — orchestrator must not mark sprint-status done unless story file Status is already done (carried from Epic 13)"
     owner: "Bob (Scrum Master)"
+    status: done  # finalize-story.py during Epic 16 retro
+
+  # Epic 16 action items
+  - epic: 16
+    action: "RADIUS toMap() emit token_type default when TokenType is empty so sparse configs match Vault read shape"
+    owner: "Amelia (Developer)"
+    status: done
+  - epic: 16
+    action: "ENABLE_WEBHOOKS-dependent RADIUS passwordKey remap — no action; webhooks-on is the production contract"
+    owner: "Amelia (Developer)"
+    status: done
+  - epic: 16
+    action: "Phase B story-file finalization via finalize-story.py — refuse sprint-status done without Code Review Record; atomic story and sprint-status update; --check-epic gate"
+    owner: "Bob (Scrum Master)"
+    status: done
+  - epic: 16
+    action: "Propagate token_type empty-to-default read-shape emit to other always-emit types (Okta, AppRole, AliCloud, OCI, CF, LDAP, AWS, Azure, GCP, JWT, Cert, Kerberos)"
+    owner: "Amelia (Developer)"
     status: open

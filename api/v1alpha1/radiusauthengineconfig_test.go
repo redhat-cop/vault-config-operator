@@ -136,7 +136,7 @@ func TestRADIUSAuthEngineConfig_toMap_SparseConfig(t *testing.T) {
 		"token_no_default_policy":    false,
 		"token_num_uses":             json.Number("0"),
 		"token_period":               json.Number("0"),
-		"token_type":                 "",
+		"token_type":                 "default",
 	}
 	for key, expected := range zeroFields {
 		val, exists := result[key]
@@ -174,17 +174,49 @@ func TestRADIUSAuthEngineConfig_IsEquivalentToDesiredState_SparseConfig(t *testi
 		retrievedSecret: "my-shared-secret",
 	}
 
-	// Vault omits optional fields that were never configured — sparse CR must still match.
+	// Vault omits most unset optionals but returns token_type as "default".
 	vaultPayload := map[string]any{
 		"host":         "radius.example.com",
 		"port":         json.Number("1812"),
 		"dial_timeout": json.Number("10"),
 		"read_timeout": json.Number("10"),
 		"nas_port":     json.Number("10"),
+		"token_type":   "default",
 	}
 
 	if !instance.IsEquivalentToDesiredState(vaultPayload) {
 		t.Error("expected IsEquivalentToDesiredState to return true: sparse config with Vault defaults must match")
+	}
+}
+
+func TestRADIUSAuthEngineConfig_IsEquivalentToDesiredState_OmittedTokenTypeMatchesVaultDefault(t *testing.T) {
+	instance := &RADIUSAuthEngineConfig{}
+	instance.Spec.RADIUSAuthConfig = RADIUSAuthConfig{
+		Host:            "radius.example.com",
+		Port:            1812,
+		DialTimeout:     10,
+		ReadTimeout:     10,
+		NASPort:         10,
+		retrievedSecret: "my-shared-secret",
+		// TokenType omitted — must match Vault's read-default of "default".
+	}
+
+	vaultPayload := map[string]any{
+		"host":         "radius.example.com",
+		"port":         json.Number("1812"),
+		"dial_timeout": json.Number("10"),
+		"read_timeout": json.Number("10"),
+		"nas_port":     json.Number("10"),
+		"token_type":   "default",
+	}
+
+	if !instance.IsEquivalentToDesiredState(vaultPayload) {
+		t.Error("expected omitted tokenType to be equivalent to Vault token_type=default")
+	}
+
+	vaultPayload["token_type"] = "service"
+	if instance.IsEquivalentToDesiredState(vaultPayload) {
+		t.Error("expected omitted tokenType NOT to match an explicit Vault token_type=service")
 	}
 }
 
@@ -208,6 +240,7 @@ func TestRADIUSAuthEngineConfig_IsEquivalentToDesiredState_StaleTokenTTL(t *test
 		"read_timeout": json.Number("10"),
 		"nas_port":     json.Number("10"),
 		"token_ttl":    json.Number("3600"),
+		"token_type":   "default",
 	}
 
 	if instance.IsEquivalentToDesiredState(vaultPayload) {
@@ -340,6 +373,7 @@ func TestRADIUSAuthEngineConfig_IsEquivalentToDesiredState_SetOrderIndependent(t
 		"dial_timeout":      json.Number("10"),
 		"read_timeout":      json.Number("10"),
 		"nas_port":          json.Number("10"),
+		"token_type":        "default",
 		"token_policies":    []any{"ops", "default", "admin"},
 		"token_bound_cidrs": []any{"10.0.0.0/8", "192.168.1.0/24"},
 	}
