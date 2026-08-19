@@ -1,5 +1,5 @@
 # generated: 2026-04-11
-# last_updated: 2026-08-18
+# last_updated: 2026-08-19
 # project: vault-config-operator
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-08-18
+last_updated: 2026-08-19
 # Epic 15 retrospective 2026-08-18
 # Story 15.2 ready-for-dev 2026-08-17
 # Story 15.3 ready-for-dev 2026-08-17
@@ -575,12 +575,12 @@ development_status:
   epic-15-retrospective: done
 
   # Epic 16: Lower-Priority Missing Auth Methods (RADIUS, AliCloud, OCI, Kerberos, CF)
-  epic-16: backlog
-  16-1-radius-auth-engine-config-and-user-crds: backlog
-  16-2-alicloud-auth-engine-config-and-role-crds: backlog
-  16-3-oci-auth-engine-config-and-role-crds: backlog
-  16-4-kerberos-auth-engine-config-and-ldap-group-crds: backlog
-  16-5-cloud-foundry-auth-engine-config-and-role-crds: backlog
+  epic-16: in-progress
+  16-1-radius-auth-engine-config-and-user-crds: ready-for-dev
+  16-2-alicloud-auth-engine-config-and-role-crds: ready-for-dev
+  16-3-oci-auth-engine-config-and-role-crds: ready-for-dev
+  16-4-kerberos-auth-engine-config-and-ldap-group-crds: ready-for-dev
+  16-5-cloud-foundry-auth-engine-config-and-role-crds: ready-for-dev
   epic-16-retrospective: optional
 
 action_items:
