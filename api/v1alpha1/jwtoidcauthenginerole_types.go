@@ -18,7 +18,9 @@ package v1alpha1
 
 import (
 	"context"
+	"encoding/json"
 	"reflect"
+	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -301,14 +303,14 @@ func (r *JWTOIDCRole) toMap() map[string]any {
 	payload["allowed_redirect_uris"] = r.AllowedRedirectURIs
 	payload["verbose_oidc_logging"] = r.VerboseOIDCLogging
 	payload["max_age"] = r.MaxAge
-	payload["token_ttl"] = r.TokenTTL
-	payload["token_max_ttl"] = r.TokenMaxTTL
+	payload["token_ttl"] = durationToSeconds(r.TokenTTL)
+	payload["token_max_ttl"] = durationToSeconds(r.TokenMaxTTL)
 	payload["token_policies"] = r.TokenPolicies
 	payload["token_bound_cidrs"] = r.TokenBoundCIDRs
-	payload["token_explicit_max_ttl"] = r.TokenExplicitMaxTTL
+	payload["token_explicit_max_ttl"] = durationToSeconds(r.TokenExplicitMaxTTL)
 	payload["token_no_default_policy"] = r.TokenNoDefaultPolicy
 	payload["token_num_uses"] = r.TokenNumUses
-	payload["token_period"] = r.TokenPeriod
+	payload["token_period"] = json.Number(strconv.FormatInt(r.TokenPeriod, 10))
 	payload["token_type"] = r.TokenType
 
 	return payload

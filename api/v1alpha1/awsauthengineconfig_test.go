@@ -6,7 +6,10 @@ import (
 	"testing"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
+	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 func TestAWSAuthEngineClientConfig_toMap(t *testing.T) {
@@ -319,5 +322,55 @@ func TestAWSAuthEngineClientConfig_Default_PreservesCustomKeys(t *testing.T) {
 	}
 	if obj.Spec.AWSCredentials.PasswordKey != "my_custom_pass" {
 		t.Errorf("expected custom passwordKey to be preserved, got %s", obj.Spec.AWSCredentials.PasswordKey)
+	}
+}
+
+func TestAWSAuthEngineClientConfig_Default_PreservesExplicitUsernamePasswordKeys(t *testing.T) {
+	webhook := &AWSAuthEngineClientConfig{}
+	obj := &AWSAuthEngineClientConfig{}
+	obj.Spec.AWSCredentials.UsernameKey = "username"
+	obj.Spec.AWSCredentials.PasswordKey = "password"
+
+	ctx := admission.NewContextWithRequest(context.Background(), admission.Request{
+		AdmissionRequest: admissionv1.AdmissionRequest{
+			Object: runtime.RawExtension{
+				Raw: []byte(`{"spec":{"AWSCredentials":{"usernameKey":"username","passwordKey":"password","secret":{"name":"aws-creds"}}}}`),
+			},
+		},
+	})
+
+	if err := webhook.Default(ctx, obj); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if obj.Spec.AWSCredentials.UsernameKey != "username" {
+		t.Errorf("expected explicit usernameKey=username to be preserved, got %s", obj.Spec.AWSCredentials.UsernameKey)
+	}
+	if obj.Spec.AWSCredentials.PasswordKey != "password" {
+		t.Errorf("expected explicit passwordKey=password to be preserved, got %s", obj.Spec.AWSCredentials.PasswordKey)
+	}
+}
+
+func TestAWSAuthEngineClientConfig_Default_RemapsOmittedKeysEvenWhenCRDDefaulted(t *testing.T) {
+	webhook := &AWSAuthEngineClientConfig{}
+	obj := &AWSAuthEngineClientConfig{}
+	obj.Spec.AWSCredentials.UsernameKey = "username"
+	obj.Spec.AWSCredentials.PasswordKey = "password"
+
+	ctx := admission.NewContextWithRequest(context.Background(), admission.Request{
+		AdmissionRequest: admissionv1.AdmissionRequest{
+			Object: runtime.RawExtension{
+				Raw: []byte(`{"spec":{"AWSCredentials":{"secret":{"name":"aws-creds"}}}}`),
+			},
+		},
+	})
+
+	if err := webhook.Default(ctx, obj); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if obj.Spec.AWSCredentials.UsernameKey != "access_key" {
+		t.Errorf("expected omitted usernameKey remapped to access_key, got %s", obj.Spec.AWSCredentials.UsernameKey)
+	}
+	if obj.Spec.AWSCredentials.PasswordKey != "secret_key" {
+		t.Errorf("expected omitted passwordKey remapped to secret_key, got %s", obj.Spec.AWSCredentials.PasswordKey)
 	}
 }

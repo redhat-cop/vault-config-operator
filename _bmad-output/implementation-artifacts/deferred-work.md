@@ -39,3 +39,7 @@
 ## Deferred from: code review of 9-5-upgrade-vault-version-in-integration-test-infrastructure (2026-07-31)
 
 - **Define the supported `deploy-vault` upgrade path across existing 1.x data**: Deferred because integration tests are expected to run on fresh environments, so Helm chart upgrade handling is out of scope for this story.
+
+## Deferred from: code review of story-15.3 (2026-08-17)
+
+- **Duration fields format mismatch causes unnecessary Vault writes**: `OktaAuthConfig.toMap()` emits raw Go strings for `token_ttl`, `token_max_ttl`, `token_explicit_max_ttl`, `token_period` (e.g., `"1h"`, `""`), while Vault read responses return integer seconds as `json.Number` (e.g., `json.Number("3600")`, `json.Number("0")`). `IsEquivalentToDesiredState` compares these mismatched formats via `reflect.DeepEqual`, causing it to always return `false` for non-zero durations, triggering an unnecessary (but idempotent) write on every reconcile. Pre-existing pattern — same behavior exists in LDAPAuthEngineConfig, GCPAuthEngineConfig, AWSAuthEngineConfig, and other auth engine configs that have token_* fields. Story dev notes mention `durationToSeconds()` normalization, but the LDAP reference pattern does not use it. Not introduced by this story.

@@ -18,8 +18,10 @@ package v1alpha1
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"reflect"
+	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -266,14 +268,14 @@ func (i *VRole) toMap() map[string]any {
 	if i.Audience != nil {
 		payload["audience"] = i.Audience
 	}
-	payload["token_ttl"] = i.TokenTTL
-	payload["token_max_ttl"] = i.TokenMaxTTL
+	payload["token_ttl"] = json.Number(strconv.Itoa(i.TokenTTL))
+	payload["token_max_ttl"] = json.Number(strconv.Itoa(i.TokenMaxTTL))
 	payload["token_policies"] = i.Policies
 	payload["token_bound_cidrs"] = i.TokenBoundCIDRs
-	payload["token_explicit_max_ttl"] = i.TokenExplicitMaxTTL
+	payload["token_explicit_max_ttl"] = json.Number(strconv.Itoa(i.TokenExplicitMaxTTL))
 	payload["token_no_default_policy"] = i.TokenNoDefaultPolicy
 	payload["token_num_uses"] = i.TokenNumUses
-	payload["token_period"] = i.TokenPeriod
+	payload["token_period"] = json.Number(strconv.Itoa(i.TokenPeriod))
 	payload["token_type"] = i.TokenType
 	return payload
 }

@@ -1,0 +1,11 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GitHubAuthEngineUserMap
+metadata:
+  name: sethvargo-mapping
+spec:
+  authentication:
+    path: kubernetes
+    role: vault-admin
+  path: github
+  name: sethvargo
+  policies: "sethvargo-policy,admin"

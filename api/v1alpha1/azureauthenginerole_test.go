@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -59,15 +60,15 @@ func TestAzureRoleToMap(t *testing.T) {
 		"bound_subscription_ids":      []string{"sub-1"},
 		"bound_resource_groups":       []string{"rg-1"},
 		"bound_scale_sets":            []string{"ss-1"},
-		"token_ttl":                   "1h",
-		"token_max_ttl":               "24h",
+		"token_ttl":                   json.Number("3600"),
+		"token_max_ttl":               json.Number("86400"),
 		"token_policies":              []string{"reader"},
 		"policies":                    []string{"legacy-policy"},
 		"token_bound_cidrs":           []string{"10.0.0.0/8"},
-		"token_explicit_max_ttl":      "",
+		"token_explicit_max_ttl":      json.Number("0"),
 		"token_no_default_policy":     false,
 		"token_num_uses":              int64(0),
-		"token_period":                int64(0),
+		"token_period":                json.Number("0"),
 		"token_type":                  "service",
 	}
 

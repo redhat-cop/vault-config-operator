@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"context"
+	"encoding/json"
 	"reflect"
 	"sort"
 	"testing"
@@ -79,14 +80,14 @@ func TestVRoleToMap(t *testing.T) {
 		"bound_service_account_namespaces": []string{"ns1", "ns2"},
 		"alias_name_source":                "serviceaccount_uid",
 		"audience":                         &aud,
-		"token_ttl":                        3600,
-		"token_max_ttl":                    86400,
+		"token_ttl":                        json.Number("3600"),
+		"token_max_ttl":                    json.Number("86400"),
 		"token_policies":                   []string{"policy1", "policy2"},
 		"token_bound_cidrs":                []string{"10.0.0.0/8"},
-		"token_explicit_max_ttl":           0,
+		"token_explicit_max_ttl":           json.Number("0"),
 		"token_no_default_policy":          false,
 		"token_num_uses":                   0,
-		"token_period":                     0,
+		"token_period":                     json.Number("0"),
 		"token_type":                       "default",
 	}
 

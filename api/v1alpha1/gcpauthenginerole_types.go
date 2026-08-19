@@ -18,7 +18,9 @@ package v1alpha1
 
 import (
 	"context"
+	"encoding/json"
 	"reflect"
+	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -265,17 +267,17 @@ func (r *GCPRole) toMap() map[string]any {
 	payload["bound_service_accounts"] = r.BoundServiceAccounts
 	payload["bound_projects"] = r.BoundProjects
 	payload["add_group_aliases"] = r.AddGroupAliases
-	payload["token_ttl"] = r.TokenTTL
-	payload["token_max_ttl"] = r.TokenMaxTTL
+	payload["token_ttl"] = durationToSeconds(r.TokenTTL)
+	payload["token_max_ttl"] = durationToSeconds(r.TokenMaxTTL)
 	payload["token_policies"] = r.TokenPolicies
 	payload["policies"] = r.Policies
 	payload["token_bound_cidrs"] = r.TokenBoundCIDRs
-	payload["token_explicit_max_ttl"] = r.TokenExplicitMaxTTL
+	payload["token_explicit_max_ttl"] = durationToSeconds(r.TokenExplicitMaxTTL)
 	payload["token_no_default_policy"] = r.TokenNoDefaultPolicy
 	payload["token_num_uses"] = r.TokenNumUses
-	payload["token_period"] = r.TokenPeriod
+	payload["token_period"] = json.Number(strconv.FormatInt(r.TokenPeriod, 10))
 	payload["token_type"] = r.TokenType
-	payload["max_jwt_exp"] = r.MaxJWTExp
+	payload["max_jwt_exp"] = durationToSeconds(r.MaxJWTExp)
 	payload["allow_gce_inference"] = r.AllowGCEInference
 	payload["bound_zones"] = r.BoundZones
 	payload["bound_regions"] = r.BoundRegions

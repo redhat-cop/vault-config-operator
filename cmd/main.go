@@ -220,6 +220,19 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controller.GitHubAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GitHubAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GitHubAuthEngineConfig")
+		os.Exit(1)
+	}
+	if err = (&controller.GitHubAuthEngineTeamMapReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GitHubAuthEngineTeamMap")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GitHubAuthEngineTeamMap")
+		os.Exit(1)
+	}
+	if err = (&controller.GitHubAuthEngineUserMapReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GitHubAuthEngineUserMap")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GitHubAuthEngineUserMap")
+		os.Exit(1)
+	}
+
 	if err = (&controller.AWSAuthEngineClientConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AWSAuthEngineClientConfig")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AWSAuthEngineClientConfig")
 		os.Exit(1)
@@ -239,6 +252,11 @@ func main() {
 	}
 	if err = (&controller.CertAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "CertAuthEngineRole")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CertAuthEngineRole")
+		os.Exit(1)
+	}
+
+	if err = (&controller.UserpassAuthEngineUserReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "UserpassAuthEngineUser")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "UserpassAuthEngineUser")
 		os.Exit(1)
 	}
 
@@ -487,6 +505,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controller.OktaAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "OktaAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "OktaAuthEngineConfig")
+		os.Exit(1)
+	}
+	if err = (&controller.OktaAuthEngineGroupReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "OktaAuthEngineGroup")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "OktaAuthEngineGroup")
+		os.Exit(1)
+	}
+
 	if webhooks, ok := os.LookupEnv("ENABLE_WEBHOOKS"); !ok || webhooks != "false" {
 		if err = (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "RandomSecret")
@@ -554,6 +581,19 @@ func main() {
 			os.Exit(1)
 		}
 
+		if err = (&redhatcopv1alpha1.GitHubAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "GitHubAuthEngineConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.GitHubAuthEngineTeamMap{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "GitHubAuthEngineTeamMap")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.GitHubAuthEngineUserMap{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "GitHubAuthEngineUserMap")
+			os.Exit(1)
+		}
+
 		if err = (&redhatcopv1alpha1.AWSAuthEngineClientConfig{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "AWSAuthEngineClientConfig")
 			os.Exit(1)
@@ -573,6 +613,11 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.CertAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "CertAuthEngineRole")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.UserpassAuthEngineUser{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "UserpassAuthEngineUser")
 			os.Exit(1)
 		}
 
@@ -795,6 +840,15 @@ func main() {
 
 		if err = (&redhatcopv1alpha1.TerraformCloudSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "TerraformCloudSecretEngineRole")
+			os.Exit(1)
+		}
+
+		if err = (&redhatcopv1alpha1.OktaAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "OktaAuthEngineConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.OktaAuthEngineGroup{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "OktaAuthEngineGroup")
 			os.Exit(1)
 		}
 	}

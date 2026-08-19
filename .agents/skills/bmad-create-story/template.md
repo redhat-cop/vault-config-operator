@@ -26,6 +26,8 @@ so that {{benefit}}.
 - Relevant architecture patterns and constraints
 - Source tree components to touch
 - Testing standards summary
+- **Novelty Risk:** LOW / MEDIUM / HIGH — why, and what is novel vs copy-paste
+- Duration/TTL fields in `toMap()` must use `durationToSeconds()` or `json.Number` (Vault-read format). Never emit raw duration strings.
 
 ### Project Structure Notes
 
@@ -47,3 +49,15 @@ so that {{benefit}}.
 ### Completion Notes List
 
 ### File List
+
+## Code Review Record
+
+### Review Model Used
+
+{{review_model_name_version}}
+
+### Review Findings
+
+### Decisions Needed / Decisions Taken
+
+### Fixes Applied

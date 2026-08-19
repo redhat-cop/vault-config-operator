@@ -230,14 +230,14 @@ func (r *CertAuthEngineRoleInternal) toMap() map[string]any {
 	payload["ocsp_max_retries"] = r.OCSPMaxRetries
 	payload["ocsp_query_all_servers"] = r.OCSPQueryAllServers
 	payload["display_name"] = r.DisplayName
-	payload["token_ttl"] = r.TokenTTL
-	payload["token_max_ttl"] = r.TokenMaxTTL
+	payload["token_ttl"] = durationToSeconds(r.TokenTTL)
+	payload["token_max_ttl"] = durationToSeconds(r.TokenMaxTTL)
 	payload["token_policies"] = r.TokenPolicies
 	payload["token_bound_cidrs"] = r.TokenBoundCIDRs
-	payload["token_explicit_max_ttl"] = r.TokenExplicitMaxTTL
+	payload["token_explicit_max_ttl"] = durationToSeconds(r.TokenExplicitMaxTTL)
 	payload["token_no_default_policy"] = r.TokenNoDefaultPolicy
 	payload["token_num_uses"] = r.TokenNumUses
-	payload["token_period"] = r.TokenPeriod
+	payload["token_period"] = durationToSeconds(r.TokenPeriod)
 	payload["token_type"] = r.TokenType
 
 	return payload
