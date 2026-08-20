@@ -1,4 +1,4 @@
-![build status](https://github.com/redhat-cop/vault-config-operator/workflows/push/badge.svg)
+![build status](https://github.com/redhat-cop/vault-config-operator/actions/workflows/push.yaml/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/redhat-cop/vault-config-operator)](https://goreportcard.com/report/github.com/redhat-cop/vault-config-operator)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/redhat-cop/vault-config-operator)
 [![CRD Docs](https://img.shields.io/badge/CRD-Docs-brightgreen)](https://doc.crds.dev/github.com/redhat-cop/vault-config-operator)
@@ -22,13 +22,14 @@
   - [Secret Engines](#secret-engines)
   - [Secret Management](#secret-management)
   - [Identities](#identities)
+  - [Namespaces](#namespaces)
   - [Audit Management](#audit-management)
   - [The common authentication section](#the-common-authentication-section)
   - [End to end example](#end-to-end-example)
   - [Contributing a new Vault type](#contributing-a-new-vault-type)
   - [Initializing the connection to Vault](#initializing-the-connection-to-vault)
   - [The Common connection section](#the-common-connection-section)
-  - [Node on deleting resources](#note-on-deleting-resources)
+  - [Note on deleting resources](#note-on-deleting-resources)
   - [Deploying the Operator](#deploying-the-operator)
     - [Multiarch Support](#multiarch-support)
     - [Deploying from OperatorHub](#deploying-from-operatorhub)
@@ -65,73 +66,116 @@ Currently this operator covers the following Vault APIs:
 
 ## Authentication Engines
 
-1. [AuthEngineMount](./docs/auth-engines.md#authenginemount) Sets up a [Vault Authentication Endpoint](https://www.vaultproject.io/docs/auth)
-2. [KubernetesAuthEngineConfig](./docs/auth-engines.md#kubernetesauthengineconfig) Configures a [Vault Kubernetes Authentication Endpoint](https://www.vaultproject.io/docs/auth/kubernetes).
-3. [KubernetesAuthEngineRole](./docs/auth-engines.md#KubernetesAuthEngineRole) Configures a Vault [Kubernetes Authentication](https://www.vaultproject.io/docs/auth/kubernetes) Role
-4. [LDAPAuthEngineConfig](./docs/auth-engines.md#ldapauthengineconfig) Configures a [Vault LDAP Authentication Endpoint](https://www.vaultproject.io/docs/auth/ldap).
-   - [LDAPAuthEngineGroup](./docs/auth-engines.md#ldapauthenginegroup) Creates or updates [Vault LDAP Authentication Engine Group](https://www.vaultproject.io/api-docs/auth/ldap#create-update-ldap-group) policies.
-5. [JWTOIDCAuthEngineConfig](./docs/auth-engines.md#jwtoidcauthengineconfig) Configures a [Vault JWT/OIDC Authentication Endpoint](https://developer.hashicorp.com/vault/api-docs/auth/jwt)
-   - [JWTOIDCAuthEngineRole](./docs/auth-engines.md#jwtoidcauthenginerole) Register a role in an Authentication Engine Mount of type [JWT/OIDC](https://developer.hashicorp.com/vault/api-docs/auth/jwt#create-role)
-6. [AzureAuthEngineConfig](./docs/auth-engines.md#azureauthengineconfig) Configures a [Vault Azure Authentication Endpoint](https://developer.hashicorp.com/vault/api-docs/auth/azure)
+See the [auth engines index](./docs/auth-engines/index.md) for the full list.
+
+1. [AuthEngineMount](./docs/auth-engines/index.md#authenginemount) Sets up a [Vault Authentication Endpoint](https://developer.hashicorp.com/vault/docs/auth)
+2. [KubernetesAuthEngineConfig](./docs/auth-engines/kubernetes.md#kubernetesauthengineconfig) Configures a [Vault Kubernetes Authentication Endpoint](https://developer.hashicorp.com/vault/docs/auth/kubernetes).
+   - [KubernetesAuthEngineRole](./docs/auth-engines/kubernetes.md#kubernetesauthenginerole) Configures a Vault [Kubernetes Authentication](https://developer.hashicorp.com/vault/docs/auth/kubernetes) Role
+3. [LDAPAuthEngineConfig](./docs/auth-engines/ldap.md#ldapauthengineconfig) Configures a [Vault LDAP Authentication Endpoint](https://developer.hashicorp.com/vault/docs/auth/ldap).
+   - [LDAPAuthEngineGroup](./docs/auth-engines/ldap.md#ldapauthenginegroup) Creates or updates [Vault LDAP Authentication Engine Group](https://developer.hashicorp.com/vault/api-docs/auth/ldap#create-update-ldap-group) policies.
+4. [JWTOIDCAuthEngineConfig](./docs/auth-engines/jwt-oidc.md#jwtoidcauthengineconfig) Configures a [Vault JWT/OIDC Authentication Endpoint](https://developer.hashicorp.com/vault/api-docs/auth/jwt)
+   - [JWTOIDCAuthEngineRole](./docs/auth-engines/jwt-oidc.md#jwtoidcauthenginerole) Register a role in an Authentication Engine Mount of type [JWT/OIDC](https://developer.hashicorp.com/vault/api-docs/auth/jwt#create-update-role)
+5. [AzureAuthEngineConfig](./docs/auth-engines/azure.md#azureauthengineconfig) Configures a [Vault Azure Authentication Endpoint](https://developer.hashicorp.com/vault/api-docs/auth/azure)
+   - [AzureAuthEngineRole](./docs/auth-engines/azure.md#azureauthenginerole) Configures a Vault [Azure Authentication](https://developer.hashicorp.com/vault/api-docs/auth/azure) Role
+6. [AliCloudAuthEngineRole](./docs/auth-engines/alicloud.md#alicloudauthenginerole) Configures a Vault [AliCloud Authentication](https://developer.hashicorp.com/vault/api-docs/auth/alicloud) Role
+7. [AppRoleAuthEngineRole](./docs/auth-engines/approle.md#approleauthenginerole) Configures a Vault [AppRole Authentication](https://developer.hashicorp.com/vault/api-docs/auth/approle) Role
+8. [AWSAuthEngineClientConfig](./docs/auth-engines/aws.md#awsauthengineclientconfig) Configures a [Vault AWS Authentication](https://developer.hashicorp.com/vault/api-docs/auth/aws) client
+   - [AWSAuthEngineIdentityConfig](./docs/auth-engines/aws.md#awsauthengineidentityconfig) Configures AWS IAM identity for Vault AWS Authentication
+   - [AWSAuthEngineRole](./docs/auth-engines/aws.md#awsauthenginerole) Configures a Vault [AWS Authentication](https://developer.hashicorp.com/vault/api-docs/auth/aws) Role
+9. [GCPAuthEngineConfig](./docs/auth-engines/gcp.md#gcpauthengineconfig) Configures a [Vault GCP Authentication Endpoint](https://developer.hashicorp.com/vault/api-docs/auth/gcp)
+   - [GCPAuthEngineRole](./docs/auth-engines/gcp.md#gcpauthenginerole) Configures a Vault [GCP Authentication](https://developer.hashicorp.com/vault/api-docs/auth/gcp) Role
+10. [GitHubAuthEngineConfig](./docs/auth-engines/github.md#githubauthengineconfig) Configures a [Vault GitHub Authentication Endpoint](https://developer.hashicorp.com/vault/api-docs/auth/github)
+    - [GitHubAuthEngineTeamMap](./docs/auth-engines/github.md#githubauthengineteammap) Maps a GitHub team to Vault policies
+    - [GitHubAuthEngineUserMap](./docs/auth-engines/github.md#githubauthengineusermap) Maps a GitHub user to Vault policies
+11. [OktaAuthEngineConfig](./docs/auth-engines/okta.md#oktaauthengineconfig) Configures a [Vault Okta Authentication Endpoint](https://developer.hashicorp.com/vault/api-docs/auth/okta)
+    - [OktaAuthEngineGroup](./docs/auth-engines/okta.md#oktaauthenginegroup) Maps an Okta group to Vault policies
+12. [OCIAuthEngineConfig](./docs/auth-engines/oci.md#ociauthengineconfig) Configures a [Vault OCI Authentication Endpoint](https://developer.hashicorp.com/vault/api-docs/auth/oci)
+    - [OCIAuthEngineRole](./docs/auth-engines/oci.md#ociauthenginerole) Configures a Vault [OCI Authentication](https://developer.hashicorp.com/vault/api-docs/auth/oci) Role
+13. [CFAuthEngineConfig](./docs/auth-engines/cloud-foundry.md#cfauthengineconfig) Configures a [Vault Cloud Foundry Authentication Endpoint](https://developer.hashicorp.com/vault/api-docs/auth/cf)
+    - [CFAuthEngineRole](./docs/auth-engines/cloud-foundry.md#cfauthenginerole) Configures a Vault [Cloud Foundry Authentication](https://developer.hashicorp.com/vault/api-docs/auth/cf) Role
+14. [RADIUSAuthEngineConfig](./docs/auth-engines/radius.md#radiusauthengineconfig) Configures a [Vault RADIUS Authentication Endpoint](https://developer.hashicorp.com/vault/api-docs/auth/radius)
+    - [RADIUSAuthEngineUser](./docs/auth-engines/radius.md#radiusauthengineuser) Configures a Vault [RADIUS Authentication](https://developer.hashicorp.com/vault/api-docs/auth/radius) User
+15. [KerberosAuthEngineConfig](./docs/auth-engines/kerberos.md#kerberosauthengineconfig) Configures a [Vault Kerberos Authentication Endpoint](https://developer.hashicorp.com/vault/api-docs/auth/kerberos)
+    - [KerberosAuthEngineLDAPConfig](./docs/auth-engines/kerberos.md#kerberosauthengineldapconfig) Configures LDAP group lookup for Kerberos Authentication
+    - [KerberosAuthEngineGroup](./docs/auth-engines/kerberos.md#kerberosauthenginegroup) Maps a Kerberos group to Vault policies
+16. [CertAuthEngineConfig](./docs/auth-engines/cert.md#certauthengineconfig) Configures a [Vault TLS Certificate Authentication Endpoint](https://developer.hashicorp.com/vault/api-docs/auth/cert)
+    - [CertAuthEngineRole](./docs/auth-engines/cert.md#certauthenginerole) Configures a Vault [TLS Certificate Authentication](https://developer.hashicorp.com/vault/api-docs/auth/cert) Role
+17. [UserpassAuthEngineUser](./docs/auth-engines/userpass.md#userpassauthengineuser) Configures a Vault [Username & Password Authentication](https://developer.hashicorp.com/vault/api-docs/auth/userpass) User
 
 ## Policy management
 
-1. [Policy](./docs/policy-management.md#policy) Configures Vault [Policies](https://www.vaultproject.io/docs/concepts/policies)
-2. [PasswordPolicy](./docs/policy-management.md#passwordpolicy) Configures Vault [Password Policies](https://www.vaultproject.io/docs/concepts/password-policies)
+1. [Policy](./docs/policy-management.md#policy) Configures Vault [Policies](https://developer.hashicorp.com/vault/docs/concepts/policies)
+2. [PasswordPolicy](./docs/policy-management.md#passwordpolicy) Configures Vault [Password Policies](https://developer.hashicorp.com/vault/docs/concepts/password-policies)
 
 ## Secret Engines
 
-1. [SecretEngineMount](./docs/secret-engines.md#SecretEngineMount) Configures a Mount point for a [SecretEngine](https://www.vaultproject.io/docs/secrets)
-2. [DatabaseSecretEngineConfig](./docs/secret-engines/database.md#databasesecretengineconfig) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Connection
-3. [DatabaseSecretEngineRole](./docs/secret-engines/database.md#databasesecretenginerole) Configures a [Database Secret Engine](https://www.vaultproject.io/docs/secrets/databases) Role
-4. [GitHubSecretEngineConfig](./docs/secret-engines/github.md#githubsecretengineconfig) Configures a Github Application to produce tokens, see also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
-5. [GitHubSecretEngineRole](./docs/secret-engines/github.md#githubsecretenginerole) Configures a Github Application to produce scoped tokens, see also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
-6. [PKISecretEngineConfig](./docs/secret-engines/pki.md#pkisecretengineconfig)  Configures a [PKI Secret Engine](https://www.vaultproject.io/docs/secrets/pki)
-7. [PKISecretEngineRole](./docs/secret-engines/pki.md#pkisecretenginerole)  Configures a [PKI Secret Engine](https://www.vaultproject.io/docs/secrets/pki) Role
-8. [QuaySecretEngineConfig](./docs/secret-engines/quay.md#quaysecretengineconfig) Configures a Quay server to produce Robot accounts, see also the [vault-plugin-secrets-quay](https://github.com/redhat-cop/vault-plugin-secrets-quay)
-9. [QuaySecretEngineRole](./docs/secret-engines/quay.md#quaysecretenginerole) Configures a Quay server to produce credentials for a Robot account, see also the [vault-plugin-secrets-quay](https://github.com/redhat-cop/vault-plugin-secrets-quay)
-10. [QuaySecretEngineStaticRole](./docs/secret-engines/quay.md#quaysecretenginestaticrole) Configures a Quay server to produce credentials for a Robot account using a fixed username and generated credentials, see also the [vault-plugin-secrets-quay](https://github.com/redhat-cop/vault-plugin-secrets-quay)
-11. [RabbitMQSecretEngineConfig](./docs/secret-engines/rabbitmq.md#rabbitmqsecretengineconfig) Configures a [RabbitMQ Secret Engine](https://www.vaultproject.io/docs/secrets/rabbitmq#rabbitmq-secrets-engine)
-12. [RabbitMQSecretEngineRole](./docs/secret-engines/rabbitmq.md#rabbitmqsecretenginerole) Configures a [RabbitMQ Secret Engine Role](https://www.vaultproject.io/docs/secrets/rabbitmq#rabbitmq-secrets-engine)
-13. [KubernetesSecretEngineConfig](./docs/secret-engines/kubernetes.md#kubernetessecretengineconfig) Configures a [Kubernetes Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/kubernetes) Connection
-14. [KubernetesSecretEngineRole](./docs/secret-engines/kubernetes.md#kubernetessecretenginerole) Configures a [Kubernetes Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/kubernetes) Role
-15. [AzureSecretEngineConfig](./docs/secret-engines/azure.md#azuresecretengineconfig) Configures an [Azure Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/azure) Connection
-16. [AzureSecretEngineRole](./docs/secret-engines/azure.md#azuresecretenginerole) Configures an [Azure Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/azure) Role
-17. [AWSSecretEngineConfig](./docs/secret-engines/aws.md#awssecretengineconfig) Configures an [AWS Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/aws) Connection
-18. [AWSSecretEngineRole](./docs/secret-engines/aws.md#awssecretenginerole) Configures an [AWS Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/aws) Role
-19. [ConsulSecretEngineConfig](./docs/secret-engines/consul.md#consulsecretengineconfig) Configures a [Consul Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/consul) Connection
-20. [ConsulSecretEngineRole](./docs/secret-engines/consul.md#consulsecretenginerole) Configures a [Consul Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/consul) Role
-21. [GCPSecretEngineConfig](./docs/secret-engines/gcp.md#gcpsecretengineconfig) Configures a [GCP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/gcp) Connection
-22. [GCPSecretEngineRoleset](./docs/secret-engines/gcp.md#gcpsecretengineroleset) Configures a [GCP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/gcp) Roleset
-23. [GCPSecretEngineStaticAccount](./docs/secret-engines/gcp.md#gcpsecretenginestaticaccount) Configures a [GCP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/gcp) Static Account
-24. [LDAPSecretEngineConfig](./docs/secret-engines/ldap.md#ldapsecretengineconfig) Configures an [LDAP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ldap) Connection
-25. [LDAPSecretEngineStaticRole](./docs/secret-engines/ldap.md#ldapsecretenginestaticrole) Configures an [LDAP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ldap) Static Role
-26. [LDAPSecretEngineDynamicRole](./docs/secret-engines/ldap.md#ldapsecretenginedynamicrole) Configures an [LDAP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ldap) Dynamic Role
-27. [SSHSecretEngineConfig](./docs/secret-engines/ssh.md#sshsecretengineconfig) Configures an [SSH Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ssh) CA (certificate signing key behavior)
-28. [SSHSecretEngineRole](./docs/secret-engines/ssh.md#sshsecretenginerole) Configures an [SSH Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ssh) Role
-29. [TransitSecretEngineKey](./docs/secret-engines/transit.md#transitsecretenginekey) Configures a [Transit Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/transit) Key
+See the [secret engines index](./docs/secret-engines/index.md) for the full list.
+
+1. [SecretEngineMount](./docs/secret-engines/index.md#secretenginemount) Configures a Mount point for a [SecretEngine](https://developer.hashicorp.com/vault/docs/secrets)
+2. [DatabaseSecretEngineConfig](./docs/secret-engines/database.md#databasesecretengineconfig) Configures a [Database Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/databases) Connection
+   - [DatabaseSecretEngineRole](./docs/secret-engines/database.md#databasesecretenginerole) Configures a [Database Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/databases) Role
+   - [DatabaseSecretEngineStaticRole](./docs/secret-engines/database.md#databasesecretenginestaticrole) Configures a [Database Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/databases) Static Role
+3. [GitHubSecretEngineConfig](./docs/secret-engines/github.md#githubsecretengineconfig) Configures a Github Application to produce tokens, see also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
+   - [GitHubSecretEngineRole](./docs/secret-engines/github.md#githubsecretenginerole) Configures a Github Application to produce scoped tokens, see also the [vault-plugin-secrets-github](https://github.com/martinbaillie/vault-plugin-secrets-github)
+4. [PKISecretEngineConfig](./docs/secret-engines/pki.md#pkisecretengineconfig) Configures a [PKI Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/pki)
+   - [PKISecretEngineRole](./docs/secret-engines/pki.md#pkisecretenginerole) Configures a [PKI Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/pki) Role
+5. [QuaySecretEngineConfig](./docs/secret-engines/quay.md#quaysecretengineconfig) Configures a Quay server to produce Robot accounts, see also the [vault-plugin-secrets-quay](https://github.com/redhat-cop/vault-plugin-secrets-quay)
+   - [QuaySecretEngineRole](./docs/secret-engines/quay.md#quaysecretenginerole) Configures a Quay server to produce credentials for a Robot account, see also the [vault-plugin-secrets-quay](https://github.com/redhat-cop/vault-plugin-secrets-quay)
+   - [QuaySecretEngineStaticRole](./docs/secret-engines/quay.md#quaysecretenginestaticrole) Configures a Quay server to produce credentials for a Robot account using a fixed username and generated credentials, see also the [vault-plugin-secrets-quay](https://github.com/redhat-cop/vault-plugin-secrets-quay)
+6. [RabbitMQSecretEngineConfig](./docs/secret-engines/rabbitmq.md#rabbitmqsecretengineconfig) Configures a [RabbitMQ Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/rabbitmq#rabbitmq-secrets-engine)
+   - [RabbitMQSecretEngineRole](./docs/secret-engines/rabbitmq.md#rabbitmqsecretenginerole) Configures a [RabbitMQ Secret Engine Role](https://developer.hashicorp.com/vault/docs/secrets/rabbitmq#rabbitmq-secrets-engine)
+7. [KubernetesSecretEngineConfig](./docs/secret-engines/kubernetes.md#kubernetessecretengineconfig) Configures a [Kubernetes Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/kubernetes) Connection
+   - [KubernetesSecretEngineRole](./docs/secret-engines/kubernetes.md#kubernetessecretenginerole) Configures a [Kubernetes Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/kubernetes) Role
+8. [AzureSecretEngineConfig](./docs/secret-engines/azure.md#azuresecretengineconfig) Configures an [Azure Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/azure) Connection
+   - [AzureSecretEngineRole](./docs/secret-engines/azure.md#azuresecretenginerole) Configures an [Azure Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/azure) Role
+9. [AWSSecretEngineConfig](./docs/secret-engines/aws.md#awssecretengineconfig) Configures an [AWS Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/aws) Connection
+   - [AWSSecretEngineRole](./docs/secret-engines/aws.md#awssecretenginerole) Configures an [AWS Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/aws) Role
+10. [ConsulSecretEngineConfig](./docs/secret-engines/consul.md#consulsecretengineconfig) Configures a [Consul Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/consul) Connection
+    - [ConsulSecretEngineRole](./docs/secret-engines/consul.md#consulsecretenginerole) Configures a [Consul Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/consul) Role
+11. [GCPSecretEngineConfig](./docs/secret-engines/gcp.md#gcpsecretengineconfig) Configures a [GCP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/gcp) Connection
+    - [GCPSecretEngineRoleset](./docs/secret-engines/gcp.md#gcpsecretengineroleset) Configures a [GCP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/gcp) Roleset
+    - [GCPSecretEngineStaticAccount](./docs/secret-engines/gcp.md#gcpsecretenginestaticaccount) Configures a [GCP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/gcp) Static Account
+12. [LDAPSecretEngineConfig](./docs/secret-engines/ldap.md#ldapsecretengineconfig) Configures an [LDAP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ldap) Connection
+    - [LDAPSecretEngineStaticRole](./docs/secret-engines/ldap.md#ldapsecretenginestaticrole) Configures an [LDAP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ldap) Static Role
+    - [LDAPSecretEngineDynamicRole](./docs/secret-engines/ldap.md#ldapsecretenginedynamicrole) Configures an [LDAP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ldap) Dynamic Role
+13. [SSHSecretEngineConfig](./docs/secret-engines/ssh.md#sshsecretengineconfig) Configures an [SSH Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ssh) CA (certificate signing key behavior)
+    - [SSHSecretEngineRole](./docs/secret-engines/ssh.md#sshsecretenginerole) Configures an [SSH Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/ssh) Role
+14. [MongoDBAtlasSecretEngineConfig](./docs/secret-engines/mongodb-atlas.md#mongodbatlassecretengineconfig) Configures a [MongoDB Atlas Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/mongodbatlas) Connection
+    - [MongoDBAtlasSecretEngineRole](./docs/secret-engines/mongodb-atlas.md#mongodbatlassecretenginerole) Configures a [MongoDB Atlas Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/mongodbatlas) Role
+15. [NomadSecretEngineConfig](./docs/secret-engines/nomad.md#nomadsecretengineconfig) Configures a [Nomad Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/nomad) Connection
+    - [NomadSecretEngineRole](./docs/secret-engines/nomad.md#nomadsecretenginerole) Configures a [Nomad Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/nomad) Role
+16. [TerraformCloudSecretEngineConfig](./docs/secret-engines/terraform-cloud.md#terraformcloudsecretengineconfig) Configures a [Terraform Cloud Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/terraform) Connection
+    - [TerraformCloudSecretEngineRole](./docs/secret-engines/terraform-cloud.md#terraformcloudsecretenginerole) Configures a [Terraform Cloud Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/terraform) Role
+17. [TOTPSecretEngineKey](./docs/secret-engines/totp.md#totpsecretenginekey) Configures a [TOTP Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/totp) Key
+18. [TransitSecretEngineKey](./docs/secret-engines/transit.md#transitsecretenginekey) Configures a [Transit Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/transit) Key
 
 ## Secret Management
 
-1. [RandomSecret](./docs/secret-management.md#RandomSecret) Creates a random secret in a vault [kv Secret Engine](https://www.vaultproject.io/docs/secrets/kv) with one password field generated using a [PasswordPolicy](https://www.vaultproject.io/docs/concepts/password-policies)
-2. [VaultSecret](./docs/secret-management.md#VaultSecret) Creates a K8s Secret from one or more Vault Secrets
+1. [RandomSecret](./docs/secret-management.md#randomsecret) Creates a random secret in a vault [kv Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/kv) with one password field generated using a [PasswordPolicy](https://developer.hashicorp.com/vault/docs/concepts/password-policies)
+2. [VaultSecret](./docs/secret-management.md#vaultsecret) Creates a K8s Secret from one or more Vault Secrets
 
 ## Identities
 
-1. [Group](./docs/identities.md#Group) Creates a [Vault Group](https://developer.hashicorp.com/vault/docs/concepts/identity#identity-groups).
-2. [GroupAlias](./docs/identities.md#GroupAlias) Creates a [Vault GroupAlias](https://developer.hashicorp.com/vault/api-docs/secret/identity/group-alias).
-3. [IdentityOIDCProvider](./docs/identities.md#IdentityOIDCProvider) Creates a [Vault OIDC Provider](https://developer.hashicorp.com/vault/api-docs/secret/identity/oidc-provider#create-or-update-a-provider).
-4. [IdentityOIDCScope](./docs/identities.md#IdentityOIDCScope) Creates a [Vault OIDC Scope](https://developer.hashicorp.com/vault/api-docs/secret/identity/oidc-provider#create-or-update-a-scope).
-5. [IdentityOIDCClient](./docs/identities.md#IdentityOIDCClient) Creates a [Vault OIDC Client](https://developer.hashicorp.com/vault/api-docs/secret/identity/oidc-provider#create-or-update-a-client).
-6. [IdentityOIDCAssignment](./docs/identities.md#IdentityOIDCAssignment) Creates a [Vault OIDC Assignment](https://developer.hashicorp.com/vault/api-docs/secret/identity/oidc-provider#create-or-update-an-assignment).
-7. [IdentityTokenConfig](./docs/identities.md#IdentityTokenConfig) Configures the [Identity Tokens backend](https://developer.hashicorp.com/vault/api-docs/secret/identity/tokens#configure-the-identity-tokens-backend).
-8. [IdentityTokenKey](./docs/identities.md#IdentityTokenKey) Creates a [named key](https://developer.hashicorp.com/vault/api-docs/secret/identity/tokens#create-a-named-key) for signing identity tokens.
-9. [IdentityTokenRole](./docs/identities.md#IdentityTokenRole) Creates a [role](https://developer.hashicorp.com/vault/api-docs/secret/identity/tokens#create-or-update-a-role) for generating identity tokens.
+1. [Entity](./docs/identities.md#entity) Creates a [Vault Entity](https://developer.hashicorp.com/vault/api-docs/secret/identity/entity).
+2. [EntityAlias](./docs/identities.md#entityalias) Creates a [Vault EntityAlias](https://developer.hashicorp.com/vault/api-docs/secret/identity/entity-alias).
+3. [Group](./docs/identities.md#group) Creates a [Vault Group](https://developer.hashicorp.com/vault/docs/concepts/identity#identity-groups).
+4. [GroupAlias](./docs/identities.md#groupalias) Creates a [Vault GroupAlias](https://developer.hashicorp.com/vault/api-docs/secret/identity/group-alias).
+5. [IdentityOIDCProvider](./docs/identities.md#identityoidcprovider) Creates a [Vault OIDC Provider](https://developer.hashicorp.com/vault/api-docs/secret/identity/oidc-provider#create-or-update-a-provider).
+6. [IdentityOIDCScope](./docs/identities.md#identityoidcscope) Creates a [Vault OIDC Scope](https://developer.hashicorp.com/vault/api-docs/secret/identity/oidc-provider#create-or-update-a-scope).
+7. [IdentityOIDCClient](./docs/identities.md#identityoidcclient) Creates a [Vault OIDC Client](https://developer.hashicorp.com/vault/api-docs/secret/identity/oidc-provider#create-or-update-a-client).
+8. [IdentityOIDCAssignment](./docs/identities.md#identityoidcassignment) Creates a [Vault OIDC Assignment](https://developer.hashicorp.com/vault/api-docs/secret/identity/oidc-provider#create-or-update-an-assignment).
+9. [IdentityTokenConfig](./docs/identities.md#identitytokenconfig) Configures the [Identity Tokens backend](https://developer.hashicorp.com/vault/api-docs/secret/identity/tokens#configure-the-identity-tokens-backend).
+10. [IdentityTokenKey](./docs/identities.md#identitytokenkey) Creates a [named key](https://developer.hashicorp.com/vault/api-docs/secret/identity/tokens#create-a-named-key) for signing identity tokens.
+11. [IdentityTokenRole](./docs/identities.md#identitytokenrole) Creates a [role](https://developer.hashicorp.com/vault/api-docs/secret/identity/tokens#create-or-update-a-role) for generating identity tokens.
+
+## Namespaces
+
+1. [Namespace](./docs/namespaces.md#namespace-management) Creates a [Vault Namespace](https://developer.hashicorp.com/vault/docs/enterprise/namespaces) (Enterprise).
 
 ## Audit Management
 
-1. [Audit](./docs/audit-management.md#Audit) Configures Vault [Audit Devices](https://developer.hashicorp.com/vault/docs/audit) for detailed logging of requests and responses.
-2. [AuditRequestHeader](./docs/audit-management.md#AuditRequestHeader) Configures which HTTP request headers should be captured in [Vault audit logs](https://developer.hashicorp.com/vault/docs/audit).
+1. [Audit](./docs/audit-management.md#audit) Configures Vault [Audit Devices](https://developer.hashicorp.com/vault/docs/audit) for detailed logging of requests and responses.
+2. [AuditRequestHeader](./docs/audit-management.md#auditrequestheader) Configures which HTTP request headers should be captured in [Vault audit logs](https://developer.hashicorp.com/vault/docs/audit).
 
 ## The common authentication section
 
@@ -150,9 +194,9 @@ See [this section](./docs/contributing-vault-apis.md) of the documentation for a
 
 ## Initializing the connection to Vault
 
-At the moment the connection to Vault can be initialized with [Vault's standard environment variables](https://www.vaultproject.io/docs/commands#environment-variables).
+At the moment the connection to Vault can be initialized with [Vault's standard environment variables](https://developer.hashicorp.com/vault/docs/commands#configure-environment-variables).
 See the [OLM documentation](https://github.com/operator-framework/operator-lifecycle-manager/blob/master/doc/design/subscription-config.md#env) on how to pass environment variables via a Subscription.
-The variable that are read at client initialization are listed [here](https://github.com/hashicorp/vault/blob/14101f866414d2ed7850648b465c746ac8fda621/api/client.go#L35).
+The variable that are read at client initialization are listed [here](https://github.com/hashicorp/vault/blob/main/api/client.go#L36).
 
 Additionally, the operator checks for an environment variable named `CACHE_VAULT_TOKEN`. If set to a value of `"true"`, the operator will cache the Vault clients (and tokens) it creates per tuple of:
 - Vault namespace
@@ -278,8 +322,6 @@ oc new-project vault-config-operator
 - Once there, you can search for this operator by name: `vault config operator`. This will then return an item for our operator and you can select it to get started. Once you've arrived here, you'll be presented with an option to install, which will begin the process.
 - After clicking the install button, you can then select the namespace that you would like to install this to as well as the installation strategy you would like to proceed with (`Automatic` or `Manual`).
 - Once you've made your selection, you can select `Subscribe` and the installation will begin. After a few moments you can go ahead and check your namespace and you should see the operator running.
-
-![Cert Utils Operator](./media/vault-config-operator.png)
 
 #### Deploying from OperatorHub using CLI
 
@@ -439,7 +481,7 @@ vault write -tls-skip-verify auth/kubernetes/login role=policy-admin jwt=${token
 
 #### Run the operator
 
-> Note: this operator build process is tested with [podman](https://podman.io/), but some of the build files (Makefile specifically) use docker because they are generated automatically by operator-sdk. It is recommended [remap the docker command to the podman command](https://developers.redhat.com/blog/2020/11/19/transitioning-from-docker-to-podman#transition_to_the_podman_cli).
+> Note: this operator build process is tested with [podman](https://podman.io/), but some of the build files (Makefile specifically) use docker because they are generated automatically by operator-sdk. It is recommended [remap the docker command to the podman command](https://developers.redhat.com/blog/2020/11/19/transitioning-from-docker-to-podman).
 
 ```sh
 export repo=raffaelespazzoli #change the organization name to your own and be sure to make the repo public
