@@ -17,7 +17,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Namespace is the Schema for the policies API
+        description: Namespace is the Schema for the namespaces API
         properties:
           apiVersion:
             description: |-
