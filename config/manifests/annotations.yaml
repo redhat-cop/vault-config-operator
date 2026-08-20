@@ -1,0 +1,7 @@
+# Extra bundle metadata merged into bundle/metadata/annotations.yaml by `make bundle`
+# after `operator-sdk generate bundle --overwrite`. The SDK regenerates that file
+# from a fixed template and does not preserve custom keys.
+#
+# This file is not a kustomize resource. Do not list it under resources: below.
+annotations:
+  com.redhat.openshift.versions: v4.16

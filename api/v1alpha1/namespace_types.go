@@ -118,7 +118,7 @@ func (m *Namespace) SetConditions(conditions []metav1.Condition) {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// Namespace is the Schema for the policies API
+// Namespace is the Schema for the namespaces API
 type Namespace struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

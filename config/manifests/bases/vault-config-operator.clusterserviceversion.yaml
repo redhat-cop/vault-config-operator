@@ -226,6 +226,11 @@ spec:
       kind: LDAPAuthEngineGroup
       name: ldapauthenginegroups.redhatcop.redhat.io
       version: v1alpha1
+    - description: Namespace is the Schema for the namespaces API
+      displayName: Namespace
+      kind: Namespace
+      name: namespaces.redhatcop.redhat.io
+      version: v1alpha1
     - description: PasswordPolicy is the Schema for the passwordpolicies API
       displayName: Password Policy
       kind: PasswordPolicy

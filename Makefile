@@ -72,6 +72,10 @@ IMAGE_TAG_BASE ?= quay.io/redhat-cop/$(OPERATOR_NAME)
 # BUNDLE_GEN_FLAGS are the flags passed to the operator-sdk generate bundle command
 BUNDLE_GEN_FLAGS ?= -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
 
+# Extra bundle annotations merged after generate bundle. operator-sdk --overwrite
+# regenerates bundle/metadata/annotations.yaml without these keys.
+BUNDLE_EXTRA_ANNOTATIONS ?= config/manifests/annotations.yaml
+
 # USE_IMAGE_DIGESTS defines if images are resolved via tags or digests
 # You can enable this value if you would like to use SHA Based Digests
 # To enable set flag to true
@@ -407,7 +411,7 @@ bundle: manifests kustomize operator-sdk ## Generate bundle manifests and metada
 	$(OPERATOR_SDK) generate kustomize manifests --interactive=false -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle $(BUNDLE_GEN_FLAGS)
-	echo '  com.redhat.openshift.versions: v4.16' >> bundle/metadata/annotations.yaml
+	awk 'BEGIN {p=0} /^annotations:/{p=1; next} p && /^[^[:space:]#]/{p=0} p && /^[[:space:]]+[^#[:space:]]/{print}' $(BUNDLE_EXTRA_ANNOTATIONS) >> bundle/metadata/annotations.yaml
 	$(OPERATOR_SDK) bundle validate ./bundle
 
 .PHONY: bundle-build

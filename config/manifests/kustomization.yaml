@@ -1,5 +1,7 @@
 # These resources constitute the fully configured set of manifests
 # used to generate the 'manifests/' directory in a bundle.
+# Extra bundle annotations are in annotations.yaml and are merged by `make bundle`;
+# do not add that file to resources.
 resources:
 - bases/vault-config-operator.clusterserviceversion.yaml
 - ../default
