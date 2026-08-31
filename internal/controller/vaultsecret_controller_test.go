@@ -321,6 +321,51 @@ var _ = Describe("VaultSecret controller", func() {
 				Expect(len(s)).To(Equal(20))
 			}
 
+			By("Checking the Secret type defaults to Opaque when VaultSecret output type is unset")
+			Expect(instance.Spec.TemplatizedK8sSecret.Type).To(BeEmpty())
+			Expect(secret.Type).To(Equal(corev1.SecretTypeOpaque))
+
+			By("Creating a VaultSecret with output type set")
+			typedName, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../../test/vaultsecret/vaultsecret-randomsecret-typed.yaml", vaultTestNamespaceName)
+			Expect(err).To(BeNil())
+			typedInstance := &redhatcopv1alpha1.VaultSecret{}
+			Expect(k8sIntegrationClient.Get(ctx, types.NamespacedName{Name: typedName, Namespace: vaultTestNamespaceName}, typedInstance)).Should(Succeed())
+			typedVSKey := types.NamespacedName{Name: typedInstance.Name, Namespace: typedInstance.Namespace}
+			typedCreated := &redhatcopv1alpha1.VaultSecret{}
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, typedVSKey, typedCreated)
+				if err != nil {
+					return false
+				}
+				for _, condition := range typedCreated.Status.Conditions {
+					if condition.Type == vaultresourcecontroller.ReconcileSuccessful && condition.Status == metav1.ConditionTrue {
+						return true
+					}
+				}
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			By("Checking the Secret type matches the VaultSecret output type")
+			Expect(typedCreated.Spec.TemplatizedK8sSecret.Type).To(Equal(string(corev1.SecretTypeBasicAuth)))
+			typedSecretKey := types.NamespacedName{Name: typedCreated.Spec.TemplatizedK8sSecret.Name, Namespace: typedCreated.Namespace}
+			typedSecret := &corev1.Secret{}
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, typedSecretKey, typedSecret)
+				if err != nil {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
+			Expect(typedSecret.Type).To(Equal(corev1.SecretType(typedCreated.Spec.TemplatizedK8sSecret.Type)))
+			Expect(typedSecret.Type).To(Equal(corev1.SecretTypeBasicAuth))
+
+			By("Deleting the typed VaultSecret")
+			Expect(k8sIntegrationClient.Delete(ctx, typedInstance)).Should(Succeed())
+			Eventually(func() bool {
+				err := k8sIntegrationClient.Get(ctx, typedSecretKey, &corev1.Secret{})
+				return err != nil
+			}, timeout, interval).Should(BeTrue())
+
 			By("Recording the initial ObservedGeneration from VaultSecret conditions")
 			vsLookupKey := types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}
 			Expect(k8sIntegrationClient.Get(ctx, vsLookupKey, created)).Should(Succeed())

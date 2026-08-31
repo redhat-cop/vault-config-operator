@@ -21,11 +21,12 @@ package controller
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
-
-	"net/http"
+	"time"
 
 	vault "github.com/hashicorp/vault/api"
 	. "github.com/onsi/ginkgo/v2"
@@ -91,8 +92,15 @@ var _ = BeforeSuite(func() {
 		vaultAddress = os.Getenv("VAULT_ADDR")
 	}
 
-	_, err := http.Get(os.Getenv("VAULT_ADDR"))
-	Expect(err).To(BeNil())
+	// Probe /v1/sys/health with a timeout. http.Get on VAULT_ADDR follows Vault's
+	// 307 to /ui/, which hangs, and Kind extraPortMappings via rootless Podman
+	// often accept TCP then never return bytes.
+	healthURL := strings.TrimRight(vaultAddress, "/") + "/v1/sys/health"
+	httpClient := &http.Client{Timeout: 10 * time.Second}
+	resp, err := httpClient.Get(healthURL)
+	Expect(err).To(BeNil(), fmt.Sprintf("Vault is not reachable at %s", healthURL))
+	defer resp.Body.Close()
+	Expect(resp.StatusCode).To(Equal(http.StatusOK), fmt.Sprintf("Vault health at %s returned %s", healthURL, resp.Status))
 
 	vaultToken, isSet := os.LookupEnv("VAULT_TOKEN")
 	Expect(isSet).To(BeTrue())

@@ -14,6 +14,12 @@ VAULT_HOST_PORT ?= 8200
 # Override HTTPS_HOST_PORT and VAULT_HOST_PORT (along with KIND_CLUSTER_NAME) to run
 # parallel integration tests in separate Kind clusters — see project-context.md.
 HTTPS_HOST_PORT ?= 8443
+# Host port for kubectl port-forward to the Vault Service. Kind extraPortMappings
+# bind VAULT_HOST_PORT to ingress-nginx (node:80); that path is unreliable with
+# rootless Podman (TCP accept, then hang). Offset keeps the two listeners apart
+# and stays unique per worktree when VAULT_HOST_PORT is overridden.
+VAULT_API_PORT ?= $(shell echo $$(($(VAULT_HOST_PORT) + 10000)))
+VAULT_PF_PIDFILE ?= /tmp/$(KIND_CLUSTER_NAME)-vault-pf.pid
 KUBE_CONTEXT ?= kind-$(KIND_CLUSTER_NAME)
 KUBE_CONFIG_FILE ?= /tmp/$(KIND_CLUSTER_NAME)-kubeconfig
 # Container runtime: use docker in CI (GitHub Actions), podman on local dev machines.
@@ -151,10 +157,35 @@ test: manifests generate fmt vet envtest ## Run tests.
 
 # note: envtest requires a container runtime (docker or podman)
 .PHONY: integration
-integration: kind-setup deploy-vault deploy-ingress deploy-postgresql deploy-rabbitmq deploy-ldap deploy-keycloak deploy-nomad vault manifests generate fmt vet envtest ## Run tests.
+integration: kind-setup deploy-vault deploy-ingress deploy-postgresql deploy-rabbitmq deploy-ldap deploy-keycloak deploy-nomad vault-port-forward vault manifests generate fmt vet envtest ## Run tests.
 	export VAULT_TOKEN=$$(KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
-	export VAULT_ADDR="http://localhost:$(VAULT_HOST_PORT)" ;\
+	export VAULT_ADDR="http://127.0.0.1:$(VAULT_API_PORT)" ;\
 	KUBECONFIG=$(KUBE_CONFIG_FILE) KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration -timeout 30m
+
+.PHONY: vault-port-forward
+vault-port-forward: kubectl ## Port-forward Vault API to the host (avoids Kind extraPortMappings).
+	@if [ -f $(VAULT_PF_PIDFILE) ]; then \
+	  PF_PID=$$(cat $(VAULT_PF_PIDFILE)); \
+	  if kill -0 $$PF_PID 2>/dev/null && curl -fsS --max-time 2 http://127.0.0.1:$(VAULT_API_PORT)/v1/sys/health >/dev/null 2>&1; then \
+	    echo "Vault port-forward already running (pid $$PF_PID) on 127.0.0.1:$(VAULT_API_PORT)"; \
+	    exit 0; \
+	  fi; \
+	  kill $$PF_PID 2>/dev/null || true; \
+	  rm -f $(VAULT_PF_PIDFILE); \
+	fi; \
+	echo "Port-forwarding Vault API to http://127.0.0.1:$(VAULT_API_PORT) (bypasses Kind extraPortMappings / rootless Podman)"; \
+	KUBECONFIG=$(KUBE_CONFIG_FILE) setsid $(KUBECTL) --context $(KUBE_CONTEXT) port-forward -n vault --address 127.0.0.1 svc/vault $(VAULT_API_PORT):8200 >/tmp/$(KIND_CLUSTER_NAME)-vault-pf.log 2>&1 < /dev/null & \
+	echo $$! > $(VAULT_PF_PIDFILE); \
+	for i in $$(seq 1 30); do \
+	  if curl -fsS --max-time 1 http://127.0.0.1:$(VAULT_API_PORT)/v1/sys/health >/dev/null 2>&1; then \
+	    echo "Vault API reachable at http://127.0.0.1:$(VAULT_API_PORT)"; \
+	    exit 0; \
+	  fi; \
+	  sleep 1; \
+	done; \
+	echo "Vault port-forward failed to become ready. Log:"; \
+	cat /tmp/$(KIND_CLUSTER_NAME)-vault-pf.log; \
+	exit 1
 
 .PHONY: deploy-ingress
 deploy-ingress: kubectl helm
@@ -203,7 +234,11 @@ kind-teardown: kind ## Delete the Kind cluster and its kubeconfig.
 	else \
 	  echo "Kind cluster '$(KIND_CLUSTER_NAME)' does not exist, nothing to delete"; \
 	fi
-	@rm -f $(KUBE_CONFIG_FILE)
+	@if [ -f $(VAULT_PF_PIDFILE) ]; then \
+	  kill $$(cat $(VAULT_PF_PIDFILE)) 2>/dev/null || true; \
+	  rm -f $(VAULT_PF_PIDFILE); \
+	fi
+	@rm -f $(KUBE_CONFIG_FILE) /tmp/$(KIND_CLUSTER_NAME)-vault-pf.log
 
 .PHONY: deploy-postgresql
 deploy-postgresql: kubectl helm
@@ -241,22 +276,42 @@ deploy-nomad: kubectl
 		exit 1 ;\
 	}
 	@echo "Bootstrapping Nomad ACLs..."
-	@NOMAD_POD=$$($(KUBECTL) --context $(KUBE_CONTEXT) get pods -n nomad -l app=nomad -o jsonpath='{.items[0].metadata.name}') ;\
+	@set +e; \
+	NOMAD_POD=$$($(KUBECTL) --context $(KUBE_CONTEXT) get pods -n nomad -l app=nomad -o jsonpath='{.items[0].metadata.name}') ;\
+	BOOTSTRAP_ERR=/tmp/$(KIND_CLUSTER_NAME)-nomad-bootstrap.err ;\
+	extract_secret() { sed -n 's/.*"SecretID"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'; } ;\
 	NOMAD_TOKEN="" ;\
 	for i in 1 2 3 4 5 6 7 8 9 10; do \
-		NOMAD_TOKEN=$$($(KUBECTL) --context $(KUBE_CONTEXT) exec -n nomad $$NOMAD_POD -- sh -c 'nomad acl bootstrap -json 2>/dev/null | grep -o "\"SecretID\":\"[^\"]*\"" | cut -d\" -f4' 2>/dev/null || echo "") ;\
+		BOOTSTRAP_OUT=$$($(KUBECTL) --context $(KUBE_CONTEXT) exec -n nomad $$NOMAD_POD -- nomad acl bootstrap -json 2>&1) ;\
+		printf '%s\n' "$$BOOTSTRAP_OUT" > $$BOOTSTRAP_ERR ;\
+		NOMAD_TOKEN=$$(printf '%s\n' "$$BOOTSTRAP_OUT" | extract_secret) ;\
 		if [ -n "$$NOMAD_TOKEN" ]; then break; fi ;\
+		if printf '%s\n' "$$BOOTSTRAP_OUT" | grep -Eq 'ACL bootstrap already done|Invalid bootstrap reset index'; then break; fi ;\
 		echo "Waiting for Nomad ACL system to be ready (attempt $$i/10)..." ;\
 		sleep 2 ;\
 	done ;\
 	if [ -z "$$NOMAD_TOKEN" ]; then \
 		echo "Nomad ACL already bootstrapped or bootstrap failed, trying to read existing secret..." ;\
-		NOMAD_TOKEN=$$($(KUBECTL) --context $(KUBE_CONTEXT) get secret nomad-token-secret -n vault-admin -o jsonpath='{.data.token}' 2>/dev/null | base64 -d) ;\
+		NOMAD_TOKEN=$$($(KUBECTL) --context $(KUBE_CONTEXT) get secret nomad-token-secret -n vault-admin -o jsonpath='{.data.token}' 2>/dev/null | base64 -d || true) ;\
+	fi ;\
+	if [ -z "$$NOMAD_TOKEN" ]; then \
+		RESET_INDEX=$$(sed -n 's/.*reset index: \([0-9]*\).*/\1/p' $$BOOTSTRAP_ERR) ;\
+		if [ -n "$$RESET_INDEX" ]; then \
+			echo "ACL token secret missing; resetting Nomad ACL bootstrap (index $$RESET_INDEX)..." ;\
+			$(KUBECTL) --context $(KUBE_CONTEXT) exec -n nomad $$NOMAD_POD -- sh -c "echo $$RESET_INDEX > /tmp/nomad/server/acl-bootstrap-reset" ;\
+			BOOTSTRAP_OUT=$$($(KUBECTL) --context $(KUBE_CONTEXT) exec -n nomad $$NOMAD_POD -- nomad acl bootstrap -json 2>&1) ;\
+			printf '%s\n' "$$BOOTSTRAP_OUT" > $$BOOTSTRAP_ERR ;\
+			NOMAD_TOKEN=$$(printf '%s\n' "$$BOOTSTRAP_OUT" | extract_secret) ;\
+			$(KUBECTL) --context $(KUBE_CONTEXT) exec -n nomad $$NOMAD_POD -- rm -f /tmp/nomad/server/acl-bootstrap-reset >/dev/null 2>&1 || true ;\
+		fi ;\
 	fi ;\
 	if [ -z "$$NOMAD_TOKEN" ]; then \
 		echo "ERROR: Could not obtain Nomad management token." ;\
+		echo "--- nomad acl bootstrap output ---" ;\
+		cat $$BOOTSTRAP_ERR ;\
 		exit 1 ;\
 	fi ;\
+	set -e ;\
 	echo "Creating readonly ACL policy in Nomad..." ;\
 	echo 'namespace "default" { policy = "read" }' | $(KUBECTL) --context $(KUBE_CONTEXT) exec -i -n nomad $$NOMAD_POD -- sh -c "NOMAD_TOKEN=$$NOMAD_TOKEN nomad acl policy apply readonly -" ;\
 	echo "Creating Nomad token K8s secret..." ;\

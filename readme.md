@@ -758,7 +758,7 @@ oc apply -f test/olm/subscription-vault-config-operator-v0-0-1-sub.yaml -n vault
 
 ## Integration Test
 
-> Note the envtest seems to only work with kind when using docker instead of podman
+> Integration tests reach Vault via `kubectl port-forward` (`VAULT_API_PORT`, default 18200). Kind extraPortMappings through rootless Podman (host → ingress-nginx hostPort) often accept TCP and then hang.
 
 ```sh
 make integration

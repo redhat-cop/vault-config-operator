@@ -320,7 +320,8 @@ subjects:
   namespace: ingress-nginx
 ---
 apiVersion: v1
-data: null
+data:
+  worker-processes: "4"
 kind: ConfigMap
 metadata:
   labels:
