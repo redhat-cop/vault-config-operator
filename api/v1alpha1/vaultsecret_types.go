@@ -158,7 +158,7 @@ type TemplatizedK8sSecret struct {
 	// +kubebuilder:validation:Required
 	Name string `json:"name,omitempty"`
 	// Type is the K8s Secret type to output to.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Type string `json:"type,omitempty"`
 	// StringData is the K8s Secret stringData and allows specifying non-binary secret data in string form with go templating support
 	// to transform the Vault KV secrets into a formatted K8s Secret.
