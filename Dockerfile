@@ -2,7 +2,7 @@
 # Follow-up: switch this image (and go.mod / CI GO_VERSION) to 1.27 as soon as
 # the official golang:1.27 image is published. golangci-lint v2.12.2's bundled
 # staticcheck is not yet Go 1.27-compatible, so lint still pins GOTOOLCHAIN=go1.26.4.
-FROM --platform=$BUILDPLATFORM golang:1.26 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.27@sha256:512690a5660563b57d37ecc31129e7f136e831db2aed24a1dbeb8ad7380dc0fa AS builder
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
