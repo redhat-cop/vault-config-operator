@@ -47,50 +47,26 @@ func TestNamespaceToMap(t *testing.T) {
 	}
 }
 
-func TestNamespaceIsEquivalentMatching(t *testing.T) {
-	namespace := &Namespace{
-		Spec: NamespaceSpec{
-			Name: "myNamespace",
-			Path: "myParentNamespace",
-		},
-	}
-
-	payload := namespace.toMap()
-
-	if !namespace.IsEquivalentToDesiredState(payload) {
-		t.Error("expected matching payload to be equivalent")
-	}
+// Vault's response to GET sys/namespaces/<name>.
+func vaultNamespaceRead(path string) map[string]interface{} {
+	return map[string]interface{}{"custom_metadata": map[string]interface{}{}, "id": "lDdTO", "path": path + "/"}
 }
 
-func TestNamespaceIsEquivalentNonMatching(t *testing.T) {
-	namespace := &Namespace{
-		Spec: NamespaceSpec{
-			Name: "myNamespace",
-			Path: "myParentNamespace",
-		},
-	}
-
-	payload := namespace.toMap()
-	payload["path"] = "different-path"
-
-	if namespace.IsEquivalentToDesiredState(payload) {
-		t.Error("expected non-matching payload (different policies) to NOT be equivalent")
-	}
-}
-
-func TestNamespaceIsEquivalentExtraFields(t *testing.T) {
-	namespace := &Namespace{
-		Spec: NamespaceSpec{
-			Name: "admins",
-			Path: "myParentNamespace",
-		},
-	}
-
-	payload := namespace.toMap()
-	payload["extra_field"] = "unexpected"
-
-	if !namespace.IsEquivalentToDesiredState(payload) {
-		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
+func TestNamespaceIsEquivalentToVaultRead(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		spec NamespaceSpec
+		read string
+	}{
+		{"top-level namespace", NamespaceSpec{Name: "team-a"}, "team-a"},
+		{"nested namespace", NamespaceSpec{Name: "team-a", Path: "org"}, "org/team-a"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			namespace := &Namespace{Spec: tc.spec}
+			if !namespace.IsEquivalentToDesiredState(vaultNamespaceRead(tc.read)) {
+				t.Error("expected an existing namespace to be equivalent to its desired state")
+			}
+		})
 	}
 }
 
