@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	"context"
-	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,9 +45,9 @@ func (d *Namespace) GetPayload() map[string]interface{} {
 	return d.toMap()
 }
 
+// An existing namespace is the desired state: Vault rejects a second write to it.
 func (d *Namespace) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
-	desiredState := d.GetPayload()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
+	return true
 }
 
 func (d *Namespace) IsInitialized() bool {

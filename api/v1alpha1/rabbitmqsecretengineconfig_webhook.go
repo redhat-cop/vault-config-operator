@@ -40,7 +40,7 @@ func (r *RabbitMQSecretEngineConfigValidation) Handle(ctx context.Context, req a
 		if err := json.Unmarshal(req.Object.Raw, rabbitMQSecretEngineConfig); err != nil {
 			return admission.Errored(http.StatusBadRequest, err)
 		}
-		vaultNamespace := rabbitMQSecretEngineConfig.Spec.Authentication.Namespace
+		vaultNamespace := rabbitMQSecretEngineConfig.Spec.Authentication.GetTargetNamespace()
 		rabbitMQSecretEngineConfigList := &RabbitMQSecretEngineConfigList{}
 		if err := r.Client.List(ctx, rabbitMQSecretEngineConfigList); err != nil {
 			return admission.Errored(http.StatusBadRequest, err)
@@ -48,7 +48,7 @@ func (r *RabbitMQSecretEngineConfigValidation) Handle(ctx context.Context, req a
 		for _, config := range rabbitMQSecretEngineConfigList.Items {
 			if vaultNamespace != "" {
 				// Check Vault namespace with the path
-				if vaultNamespace == config.Spec.Authentication.Namespace && config.Spec.Path == rabbitMQSecretEngineConfig.Spec.Path {
+				if vaultNamespace == config.Spec.Authentication.GetTargetNamespace() && config.Spec.Path == rabbitMQSecretEngineConfig.Spec.Path {
 					return admission.Errored(http.StatusBadRequest, errors.New("rabbitMQ engine already configured at spec.path in Vault Namespace "+vaultNamespace))
 				}
 			} else {

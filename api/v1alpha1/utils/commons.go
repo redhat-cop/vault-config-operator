@@ -62,9 +62,13 @@ type KubeAuthConfiguration struct {
 	// +kubebuilder:validation:Required
 	Role string `json:"role,omitempty"`
 
-	//Namespace is the Vault namespace to be used in all the operations withing this connection/authentication. Only available in Vault Enterprise.
+	//Namespace is the Vault namespace in which the operator authenticates, and in which the resource is managed unless TargetNamespace is set. Only available in Vault Enterprise.
 	// +kubebuilder:validation:Optional
 	Namespace string `json:"namespace,omitempty"`
+
+	// TargetNamespace is the Vault namespace, relative to Namespace, in which the resource is managed. Only available in Vault Enterprise.
+	// +kubebuilder:validation:Optional
+	TargetNamespace string `json:"targetNamespace,omitempty"`
 }
 
 // +kubebuilder:object:generate=true
@@ -176,6 +180,22 @@ func (vc *VaultConnection) getConnectionConfig(context context.Context, kubeName
 func (kc *KubeAuthConfiguration) GetNamespace() string {
 	return kc.Namespace
 }
+
+// GetTargetNamespace returns the full path of the Vault namespace in which the resource is managed.
+func (kc *KubeAuthConfiguration) GetTargetNamespace() string {
+	if kc.TargetNamespace == "" {
+		return kc.Namespace
+	}
+	return CleansePath(CleansePath(kc.Namespace) + "/" + CleansePath(kc.TargetNamespace))
+}
+
+// withTargetNamespace returns a copy, because the client is shared through the cache.
+func (kc *KubeAuthConfiguration) withTargetNamespace(client *vault.Client) *vault.Client {
+	if kc.TargetNamespace == "" {
+		return client
+	}
+	return client.WithNamespace(kc.GetTargetNamespace())
+}
 func (kc *KubeAuthConfiguration) GetRole() string {
 	return kc.Role
 }
@@ -206,7 +226,7 @@ func (kc *KubeAuthConfiguration) GetVaultClient(context context.Context, kubeNam
 			_, err := vaultClient.Auth().Token().LookupSelf()
 			if err == nil {
 				log.V(1).Info("Returning cached client")
-				return vaultClient, nil
+				return kc.withTargetNamespace(vaultClient), nil
 			}
 		}
 	}
@@ -225,7 +245,7 @@ func (kc *KubeAuthConfiguration) GetVaultClient(context context.Context, kubeNam
 	if cacheVaultToken, ok := os.LookupEnv("CACHE_VAULT_TOKEN"); !ok || cacheVaultToken == "true" {
 		vaultClientCache.Put(kc, kubeNamespace, vaultClient)
 	}
-	return vaultClient, nil
+	return kc.withTargetNamespace(vaultClient), nil
 }
 
 func GetJWTTokenWithDuration(context context.Context, serviceAccountName string, kubeNamespace string, duration int64) (string, error) {
