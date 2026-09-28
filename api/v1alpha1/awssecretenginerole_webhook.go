@@ -54,6 +54,10 @@ func (r *AWSSecretEngineRole) ValidateCreate(ctx context.Context, obj *AWSSecret
 
 func (r *AWSSecretEngineRole) ValidateUpdate(ctx context.Context, oldObj, newObj *AWSSecretEngineRole) (admission.Warnings, error) {
 	awssecretenginerolelog.Info("validate update", "name", newObj.Name)
+
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}

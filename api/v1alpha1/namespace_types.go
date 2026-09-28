@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	"context"
+	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -45,9 +46,9 @@ func (d *Namespace) GetPayload() map[string]interface{} {
 	return d.toMap()
 }
 
-// An existing namespace is the desired state: Vault rejects a second write to it.
 func (d *Namespace) IsEquivalentToDesiredState(payload map[string]interface{}) bool {
-	return true
+	desiredState := d.GetPayload()
+	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 func (d *Namespace) IsInitialized() bool {
@@ -143,10 +144,7 @@ func (d *Namespace) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration
 	return &d.Spec.Authentication
 }
 
+// Vault takes the namespace name from the request path and its parent from the namespace header.
 func (i *Namespace) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
-	payload["name"] = i.Spec.Name
-	payload["path"] = i.Spec.Path
-
-	return payload
+	return map[string]interface{}{}
 }

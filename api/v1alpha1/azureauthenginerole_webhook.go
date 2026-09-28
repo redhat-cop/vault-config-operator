@@ -61,6 +61,10 @@ func (r *AzureAuthEngineRole) ValidateCreate(ctx context.Context, obj *AzureAuth
 func (r *AzureAuthEngineRole) ValidateUpdate(ctx context.Context, oldObj, newObj *AzureAuthEngineRole) (admission.Warnings, error) {
 	azureauthenginerolelog.Info("validate update", "name", newObj.Name)
 
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
+
 	return nil, nil
 }
 

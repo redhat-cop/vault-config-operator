@@ -40,9 +40,15 @@ Set `targetNamespace` to authenticate in a parent namespace and manage the resou
     targetNamespace: tenant-a
 ```
 
-The operator logs in at `auth/kubernetes/login` in the root namespace, and then manages the resource in the `tenant-a` namespace. `tenant-a` does not need its own auth method.
+When `VAULT_NAMESPACE` is not set, the operator logs in at `auth/kubernetes/login` in the root namespace, and then manages the resource in the `tenant-a` namespace. `tenant-a` does not need its own auth method.
 
-`targetNamespace` is relative to `namespace`. With `namespace: org` and `targetNamespace: tenant-a`, the operator logs in to `org` and manages the resource in `org/tenant-a`.
+`targetNamespace` is relative to the namespace in which the operator logs in. With `namespace: org` and `targetNamespace: tenant-a`, the operator logs in to `org` and manages the resource in `org/tenant-a`. When `namespace` is empty, the operator logs in to the namespace in the `VAULT_NAMESPACE` environment variable of the operator. With `VAULT_NAMESPACE=admin` and `targetNamespace: tenant-a`, the operator logs in to `admin` and manages the resource in `admin/tenant-a`.
+
+You cannot change `targetNamespace` in a way that moves the resource to a different Vault namespace, because the change leaves the old resource in Vault. To move a resource, delete it and create it again. You can change `targetNamespace` when the Vault namespace stays the same. For example, you can change `namespace: org/tenant-a` to `namespace: org` and `targetNamespace: tenant-a`, and the operator keeps the same resource.
+
+The validating webhook enforces this limit. The limit does not apply to `VaultSecret`, because it only reads from Vault. `Audit`, `AuditRequestHeader`, `Entity`, `EntityAlias` and `RabbitMQSecretEngineConfig` have no active validating webhook, so do not change `targetNamespace` on these kinds. A change to `namespace` also moves the resource. The operator does not block it, so that existing resources keep their behavior.
+
+A resource that refers to a `RandomSecret`, for example through `rootCredentials.randomSecret`, reads the secret in the Vault namespace of that resource, not in the Vault namespace of the `RandomSecret`. Give the `RandomSecret` the same `namespace` and `targetNamespace` as the resource that refers to it.
 
 The policy of the role must grant the resource paths in the child namespace. A policy in a parent namespace grants a child path when the path starts with the child namespace:
 

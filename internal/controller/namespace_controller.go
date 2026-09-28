@@ -72,11 +72,9 @@ func (r *NamespaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
 
-	// Auth namespace and parent namespace can be set differently
-	if instance.Spec.Path != "" {
-		vaultClient := vaultutils.VaultClientFromContext(ctx1).WithNamespace(string(instance.Spec.Path))
-		ctx1 = vaultutils.ContextWithVaultClient(ctx1, vaultClient)
-	}
+	// spec.path is relative to the target namespace
+	vaultClient := vaultutils.WithChildNamespace(vaultutils.VaultClientFromContext(ctx1), string(instance.Spec.Path))
+	ctx1 = vaultutils.ContextWithVaultClient(ctx1, vaultClient)
 
 	return vaultResource.Reconcile(ctx1, instance)
 }

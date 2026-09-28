@@ -57,6 +57,10 @@ func (r *TerraformCloudSecretEngineConfig) ValidateCreate(ctx context.Context, o
 
 func (r *TerraformCloudSecretEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *TerraformCloudSecretEngineConfig) (admission.Warnings, error) {
 	terraformcloudsecretengineconfiglog.Info("validate update", "name", newObj.Name)
+
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}

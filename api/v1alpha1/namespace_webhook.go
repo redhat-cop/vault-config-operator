@@ -58,6 +58,10 @@ func (r *Namespace) ValidateCreate(ctx context.Context, obj *Namespace) (admissi
 func (r *Namespace) ValidateUpdate(ctx context.Context, oldObj, newObj *Namespace) (admission.Warnings, error) {
 	namespacelog.Info("validate update", "name", newObj.Name)
 
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
+
 	return nil, nil
 }
 

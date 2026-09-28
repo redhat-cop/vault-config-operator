@@ -65,6 +65,10 @@ func (r *Group) ValidateCreate(ctx context.Context, obj *Group) (admission.Warni
 func (r *Group) ValidateUpdate(ctx context.Context, oldObj, newObj *Group) (admission.Warnings, error) {
 	grouplog.Info("validate update", "name", newObj.Name)
 
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
+
 	// TODO(user): fill in your validation logic upon object update.
 	return nil, nil
 }

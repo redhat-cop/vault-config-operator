@@ -59,6 +59,10 @@ func (r *GCPAuthEngineRole) ValidateCreate(ctx context.Context, obj *GCPAuthEngi
 func (r *GCPAuthEngineRole) ValidateUpdate(ctx context.Context, oldObj, newObj *GCPAuthEngineRole) (admission.Warnings, error) {
 	gcpauthenginerolelog.Info("validate update", "name", newObj.Name)
 
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
+
 	return nil, nil
 }
 

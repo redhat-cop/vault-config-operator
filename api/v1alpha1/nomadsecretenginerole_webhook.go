@@ -54,6 +54,10 @@ func (r *NomadSecretEngineRole) ValidateCreate(ctx context.Context, obj *NomadSe
 
 func (r *NomadSecretEngineRole) ValidateUpdate(ctx context.Context, oldObj, newObj *NomadSecretEngineRole) (admission.Warnings, error) {
 	nomadsecretenginerolelog.Info("validate update", "name", newObj.Name)
+
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}

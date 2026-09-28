@@ -60,6 +60,10 @@ func (r *CertAuthEngineRole) ValidateCreate(ctx context.Context, obj *CertAuthEn
 func (r *CertAuthEngineRole) ValidateUpdate(ctx context.Context, oldObj, newObj *CertAuthEngineRole) (admission.Warnings, error) {
 	certauthenginerolelog.Info("validate update", "name", newObj.Name)
 
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
+
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}

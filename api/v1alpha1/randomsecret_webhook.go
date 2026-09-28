@@ -64,6 +64,10 @@ func (r *RandomSecret) ValidateCreate(ctx context.Context, obj *RandomSecret) (a
 func (r *RandomSecret) ValidateUpdate(ctx context.Context, oldObj, newObj *RandomSecret) (admission.Warnings, error) {
 	randomsecretlog.Info("validate update", "name", newObj.Name)
 
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
+
 	// the path cannot be updated
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")

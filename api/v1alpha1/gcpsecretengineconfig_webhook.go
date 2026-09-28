@@ -57,6 +57,10 @@ func (r *GCPSecretEngineConfig) ValidateCreate(ctx context.Context, obj *GCPSecr
 
 func (r *GCPSecretEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *GCPSecretEngineConfig) (admission.Warnings, error) {
 	gcpsecretengineconfiglog.Info("validate update", "name", newObj.Name)
+
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}

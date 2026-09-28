@@ -66,8 +66,9 @@ type KubeAuthConfiguration struct {
 	// +kubebuilder:validation:Optional
 	Namespace string `json:"namespace,omitempty"`
 
-	// TargetNamespace is the Vault namespace, relative to Namespace, in which the resource is managed. Only available in Vault Enterprise.
+	// TargetNamespace is the Vault namespace in which the resource is managed, relative to the namespace in which the operator authenticates. Only available in Vault Enterprise.
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern:=`^(/?[^\s/]+(/[^\s/]+)*/?)?$`
 	TargetNamespace string `json:"targetNamespace,omitempty"`
 }
 
@@ -181,21 +182,39 @@ func (kc *KubeAuthConfiguration) GetNamespace() string {
 	return kc.Namespace
 }
 
-// GetTargetNamespace returns the full path of the Vault namespace in which the resource is managed.
-func (kc *KubeAuthConfiguration) GetTargetNamespace() string {
-	if kc.TargetNamespace == "" {
+// getLoginNamespace matches vault.NewClient, which uses VAULT_NAMESPACE when Namespace is empty.
+func (kc *KubeAuthConfiguration) getLoginNamespace() string {
+	if kc.Namespace != "" {
 		return kc.Namespace
 	}
-	return CleansePath(CleansePath(kc.Namespace) + "/" + CleansePath(kc.TargetNamespace))
+	return os.Getenv(vault.EnvVaultNamespace)
 }
 
-// withTargetNamespace returns a copy, because the client is shared through the cache.
-func (kc *KubeAuthConfiguration) withTargetNamespace(client *vault.Client) *vault.Client {
-	if kc.TargetNamespace == "" {
+// GetTargetNamespace returns the full path of the Vault namespace in which the resource is managed.
+func (kc *KubeAuthConfiguration) GetTargetNamespace() string {
+	return joinNamespace(kc.getLoginNamespace(), kc.TargetNamespace)
+}
+
+// ValidateTargetNamespaceUpdate rejects a TargetNamespace change that moves the resource, because the old resource stays in Vault.
+func (kc *KubeAuthConfiguration) ValidateTargetNamespaceUpdate(old *KubeAuthConfiguration) error {
+	if kc.TargetNamespace != old.TargetNamespace && kc.GetTargetNamespace() != old.GetTargetNamespace() {
+		return errors.New("spec.authentication.targetNamespace cannot be updated to a different Vault namespace")
+	}
+	return nil
+}
+
+// WithChildNamespace returns a copy of client in child, relative to the client namespace, or client itself when child is empty.
+func WithChildNamespace(client *vault.Client, child string) *vault.Client {
+	if CleansePath(child) == "" {
 		return client
 	}
-	return client.WithNamespace(kc.GetTargetNamespace())
+	return client.WithNamespace(joinNamespace(client.Namespace(), child))
 }
+
+func joinNamespace(parent string, child string) string {
+	return CleansePath(CleansePath(parent) + "/" + CleansePath(child))
+}
+
 func (kc *KubeAuthConfiguration) GetRole() string {
 	return kc.Role
 }
@@ -226,7 +245,7 @@ func (kc *KubeAuthConfiguration) GetVaultClient(context context.Context, kubeNam
 			_, err := vaultClient.Auth().Token().LookupSelf()
 			if err == nil {
 				log.V(1).Info("Returning cached client")
-				return kc.withTargetNamespace(vaultClient), nil
+				return WithChildNamespace(vaultClient, kc.TargetNamespace), nil
 			}
 		}
 	}
@@ -245,7 +264,7 @@ func (kc *KubeAuthConfiguration) GetVaultClient(context context.Context, kubeNam
 	if cacheVaultToken, ok := os.LookupEnv("CACHE_VAULT_TOKEN"); !ok || cacheVaultToken == "true" {
 		vaultClientCache.Put(kc, kubeNamespace, vaultClient)
 	}
-	return kc.withTargetNamespace(vaultClient), nil
+	return WithChildNamespace(vaultClient, kc.TargetNamespace), nil
 }
 
 func GetJWTTokenWithDuration(context context.Context, serviceAccountName string, kubeNamespace string, duration int64) (string, error) {
@@ -306,8 +325,8 @@ func (kc *KubeAuthConfiguration) createVaultClient(context context.Context, jwt 
 		log.Error(err, "unable initialize vault client")
 		return nil, err
 	}
-	if kc.GetNamespace() != "" {
-		client.SetNamespace(kc.GetNamespace())
+	if loginNamespace := kc.getLoginNamespace(); loginNamespace != "" {
+		client.SetNamespace(loginNamespace)
 	}
 	secret, err := client.Logical().Write(kc.GetKubeAuthPath(), map[string]any{
 		"jwt":  jwt,

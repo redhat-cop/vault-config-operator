@@ -54,6 +54,10 @@ func (r *NomadSecretEngineConfig) ValidateCreate(ctx context.Context, obj *Nomad
 
 func (r *NomadSecretEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *NomadSecretEngineConfig) (admission.Warnings, error) {
 	nomadsecretengineconfiglog.Info("validate update", "name", newObj.Name)
+
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}

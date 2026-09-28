@@ -1,7 +1,8 @@
 package v1alpha1
 
 import (
-	"reflect"
+	"encoding/json"
+	"net/http"
 	"testing"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
@@ -31,19 +32,8 @@ func TestNamespaceToMap(t *testing.T) {
 		},
 	}
 
-	result := namespace.toMap()
-
-	if len(result) != 2 {
-		t.Errorf("expected 2 keys in map, got %d", len(result))
-	}
-
-	expected := map[string]interface{}{
-		"name": "myNamespace",
-		"path": vaultutils.Path("myParentNamespace"),
-	}
-
-	if !reflect.DeepEqual(result, expected) {
-		t.Errorf("toMap() mismatch:\n  got  %v\n  want %v", result, expected)
+	if result := namespace.toMap(); len(result) != 0 {
+		t.Errorf("expected an empty payload, got %v", result)
 	}
 }
 
@@ -52,19 +42,47 @@ func vaultNamespaceRead(path string) map[string]interface{} {
 	return map[string]interface{}{"custom_metadata": map[string]interface{}{}, "id": "lDdTO", "path": path + "/"}
 }
 
-func TestNamespaceIsEquivalentToVaultRead(t *testing.T) {
+func TestNamespaceCreateOrUpdate(t *testing.T) {
 	for _, tc := range []struct {
-		name string
-		spec NamespaceSpec
-		read string
+		name       string
+		exists     bool
+		wantWrites int
 	}{
-		{"top-level namespace", NamespaceSpec{Name: "team-a"}, "team-a"},
-		{"nested namespace", NamespaceSpec{Name: "team-a", Path: "org"}, "org/team-a"},
+		{"missing namespace is created", false, 1},
+		{"existing namespace is not written again", true, 0},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			namespace := &Namespace{Spec: tc.spec}
-			if !namespace.IsEquivalentToDesiredState(vaultNamespaceRead(tc.read)) {
-				t.Error("expected an existing namespace to be equivalent to its desired state")
+			writes := 0
+			vaultClient, ts := newFakeVaultClient(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path != "/v1/sys/namespaces/team-a" {
+					t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+					w.WriteHeader(http.StatusNotFound)
+					return
+				}
+				switch r.Method {
+				case http.MethodGet:
+					if !tc.exists {
+						w.WriteHeader(http.StatusNotFound)
+						return
+					}
+					w.Header().Set("Content-Type", "application/json")
+					_ = json.NewEncoder(w).Encode(map[string]any{"data": vaultNamespaceRead("org/team-a")}) // test handler; encode error is not actionable
+				case http.MethodPut, http.MethodPost:
+					writes++
+					w.WriteHeader(http.StatusNoContent)
+				default:
+					t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+					w.WriteHeader(http.StatusMethodNotAllowed)
+				}
+			}))
+			defer ts.Close()
+
+			namespace := &Namespace{Spec: NamespaceSpec{Name: "team-a", Path: "org"}}
+			if err := vaultutils.NewVaultEndpoint(namespace).CreateOrUpdate(pivContext(nil, vaultClient)); err != nil {
+				t.Fatalf("CreateOrUpdate: %v", err)
+			}
+			if writes != tc.wantWrites {
+				t.Errorf("writes = %d, want %d", writes, tc.wantWrites)
 			}
 		})
 	}

@@ -40,24 +40,7 @@ func (r *RabbitMQSecretEngineConfigValidation) Handle(ctx context.Context, req a
 		if err := json.Unmarshal(req.Object.Raw, rabbitMQSecretEngineConfig); err != nil {
 			return admission.Errored(http.StatusBadRequest, err)
 		}
-		vaultNamespace := rabbitMQSecretEngineConfig.Spec.Authentication.GetTargetNamespace()
-		rabbitMQSecretEngineConfigList := &RabbitMQSecretEngineConfigList{}
-		if err := r.Client.List(ctx, rabbitMQSecretEngineConfigList); err != nil {
-			return admission.Errored(http.StatusBadRequest, err)
-		}
-		for _, config := range rabbitMQSecretEngineConfigList.Items {
-			if vaultNamespace != "" {
-				// Check Vault namespace with the path
-				if vaultNamespace == config.Spec.Authentication.GetTargetNamespace() && config.Spec.Path == rabbitMQSecretEngineConfig.Spec.Path {
-					return admission.Errored(http.StatusBadRequest, errors.New("rabbitMQ engine already configured at spec.path in Vault Namespace "+vaultNamespace))
-				}
-			} else {
-				if config.Spec.Path == rabbitMQSecretEngineConfig.Spec.Path {
-					return admission.Errored(http.StatusBadRequest, errors.New("rabbitMQ engine already configured at spec.path"))
-				}
-			}
-		}
-		return admission.Allowed("")
+		return r.validateUniquePath(ctx, rabbitMQSecretEngineConfig)
 	case "UPDATE":
 		rabbitMQSecretEngineConfig := &RabbitMQSecretEngineConfig{}
 		// Using json Unmarshal as Decoder has issues to decode specific type
@@ -71,8 +54,33 @@ func (r *RabbitMQSecretEngineConfigValidation) Handle(ctx context.Context, req a
 		if rabbitMQSecretEngineConfig.Spec.Path != oldRabbitMQSecretEngineConfig.Spec.Path {
 			return admission.Errored(http.StatusBadRequest, errors.New("spec.path cannot be updated"))
 		}
+		if err := rabbitMQSecretEngineConfig.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldRabbitMQSecretEngineConfig.Spec.Authentication); err != nil {
+			return admission.Errored(http.StatusBadRequest, err)
+		}
+		// The stored copy of this config is in the old namespace, so it cannot match itself
+		if rabbitMQSecretEngineConfig.Spec.Authentication.GetTargetNamespace() != oldRabbitMQSecretEngineConfig.Spec.Authentication.GetTargetNamespace() {
+			return r.validateUniquePath(ctx, rabbitMQSecretEngineConfig)
+		}
 		return admission.Allowed("")
 	default:
 		return admission.Allowed("")
 	}
+}
+
+func (r *RabbitMQSecretEngineConfigValidation) validateUniquePath(ctx context.Context, rabbitMQSecretEngineConfig *RabbitMQSecretEngineConfig) admission.Response {
+	vaultNamespace := rabbitMQSecretEngineConfig.Spec.Authentication.GetTargetNamespace()
+	rabbitMQSecretEngineConfigList := &RabbitMQSecretEngineConfigList{}
+	if err := r.Client.List(ctx, rabbitMQSecretEngineConfigList); err != nil {
+		return admission.Errored(http.StatusBadRequest, err)
+	}
+	for _, config := range rabbitMQSecretEngineConfigList.Items {
+		if config.Spec.Path != rabbitMQSecretEngineConfig.Spec.Path || config.Spec.Authentication.GetTargetNamespace() != vaultNamespace {
+			continue
+		}
+		if vaultNamespace == "" {
+			return admission.Errored(http.StatusBadRequest, errors.New("rabbitMQ engine already configured at spec.path"))
+		}
+		return admission.Errored(http.StatusBadRequest, errors.New("rabbitMQ engine already configured at spec.path in Vault Namespace "+vaultNamespace))
+	}
+	return admission.Allowed("")
 }

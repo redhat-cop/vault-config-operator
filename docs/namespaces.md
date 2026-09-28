@@ -53,7 +53,7 @@ spec:
 
 ## Nested namespaces
 
-You can also specify nested namespace path under which you would like to create the namespaces, independently from the authentication namespace, using the `path` field.
+You can also specify a nested namespace path under which you would like to create the namespace, using the `path` field. The `path` field is relative to the authentication namespace.
 
 ```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
@@ -70,3 +70,5 @@ spec:
 ```
 
 The result here would be a namespace created under `my-root-namespace/my-first-level-namespace/my-other-name`.
+
+If you also set `authentication.targetNamespace`, the `path` field is relative to the target namespace. With `namespace: my-root-namespace`, `targetNamespace: tenant-a` and `path: my-first-level-namespace`, the operator creates `my-root-namespace/tenant-a/my-first-level-namespace/my-other-name`.
