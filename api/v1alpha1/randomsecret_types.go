@@ -47,9 +47,9 @@ type RandomSecretSpec struct {
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to create the secret.
-	// The final path in Vault will be {[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
-	// If IsKVSecretsEngineV2 is false, the authentication role must have the following capabilities = [ "create", "update", "delete"] on the {[spec.authentication.namespace]}/{spec.path}/{metadata.name} path.
-	// If IsKVSecretsEngineV2 is true, the authentication role must have the following capabilities = [ "create", "update"] on the {[spec.authentication.namespace]}/{spec.path}/data/{metadata.name} path and capabilities = [ "delete"] on the {[spec.authentication.namespace]}/{spec.path}/metadata/{metadata.name} path.
+	// The final path in Vault will be {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/{spec.path}/{metadata.name}.
+	// If IsKVSecretsEngineV2 is false, the authentication role must have the following capabilities = [ "create", "update", "delete"] on the {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/{spec.path}/{metadata.name} path.
+	// If IsKVSecretsEngineV2 is true, the authentication role must have the following capabilities = [ "create", "update"] on the {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/{spec.path}/data/{metadata.name} path and capabilities = [ "delete"] on the {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/{spec.path}/metadata/{metadata.name} path.
 	// Additionally, if IsKVSecretsEngineV2 is true, it is acceptable for this value to have a suffix of "/data" or not. This suffix is no longer needed but still supported for backwards compatibility.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`

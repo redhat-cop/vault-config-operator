@@ -63,7 +63,7 @@ func TestTransitKeyWebhookValidateUpdate_ImmutableFields(t *testing.T) {
 			oldSpec:      TransitSecretEngineKeySpec{Path: "transit", Authentication: vaultutils.KubeAuthConfiguration{TargetNamespace: "tenant-a"}, TransitKeyConfig: TransitKeyConfig{Type: "aes256-gcm96"}},
 			newSpec:      TransitSecretEngineKeySpec{Path: "transit", Authentication: vaultutils.KubeAuthConfiguration{TargetNamespace: "tenant-b"}, TransitKeyConfig: TransitKeyConfig{Type: "aes256-gcm96"}},
 			expectErr:    true,
-			errSubstring: "spec.authentication.targetNamespace cannot be updated",
+			errSubstring: "cannot be updated to a different Vault namespace",
 		},
 		{
 			name:    "allows mutable config field update",

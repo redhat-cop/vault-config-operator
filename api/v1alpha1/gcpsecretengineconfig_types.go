@@ -41,7 +41,7 @@ type GCPSecretEngineConfigSpec struct {
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
-	// The final path in Vault will be {[spec.authentication.namespace]}/{spec.path}/config.
+	// The final path in Vault will be {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/{spec.path}/config.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
 

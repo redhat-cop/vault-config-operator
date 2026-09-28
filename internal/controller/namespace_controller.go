@@ -26,7 +26,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
-	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 )
 
@@ -71,10 +70,6 @@ func (r *NamespaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
 	}
 	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
-
-	// spec.path is relative to the target namespace
-	vaultClient := vaultutils.WithChildNamespace(vaultutils.VaultClientFromContext(ctx1), string(instance.Spec.Path))
-	ctx1 = vaultutils.ContextWithVaultClient(ctx1, vaultClient)
 
 	return vaultResource.Reconcile(ctx1, instance)
 }

@@ -76,10 +76,11 @@ spec:
                     type: object
                     x-kubernetes-map-type: atomic
                   targetNamespace:
-                    description: TargetNamespace is the Vault namespace in which the
-                      resource is managed, relative to the namespace in which the
-                      operator authenticates. Only available in Vault Enterprise.
-                    pattern: ^(/?[^\s/]+(/[^\s/]+)*/?)?$
+                    description: TargetNamespace is the Vault namespace (not a Kubernetes
+                      namespace) in which the resource is managed, relative to the
+                      namespace in which the operator authenticates, for example tenant-a
+                      or org/tenant-a. Only available in Vault Enterprise.
+                    pattern: ^(([^\s/]*[^\s/.][^\s/]*|\.{3,})(/([^\s/]*[^\s/.][^\s/]*|\.{3,}))*)?$
                     type: string
                 required:
                 - path

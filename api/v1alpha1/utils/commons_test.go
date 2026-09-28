@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"strings"
 	"testing"
 
 	vault "github.com/hashicorp/vault/api"
@@ -79,11 +81,12 @@ func TestValidateTargetNamespaceUpdate(t *testing.T) {
 		{"changed", "", KubeAuthConfiguration{TargetNamespace: "tenant-a"}, KubeAuthConfiguration{TargetNamespace: "tenant-b"}, true},
 		{"added", "", KubeAuthConfiguration{}, KubeAuthConfiguration{TargetNamespace: "tenant-a"}, true},
 		{"removed", "", KubeAuthConfiguration{TargetNamespace: "tenant-a"}, KubeAuthConfiguration{}, true},
-		{"only slashes changed", "", KubeAuthConfiguration{TargetNamespace: "tenant-a"}, KubeAuthConfiguration{TargetNamespace: "/tenant-a/"}, false},
+		{"only slashes in namespace changed", "", KubeAuthConfiguration{Namespace: "org/", TargetNamespace: "tenant-a"}, KubeAuthConfiguration{Namespace: "org", TargetNamespace: "tenant-a"}, false},
 		{"child moved from namespace to targetNamespace", "", KubeAuthConfiguration{Namespace: "org/tenant-a"}, KubeAuthConfiguration{Namespace: "org", TargetNamespace: "tenant-a"}, false},
 		{"child moved from targetNamespace to namespace", "", KubeAuthConfiguration{Namespace: "org", TargetNamespace: "tenant-a"}, KubeAuthConfiguration{Namespace: "org/tenant-a"}, false},
 		{"child moved from VAULT_NAMESPACE to targetNamespace", "admin/tenant-a", KubeAuthConfiguration{}, KubeAuthConfiguration{Namespace: "admin", TargetNamespace: "tenant-a"}, false},
-		{"namespace change without a targetNamespace change is not checked", "", KubeAuthConfiguration{Namespace: "org", TargetNamespace: "tenant-a"}, KubeAuthConfiguration{Namespace: "org2", TargetNamespace: "tenant-a"}, false},
+		{"namespace change moves a resource with targetNamespace", "", KubeAuthConfiguration{Namespace: "org", TargetNamespace: "tenant-a"}, KubeAuthConfiguration{Namespace: "org2", TargetNamespace: "tenant-a"}, true},
+		{"namespace change moves a resource without targetNamespace, as before", "", KubeAuthConfiguration{Namespace: "org"}, KubeAuthConfiguration{Namespace: "org2"}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -96,6 +99,16 @@ func TestValidateTargetNamespaceUpdate(t *testing.T) {
 	}
 }
 
+func TestValidateTargetNamespaceUpdateMessage(t *testing.T) {
+	t.Setenv(vault.EnvVaultNamespace, "")
+	newKc := &KubeAuthConfiguration{TargetNamespace: "tenant-a"}
+	err := newKc.ValidateTargetNamespaceUpdate(&KubeAuthConfiguration{})
+	want := `(from "root" to "tenant-a"): to move the resource, delete it and create it again`
+	if err == nil || !strings.Contains(err.Error(), want) {
+		t.Errorf("ValidateTargetNamespaceUpdate() error = %v, want it to contain %q", err, want)
+	}
+}
+
 func TestWithChildNamespace(t *testing.T) {
 	client, err := vault.NewClient(vault.DefaultConfig())
 	if err != nil {
@@ -103,10 +116,10 @@ func TestWithChildNamespace(t *testing.T) {
 	}
 	client.SetNamespace("org/tenant-a")
 
-	if got := WithChildNamespace(client, ""); got != client {
+	if got := withChildNamespace(client, ""); got != client {
 		t.Error("expected the same client when child is empty")
 	}
-	if got := WithChildNamespace(client, "/team/").Namespace(); got != "org/tenant-a/team" {
+	if got := withChildNamespace(client, "/team/").Namespace(); got != "org/tenant-a/team" {
 		t.Errorf("child namespace = %q, want %q", got, "org/tenant-a/team")
 	}
 	if client.Namespace() != "org/tenant-a" {
@@ -187,6 +200,26 @@ func TestGetVaultClientTargetNamespace(t *testing.T) {
 					t.Errorf("login namespace = %q, want %q", loginNs, tt.wantLoginNs)
 				}
 				checkWrite(t, client)
+			})
+
+			t.Run("cache stores the login client", func(t *testing.T) {
+				// When CACHE_VAULT_TOKEN is not set, GetVaultClient stores the client and does not start the lifetime watcher
+				t.Setenv("CACHE_VAULT_TOKEN", "")
+				if err := os.Unsetenv("CACHE_VAULT_TOKEN"); err != nil {
+					t.Fatalf("unset CACHE_VAULT_TOKEN: %v", err)
+				}
+				defer vaultClientCache.Delete(kc, "default")
+
+				if _, err := kc.GetVaultClient(ctx, "default"); err != nil {
+					t.Fatalf("GetVaultClient: %v", err)
+				}
+				cached := vaultClientCache.Get(kc, "default")
+				if cached == nil {
+					t.Fatal("expected a cached client")
+				}
+				if cached.Namespace() != tt.wantLoginNs {
+					t.Errorf("cached client namespace = %q, want %q", cached.Namespace(), tt.wantLoginNs)
+				}
 			})
 
 			t.Run("cached client", func(t *testing.T) {

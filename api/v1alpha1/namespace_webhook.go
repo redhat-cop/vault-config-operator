@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	"context"
+	"errors"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -62,6 +63,10 @@ func (r *Namespace) ValidateUpdate(ctx context.Context, oldObj, newObj *Namespac
 		return nil, err
 	}
 
+	// The CRD rule does not catch the removal of spec.path
+	if newObj.Spec.Path != oldObj.Spec.Path {
+		return nil, errors.New("spec.path cannot be updated")
+	}
 	return nil, nil
 }
 

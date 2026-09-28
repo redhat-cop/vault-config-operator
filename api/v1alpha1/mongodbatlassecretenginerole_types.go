@@ -37,7 +37,7 @@ type MongoDBAtlasSecretEngineRoleSpec struct {
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to create the role.
-	// The final path in Vault will be {[spec.authentication.namespace]}/{spec.path}/roles/{metadata.name}.
+	// The final path in Vault will be {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/{spec.path}/roles/{metadata.name}.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
 

@@ -37,7 +37,6 @@ func TestNamespaceToMap(t *testing.T) {
 	}
 }
 
-// Vault's response to GET sys/namespaces/<name>.
 func vaultNamespaceRead(path string) map[string]interface{} {
 	return map[string]interface{}{"custom_metadata": map[string]interface{}{}, "id": "lDdTO", "path": path + "/"}
 }

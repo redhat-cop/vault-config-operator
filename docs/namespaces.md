@@ -8,7 +8,7 @@ You can create Vault namespaces using the Namespace resource:
 
 ```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
-kind: namespace
+kind: Namespace
 metadata:
   name: my-namespace
 spec:
@@ -23,7 +23,7 @@ You can specify another name using the `name` field.
 
 ```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
-kind: namespace
+kind: Namespace
 metadata:
   name: my-namespace
 spec:
@@ -40,7 +40,7 @@ If you are authenticated in another namespace like `my-root-namespace`, it'll cr
 
 ```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
-kind: namespace
+kind: Namespace
 metadata:
   name: my-namespace
 spec:
@@ -57,7 +57,7 @@ You can also specify a nested namespace path under which you would like to creat
 
 ```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
-kind: namespace
+kind: Namespace
 metadata:
   name: my-namespace
 spec:
@@ -70,5 +70,7 @@ spec:
 ```
 
 The result here would be a namespace created under `my-root-namespace/my-first-level-namespace/my-other-name`.
+
+You cannot change or remove the `path` field after you create the resource.
 
 If you also set `authentication.targetNamespace`, the `path` field is relative to the target namespace. With `namespace: my-root-namespace`, `targetNamespace: tenant-a` and `path: my-first-level-namespace`, the operator creates `my-root-namespace/tenant-a/my-first-level-namespace/my-other-name`.
