@@ -64,6 +64,10 @@ func (r *PKISecretEngineRole) ValidateCreate(ctx context.Context, obj *PKISecret
 func (r *PKISecretEngineRole) ValidateUpdate(ctx context.Context, oldObj, newObj *PKISecretEngineRole) (admission.Warnings, error) {
 	pkisecretenginerolelog.Info("validate update", "name", newObj.Name)
 
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
+
 	pkisecretenginerolelog.Info("validate update", "name", newObj.Name)
 
 	// the path cannot be updated

@@ -62,6 +62,10 @@ func (r *SSHSecretEngineConfig) ValidateCreate(ctx context.Context, obj *SSHSecr
 
 func (r *SSHSecretEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *SSHSecretEngineConfig) (admission.Warnings, error) {
 	sshsecretengineconfiglog.Info("validate update", "name", newObj.Name)
+
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}

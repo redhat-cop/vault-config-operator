@@ -54,6 +54,10 @@ func (r *CFAuthEngineRole) ValidateCreate(ctx context.Context, obj *CFAuthEngine
 
 func (r *CFAuthEngineRole) ValidateUpdate(ctx context.Context, oldObj, newObj *CFAuthEngineRole) (admission.Warnings, error) {
 	cfauthenginerolelog.Info("validate update", "name", newObj.Name)
+
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}

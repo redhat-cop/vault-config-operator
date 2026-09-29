@@ -73,6 +73,10 @@ func (r *KubernetesAuthEngineConfig) ValidateCreate(ctx context.Context, obj *Ku
 func (r *KubernetesAuthEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *KubernetesAuthEngineConfig) (admission.Warnings, error) {
 	kubernetesauthengineconfiglog.Info("validate update", "name", newObj.Name)
 
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
+
 	// the path cannot be updated
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")

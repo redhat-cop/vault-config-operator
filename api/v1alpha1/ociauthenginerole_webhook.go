@@ -55,6 +55,10 @@ func (r *OCIAuthEngineRole) ValidateCreate(ctx context.Context, obj *OCIAuthEngi
 func (r *OCIAuthEngineRole) ValidateUpdate(ctx context.Context, oldObj, newObj *OCIAuthEngineRole) (admission.Warnings, error) {
 	ociauthenginerolelog.Info("validate update", "name", newObj.Name)
 
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
+
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}

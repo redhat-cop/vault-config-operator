@@ -50,9 +50,9 @@ spec:
                   to execute this request
                 properties:
                   namespace:
-                    description: Namespace is the Vault namespace to be used in all
-                      the operations withing this connection/authentication. Only
-                      available in Vault Enterprise.
+                    description: Namespace is the Vault namespace in which the operator
+                      authenticates, and in which the resource is managed unless TargetNamespace
+                      is set. Only available in Vault Enterprise.
                     type: string
                   path:
                     default: kubernetes
@@ -80,6 +80,13 @@ spec:
                         type: string
                     type: object
                     x-kubernetes-map-type: atomic
+                  targetNamespace:
+                    description: TargetNamespace is the Vault namespace (not a Kubernetes
+                      namespace) in which the resource is managed, relative to the
+                      namespace in which the operator authenticates, for example tenant-a
+                      or org/tenant-a. Only available in Vault Enterprise.
+                    pattern: ^(([^\s/]*[^\s/.][^\s/]*|\.{3,})(/([^\s/]*[^\s/.][^\s/]*|\.{3,}))*)?$
+                    type: string
                 required:
                 - path
                 - role

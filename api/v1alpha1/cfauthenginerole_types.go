@@ -38,7 +38,7 @@ type CFAuthEngineRoleSpec struct {
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which the CF auth engine is mounted.
-	// The final path in Vault will be {[spec.authentication.namespace]}/auth/{spec.path}/roles/{name}.
+	// The final path in Vault will be {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/auth/{spec.path}/roles/{name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`

@@ -65,6 +65,10 @@ func (r *SecretEngineMount) ValidateCreate(ctx context.Context, obj *SecretEngin
 func (r *SecretEngineMount) ValidateUpdate(ctx context.Context, oldObj, newObj *SecretEngineMount) (admission.Warnings, error) {
 	secretenginemountlog.Info("validate update", "name", newObj.Name)
 
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
+
 	// the path cannot be updated
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")

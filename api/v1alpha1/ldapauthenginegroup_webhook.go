@@ -59,6 +59,10 @@ func (r *LDAPAuthEngineGroup) ValidateCreate(ctx context.Context, obj *LDAPAuthE
 func (r *LDAPAuthEngineGroup) ValidateUpdate(ctx context.Context, oldObj, newObj *LDAPAuthEngineGroup) (admission.Warnings, error) {
 	ldapauthenginegrouplog.Info("validate update", "name", newObj.Name)
 
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
+
 	return nil, nil
 }
 

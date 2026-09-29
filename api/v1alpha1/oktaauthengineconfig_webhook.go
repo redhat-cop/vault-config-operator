@@ -57,6 +57,10 @@ func (r *OktaAuthEngineConfig) ValidateCreate(ctx context.Context, obj *OktaAuth
 
 func (r *OktaAuthEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *OktaAuthEngineConfig) (admission.Warnings, error) {
 	oktaauthengineconfiglog.Info("validate update", "name", newObj.Name)
+
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}

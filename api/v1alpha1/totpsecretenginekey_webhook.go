@@ -87,6 +87,10 @@ func (r *TOTPSecretEngineKey) isValid() error {
 func (r *TOTPSecretEngineKey) ValidateUpdate(ctx context.Context, oldObj, newObj *TOTPSecretEngineKey) (admission.Warnings, error) {
 	totpsecretenginekeylog.Info("validate update", "name", newObj.Name)
 
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
+
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}

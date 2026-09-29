@@ -65,6 +65,10 @@ func (r *KubernetesSecretEngineRole) ValidateCreate(ctx context.Context, obj *Ku
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
 func (r *KubernetesSecretEngineRole) ValidateUpdate(ctx context.Context, oldObj, newObj *KubernetesSecretEngineRole) (admission.Warnings, error) {
 	kubernetessecretenginerolelog.Info("validate update", "name", newObj.Name)
+
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}

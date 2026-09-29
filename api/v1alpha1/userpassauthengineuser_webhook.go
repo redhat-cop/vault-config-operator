@@ -57,6 +57,10 @@ func (r *UserpassAuthEngineUser) ValidateCreate(ctx context.Context, obj *Userpa
 
 func (r *UserpassAuthEngineUser) ValidateUpdate(ctx context.Context, oldObj, newObj *UserpassAuthEngineUser) (admission.Warnings, error) {
 	userpassauthengineruserlog.Info("validate update", "name", newObj.Name)
+
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}

@@ -63,6 +63,10 @@ func (r *PasswordPolicy) ValidateCreate(ctx context.Context, obj *PasswordPolicy
 func (r *PasswordPolicy) ValidateUpdate(ctx context.Context, oldObj, newObj *PasswordPolicy) (admission.Warnings, error) {
 	passwordpolicylog.Info("validate update", "name", newObj.Name)
 
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
+
 	// TODO(user): fill in your validation logic upon object update.
 	return nil, nil
 }

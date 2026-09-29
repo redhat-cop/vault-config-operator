@@ -90,7 +90,8 @@ type NamespaceSpec struct {
 	Name string `json:"name,omitempty"`
 
 	// Path at which to create the namespace (in case of nested namespaces).
-	// The final path in Vault will be {spec.path}/{spec.name}.
+	// The final path in Vault will be {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/{spec.path}/{spec.name}.
+	// It cannot be updated.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Value is immutable"
@@ -140,14 +141,14 @@ func init() {
 	SchemeBuilder.Register(&Namespace{}, &NamespaceList{})
 }
 
+// GetKubeAuthConfiguration returns a copy that adds spec.path to the target namespace.
 func (d *Namespace) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
-	return &d.Spec.Authentication
+	kubeAuthConfiguration := d.Spec.Authentication
+	kubeAuthConfiguration.TargetNamespace = vaultutils.JoinNamespace(kubeAuthConfiguration.TargetNamespace, string(d.Spec.Path))
+	return &kubeAuthConfiguration
 }
 
+// Vault takes the namespace name from the request path and its parent from the namespace header.
 func (i *Namespace) toMap() map[string]interface{} {
-	payload := map[string]interface{}{}
-	payload["name"] = i.Spec.Name
-	payload["path"] = i.Spec.Path
-
-	return payload
+	return map[string]interface{}{}
 }

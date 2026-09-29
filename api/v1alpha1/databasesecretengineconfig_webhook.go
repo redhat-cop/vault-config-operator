@@ -64,6 +64,10 @@ func (r *DatabaseSecretEngineConfig) ValidateCreate(ctx context.Context, obj *Da
 func (r *DatabaseSecretEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *DatabaseSecretEngineConfig) (admission.Warnings, error) {
 	databasesecretengineconfiglog.Info("validate update", "name", newObj.Name)
 
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
+
 	// the path cannot be updated
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")

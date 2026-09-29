@@ -57,6 +57,10 @@ func (r *IdentityTokenKey) ValidateCreate(ctx context.Context, obj *IdentityToke
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
 func (r *IdentityTokenKey) ValidateUpdate(ctx context.Context, oldObj, newObj *IdentityTokenKey) (admission.Warnings, error) {
 	identitytokenkeylog.Info("validate update", "name", newObj.Name)
+
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
 	return nil, nil
 }
 

@@ -59,6 +59,10 @@ func (r *IdentityOIDCClient) ValidateCreate(ctx context.Context, obj *IdentityOI
 func (r *IdentityOIDCClient) ValidateUpdate(ctx context.Context, oldObj, newObj *IdentityOIDCClient) (admission.Warnings, error) {
 	identityoidcclientlog.Info("validate update", "name", newObj.Name)
 
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
+
 	// key and client_type cannot be updated after creation
 	if newObj.Spec.Key != oldObj.Spec.Key {
 		return nil, errors.New("spec.key cannot be updated")

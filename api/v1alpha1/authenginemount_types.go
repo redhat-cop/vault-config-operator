@@ -42,8 +42,8 @@ type AuthEngineMountSpec struct {
 	AuthMount `json:",inline"`
 
 	// Path at which this auth engine will be mounted
-	// The final path in Vault will be {[spec.authentication.namespace]}/auth/{spec.path}/{metadata.name}.
-	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path /sys/auth/{[spec.authentication.namespace]}/{spec.path}/{metadata.name}.
+	// The final path in Vault will be {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/auth/{spec.path}/{metadata.name}.
+	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path /sys/auth/{[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/{spec.path}/{metadata.name}.
 	// +kubebuilder:validation:Required
 	Path vaultutils.Path `json:"path,omitempty"`
 

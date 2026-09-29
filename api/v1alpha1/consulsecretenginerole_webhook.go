@@ -54,6 +54,10 @@ func (r *ConsulSecretEngineRole) ValidateCreate(ctx context.Context, obj *Consul
 
 func (r *ConsulSecretEngineRole) ValidateUpdate(ctx context.Context, oldObj, newObj *ConsulSecretEngineRole) (admission.Warnings, error) {
 	consulsecretenginerolelog.Info("validate update", "name", newObj.Name)
+
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}

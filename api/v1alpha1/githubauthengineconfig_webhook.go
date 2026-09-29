@@ -54,6 +54,10 @@ func (r *GitHubAuthEngineConfig) ValidateCreate(ctx context.Context, obj *GitHub
 
 func (r *GitHubAuthEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *GitHubAuthEngineConfig) (admission.Warnings, error) {
 	githubauthengineconfiglog.Info("validate update", "name", newObj.Name)
+
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}

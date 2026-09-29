@@ -62,9 +62,14 @@ type KubeAuthConfiguration struct {
 	// +kubebuilder:validation:Required
 	Role string `json:"role,omitempty"`
 
-	//Namespace is the Vault namespace to be used in all the operations withing this connection/authentication. Only available in Vault Enterprise.
+	//Namespace is the Vault namespace in which the operator authenticates, and in which the resource is managed unless TargetNamespace is set. Only available in Vault Enterprise.
 	// +kubebuilder:validation:Optional
 	Namespace string `json:"namespace,omitempty"`
+
+	// TargetNamespace is the Vault namespace (not a Kubernetes namespace) in which the resource is managed, relative to the namespace in which the operator authenticates, for example tenant-a or org/tenant-a. Only available in Vault Enterprise.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern:=`^(([^\s/]*[^\s/.][^\s/]*|\.{3,})(/([^\s/]*[^\s/.][^\s/]*|\.{3,}))*)?$`
+	TargetNamespace string `json:"targetNamespace,omitempty"`
 }
 
 // +kubebuilder:object:generate=true
@@ -176,6 +181,51 @@ func (vc *VaultConnection) getConnectionConfig(context context.Context, kubeName
 func (kc *KubeAuthConfiguration) GetNamespace() string {
 	return kc.Namespace
 }
+
+// getLoginNamespace matches vault.NewClient, which uses VAULT_NAMESPACE when Namespace is empty.
+func (kc *KubeAuthConfiguration) getLoginNamespace() string {
+	if kc.Namespace != "" {
+		return kc.Namespace
+	}
+	return os.Getenv(vault.EnvVaultNamespace)
+}
+
+// GetTargetNamespace returns the full path of the Vault namespace in which the resource is managed.
+func (kc *KubeAuthConfiguration) GetTargetNamespace() string {
+	return JoinNamespace(kc.getLoginNamespace(), kc.TargetNamespace)
+}
+
+// ValidateTargetNamespaceUpdate rejects an update that moves a resource with a TargetNamespace, because the old resource stays in Vault.
+// Resources without a TargetNamespace keep the old behavior, so a change to Namespace can still move them.
+func (kc *KubeAuthConfiguration) ValidateTargetNamespaceUpdate(old *KubeAuthConfiguration) error {
+	oldNamespace, newNamespace := old.GetTargetNamespace(), kc.GetTargetNamespace()
+	if (kc.TargetNamespace != "" || old.TargetNamespace != "") && newNamespace != oldNamespace {
+		return fmt.Errorf("spec.authentication cannot be updated to a different Vault namespace when targetNamespace is set (from %q to %q): to move the resource, delete it and create it again",
+			displayNamespace(oldNamespace), displayNamespace(newNamespace))
+	}
+	return nil
+}
+
+func displayNamespace(namespace string) string {
+	if namespace == "" {
+		return "root"
+	}
+	return namespace
+}
+
+// withChildNamespace returns a copy of client in child, relative to the client namespace, or client itself when child is empty.
+func withChildNamespace(client *vault.Client, child string) *vault.Client {
+	if CleansePath(child) == "" {
+		return client
+	}
+	return client.WithNamespace(JoinNamespace(client.Namespace(), child))
+}
+
+// JoinNamespace returns the path of the child Vault namespace, relative to parent.
+func JoinNamespace(parent string, child string) string {
+	return CleansePath(CleansePath(parent) + "/" + CleansePath(child))
+}
+
 func (kc *KubeAuthConfiguration) GetRole() string {
 	return kc.Role
 }
@@ -206,7 +256,7 @@ func (kc *KubeAuthConfiguration) GetVaultClient(context context.Context, kubeNam
 			_, err := vaultClient.Auth().Token().LookupSelf()
 			if err == nil {
 				log.V(1).Info("Returning cached client")
-				return vaultClient, nil
+				return withChildNamespace(vaultClient, kc.TargetNamespace), nil
 			}
 		}
 	}
@@ -225,7 +275,7 @@ func (kc *KubeAuthConfiguration) GetVaultClient(context context.Context, kubeNam
 	if cacheVaultToken, ok := os.LookupEnv("CACHE_VAULT_TOKEN"); !ok || cacheVaultToken == "true" {
 		vaultClientCache.Put(kc, kubeNamespace, vaultClient)
 	}
-	return vaultClient, nil
+	return withChildNamespace(vaultClient, kc.TargetNamespace), nil
 }
 
 func GetJWTTokenWithDuration(context context.Context, serviceAccountName string, kubeNamespace string, duration int64) (string, error) {
@@ -286,8 +336,8 @@ func (kc *KubeAuthConfiguration) createVaultClient(context context.Context, jwt 
 		log.Error(err, "unable initialize vault client")
 		return nil, err
 	}
-	if kc.GetNamespace() != "" {
-		client.SetNamespace(kc.GetNamespace())
+	if loginNamespace := kc.getLoginNamespace(); loginNamespace != "" {
+		client.SetNamespace(loginNamespace)
 	}
 	secret, err := client.Logical().Write(kc.GetKubeAuthPath(), map[string]any{
 		"jwt":  jwt,

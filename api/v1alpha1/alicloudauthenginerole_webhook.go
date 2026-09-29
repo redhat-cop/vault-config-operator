@@ -58,6 +58,10 @@ func (r *AliCloudAuthEngineRole) ValidateCreate(ctx context.Context, obj *AliClo
 func (r *AliCloudAuthEngineRole) ValidateUpdate(ctx context.Context, oldObj, newObj *AliCloudAuthEngineRole) (admission.Warnings, error) {
 	alicloudauthenginerolelog.Info("validate update", "name", newObj.Name)
 
+	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
+		return nil, err
+	}
+
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
 	}
