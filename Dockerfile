@@ -2,7 +2,7 @@
 # Follow-up: switch this image (and go.mod / CI GO_VERSION) to 1.27 as soon as
 # the official golang:1.27 image is published. golangci-lint v2.12.2's bundled
 # staticcheck is not yet Go 1.27-compatible, so lint still pins GOTOOLCHAIN=go1.26.4.
-FROM --platform=$BUILDPLATFORM golang:1.26 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.26@sha256:37cfcca63222ec499bec5e8ad7aad52dbf7529db36d5812b8eae2f0621aa92d6 AS builder
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
@@ -24,7 +24,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -a -o manager .
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
-FROM registry.access.redhat.com/ubi9/ubi-minimal
+FROM registry.access.redhat.com/ubi9/ubi-minimal@sha256:c4c285d42941ebb2bd4da878479008e1e4536bb599aad1dbe568f89de9053661
 WORKDIR /
 COPY --from=builder /workspace/manager .
 USER 65532:65532
