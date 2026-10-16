@@ -17,3 +17,12 @@ spec:
         - containerPort: 8443
           name: https
           protocol: TCP
+        volumeMounts:
+        - name: metrics-service-cert
+          readOnly: true
+          mountPath: /tmp/k8s-metrics-server/serving-certs
+      volumes:
+      - name: metrics-service-cert
+        secret:
+          secretName: vault-config-operator-certs
+          defaultMode: 420
