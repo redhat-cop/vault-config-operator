@@ -56,7 +56,9 @@ var _ admission.Validator[*PKISecretEngineConfig] = &PKISecretEngineConfig{}
 func (r *PKISecretEngineConfig) ValidateCreate(ctx context.Context, obj *PKISecretEngineConfig) (admission.Warnings, error) {
 	pkisecretengineconfiglog.Info("validate create", "name", obj.Name)
 
-	// TODO(user): fill in your validation logic upon object creation.
+	if err := obj.isValid(); err != nil {
+		return nil, err
+	}
 	return nil, nil
 }
 
@@ -79,6 +81,10 @@ func (r *PKISecretEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newO
 
 	if newObj.Spec.PrivateKeyType != oldObj.Spec.PrivateKeyType {
 		return nil, errors.New("spec.privateKeyType cannot be updated")
+	}
+
+	if err := newObj.isValid(); err != nil {
+		return nil, err
 	}
 
 	return nil, nil
