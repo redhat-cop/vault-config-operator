@@ -224,7 +224,7 @@ func (r *VaultSecretReconciler) calculateDuration(instance *redhatcopv1alpha1.Va
 		var smallestLeaseDurationSeconds int = math.MaxInt64
 
 		for _, defstat := range instance.Status.VaultSecretDefinitionsStatus {
-			if defstat.LeaseDuration < smallestLeaseDurationSeconds {
+			if defstat.LeaseDuration > 0 && defstat.LeaseDuration < smallestLeaseDurationSeconds {
 				smallestLeaseDurationSeconds = defstat.LeaseDuration
 			}
 		}
