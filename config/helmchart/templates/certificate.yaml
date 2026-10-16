@@ -1,4 +1,7 @@
 {{- if .Values.enableCertManager }}
+{{- $issuerRef := .Values.certificate.issuerRef }}
+{{- $isDefault := and (eq ($issuerRef.name | default "") "selfsigned-issuer") (eq ($issuerRef.kind | default "") "Issuer") }}
+{{- if $isDefault }}
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
@@ -6,6 +9,7 @@ metadata:
 spec:
   selfSigned: {}
 ---
+{{- end }}
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -15,8 +19,7 @@ spec:
   - vault-config-operator-webhook-service.{{ .Release.Namespace }}.svc
   - vault-config-operator-webhook-service.{{ .Release.Namespace }}.svc.cluster.local
   issuerRef:
-    kind: Issuer
-    name: selfsigned-issuer
+    {{- toYaml $issuerRef | nindent 4 }}
   secretName: vault-config-operator-webhook-service-cert
 ---
 apiVersion: cert-manager.io/v1
@@ -28,7 +31,6 @@ spec:
   - vault-config-operator-controller-manager-metrics-service.{{ .Release.Namespace }}.svc
   - vault-config-operator-controller-manager-metrics-service.{{ .Release.Namespace }}.svc.cluster.local
   issuerRef:
-    kind: Issuer
-    name: selfsigned-issuer
+    {{- toYaml $issuerRef | nindent 4 }}
   secretName: vault-config-operator-metrics-service-cert
 {{- end }}
