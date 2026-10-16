@@ -132,8 +132,6 @@ spec:
                       path:
                         description: Path is the path to the secret
                         type: string
-                    required:
-                    - path
                     type: object
                 type: object
               OIDCDiscoveryCAPEM:
@@ -203,10 +201,6 @@ spec:
                       or org/tenant-a. Only available in Vault Enterprise.
                     pattern: ^(([^\s/]*[^\s/.][^\s/]*|\.{3,})(/([^\s/]*[^\s/.][^\s/]*|\.{3,}))*)?$
                     type: string
-                required:
-                - path
-                - role
-                - serviceAccount
                 type: object
               boundIssuer:
                 description: The value against which to match the iss claim in a JWT
@@ -267,8 +261,6 @@ spec:
                   timeOut:
                     description: Timeout Timeout variable. The default value is 60s.
                     type: string
-                required:
-                - address
                 type: object
               defaultRole:
                 description: The default role to use if none is provided during login
@@ -293,8 +285,6 @@ spec:
                   Configuration options for provider-specific handling. Providers with specific handling include: Azure, Google.
                   The options are described in each provider's section in OIDC Provider Setup
                 x-kubernetes-preserve-unknown-fields: true
-            required:
-            - path
             type: object
           status:
             description: JWTOIDCAuthEngineConfigStatus defines the observed state

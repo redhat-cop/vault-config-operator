@@ -72,31 +72,31 @@ type RMQSERole struct {
 
 type Vhost struct {
 	// Name of an existing vhost.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	VhostName string `json:"vhostName,omitempty"`
 	// Permissions to grant to the user in the specific vhost.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Permissions VhostPermissions `json:"permissions,omitempty"`
 }
 
 type VhostTopic struct {
 	// Name of an existing vhost.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	VhostName string `json:"vhostName,omitempty"`
 
 	// List of topics to provide
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	// +listType=atomic
 	Topics []Topic `json:"topics,omitempty"`
 }
 
 type Topic struct {
 	// Name of an existing topic.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	TopicName string `json:"topicName,omitempty"`
 
 	// Permissions to grant to the user in the specific vhost
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Permissions VhostPermissions `json:"permissions,omitempty"`
 }
 

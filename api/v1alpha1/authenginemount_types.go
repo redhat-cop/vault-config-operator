@@ -36,7 +36,7 @@ type AuthEngineMountSpec struct {
 	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
 
 	// Authentication is the kube auth configuration to be used to execute this request
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	AuthMount `json:",inline"`
@@ -44,7 +44,7 @@ type AuthEngineMountSpec struct {
 	// Path at which this auth engine will be mounted
 	// The final path in Vault will be {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/auth/{spec.path}/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path /sys/auth/{[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/{spec.path}/{metadata.name}.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Path vaultutils.Path `json:"path,omitempty"`
 
 	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
@@ -71,7 +71,7 @@ type AuthMount struct {
 	Description string `json:"description,omitempty"`
 
 	// Type Specifies the name of the authentication method type, such as "github" or "token".
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Type string `json:"type,omitempty"`
 
 	// Config Specifies configuration options for this auth method.

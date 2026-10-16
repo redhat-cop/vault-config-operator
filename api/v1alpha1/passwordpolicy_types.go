@@ -81,11 +81,11 @@ type PasswordPolicySpec struct {
 	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
 
 	// PasswordPolicy  is a Vault password policy (https://www.vaultproject.io/docs/concepts/password-policies) expressed in HCL language.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	PasswordPolicy string `json:"passwordPolicy,omitempty"`
 
 	// Authentication is the kube auth configuration to be used to execute this request
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}

@@ -82,10 +82,6 @@ spec:
                       or org/tenant-a. Only available in Vault Enterprise.
                     pattern: ^(([^\s/]*[^\s/.][^\s/]*|\.{3,})(/([^\s/]*[^\s/.][^\s/]*|\.{3,}))*)?$
                     type: string
-                required:
-                - path
-                - role
-                - serviceAccount
                 type: object
               connection:
                 description: Connection represents the information needed to connect
@@ -143,8 +139,6 @@ spec:
                   timeOut:
                     description: Timeout Timeout variable. The default value is 60s.
                     type: string
-                required:
-                - address
                 type: object
               issuer:
                 description: |-
@@ -152,8 +146,6 @@ spec:
                   If not set, Vault's api_addr will be used. The issuer is a case sensitive URL
                   using the https scheme that contains scheme, host, and an optional port number.
                 type: string
-            required:
-            - authentication
             type: object
           status:
             description: IdentityTokenConfigStatus defines the observed state of IdentityTokenConfig

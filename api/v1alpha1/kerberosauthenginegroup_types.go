@@ -34,15 +34,15 @@ type KerberosAuthEngineGroupSpec struct {
 	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
 
 	// Authentication is the kube auth configuration to be used to execute this request
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which the Kerberos auth engine is mounted.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Path vaultutils.Path `json:"path,omitempty"`
 
 	// Name of the Kerberos LDAP group.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
 
 	// Policies is a comma-separated list of policies associated with the group.

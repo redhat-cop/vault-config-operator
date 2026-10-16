@@ -45,10 +45,10 @@ type VaultSecretSpec struct {
 	// +kubebuilder:validation:Optional
 	SyncOnResourceChange bool `json:"syncOnResourceChange,omitempty"`
 	// VaultSecretDefinitions are the secrets in Vault.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	VaultSecretDefinitions []VaultSecretDefinition `json:"vaultSecretDefinitions,omitempty"`
 	// TemplatizedK8sSecret is the formatted K8s Secret created by templating from the Vault KV secrets.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	TemplatizedK8sSecret TemplatizedK8sSecret `json:"output,omitempty"`
 }
 
@@ -112,7 +112,7 @@ func init() {
 
 type VaultSecretDefinition struct {
 	// Name is an arbitrary, but unique, name for this KV Vault secret and referenced when templating.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
 
 	// Connection represents the information needed to connect to Vault. This operator uses the standard Vault environment variables to connect to Vault. If you need to override those settings and for example connect to a different Vault instance, you can do with this section of the CR.
@@ -120,7 +120,7 @@ type VaultSecretDefinition struct {
 	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
 
 	// Authentication is the kube auth configuraiton to be used to execute this request
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 	// Path is the path of the secret.
 	// +kubebuilder:validation:Required
@@ -140,7 +140,7 @@ type VaultSecretDefinition struct {
 
 type VaultSecretDefinitionStatus struct {
 	// Name is an arbitrary, but unique, name for this KV Vault secret and referenced when templating.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
 	// LeaseID is the id of a lease, this denotes the secret is dynamic
 	// +kubebuilder:validation:Optional
@@ -155,7 +155,7 @@ type VaultSecretDefinitionStatus struct {
 
 type TemplatizedK8sSecret struct {
 	// Name is the K8s Secret name to output to.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
 	// Type is the K8s Secret type to output to.
 	// +kubebuilder:validation:Optional
@@ -163,7 +163,7 @@ type TemplatizedK8sSecret struct {
 	// StringData is the K8s Secret stringData and allows specifying non-binary secret data in string form with go templating support
 	// to transform the Vault KV secrets into a formatted K8s Secret.
 	// The Sprig template library and Helm functions (like toYaml) are supported.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	StringData map[string]string `json:"stringData,omitempty"`
 	// Labels are labels to add to the final K8s Secret.
 	// +kubebuilder:validation:Optional

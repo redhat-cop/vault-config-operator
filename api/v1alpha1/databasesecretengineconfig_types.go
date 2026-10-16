@@ -42,19 +42,19 @@ type DatabaseSecretEngineConfigSpec struct {
 	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
 
 	// Authentication is the kube auth configuration to be used to execute this request
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
 	// The final path in Vault will be {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/{spec.path}/config/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Path vaultutils.Path `json:"path,omitempty"`
 
 	DBSEConfig `json:",inline"`
 
 	// RootCredentials specifies how to retrieve the credentials for this DatabaseEngine connection.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	RootCredentials vaultutils.RootCredentialConfig `json:"rootCredentials,omitempty"`
 
 	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
@@ -257,7 +257,7 @@ func (r *DatabaseSecretEngineConfig) setInternalCredentials(context context.Cont
 type DBSEConfig struct {
 
 	// PluginName Specifies the name of the plugin to use for this connection.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	PluginName string `json:"pluginName,omitempty"`
 
 	// PluginVersion Specifies the semantic version of the plugin to use for this connection.
@@ -293,7 +293,7 @@ type DBSEConfig struct {
 	PasswordPolicy string `json:"passwordPolicy,omitempty"`
 
 	// ConnectionURL Specifies the connection string used to connect to the database. Some plugins use url rather than connection_url. This allows for simple templating of the username and password of the root user. Typically, this is done by including a "{{"username"}}", "{{"name"}}", and/or "{{"password"}}" field within the string. These fields are typically be replaced with the values in the username and password fields.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	ConnectionURL string `json:"connectionURL,omitempty"`
 
 	// Username Specifies the name of the user to use as the "root" user when connecting to the database. This "root" user is used to create/update/delete users managed by these plugins, so you will need to ensure that this user has permissions to manipulate users appropriate to the database. This is typically used in the connection_url field via the templating directive "{{"username"}}" or "{{"name"}}"

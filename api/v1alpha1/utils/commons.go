@@ -49,17 +49,17 @@ type Path string
 // +kubebuilder:object:generate=true
 type KubeAuthConfiguration struct {
 	// ServiceAccount is the service account used for the kube auth authentication
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	// +kubebuilder:default={"name": "default"}
 	ServiceAccount *corev1.LocalObjectReference `json:"serviceAccount,omitempty"`
 
 	// Path is the path of the role used for this kube auth authentication. The operator will try to authenticate at {[namespace/]}auth/{spec.path}
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=kubernetes
 	Path Path `json:"path,omitempty"`
 
 	// Role the role to be used during authentication
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Role string `json:"role,omitempty"`
 
 	//Namespace is the Vault namespace in which the operator authenticates, and in which the resource is managed unless TargetNamespace is set. Only available in Vault Enterprise.
@@ -78,7 +78,7 @@ type VaultConnection struct {
 	TLSConfig *TLSConfig `json:"tLSConfig,omitempty"`
 
 	// Address Address of the Vault server expressed as a URL and port, for example: https://127.0.0.1:8200/
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Address string `json:"address,omitempty"`
 
 	// Timeout Timeout variable. The default value is 60s.
@@ -408,7 +408,7 @@ func ToString(name any) string {
 // +kubebuilder:object:generate=true
 type VaultSecretReference struct {
 	// Path is the path to the secret
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Path string `json:"path,omitempty"`
 }
 

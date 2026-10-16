@@ -38,19 +38,19 @@ type MongoDBAtlasSecretEngineConfigSpec struct {
 	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
 
 	// Authentication is the kube auth configuration to be used to execute this request
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
 	// The final path in Vault will be {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/{spec.path}/config.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Path vaultutils.Path `json:"path,omitempty"`
 
 	MongoDBAtlasSEConfig `json:",inline"`
 
 	// RootCredentials specifies how to retrieve the MongoDB Atlas Programmatic API Key pair.
 	// UsernameKey maps to public_key, PasswordKey maps to private_key.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	RootCredentials vaultutils.RootCredentialConfig `json:"rootCredentials,omitempty"`
 }
 

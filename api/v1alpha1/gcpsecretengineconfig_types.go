@@ -37,16 +37,16 @@ type GCPSecretEngineConfigSpec struct {
 	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
 
 	// Authentication is the kube auth configuration to be used to execute this request
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
 	// The final path in Vault will be {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/{spec.path}/config.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Path vaultutils.Path `json:"path,omitempty"`
 
 	// GCPCredentials specifies how to retrieve the GCP credentials JSON.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	GCPCredentials GCPCredentialConfig `json:"gcpCredentials,omitempty"`
 
 	GCPSEConfig `json:",inline"`

@@ -37,19 +37,19 @@ type QuaySecretEngineConfigSpec struct {
 	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
 
 	// Authentication is the kube auth configuration to be used to execute this request
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
 	// The final path in Vault will be {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/{spec.path}/config.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Path vaultutils.Path `json:"path,omitempty"`
 
 	QuayConfig `json:",inline"`
 
 	// RootCredentials specifies how to retrieve the credentials for this Quay connection.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	RootCredentials vaultutils.RootCredentialConfig `json:"rootCredentials,omitempty"`
 }
 
@@ -152,7 +152,7 @@ func (q *QuaySecretEngineConfig) setInternalCredentials(context context.Context)
 type QuayConfig struct {
 
 	// url Specifies the location of the Quay instance
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	URL string `json:"url,omitempty"`
 
 	// CACertertificate PEM encoded CA cert for use by the TLS client used to communicate with Quay.

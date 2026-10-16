@@ -38,13 +38,13 @@ type DatabaseSecretEngineStaticRoleSpec struct {
 	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
 
 	// Authentication is the kube auth configuration to be used to execute this request
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to create the role.
 	// The final path in Vault will be {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/{spec.path}/roles/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Path vaultutils.Path `json:"path,omitempty"`
 
 	DBSEStaticRole `json:",inline"`
@@ -57,15 +57,15 @@ type DatabaseSecretEngineStaticRoleSpec struct {
 
 type DBSEStaticRole struct {
 	// DBName The name of the database connection to use for this role.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	DBName string `json:"dBName,omitempty"`
 
 	// Username Specifies the database username that this Vault role corresponds to.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Username string `json:"username,omitempty"`
 
 	// RotationPeriod Specifies the amount of time Vault should wait before rotating the password. The minimum is 5 seconds.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=5
 	RotationPeriod int `json:"rotationPeriod,omitempty"`
 
@@ -76,7 +76,7 @@ type DBSEStaticRole struct {
 	RotationStatements []string `json:"rotationStatements,omitempty"`
 
 	// CredentialType Specifies the type of credential that will be generated for the role. Options include: password, rsa_private_key. See the plugin's API page for credential types supported by individual databases.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum={"password","rsa_private_key"}
 	CredentialType string `json:"credentialType,omitempty"`
 

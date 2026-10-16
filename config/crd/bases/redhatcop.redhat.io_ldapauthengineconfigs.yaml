@@ -110,10 +110,6 @@ spec:
                       or org/tenant-a. Only available in Vault Enterprise.
                     pattern: ^(([^\s/]*[^\s/.][^\s/]*|\.{3,})(/([^\s/]*[^\s/.][^\s/]*|\.{3,}))*)?$
                     type: string
-                required:
-                - path
-                - role
-                - serviceAccount
                 type: object
               bindCredentials:
                 description: |-
@@ -177,8 +173,6 @@ spec:
                       path:
                         description: Path is the path to the secret
                         type: string
-                    required:
-                    - path
                     type: object
                 type: object
               bindDN:
@@ -260,8 +254,6 @@ spec:
                   timeOut:
                     description: Timeout Timeout variable. The default value is 60s.
                     type: string
-                required:
-                - address
                 type: object
               denyNullBind:
                 default: true
@@ -424,8 +416,6 @@ spec:
                   to use the username passed by the user as the alias name.
                 type: boolean
             required:
-            - bindCredentials
-            - path
             - url
             type: object
           status:
