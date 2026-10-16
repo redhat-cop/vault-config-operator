@@ -249,3 +249,116 @@ func TestJWTOIDCAuthEngineRoleConditions(t *testing.T) {
 		t.Errorf("expected condition status True, got %v", got[0].Status)
 	}
 }
+
+func TestValidateAllowedRedirectURIs(t *testing.T) {
+	tests := []struct {
+		name      string
+		role      *JWTOIDCAuthEngineRole
+		expectErr bool
+	}{
+		{
+			name: "oidc role with redirect URIs - valid",
+			role: &JWTOIDCAuthEngineRole{
+				Spec: JWTOIDCAuthEngineRoleSpec{
+					JWTOIDCRole: JWTOIDCRole{
+						RoleType:            "oidc",
+						AllowedRedirectURIs: []string{"https://vault.example.com/callback"},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "oidc role with empty redirect URIs - invalid",
+			role: &JWTOIDCAuthEngineRole{
+				Spec: JWTOIDCAuthEngineRoleSpec{
+					JWTOIDCRole: JWTOIDCRole{
+						RoleType:            "oidc",
+						AllowedRedirectURIs: []string{},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "oidc role with nil redirect URIs - invalid",
+			role: &JWTOIDCAuthEngineRole{
+				Spec: JWTOIDCAuthEngineRoleSpec{
+					JWTOIDCRole: JWTOIDCRole{
+						RoleType: "oidc",
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "default role type (empty, implies oidc) with empty redirect URIs - invalid",
+			role: &JWTOIDCAuthEngineRole{
+				Spec: JWTOIDCAuthEngineRoleSpec{
+					JWTOIDCRole: JWTOIDCRole{
+						AllowedRedirectURIs: []string{},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "default role type with redirect URIs - valid",
+			role: &JWTOIDCAuthEngineRole{
+				Spec: JWTOIDCAuthEngineRoleSpec{
+					JWTOIDCRole: JWTOIDCRole{
+						AllowedRedirectURIs: []string{"https://vault.example.com/callback"},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "jwt role with empty redirect URIs - valid",
+			role: &JWTOIDCAuthEngineRole{
+				Spec: JWTOIDCAuthEngineRoleSpec{
+					JWTOIDCRole: JWTOIDCRole{
+						RoleType:            "jwt",
+						AllowedRedirectURIs: []string{},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "jwt role with nil redirect URIs - valid",
+			role: &JWTOIDCAuthEngineRole{
+				Spec: JWTOIDCAuthEngineRoleSpec{
+					JWTOIDCRole: JWTOIDCRole{
+						RoleType: "jwt",
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "jwt role with redirect URIs - valid",
+			role: &JWTOIDCAuthEngineRole{
+				Spec: JWTOIDCAuthEngineRoleSpec{
+					JWTOIDCRole: JWTOIDCRole{
+						RoleType:            "jwt",
+						AllowedRedirectURIs: []string{"https://vault.example.com/callback"},
+					},
+				},
+			},
+			expectErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.role.validateAllowedRedirectURIs()
+			if tt.expectErr && err == nil {
+				t.Error("expected error but got nil")
+			}
+			if !tt.expectErr && err != nil {
+				t.Errorf("expected no error but got: %v", err)
+			}
+		})
+	}
+}
