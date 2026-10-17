@@ -7,6 +7,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+func staticRoleIntPtr(v int) *int { return &v }
+
 func TestDatabaseSecretEngineStaticRoleGetPath(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -46,11 +48,11 @@ func TestDatabaseSecretEngineStaticRoleGetPath(t *testing.T) {
 	}
 }
 
-func TestDBSEStaticRoleToMap(t *testing.T) {
+func TestDBSEStaticRoleToMapWithRotationPeriod(t *testing.T) {
 	role := DBSEStaticRole{
 		DBName:             "my-db",
 		Username:           "static-user",
-		RotationPeriod:     86400,
+		RotationPeriod:     staticRoleIntPtr(86400),
 		RotationStatements: []string{"ALTER USER"},
 		CredentialType:     "password",
 	}
@@ -84,13 +86,62 @@ func TestDBSEStaticRoleToMap(t *testing.T) {
 	if _, ok := result["credential_config"]; ok {
 		t.Error("expected no 'credential_config' key when both config pointers are nil")
 	}
+	if _, ok := result["rotation_schedule"]; ok {
+		t.Error("expected no 'rotation_schedule' key when not set")
+	}
+	if _, ok := result["rotation_window"]; ok {
+		t.Error("expected no 'rotation_window' key when not set")
+	}
+}
+
+func TestDBSEStaticRoleToMapWithRotationSchedule(t *testing.T) {
+	role := DBSEStaticRole{
+		DBName:           "my-db",
+		Username:         "static-user",
+		RotationSchedule: "0 0 * * SAT",
+		RotationWindow:   staticRoleIntPtr(3600),
+		CredentialType:   "password",
+	}
+
+	result := role.toMap()
+
+	if result["rotation_schedule"] != "0 0 * * SAT" {
+		t.Errorf("rotation_schedule = %v, expected '0 0 * * SAT'", result["rotation_schedule"])
+	}
+	if result["rotation_window"] != 3600 {
+		t.Errorf("rotation_window = %v, expected 3600", result["rotation_window"])
+	}
+	if _, ok := result["rotation_period"]; ok {
+		t.Error("expected no 'rotation_period' key when rotation_schedule is set")
+	}
+}
+
+func TestDBSEStaticRoleToMapWithRotationScheduleNoWindow(t *testing.T) {
+	role := DBSEStaticRole{
+		DBName:           "my-db",
+		Username:         "static-user",
+		RotationSchedule: "0 0 * * SAT",
+		CredentialType:   "password",
+	}
+
+	result := role.toMap()
+
+	if result["rotation_schedule"] != "0 0 * * SAT" {
+		t.Errorf("rotation_schedule = %v, expected '0 0 * * SAT'", result["rotation_schedule"])
+	}
+	if _, ok := result["rotation_window"]; ok {
+		t.Error("expected no 'rotation_window' key when not set")
+	}
+	if _, ok := result["rotation_period"]; ok {
+		t.Error("expected no 'rotation_period' key when rotation_schedule is set")
+	}
 }
 
 func TestDBSEStaticRoleToMapPasswordCredentialConfig(t *testing.T) {
 	role := DBSEStaticRole{
 		DBName:         "my-db",
 		Username:       "static-user",
-		RotationPeriod: 86400,
+		RotationPeriod: staticRoleIntPtr(86400),
 		CredentialType: "password",
 		PasswordCredentialConfig: &PasswordCredentialConfig{
 			PasswordPolicy: "my-password-policy",
@@ -114,7 +165,7 @@ func TestDBSEStaticRoleToMapRSACredentialConfig(t *testing.T) {
 	role := DBSEStaticRole{
 		DBName:         "my-db",
 		Username:       "static-user",
-		RotationPeriod: 86400,
+		RotationPeriod: staticRoleIntPtr(86400),
 		CredentialType: "rsa_private_key",
 		RSAPrivateKeyCredentialConfig: &RSAPrivateKeyCredentialConfig{
 			KeyBits: 2048,
@@ -139,7 +190,7 @@ func TestDBSEStaticRoleToMapNoCredentialConfig(t *testing.T) {
 	role := DBSEStaticRole{
 		DBName:         "my-db",
 		Username:       "static-user",
-		RotationPeriod: 86400,
+		RotationPeriod: staticRoleIntPtr(86400),
 		CredentialType: "password",
 	}
 
@@ -157,7 +208,7 @@ func TestDatabaseSecretEngineStaticRoleIsEquivalentMatching(t *testing.T) {
 			DBSEStaticRole: DBSEStaticRole{
 				DBName:             "my-db",
 				Username:           "static-user",
-				RotationPeriod:     86400,
+				RotationPeriod:     staticRoleIntPtr(86400),
 				RotationStatements: []string{"ALTER USER"},
 				CredentialType:     "password",
 				PasswordCredentialConfig: &PasswordCredentialConfig{
@@ -181,7 +232,7 @@ func TestDatabaseSecretEngineStaticRoleIsEquivalentNonMatching(t *testing.T) {
 			DBSEStaticRole: DBSEStaticRole{
 				DBName:         "my-db",
 				Username:       "static-user",
-				RotationPeriod: 86400,
+				RotationPeriod: staticRoleIntPtr(86400),
 				CredentialType: "password",
 			},
 		},
@@ -195,8 +246,6 @@ func TestDatabaseSecretEngineStaticRoleIsEquivalentNonMatching(t *testing.T) {
 	}
 }
 
-// Extra keys in the Vault response should be ignored; filterPayloadToDesiredKeys
-// restricts comparison to desired-state keys only.
 func TestDatabaseSecretEngineStaticRoleIsEquivalentExtraFields(t *testing.T) {
 	role := &DatabaseSecretEngineStaticRole{
 		Spec: DatabaseSecretEngineStaticRoleSpec{
@@ -204,7 +253,7 @@ func TestDatabaseSecretEngineStaticRoleIsEquivalentExtraFields(t *testing.T) {
 			DBSEStaticRole: DBSEStaticRole{
 				DBName:         "my-db",
 				Username:       "static-user",
-				RotationPeriod: 86400,
+				RotationPeriod: staticRoleIntPtr(86400),
 				CredentialType: "password",
 			},
 		},
@@ -218,8 +267,6 @@ func TestDatabaseSecretEngineStaticRoleIsEquivalentExtraFields(t *testing.T) {
 	}
 }
 
-// Documents that credential_config as map[string]string vs map[string]any
-// causes a DeepEqual mismatch due to Go type differences.
 func TestDatabaseSecretEngineStaticRoleIsEquivalentCredentialConfigTypeMismatch(t *testing.T) {
 	role := &DatabaseSecretEngineStaticRole{
 		Spec: DatabaseSecretEngineStaticRoleSpec{
@@ -227,7 +274,7 @@ func TestDatabaseSecretEngineStaticRoleIsEquivalentCredentialConfigTypeMismatch(
 			DBSEStaticRole: DBSEStaticRole{
 				DBName:         "my-db",
 				Username:       "static-user",
-				RotationPeriod: 86400,
+				RotationPeriod: staticRoleIntPtr(86400),
 				CredentialType: "password",
 				PasswordCredentialConfig: &PasswordCredentialConfig{
 					PasswordPolicy: "my-policy",
@@ -236,8 +283,6 @@ func TestDatabaseSecretEngineStaticRoleIsEquivalentCredentialConfigTypeMismatch(
 		},
 	}
 
-	// Build a payload that matches in values but uses map[string]any
-	// instead of map[string]string for credential_config
 	payload := map[string]any{
 		"db_name":             "my-db",
 		"username":            "static-user",
@@ -309,8 +354,164 @@ func TestRSAPrivateKeyCredentialConfigToMap(t *testing.T) {
 		t.Errorf("toMap() = %v, expected %v", result, expected)
 	}
 
-	// Verify key_bits is string (from strconv.Itoa), not int
 	if result["key_bits"] != "4096" {
 		t.Errorf("key_bits should be string '4096', got %v", result["key_bits"])
+	}
+}
+
+// Validation tests
+
+func TestValidateRotationConfig_PeriodOnly(t *testing.T) {
+	role := &DatabaseSecretEngineStaticRole{
+		Spec: DatabaseSecretEngineStaticRoleSpec{
+			DBSEStaticRole: DBSEStaticRole{
+				DBName:         "my-db",
+				Username:       "user",
+				RotationPeriod: staticRoleIntPtr(86400),
+				CredentialType: "password",
+				PasswordCredentialConfig: &PasswordCredentialConfig{
+					PasswordPolicy: "my-policy",
+				},
+			},
+		},
+	}
+	valid, err := role.IsValid()
+	if !valid || err != nil {
+		t.Errorf("expected valid, got err: %v", err)
+	}
+}
+
+func TestValidateRotationConfig_ScheduleOnly(t *testing.T) {
+	role := &DatabaseSecretEngineStaticRole{
+		Spec: DatabaseSecretEngineStaticRoleSpec{
+			DBSEStaticRole: DBSEStaticRole{
+				DBName:           "my-db",
+				Username:         "user",
+				RotationSchedule: "0 0 * * SAT",
+				CredentialType:   "password",
+				PasswordCredentialConfig: &PasswordCredentialConfig{
+					PasswordPolicy: "my-policy",
+				},
+			},
+		},
+	}
+	valid, err := role.IsValid()
+	if !valid || err != nil {
+		t.Errorf("expected valid, got err: %v", err)
+	}
+}
+
+func TestValidateRotationConfig_ScheduleWithWindow(t *testing.T) {
+	role := &DatabaseSecretEngineStaticRole{
+		Spec: DatabaseSecretEngineStaticRoleSpec{
+			DBSEStaticRole: DBSEStaticRole{
+				DBName:           "my-db",
+				Username:         "user",
+				RotationSchedule: "0 0 * * SAT",
+				RotationWindow:   staticRoleIntPtr(3600),
+				CredentialType:   "password",
+				PasswordCredentialConfig: &PasswordCredentialConfig{
+					PasswordPolicy: "my-policy",
+				},
+			},
+		},
+	}
+	valid, err := role.IsValid()
+	if !valid || err != nil {
+		t.Errorf("expected valid, got err: %v", err)
+	}
+}
+
+func TestValidateRotationConfig_BothPeriodAndSchedule(t *testing.T) {
+	role := &DatabaseSecretEngineStaticRole{
+		Spec: DatabaseSecretEngineStaticRoleSpec{
+			DBSEStaticRole: DBSEStaticRole{
+				DBName:           "my-db",
+				Username:         "user",
+				RotationPeriod:   staticRoleIntPtr(86400),
+				RotationSchedule: "0 0 * * SAT",
+				CredentialType:   "password",
+				PasswordCredentialConfig: &PasswordCredentialConfig{
+					PasswordPolicy: "my-policy",
+				},
+			},
+		},
+	}
+	valid, err := role.IsValid()
+	if valid {
+		t.Error("expected invalid when both rotationPeriod and rotationSchedule are set")
+	}
+	if err == nil {
+		t.Error("expected error when both rotationPeriod and rotationSchedule are set")
+	}
+}
+
+func TestValidateRotationConfig_NeitherPeriodNorSchedule(t *testing.T) {
+	role := &DatabaseSecretEngineStaticRole{
+		Spec: DatabaseSecretEngineStaticRoleSpec{
+			DBSEStaticRole: DBSEStaticRole{
+				DBName:         "my-db",
+				Username:       "user",
+				CredentialType: "password",
+				PasswordCredentialConfig: &PasswordCredentialConfig{
+					PasswordPolicy: "my-policy",
+				},
+			},
+		},
+	}
+	valid, err := role.IsValid()
+	if valid {
+		t.Error("expected invalid when neither rotationPeriod nor rotationSchedule is set")
+	}
+	if err == nil {
+		t.Error("expected error when neither rotationPeriod nor rotationSchedule is set")
+	}
+}
+
+func TestValidateRotationConfig_WindowWithoutSchedule(t *testing.T) {
+	role := &DatabaseSecretEngineStaticRole{
+		Spec: DatabaseSecretEngineStaticRoleSpec{
+			DBSEStaticRole: DBSEStaticRole{
+				DBName:         "my-db",
+				Username:       "user",
+				RotationPeriod: staticRoleIntPtr(86400),
+				RotationWindow: staticRoleIntPtr(3600),
+				CredentialType: "password",
+				PasswordCredentialConfig: &PasswordCredentialConfig{
+					PasswordPolicy: "my-policy",
+				},
+			},
+		},
+	}
+	valid, err := role.IsValid()
+	if valid {
+		t.Error("expected invalid when rotationWindow is set without rotationSchedule")
+	}
+	if err == nil {
+		t.Error("expected error when rotationWindow is set without rotationSchedule")
+	}
+}
+
+func TestDatabaseSecretEngineStaticRoleIsEquivalentWithSchedule(t *testing.T) {
+	role := &DatabaseSecretEngineStaticRole{
+		Spec: DatabaseSecretEngineStaticRoleSpec{
+			Path: "database",
+			DBSEStaticRole: DBSEStaticRole{
+				DBName:           "my-db",
+				Username:         "static-user",
+				RotationSchedule: "0 0 * * SAT",
+				RotationWindow:   staticRoleIntPtr(3600),
+				CredentialType:   "password",
+				PasswordCredentialConfig: &PasswordCredentialConfig{
+					PasswordPolicy: "my-policy",
+				},
+			},
+		},
+	}
+
+	payload := role.Spec.DBSEStaticRole.toMap()
+
+	if !role.IsEquivalentToDesiredState(payload) {
+		t.Error("expected matching payload with rotation_schedule to be equivalent")
 	}
 }

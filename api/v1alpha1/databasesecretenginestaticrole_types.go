@@ -64,10 +64,23 @@ type DBSEStaticRole struct {
 	// +kubebuilder:validation:Required
 	Username string `json:"username,omitempty"`
 
-	// RotationPeriod Specifies the amount of time Vault should wait before rotating the password. The minimum is 5 seconds.
-	// +kubebuilder:validation:Required
+	// RotationPeriod Specifies the amount of time Vault should wait before rotating the password.
+	// The minimum is 5 seconds. Mutually exclusive with RotationSchedule.
+	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=5
-	RotationPeriod int `json:"rotationPeriod,omitempty"`
+	RotationPeriod *int `json:"rotationPeriod,omitempty"`
+
+	// RotationSchedule Specifies a cron-style rotation schedule for the static role.
+	// Mutually exclusive with RotationPeriod. Uses standard 5-field cron format (minute, hour,
+	// day of month, month, day of week). For example, "0 0 * * SAT" rotates every Saturday at midnight UTC.
+	// +kubebuilder:validation:Optional
+	RotationSchedule string `json:"rotationSchedule,omitempty"`
+
+	// RotationWindow Specifies the maximum duration (in seconds) in which a scheduled rotation
+	// is allowed to occur. Only valid when RotationSchedule is set. The minimum is 3600 (1 hour).
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=3600
+	RotationWindow *int `json:"rotationWindow,omitempty"`
 
 	// RotationStatements Specifies the database statements to be executed to rotate the password for the configured database user. Not every plugin type will support this functionality. See the plugin's API page for more information on support and formatting for this parameter.
 	// +kubebuilder:validation:Optional
@@ -124,7 +137,15 @@ func (i *DBSEStaticRole) toMap() map[string]any {
 	payload := map[string]any{}
 	payload["db_name"] = i.DBName
 	payload["username"] = i.Username
-	payload["rotation_period"] = i.RotationPeriod
+	if i.RotationPeriod != nil {
+		payload["rotation_period"] = *i.RotationPeriod
+	}
+	if i.RotationSchedule != "" {
+		payload["rotation_schedule"] = i.RotationSchedule
+	}
+	if i.RotationWindow != nil {
+		payload["rotation_window"] = *i.RotationWindow
+	}
 	payload["rotation_statements"] = i.RotationStatements
 	payload["credential_type"] = i.CredentialType
 	if i.PasswordCredentialConfig != nil {
@@ -180,7 +201,26 @@ func (r *DatabaseSecretEngineStaticRole) IsValid() (bool, error) {
 }
 
 func (r *DatabaseSecretEngineStaticRole) isValid() error {
+	if err := r.validateRotationConfig(); err != nil {
+		return err
+	}
 	return r.validateEitherPasswordOrKey()
+}
+
+func (r *DatabaseSecretEngineStaticRole) validateRotationConfig() error {
+	hasPeriod := r.Spec.RotationPeriod != nil
+	hasSchedule := r.Spec.RotationSchedule != ""
+
+	if hasPeriod && hasSchedule {
+		return errors.New("spec.rotationPeriod and spec.rotationSchedule are mutually exclusive; set one but not both")
+	}
+	if !hasPeriod && !hasSchedule {
+		return errors.New("one of spec.rotationPeriod or spec.rotationSchedule must be set")
+	}
+	if r.Spec.RotationWindow != nil && !hasSchedule {
+		return errors.New("spec.rotationWindow is only valid when spec.rotationSchedule is set")
+	}
+	return nil
 }
 
 func (r *DatabaseSecretEngineStaticRole) validateEitherPasswordOrKey() error {
