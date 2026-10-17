@@ -130,10 +130,6 @@ spec:
                       or org/tenant-a. Only available in Vault Enterprise.
                     pattern: ^(([^\s/]*[^\s/.][^\s/]*|\.{3,})(/([^\s/]*[^\s/.][^\s/]*|\.{3,}))*)?$
                     type: string
-                required:
-                - path
-                - role
-                - serviceAccount
                 type: object
               certificate:
                 description: The PEM-format CA certificate.
@@ -194,8 +190,6 @@ spec:
                   timeOut:
                     description: Timeout Timeout variable. The default value is 60s.
                     type: string
-                required:
-                - address
                 type: object
               displayName:
                 description: |-
@@ -317,10 +311,6 @@ spec:
                 - default-service
                 - default-batch
                 type: string
-            required:
-            - authentication
-            - certificate
-            - path
             type: object
           status:
             description: CertAuthEngineRoleStatus defines the observed state of CertAuthEngineRole

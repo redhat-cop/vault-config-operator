@@ -40,20 +40,20 @@ type LDAPSecretEngineConfigSpec struct {
 	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
 
 	// Authentication is the kube auth configuration to be used to execute this request
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to make the configuration.
 	// The final path in Vault will be {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/{spec.path}/config.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Path vaultutils.Path `json:"path,omitempty"`
 
 	LDAPSEConfig `json:",inline"`
 
 	// BindCredentials is used to connect to the LDAP service on the specified LDAP Server.
 	// BindCredentials consists in bindDN and bindPass, which can be created as Kubernetes Secret, VaultSecret or RandomSecret.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	BindCredentials vaultutils.RootCredentialConfig `json:"bindCredentials,omitempty"`
 
 	// The name of the object created in Vault. If this is specified it takes precedence over {metadata.name}

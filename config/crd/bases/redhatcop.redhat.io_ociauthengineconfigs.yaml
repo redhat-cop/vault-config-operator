@@ -82,10 +82,6 @@ spec:
                       or org/tenant-a. Only available in Vault Enterprise.
                     pattern: ^(([^\s/]*[^\s/.][^\s/]*|\.{3,})(/([^\s/]*[^\s/.][^\s/]*|\.{3,}))*)?$
                     type: string
-                required:
-                - path
-                - role
-                - serviceAccount
                 type: object
               connection:
                 description: Connection represents the information needed to connect
@@ -143,8 +139,6 @@ spec:
                   timeOut:
                     description: Timeout Timeout variable. The default value is 60s.
                     type: string
-                required:
-                - address
                 type: object
               homeTenancyID:
                 description: HomeTenancyID is the Tenancy OCID of the OCI account.
@@ -157,9 +151,7 @@ spec:
                 pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
                 type: string
             required:
-            - authentication
             - homeTenancyID
-            - path
             type: object
           status:
             description: OCIAuthEngineConfigStatus defines the observed state of OCIAuthEngineConfig

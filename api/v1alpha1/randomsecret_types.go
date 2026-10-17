@@ -43,7 +43,7 @@ type RandomSecretSpec struct {
 	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
 
 	// Authentication is the kube auth configuration to be used to execute this request
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which to create the secret.
@@ -51,11 +51,11 @@ type RandomSecretSpec struct {
 	// If IsKVSecretsEngineV2 is false, the authentication role must have the following capabilities = [ "create", "update", "delete"] on the {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/{spec.path}/{metadata.name} path.
 	// If IsKVSecretsEngineV2 is true, the authentication role must have the following capabilities = [ "create", "update"] on the {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/{spec.path}/data/{metadata.name} path and capabilities = [ "delete"] on the {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/{spec.path}/metadata/{metadata.name} path.
 	// Additionally, if IsKVSecretsEngineV2 is true, it is acceptable for this value to have a suffix of "/data" or not. This suffix is no longer needed but still supported for backwards compatibility.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Path vaultutils.Path `json:"path,omitempty"`
 
 	// SecretFormat specifies a map of key and password policies used to generate random values
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	SecretFormat VaultPasswordPolicy `json:"secretFormat,omitempty"`
 
 	// RefreshPeriod if specified, the operator will refresh the secret with the given frequency. This will also set the ttl of the secret which provides a hint for how often consumers should check back for a new value when reading the secret's lease_duration.
@@ -63,7 +63,7 @@ type RandomSecretSpec struct {
 	RefreshPeriod *metav1.Duration `json:"refreshPeriod,omitempty"`
 
 	// SecretKey is the key to be used for this secret when stored in Vault kv
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	SecretKey string `json:"secretKey,omitempty"`
 
 	calculatedSecret string `json:"-"`

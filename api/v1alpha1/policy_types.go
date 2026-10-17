@@ -125,7 +125,7 @@ type PolicySpec struct {
 	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
 
 	// Policy is a Vault policy expressed in HCL language.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Policy string `json:"policy,omitempty"`
 
 	// Type represents the policy type, currently the only supported policy type is "acl", but in the future rgp and egp  might be supported. If not specified a policy will be created at /sys/policies/<name>, if specified (the recommended approach) a policy will be created at /sys/policies/acl/<name>
@@ -134,7 +134,7 @@ type PolicySpec struct {
 	Type string `json:"type,omitempty"`
 
 	// Authentication is the kube auth configuration to be used to execute this request
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}

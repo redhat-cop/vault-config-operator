@@ -9,14 +9,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func newTestReconciler() *VaultSecretReconciler {
+func newVaultSecretTestReconciler() *VaultSecretReconciler {
 	return &VaultSecretReconciler{
 		ReconcilerBase: vaultresourcecontroller.ReconcilerBase{},
 	}
 }
 
 func TestCalculateDuration_ExplicitRefreshPeriod(t *testing.T) {
-	r := newTestReconciler()
+	r := newVaultSecretTestReconciler()
 	instance := &redhatcopv1alpha1.VaultSecret{
 		Spec: redhatcopv1alpha1.VaultSecretSpec{
 			RefreshPeriod:    &metav1.Duration{Duration: 5 * time.Minute},
@@ -33,7 +33,7 @@ func TestCalculateDuration_ExplicitRefreshPeriod(t *testing.T) {
 }
 
 func TestCalculateDuration_NoRefreshPeriodNoStatus(t *testing.T) {
-	r := newTestReconciler()
+	r := newVaultSecretTestReconciler()
 	instance := &redhatcopv1alpha1.VaultSecret{
 		Spec: redhatcopv1alpha1.VaultSecretSpec{
 			RefreshThreshold: 90,
@@ -46,7 +46,7 @@ func TestCalculateDuration_NoRefreshPeriodNoStatus(t *testing.T) {
 }
 
 func TestCalculateDuration_ZeroLeaseDuration_NoRefreshPeriod(t *testing.T) {
-	r := newTestReconciler()
+	r := newVaultSecretTestReconciler()
 	instance := &redhatcopv1alpha1.VaultSecret{
 		Spec: redhatcopv1alpha1.VaultSecretSpec{
 			RefreshThreshold: 90,
@@ -64,7 +64,7 @@ func TestCalculateDuration_ZeroLeaseDuration_NoRefreshPeriod(t *testing.T) {
 }
 
 func TestCalculateDuration_MixedLeaseDurations_ZeroIgnored(t *testing.T) {
-	r := newTestReconciler()
+	r := newVaultSecretTestReconciler()
 	instance := &redhatcopv1alpha1.VaultSecret{
 		Spec: redhatcopv1alpha1.VaultSecretSpec{
 			RefreshThreshold: 90,
@@ -87,7 +87,7 @@ func TestCalculateDuration_MixedLeaseDurations_ZeroIgnored(t *testing.T) {
 }
 
 func TestCalculateDuration_PositiveLeaseDuration(t *testing.T) {
-	r := newTestReconciler()
+	r := newVaultSecretTestReconciler()
 	instance := &redhatcopv1alpha1.VaultSecret{
 		Spec: redhatcopv1alpha1.VaultSecretSpec{
 			RefreshThreshold: 90,
@@ -110,7 +110,7 @@ func TestCalculateDuration_PositiveLeaseDuration(t *testing.T) {
 }
 
 func TestCalculateDuration_AllZeroLeaseDurations(t *testing.T) {
-	r := newTestReconciler()
+	r := newVaultSecretTestReconciler()
 	instance := &redhatcopv1alpha1.VaultSecret{
 		Spec: redhatcopv1alpha1.VaultSecretSpec{
 			RefreshThreshold: 90,

@@ -81,10 +81,6 @@ spec:
                       or org/tenant-a. Only available in Vault Enterprise.
                     pattern: ^(([^\s/]*[^\s/.][^\s/]*|\.{3,})(/([^\s/]*[^\s/.][^\s/]*|\.{3,}))*)?$
                     type: string
-                required:
-                - path
-                - role
-                - serviceAccount
                 type: object
               clientID:
                 description: ClientID is an optional client ID. A random ID will be
@@ -146,8 +142,6 @@ spec:
                   timeOut:
                     description: Timeout Timeout variable. The default value is 60s.
                     type: string
-                required:
-                - address
                 type: object
               key:
                 description: Key is a configured named key, the key must already exist.
@@ -169,7 +163,6 @@ spec:
                   Uses duration format strings.
                 type: string
             required:
-            - authentication
             - key
             type: object
           status:

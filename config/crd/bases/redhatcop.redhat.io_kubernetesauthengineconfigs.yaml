@@ -91,10 +91,6 @@ spec:
                       or org/tenant-a. Only available in Vault Enterprise.
                     pattern: ^(([^\s/]*[^\s/.][^\s/]*|\.{3,})(/([^\s/]*[^\s/.][^\s/]*|\.{3,}))*)?$
                     type: string
-                required:
-                - path
-                - role
-                - serviceAccount
                 type: object
               connection:
                 description: Connection represents the information needed to connect
@@ -152,8 +148,6 @@ spec:
                   timeOut:
                     description: Timeout Timeout variable. The default value is 60s.
                     type: string
-                required:
-                - address
                 type: object
               disableISSValidation:
                 description: DisableISSValidation Disable JWT issuer validation. Allows
@@ -254,9 +248,7 @@ spec:
                   If tis field is set to false, the os ca bundle of where vault is running will be used.
                 type: boolean
             required:
-            - authentication
             - kubernetesHost
-            - path
             type: object
           status:
             description: KubernetesAuthEngineConfigStatus defines the observed state

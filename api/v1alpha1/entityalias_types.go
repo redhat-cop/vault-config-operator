@@ -37,7 +37,7 @@ type EntityAliasSpec struct {
 	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
 
 	// Authentication is the kube auth configuration to be used to execute this request
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	EntityAliasConfig `json:",inline"`
@@ -62,11 +62,11 @@ type EntityAliasSpec struct {
 
 type EntityAliasConfig struct {
 	// AuthEngineMountPath is the path where the auth engine is mounted
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	AuthEngineMountPath string `json:"authEngineMountPath,omitempty"`
 
 	// EntityName is the name of the entity to which this alias belongs
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	EntityName string `json:"entityName,omitempty"`
 
 	// CustomMetadata is a map of arbitrary string to string valued user-provided metadata meant to describe the alias.

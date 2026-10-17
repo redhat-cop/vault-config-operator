@@ -107,7 +107,7 @@ type SecretEngineMountSpec struct {
 	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
 
 	// Authentication is the kube auth configuration to be used to execute this request
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	Mount `json:",inline"`
@@ -127,7 +127,7 @@ type SecretEngineMountSpec struct {
 // +k8s:openapi-gen=true
 type Mount struct {
 	// Type Specifies the type of the backend, such as "aws".
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Type string `json:"type,omitempty"`
 
 	// Description Specifies the human-friendly description of the mount.

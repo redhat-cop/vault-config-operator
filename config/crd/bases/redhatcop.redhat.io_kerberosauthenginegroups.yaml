@@ -83,10 +83,6 @@ spec:
                       or org/tenant-a. Only available in Vault Enterprise.
                     pattern: ^(([^\s/]*[^\s/.][^\s/]*|\.{3,})(/([^\s/]*[^\s/.][^\s/]*|\.{3,}))*)?$
                     type: string
-                required:
-                - path
-                - role
-                - serviceAccount
                 type: object
               connection:
                 description: Connection represents the information needed to connect
@@ -144,8 +140,6 @@ spec:
                   timeOut:
                     description: Timeout Timeout variable. The default value is 60s.
                     type: string
-                required:
-                - address
                 type: object
               name:
                 description: Name of the Kerberos LDAP group.
@@ -158,10 +152,6 @@ spec:
                 description: Policies is a comma-separated list of policies associated
                   with the group.
                 type: string
-            required:
-            - authentication
-            - name
-            - path
             type: object
           status:
             description: KerberosAuthEngineGroupStatus defines the observed state

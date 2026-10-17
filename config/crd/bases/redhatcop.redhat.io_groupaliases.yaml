@@ -83,10 +83,6 @@ spec:
                       or org/tenant-a. Only available in Vault Enterprise.
                     pattern: ^(([^\s/]*[^\s/.][^\s/]*|\.{3,})(/([^\s/]*[^\s/.][^\s/]*|\.{3,}))*)?$
                     type: string
-                required:
-                - path
-                - role
-                - serviceAccount
                 type: object
               connection:
                 description: Connection represents the information needed to connect
@@ -144,8 +140,6 @@ spec:
                   timeOut:
                     description: Timeout Timeout variable. The default value is 60s.
                     type: string
-                required:
-                - address
                 type: object
               groupName:
                 type: string
@@ -158,8 +152,6 @@ spec:
                 minLength: 1
                 pattern: ^[ -~]+$
                 type: string
-            required:
-            - authentication
             type: object
           status:
             description: GroupAliasStatus defines the observed state of GroupAlias

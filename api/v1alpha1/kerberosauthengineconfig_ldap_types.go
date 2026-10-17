@@ -38,18 +38,18 @@ type KerberosAuthEngineLDAPConfigSpec struct {
 	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
 
 	// Authentication is the kube auth configuration to be used to execute this request
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Path at which the Kerberos auth engine is mounted.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Path vaultutils.Path `json:"path,omitempty"`
 
 	KerberosLDAPConfig `json:",inline"`
 
 	// LDAPCredentials is used to connect to the LDAP service.
 	// Consists in bindDN and bindPass, sourced from a K8s Secret, VaultSecret, or RandomSecret.
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	LDAPCredentials vaultutils.RootCredentialConfig `json:"ldapCredentials,omitempty"`
 
 	// TLSConfig represents the LDAP service certificate configuration.

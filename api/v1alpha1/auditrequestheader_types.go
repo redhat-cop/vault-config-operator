@@ -34,12 +34,12 @@ type AuditRequestHeaderSpec struct {
 	Connection *vaultutils.VaultConnection `json:"connection,omitempty"`
 
 	// Authentication is the kube auth configuration to be used to execute this request
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
 	// Name is the name of the request header to configure
 	// The final path in Vault will be sys/config/auditing/request-headers/{metadata.name}
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
 
 	// HMAC specifies if this header's value should be HMAC'd in the audit logs

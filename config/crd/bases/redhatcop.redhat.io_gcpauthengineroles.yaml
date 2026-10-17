@@ -91,10 +91,6 @@ spec:
                       or org/tenant-a. Only available in Vault Enterprise.
                     pattern: ^(([^\s/]*[^\s/.][^\s/]*|\.{3,})(/([^\s/]*[^\s/.][^\s/]*|\.{3,}))*)?$
                     type: string
-                required:
-                - path
-                - role
-                - serviceAccount
                 type: object
               boundInstanceGroups:
                 description: |-
@@ -204,8 +200,6 @@ spec:
                   timeOut:
                     description: Timeout Timeout variable. The default value is 60s.
                     type: string
-                required:
-                - address
                 type: object
               maxJWTExp:
                 description: |-
@@ -303,9 +297,7 @@ spec:
                 - gce
                 type: string
             required:
-            - authentication
             - name
-            - path
             - type
             type: object
           status:

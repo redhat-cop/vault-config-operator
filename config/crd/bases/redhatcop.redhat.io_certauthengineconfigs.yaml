@@ -82,10 +82,6 @@ spec:
                       or org/tenant-a. Only available in Vault Enterprise.
                     pattern: ^(([^\s/]*[^\s/.][^\s/]*|\.{3,})(/([^\s/]*[^\s/.][^\s/]*|\.{3,}))*)?$
                     type: string
-                required:
-                - path
-                - role
-                - serviceAccount
                 type: object
               connection:
                 description: Connection represents the information needed to connect
@@ -143,8 +139,6 @@ spec:
                   timeOut:
                     description: Timeout Timeout variable. The default value is 60s.
                     type: string
-                required:
-                - address
                 type: object
               disableBinding:
                 description: If set, during renewal, skips the matching of presented
@@ -178,9 +172,6 @@ spec:
                 description: The size of the role cache. Use -1 to disable role caching.
                 minimum: -1
                 type: integer
-            required:
-            - authentication
-            - path
             type: object
           status:
             description: CertAuthEngineConfigStatus defines the observed state of

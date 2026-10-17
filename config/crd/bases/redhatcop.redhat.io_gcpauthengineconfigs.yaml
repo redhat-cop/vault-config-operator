@@ -119,8 +119,6 @@ spec:
                       path:
                         description: Path is the path to the secret
                         type: string
-                    required:
-                    - path
                     type: object
                 type: object
               IAMalias:
@@ -180,10 +178,6 @@ spec:
                       or org/tenant-a. Only available in Vault Enterprise.
                     pattern: ^(([^\s/]*[^\s/.][^\s/]*|\.{3,})(/([^\s/]*[^\s/.][^\s/]*|\.{3,}))*)?$
                     type: string
-                required:
-                - path
-                - role
-                - serviceAccount
                 type: object
               connection:
                 description: Connection represents the information needed to connect
@@ -241,8 +235,6 @@ spec:
                   timeOut:
                     description: Timeout Timeout variable. The default value is 60s.
                     type: string
-                required:
-                - address
                 type: object
               customEndpoint:
                 default: {}
@@ -270,8 +262,6 @@ spec:
                   Applications use service accounts to make authorized API calls by authenticating as either the service account itself, or as Google Workspace or Cloud Identity users through domain-wide delegation.
                   When an application authenticates as a service account, it has access to all resources that the service account has permission to access.
                 type: string
-            required:
-            - path
             type: object
           status:
             description: GCPAuthEngineConfigStatus defines the observed state of GCPAuthEngineConfig
