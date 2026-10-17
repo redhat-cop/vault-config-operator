@@ -193,23 +193,12 @@ func (d *TerraformCloudSecretEngineConfig) setInternalCredentials(context contex
 			log.Error(err, "unable to retrieve vault secret", "instance", d)
 			return err
 		}
-		if randomSecret.Spec.IsKVSecretsEngineV2 {
-			actualData, ok := secret.Data["data"].(map[string]any)
-			if !ok {
-				return fmt.Errorf("RandomSecret KV v2 response missing nested data map")
-			}
-			secretKey, ok := actualData[randomSecret.Spec.SecretKey].(string)
-			if !ok {
-				return fmt.Errorf("RandomSecret KV v2 key %q not found or not a string", randomSecret.Spec.SecretKey)
-			}
-			d.Spec.TFCSEConfig.retrievedToken = secretKey
-		} else {
-			secretKey, ok := secret.Data[randomSecret.Spec.SecretKey].(string)
-			if !ok {
-				return fmt.Errorf("RandomSecret key %q not found or not a string", randomSecret.Spec.SecretKey)
-			}
-			d.Spec.TFCSEConfig.retrievedToken = secretKey
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+		secretVal, ok := secretData[randomSecret.Spec.SecretKey].(string)
+		if !ok {
+			return fmt.Errorf("secret key %q not found or not a string in vault secret", randomSecret.Spec.SecretKey)
 		}
+		d.Spec.TFCSEConfig.retrievedToken = secretVal
 		return nil
 	}
 	if d.Spec.TFCCredentials.Secret != nil {
@@ -239,7 +228,8 @@ func (d *TerraformCloudSecretEngineConfig) setInternalCredentials(context contex
 			log.Error(err, "unable to retrieve vault secret", "instance", d)
 			return err
 		}
-		passwordVal, ok := secret.Data[d.Spec.TFCCredentials.PasswordKey].(string)
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+		passwordVal, ok := secretData[d.Spec.TFCCredentials.PasswordKey].(string)
 		if !ok {
 			return fmt.Errorf("VaultSecret key %q not found or not a string", d.Spec.TFCCredentials.PasswordKey)
 		}

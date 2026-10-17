@@ -256,17 +256,7 @@ func (r *SSHSecretEngineConfig) setInternalCredentials(context context.Context) 
 			log.Error(err, "unable to resolve CA key material", "instance", r)
 			return err
 		}
-		var secretData map[string]any
-		if dataInterface, ok := secret.Data["data"]; ok {
-			secretData, ok = dataInterface.(map[string]any)
-			if !ok {
-				err := errors.New("vault secret data is not in expected format for KV v2")
-				log.Error(err, "unable to parse vault secret data", "path", r.Spec.CAKeyReference.VaultSecret.Path)
-				return err
-			}
-		} else {
-			secretData = secret.Data
-		}
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
 		if pk, ok := secretData[privateKeyField].(string); ok && pk != "" {
 			r.Spec.retrievedPrivateKey = pk
 		} else {

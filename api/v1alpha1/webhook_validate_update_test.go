@@ -904,7 +904,7 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 				return r.ValidateUpdate(context.Background(),
 					&KubernetesAuthEngineConfig{Spec: KubernetesAuthEngineConfigSpec{Path: "same/path"}},
 					&KubernetesAuthEngineConfig{Spec: KubernetesAuthEngineConfigSpec{
-						Path: "same/path",
+						Path:                        "same/path",
 						TokenReviewerServiceAccount: &corev1.LocalObjectReference{Name: "sa"},
 						TokenReviewerJWTSecret: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},

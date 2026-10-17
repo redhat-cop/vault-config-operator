@@ -441,7 +441,7 @@ func TestConsulSecretEngineConfig_PrepareInternalValues_VaultSecretKVv1WithDataS
 	}
 }
 
-func TestConsulSecretEngineConfig_PrepareInternalValues_VaultSecretKVv2FallbackToTopLevel(t *testing.T) {
+func TestConsulSecretEngineConfig_PrepareInternalValues_VaultSecretKVv2MissingKey(t *testing.T) {
 	ns := "ns-consul"
 	vaultPath := "secret/data/consul-token"
 	handler := newFakeVaultHandler()
@@ -469,11 +469,9 @@ func TestConsulSecretEngineConfig_PrepareInternalValues_VaultSecretKVv2FallbackT
 			},
 		},
 	}
-	if err := config.PrepareInternalValues(ctx, config); err != nil {
-		t.Fatalf("PrepareInternalValues: %v", err)
-	}
-	if config.Spec.retrievedToken != "top-level-token" {
-		t.Errorf("retrievedToken = %q, want %q", config.Spec.retrievedToken, "top-level-token")
+	err := config.PrepareInternalValues(ctx, config)
+	if err == nil {
+		t.Fatal("PrepareInternalValues: expected error when key is missing from KV v2 nested data, got nil")
 	}
 }
 

@@ -206,13 +206,12 @@ func (r *DatabaseSecretEngineConfig) setInternalCredentials(context context.Cont
 			return err
 		}
 
-		if randomSecret.Spec.IsKVSecretsEngineV2 {
-			var actualData map[string]any = secret.Data["data"].(map[string]any)
-			r.SetUsernameAndPassword(r.Spec.Username, (actualData[randomSecret.Spec.SecretKey]).(string))
-		} else {
-			r.SetUsernameAndPassword(r.Spec.Username, secret.Data[randomSecret.Spec.SecretKey].(string))
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+		secretVal, ok := secretData[randomSecret.Spec.SecretKey].(string)
+		if !ok {
+			return errors.New("secret key not found or not a string in vault secret")
 		}
-
+		r.SetUsernameAndPassword(r.Spec.Username, secretVal)
 		return nil
 	}
 	if r.Spec.RootCredentials.Secret != nil {
@@ -242,12 +241,19 @@ func (r *DatabaseSecretEngineConfig) setInternalCredentials(context context.Cont
 			log.Error(err, "unable to retrieve vault secret", "instance", r)
 			return err
 		}
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+		passwordVal, ok := secretData[r.Spec.RootCredentials.PasswordKey].(string)
+		if !ok {
+			return errors.New("password key not found or not a string in vault secret")
+		}
 		if r.Spec.Username == "" {
-			r.SetUsernameAndPassword(secret.Data[r.Spec.RootCredentials.UsernameKey].(string), secret.Data[r.Spec.RootCredentials.PasswordKey].(string))
-			log.V(1).Info("", "username", secret.Data[r.Spec.RootCredentials.UsernameKey].(string), "password", secret.Data[r.Spec.RootCredentials.PasswordKey].(string))
+			usernameVal, ok := secretData[r.Spec.RootCredentials.UsernameKey].(string)
+			if !ok {
+				return errors.New("username key not found or not a string in vault secret")
+			}
+			r.SetUsernameAndPassword(usernameVal, passwordVal)
 		} else {
-			r.SetUsernameAndPassword(r.Spec.Username, secret.Data[r.Spec.RootCredentials.PasswordKey].(string))
-			log.V(1).Info("", "username", r.Spec.Username, "password", secret.Data[r.Spec.RootCredentials.PasswordKey].(string))
+			r.SetUsernameAndPassword(r.Spec.Username, passwordVal)
 		}
 		return nil
 	}

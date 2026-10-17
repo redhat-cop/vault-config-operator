@@ -116,7 +116,12 @@ func (q *QuaySecretEngineConfig) setInternalCredentials(context context.Context)
 			log.Error(err, "unable to retrieve vault secret", "instance", q)
 			return err
 		}
-		q.SetToken(secret.Data[randomSecret.Spec.SecretKey].(string))
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+		secretVal, ok := secretData[randomSecret.Spec.SecretKey].(string)
+		if !ok {
+			return errors.New("secret key not found or not a string in vault secret")
+		}
+		q.SetToken(secretVal)
 		return nil
 	}
 	if q.Spec.RootCredentials.Secret != nil {
@@ -142,8 +147,12 @@ func (q *QuaySecretEngineConfig) setInternalCredentials(context context.Context)
 			log.Error(err, "unable to retrieve vault secret", "instance", q)
 			return err
 		}
-		q.SetToken(secret.Data[q.Spec.RootCredentials.PasswordKey].(string))
-		log.V(1).Info("", "token", secret.Data[q.Spec.RootCredentials.PasswordKey].(string))
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+		tokenVal, ok := secretData[q.Spec.RootCredentials.PasswordKey].(string)
+		if !ok {
+			return errors.New("password key not found or not a string in vault secret")
+		}
+		q.SetToken(tokenVal)
 		return nil
 	}
 	return errors.New("no means of retrieving a secret was specified")

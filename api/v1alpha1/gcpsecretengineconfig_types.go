@@ -187,23 +187,12 @@ func (d *GCPSecretEngineConfig) setInternalCredentials(context context.Context) 
 			log.Error(err, "unable to retrieve vault secret", "instance", d)
 			return err
 		}
-		if randomSecret.Spec.IsKVSecretsEngineV2 {
-			actualData, ok := secret.Data["data"].(map[string]any)
-			if !ok {
-				return fmt.Errorf("RandomSecret KV v2 response missing nested data map")
-			}
-			secretKey, ok := actualData[randomSecret.Spec.SecretKey].(string)
-			if !ok {
-				return fmt.Errorf("RandomSecret KV v2 key %q not found or not a string", randomSecret.Spec.SecretKey)
-			}
-			d.Spec.GCPSEConfig.retrievedCredentials = secretKey
-		} else {
-			secretKey, ok := secret.Data[randomSecret.Spec.SecretKey].(string)
-			if !ok {
-				return fmt.Errorf("RandomSecret key %q not found or not a string", randomSecret.Spec.SecretKey)
-			}
-			d.Spec.GCPSEConfig.retrievedCredentials = secretKey
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+		secretVal, ok := secretData[randomSecret.Spec.SecretKey].(string)
+		if !ok {
+			return fmt.Errorf("secret key %q not found or not a string in vault secret", randomSecret.Spec.SecretKey)
 		}
+		d.Spec.GCPSEConfig.retrievedCredentials = secretVal
 		return nil
 	}
 	if d.Spec.GCPCredentials.Secret != nil {
@@ -233,7 +222,8 @@ func (d *GCPSecretEngineConfig) setInternalCredentials(context context.Context) 
 			log.Error(err, "unable to retrieve vault secret", "instance", d)
 			return err
 		}
-		passwordVal, ok := secret.Data[d.Spec.GCPCredentials.PasswordKey].(string)
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+		passwordVal, ok := secretData[d.Spec.GCPCredentials.PasswordKey].(string)
 		if !ok {
 			return fmt.Errorf("VaultSecret key %q not found or not a string", d.Spec.GCPCredentials.PasswordKey)
 		}

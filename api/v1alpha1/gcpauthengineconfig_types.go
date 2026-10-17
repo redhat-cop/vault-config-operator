@@ -223,7 +223,12 @@ func (r *GCPAuthEngineConfig) setInternalCredentials(context context.Context) er
 			log.Error(err, "unable to retrieve vault secret", "instance", r)
 			return err
 		}
-		r.SetServiceAccountAndCredentials(r.Spec.ServiceAccount, secret.Data[randomSecret.Spec.SecretKey].(string))
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+		secretVal, ok := secretData[randomSecret.Spec.SecretKey].(string)
+		if !ok {
+			return errors.New("secret key not found or not a string in vault secret")
+		}
+		r.SetServiceAccountAndCredentials(r.Spec.ServiceAccount, secretVal)
 		return nil
 	}
 	if r.Spec.GCPCredentials.Secret != nil {
@@ -253,12 +258,19 @@ func (r *GCPAuthEngineConfig) setInternalCredentials(context context.Context) er
 			log.Error(err, "unable to retrieve vault secret", "instance", r)
 			return err
 		}
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+		passwordVal, ok := secretData[r.Spec.GCPCredentials.PasswordKey].(string)
+		if !ok {
+			return errors.New("password key not found or not a string in vault secret")
+		}
 		if r.Spec.ServiceAccount == "" {
-			r.SetServiceAccountAndCredentials(secret.Data[r.Spec.GCPCredentials.UsernameKey].(string), secret.Data[r.Spec.GCPCredentials.PasswordKey].(string))
-			log.V(1).Info("", "serviceaccount", secret.Data[r.Spec.GCPCredentials.UsernameKey].(string), "credentials", secret.Data[r.Spec.GCPCredentials.PasswordKey].(string))
+			usernameVal, ok := secretData[r.Spec.GCPCredentials.UsernameKey].(string)
+			if !ok {
+				return errors.New("username key not found or not a string in vault secret")
+			}
+			r.SetServiceAccountAndCredentials(usernameVal, passwordVal)
 		} else {
-			r.SetServiceAccountAndCredentials(r.Spec.GCPConfig.ServiceAccount, secret.Data[r.Spec.GCPCredentials.PasswordKey].(string))
-			log.V(1).Info("", "serviceaccount", r.Spec.GCPConfig.ServiceAccount, "credentials", secret.Data[r.Spec.GCPCredentials.PasswordKey].(string))
+			r.SetServiceAccountAndCredentials(r.Spec.GCPConfig.ServiceAccount, passwordVal)
 		}
 		return nil
 	}

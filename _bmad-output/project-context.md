@@ -329,6 +329,7 @@ The base port `8200` and default cluster name `vault-config-operator` are reserv
 - Vault returns extra fields not managed by the operator. The `filterPayloadToDesiredKeys` helper filters the Vault read response to only the keys present in the desired state map — any Vault-returned key not in `desiredState` is excluded before `reflect.DeepEqual`. This prevents false drift from unmanaged fields.
 - Vault returns `[]any` for lists, not `[]string`. The `toInterfaceArray()` helper converts `[]string` to `[]any` for accurate comparison.
 - Engine mounts (auth/secret) compare only the **tune config**, not the full mount spec, because Vault's tune endpoint returns a different payload structure than the enable endpoint.
+- **KV v2 secret unwrapping (critical):** When reading secrets from a Vault KV secret engine via `VaultSecretReference` or direct `Logical().Read()`, **always** call `vaultutils.UnwrapKVv2Data(secret.Data)` before accessing keys. KV v1 returns data directly as `secret.Data["key"]`, but KV v2 nests it under `secret.Data["data"]["key"]` alongside a `"metadata"` key. Accessing `secret.Data[key]` on a v2 response returns `nil` and causes a type-assertion panic. The `UnwrapKVv2Data` helper transparently handles both formats. Never write inline v1/v2 detection logic — always use the centralized helper.
 
 #### Code Generation Pitfalls
 - After modifying `*_types.go`, **always** run `make manifests generate`. Forgetting this leaves CRDs, RBAC, and deepcopy out of sync.

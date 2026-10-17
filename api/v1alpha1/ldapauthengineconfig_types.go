@@ -127,7 +127,12 @@ func (r *LDAPAuthEngineConfig) setInternalCredentials(context context.Context) e
 			log.Error(err, "unable to retrieve vault secret", "instance", r)
 			return err
 		}
-		r.SetUsernameAndPassword(r.Spec.BindDN, secret.Data[randomSecret.Spec.SecretKey].(string))
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+		secretVal, ok := secretData[randomSecret.Spec.SecretKey].(string)
+		if !ok {
+			return errors.New("secret key not found or not a string in vault secret")
+		}
+		r.SetUsernameAndPassword(r.Spec.BindDN, secretVal)
 		return nil
 	}
 	if r.Spec.BindCredentials.Secret != nil {
@@ -157,12 +162,19 @@ func (r *LDAPAuthEngineConfig) setInternalCredentials(context context.Context) e
 			log.Error(err, "unable to retrieve vault secret", "instance", r)
 			return err
 		}
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+		passwordVal, ok := secretData[r.Spec.BindCredentials.PasswordKey].(string)
+		if !ok {
+			return errors.New("password key not found or not a string in vault secret")
+		}
 		if r.Spec.BindDN == "" {
-			r.SetUsernameAndPassword(secret.Data[r.Spec.BindCredentials.UsernameKey].(string), secret.Data[r.Spec.BindCredentials.PasswordKey].(string))
-			log.V(1).Info("", "username", secret.Data[r.Spec.BindCredentials.UsernameKey].(string), "password", secret.Data[r.Spec.BindCredentials.PasswordKey].(string))
+			usernameVal, ok := secretData[r.Spec.BindCredentials.UsernameKey].(string)
+			if !ok {
+				return errors.New("username key not found or not a string in vault secret")
+			}
+			r.SetUsernameAndPassword(usernameVal, passwordVal)
 		} else {
-			r.SetUsernameAndPassword(r.Spec.LDAPConfig.BindDN, secret.Data[r.Spec.BindCredentials.PasswordKey].(string))
-			log.V(1).Info("", "username", r.Spec.LDAPConfig.BindDN, "password", secret.Data[r.Spec.BindCredentials.PasswordKey].(string))
+			r.SetUsernameAndPassword(r.Spec.LDAPConfig.BindDN, passwordVal)
 		}
 		return nil
 	}
