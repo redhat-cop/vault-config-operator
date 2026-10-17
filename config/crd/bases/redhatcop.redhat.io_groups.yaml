@@ -153,9 +153,29 @@ spec:
                   type: string
                 type: array
                 x-kubernetes-list-type: set
+              memberEntityNames:
+                description: |-
+                  MemberEntityNames Entity names to be resolved to IDs and assigned as group members.
+                  Each name is looked up via Vault's identity API at reconciliation time.
+                  The resolved IDs are merged with any explicitly provided MemberEntityIDs.
+                  kubebuilder:validation:UniqueItems=true
+                items:
+                  type: string
+                type: array
+                x-kubernetes-list-type: set
               memberGroupIDs:
                 description: |-
                   MemberGroupIDs Group IDs to be assigned as group members.
+                  kubebuilder:validation:UniqueItems=true
+                items:
+                  type: string
+                type: array
+                x-kubernetes-list-type: set
+              memberGroupNames:
+                description: |-
+                  MemberGroupNames Group names to be resolved to IDs and assigned as group members.
+                  Each name is looked up via Vault's identity API at reconciliation time.
+                  The resolved IDs are merged with any explicitly provided MemberGroupIDs.
                   kubebuilder:validation:UniqueItems=true
                 items:
                   type: string
