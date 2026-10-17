@@ -374,10 +374,10 @@ func TestGroupToMapWithResolvedNames(t *testing.T) {
 	spec := &GroupSpec{
 		GroupConfig: GroupConfig{
 			Type:                    "internal",
-			Metadata:               map[string]string{"team": "platform"},
-			Policies:               []string{"default"},
-			MemberGroupIDs:         []string{"explicit-group-id"},
-			MemberEntityIDs:        []string{"explicit-entity-id"},
+			Metadata:                map[string]string{"team": "platform"},
+			Policies:                []string{"default"},
+			MemberGroupIDs:          []string{"explicit-group-id"},
+			MemberEntityIDs:         []string{"explicit-entity-id"},
 			resolvedMemberGroupIDs:  []string{"resolved-group-id"},
 			resolvedMemberEntityIDs: []string{"resolved-entity-id"},
 		},
@@ -405,9 +405,9 @@ func TestGroupToMapWithResolvedNames(t *testing.T) {
 func TestGroupToMapWithResolvedNamesDeduplicated(t *testing.T) {
 	spec := &GroupSpec{
 		GroupConfig: GroupConfig{
-			Type:                    "internal",
+			Type:                   "internal",
 			MemberGroupIDs:         []string{"same-id"},
-			resolvedMemberGroupIDs:  []string{"same-id"},
+			resolvedMemberGroupIDs: []string{"same-id"},
 		},
 	}
 
