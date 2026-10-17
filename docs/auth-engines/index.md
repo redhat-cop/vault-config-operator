@@ -23,6 +23,25 @@ The `type` field specifies the type of the authentication engine.
 
 The `path` field specifies the path at which the auth engine is mounted. The complete path will be: `[namespace/]auth/{.spec.path}/{metadata.name}`
 
+### Mounting directly at a single-segment path
+
+By default, the operator constructs the Vault mount path as `auth/{spec.path}/{metadata.name}`. If you want the auth engine mounted at a path without the extra `/{metadata.name}` suffix (e.g. exactly at `auth/kubernetes`), simply set `metadata.name` to the desired mount name and leave `spec.path` empty:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AuthEngineMount
+metadata:
+  name: kubernetes
+spec:
+  authentication: 
+    path: kubernetes
+    role: policy-admin
+  type: kubernetes
+  # path is intentionally omitted so the mount is created at auth/kubernetes
+```
+
+In this case the final mount path will be `auth/kubernetes` (i.e. `auth/{metadata.name}`), with no additional path segment appended. This is useful when external automation or other systems expect the auth engine at a specific single-segment path.
+
 ## Supported Auth Engines
 
 | Engine | Config CRD | Role/Group CRD | File |
