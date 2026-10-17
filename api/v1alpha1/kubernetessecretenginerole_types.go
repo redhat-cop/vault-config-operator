@@ -134,7 +134,7 @@ type KubeSERole struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="Role"
 	// +kubebuilder:validation:Enum={"Role","ClusterRole"}
-	KubernetesRoleType string `json:"kubernetesRoleType"`
+	KubernetesRoleType string `json:"kubernetesRoleType,omitempty"`
 
 	// GenerateRoleRules The Role or ClusterRole rules to use when generating a role. Accepts either JSON or YAML formatted rules. If set, the entire chain of Kubernetes objects will be generated when credentials are requested. The value should be a rules key with an array of PolicyRule objects, as illustrated in the Kubernetes RBAC documentation and Sample Payload 3 below.
 	// +kubebuilder:validation:Optional

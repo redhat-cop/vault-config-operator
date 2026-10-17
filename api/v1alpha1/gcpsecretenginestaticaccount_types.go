@@ -54,7 +54,7 @@ type GCPSEStaticAccount struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum:={"access_token","service_account_key"}
 	// +kubebuilder:default="access_token"
-	SecretType string `json:"secretType"`
+	SecretType string `json:"secretType,omitempty"`
 
 	// ServiceAccountEmail is the email of the GCP service account to manage. Cannot be updated.
 	// +kubebuilder:validation:Required

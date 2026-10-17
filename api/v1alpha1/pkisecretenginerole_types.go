@@ -173,7 +173,7 @@ type PKIRole struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"rsa","ec","any"}
 	// +kubebuilder:default="rsa"
-	KeyType string `json:"keyType"`
+	KeyType string `json:"keyType,omitempty"`
 
 	// Specifies the number of bits to use for the generated keys. This will need to be changed for ec keys, e.g., 224, 256, 384 or 521.
 	// +kubebuilder:validation:Optional

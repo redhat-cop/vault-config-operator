@@ -71,7 +71,7 @@ type IdentityOIDCClientConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"confidential","public"}
 	// +kubebuilder:default:="confidential"
-	ClientType string `json:"clientType"`
+	ClientType string `json:"clientType,omitempty"`
 
 	// IDTokenTTL is the time-to-live for ID tokens obtained by the client.
 	// Accepts duration format strings. The value should be less than the verification_ttl on the key.

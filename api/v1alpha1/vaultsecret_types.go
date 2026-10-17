@@ -131,7 +131,7 @@ type VaultSecretDefinition struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=GET
 	// +kubebuilder:validation:Enum={"GET","POST"}
-	RequestType string `json:"requestType"`
+	RequestType string `json:"requestType,omitempty"`
 
 	// RequestPayload for POST type of requests, this field contains the payload of the request. Not used for GET requests.
 	// +kubebuilder:validation:Optional

@@ -103,7 +103,7 @@ type AzureSEConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="AzurePublicCloud"
 	// +kubebuilder:validation:Enum={"AzurePublicCloud","AzureUSGovernmentCloud","AzureChinaCloud","AzureGermanCloud"}
-	Environment string `json:"environment"`
+	Environment string `json:"environment,omitempty"`
 
 	// Specifies a password policy to use when creating dynamic credentials. Defaults to generating an alphanumeric password if not set.
 	// +kubebuilder:validation:Optional

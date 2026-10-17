@@ -69,7 +69,7 @@ type IdentityTokenKeyConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"RS256","RS384","RS512","ES256","ES384","ES512","EdDSA"}
 	// +kubebuilder:default:="RS256"
-	Algorithm string `json:"algorithm"`
+	Algorithm string `json:"algorithm,omitempty"`
 }
 
 // IdentityTokenKeyStatus defines the observed state of IdentityTokenKey

@@ -162,7 +162,7 @@ type QuayBaseRole struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"organization","user"}
 	// +kubebuilder:default="organization"
-	NamespaceType NamespaceType `json:"namespaceType"`
+	NamespaceType NamespaceType `json:"namespaceType,omitempty"`
 
 	// NamespaceName Name of the Quay account.
 	// +kubebuilder:validation:Required

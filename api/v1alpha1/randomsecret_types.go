@@ -82,7 +82,7 @@ type RandomSecretSpec struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"Delete","Retain"}
 	// +kubebuilder:default:="Delete"
-	KvSecretRetainPolicy string `json:"kvSecretRetainPolicy"`
+	KvSecretRetainPolicy string `json:"kvSecretRetainPolicy,omitempty"`
 }
 
 const ttlKey string = "ttl"

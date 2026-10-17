@@ -49,7 +49,7 @@ type AWSAuthIdentityConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="role_id"
 	// +kubebuilder:validation:Enum={"role_id","unique_id","canonical_arn","full_arn"}
-	IAMAlias string `json:"iamAlias"`
+	IAMAlias string `json:"iamAlias,omitempty"`
 
 	// IAMMetadata is the metadata to include on the login token for IAM auth.
 	// +kubebuilder:validation:Optional
@@ -60,7 +60,7 @@ type AWSAuthIdentityConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="role_id"
 	// +kubebuilder:validation:Enum={"role_id","instance_id","image_id"}
-	EC2Alias string `json:"ec2Alias"`
+	EC2Alias string `json:"ec2Alias,omitempty"`
 
 	// EC2Metadata is the metadata to include on the login token for EC2 auth.
 	// +kubebuilder:validation:Optional

@@ -187,7 +187,7 @@ type MountConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"unauth","hidden"}
 	// +kubebuilder:default:="hidden"
-	ListingVisibility string `json:"listingVisibility"`
+	ListingVisibility string `json:"listingVisibility,omitempty"`
 
 	// PassthroughRequestHeaders list of headers to whitelist and pass from the request to the plugin.
 	// +kubebuilder:validation:Optional

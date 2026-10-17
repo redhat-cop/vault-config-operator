@@ -160,7 +160,7 @@ type VRole struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"serviceaccount_uid", "serviceaccount_name"}
 	// +kubebuilder:default="serviceaccount_uid"
-	AliasNameSource string `json:"aliasNameSource"`
+	AliasNameSource string `json:"aliasNameSource,omitempty"`
 
 	// TokenTTL The incremental lifetime for generated tokens. This current value of this will be referenced at renewal time.
 	// +kubebuilder:validation:Optional
@@ -207,7 +207,7 @@ type VRole struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"service","batch","default","default-service","default-batch"}
 	// +kubebuilder:default="default"
-	TokenType string `json:"tokenType"`
+	TokenType string `json:"tokenType,omitempty"`
 
 	// this field is for internal use and will not be serialized
 	namespaces []string `json:"-"`
