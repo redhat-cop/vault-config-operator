@@ -134,16 +134,45 @@ func (r *DatabaseSecretEngineConfigReconciler) Reconcile(ctx context.Context, re
 }
 
 func (r *DatabaseSecretEngineConfigReconciler) rotateRootPassword(ctx context.Context, instance *redhatcopv1alpha1.DatabaseSecretEngineConfig) error {
+	log := log.FromContext(ctx)
+
 	err := instance.RotateRootPassword(ctx)
 	if err != nil {
 		return err
 	}
-	instance.Status.LastRootPasswordRotation = metav1.Now()
-	err = r.GetClient().Status().Update(ctx, instance)
-	if err != nil {
-		return err
+
+	// The Vault rotation succeeded. We must persist the status timestamp
+	// before returning so that the next reconcile does not re-enter the
+	// rotation branch. Retry on conflict (stale resourceVersion) by
+	// re-fetching the latest version and reapplying the timestamp.
+	rotationTime := metav1.Now()
+	const maxRetries = 5
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		instance.Status.LastRootPasswordRotation = rotationTime
+		err = r.GetClient().Status().Update(ctx, instance)
+		if err == nil {
+			return nil
+		}
+		if !apierrors.IsConflict(err) {
+			log.Error(err, "unable to update status after root password rotation", "attempt", attempt+1)
+			return err
+		}
+		log.V(1).Info("conflict updating status after root password rotation, retrying", "attempt", attempt+1)
+
+		// Re-fetch the latest version to resolve the conflict.
+		fresh := &redhatcopv1alpha1.DatabaseSecretEngineConfig{}
+		if getErr := r.GetClient().Get(ctx, types.NamespacedName{
+			Name:      instance.Name,
+			Namespace: instance.Namespace,
+		}, fresh); getErr != nil {
+			log.Error(getErr, "unable to re-fetch instance for status retry")
+			return getErr
+		}
+		instance.ResourceVersion = fresh.ResourceVersion
+		instance.Status = fresh.Status
 	}
-	return nil
+	log.Error(err, "exhausted retries updating status after root password rotation")
+	return err
 }
 
 // SetupWithManager sets up the controller with the Manager.
