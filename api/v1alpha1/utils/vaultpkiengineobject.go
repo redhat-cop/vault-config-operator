@@ -18,6 +18,7 @@ package utils
 
 import (
 	"context"
+	"reflect"
 
 	vault "github.com/hashicorp/vault/api"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -31,8 +32,12 @@ type VaultPKIEngineObject interface {
 	SetGeneratedStatus(status bool)
 	GetConfigUrlsPath() string
 	GetConfigCrlPath() string
+	GetConfigClusterPath() string
+	GetConfigACMEPath() string
 	GetConfigUrlsPayload() map[string]any
 	GetConfigCrlPayload() map[string]any
+	GetConfigClusterPayload() map[string]any
+	GetConfigACMEPayload() map[string]any
 	CreateExported(context context.Context, secret *vault.Secret) (bool, error)
 	SetExportedStatus(status bool)
 	SetIntermediate(context context.Context) error
@@ -110,11 +115,32 @@ func (ve *VaultPKIEngineEndpoint) CreateOrUpdateConfig(context context.Context, 
 		return err
 	}
 
-	if !ve.vaultObject.IsEquivalentToDesiredState(currentConfigPayload) {
+	if !isPayloadEquivalent(payload, currentConfigPayload) {
 		return write(context, configPath, payload)
 	}
 
 	return nil
+}
+
+// isPayloadEquivalent compares the desired payload against the current Vault
+// state, considering only the keys present in the desired payload. Extra keys
+// returned by Vault are ignored.
+func isPayloadEquivalent(desired, current map[string]any) bool {
+	filtered := make(map[string]any, len(desired))
+	for key := range desired {
+		if val, exists := current[key]; exists {
+			filtered[key] = val
+		}
+	}
+	return reflect.DeepEqual(desired, filtered)
+}
+
+func (ve *VaultPKIEngineEndpoint) CreateOrUpdateConfigCluster(context context.Context) error {
+	return ve.CreateOrUpdateConfig(context, ve.vaultPKIEngineObject.GetConfigClusterPath(), ve.vaultPKIEngineObject.GetConfigClusterPayload())
+}
+
+func (ve *VaultPKIEngineEndpoint) CreateOrUpdateConfigACME(context context.Context) error {
+	return ve.CreateOrUpdateConfig(context, ve.vaultPKIEngineObject.GetConfigACMEPath(), ve.vaultPKIEngineObject.GetConfigACMEPayload())
 }
 
 func (ve *VaultPKIEngineEndpoint) CreateExported(context context.Context, secret *vault.Secret) (bool, error) {

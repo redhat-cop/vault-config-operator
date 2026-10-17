@@ -96,5 +96,25 @@ func (r *VaultPKIEngineResource) manageReconcileLogic(context context.Context, i
 		return err
 	}
 
+	// Cluster config (must be set before ACME)
+	clusterPayload := instance.(vaultutils.VaultPKIEngineObject).GetConfigClusterPayload()
+	if clusterPayload != nil {
+		err = r.vaultPKIEngineEndpoint.CreateOrUpdateConfigCluster(context)
+		if err != nil {
+			log.Error(err, "unable to create or update cluster config", "instance", instance)
+			return err
+		}
+	}
+
+	// ACME config
+	acmePayload := instance.(vaultutils.VaultPKIEngineObject).GetConfigACMEPayload()
+	if acmePayload != nil {
+		err = r.vaultPKIEngineEndpoint.CreateOrUpdateConfigACME(context)
+		if err != nil {
+			log.Error(err, "unable to create or update ACME config", "instance", instance)
+			return err
+		}
+	}
+
 	return nil
 }

@@ -58,6 +58,17 @@ type PKISecretEngineConfigSpec struct {
 	PKIConfig `json:",inline"`
 
 	PKIIntermediate `json:",inline"`
+
+	// Cluster configures the PKI cluster path required for ACME.
+	// When absent, the operator does not manage <mount>/config/cluster.
+	// +kubebuilder:validation:Optional
+	Cluster *PKIConfigCluster `json:"cluster,omitempty"`
+
+	// ACME configures the ACME protocol on this PKI mount.
+	// When absent, the operator does not manage <mount>/config/acme.
+	// Requires Cluster to be configured first.
+	// +kubebuilder:validation:Optional
+	ACME *PKIConfigACME `json:"acme,omitempty"`
 }
 
 type PKIType struct {
@@ -209,6 +220,46 @@ type PKIConfigCRL struct {
 	CRLDisable bool `json:"CRLDisable,omitempty"`
 }
 
+type PKIConfigCluster struct {
+	// Path is the base URL of the Vault cluster for ACME directory discovery (e.g. https://vault.example.com/v1/pki).
+	// +kubebuilder:validation:Required
+	Path string `json:"path"`
+
+	// AIAPath is the optional AIA base URL. When empty, Vault derives it from Path.
+	// +kubebuilder:validation:Optional
+	AIAPath string `json:"aiaPath,omitempty"`
+}
+
+type PKIConfigACME struct {
+	// Enabled specifies whether ACME is enabled on this mount.
+	// +kubebuilder:validation:Required
+	Enabled bool `json:"enabled"`
+
+	// AllowedIssuers restricts which issuers can be used with ACME. When empty, all issuers are allowed.
+	// +kubebuilder:validation:Optional
+	// +listType=set
+	AllowedIssuers []string `json:"allowedIssuers,omitempty"`
+
+	// AllowedRoles restricts which roles can be used with ACME. When empty, all roles are allowed.
+	// +kubebuilder:validation:Optional
+	// +listType=set
+	AllowedRoles []string `json:"allowedRoles,omitempty"`
+
+	// AllowRoleExtKeyUsage allows ACME to honor role extended key usage flags.
+	// +kubebuilder:validation:Optional
+	AllowRoleExtKeyUsage bool `json:"allowRoleExtKeyUsage,omitempty"`
+
+	// DefaultDirectoryPolicy controls which role/issuer is used for the default ACME directory.
+	// Valid values include "sign-verbatim", "role:<role_name>", or "forbid".
+	// +kubebuilder:validation:Optional
+	DefaultDirectoryPolicy string `json:"defaultDirectoryPolicy,omitempty"`
+
+	// EABPolicy specifies the External Account Binding policy for ACME.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum={"not-required","new-account-required","always-required"}
+	EABPolicy string `json:"eabPolicy,omitempty"`
+}
+
 type PKIIntermediate struct {
 	// ExternalSignSecret retrieves the signed intermediate certificate from a Kubernetes secret. Allows submitting the signed CA certificate corresponding to a private key generated.
 	// +kubebuilder:validation:Optional
@@ -257,6 +308,14 @@ func (p *PKISecretEngineConfig) GetConfigUrlsPath() string {
 
 func (p *PKISecretEngineConfig) GetConfigCrlPath() string {
 	return string(p.Spec.Path) + "/config/crl"
+}
+
+func (p *PKISecretEngineConfig) GetConfigClusterPath() string {
+	return string(p.Spec.Path) + "/config/cluster"
+}
+
+func (p *PKISecretEngineConfig) GetConfigACMEPath() string {
+	return string(p.Spec.Path) + "/config/acme"
 }
 
 func (p *PKISecretEngineConfig) GetSignIntermediatePath() string {
@@ -438,6 +497,20 @@ func (p *PKISecretEngineConfig) GetConfigCrlPayload() map[string]any {
 	return p.Spec.PKIConfig.PKIConfigCRL.toMap()
 }
 
+func (p *PKISecretEngineConfig) GetConfigClusterPayload() map[string]any {
+	if p.Spec.Cluster == nil {
+		return nil
+	}
+	return p.Spec.Cluster.toMap()
+}
+
+func (p *PKISecretEngineConfig) GetConfigACMEPayload() map[string]any {
+	if p.Spec.ACME == nil {
+		return nil
+	}
+	return p.Spec.ACME.toMap()
+}
+
 func (p *PKISecretEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := p.Spec.PKICommon.toMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
@@ -453,6 +526,9 @@ func (p *PKISecretEngineConfig) IsValid() (bool, error) {
 }
 
 func (p *PKISecretEngineConfig) isValid() error {
+	if p.Spec.ACME != nil && p.Spec.Cluster == nil {
+		return errors.New("spec.acme requires spec.cluster to be set")
+	}
 	return nil
 }
 func (p *PKISecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
@@ -566,6 +642,28 @@ func (i *PKIConfigCRL) toMap() map[string]any {
 
 	payload["expiry"] = i.CRLExpiry
 	payload["disable"] = i.CRLDisable
+
+	return payload
+}
+
+func (i *PKIConfigCluster) toMap() map[string]any {
+	payload := map[string]any{}
+
+	payload["path"] = i.Path
+	payload["aia_path"] = i.AIAPath
+
+	return payload
+}
+
+func (i *PKIConfigACME) toMap() map[string]any {
+	payload := map[string]any{}
+
+	payload["enabled"] = i.Enabled
+	payload["allowed_issuers"] = i.AllowedIssuers
+	payload["allowed_roles"] = i.AllowedRoles
+	payload["allow_role_ext_key_usage"] = i.AllowRoleExtKeyUsage
+	payload["default_directory_policy"] = i.DefaultDirectoryPolicy
+	payload["eab_policy"] = i.EABPolicy
 
 	return payload
 }

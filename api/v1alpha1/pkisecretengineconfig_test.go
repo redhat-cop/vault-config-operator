@@ -173,6 +173,193 @@ func TestPKISecretEngineConfigIsDeletable(t *testing.T) {
 	}
 }
 
+func TestPKIConfigClusterToMap(t *testing.T) {
+	c := PKIConfigCluster{
+		Path:    "https://vault.example.com/v1/pki",
+		AIAPath: "https://vault.example.com/v1/pki",
+	}
+	result := c.toMap()
+	if len(result) != 2 {
+		t.Errorf("expected 2 keys, got %d", len(result))
+	}
+	if result["path"] != "https://vault.example.com/v1/pki" {
+		t.Errorf("path = %v, want https://vault.example.com/v1/pki", result["path"])
+	}
+	if result["aia_path"] != "https://vault.example.com/v1/pki" {
+		t.Errorf("aia_path = %v, want https://vault.example.com/v1/pki", result["aia_path"])
+	}
+}
+
+func TestPKIConfigClusterToMapEmpty(t *testing.T) {
+	c := PKIConfigCluster{
+		Path: "https://vault.example.com/v1/pki",
+	}
+	result := c.toMap()
+	if result["aia_path"] != "" {
+		t.Errorf("aia_path = %v, want empty string", result["aia_path"])
+	}
+}
+
+func TestPKIConfigACMEToMap(t *testing.T) {
+	a := PKIConfigACME{
+		Enabled:                true,
+		AllowedIssuers:         []string{"default"},
+		AllowedRoles:           []string{"web-server"},
+		AllowRoleExtKeyUsage:   false,
+		DefaultDirectoryPolicy: "role:web-server",
+		EABPolicy:              "always-required",
+	}
+	result := a.toMap()
+	if len(result) != 6 {
+		t.Errorf("expected 6 keys, got %d", len(result))
+	}
+	if result["enabled"] != true {
+		t.Errorf("enabled = %v, want true", result["enabled"])
+	}
+	issuers, ok := result["allowed_issuers"].([]string)
+	if !ok || len(issuers) != 1 || issuers[0] != "default" {
+		t.Errorf("allowed_issuers = %v, want [default]", result["allowed_issuers"])
+	}
+	roles, ok := result["allowed_roles"].([]string)
+	if !ok || len(roles) != 1 || roles[0] != "web-server" {
+		t.Errorf("allowed_roles = %v, want [web-server]", result["allowed_roles"])
+	}
+	if result["allow_role_ext_key_usage"] != false {
+		t.Errorf("allow_role_ext_key_usage = %v, want false", result["allow_role_ext_key_usage"])
+	}
+	if result["default_directory_policy"] != "role:web-server" {
+		t.Errorf("default_directory_policy = %v, want role:web-server", result["default_directory_policy"])
+	}
+	if result["eab_policy"] != "always-required" {
+		t.Errorf("eab_policy = %v, want always-required", result["eab_policy"])
+	}
+}
+
+func TestPKISecretEngineConfigGetConfigClusterPath(t *testing.T) {
+	config := &PKISecretEngineConfig{
+		Spec: PKISecretEngineConfigSpec{
+			Path: "pki",
+		},
+	}
+	if got := config.GetConfigClusterPath(); got != "pki/config/cluster" {
+		t.Errorf("GetConfigClusterPath() = %q, want %q", got, "pki/config/cluster")
+	}
+}
+
+func TestPKISecretEngineConfigGetConfigACMEPath(t *testing.T) {
+	config := &PKISecretEngineConfig{
+		Spec: PKISecretEngineConfigSpec{
+			Path: "pki",
+		},
+	}
+	if got := config.GetConfigACMEPath(); got != "pki/config/acme" {
+		t.Errorf("GetConfigACMEPath() = %q, want %q", got, "pki/config/acme")
+	}
+}
+
+func TestPKISecretEngineConfigGetConfigClusterPayloadNil(t *testing.T) {
+	config := &PKISecretEngineConfig{
+		Spec: PKISecretEngineConfigSpec{},
+	}
+	if got := config.GetConfigClusterPayload(); got != nil {
+		t.Errorf("GetConfigClusterPayload() = %v, want nil when Cluster is absent", got)
+	}
+}
+
+func TestPKISecretEngineConfigGetConfigClusterPayloadPresent(t *testing.T) {
+	config := &PKISecretEngineConfig{
+		Spec: PKISecretEngineConfigSpec{
+			Cluster: &PKIConfigCluster{
+				Path: "https://vault.example.com/v1/pki",
+			},
+		},
+	}
+	got := config.GetConfigClusterPayload()
+	if got == nil {
+		t.Fatal("GetConfigClusterPayload() = nil, want non-nil")
+	}
+	if got["path"] != "https://vault.example.com/v1/pki" {
+		t.Errorf("path = %v, want https://vault.example.com/v1/pki", got["path"])
+	}
+}
+
+func TestPKISecretEngineConfigGetConfigACMEPayloadNil(t *testing.T) {
+	config := &PKISecretEngineConfig{
+		Spec: PKISecretEngineConfigSpec{},
+	}
+	if got := config.GetConfigACMEPayload(); got != nil {
+		t.Errorf("GetConfigACMEPayload() = %v, want nil when ACME is absent", got)
+	}
+}
+
+func TestPKISecretEngineConfigGetConfigACMEPayloadPresent(t *testing.T) {
+	config := &PKISecretEngineConfig{
+		Spec: PKISecretEngineConfigSpec{
+			ACME: &PKIConfigACME{
+				Enabled: true,
+			},
+		},
+	}
+	got := config.GetConfigACMEPayload()
+	if got == nil {
+		t.Fatal("GetConfigACMEPayload() = nil, want non-nil")
+	}
+	if got["enabled"] != true {
+		t.Errorf("enabled = %v, want true", got["enabled"])
+	}
+}
+
+func TestPKISecretEngineConfigIsValidACMEWithoutCluster(t *testing.T) {
+	config := &PKISecretEngineConfig{
+		Spec: PKISecretEngineConfigSpec{
+			ACME: &PKIConfigACME{
+				Enabled: true,
+			},
+		},
+	}
+	if err := config.isValid(); err == nil {
+		t.Error("expected error when ACME is set without Cluster")
+	}
+}
+
+func TestPKISecretEngineConfigIsValidACMEWithCluster(t *testing.T) {
+	config := &PKISecretEngineConfig{
+		Spec: PKISecretEngineConfigSpec{
+			Cluster: &PKIConfigCluster{
+				Path: "https://vault.example.com/v1/pki",
+			},
+			ACME: &PKIConfigACME{
+				Enabled: true,
+			},
+		},
+	}
+	if err := config.isValid(); err != nil {
+		t.Errorf("expected no error when ACME and Cluster are both set, got %v", err)
+	}
+}
+
+func TestPKISecretEngineConfigIsValidNoACMENoCluster(t *testing.T) {
+	config := &PKISecretEngineConfig{
+		Spec: PKISecretEngineConfigSpec{},
+	}
+	if err := config.isValid(); err != nil {
+		t.Errorf("expected no error when both ACME and Cluster are absent, got %v", err)
+	}
+}
+
+func TestPKISecretEngineConfigIsValidClusterWithoutACME(t *testing.T) {
+	config := &PKISecretEngineConfig{
+		Spec: PKISecretEngineConfigSpec{
+			Cluster: &PKIConfigCluster{
+				Path: "https://vault.example.com/v1/pki",
+			},
+		},
+	}
+	if err := config.isValid(); err != nil {
+		t.Errorf("expected no error when Cluster is set without ACME, got %v", err)
+	}
+}
+
 func TestPKISecretEngineConfigConditions(t *testing.T) {
 	config := &PKISecretEngineConfig{}
 	conditions := []metav1.Condition{
