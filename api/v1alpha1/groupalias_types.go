@@ -50,9 +50,13 @@ type GroupAliasSpec struct {
 
 	retrievedName string `json:"-"`
 
-	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
+	// The name of the object created in Vault. If this is specified it takes precedence over {metadata.name}.
+	// This value is sent verbatim to Vault's identity alias API and must match the external IdP's
+	// group/role claim value exactly. Unlike metadata.name, it is not subject to Kubernetes naming rules.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Pattern:=`[a-z0-9]([-a-z0-9]*[a-z0-9])?`
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=512
+	// +kubebuilder:validation:Pattern:=`^[ -~]+$`
 	Name string `json:"name,omitempty"`
 }
 
