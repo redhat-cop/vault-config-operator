@@ -42,3 +42,9 @@ affinity: {}
 enableMonitoring: true
 metricsSecure: true
 enableCertManager: false
+
+certificate:
+  issuerRef:
+    name: selfsigned-issuer
+    kind: Issuer
+    # group: cert-manager.io
