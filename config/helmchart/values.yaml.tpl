@@ -39,7 +39,8 @@ tolerations: []
 
 affinity: {}
 
-enableMonitoring: true
+# Set to true to create a ServiceMonitor resource (requires Prometheus Operator CRDs).
+enableMonitoring: false
 metricsSecure: true
 enableCertManager: false
 
