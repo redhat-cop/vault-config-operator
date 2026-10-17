@@ -149,22 +149,22 @@ func (r *DatabaseSecretEngineConfigReconciler) rotateRootPassword(ctx context.Co
 // SetupWithManager sets up the controller with the Manager.
 func (r *DatabaseSecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
-	// this will filter routes that have the annotation and on update only if the annotation is changed.
+	// Filter for basic-auth secrets whose credentials have changed.
 	isBasicAuthSecret := predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			newSecret, ok := e.ObjectNew.DeepCopyObject().(*corev1.Secret)
-			if !ok || newSecret.Type == "kubernetes.io/basic-auth" {
+			if !ok || newSecret.Type != "kubernetes.io/basic-auth" {
 				return false
 			}
 			oldSecret, ok := e.ObjectOld.DeepCopyObject().(*corev1.Secret)
 			if !ok {
 				return true
 			}
-			return bytes.Equal(oldSecret.Data["username"], newSecret.Data["username"]) || bytes.Equal(oldSecret.Data["password"], newSecret.Data["password"])
+			return !bytes.Equal(oldSecret.Data["username"], newSecret.Data["username"]) || !bytes.Equal(oldSecret.Data["password"], newSecret.Data["password"])
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
 			newSecret, ok := e.Object.DeepCopyObject().(*corev1.Secret)
-			if !ok || newSecret.Type == "kubernetes.io/basic-auth" {
+			if !ok || newSecret.Type != "kubernetes.io/basic-auth" {
 				return false
 			}
 			return true

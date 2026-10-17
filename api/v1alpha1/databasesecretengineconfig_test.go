@@ -864,3 +864,89 @@ func TestDatabaseSecretEngineConfig_PrepareInternalValues(t *testing.T) {
 		})
 	}
 }
+
+func TestSetUsernameAndPassword_CredentialsChangedFlag(t *testing.T) {
+	config := &DatabaseSecretEngineConfig{
+		Status: DatabaseSecretEngineConfigStatus{
+			CredentialsHash: computeCredentialsHash("user", "old-pass"),
+		},
+	}
+
+	config.SetUsernameAndPassword("user", "new-pass")
+
+	if !config.Spec.DBSEConfig.credentialsChanged {
+		t.Error("expected credentialsChanged=true when password hash changes")
+	}
+	if !config.Status.LastRootPasswordRotation.IsZero() {
+		t.Error("expected LastRootPasswordRotation to be reset to zero")
+	}
+}
+
+func TestSetUsernameAndPassword_SameCredentialsNotMarkedChanged(t *testing.T) {
+	config := &DatabaseSecretEngineConfig{
+		Status: DatabaseSecretEngineConfigStatus{
+			CredentialsHash: computeCredentialsHash("user", "same-pass"),
+		},
+	}
+
+	config.SetUsernameAndPassword("user", "same-pass")
+
+	if config.Spec.DBSEConfig.credentialsChanged {
+		t.Error("expected credentialsChanged=false when credentials are unchanged")
+	}
+}
+
+func TestSetUsernameAndPassword_FirstTimeNoFlag(t *testing.T) {
+	config := &DatabaseSecretEngineConfig{
+		Status: DatabaseSecretEngineConfigStatus{
+			CredentialsHash: "", // first reconcile, no hash yet
+		},
+	}
+
+	config.SetUsernameAndPassword("user", "pass")
+
+	if config.Spec.DBSEConfig.credentialsChanged {
+		t.Error("expected credentialsChanged=false on first reconcile (empty hash)")
+	}
+}
+
+func TestIsEquivalentToDesiredState_CredentialsChangedForcesRewrite(t *testing.T) {
+	config := &DatabaseSecretEngineConfig{
+		Spec: DatabaseSecretEngineConfigSpec{
+			Path: "database",
+			DBSEConfig: DBSEConfig{
+				PluginName:         "postgresql-database-plugin",
+				ConnectionURL:      "postgresql://localhost/mydb",
+				AllowedRoles:       []string{"*"},
+				credentialsChanged: true,
+			},
+		},
+	}
+
+	payload := map[string]any{"anything": "value"}
+	if config.IsEquivalentToDesiredState(payload) {
+		t.Error("expected false when credentialsChanged=true, regardless of rotation settings")
+	}
+}
+
+func TestIsEquivalentToDesiredState_CredentialsChangedNoRotation(t *testing.T) {
+	config := &DatabaseSecretEngineConfig{
+		Spec: DatabaseSecretEngineConfigSpec{
+			Path: "database",
+			DBSEConfig: DBSEConfig{
+				PluginName:    "postgresql-database-plugin",
+				ConnectionURL: "postgresql://localhost/mydb",
+				AllowedRoles:  []string{"*"},
+				RootPasswordRotation: &RootPasswordRotation{
+					Enable: false,
+				},
+				credentialsChanged: true,
+			},
+		},
+	}
+
+	payload := map[string]any{"anything": "value"}
+	if config.IsEquivalentToDesiredState(payload) {
+		t.Error("expected false when credentialsChanged=true even with rotation disabled")
+	}
+}

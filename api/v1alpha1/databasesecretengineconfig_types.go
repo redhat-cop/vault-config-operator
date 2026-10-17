@@ -89,6 +89,13 @@ func (d *DatabaseSecretEngineConfig) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
 func (d *DatabaseSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
+	// Force a config rewrite when the referenced credential source (Secret,
+	// RandomSecret, VaultSecret) has changed since the last successful
+	// reconcile. The password is write-only in Vault (never returned in GET
+	// responses), so normal field comparison cannot detect password changes.
+	if d.Spec.DBSEConfig.credentialsChanged {
+		return false
+	}
 	if d.Spec.DBSEConfig.RootPasswordRotation != nil && d.Spec.DBSEConfig.RootPasswordRotation.Enable && d.Status.LastRootPasswordRotation.IsZero() {
 		return false
 	}
@@ -271,6 +278,11 @@ type DBSEConfig struct {
 
 	retrievedUsername string `json:"-"`
 
+	// credentialsChanged is set when SetUsernameAndPassword detects a hash
+	// mismatch, signalling that the Vault config must be rewritten even though
+	// the password is a write-only field invisible to drift comparison.
+	credentialsChanged bool `json:"-"`
+
 	// +kubebuilder:validation:Optional
 	RootPasswordRotation *RootPasswordRotation `json:"rootPasswordRotation,omitempty"`
 }
@@ -328,6 +340,7 @@ func (m *DatabaseSecretEngineConfig) SetUsernameAndPassword(username string, pas
 	// If the hash has changed, reset the last rotation time to trigger a new rotation
 	if m.Status.CredentialsHash != "" && m.Status.CredentialsHash != newHash {
 		m.Status.LastRootPasswordRotation = metav1.Time{}
+		m.Spec.DBSEConfig.credentialsChanged = true
 	}
 
 	// Update the stored hash
