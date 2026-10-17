@@ -1,0 +1,8 @@
+---
+description: Always use unrestricted sandbox permissions when running git commit
+alwaysApply: true
+---
+
+# Git Commit Permissions
+
+When executing `git commit` (or any command that triggers pre-commit hooks), always set `required_permissions: ["all"]` on the Shell tool call. Pre-commit hooks need write access to `~/.cache/pre-commit/` which is outside the workspace sandbox.

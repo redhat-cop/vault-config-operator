@@ -76,13 +76,13 @@ type PKIType struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum:={"root","intermediate"}
 	// +kubebuilder:default="root"
-	Type string `json:"type"`
+	Type string `json:"type,omitempty"`
 
 	// Specifies the type of the root to create. If exported, the private key will be returned in the response; if internal the private key will not be returned and cannot be retrieved later. This is part of the request URL.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum:={"internal","exported"}
 	// +kubebuilder:default="internal"
-	PrivateKeyType string `json:"privateKeyType"`
+	PrivateKeyType string `json:"privateKeyType,omitempty"`
 }
 
 type PKICommon struct {
@@ -115,7 +115,7 @@ type PKICommon struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"pem","pem_bundle", "der"}
 	// +kubebuilder:default="pem"
-	Format string `json:"format"`
+	Format string `json:"format,omitempty"`
 
 	// Specifies the format for marshaling the private key. Defaults to der which will return either base64-encoded DER or PEM-encoded DER, depending on the value of format. The other option is pkcs8 which will return the key marshalled as PEM-encoded PKCS8.
 	// +kubebuilder:validation:Optional
@@ -126,7 +126,7 @@ type PKICommon struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"rsa","ec"}
 	// +kubebuilder:default="rsa"
-	KeyType string `json:"keyType"`
+	KeyType string `json:"keyType,omitempty"`
 
 	// Specifies the number of bits to use. This must be changed to a valid value if the key_type is ec, e.g., 224, 256, 384 or 521.
 	// +kubebuilder:validation:Optional

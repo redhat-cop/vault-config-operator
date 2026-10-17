@@ -112,7 +112,7 @@ type GCPConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="role_id"
 	// +kubebuilder:validation:Enum={"instance_id","role_id"}
-	GCEalias string `json:"GCEalias"`
+	GCEalias string `json:"GCEalias,omitempty"`
 
 	// The metadata to include on the token returned by the login endpoint. This metadata will be added to both audit logs, and on the gce_alias.
 	// By default, it includes instance_creation_timestamp, instance_id, instance_name, project_id, project_number, role, service_account_id, service_account_email, and zone.

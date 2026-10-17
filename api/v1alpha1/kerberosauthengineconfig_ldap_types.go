@@ -74,13 +74,13 @@ type KerberosLDAPConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="tls12"
 	// +kubebuilder:validation:Enum={"tls10","tls11","tls12","tls13"}
-	TLSMinVersion string `json:"tlsMinVersion"`
+	TLSMinVersion string `json:"tlsMinVersion,omitempty"`
 
 	// TLSMaxVersion is the maximum TLS version to use.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="tls12"
 	// +kubebuilder:validation:Enum={"tls10","tls11","tls12","tls13"}
-	TLSMaxVersion string `json:"tlsMaxVersion"`
+	TLSMaxVersion string `json:"tlsMaxVersion,omitempty"`
 
 	// InsecureTLS skips LDAP server SSL certificate verification.
 	// +kubebuilder:validation:Optional

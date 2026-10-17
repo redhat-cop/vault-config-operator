@@ -57,7 +57,7 @@ type GCPSERoleset struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum:={"access_token","service_account_key"}
 	// +kubebuilder:default="access_token"
-	SecretType string `json:"secretType"`
+	SecretType string `json:"secretType,omitempty"`
 
 	// Project is the GCP project ID that this roleset's service account belongs to. Cannot be updated.
 	// +kubebuilder:validation:Required

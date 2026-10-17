@@ -229,13 +229,13 @@ type LDAPConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="tls12"
 	// +kubebuilder:validation:Enum={"tls10","tls11","tls12","tls13"}
-	TLSMinVersion string `json:"TLSMinVersion"`
+	TLSMinVersion string `json:"TLSMinVersion,omitempty"`
 
 	// TLSMaxVersion Maximum TLS version to use. Accepted values are tls10, tls11, tls12 or tls13
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="tls12"
 	// +kubebuilder:validation:Enum={"tls10","tls11","tls12","tls13"}
-	TLSMaxVersion string `json:"TLSMaxVersion"`
+	TLSMaxVersion string `json:"TLSMaxVersion,omitempty"`
 
 	// InsecureTLS If true, skips LDAP server SSL certificate verification - insecure, use with caution!
 	// +kubebuilder:validation:Optional

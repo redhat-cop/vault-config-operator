@@ -52,7 +52,7 @@ type GroupConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"internal","external"}
 	// +kubebuilder:default:="internal"
-	Type string `json:"type"`
+	Type string `json:"type,omitempty"`
 
 	// Metadata Metadata to be associated with the group.
 	// +kubebuilder:validation:Optional

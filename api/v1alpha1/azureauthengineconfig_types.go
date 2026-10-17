@@ -97,7 +97,7 @@ type AzureConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="AzurePublicCloud"
 	// +kubebuilder:validation:Enum={"AzurePublicCloud","AzureUSGovernmentCloud","AzureChinaCloud","AzureGermanCloud"}
-	Environment string `json:"environment"`
+	Environment string `json:"environment,omitempty"`
 
 	//The client id for credentials to query the Azure APIs.
 	//Currently read permissions to query compute resources are required.

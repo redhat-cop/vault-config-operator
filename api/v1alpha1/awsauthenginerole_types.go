@@ -55,7 +55,7 @@ type AWSAuthRole struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="iam"
 	// +kubebuilder:validation:Enum={"iam","ec2"}
-	AuthType string `json:"authType"`
+	AuthType string `json:"authType,omitempty"`
 
 	// BoundAmiID constrains EC2 instances to specific AMI IDs.
 	// +kubebuilder:validation:Optional

@@ -110,7 +110,7 @@ type JWTOIDCRole struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="string"
 	// +kubebuilder:validation:Enum={"string","glob"}
-	BoundClaimsType string `json:"boundClaimsType"`
+	BoundClaimsType string `json:"boundClaimsType,omitempty"`
 
 	// The claim to use to uniquely identify the set of groups to which the user belongs; this will be used as the names for the Identity group aliases created due to a successful login.
 	// The claim value must be a list of strings. Supports JSON pointer syntax for referencing claims

@@ -65,7 +65,7 @@ type NomadSERole struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="client"
 	// +kubebuilder:validation:Enum:={"client","management"}
-	Type string `json:"type"`
+	Type string `json:"type,omitempty"`
 }
 
 var _ vaultutils.VaultObject = &NomadSecretEngineRole{}

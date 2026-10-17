@@ -63,7 +63,7 @@ type ConsulSEConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="http"
 	// +kubebuilder:validation:Enum:={"http","https"}
-	Scheme string `json:"scheme"`
+	Scheme string `json:"scheme,omitempty"`
 
 	// CACert is the CA certificate for verifying the Consul server certificate (x509 PEM).
 	// +kubebuilder:validation:Optional

@@ -72,7 +72,7 @@ type LDAPSEConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="openldap"
 	// +kubebuilder:validation:Enum:={"openldap","ad","racf"}
-	Schema string `json:"schema"`
+	Schema string `json:"schema,omitempty"`
 
 	// BindDN is the Distinguished name of object to bind for managing user entries
 	// +kubebuilder:validation:Optional

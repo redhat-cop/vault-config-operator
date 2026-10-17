@@ -279,7 +279,7 @@ type DBSEConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"password","scram-sha-256"}
 	// +kubebuilder:default:="password"
-	PasswordAuthentication string `json:"passwordAuthentication"`
+	PasswordAuthentication string `json:"passwordAuthentication,omitempty"`
 
 	// PasswordPolicy The name of the password policy to use when generating passwords for this database. If not specified, this will use a default policy defined as: 20 characters with at least 1 uppercase, 1 lowercase, 1 number, and 1 dash character.
 	// +kubebuilder:validation:Optional

@@ -100,13 +100,13 @@ type TOTPKeyConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="SHA1"
 	// +kubebuilder:validation:Enum={"SHA1","SHA256","SHA512"}
-	Algorithm string `json:"algorithm"`
+	Algorithm string `json:"algorithm,omitempty"`
 
 	// Digits specifies the number of digits in the generated TOTP code (6 or 8).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=6
 	// +kubebuilder:validation:Enum={6,8}
-	Digits int `json:"digits"`
+	Digits int `json:"digits,omitempty"`
 
 	// Skew specifies the number of delay periods allowed when validating a TOTP code (0 or 1).
 	// Only used when generate is true. If unset, Vault defaults to 1.

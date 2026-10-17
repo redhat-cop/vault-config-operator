@@ -55,9 +55,10 @@ type TransitSecretEngineKeySpec struct {
 type TransitKeyConfig struct {
 
 	// Type specifies the key algorithm. Immutable after key creation.
+	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="aes256-gcm96"
 	// +kubebuilder:validation:Enum={"aes128-gcm96","aes256-gcm96","chacha20-poly1305","ed25519","ecdsa-p256","ecdsa-p384","ecdsa-p521","rsa-2048","rsa-3072","rsa-4096","hmac"}
-	Type string `json:"type"`
+	Type string `json:"type,omitempty"`
 
 	// Derived enables key derivation. Immutable after key creation.
 	// +kubebuilder:validation:Optional
