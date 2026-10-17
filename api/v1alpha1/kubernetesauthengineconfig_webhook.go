@@ -56,8 +56,7 @@ func (r *KubernetesAuthEngineConfig) Default(ctx context.Context, obj *Kubernete
 	return nil
 }
 
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-kubernetesauthengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=kubernetesauthengineconfigs,verbs=update,versions=v1alpha1,name=vkubernetesauthengineconfig.kb.io,admissionReviewVersions={v1,v1beta1}
+//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-kubernetesauthengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=kubernetesauthengineconfigs,verbs=create;update,versions=v1alpha1,name=vkubernetesauthengineconfig.kb.io,admissionReviewVersions={v1,v1beta1}
 
 var _ admission.Validator[*KubernetesAuthEngineConfig] = &KubernetesAuthEngineConfig{}
 
@@ -65,7 +64,9 @@ var _ admission.Validator[*KubernetesAuthEngineConfig] = &KubernetesAuthEngineCo
 func (r *KubernetesAuthEngineConfig) ValidateCreate(ctx context.Context, obj *KubernetesAuthEngineConfig) (admission.Warnings, error) {
 	kubernetesauthengineconfiglog.Info("validate create", "name", obj.Name)
 
-	// TODO(user): fill in your validation logic upon object creation.
+	if _, err := obj.IsValid(); err != nil {
+		return nil, err
+	}
 	return nil, nil
 }
 
@@ -80,6 +81,10 @@ func (r *KubernetesAuthEngineConfig) ValidateUpdate(ctx context.Context, oldObj,
 	// the path cannot be updated
 	if newObj.Spec.Path != oldObj.Spec.Path {
 		return nil, errors.New("spec.path cannot be updated")
+	}
+
+	if _, err := newObj.IsValid(); err != nil {
+		return nil, err
 	}
 	return nil, nil
 }

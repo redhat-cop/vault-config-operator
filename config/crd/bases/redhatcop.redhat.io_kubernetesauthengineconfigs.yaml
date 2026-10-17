@@ -191,11 +191,38 @@ spec:
                   The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
                 pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
                 type: string
+              tokenReviewerJWTSecret:
+                description: |-
+                  TokenReviewerJWTSecret sources the token_reviewer_jwt from a Kubernetes Secret.
+                  This is useful when the Kubernetes auth backend's kubernetesHost points at a remote cluster,
+                  an authenticating proxy, or any endpoint where a locally-minted ServiceAccount JWT is not valid.
+                  The Secret is read from the CR's namespace.
+                  Mutually exclusive with TokenReviewerServiceAccount.
+                properties:
+                  key:
+                    description: The key of the secret to select from.  Must be a
+                      valid secret key.
+                    type: string
+                  name:
+                    default: ""
+                    description: |-
+                      Name of the referent.
+                      This field is effectively required, but due to backwards compatibility is
+                      allowed to be empty. Instances of this type with an empty value here are
+                      almost certainly wrong.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    type: string
+                  optional:
+                    description: Specify whether the Secret or its key must be defined
+                    type: boolean
+                required:
+                - key
+                type: object
+                x-kubernetes-map-type: atomic
               tokenReviewerServiceAccount:
-                description: TokenReviewerServiceAccount A service account JWT used
-                  to access the TokenReview API to validate other JWTs during login.
-                  If not set, the JWT submitted in the login payload will be used
-                  to access the Kubernetes TokenReview API.
+                description: |-
+                  TokenReviewerServiceAccount A service account JWT used to access the TokenReview API to validate other JWTs during login. If not set, the JWT submitted in the login payload will be used to access the Kubernetes TokenReview API.
+                  Mutually exclusive with TokenReviewerJWTSecret.
                 properties:
                   name:
                     default: ""

@@ -18,11 +18,13 @@ package v1alpha1
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -50,8 +52,17 @@ type KubernetesAuthEngineConfigSpec struct {
 	KAECConfig `json:",inline"`
 
 	// TokenReviewerServiceAccount A service account JWT used to access the TokenReview API to validate other JWTs during login. If not set, the JWT submitted in the login payload will be used to access the Kubernetes TokenReview API.
+	// Mutually exclusive with TokenReviewerJWTSecret.
 	// +kubebuilder:validation:Optional
 	TokenReviewerServiceAccount *corev1.LocalObjectReference `json:"tokenReviewerServiceAccount,omitempty"`
+
+	// TokenReviewerJWTSecret sources the token_reviewer_jwt from a Kubernetes Secret.
+	// This is useful when the Kubernetes auth backend's kubernetesHost points at a remote cluster,
+	// an authenticating proxy, or any endpoint where a locally-minted ServiceAccount JWT is not valid.
+	// The Secret is read from the CR's namespace.
+	// Mutually exclusive with TokenReviewerServiceAccount.
+	// +kubebuilder:validation:Optional
+	TokenReviewerJWTSecret *corev1.SecretKeySelector `json:"tokenReviewerJWTSecret,omitempty"`
 
 	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
 	// +kubebuilder:validation:Optional
@@ -92,8 +103,30 @@ func (d *KubernetesAuthEngineConfig) IsDeletable() bool {
 func (d *KubernetesAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	log := log.FromContext(context)
 
-	// Check if TokenReviewerServiceAccount exists before calling getJWTToken
-	if d.Spec.TokenReviewerServiceAccount != nil {
+	// TokenReviewerJWTSecret takes precedence over TokenReviewerServiceAccount
+	if d.Spec.TokenReviewerJWTSecret != nil {
+		kubeClient := vaultutils.KubeClientFromContext(context)
+		secret := &corev1.Secret{}
+		err := kubeClient.Get(context, types.NamespacedName{
+			Namespace: d.Namespace,
+			Name:      d.Spec.TokenReviewerJWTSecret.Name,
+		}, secret)
+		if err != nil {
+			log.Error(err, "unable to retrieve token reviewer JWT secret", "secret", d.Namespace+"/"+d.Spec.TokenReviewerJWTSecret.Name)
+			return err
+		}
+		key := d.Spec.TokenReviewerJWTSecret.Key
+		if key == "" {
+			key = "token"
+		}
+		jwt, ok := secret.Data[key]
+		if !ok {
+			err := fmt.Errorf("key %q not found in secret %s/%s", key, d.Namespace, d.Spec.TokenReviewerJWTSecret.Name)
+			log.Error(err, "token reviewer JWT secret key missing")
+			return err
+		}
+		d.Spec.retrievedTokenReviewerJWT = string(jwt)
+	} else if d.Spec.TokenReviewerServiceAccount != nil {
 		jwt, err := d.getJWTToken(context)
 		if err != nil {
 			log.Error(err, "unable to retrieve jwt token for service account", "service account", d.Namespace+"/"+d.Spec.TokenReviewerServiceAccount.Name)
@@ -115,6 +148,9 @@ func (kc *KubernetesAuthEngineConfig) getJWTToken(context context.Context) (stri
 }
 
 func (r *KubernetesAuthEngineConfig) IsValid() (bool, error) {
+	if r.Spec.TokenReviewerServiceAccount != nil && r.Spec.TokenReviewerJWTSecret != nil {
+		return false, fmt.Errorf("spec.tokenReviewerServiceAccount and spec.tokenReviewerJWTSecret are mutually exclusive")
+	}
 	return true, nil
 }
 
@@ -207,7 +243,9 @@ func (i *KAECConfig) toMap() map[string]any {
 	payload := map[string]any{}
 	payload["kubernetes_host"] = i.KubernetesHost
 	payload["kubernetes_ca_cert"] = i.KubernetesCACert
-	payload["token_reviewer_jwt"] = i.retrievedTokenReviewerJWT
+	if i.retrievedTokenReviewerJWT != "" {
+		payload["token_reviewer_jwt"] = i.retrievedTokenReviewerJWT
+	}
 	payload["pem_keys"] = i.PEMKeys
 	payload["issuer"] = i.Issuer
 	payload["disable_iss_validation"] = i.DisableISSValidation

@@ -10,6 +10,259 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+// --- TokenReviewerJWTSecret tests ---
+
+func TestKubernetesAuthEngineConfig_PrepareInternalValues_JWTSecretHappyPath(t *testing.T) {
+	secret := newK8sSecret("vault-ns", "reviewer-cred", map[string][]byte{
+		"token": []byte("my-remote-jwt"),
+	})
+	kubeClient := newFakeKubeClient(secret)
+	ctx := pivContext(kubeClient, nil)
+
+	config := &KubernetesAuthEngineConfig{
+		ObjectMeta: metav1.ObjectMeta{Name: "k8scfg", Namespace: "vault-ns"},
+		Spec: KubernetesAuthEngineConfigSpec{
+			Path: "kubernetes",
+			TokenReviewerJWTSecret: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{Name: "reviewer-cred"},
+				Key:                  "token",
+			},
+			KAECConfig: KAECConfig{
+				KubernetesHost: "https://remote-cluster:443",
+			},
+		},
+	}
+
+	if err := config.PrepareInternalValues(ctx, config); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	if config.Spec.retrievedTokenReviewerJWT != "my-remote-jwt" {
+		t.Fatalf("retrievedTokenReviewerJWT: got %q want %q", config.Spec.retrievedTokenReviewerJWT, "my-remote-jwt")
+	}
+
+	payload := config.GetPayload()
+	if payload["token_reviewer_jwt"] != "my-remote-jwt" {
+		t.Fatalf("payload token_reviewer_jwt: got %q want %q", payload["token_reviewer_jwt"], "my-remote-jwt")
+	}
+}
+
+func TestKubernetesAuthEngineConfig_PrepareInternalValues_JWTSecretCustomKey(t *testing.T) {
+	secret := newK8sSecret("vault-ns", "reviewer-cred", map[string][]byte{
+		"jwt-data": []byte("custom-key-jwt"),
+	})
+	kubeClient := newFakeKubeClient(secret)
+	ctx := pivContext(kubeClient, nil)
+
+	config := &KubernetesAuthEngineConfig{
+		ObjectMeta: metav1.ObjectMeta{Name: "k8scfg", Namespace: "vault-ns"},
+		Spec: KubernetesAuthEngineConfigSpec{
+			Path: "kubernetes",
+			TokenReviewerJWTSecret: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{Name: "reviewer-cred"},
+				Key:                  "jwt-data",
+			},
+			KAECConfig: KAECConfig{
+				KubernetesHost: "https://remote-cluster:443",
+			},
+		},
+	}
+
+	if err := config.PrepareInternalValues(ctx, config); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	if config.Spec.retrievedTokenReviewerJWT != "custom-key-jwt" {
+		t.Fatalf("retrievedTokenReviewerJWT: got %q want %q", config.Spec.retrievedTokenReviewerJWT, "custom-key-jwt")
+	}
+}
+
+func TestKubernetesAuthEngineConfig_PrepareInternalValues_JWTSecretDefaultKey(t *testing.T) {
+	secret := newK8sSecret("vault-ns", "reviewer-cred", map[string][]byte{
+		"token": []byte("default-key-jwt"),
+	})
+	kubeClient := newFakeKubeClient(secret)
+	ctx := pivContext(kubeClient, nil)
+
+	config := &KubernetesAuthEngineConfig{
+		ObjectMeta: metav1.ObjectMeta{Name: "k8scfg", Namespace: "vault-ns"},
+		Spec: KubernetesAuthEngineConfigSpec{
+			Path: "kubernetes",
+			TokenReviewerJWTSecret: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{Name: "reviewer-cred"},
+				Key:                  "", // empty key defaults to "token"
+			},
+			KAECConfig: KAECConfig{
+				KubernetesHost: "https://remote-cluster:443",
+			},
+		},
+	}
+
+	if err := config.PrepareInternalValues(ctx, config); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	if config.Spec.retrievedTokenReviewerJWT != "default-key-jwt" {
+		t.Fatalf("retrievedTokenReviewerJWT: got %q want %q", config.Spec.retrievedTokenReviewerJWT, "default-key-jwt")
+	}
+}
+
+func TestKubernetesAuthEngineConfig_PrepareInternalValues_JWTSecretNotFound(t *testing.T) {
+	kubeClient := newFakeKubeClient() // no secrets
+	ctx := pivContext(kubeClient, nil)
+
+	config := &KubernetesAuthEngineConfig{
+		ObjectMeta: metav1.ObjectMeta{Name: "k8scfg", Namespace: "vault-ns"},
+		Spec: KubernetesAuthEngineConfigSpec{
+			Path: "kubernetes",
+			TokenReviewerJWTSecret: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{Name: "nonexistent"},
+				Key:                  "token",
+			},
+			KAECConfig: KAECConfig{
+				KubernetesHost: "https://remote-cluster:443",
+			},
+		},
+	}
+
+	err := config.PrepareInternalValues(ctx, config)
+	if err == nil {
+		t.Fatal("expected error when secret does not exist")
+	}
+}
+
+func TestKubernetesAuthEngineConfig_PrepareInternalValues_JWTSecretKeyMissing(t *testing.T) {
+	secret := newK8sSecret("vault-ns", "reviewer-cred", map[string][]byte{
+		"other-key": []byte("some-value"),
+	})
+	kubeClient := newFakeKubeClient(secret)
+	ctx := pivContext(kubeClient, nil)
+
+	config := &KubernetesAuthEngineConfig{
+		ObjectMeta: metav1.ObjectMeta{Name: "k8scfg", Namespace: "vault-ns"},
+		Spec: KubernetesAuthEngineConfigSpec{
+			Path: "kubernetes",
+			TokenReviewerJWTSecret: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{Name: "reviewer-cred"},
+				Key:                  "token",
+			},
+			KAECConfig: KAECConfig{
+				KubernetesHost: "https://remote-cluster:443",
+			},
+		},
+	}
+
+	err := config.PrepareInternalValues(ctx, config)
+	if err == nil {
+		t.Fatal("expected error when key is not found in secret")
+	}
+}
+
+func TestKubernetesAuthEngineConfig_PrepareInternalValues_JWTSecretTakesPrecedence(t *testing.T) {
+	secret := newK8sSecret("vault-ns", "reviewer-cred", map[string][]byte{
+		"token": []byte("secret-jwt"),
+	})
+	kubeClient := newFakeKubeClient(secret)
+	ctx := pivContext(kubeClient, nil)
+
+	config := &KubernetesAuthEngineConfig{
+		ObjectMeta: metav1.ObjectMeta{Name: "k8scfg", Namespace: "vault-ns"},
+		Spec: KubernetesAuthEngineConfigSpec{
+			Path: "kubernetes",
+			TokenReviewerJWTSecret: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{Name: "reviewer-cred"},
+				Key:                  "token",
+			},
+			TokenReviewerServiceAccount: &corev1.LocalObjectReference{
+				Name: "my-service-account",
+			},
+			KAECConfig: KAECConfig{
+				KubernetesHost: "https://remote-cluster:443",
+			},
+		},
+	}
+
+	if err := config.PrepareInternalValues(ctx, config); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	if config.Spec.retrievedTokenReviewerJWT != "secret-jwt" {
+		t.Fatalf("expected Secret to take precedence, got %q", config.Spec.retrievedTokenReviewerJWT)
+	}
+}
+
+// --- Mutual exclusivity validation ---
+
+func TestKubernetesAuthEngineConfig_IsValid_BothSourcesSet(t *testing.T) {
+	config := &KubernetesAuthEngineConfig{
+		Spec: KubernetesAuthEngineConfigSpec{
+			TokenReviewerServiceAccount: &corev1.LocalObjectReference{Name: "sa"},
+			TokenReviewerJWTSecret: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+				Key:                  "token",
+			},
+		},
+	}
+	valid, err := config.IsValid()
+	if valid || err == nil {
+		t.Fatal("expected validation error when both sources are set")
+	}
+}
+
+func TestKubernetesAuthEngineConfig_IsValid_OnlySecretSet(t *testing.T) {
+	config := &KubernetesAuthEngineConfig{
+		Spec: KubernetesAuthEngineConfigSpec{
+			TokenReviewerJWTSecret: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+				Key:                  "token",
+			},
+		},
+	}
+	valid, err := config.IsValid()
+	if !valid || err != nil {
+		t.Fatalf("expected valid, got valid=%v err=%v", valid, err)
+	}
+}
+
+func TestKubernetesAuthEngineConfig_IsValid_OnlySASet(t *testing.T) {
+	config := &KubernetesAuthEngineConfig{
+		Spec: KubernetesAuthEngineConfigSpec{
+			TokenReviewerServiceAccount: &corev1.LocalObjectReference{Name: "sa"},
+		},
+	}
+	valid, err := config.IsValid()
+	if !valid || err != nil {
+		t.Fatalf("expected valid, got valid=%v err=%v", valid, err)
+	}
+}
+
+func TestKubernetesAuthEngineConfig_IsValid_NeitherSet(t *testing.T) {
+	config := &KubernetesAuthEngineConfig{}
+	valid, err := config.IsValid()
+	if !valid || err != nil {
+		t.Fatalf("expected valid, got valid=%v err=%v", valid, err)
+	}
+}
+
+// --- toMap empty-string fix ---
+
+func TestKAECConfigToMap_OmitsTokenReviewerJWTWhenEmpty(t *testing.T) {
+	config := KAECConfig{
+		KubernetesHost: "https://kubernetes.default.svc:443",
+	}
+	result := config.toMap()
+	if _, exists := result["token_reviewer_jwt"]; exists {
+		t.Error("toMap() should omit token_reviewer_jwt when retrievedTokenReviewerJWT is empty")
+	}
+}
+
+func TestKAECConfigToMap_IncludesTokenReviewerJWTWhenSet(t *testing.T) {
+	config := KAECConfig{
+		KubernetesHost: "https://kubernetes.default.svc:443",
+	}
+	config.retrievedTokenReviewerJWT = "a-jwt"
+	result := config.toMap()
+	if result["token_reviewer_jwt"] != "a-jwt" {
+		t.Errorf("toMap() should include token_reviewer_jwt when set, got %v", result["token_reviewer_jwt"])
+	}
+}
+
 func TestKubernetesAuthEngineConfigGetPath(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -62,14 +315,14 @@ func TestKAECConfigToMap(t *testing.T) {
 
 	result := config.toMap()
 
-	if len(result) != 8 {
-		t.Errorf("expected 8 keys in map, got %d", len(result))
+	// token_reviewer_jwt is omitted when empty, so expect 7 keys
+	if len(result) != 7 {
+		t.Errorf("expected 7 keys in map, got %d: %v", len(result), result)
 	}
 
 	expected := map[string]any{
 		"kubernetes_host":                   "https://kubernetes.default.svc:443",
 		"kubernetes_ca_cert":                "-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----",
-		"token_reviewer_jwt":                "",
 		"pem_keys":                          []string{"pem-key-1", "pem-key-2"},
 		"issuer":                            "https://kubernetes.default.svc",
 		"disable_iss_validation":            true,

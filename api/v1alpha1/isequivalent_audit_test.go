@@ -58,7 +58,7 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 				m := &KubernetesAuthEngineConfig{Spec: KubernetesAuthEngineConfigSpec{KAECConfig: KAECConfig{KubernetesHost: "https://kubernetes.default.svc:443"}}}
 				p := map[string]any{
 					"kubernetes_host": "https://kubernetes.default.svc:443", "kubernetes_ca_cert": "",
-					"token_reviewer_jwt": "", "pem_keys": []string(nil), "issuer": "",
+					"pem_keys": []string(nil), "issuer": "",
 					"disable_iss_validation": false, "disable_local_ca_jwt": false,
 					"use_annotations_as_alias_metadata": false,
 				}
@@ -573,7 +573,7 @@ func TestAuditNegativeCases_WrongManagedFieldValues(t *testing.T) {
 		m := &KubernetesAuthEngineConfig{Spec: KubernetesAuthEngineConfigSpec{KAECConfig: KAECConfig{KubernetesHost: "https://kubernetes.default.svc:443"}}}
 		payload := map[string]any{
 			"kubernetes_host": "https://WRONG.HOST:443", "kubernetes_ca_cert": "",
-			"token_reviewer_jwt": "", "pem_keys": []string(nil), "issuer": "",
+			"pem_keys": []string(nil), "issuer": "",
 			"disable_iss_validation": false, "disable_local_ca_jwt": false,
 			"use_annotations_as_alias_metadata": false,
 			"accessor":                          "extra-field",
