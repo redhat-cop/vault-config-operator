@@ -823,14 +823,15 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 			name: "DatabaseSecretEngineStaticRole allows non-path update",
 			validateFn: func() (admission.Warnings, error) {
 				r := &DatabaseSecretEngineStaticRole{}
+				rp := 3600
 				return r.ValidateUpdate(context.Background(),
 					&DatabaseSecretEngineStaticRole{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: DatabaseSecretEngineStaticRoleSpec{
 						Path:           "same/path",
-						DBSEStaticRole: DBSEStaticRole{PasswordCredentialConfig: &PasswordCredentialConfig{}},
+						DBSEStaticRole: DBSEStaticRole{RotationPeriod: &rp, PasswordCredentialConfig: &PasswordCredentialConfig{}},
 					}},
 					&DatabaseSecretEngineStaticRole{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: DatabaseSecretEngineStaticRoleSpec{
 						Path:           "same/path",
-						DBSEStaticRole: DBSEStaticRole{PasswordCredentialConfig: &PasswordCredentialConfig{}},
+						DBSEStaticRole: DBSEStaticRole{RotationPeriod: &rp, PasswordCredentialConfig: &PasswordCredentialConfig{}},
 					}},
 				)
 			},
