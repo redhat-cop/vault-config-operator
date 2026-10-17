@@ -158,24 +158,12 @@ func (r *NomadSecretEngineConfig) setInternalCredentials(context context.Context
 			return err
 		}
 
-		if randomSecret.Spec.IsKVSecretsEngineV2 {
-			actualData, ok := secret.Data["data"].(map[string]any)
-			if !ok {
-				return fmt.Errorf("RandomSecret KV v2 response missing nested data map")
-			}
-			token, ok := actualData[randomSecret.Spec.SecretKey].(string)
-			if !ok {
-				return fmt.Errorf("RandomSecret KV v2 key %q not found or not a string", randomSecret.Spec.SecretKey)
-			}
-			r.Spec.NomadSEConfig.retrievedToken = token
-		} else {
-			token, ok := secret.Data[randomSecret.Spec.SecretKey].(string)
-			if !ok {
-				return fmt.Errorf("RandomSecret key %q not found or not a string", randomSecret.Spec.SecretKey)
-			}
-			r.Spec.NomadSEConfig.retrievedToken = token
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+		token, ok := secretData[randomSecret.Spec.SecretKey].(string)
+		if !ok {
+			return fmt.Errorf("secret key %q not found or not a string in vault secret", randomSecret.Spec.SecretKey)
 		}
-
+		r.Spec.NomadSEConfig.retrievedToken = token
 		return nil
 	}
 	if r.Spec.RootCredentials.Secret != nil {
@@ -205,20 +193,9 @@ func (r *NomadSecretEngineConfig) setInternalCredentials(context context.Context
 			log.Error(err, "unable to retrieve vault secret", "instance", r)
 			return err
 		}
-		var tokenVal string
-		if dataInterface, exists := secret.Data["data"]; exists {
-			if nestedData, ok := dataInterface.(map[string]any); ok {
-				if val, ok := nestedData[r.Spec.RootCredentials.PasswordKey].(string); ok {
-					tokenVal = val
-				}
-			}
-		}
-		if tokenVal == "" {
-			if val, ok := secret.Data[r.Spec.RootCredentials.PasswordKey].(string); ok {
-				tokenVal = val
-			}
-		}
-		if tokenVal == "" {
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+		tokenVal, ok := secretData[r.Spec.RootCredentials.PasswordKey].(string)
+		if !ok {
 			return fmt.Errorf("VaultSecret key %q not found or not a string in secret at %q", r.Spec.RootCredentials.PasswordKey, r.Spec.RootCredentials.VaultSecret.Path)
 		}
 		r.Spec.NomadSEConfig.retrievedToken = tokenVal

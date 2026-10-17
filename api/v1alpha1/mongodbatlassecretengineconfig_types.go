@@ -130,24 +130,12 @@ func (r *MongoDBAtlasSecretEngineConfig) setInternalCredentials(context context.
 			return err
 		}
 
-		if randomSecret.Spec.IsKVSecretsEngineV2 {
-			actualData, ok := secret.Data["data"].(map[string]any)
-			if !ok {
-				return fmt.Errorf("RandomSecret KV v2 response missing nested data map")
-			}
-			secretKey, ok := actualData[randomSecret.Spec.SecretKey].(string)
-			if !ok {
-				return fmt.Errorf("RandomSecret KV v2 key %q not found or not a string", randomSecret.Spec.SecretKey)
-			}
-			r.SetPublicKeyAndPrivateKey(r.Spec.PublicKey, secretKey)
-		} else {
-			secretKey, ok := secret.Data[randomSecret.Spec.SecretKey].(string)
-			if !ok {
-				return fmt.Errorf("RandomSecret key %q not found or not a string", randomSecret.Spec.SecretKey)
-			}
-			r.SetPublicKeyAndPrivateKey(r.Spec.PublicKey, secretKey)
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+		secretVal, ok := secretData[randomSecret.Spec.SecretKey].(string)
+		if !ok {
+			return fmt.Errorf("secret key %q not found or not a string in vault secret", randomSecret.Spec.SecretKey)
 		}
-
+		r.SetPublicKeyAndPrivateKey(r.Spec.PublicKey, secretVal)
 		return nil
 	}
 	if r.Spec.RootCredentials.Secret != nil {
@@ -185,12 +173,13 @@ func (r *MongoDBAtlasSecretEngineConfig) setInternalCredentials(context context.
 			log.Error(err, "unable to retrieve vault secret", "instance", r)
 			return err
 		}
-		passwordVal, ok := secret.Data[r.Spec.RootCredentials.PasswordKey].(string)
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+		passwordVal, ok := secretData[r.Spec.RootCredentials.PasswordKey].(string)
 		if !ok {
 			return fmt.Errorf("VaultSecret key %q not found or not a string", r.Spec.RootCredentials.PasswordKey)
 		}
 		if r.Spec.PublicKey == "" {
-			usernameVal, ok := secret.Data[r.Spec.RootCredentials.UsernameKey].(string)
+			usernameVal, ok := secretData[r.Spec.RootCredentials.UsernameKey].(string)
 			if !ok {
 				return fmt.Errorf("VaultSecret key %q not found or not a string", r.Spec.RootCredentials.UsernameKey)
 			}

@@ -157,7 +157,15 @@ func (r *GitHubSecretEngineConfig) setInternalCredentials(context context.Contex
 			log.Error(err, "unable to retrieve vault secret", "instance", r)
 			return err
 		}
-		r.Spec.retrievedSSHKey = secret.Data["key"].(string)
+		if secret == nil || secret.Data == nil {
+			return errors.New("secret not found at path: " + string(r.Spec.SSHKeyReference.VaultSecret.Path))
+		}
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+		sshKey, ok := secretData["key"].(string)
+		if !ok {
+			return errors.New("vault secret key \"key\" not found or not a string")
+		}
+		r.Spec.retrievedSSHKey = sshKey
 		return nil
 	}
 	return errors.New("no means of retrieving a secret was specified")

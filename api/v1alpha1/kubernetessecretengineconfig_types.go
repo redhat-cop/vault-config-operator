@@ -173,7 +173,15 @@ func (r *KubernetesSecretEngineConfig) setInternalCredentials(context context.Co
 			log.Error(err, "unable to retrieve vault secret", "instance", r)
 			return err
 		}
-		r.Spec.retrievedServiceAccountJWT = secret.Data["key"].(string)
+		if secret == nil || secret.Data == nil {
+			return errors.New("secret not found at path: " + string(r.Spec.JWTReference.VaultSecret.Path))
+		}
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+		jwtVal, ok := secretData["key"].(string)
+		if !ok {
+			return errors.New("vault secret key \"key\" not found or not a string")
+		}
+		r.Spec.retrievedServiceAccountJWT = jwtVal
 		return nil
 	}
 	return errors.New("no means of retrieving a secret was specified")

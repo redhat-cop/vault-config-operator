@@ -220,22 +220,7 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) setInternalCredentials(context conte
 			return err
 		}
 
-		// Handle both KV v1 and v2 secret formats
-		var secretData map[string]any
-		if dataInterface, exists := secret.Data["data"]; exists {
-			// KV v2 format: secret data is nested under "data" key
-			var ok bool
-			secretData, ok = dataInterface.(map[string]any)
-			if !ok {
-				err := errors.New("vault secret data is not in expected format for KV v2")
-				log.Error(err, "unable to parse vault secret data", "instance", rabbitMQ)
-				return err
-			}
-		} else {
-			// KV v1 format: secret data is directly in Data
-			secretData = secret.Data
-		}
-
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
 		password, ok := secretData[randomSecret.Spec.SecretKey].(string)
 		if !ok {
 			err := errors.New("secret key not found or not a string in vault secret")
@@ -272,22 +257,7 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) setInternalCredentials(context conte
 			log.Error(err, "unable to retrieve vault secret", "instance", rabbitMQ)
 			return err
 		}
-		// Handle both KV v1 and v2 secret formats
-		var secretData map[string]any
-		if dataInterface, exists := secret.Data["data"]; exists {
-			// KV v2 format: secret data is nested under "data" key
-			var ok bool
-			secretData, ok = dataInterface.(map[string]any)
-			if !ok {
-				err := errors.New("vault secret data is not in expected format for KV v2")
-				log.Error(err, "unable to parse vault secret data", "instance", rabbitMQ)
-				return err
-			}
-		} else {
-			// KV v1 format: secret data is directly in Data
-			secretData = secret.Data
-		}
-
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
 		if rabbitMQ.Spec.Username == "" {
 			username, ok := secretData[rabbitMQ.Spec.RootCredentials.UsernameKey].(string)
 			if !ok {

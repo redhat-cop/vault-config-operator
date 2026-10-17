@@ -244,7 +244,12 @@ func (r *JWTOIDCAuthEngineConfig) setInternalCredentials(context context.Context
 				log.Error(err, "unable to retrieve vault secret", "instance", r)
 				return err
 			}
-			r.SetUsernameAndPassword(r.Spec.OIDCClientID, secret.Data[randomSecret.Spec.SecretKey].(string))
+			secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+			secretVal, ok := secretData[randomSecret.Spec.SecretKey].(string)
+			if !ok {
+				return errors.New("secret key not found or not a string in vault secret")
+			}
+			r.SetUsernameAndPassword(r.Spec.OIDCClientID, secretVal)
 			return nil
 		}
 		if r.Spec.OIDCCredentials.Secret != nil {
@@ -274,12 +279,19 @@ func (r *JWTOIDCAuthEngineConfig) setInternalCredentials(context context.Context
 				log.Error(err, "unable to retrieve vault secret", "instance", r)
 				return err
 			}
+			secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+			passwordVal, ok := secretData[r.Spec.OIDCCredentials.PasswordKey].(string)
+			if !ok {
+				return errors.New("password key not found or not a string in vault secret")
+			}
 			if r.Spec.OIDCClientID == "" {
-				r.SetUsernameAndPassword(secret.Data[r.Spec.OIDCCredentials.UsernameKey].(string), secret.Data[r.Spec.OIDCCredentials.PasswordKey].(string))
-				log.V(1).Info("", "username", secret.Data[r.Spec.OIDCCredentials.UsernameKey].(string), "password", secret.Data[r.Spec.OIDCCredentials.PasswordKey].(string))
+				usernameVal, ok := secretData[r.Spec.OIDCCredentials.UsernameKey].(string)
+				if !ok {
+					return errors.New("username key not found or not a string in vault secret")
+				}
+				r.SetUsernameAndPassword(usernameVal, passwordVal)
 			} else {
-				r.SetUsernameAndPassword(r.Spec.JWTOIDCConfig.OIDCClientID, secret.Data[r.Spec.OIDCCredentials.PasswordKey].(string))
-				log.V(1).Info("", "username", r.Spec.JWTOIDCConfig.OIDCClientID, "password", secret.Data[r.Spec.OIDCCredentials.PasswordKey].(string))
+				r.SetUsernameAndPassword(r.Spec.JWTOIDCConfig.OIDCClientID, passwordVal)
 			}
 			return nil
 		}

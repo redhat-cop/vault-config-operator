@@ -405,6 +405,21 @@ func ToString(name any) string {
 	}
 }
 
+// UnwrapKVv2Data returns the inner key-value data from a Vault API response,
+// transparently handling both KV v1 and KV v2 secret engine formats.
+// For KV v2 responses (where the actual data is nested under a "data" key),
+// this function unwraps that layer. For KV v1 or any other response format,
+// it returns the data as-is.
+func UnwrapKVv2Data(data map[string]any) map[string]any {
+	if data == nil {
+		return nil
+	}
+	if nested, ok := data["data"].(map[string]any); ok {
+		return nested
+	}
+	return data
+}
+
 // +kubebuilder:object:generate=true
 type VaultSecretReference struct {
 	// Path is the path to the secret

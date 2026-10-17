@@ -231,24 +231,12 @@ func (d *UserpassAuthEngineUser) setInternalCredentials(ctx context.Context) err
 			return err
 		}
 
-		if randomSecret.Spec.IsKVSecretsEngineV2 {
-			actualData, ok := secret.Data["data"].(map[string]any)
-			if !ok {
-				return fmt.Errorf("RandomSecret KV v2 response missing nested data map")
-			}
-			password, ok := actualData[randomSecret.Spec.SecretKey].(string)
-			if !ok {
-				return fmt.Errorf("RandomSecret KV v2 key %q not found or not a string", randomSecret.Spec.SecretKey)
-			}
-			d.Spec.UserpassUser.retrievedPassword = password
-		} else {
-			password, ok := secret.Data[randomSecret.Spec.SecretKey].(string)
-			if !ok {
-				return fmt.Errorf("RandomSecret key %q not found or not a string", randomSecret.Spec.SecretKey)
-			}
-			d.Spec.UserpassUser.retrievedPassword = password
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+		password, ok := secretData[randomSecret.Spec.SecretKey].(string)
+		if !ok {
+			return fmt.Errorf("secret key %q not found or not a string in vault secret", randomSecret.Spec.SecretKey)
 		}
-
+		d.Spec.UserpassUser.retrievedPassword = password
 		return nil
 	}
 	if d.Spec.PasswordCredentials.Secret != nil {
@@ -278,7 +266,8 @@ func (d *UserpassAuthEngineUser) setInternalCredentials(ctx context.Context) err
 			log.Error(err, "unable to retrieve vault secret", "instance", d)
 			return err
 		}
-		passwordVal, ok := secret.Data[d.Spec.PasswordCredentials.PasswordKey].(string)
+		secretData := vaultutils.UnwrapKVv2Data(secret.Data)
+		passwordVal, ok := secretData[d.Spec.PasswordCredentials.PasswordKey].(string)
 		if !ok {
 			return fmt.Errorf("VaultSecret key %q not found or not a string", d.Spec.PasswordCredentials.PasswordKey)
 		}
