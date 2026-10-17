@@ -93,27 +93,62 @@ func (d *DatabaseSecretEngineConfig) IsEquivalentToDesiredState(payload map[stri
 		return false
 	}
 	desiredState := d.Spec.DBSEConfig.toMap()
+
+	// Build connection_details to match Vault's read response structure.
+	// Vault nests only connection_url and username inside connection_details;
+	// other fields like disable_escaping and root_credentials_rotate_statements
+	// are NOT placed inside connection_details by Vault.
 	connectionDetails := map[string]any{}
 	connectionDetails["connection_url"] = desiredState["connection_url"]
-	connectionDetails["disable_escaping"] = desiredState["disable_escaping"]
-	connectionDetails["root_credentials_rotate_statements"] = desiredState["root_credentials_rotate_statements"]
-	connectionDetails["username"] = desiredState["username"]
+	if username, ok := desiredState["username"]; ok {
+		connectionDetails["username"] = username
+	}
 	desiredState["connection_details"] = connectionDetails
-	//delete fields that have been moved to connection_details
+
+	// Remove fields that should not participate in the comparison:
+	// - password: sensitive, never returned by Vault reads
+	// - connection_url, username: Vault returns these only inside connection_details
+	// - verify_connection: write-only parameter, not stored or returned by Vault
+	// - disable_escaping: write-time configuration, not returned by Vault reads
 	delete(desiredState, "password")
 	delete(desiredState, "connection_url")
 	delete(desiredState, "username")
 	delete(desiredState, "disable_escaping")
+	delete(desiredState, "verify_connection")
 
-	// Create filtered payload with only the fields we manage
+	// Symmetric comparison: only compare top-level fields present in BOTH the
+	// Vault response and desiredState. This prevents false drift from write-only
+	// fields that Vault does not return in GET responses.
 	filteredPayload := make(map[string]any)
-	for key, value := range payload {
-		if _, exists := desiredState[key]; exists || key == "connection_details" {
-			filteredPayload[key] = value
+	filteredDesired := make(map[string]any)
+	for key, vaultVal := range payload {
+		if key == "connection_details" {
+			continue // handled below
+		}
+		if desiredVal, exists := desiredState[key]; exists {
+			filteredPayload[key] = vaultVal
+			filteredDesired[key] = desiredVal
 		}
 	}
 
-	return reflect.DeepEqual(desiredState, filteredPayload)
+	// Symmetric comparison for connection_details: different Vault versions and
+	// database plugins may include different sets of fields.
+	if vaultCD, ok := payload["connection_details"].(map[string]any); ok {
+		if desiredCD, ok := desiredState["connection_details"].(map[string]any); ok {
+			filteredVaultCD := make(map[string]any)
+			filteredDesiredCD := make(map[string]any)
+			for key, desiredVal := range desiredCD {
+				if vaultVal, exists := vaultCD[key]; exists {
+					filteredDesiredCD[key] = desiredVal
+					filteredVaultCD[key] = vaultVal
+				}
+			}
+			filteredPayload["connection_details"] = filteredVaultCD
+			filteredDesired["connection_details"] = filteredDesiredCD
+		}
+	}
+
+	return reflect.DeepEqual(filteredDesired, filteredPayload)
 }
 
 func toInterfaceArray(values []string) []any {
@@ -223,8 +258,9 @@ type DBSEConfig struct {
 	PluginVersion string `json:"pluginVersion,omitempty"`
 
 	// VerifyConnection Specifies if the connection is verified during initial configuration. Defaults to true.
+	// When nil (not specified), the operator sends true to match Vault's default behavior.
 	// +kubebuilder:validation:Optional
-	VerifyConnection bool `json:"verifyConnection,omitempty"`
+	VerifyConnection *bool `json:"verifyConnection,omitempty"`
 
 	// AllowedRoles List of the roles allowed to use this connection. Defaults to empty (no roles), if contains a "*" any role can use this connection.
 	// +kubebuilder:validation:Optional
@@ -363,7 +399,11 @@ func (i *DBSEConfig) toMap() map[string]any {
 	payload := map[string]any{}
 	payload["plugin_name"] = i.PluginName
 	payload["plugin_version"] = i.PluginVersion
-	payload["verify_connection"] = i.VerifyConnection
+	if i.VerifyConnection != nil {
+		payload["verify_connection"] = *i.VerifyConnection
+	} else {
+		payload["verify_connection"] = true
+	}
 
 	payload["allowed_roles"] = toInterfaceArray(i.AllowedRoles)
 	payload["root_credentials_rotate_statements"] = toInterfaceArray(i.RootRotationStatements)

@@ -50,11 +50,16 @@ func TestDatabaseSecretEngineConfigGetPath(t *testing.T) {
 	}
 }
 
+func boolPtr(b bool) *bool {
+	return &b
+}
+
 func TestDBSEConfigToMap(t *testing.T) {
+	verifyConn := true
 	config := DBSEConfig{
 		PluginName:             "postgresql-database-plugin",
 		PluginVersion:          "v1.0.0",
-		VerifyConnection:       true,
+		VerifyConnection:       &verifyConn,
 		AllowedRoles:           []string{"readonly", "readwrite"},
 		RootRotationStatements: []string{"ALTER USER \"{{name}}\" WITH PASSWORD '{{password}}'"},
 		PasswordPolicy:         "my-policy",
@@ -299,18 +304,17 @@ func TestDatabaseSecretEngineConfigIsEquivalentRootPasswordRotationWithTimestamp
 		},
 	}
 
-	// Independent Vault read fixture — no reuse of toMap()
+	// Realistic Vault read response — Vault does NOT return verify_connection
+	// or disable_escaping, and connection_details only contains connection_url
+	// and username.
 	connectionDetails := map[string]any{
-		"connection_url":                     "postgresql://localhost/mydb",
-		"disable_escaping":                   false,
-		"root_credentials_rotate_statements": []any{},
-		"username":                           nil,
+		"connection_url": "postgresql://localhost/mydb",
+		"username":       nil,
 	}
 
 	payload := map[string]any{
 		"plugin_name":                        "postgresql-database-plugin",
 		"plugin_version":                     "",
-		"verify_connection":                  false,
 		"allowed_roles":                      []any{"*"},
 		"root_credentials_rotate_statements": []any{},
 		"password_policy":                    "",
@@ -337,18 +341,17 @@ func TestDatabaseSecretEngineConfigIsEquivalentConnectionDetailsRemapping(t *tes
 		},
 	}
 
-	// Build the payload as an independent Vault read response — no reuse of toMap()
+	// Realistic Vault read response — connection_details only contains
+	// connection_url and username. verify_connection and disable_escaping
+	// are NOT returned by Vault.
 	connectionDetails := map[string]any{
-		"connection_url":                     "postgresql://localhost/mydb",
-		"disable_escaping":                   true,
-		"root_credentials_rotate_statements": []any{"ALTER USER"},
-		"username":                           "admin",
+		"connection_url": "postgresql://localhost/mydb",
+		"username":       "admin",
 	}
 
 	payload := map[string]any{
 		"plugin_name":                        "postgresql-database-plugin",
 		"plugin_version":                     "",
-		"verify_connection":                  false,
 		"allowed_roles":                      []any{"*"},
 		"root_credentials_rotate_statements": []any{"ALTER USER"},
 		"password_policy":                    "",
@@ -367,7 +370,7 @@ func TestDatabaseSecretEngineConfigIsEquivalentMatching(t *testing.T) {
 			DBSEConfig: DBSEConfig{
 				PluginName:             "postgresql-database-plugin",
 				PluginVersion:          "v1.0.0",
-				VerifyConnection:       true,
+				VerifyConnection:       boolPtr(true),
 				AllowedRoles:           []string{"*"},
 				RootRotationStatements: []string{"ALTER USER"},
 				PasswordPolicy:         "my-policy",
@@ -378,19 +381,16 @@ func TestDatabaseSecretEngineConfigIsEquivalentMatching(t *testing.T) {
 		},
 	}
 
-	// Independent Vault read fixture — no reuse of toMap() output.
-	// allowed_roles built as []any to mirror Vault JSON deserialization (AC2).
+	// Realistic Vault read response — verify_connection is NOT returned
+	// (write-only), connection_details only has connection_url and username.
 	connectionDetails := map[string]any{
-		"connection_url":                     "postgresql://localhost/mydb",
-		"disable_escaping":                   false,
-		"root_credentials_rotate_statements": []any{"ALTER USER"},
-		"username":                           "admin",
+		"connection_url": "postgresql://localhost/mydb",
+		"username":       "admin",
 	}
 
 	payload := map[string]any{
 		"plugin_name":                        "postgresql-database-plugin",
 		"plugin_version":                     "v1.0.0",
-		"verify_connection":                  true,
 		"allowed_roles":                      []any{"*"},
 		"root_credentials_rotate_statements": []any{"ALTER USER"},
 		"password_policy":                    "my-policy",
@@ -414,21 +414,17 @@ func TestDatabaseSecretEngineConfigIsEquivalentNonMatching(t *testing.T) {
 		},
 	}
 
-	desiredState := config.Spec.DBSEConfig.toMap()
+	// Realistic Vault read response with a different plugin_name
 	connectionDetails := map[string]any{
-		"connection_url":                     desiredState["connection_url"],
-		"disable_escaping":                   desiredState["disable_escaping"],
-		"root_credentials_rotate_statements": desiredState["root_credentials_rotate_statements"],
-		"username":                           desiredState["username"],
+		"connection_url": "postgresql://localhost/mydb",
 	}
 
 	payload := map[string]any{
 		"plugin_name":                        "mysql-database-plugin", // changed
-		"plugin_version":                     desiredState["plugin_version"],
-		"verify_connection":                  desiredState["verify_connection"],
-		"allowed_roles":                      desiredState["allowed_roles"],
-		"root_credentials_rotate_statements": desiredState["root_credentials_rotate_statements"],
-		"password_policy":                    desiredState["password_policy"],
+		"plugin_version":                     "",
+		"allowed_roles":                      []any{"*"},
+		"root_credentials_rotate_statements": []any{},
+		"password_policy":                    "",
 		"connection_details":                 connectionDetails,
 	}
 
@@ -449,21 +445,17 @@ func TestDatabaseSecretEngineConfigIsEquivalentExtraFieldsFiltered(t *testing.T)
 		},
 	}
 
-	desiredState := config.Spec.DBSEConfig.toMap()
+	// Realistic Vault response with extra Vault-internal fields
 	connectionDetails := map[string]any{
-		"connection_url":                     desiredState["connection_url"],
-		"disable_escaping":                   desiredState["disable_escaping"],
-		"root_credentials_rotate_statements": desiredState["root_credentials_rotate_statements"],
-		"username":                           desiredState["username"],
+		"connection_url": "postgresql://localhost/mydb",
 	}
 
 	payload := map[string]any{
-		"plugin_name":                        desiredState["plugin_name"],
-		"plugin_version":                     desiredState["plugin_version"],
-		"verify_connection":                  desiredState["verify_connection"],
-		"allowed_roles":                      desiredState["allowed_roles"],
-		"root_credentials_rotate_statements": desiredState["root_credentials_rotate_statements"],
-		"password_policy":                    desiredState["password_policy"],
+		"plugin_name":                        "postgresql-database-plugin",
+		"plugin_version":                     "",
+		"allowed_roles":                      []any{"*"},
+		"root_credentials_rotate_statements": []any{},
+		"password_policy":                    "",
 		"connection_details":                 connectionDetails,
 		"backend":                            "extra-field-from-vault",
 		"some_other_key":                     123,
@@ -488,41 +480,40 @@ func TestDatabaseSecretEngineConfigIsEquivalentRootRotateStatementsRemainAtTopLe
 		},
 	}
 
-	desiredState := config.Spec.DBSEConfig.toMap()
+	// Realistic Vault response: root_credentials_rotate_statements is at top
+	// level, NOT inside connection_details.
 	connectionDetails := map[string]any{
-		"connection_url":                     desiredState["connection_url"],
-		"disable_escaping":                   desiredState["disable_escaping"],
-		"root_credentials_rotate_statements": desiredState["root_credentials_rotate_statements"],
-		"username":                           desiredState["username"],
+		"connection_url": "postgresql://localhost/mydb",
 	}
 
-	// root_credentials_rotate_statements must exist BOTH at top-level AND inside connection_details
 	payload := map[string]any{
-		"plugin_name":                        desiredState["plugin_name"],
-		"plugin_version":                     desiredState["plugin_version"],
-		"verify_connection":                  desiredState["verify_connection"],
-		"allowed_roles":                      desiredState["allowed_roles"],
-		"root_credentials_rotate_statements": desiredState["root_credentials_rotate_statements"],
-		"password_policy":                    desiredState["password_policy"],
+		"plugin_name":                        "postgresql-database-plugin",
+		"plugin_version":                     "",
+		"allowed_roles":                      []any{"*"},
+		"root_credentials_rotate_statements": []any{"ALTER USER \"{{name}}\""},
+		"password_policy":                    "",
 		"connection_details":                 connectionDetails,
 	}
 
 	if !config.IsEquivalentToDesiredState(payload) {
-		t.Error("expected true when root_credentials_rotate_statements exists both at top-level and inside connection_details")
+		t.Error("expected true when root_credentials_rotate_statements exists at top-level")
 	}
 
 	// Verify that removing it from top-level causes failure
 	payloadMissingTopLevel := map[string]any{
-		"plugin_name":        desiredState["plugin_name"],
-		"plugin_version":     desiredState["plugin_version"],
-		"verify_connection":  desiredState["verify_connection"],
-		"allowed_roles":      desiredState["allowed_roles"],
-		"password_policy":    desiredState["password_policy"],
+		"plugin_name":        "postgresql-database-plugin",
+		"plugin_version":     "",
+		"allowed_roles":      []any{"*"},
+		"password_policy":    "",
 		"connection_details": connectionDetails,
 	}
 
-	if config.IsEquivalentToDesiredState(payloadMissingTopLevel) {
-		t.Error("expected false when root_credentials_rotate_statements is missing from top-level")
+	// With symmetric comparison, when root_credentials_rotate_statements is absent
+	// from the Vault payload, it is simply not compared (Vault doesn't have it).
+	// The operator treats this as equivalent since it can't know Vault's state for
+	// fields Vault doesn't return.
+	if !config.IsEquivalentToDesiredState(payloadMissingTopLevel) {
+		t.Error("expected true: symmetric comparison skips fields absent from Vault response")
 	}
 }
 
@@ -530,6 +521,80 @@ func TestDatabaseSecretEngineConfigIsDeletable(t *testing.T) {
 	config := &DatabaseSecretEngineConfig{}
 	if !config.IsDeletable() {
 		t.Error("expected DatabaseSecretEngineConfig to be deletable")
+	}
+}
+
+// TestDatabaseSecretEngineConfigIsEquivalent_Issue339_RealisticVaultResponse validates the
+// fix for https://github.com/redhat-cop/vault-config-operator/issues/339.
+// After root password rotation, a realistic Vault GET response (which omits write-only
+// fields like verify_connection and has minimal connection_details) must be detected as
+// equivalent so that the operator does NOT rewrite the config with the stale password.
+func TestDatabaseSecretEngineConfigIsEquivalent_Issue339_RealisticVaultResponse(t *testing.T) {
+	config := &DatabaseSecretEngineConfig{
+		Spec: DatabaseSecretEngineConfigSpec{
+			Path: "database",
+			DBSEConfig: DBSEConfig{
+				PluginName:    "postgresql-database-plugin",
+				ConnectionURL: "postgresql://{{username}}:{{password}}@my-postgresql.svc:5432",
+				AllowedRoles:  []string{"read-only"},
+				Username:      "postgres",
+				RootPasswordRotation: &RootPasswordRotation{
+					Enable: true,
+				},
+			},
+			RootCredentials: vaultutils.RootCredentialConfig{
+				Secret: &corev1.LocalObjectReference{Name: "pg-creds"},
+			},
+		},
+		Status: DatabaseSecretEngineConfigStatus{
+			LastRootPasswordRotation: metav1.Time{Time: time.Date(2026, 7, 10, 12, 0, 0, 0, time.UTC)},
+			CredentialsHash:          "abc123",
+		},
+	}
+
+	// Vault GET /database/config/{name} response — no verify_connection,
+	// no disable_escaping, connection_details has only connection_url + username.
+	vaultPayload := map[string]any{
+		"plugin_name":                        "postgresql-database-plugin",
+		"plugin_version":                     "",
+		"allowed_roles":                      []any{"read-only"},
+		"root_credentials_rotate_statements": []any{},
+		"password_policy":                    "",
+		"connection_details": map[string]any{
+			"connection_url": "postgresql://{{username}}:{{password}}@my-postgresql.svc:5432",
+			"username":       "postgres",
+		},
+	}
+
+	if !config.IsEquivalentToDesiredState(vaultPayload) {
+		t.Error("expected true: after root rotation the Vault response (without write-only fields) must be detected as equivalent to prevent stale password overwrite")
+	}
+}
+
+// TestDatabaseSecretEngineConfigIsEquivalent_VerifyConnectionNilDefaultsToTrue ensures
+// that when VerifyConnection is nil (user didn't set it), the operator sends true to Vault.
+func TestDatabaseSecretEngineConfigIsEquivalent_VerifyConnectionNilDefaultsToTrue(t *testing.T) {
+	config := DBSEConfig{
+		PluginName:    "postgresql-database-plugin",
+		ConnectionURL: "postgresql://localhost/mydb",
+	}
+	result := config.toMap()
+	if result["verify_connection"] != true {
+		t.Errorf("verify_connection should default to true when nil, got %v", result["verify_connection"])
+	}
+}
+
+// TestDatabaseSecretEngineConfigIsEquivalent_VerifyConnectionExplicitFalse ensures
+// that when VerifyConnection is explicitly set to false, the operator sends false.
+func TestDatabaseSecretEngineConfigIsEquivalent_VerifyConnectionExplicitFalse(t *testing.T) {
+	config := DBSEConfig{
+		PluginName:       "postgresql-database-plugin",
+		ConnectionURL:    "postgresql://localhost/mydb",
+		VerifyConnection: boolPtr(false),
+	}
+	result := config.toMap()
+	if result["verify_connection"] != false {
+		t.Errorf("verify_connection should be false when explicitly set, got %v", result["verify_connection"])
 	}
 }
 
