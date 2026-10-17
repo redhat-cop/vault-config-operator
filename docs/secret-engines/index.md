@@ -31,6 +31,25 @@ This CR is roughly equivalent to this Vault CLI command:
 vault secrets enable -path [namespace/]postgresql-vault-demo/database database
 ```
 
+### Mounting directly at a single-segment path
+
+By default, the operator constructs the Vault mount path as `{spec.path}/{metadata.name}`. If you want the secret engine mounted at a path without the extra `/{metadata.name}` suffix (e.g. exactly at `database`), simply set `metadata.name` to the desired mount name and leave `spec.path` empty:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: SecretEngineMount
+metadata:
+  name: database
+spec:
+  authentication: 
+    path: kubernetes
+    role: database-engine-admin
+  type: database
+  # path is intentionally omitted so the mount is created at database/
+```
+
+In this case the final mount path will be `database` (i.e. `{metadata.name}`), with no additional path segment appended. This is useful when external automation or other systems expect the secret engine at a specific single-segment path.
+
 ## Supported Secret Engines
 
 | Engine | Config CRD | Additional CRD(s) | File |
