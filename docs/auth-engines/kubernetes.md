@@ -15,7 +15,7 @@ The vault-config-operator supports the following CRDs for the Kubernetes engine:
 
 The `KubernetesAuthEngineConfig` CRD allows you to configure a [Kubernetes auth engine](https://developer.hashicorp.com/vault/api-docs/auth/kubernetes#configure-kubernetes-method).
 
-### Example
+### Example — Local service account
 
 ```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
@@ -30,6 +30,30 @@ spec:
   tokenReviewerServiceAccount:
     name: token-review-sa
   kubernetesHost: https://kubernetes.default.svc:443
+```
+
+### Example — Remote cluster / external JWT from a Secret
+
+When `kubernetesHost` points at a remote cluster, an authenticating proxy, or an API gateway, a locally-minted ServiceAccount JWT is not a valid reviewer credential. Use `tokenReviewerJWTSecret` to source the `token_reviewer_jwt` from a Kubernetes Secret instead:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KubernetesAuthEngineConfig
+metadata:
+  name: remote-cluster-config
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  path: remote-kubernetes
+  tokenReviewerJWTSecret:
+    name: reviewer-credential
+    key: token
+  kubernetesHost: https://gateway.example.com/cluster-a
+  kubernetesCACert: |
+    -----BEGIN CERTIFICATE-----
+    ...
+    -----END CERTIFICATE-----
 ```
 
 > **`spec.authentication.path` vs `spec.path`:** `spec.authentication.path` is the auth mount the operator itself uses to authenticate with Vault. `spec.path` is the mount path of the Kubernetes auth engine being configured. They may point to different mounts.
@@ -53,7 +77,8 @@ vault write [namespace/]auth/<path>/<name>/config \
 | authentication | object | Yes | Kubernetes auth configuration. See [Authentication](../auth-section.md) |
 | connection | object | No | Override Vault connection settings. See [Vault Connection](../contributing-vault-apis.md) |
 | name | string | No | Override the Vault object name. Defaults to `metadata.name` |
-| tokenReviewerServiceAccount | object | No | Service account for token review. If not set, the JWT submitted in the login payload is used to access the Kubernetes TokenReview API |
+| tokenReviewerServiceAccount | object | No | Service account for token review. If not set, the JWT submitted in the login payload is used to access the Kubernetes TokenReview API. Mutually exclusive with `tokenReviewerJWTSecret` |
+| tokenReviewerJWTSecret | [SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#secretkeyselector-v1-core) | No | Sources `token_reviewer_jwt` from a Kubernetes Secret in the CR's namespace. Useful for remote clusters, authenticating proxies, or externally-managed reviewer credentials. Mutually exclusive with `tokenReviewerServiceAccount` |
 | kubernetesHost | string | Yes | Kubernetes API server URL. Defaults to `https://kubernetes.default.svc:443` |
 | kubernetesCACert | string | No | PEM-encoded CA cert for the Kubernetes API TLS client. See the [CA resolution table](#kubernetescacert-behavior) below |
 | PEMKeys | []string | No | PEM-formatted public keys or certificates to verify Kubernetes service account JWT signatures |
@@ -62,6 +87,17 @@ vault write [namespace/]auth/<path>/<name>/config \
 | disableLocalCAJWT | bool | No | Disable defaulting to the local CA cert and service account JWT when running in a Kubernetes pod. Defaults to `false` |
 | useOperatorPodCA | bool | No | When `kubernetesCACert` is unset and `disableLocalCAJWT` is `true`, inject the operator pod's CA cert. Defaults to `true`. This field is not sent to Vault |
 | useAnnotationsAsAliasMetadata | bool | No | Use annotations from the client token's service account as alias metadata for the Vault entity. Only `vault.hashicorp.com/alias-metadata-*` annotations are captured (512 character limit). Defaults to `false` |
+
+### token_reviewer_jwt Resolution
+
+The `token_reviewer_jwt` sent to Vault is resolved based on the following precedence:
+
+| `tokenReviewerJWTSecret` | `tokenReviewerServiceAccount` | Behaviour |
+|---------------------------|-------------------------------|-----------|
+| set | not set | JWT is read from the referenced Kubernetes Secret |
+| not set | set | JWT is minted via the Kubernetes TokenRequest API for the referenced ServiceAccount (1-year expiry) |
+| not set | not set | No `token_reviewer_jwt` is sent; Vault uses the JWT from login payloads for TokenReview |
+| set | set | **Rejected** by the validating webhook (mutually exclusive) |
 
 ### kubernetesCACert Behavior
 

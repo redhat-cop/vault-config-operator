@@ -898,6 +898,25 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 			expectErr: false,
 		},
 		{
+			name: "KubernetesAuthEngineConfig rejects both tokenReviewerServiceAccount and tokenReviewerJWTSecret on update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &KubernetesAuthEngineConfig{}
+				return r.ValidateUpdate(context.Background(),
+					&KubernetesAuthEngineConfig{Spec: KubernetesAuthEngineConfigSpec{Path: "same/path"}},
+					&KubernetesAuthEngineConfig{Spec: KubernetesAuthEngineConfigSpec{
+						Path: "same/path",
+						TokenReviewerServiceAccount: &corev1.LocalObjectReference{Name: "sa"},
+						TokenReviewerJWTSecret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+							Key:                  "token",
+						},
+					}},
+				)
+			},
+			expectErr:    true,
+			errSubstring: "mutually exclusive",
+		},
+		{
 			name: "KubernetesAuthEngineRole allows non-path update",
 			validateFn: func() (admission.Warnings, error) {
 				r := &KubernetesAuthEngineRole{}
