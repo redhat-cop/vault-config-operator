@@ -4773,8 +4773,28 @@ func (in *GroupConfig) DeepCopyInto(out *GroupConfig) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.MemberGroupNames != nil {
+		in, out := &in.MemberGroupNames, &out.MemberGroupNames
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.MemberEntityIDs != nil {
 		in, out := &in.MemberEntityIDs, &out.MemberEntityIDs
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.MemberEntityNames != nil {
+		in, out := &in.MemberEntityNames, &out.MemberEntityNames
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.resolvedMemberGroupIDs != nil {
+		in, out := &in.resolvedMemberGroupIDs, &out.resolvedMemberGroupIDs
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.resolvedMemberEntityIDs != nil {
+		in, out := &in.resolvedMemberEntityIDs, &out.resolvedMemberEntityIDs
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}

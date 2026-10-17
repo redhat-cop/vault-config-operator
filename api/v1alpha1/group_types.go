@@ -18,11 +18,13 @@ package v1alpha1
 
 import (
 	"context"
+	"errors"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -71,11 +73,33 @@ type GroupConfig struct {
 	// kubebuilder:validation:UniqueItems=true
 	MemberGroupIDs []string `json:"memberGroupIDs,omitempty"`
 
+	// MemberGroupNames Group names to be resolved to IDs and assigned as group members.
+	// Each name is looked up via Vault's identity API at reconciliation time.
+	// The resolved IDs are merged with any explicitly provided MemberGroupIDs.
+	// +kubebuilder:validation:Optional
+	// +listType=set
+	// kubebuilder:validation:UniqueItems=true
+	MemberGroupNames []string `json:"memberGroupNames,omitempty"`
+
 	// MemberEntityIDs Entity IDs to be assigned as group members.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
 	MemberEntityIDs []string `json:"memberEntityIDs,omitempty"`
+
+	// MemberEntityNames Entity names to be resolved to IDs and assigned as group members.
+	// Each name is looked up via Vault's identity API at reconciliation time.
+	// The resolved IDs are merged with any explicitly provided MemberEntityIDs.
+	// +kubebuilder:validation:Optional
+	// +listType=set
+	// kubebuilder:validation:UniqueItems=true
+	MemberEntityNames []string `json:"memberEntityNames,omitempty"`
+
+	// resolvedMemberGroupIDs holds the IDs resolved from MemberGroupNames during PrepareInternalValues.
+	resolvedMemberGroupIDs []string `json:"-"`
+
+	// resolvedMemberEntityIDs holds the IDs resolved from MemberEntityNames during PrepareInternalValues.
+	resolvedMemberEntityIDs []string `json:"-"`
 }
 
 // GroupStatus defines the observed state of Group
@@ -153,10 +177,33 @@ func (i *GroupSpec) toMap() map[string]any {
 	payload["metadata"] = i.Metadata
 	payload["policies"] = i.Policies
 	if i.Type == "internal" {
-		payload["member_group_ids"] = i.MemberGroupIDs
-		payload["member_entity_ids"] = i.MemberEntityIDs
+		payload["member_group_ids"] = mergeUniqueStrings(i.MemberGroupIDs, i.resolvedMemberGroupIDs)
+		payload["member_entity_ids"] = mergeUniqueStrings(i.MemberEntityIDs, i.resolvedMemberEntityIDs)
 	}
 	return payload
+}
+
+// mergeUniqueStrings returns a deduplicated union of two string slices.
+// Returns nil when both inputs are empty/nil to preserve clean payloads.
+func mergeUniqueStrings(a, b []string) []string {
+	if len(a) == 0 && len(b) == 0 {
+		return nil
+	}
+	seen := make(map[string]struct{}, len(a)+len(b))
+	result := make([]string, 0, len(a)+len(b))
+	for _, s := range a {
+		if _, ok := seen[s]; !ok {
+			seen[s] = struct{}{}
+			result = append(result, s)
+		}
+	}
+	for _, s := range b {
+		if _, ok := seen[s]; !ok {
+			seen[s] = struct{}{}
+			result = append(result, s)
+		}
+	}
+	return result
 }
 
 func (d *Group) IsInitialized() bool {
@@ -164,7 +211,58 @@ func (d *Group) IsInitialized() bool {
 }
 
 func (d *Group) PrepareInternalValues(context context.Context, object client.Object) error {
+	log := log.FromContext(context)
+
+	if d.Spec.Type != "internal" {
+		return nil
+	}
+
+	resolvedGroupIDs, err := resolveIdentityNames(context, "group", d.Spec.MemberGroupNames)
+	if err != nil {
+		log.Error(err, "unable to resolve member group names")
+		return err
+	}
+	d.Spec.resolvedMemberGroupIDs = resolvedGroupIDs
+
+	resolvedEntityIDs, err := resolveIdentityNames(context, "entity", d.Spec.MemberEntityNames)
+	if err != nil {
+		log.Error(err, "unable to resolve member entity names")
+		return err
+	}
+	d.Spec.resolvedMemberEntityIDs = resolvedEntityIDs
+
 	return nil
+}
+
+// resolveIdentityNames looks up each name via Vault's identity API and returns
+// the corresponding IDs. identityType should be "group" or "entity".
+func resolveIdentityNames(ctx context.Context, identityType string, names []string) ([]string, error) {
+	if len(names) == 0 {
+		return nil, nil
+	}
+	log := log.FromContext(ctx)
+	ids := make([]string, 0, len(names))
+	for _, name := range names {
+		path := vaultutils.CleansePath("/identity/" + identityType + "/name/" + name)
+		secret, found, err := vaultutils.ReadSecret(ctx, path)
+		if err != nil {
+			log.Error(err, "unable to retrieve identity object", "type", identityType, "name", name)
+			return nil, err
+		}
+		if !found {
+			err = errors.New(identityType + " not found: " + name)
+			log.Error(err, identityType+" not found", "name", name)
+			return nil, err
+		}
+		id, ok := secret.Data["id"].(string)
+		if !ok {
+			err = errors.New(identityType + " has no id field: " + name)
+			log.Error(err, identityType+" missing id", "name", name)
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	return ids, nil
 }
 
 func (d *Group) PrepareTLSConfig(context context.Context, object client.Object) error {
