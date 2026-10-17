@@ -32,10 +32,8 @@
   - [Note on deleting resources](#note-on-deleting-resources)
   - [Deploying the Operator](#deploying-the-operator)
     - [Multiarch Support](#multiarch-support)
-    - [Deploying from OperatorHub](#deploying-from-operatorhub)
-      - [Deploying from OperatorHub UI](#deploying-from-operatorhub-ui)
-      - [Deploying from OperatorHub using CLI](#deploying-from-operatorhub-using-cli)
     - [Deploying with Helm](#deploying-with-helm)
+    - [Deploying with OLM on OpenShift](#deploying-with-olm-on-openshift)
   - [Metrics](#metrics)
     - [Testing metrics](#testing-metrics)
   - [Development](#development)
@@ -294,7 +292,7 @@ CRDs corresponding to configuration resources can be identified by the Config po
 
 This is a cluster-level operator that you can deploy in any namespace, `vault-config-operator` is recommended.
 
-It is recommended to deploy this operator via [`OperatorHub`](https://operatorhub.io/), but you can also deploy it using [`Helm`](https://helm.sh/).
+It is recommended to deploy this operator using [`Helm`](https://helm.sh/). Alternatively, on OpenShift you can deploy it using the [Operator Lifecycle Manager (OLM)](https://olm.operatorframework.io/).
 
 ### Multiarch Support
 
@@ -304,36 +302,6 @@ It is recommended to deploy this operator via [`OperatorHub`](https://operatorhu
 | arm64  | ✅  |
 | ppc64le  | ✅  |
 | s390x  | ✅  |
-
-### Deploying from OperatorHub
-
-> **Note**: This operator supports being installed disconnected environments
-
-If you want to utilize the Operator Lifecycle Manager (OLM) to install this operator, you can do so in two ways: from the UI or the CLI.
-
-#### Deploying from OperatorHub UI
-
-- If you would like to launch this operator from the UI, you'll need to navigate to the OperatorHub tab in the console. Before starting, make sure you've created the namespace that you want to install this operator to with the following:
-
-```sh
-oc new-project vault-config-operator
-```
-
-- Once there, you can search for this operator by name: `vault config operator`. This will then return an item for our operator and you can select it to get started. Once you've arrived here, you'll be presented with an option to install, which will begin the process.
-- After clicking the install button, you can then select the namespace that you would like to install this to as well as the installation strategy you would like to proceed with (`Automatic` or `Manual`).
-- Once you've made your selection, you can select `Subscribe` and the installation will begin. After a few moments you can go ahead and check your namespace and you should see the operator running.
-
-#### Deploying from OperatorHub using CLI
-
-If you'd like to launch this operator from the command line, you can use the manifests contained in this repository by running the following:
-
-oc new-project vault-config-operator
-
-```sh
-oc apply -f config/operatorhub -n vault-config-operator
-```
-
-This will create the appropriate OperatorGroup and Subscription and will trigger OLM to launch the operator in the specified namespace.
 
 ### Deploying with Helm
 
@@ -362,6 +330,51 @@ If you want to provide your own `cert-manager` certificates instead, please crea
 - A certificate with a name of your choice in the operator's target namespace, with secret name `vault-config-operator-metrics-service-cert`, for the following domain names:
   - `vault-config-operator-controller-manager-metrics-service.<target namespace>.svc`
   - `vault-config-operator-controller-manager-metrics-service.<target namespace>.svc.cluster.local`
+
+### Deploying with OLM on OpenShift
+
+> **Note**: This operator is not currently published to [OperatorHub](https://operatorhub.io/). To deploy it via OLM you need to create a `CatalogSource` pointing to the operator's catalog image and then subscribe to it.
+
+First, create the namespace:
+
+```sh
+oc new-project vault-config-operator
+```
+
+Next, create an `OperatorGroup` and a `Subscription` in the target namespace:
+
+```yaml
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: vault-config-operator
+  namespace: vault-config-operator
+spec:
+  targetNamespaces: []
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: vault-config-operator
+  namespace: vault-config-operator
+spec:
+  channel: alpha
+  installPlanApproval: Automatic
+  name: vault-config-operator
+  source: vault-config-operator-catalog
+  sourceNamespace: openshift-marketplace
+```
+
+You can apply these manifests directly:
+
+```sh
+oc apply -f <catalog-source-file>.yaml
+oc apply -f <subscription-file>.yaml -n vault-config-operator
+```
+
+After a few moments the operator should be running in the `vault-config-operator` namespace. You can also find and install the operator from the OperatorHub tab in the OpenShift console once the `CatalogSource` is created.
+
+See the [OLM documentation](https://olm.operatorframework.io/) for more details on managing operators with the Operator Lifecycle Manager.
 
 ## Metrics
 
