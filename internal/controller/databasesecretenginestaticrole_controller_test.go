@@ -280,7 +280,8 @@ var _ = Describe("DatabaseSecretEngineStaticRole controller", func() {
 			Expect(k8sIntegrationClient.Get(ctx, lookupKey, created)).Should(Succeed())
 
 			By("Updating the rotation period")
-			created.Spec.RotationPeriod = 7200
+			newRotationPeriod := 7200
+			created.Spec.RotationPeriod = &newRotationPeriod
 			Expect(k8sIntegrationClient.Update(ctx, created)).Should(Succeed())
 
 			By("Waiting for Vault to reflect the updated rotation_period")
