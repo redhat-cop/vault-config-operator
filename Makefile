@@ -518,6 +518,7 @@ helmchart-test: kind-setup deploy-vault helmchart
 	$(HELM) --kube-context $(KUBE_CONTEXT) install prometheus-rbac integration/helm/prometheus-rbac -n default
 	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i ${OPERATOR_NAME}-local charts/${OPERATOR_NAME} -n ${OPERATOR_NAME}-local --create-namespace --force-conflicts \
 	  --set enableCertManager=true \
+	  --set enableMonitoring=true \
 	  --set image.repository=${HELM_TEST_IMG_NAME} \
 	  --set image.tag=${HELM_TEST_IMG_TAG} \
 	  --set env[0].name=VAULT_ADDR \
