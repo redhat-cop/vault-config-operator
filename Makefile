@@ -2,14 +2,12 @@ KUBECTL_WAIT_TIMEOUT ?= 5m
 CHART_REPO_URL ?= http://example.com
 HELM_REPO_DEST ?= /tmp/gh-pages
 OPERATOR_NAME ?=$(shell basename -z `pwd`)
-HELM_VERSION ?= v4.2.4
-KIND_VERSION ?= v0.32.0
+HELM_VERSION ?= v4.3.1
+KIND_VERSION ?= v0.33.0
 KIND_CLUSTER_NAME ?= vault-config-operator
-# kubectl client patch. Kind v0.32.0's published node image is still v1.36.1
-# (no kindest/node:v1.36.3 tag), so KIND_NODE_VERSION is pinned separately.
-KUBECTL_VERSION ?= v1.36.3
-KIND_NODE_VERSION ?= v1.36.1
-KUSTOMIZE_VERSION ?= v5.8.1
+KUBECTL_VERSION ?= v1.37.1
+KIND_NODE_VERSION ?= v1.37.0
+KUSTOMIZE_VERSION ?= v5.8.3
 VAULT_HOST_PORT ?= 8200
 # Override HTTPS_HOST_PORT and VAULT_HOST_PORT (along with KIND_CLUSTER_NAME) to run
 # parallel integration tests in separate Kind clusters — see project-context.md.
@@ -25,16 +23,13 @@ VAULT_CHART_VERSION ?= 0.34.1
 # Set the Operator SDK version to use. By default, what is installed on the system is used.
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
 OPERATOR_SDK_VERSION ?= v1.42.3
-OPM_VERSION ?= v1.73.0
+OPM_VERSION ?= v1.74.0
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION ?= 1.36.2
+ENVTEST_K8S_VERSION ?= 1.37.0
 
-CONTROLLER_TOOLS_VERSION ?= v0.21.0
-ENVTEST_VERSION ?= release-0.24
-GOLANGCI_LINT_VERSION ?= v2.12.2
-# Follow-up when golang:1.27 is published and golangci-lint/staticcheck support
-# it: bump go.mod (`go` + `toolchain`), Dockerfile `FROM golang:1.26`,
-# CI `GO_VERSION: ~1.26`, and `GOTOOLCHAIN=go1.26.4` in the lint target.
+CONTROLLER_TOOLS_VERSION ?= v0.23.0
+ENVTEST_VERSION ?= release-0.25
+GOLANGCI_LINT_VERSION ?= v2.15.0
 
 # VERSION defines the project version for the bundle.
 # Update this value when you upgrade the version of your project.
@@ -143,7 +138,7 @@ vet: ## Run go vet against code.
 
 .PHONY: lint
 lint: golangci-lint ## Run golangci-lint against code.
-	GOTOOLCHAIN=go1.26.4 $(GOLANGCI_LINT) run ./...
+	GOTOOLCHAIN=go1.27.2 $(GOLANGCI_LINT) run ./...
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
