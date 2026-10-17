@@ -129,8 +129,9 @@ type JWTOIDCRole struct {
 	// kubebuilder:validation:UniqueItems=true
 	OIDCScopes []string `json:"OIDCScopes,omitempty"`
 
-	// The list of allowed values for redirect_uri during OIDC logins
-	// +kubebuilder:validation:Required
+	// The list of allowed values for redirect_uri during OIDC logins.
+	// Required for "oidc" roles, optional for "jwt" roles.
+	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
 	AllowedRedirectURIs []string `json:"allowedRedirectURIs,omitempty"`

@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	"context"
+	"fmt"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -44,13 +45,17 @@ func (r *JWTOIDCAuthEngineRole) Default(ctx context.Context, obj *JWTOIDCAuthEng
 	return nil
 }
 
-//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-jwtoidcauthenginerole,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=jwtoidcauthengineroles,verbs=update,versions=v1alpha1,name=vjwtoidcauthenginerole.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-jwtoidcauthenginerole,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=jwtoidcauthengineroles,verbs=create;update,versions=v1alpha1,name=vjwtoidcauthenginerole.kb.io,admissionReviewVersions=v1
 
 var _ admission.Validator[*JWTOIDCAuthEngineRole] = &JWTOIDCAuthEngineRole{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
 func (r *JWTOIDCAuthEngineRole) ValidateCreate(ctx context.Context, obj *JWTOIDCAuthEngineRole) (admission.Warnings, error) {
 	jwtoidcauthenginerolelog.Info("validate create", "name", obj.Name)
+
+	if err := obj.validateAllowedRedirectURIs(); err != nil {
+		return nil, err
+	}
 
 	return nil, nil
 }
@@ -63,6 +68,10 @@ func (r *JWTOIDCAuthEngineRole) ValidateUpdate(ctx context.Context, oldObj, newO
 		return nil, err
 	}
 
+	if err := newObj.validateAllowedRedirectURIs(); err != nil {
+		return nil, err
+	}
+
 	return nil, nil
 }
 
@@ -71,4 +80,17 @@ func (r *JWTOIDCAuthEngineRole) ValidateDelete(ctx context.Context, obj *JWTOIDC
 	jwtoidcauthenginerolelog.Info("validate delete", "name", obj.Name)
 
 	return nil, nil
+}
+
+// validateAllowedRedirectURIs ensures allowedRedirectURIs is non-empty for OIDC roles.
+// For JWT roles the field is not required by Vault.
+func (r *JWTOIDCAuthEngineRole) validateAllowedRedirectURIs() error {
+	if r.Spec.RoleType == "jwt" {
+		return nil
+	}
+	// roleType is "oidc" or empty (defaults to oidc)
+	if len(r.Spec.AllowedRedirectURIs) == 0 {
+		return fmt.Errorf("spec.allowedRedirectURIs: Required value: allowedRedirectURIs must be non-empty for OIDC roles")
+	}
+	return nil
 }

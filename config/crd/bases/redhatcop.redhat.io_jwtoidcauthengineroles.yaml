@@ -51,7 +51,8 @@ spec:
                 x-kubernetes-list-type: set
               allowedRedirectURIs:
                 description: |-
-                  The list of allowed values for redirect_uri during OIDC logins
+                  The list of allowed values for redirect_uri during OIDC logins.
+                  Required for "oidc" roles, optional for "jwt" roles.
                   kubebuilder:validation:UniqueItems=true
                 items:
                   type: string
@@ -324,7 +325,6 @@ spec:
                   Not recommended in production since sensitive information may be present in OIDC responses
                 type: boolean
             required:
-            - allowedRedirectURIs
             - authentication
             - name
             - path
