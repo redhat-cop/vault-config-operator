@@ -172,9 +172,10 @@ spec:
     - database-engine-admin
   targetServiceAccounts:
     - vaultsa
-  targetNamespaceSelector:
-    matchLabels:
-      postgresql-enabled: "true"
+  targetNamespaces:
+    targetNamespaceSelector:
+      matchLabels:
+        postgresql-enabled: "true"
 ```
 -->
 
@@ -217,8 +218,7 @@ vault write [namespace/]auth/ldap/test/groups/test-3 \
 | connection | object | No | Override Vault connection settings. See [Vault Connection](contributing-vault-apis.md) |
 | policies | []string | No | Vault policies to associate with this role |
 | targetServiceAccounts | []string | No | Service accounts that can authenticate. Defaults to `default` |
-| targetNamespaceSelector | object | No | Label selector for namespaces allowed to authenticate |
-| targetNamespaces | []string | No | Static list of namespaces allowed to authenticate |
+| targetNamespaces | object | Yes | Namespace binding configuration. Contains exactly one of `targetNamespaceSelector` (label selector) or `targetNamespaces` (static list) |
 | tokenTTL | string | No | TTL for generated tokens |
 | tokenMaxTTL | string | No | Max TTL for generated tokens |
 -->
