@@ -4,13 +4,24 @@ All vault APIs can be manipulated using the Vault logical client and essentially
 
 A framework has been created to make it simple to add new types (essentially new secret engine configuration and role types and new authentication engine configuration and role types).
 
-Here are the steps:
+## Prerequisites
 
-1. Create the CRD type and mutating a validating webhooks:
+Before you begin, make sure you have:
+
+- **Go** — the version declared in `go.mod` (currently Go 1.26+). Using a different Go version may cause `controller-gen` or other tools to fail.
+- **operator-sdk** — the project pins a specific version in the Makefile (currently `v1.42.3`). Run `make operator-sdk` to download it to `./bin/operator-sdk`. **Do not use a globally-installed `operator-sdk`** — version mismatches with the project layout (`go.kubebuilder.io/v4`) will cause scaffolding failures.
+- **controller-gen** — likewise pinned in the Makefile (currently `v0.21.0`). Run `make controller-gen` to download it to `./bin/controller-gen`. The scaffolding step and `make generate` / `make manifests` use this automatically.
+
+> **Tip:** All tool versions are declared near the top of the `Makefile` (`OPERATOR_SDK_VERSION`, `CONTROLLER_TOOLS_VERSION`, etc.). The Makefile downloads each tool to `./bin/` on first use, so you generally don't need to install anything globally.
+
+## Steps
+
+1. Download the pinned `operator-sdk` and scaffold the CRD type, controller, and webhooks:
 
    ```shell
-   operator-sdk create api --group redhatcop --version v1alpha1 --kind MyVaultType --resource --controller
-   operator-sdk create webhook --group redhatcop --version v1alpha1 --kind MyVaultType --defaulting --programmatic-validation
+   make operator-sdk
+   ./bin/operator-sdk create api --group redhatcop --version v1alpha1 --kind MyVaultType --resource --controller
+   ./bin/operator-sdk create webhook --group redhatcop --version v1alpha1 --kind MyVaultType --defaulting --programmatic-validation
    ```
 
 2. Define the My Vault type fields. You should define the vault specific field in an inline type. You should have a one to one mapping between the CRD fields and the Vault api field, except for field with special treatment. Add the path and authentication fields. Add any special treatment field as un-exported and un-marshalled fields. Here is an example:
@@ -130,3 +141,15 @@ Here are the steps:
 			os.Exit(1)
 		}
   ```
+
+8. Regenerate the CRD manifests, RBAC, and DeepCopy methods using the Makefile (this ensures the pinned `controller-gen` version is used):
+
+   ```shell
+   make generate manifests
+   ```
+
+9. Build and test:
+
+   ```shell
+   make build test
+   ```
