@@ -50,3 +50,27 @@ Selector labels
 app.kubernetes.io/name: {{ include "vault-config-operator.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
+
+{{/*
+Return the proper image name.
+Usage:
+  {{ include "vault-config-operator.image" ( dict "imageRoot" .Values.image "global" .Values.global "Chart" .Chart "context" $ ) }}
+*/}}
+{{- define "vault-config-operator.image" -}}
+{{- $registryName := "" -}}
+{{- $repositoryName := .imageRoot.repository | default "" -}}
+{{- $tag := .imageRoot.tag | default .Chart.AppVersion | toString -}}
+{{- if .imageRoot.registry }}
+    {{- $registryName = tpl .imageRoot.registry .context -}}
+{{- end -}}
+{{- if .global }}
+    {{- if .global.imageRegistry }}
+        {{- $registryName = tpl .global.imageRegistry .context -}}
+    {{- end -}}
+{{- end -}}
+{{- if $registryName }}
+    {{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
+{{- else }}
+    {{- printf "%s:%s" $repositoryName $tag -}}
+{{- end -}}
+{{- end -}}

@@ -85,6 +85,15 @@ BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
 
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
+
+# Parse image components from IMG (e.g., quay.io/org/repo:tag)
+IMG_NO_TAG = $(firstword $(subst :, ,${IMG}))
+IMG_PARTS = $(subst /, ,$(IMG_NO_TAG))
+IMG_PARTS_COUNT = $(words $(IMG_PARTS))
+# If 3+ parts (registry/org/repo), first part is registry; otherwise empty
+IMAGE_REGISTRY = $(if $(filter 3,$(IMG_PARTS_COUNT))$(filter 4,$(IMG_PARTS_COUNT))$(filter 5,$(IMG_PARTS_COUNT)),$(firstword $(IMG_PARTS)),)
+# Repository is everything after registry (or full path if no registry)
+IMAGE_REPO = $(if $(IMAGE_REGISTRY),$(subst $(IMAGE_REGISTRY)/,,$(IMG_NO_TAG)),$(IMG_NO_TAG))
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -471,7 +480,7 @@ helmchart: helmchart-clean kustomize helm
 	mv ./charts/${OPERATOR_NAME}/templates/apiextensions.k8s.io_v1_customresourcedefinition* ./charts/${OPERATOR_NAME}/crds
 	cp ./config/helmchart/templates/* ./charts/${OPERATOR_NAME}/templates
 	version=${VERSION} envsubst < ./config/helmchart/Chart.yaml.tpl  > ./charts/${OPERATOR_NAME}/Chart.yaml
-	version=${VERSION} image_repo=$${IMG%:*} envsubst < ./config/helmchart/values.yaml.tpl  > ./charts/${OPERATOR_NAME}/values.yaml
+	version=${VERSION} image_registry=${IMAGE_REGISTRY} image_repo=${IMAGE_REPO} envsubst < ./config/helmchart/values.yaml.tpl  > ./charts/${OPERATOR_NAME}/values.yaml
 	sed -i '1s/^/{{- if .Values.enableMonitoring }}\n/' ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_${OPERATOR_NAME}-controller-manager-metrics-monitor.yaml
 	echo {{- end }} >> ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_${OPERATOR_NAME}-controller-manager-metrics-monitor.yaml
 	rm -f ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_${OPERATOR_NAME}-controller-manager-metrics-monitor.yaml
@@ -531,6 +540,14 @@ helmchart-test: kind-setup deploy-vault helmchart
 helmchart-clean:
 	rm -rf ./charts
 
+.PHONY: helmchart-unittest
+helmchart-unittest: helmchart helm-unittest
+	mkdir -p ./charts-unittest/
+	rm -rf ./charts-unittest/${OPERATOR_NAME}
+	cp -r ./charts/${OPERATOR_NAME} ./charts-unittest/${OPERATOR_NAME}
+	cp -r ./config/helmchart/tests ./charts-unittest/${OPERATOR_NAME}/tests
+	$(HELM) unittest ./charts-unittest/${OPERATOR_NAME}/
+
 .PHONY: kind
 KIND ?= $(LOCALBIN)/kind
 kind: $(KIND) ## Download kind locally if necessary.
@@ -580,6 +597,10 @@ helm: ## Download helm locally if necessary.
 	rm -rf $(LOCALBIN)/$${OS}-$${ARCH} ;\
 	} ;\
 	ln -sf $(HELM)-$(HELM_VERSION) $(HELM)
+
+.PHONY: helm-unittest
+helm-unittest: helm ## Download helm unittest plugin locally if necessary.
+	${HELM} plugin list | grep -q unittest || ${HELM} plugin install --verify=false https://github.com/helm-unittest/helm-unittest.git
 
 .PHONY: clean
 clean:
