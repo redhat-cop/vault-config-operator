@@ -118,7 +118,7 @@ vault write [namespace/]<path>/roles/<role-name> \
 | namespaceName | string | Yes | — | Name of the Quay organization or user |
 | namespaceType | string | No | `"organization"` | Type of account namespace to manage. Allowed values: `organization`, `user` |
 | createRepositories | *bool | No | `false` | Allow the robot account to create new repositories |
-| defaultPermission | string | No | — | Permission granted to the robot account in newly created repositories. Allowed values: `admin`, `read`, `write` |
+| defaultPermission | string | No | — | Default permission applied to existing and newly created repositories in the namespace. Per-repository overrides in `repositories` take precedence. Allowed values: `admin`, `read`, `write` |
 | teams | map[string]TeamRole | No | — | Team permissions for the robot account. Maps team names to roles. Allowed values: `admin`, `creator`, `member` |
 | repositories | map[string]Permission | No | — | Repository permissions for the robot account. Maps repository names to permissions. Allowed values: `admin`, `read`, `write` |
 | TTL | duration | No | — | Time-to-live for the generated credential |
@@ -170,7 +170,7 @@ vault write [namespace/]<path>/static-roles/<role-name> \
 | namespaceName | string | Yes | — | Name of the Quay organization or user |
 | namespaceType | string | No | `"organization"` | Type of account namespace to manage. Allowed values: `organization`, `user` |
 | createRepositories | *bool | No | `false` | Allow the robot account to create new repositories |
-| defaultPermission | string | No | — | Permission granted to the robot account in newly created repositories. Allowed values: `admin`, `read`, `write` |
+| defaultPermission | string | No | — | Default permission applied to existing and newly created repositories in the namespace. Per-repository overrides in `repositories` take precedence. Allowed values: `admin`, `read`, `write` |
 | teams | map[string]TeamRole | No | — | Team permissions for the robot account. Maps team names to roles. Allowed values: `admin`, `creator`, `member` |
 | repositories | map[string]Permission | No | — | Repository permissions for the robot account. Maps repository names to permissions. Allowed values: `admin`, `read`, `write` |
 

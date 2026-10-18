@@ -177,11 +177,14 @@ type QuayBaseRole struct {
 	// +kubebuilder:validation:Optional
 	Teams *map[string]TeamRole `json:"teams,omitempty"`
 
-	// Teams Permissions granted to the Robot Account to Repositories.
+	// Repositories Permissions granted to the Robot Account to Repositories.
 	// +kubebuilder:validation:Optional
 	Repositories *map[string]Permission `json:"repositories,omitempty"`
 
-	// DefaultPermission Permissions granted to the Robot Account in newly created repositories
+	// DefaultPermission Default permission applied to existing and newly created repositories in the namespace.
+	// When set on an organization namespace, the robot account receives this permission on all current
+	// repositories and an organization prototype is created so future repositories inherit the same permission.
+	// Per-repository overrides in the Repositories field take precedence over this default.
 	// +kubebuilder:validation:Optional
 	DefaultPermission *Permission `json:"defaultPermission,omitempty"`
 }
