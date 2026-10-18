@@ -1,177 +1,101 @@
 #!/usr/bin/env python3
-"""
-Resolve customization for a BMad skill using three-layer TOML merge.
-
-Reads customization from three layers (highest priority first):
-  1. {project-root}/_bmad/custom/{name}.user.toml  (personal, gitignored)
-  2. {project-root}/_bmad/custom/{name}.toml        (team/org, committed)
-  3. {skill-root}/customize.toml                    (skill defaults)
-
-Skill name is derived from the basename of the skill directory.
-
-Outputs merged JSON to stdout. Errors go to stderr.
-
-Uses only the Python stdlib (`tomllib`) — no third-party dependencies.
-BMad is standardizing on `uv run` to invoke scripts (uv provisions a suitable
-interpreter for you); a plain `python3` on PATH still works during the
-transition. Either runner needs Python 3.11+ for `tomllib`.
-
-  uv run resolve_customization.py --skill /abs/path/to/skill-dir
-  uv run resolve_customization.py --skill ... --key agent
-  uv run resolve_customization.py --skill ... --key agent.menu
-
-Merge rules (purely structural — no field-name special-casing):
-  - Scalars (string, int, bool, float): override wins
-  - Tables: deep merge (recursively apply these rules)
-  - Arrays of tables where every item shares the *same* identifier
-    field (every item has `code`, or every item has `id`):
-    merge by that key (matching keys replace, new keys append)
-  - All other arrays — including arrays where only some items have
-    `code` or `id`, or where items mix the two keys:
-    append (base items followed by override items)
-
-No removal mechanism — overrides cannot delete base items. To suppress
-a default, fork the skill or override the item by code with a no-op
-description/prompt.
-"""
+# /// script
+# requires-python = ">=3.11"
+# ///
+"""Resolve a skill's default, team, and user TOML customization layers."""
 
 import argparse
 import json
 import sys
 from pathlib import Path
 
+# Installed scripts are consumer files, not a location for interpreter caches.
+sys.dont_write_bytecode = True
+
 try:
-    import tomllib
-except ImportError:
-    sys.stderr.write(
-        "error: Python 3.11+ is required (stdlib `tomllib` not found).\n"
-        "Install a newer Python or run the resolution manually per the\n"
-        "fallback instructions in the skill's SKILL.md.\n"
-    )
-    sys.exit(3)
+    from config_utils import ConfigError, load_customization
+except ModuleNotFoundError as error:
+    if error.name != "tomllib":
+        raise
+    sys.stderr.write("error: Python 3.11+ is required (stdlib `tomllib` not found).\n")
+    raise SystemExit(3) from None
 
 
 _MISSING = object()
-_KEYED_MERGE_FIELDS = ("code", "id")
 
 
-def find_project_root(start: Path):
+def find_project_root(start: Path) -> Path | None:
+    """Nearest ancestor holding `_bmad/`, falling back to the nearest holding `.git`.
+
+    `_bmad/` outranks `.git` at every depth: a submodule or nested repo carries
+    `.git` without being the BMad project, so treating the two as equal stops the
+    walk short of the root that owns `_bmad/custom/`.
+    """
+    git_root: Path | None = None
     current = start.resolve()
     while True:
-        if (current / "_bmad").exists() or (current / ".git").exists():
+        if (current / "_bmad").is_dir():
             return current
-        parent = current.parent
-        if parent == current:
-            return None
-        current = parent
+        if git_root is None and (current / ".git").exists():
+            git_root = current
+        if current.parent == current:
+            return git_root
+        current = current.parent
 
 
-def load_toml(file_path: Path, required: bool = False) -> dict:
-    if not file_path.exists():
-        if required:
-            sys.stderr.write(f"error: required customization file not found: {file_path}\n")
-            sys.exit(1)
-        return {}
-    try:
-        with file_path.open("rb") as f:
-            parsed = tomllib.load(f)
-        if not isinstance(parsed, dict):
-            if required:
-                sys.stderr.write(f"error: {file_path} did not parse to a table\n")
-                sys.exit(1)
-            return {}
-        return parsed
-    except tomllib.TOMLDecodeError as error:
-        level = "error" if required else "warning"
-        sys.stderr.write(f"{level}: failed to parse {file_path}: {error}\n")
-        if required:
-            sys.exit(1)
-        return {}
-    except OSError as error:
-        level = "error" if required else "warning"
-        sys.stderr.write(f"{level}: failed to read {file_path}: {error}\n")
-        if required:
-            sys.exit(1)
-        return {}
+def script_project_root() -> Path | None:
+    """Project root implied by this script's own install path.
 
-
-def _detect_keyed_merge_field(items):
-    """Return 'code' or 'id' if every table item carries that *same* field.
-
-    All items must share the same identifier (all `code`, or all `id`).
-    Mixed arrays — where some items use `code` and others use `id` —
-    return None and fall through to append semantics. This is intentional:
-    mixing identifier keys within one array is a schema smell, and
-    append-fallback is safer than guessing which key should merge.
+    Skills invoke `{project-root}/_bmad/scripts/resolve_customization.py`, so when
+    this file sits at that path its grandparent is a project root the caller already
+    resolved.
     """
-    if not items or not all(isinstance(item, dict) for item in items):
-        return None
-    for candidate in _KEYED_MERGE_FIELDS:
-        if all(item.get(candidate) is not None for item in items):
-            return candidate
+    parents = Path(__file__).resolve().parents
+    if len(parents) >= 3 and parents[0].name == "scripts" and parents[1].name == "_bmad":
+        return parents[2]
     return None
 
 
-def _merge_by_key(base, override, key_name):
-    result = []
-    index_by_key = {}
+def candidate_project_roots(skill_dir: Path) -> list[Path]:
+    """Plausible project roots, most trustworthy first.
 
-    for item in base:
-        if not isinstance(item, dict):
-            continue
-        if item.get(key_name) is not None:
-            index_by_key[item[key_name]] = len(result)
-        result.append(dict(item))
-
-    for item in override:
-        if not isinstance(item, dict):
-            result.append(item)
-            continue
-        key = item.get(key_name)
-        if key is not None and key in index_by_key:
-            result[index_by_key[key]] = dict(item)
-        else:
-            if key is not None:
-                index_by_key[key] = len(result)
-            result.append(dict(item))
-
-    return result
-
-
-def _merge_arrays(base, override):
-    """Shape-aware array merge. Base + override combined tables may opt into
-    keyed merge if every item has `code` or `id`. Otherwise: append."""
-    base_arr = base if isinstance(base, list) else []
-    override_arr = override if isinstance(override, list) else []
-    keyed_field = _detect_keyed_merge_field(base_arr + override_arr)
-    if keyed_field:
-        return _merge_by_key(base_arr, override_arr, keyed_field)
-    return base_arr + override_arr
-
-
-def deep_merge(base, override):
-    """Recursively merge override into base using structural rules.
-    - Table + table: deep merge
-    - Array + array: shape-aware (keyed merge if all items have code/id, else append)
-    - Anything else: override wins
+    The working directory leads because the project is where the user is working,
+    not where the skill happens to be installed — a home-installed skill walks up to
+    `~`, and any `~/_bmad` there would otherwise mask the real project's overrides.
     """
-    if isinstance(base, dict) and isinstance(override, dict):
-        result = dict(base)
-        for key, over_val in override.items():
-            if key in result:
-                result[key] = deep_merge(result[key], over_val)
-            else:
-                result[key] = over_val
-        return result
-    if isinstance(base, list) and isinstance(override, list):
-        return _merge_arrays(base, override)
-    return override
+    ordered: list[Path] = []
+    for root in (
+        find_project_root(Path.cwd()),
+        script_project_root(),
+        find_project_root(skill_dir),
+    ):
+        if root is not None and root not in ordered:
+            ordered.append(root)
+    return ordered
+
+
+def has_override(root: Path, skill_name: str) -> bool:
+    custom_dir = root / "_bmad" / "custom"
+    return any((custom_dir / name).is_file() for name in (f"{skill_name}.toml", f"{skill_name}.user.toml"))
+
+
+def warn_on_masked_override(chosen: Path, rejected: list[Path], skill_name: str) -> None:
+    """Break the silence when a real override exists under a root we did not pick."""
+    if has_override(chosen, skill_name):
+        return
+    for root in rejected:
+        if has_override(root, skill_name):
+            sys.stderr.write(
+                f"note: resolved project root {chosen} has no customization for "
+                f"`{skill_name}`, but {root} does. Using {chosen}; pass "
+                f"--project-root to select the other explicitly.\n"
+            )
+            return
 
 
 def extract_key(data, dotted_key: str):
-    parts = dotted_key.split(".")
     current = data
-    for part in parts:
+    for part in dotted_key.split("."):
         if isinstance(current, dict) and part in current:
             current = current[part]
         else:
@@ -179,62 +103,70 @@ def extract_key(data, dotted_key: str):
     return current
 
 
-def write_json_stdout(output):
-    """Write JSON as UTF-8 so Windows cp1252 stdout can carry emoji icons."""
+def write_json_stdout(output) -> None:
     reconfigure = getattr(sys.stdout, "reconfigure", None)
     if reconfigure is not None:
         reconfigure(encoding="utf-8")
     sys.stdout.write(json.dumps(output, indent=2, ensure_ascii=False) + "\n")
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Resolve customization for a BMad skill using three-layer TOML merge.",
-        add_help=True,
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Resolve skill customization using three-layer TOML merge.")
+    parser.add_argument("--skill", "-s", required=True, help="Absolute path to the skill directory")
+    parser.add_argument(
+        "--project-root",
+        "-p",
+        help="Explicit project root containing _bmad/ (recommended)",
     )
     parser.add_argument(
-        "--skill", "-s", required=True,
-        help="Absolute path to the skill directory (must contain customize.toml)",
-    )
-    parser.add_argument(
-        "--key", "-k", action="append", default=[],
+        "--key",
+        "-k",
+        action="append",
+        default=[],
         help="Dotted field path to resolve (repeatable). Omit for full dump.",
     )
     args = parser.parse_args()
 
     skill_dir = Path(args.skill).resolve()
-    skill_name = skill_dir.name
-    defaults_path = skill_dir / "customize.toml"
+    if args.project_root:
+        project_root = Path(args.project_root).resolve()
+    else:
+        candidates = candidate_project_roots(skill_dir)
+        project_root = candidates[0] if candidates else None
+        if project_root is not None:
+            warn_on_masked_override(project_root, candidates[1:], skill_dir.name)
 
-    defaults = load_toml(defaults_path, required=True)
+    try:
+        merged = load_customization(project_root, skill_dir)
+    except ConfigError as error:
+        sys.stderr.write(f"error: {error}\n")
+        return 1
 
-    # Prefer the project that contains this skill. Only fall back to cwd if
-    # the skill isn't inside a recognizable project tree (unusual but possible
-    # for standalone skills invoked directly). Using cwd first is unsafe when
-    # an ancestor of cwd happens to have a stray _bmad/ from another project.
-    project_root = find_project_root(skill_dir) or find_project_root(Path.cwd())
-
-    team = {}
-    user = {}
-    if project_root:
-        custom_dir = project_root / "_bmad" / "custom"
-        team = load_toml(custom_dir / f"{skill_name}.toml")
-        user = load_toml(custom_dir / f"{skill_name}.user.toml")
-
-    merged = deep_merge(defaults, team)
-    merged = deep_merge(merged, user)
-
+    output = merged
     if args.key:
         output = {}
         for key in args.key:
             value = extract_key(merged, key)
             if value is not _MISSING:
                 output[key] = value
-    else:
-        output = merged
-
     write_json_stdout(output)
+    report_owed_setup(skill_dir, project_root)
+    return 0
+
+
+def report_owed_setup(skill_dir: Path, project_root: Path | None) -> None:
+    # The resolver is the first thing every skill runs, so it is where a skill
+    # learns that setup owes it something. It must never fail the resolve.
+    try:
+        import setup_check
+    except Exception:
+        return
+    setup_check.report(skill_dir, project_root)
 
 
 if __name__ == "__main__":
-    main()
+    if sys.platform == "win32":
+        # Piped output on Windows defaults to a legacy code page, not UTF-8.
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    raise SystemExit(main())

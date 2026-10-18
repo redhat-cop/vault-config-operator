@@ -35,7 +35,8 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-08-19
+last_updated: 2026-10-18
+# Epic 17 added 2026-10-18 — System Backend API CRDs
 # Epic 16 retrospective 2026-08-19
 # Epic 16 done 2026-08-19
 # Story 16.4 done 2026-08-19
@@ -589,6 +590,69 @@ development_status:
   16-4-kerberos-auth-engine-config-and-ldap-group-crds: done
   16-5-cloud-foundry-auth-engine-config-and-role-crds: done
   epic-16-retrospective: done
+
+  # --- Phase 3: System Backend API Coverage ---
+
+  # Epic 17: System Backend Configuration CRDs
+  # Scope: 8 new CRDs covering configurable /sys/ endpoints (OSS Vault only, no Enterprise-only APIs)
+  # Framework: All use existing VaultObject + VaultEndpoint + VaultResource generic reconciler — no framework changes needed
+  # Excluded from scope: Plugin APIs (/sys/plugins/*), operational/read-only endpoints, Enterprise-only endpoints
+  epic-17: backlog
+
+  # Story 17.0: Vault API Observability — Metrics + Reconcile Trace Logging
+  # Addresses: https://github.com/redhat-cop/vault-config-operator/issues/193
+  # Related PR (stale, never merged): https://github.com/redhat-cop/vault-config-operator/pull/194
+  # Part A — Vault API HTTP Metrics:
+  #   - Create instrumentedRoundTripper wrapping http.RoundTripper on vault.Config.HttpClient.Transport
+  #   - Record prometheus CounterVec (vault_api_requests_total: method, path, status_code)
+  #   - Record prometheus HistogramVec (vault_api_request_duration_seconds: method, path)
+  #   - Register with controller-runtime metrics.Registry (already serves /metrics on :8443)
+  #   - Inject in getConnectionConfig() and createVaultClient() in commons.go
+  #   - Implement normalizePath() to prevent cardinality explosion (collapse named segments)
+  #   - No new dependencies — prometheus/client_golang already transitive
+  # Part B — High-Verbosity Reconcile Trace Logging:
+  #   - Add V(6) log lines in VaultEndpoint.CreateOrUpdate: read result, drift decision, write/skip
+  #   - Add V(6) log lines in VaultEndpoint.DeleteIfExists, VaultAuditEndpoint, VaultEngineEndpoint
+  #   - Add V(6) log lines in ReconcileWithFunctions: event type, cleanup/reconcile path taken
+  #   - Only visible when operator runs with -v=6 or higher — zero noise at default verbosity
+  # Complexity: Medium (framework-level change touching shared utils, needs careful testing)
+  # Design note: Part A is metrics infrastructure — benefits all 80+ existing CRDs immediately
+  17-0-vault-api-observability-metrics-and-reconcile-trace-logging: backlog
+
+  # Story 17.1: Quota Management CRDs (QuotaConfig + RateLimitQuota + LeaseCountQuota)
+  # Closes: https://github.com/redhat-cop/vault-config-operator/issues/249
+  # - QuotaConfig: singleton /sys/quotas/config — enable/disable rate limit quotas, exempt paths
+  # - RateLimitQuota: /sys/quotas/rate-limit/{name} — per-mount or global rate limit quotas
+  # - LeaseCountQuota: /sys/quotas/lease-count/{name} — per-mount or global lease count caps
+  # Vault API: https://developer.hashicorp.com/vault/api-docs/system/quotas-config
+  #            https://developer.hashicorp.com/vault/api-docs/system/rate-limit-quotas
+  #            https://developer.hashicorp.com/vault/api-docs/system/lease-count-quotas
+  # Complexity: Medium (3 CRDs, singleton + 2 named resources, highest user-facing value)
+  17-1-quota-management-crds-quotaconfig-ratelimitquota-leasecountquota: backlog
+
+  # Story 17.2: System Configuration Singleton CRDs (CORSConfig + KeyRotationConfig)
+  # - CORSConfig: singleton /sys/config/cors — enable/configure CORS for Vault API
+  # - KeyRotationConfig: singleton /sys/rotate/config — automatic barrier key rotation schedule
+  # Vault API: https://developer.hashicorp.com/vault/api-docs/system/config-cors
+  #            https://developer.hashicorp.com/vault/api-docs/system/rotate-config
+  # Complexity: Low (2 singleton CRDs; CORSConfig: DELETE disables, PUT enables; KeyRotationConfig: simple PUT)
+  # Design note: Singleton resources — document one-per-cluster convention, consider validating webhook
+  17-2-system-config-singleton-crds-corsconfig-keyrotationconfig: backlog
+
+  # Story 17.3: Rotation Policy CRD (RotationPolicy)
+  # - RotationPolicy: /sys/policies/rotation/{name} — automatic credential rotation schedules
+  # Vault API: https://developer.hashicorp.com/vault/api-docs/system/policies-rotation
+  # Complexity: Low (1 CRD, follows existing Policy/PasswordPolicy pattern closely)
+  17-3-rotation-policy-crd: backlog
+
+  # Story 17.4: UI and Observability CRDs (UICustomHeader + LoggerConfig)
+  # - UICustomHeader: /sys/config/ui/headers/{name} — custom response headers for UI
+  # - LoggerConfig: /sys/loggers/{name} — runtime log level per named logger
+  # Vault API: https://developer.hashicorp.com/vault/api-docs/system/config-ui
+  #            https://developer.hashicorp.com/vault/api-docs/system/loggers
+  # Complexity: Low (2 CRDs, simple key-value configs)
+  # Design note: LoggerConfig resets on Vault restart — operator re-applies on reconcile (documented behavior)
+  17-4-ui-and-observability-crds-uicustomheader-loggerconfig: backlog
 
 action_items:
   # Epic 10 action items (status from Epic 11 retro follow-through)
