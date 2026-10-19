@@ -39,7 +39,7 @@ spec:
         {{- with .Values.args }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        image: {{ include "vault-config-operator.image" ( dict "imageRoot" .Values.image "global" .Values.global "Chart" .Chart "context" $ ) }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         volumeMounts:
         - name: webhook-service-cert
