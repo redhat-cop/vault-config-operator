@@ -156,9 +156,10 @@ func (ve *VaultAuditEndpoint) CreateOrUpdate(context context.Context) error {
 	}
 
 	if !exists {
-		// Enable the audit device
+		log.V(6).Info("audit device not found, enabling", "path", ve.vaultObject.GetPath())
 		return ve.Enable(context)
 	}
+	log.V(6).Info("audit device exists, checking equivalence", "path", ve.vaultObject.GetPath())
 
 	// Check if the configuration matches
 	equivalent, err := ve.IsEquivalentToDesired(context)
@@ -170,6 +171,7 @@ func (ve *VaultAuditEndpoint) CreateOrUpdate(context context.Context) error {
 	if !equivalent {
 		// Audit devices cannot be updated in place, we need to disable and re-enable
 		log.Info("audit device configuration changed, disabling and re-enabling")
+		log.V(6).Info("audit device out of sync, disabling and re-enabling", "path", ve.vaultObject.GetPath())
 		err = ve.Disable(context)
 		if err != nil {
 			return fmt.Errorf("unable to disable audit device for update: %w", err)
@@ -179,19 +181,23 @@ func (ve *VaultAuditEndpoint) CreateOrUpdate(context context.Context) error {
 	}
 
 	log.Info("audit device already configured correctly")
+	log.V(6).Info("audit device in sync, skipping update", "path", ve.vaultObject.GetPath())
 	return nil
 }
 
 // DeleteIfExists disables the audit device if it exists
 func (ve *VaultAuditEndpoint) DeleteIfExists(context context.Context) error {
+	log := log.FromContext(context)
 	exists, err := ve.Exists(context)
 	if err != nil {
 		return err
 	}
 
 	if exists {
+		log.V(6).Info("audit device exists, disabling", "path", ve.vaultObject.GetPath())
 		return ve.Disable(context)
 	}
 
+	log.V(6).Info("audit device not found, nothing to delete", "path", ve.vaultObject.GetPath())
 	return nil
 }

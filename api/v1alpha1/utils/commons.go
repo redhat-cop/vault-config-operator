@@ -162,6 +162,7 @@ func (vc *VaultConnection) getConnectionConfig(context context.Context, kubeName
 			return nil, err
 		}
 	}
+	wrapConfigTransport(config.HttpClient, config.Address)
 	return config, nil
 }
 
@@ -365,6 +366,7 @@ func (kc *KubeAuthConfiguration) createVaultClient(context context.Context, jwt 
 		}
 	} else {
 		config = vault.DefaultConfig()
+		wrapConfigTransport(config.HttpClient, config.Address)
 	}
 
 	client, err := vault.NewClient(config)

@@ -89,10 +89,12 @@ func (ve *VaultEndpoint) DeleteKVv2IfExists(context context.Context) error {
 func (ve *VaultEndpoint) DeleteIfExists(context context.Context) error {
 	log := log.FromContext(context)
 	vaultClient := VaultClientFromContext(context)
+	log.V(6).Info("vault deleting object", "path", ve.vaultObject.GetPath())
 	_, err := vaultClient.Logical().Delete(ve.vaultObject.GetPath())
 	if err != nil {
 		if respErr, ok := err.(*vault.ResponseError); ok {
 			if respErr.StatusCode == 404 {
+				log.V(6).Info("vault object not found, nothing to delete", "path", ve.vaultObject.GetPath())
 				return nil
 			}
 		}
@@ -179,9 +181,11 @@ func (ve *VaultEndpoint) CreateOrUpdate(context context.Context) error {
 		return err
 	}
 	if !found {
+		log.V(6).Info("vault object not found, creating", "path", ve.vaultObject.GetPath())
 		return write(context, ve.vaultObject.GetPath(), ve.vaultObject.GetPayload())
 	} else {
 		if !ve.vaultObject.IsEquivalentToDesiredState(currentPayload) {
+			log.V(6).Info("vault object out of sync, updating", "path", ve.vaultObject.GetPath())
 			payload := ve.vaultObject.GetPayload()
 			if provider, ok := ve.vaultObject.(CreateOnlyFieldsProvider); ok {
 				for _, field := range provider.GetCreateOnlyFields() {
@@ -190,6 +194,7 @@ func (ve *VaultEndpoint) CreateOrUpdate(context context.Context) error {
 			}
 			return write(context, ve.vaultObject.GetPath(), payload)
 		}
+		log.V(6).Info("vault object in sync, skipping write", "path", ve.vaultObject.GetPath())
 	}
 	return nil
 }
