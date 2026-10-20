@@ -98,6 +98,8 @@ The UBI9 runtime image does not need a Go version bump (it only packages the com
 - The `vaultClient` is obtained per-reconcile via `GetKubeAuthConfiguration().GetVaultClient(ctx, namespace)`.
 
 #### Error Management Pattern
+- **Mandatory error checking:** Every function call that returns an error **must** have the error checked. Never assign an error to `_` or ignore a returned error value. This is enforced by the `errcheck` linter (enabled via golangci-lint `default: standard` preset in `.golangci.yml`). `make lint` must pass with zero `errcheck` violations.
+- **Mandatory error logging:** When an error is caught and not immediately returned, it **must** be logged with context before any fallback/continue/skip logic: `log.Error(err, "descriptive message", "key", value)`. Never silently swallow an error by checking it and then doing nothing.
 - Controllers: `apierrors.IsNotFound(err)` → return `reconcile.Result{}, nil` (don't requeue on deleted objects).
 - All other errors from Get/context-preparation → `ManageOutcome(ctx, r.ReconcilerBase, instance, err)` which sets a `ReconcileFailed` condition on the CR status and returns the error for requeue.
 - In `_types.go` methods: log the error with `log.Error(err, "descriptive message", "key", value)` then return the error up the chain. Never swallow errors silently.
@@ -252,9 +254,11 @@ These rules govern the interaction between `kubebuilder:default`, `omitempty`, a
 - `Path` is a custom type `vaultutils.Path` (string alias), serialized as `json:"path,omitempty"`.
 
 #### Code Quality Gates
-- CI runs `go fmt`, `go vet`, and `make test` (envtest-based unit tests). No golangci-lint in CI.
-- golangci-lint v1.64.8 is available locally via `make golangci-lint` but has no committed config (`.golangci.yml`) and is not wired into `make test` or the CI workflow.
-- Effective quality enforcement: `go fmt` formatting + `go vet` static analysis only.
+- CI runs `go fmt`, `go vet`, and `make test` (envtest-based unit tests).
+- **golangci-lint v2** is configured via `.golangci.yml` with `default: standard` preset (includes `errcheck`, `govet`, `staticcheck`, and other standard linters). Run locally via `make lint` (pins `GOTOOLCHAIN=go1.27.2`).
+- **`errcheck` is mandatory:** The `default: standard` preset enables `errcheck`. Every function returning an error must have the error checked — unchecked errors fail `make lint`. This is a blocking quality gate (Story 17.6 Part B).
+- **`staticcheck`** is configured with `checks: ["all"]` minus select `QF*` and `ST*` rules (see `.golangci.yml`).
+- Effective quality enforcement: `go fmt` formatting + `go vet` + golangci-lint (errcheck, staticcheck, standard linters).
 
 ### Development Workflow Rules
 

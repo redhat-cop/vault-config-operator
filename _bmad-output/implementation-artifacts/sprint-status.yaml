@@ -654,6 +654,41 @@ development_status:
   # Design note: LoggerConfig resets on Vault restart — operator re-applies on reconcile (documented behavior)
   17-4-ui-and-observability-crds-uicustomheader-loggerconfig: backlog
 
+  # Story 17.5: Reflective toMap via vault Struct Tags + VaultObject Interface Simplification
+  # - Part A0 (PREREQUISITE) — toMap/IsEquivalentToDesiredState unit test audit + gap fill
+  #   - Audit all 88 types for toMap unit test coverage; fill gaps for 8 untested types
+  #   - Every type must have: toMap output test, IsEquivalentToDesiredState positive + negative + extra-fields tests
+  #   - These tests become the regression oracle — they MUST pass before AND after the walker migration
+  # - Part A1 — StructToVaultPayload runtime reflection walker with extended tag grammar
+  #   - Tag grammar: vault:"<key>[,<codec>][,omitempty][,when=Field:value][,default=X][,spreadmap]" | vault:"-" | vault:",inline"
+  #   - Codecs: identity, duration, number, intmap, stringmap
+  #   - Directives: omitempty, when=Field:value (conditional include), default=X (pointer-nil default), spreadmap (merge map into parent), inline, -
+  #   - Implement in api/v1alpha1/utils/ as StructToVaultPayload(any) map[string]any
+  #   - All 88 types eligible with extended grammar; only TransitSecretEngineKey keeps hand-written toMap/configToMap (two maps from one struct)
+  #   - Credential-override types: move override logic from toMap into PrepareInternalValues; tag retrieved* fields normally
+  #   - Apply to all new Epic 17 CRDs; migrate all existing types except Transit
+  #   - All Part A0 unit tests must pass unchanged after migration
+  # - Part B — Default IsEquivalentToDesiredState via optional VaultEquivalenceChecker interface
+  # - Part C — Optional interface methods (IsInitialized, IsValid, PrepareInternalValues, PrepareTLSConfig) — deletes ~275 no-ops
+  # - Part D — ResourceName helper for spec.Name-vs-metadata.Name in GetPath
+  # Complexity: High (touches every type file; Part A0 test audit is prerequisite gate)
+  # Novelty Risk: HIGH — shared framework refactor across all 88 types
+  # Safety: Part A0 builds comprehensive test oracle BEFORE migration; integration tests provide end-to-end regression
+  17-5-reflective-tomap-and-vaultobject-interface-simplification: backlog
+
+  # Story 17.6: Generic Reconciler + Error Handling Enforcement
+  # - Part A — Generic VaultResource reconciler using Go generics (Go 1.18+ type params, we're on 1.27)
+  #   - GenericVaultReconciler[T, PT] replaces the identical 70-line Reconcile() body in ~70 controller files
+  #   - Per-type controller files shrink to RBAC comments + SetupWithManager one-liner
+  #   - ~10 controllers with custom logic (PKI, Transit, RandomSecret, VaultSecret, etc.) keep hand-written Reconcile
+  # - Part B — Error handling enforcement
+  #   - Enable errcheck linter in .golangci.yml (currently not enabled — only standard linters + staticcheck)
+  #   - Fix all existing errcheck violations: every function returning error must have the error checked and logged
+  #   - Add errcheck to CI pipeline as blocking gate
+  # Complexity: High (Part A touches every controller file; Part B is a sweep with potential behavior changes)
+  # Novelty Risk: MEDIUM — generics are well-understood in Go 1.27; errcheck is mechanical
+  17-6-generic-reconciler-and-error-handling-enforcement: backlog
+
 action_items:
   # Epic 10 action items (status from Epic 11 retro follow-through)
   - epic: 10
