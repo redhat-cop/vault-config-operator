@@ -18,8 +18,10 @@ package utils
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	"sync"
@@ -146,36 +148,70 @@ func (vc *VaultConnection) getConnectionConfig(context context.Context, kubeName
 		config.MaxRetries = *vc.MaxRetries
 	}
 	if vc.TLSConfig != nil {
-		tlsConfig := vault.TLSConfig{}
+		var secretData map[string][]byte
 		if vc.TLSConfig.TLSSecret != nil {
 			tlsSecret, err := clientset.CoreV1().Secrets(kubeNamespace).Get(context, vc.TLSConfig.TLSSecret.Name, metav1.GetOptions{})
 			if err != nil {
 				log.Error(err, "unable to retrieve", "secret", vc.TLSConfig.TLSSecret.Name)
 				return nil, err
 			}
-			if ca, ok := tlsSecret.Data["ca.crt"]; ok {
-				tlsConfig.CACertBytes = ca
-			}
-			if key, ok := tlsSecret.Data["tls.key"]; ok {
-				tlsConfig.ClientKey = string(key)
-			}
-			if crt, ok := tlsSecret.Data["tls.crt"]; ok {
-				tlsConfig.ClientCert = string(crt)
-			}
+			secretData = tlsSecret.Data
 		}
-		if vc.TLSConfig.Cacert != nil {
-			tlsConfig.CACert = *vc.TLSConfig.Cacert
-		}
-		if vc.TLSConfig.TLSServerName != nil {
-			tlsConfig.TLSServerName = *vc.TLSConfig.TLSServerName
-		}
-		tlsConfig.Insecure = vc.TLSConfig.SkipVerify
-		if err := config.ConfigureTLS(&tlsConfig); err != nil {
+		if err := applyConnectionTLS(config, vc.TLSConfig, secretData); err != nil {
 			log.Error(err, "unable to configure TLS")
 			return nil, err
 		}
 	}
 	return config, nil
+}
+
+// applyConnectionTLS installs connection TLS settings on config.
+// ca.crt is PEM and is passed as CACertBytes. tls.crt and tls.key are also PEM,
+// but vault.TLSConfig.ClientCert and ClientKey are file paths that ConfigureTLS
+// opens with tls.LoadX509KeyPair, so the pair is parsed in memory and attached afterwards.
+func applyConnectionTLS(config *vault.Config, spec *TLSConfig, secretData map[string][]byte) error {
+	tlsConfig := vault.TLSConfig{}
+	if ca, ok := secretData["ca.crt"]; ok {
+		tlsConfig.CACertBytes = ca
+	}
+	if spec.Cacert != nil {
+		tlsConfig.CACert = *spec.Cacert
+	}
+	if spec.TLSServerName != nil {
+		tlsConfig.TLSServerName = *spec.TLSServerName
+	}
+	tlsConfig.Insecure = spec.SkipVerify
+	if err := config.ConfigureTLS(&tlsConfig); err != nil {
+		return err
+	}
+	secretName := ""
+	if spec.TLSSecret != nil {
+		secretName = spec.TLSSecret.Name
+	}
+	return setClientCertificateFromPEM(config, secretData["tls.crt"], secretData["tls.key"], secretName)
+}
+
+// setClientCertificateFromPEM installs a client certificate parsed from PEM bytes.
+// An empty cert and key leaves the transport unchanged. One without the other is an error.
+func setClientCertificateFromPEM(config *vault.Config, certPEM, keyPEM []byte, secretName string) error {
+	if len(certPEM) == 0 && len(keyPEM) == 0 {
+		return nil
+	}
+	pair, err := tls.X509KeyPair(certPEM, keyPEM)
+	if err != nil {
+		return fmt.Errorf("invalid tls.crt/tls.key in secret %q: %w", secretName, err)
+	}
+	if config.HttpClient == nil || config.HttpClient.Transport == nil {
+		return fmt.Errorf("vault HTTP transport is not configurable")
+	}
+	transport, ok := config.HttpClient.Transport.(*http.Transport)
+	if !ok || transport.TLSClientConfig == nil {
+		return fmt.Errorf("vault HTTP transport is not configurable")
+	}
+	transport.TLSClientConfig.GetClientCertificate = func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
+		return &pair, nil
+	}
+	return nil
 }
 
 func (kc *KubeAuthConfiguration) GetNamespace() string {
