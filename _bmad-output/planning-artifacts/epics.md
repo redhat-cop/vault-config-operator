@@ -2798,3 +2798,266 @@ So that Vault's Cloud Foundry auth method can be managed declaratively.
 **Given** the CRD types are implemented
 **When** the story is marked done
 **Then** a documentation file exists at `docs/auth-engines/cloud-foundry.md` following `docs/engine-doc-template.md` (DNFR5)
+
+---
+
+## Phase 3: System Backend API Coverage
+
+---
+
+## Epic 17: System Backend Configuration CRDs
+
+**Scope:** 8 new CRDs covering configurable `/sys/` endpoints in OSS Vault, plus foundational observability for all Vault API traffic. Enterprise-only APIs are excluded. Plugin APIs (`/sys/plugins/*`) are excluded (operator cannot verify server-side binaries).
+
+**Framework:** All new CRDs use the existing `VaultObject` + `VaultEndpoint` + `VaultResource` generic reconciler. No framework changes needed for CRD stories. Story 17.0 adds metrics instrumentation to the shared Vault HTTP client layer.
+
+**Addresses:** [GitHub Issue #193](https://github.com/redhat-cop/vault-config-operator/issues/193) — Missing observability for Vault API traffic and reconciliation decisions.
+
+**Epic-wide implementation notes:**
+- **Singleton CRDs** (`QuotaConfig`, `CORSConfig`, `KeyRotationConfig`): These manage a single global Vault configuration with no `{name}` in the path. `GetPath()` returns a fixed string. Document one-per-cluster convention. Consider a validating webhook that rejects creation when another instance already exists in the same namespace targeting the same Vault.
+- **`IsDeletable()` for singletons:** Some singletons (e.g., `QuotaConfig`) don't support DELETE — they're always-present configs. Set `IsDeletable()` to `false` for these; the operator will manage them but not remove them when the CR is deleted. Others (`CORSConfig`) use DELETE to disable, so `IsDeletable()` returns `true`.
+- **`LoggerConfig` transience:** Vault logger levels reset on restart. The operator re-applies on each reconcile, which is correct declarative behavior. Document this clearly.
+- **TTL/duration fields:** Follow the established `durationToSeconds()` rule from Epic 15/16 retro for any duration fields.
+- **Documentation:** Each CRD story must produce a documentation file at `docs/system-backend/{name}.md` following `docs/engine-doc-template.md`.
+
+### Story 17.0: Vault API Observability — HTTP Metrics + Reconcile Trace Logging
+
+As an operator administrator,
+I want Prometheus metrics tracking every Vault API call the operator makes, and high-verbosity trace logging for reconciliation decisions,
+So that I can monitor operator-to-Vault traffic volume, detect runaway reconciliation loops, and troubleshoot reconciliation behavior without modifying the operator.
+
+**Addresses:** [GitHub Issue #193](https://github.com/redhat-cop/vault-config-operator/issues/193), [Related PR #194](https://github.com/redhat-cop/vault-config-operator/pull/194) (stale, never merged)
+
+**Part A — Vault API HTTP Metrics:**
+
+**Acceptance Criteria:**
+
+**Given** the operator is running and making Vault API calls
+**When** a Prometheus scrape hits the `/metrics` endpoint
+**Then** a `vault_api_requests_total` counter is present with labels `method`, `path`, `status_code`
+
+**Given** the operator is making Vault API calls
+**When** a Prometheus scrape hits the `/metrics` endpoint
+**Then** a `vault_api_request_duration_seconds` histogram is present with labels `method`, `path`
+
+**Given** many distinct Vault paths are called (e.g., 500 different secret paths)
+**When** metrics are recorded
+**Then** path labels are normalized to prevent cardinality explosion (e.g., `sys/policies/acl/*`, `auth/*/login`, `*/config`, `*/roles/*`)
+
+**Implementation notes:**
+- Create an `instrumentedRoundTripper` struct implementing `http.RoundTripper` that wraps the real transport
+- Inject by wrapping `config.HttpClient.Transport` in both `getConnectionConfig()` and the fallback `vault.DefaultConfig()` path in `createVaultClient()` (`api/v1alpha1/utils/commons.go`)
+- Register metrics with `sigs.k8s.io/controller-runtime/pkg/metrics` → `metrics.Registry.MustRegister()`
+- `prometheus/client_golang` is already an indirect dependency (v1.24.0) — promote to direct
+- `normalizePath()` must collapse dynamic segments: named resources become `*`, mount paths become `*`. Target ~30 distinct normalized path patterns covering 95%+ of traffic.
+- The instrumented transport automatically captures everything: reconciler reads/writes/deletes, auth logins, token renewals, sys calls — with zero changes to any controller or type file.
+
+**Part B — High-Verbosity Reconcile Trace Logging:**
+
+**Acceptance Criteria:**
+
+**Given** the operator runs with `-v=6` (or `--zap-log-level=6`)
+**When** a reconciliation cycle executes
+**Then** the following are logged: read result (found/not-found), drift decision (in-sync/out-of-sync), action taken (create/update/skip), and the Vault path involved
+
+**Given** the operator runs at default verbosity
+**When** a reconciliation cycle executes
+**Then** no additional log output is produced (zero noise)
+
+**Implementation notes:**
+- Add `log.V(6).Info(...)` calls in `VaultEndpoint.CreateOrUpdate()`, `VaultEndpoint.DeleteIfExists()`, `VaultAuditEndpoint.CreateOrUpdate()`, `VaultEngineEndpoint` methods, and `ReconcileWithFunctions()`
+- Log the path, the operation, and the decision — not the full payload (payloads may contain secrets)
+- PR #194's approach of logging diffs is valuable for debugging but risks leaking secret material. Use V(6) for decision trace, V(8) for payload-level detail if needed later.
+
+**Complexity:** Medium
+**Novelty Risk:** MEDIUM — touches shared framework (`commons.go`, `vaultobject.go`, `reconcile_skeleton.go`), must not regress any existing CRD behavior.
+
+---
+
+### Story 17.1: Quota Management CRDs (QuotaConfig + RateLimitQuota + LeaseCountQuota)
+
+**Closes:** [GitHub Issue #249 — Feature Request: Rate Limiting with Resource Quotas](https://github.com/redhat-cop/vault-config-operator/issues/249)
+
+As an operator developer,
+I want CRDs for QuotaConfig, RateLimitQuota, and LeaseCountQuota,
+So that Vault's resource quota system can be managed declaratively.
+
+**Vault API paths:**
+- `sys/quotas/config` (singleton — global quota settings)
+- `sys/quotas/rate-limit/{name}` (named rate limit quotas)
+- `sys/quotas/lease-count/{name}` (named lease count quotas)
+
+**Vault API docs:**
+- https://developer.hashicorp.com/vault/api-docs/system/quotas-config
+- https://developer.hashicorp.com/vault/api-docs/system/rate-limit-quotas
+- https://developer.hashicorp.com/vault/api-docs/system/lease-count-quotas
+
+**Acceptance Criteria:**
+
+**Given** a QuotaConfig CR is created with `enable_rate_limit_audit_logging` and `rate_limit_exempt_paths`
+**When** the reconciler processes it
+**Then** the global quota config is written to Vault at `sys/quotas/config`
+
+**Given** a RateLimitQuota CR is created with `rate`, `path`, `interval`, and `block_interval`
+**When** the reconciler processes it
+**Then** a named rate limit quota exists in Vault and ReconcileSuccessful=True
+
+**Given** a LeaseCountQuota CR is created with `max_leases` and `path`
+**When** the reconciler processes it
+**Then** a named lease count quota exists in Vault and ReconcileSuccessful=True
+
+**Given** quota CRs are updated (e.g., rate changed from 100 to 200)
+**When** the reconciler processes the update
+**Then** the Vault quota configuration is updated to match
+
+**Given** RateLimitQuota or LeaseCountQuota CRs are deleted
+**When** the reconciler processes deletion
+**Then** the named quotas are removed from Vault
+
+**Given** the QuotaConfig CR is deleted
+**When** the reconciler processes deletion
+**Then** the global config is NOT deleted from Vault (`IsDeletable()` returns false — it's always-present)
+
+**Given** the CRD types are implemented
+**When** the story is marked done
+**Then** documentation files exist at `docs/system-backend/quotas.md`
+
+**Implementation notes:**
+- `QuotaConfig` is a singleton: `GetPath()` returns `sys/quotas/config`, `IsDeletable()` returns `false`
+- `RateLimitQuota` and `LeaseCountQuota` are named resources following the standard `VaultObject` pattern
+- Rate limit quotas have an optional `path` field scoping them to a mount; when absent they apply globally
+- Lease count quotas similarly have an optional `path` and `role` field
+- All three use the generic `VaultResource` reconciler — no custom reconciler needed
+
+**Complexity:** Medium
+**Novelty Risk:** LOW — follows established patterns, first singleton CRD is the only novel element
+
+---
+
+### Story 17.2: System Configuration Singleton CRDs (CORSConfig + KeyRotationConfig)
+
+As an operator developer,
+I want CRDs for CORSConfig and KeyRotationConfig,
+So that Vault's CORS settings and automatic key rotation can be managed declaratively.
+
+**Vault API paths:**
+- `sys/config/cors` (singleton — CORS configuration)
+- `sys/rotate/config` (singleton — automatic barrier key rotation)
+
+**Vault API docs:**
+- https://developer.hashicorp.com/vault/api-docs/system/config-cors
+- https://developer.hashicorp.com/vault/api-docs/system/rotate-config
+
+**Acceptance Criteria:**
+
+**Given** a CORSConfig CR is created with `allowed_origins` and `allowed_headers`
+**When** the reconciler processes it
+**Then** CORS is enabled in Vault with the specified origins and headers
+
+**Given** a CORSConfig CR is deleted
+**When** the reconciler processes deletion
+**Then** CORS is disabled in Vault (DELETE to `sys/config/cors`)
+
+**Given** a KeyRotationConfig CR is created with `max_operations` and `interval`
+**When** the reconciler processes it
+**Then** the automatic key rotation config is written to Vault
+
+**Given** CRs are updated
+**When** the reconciler processes the update
+**Then** Vault configuration is updated to match
+
+**Given** the CRD types are implemented
+**When** the story is marked done
+**Then** documentation files exist at `docs/system-backend/cors.md` and `docs/system-backend/key-rotation.md`
+
+**Implementation notes:**
+- Both are singletons with fixed paths. `GetPath()` returns `sys/config/cors` and `sys/rotate/config` respectively.
+- `CORSConfig.IsDeletable()` returns `true` — DELETE disables CORS entirely.
+- `KeyRotationConfig.IsDeletable()` returns `false` — the config always exists, you can only change it.
+- CORS config has `enabled` as a boolean field in the payload, but the Vault API uses POST to enable and DELETE to disable. The standard `VaultEndpoint.CreateOrUpdate` (which uses write/POST) works for enable; `DeleteIfExists` handles disable.
+
+**Complexity:** Low
+**Novelty Risk:** LOW — straightforward singleton pattern
+
+---
+
+### Story 17.3: Rotation Policy CRD
+
+As an operator developer,
+I want a CRD for RotationPolicy,
+So that Vault's automatic credential rotation schedules can be managed declaratively.
+
+**Vault API paths:** `sys/policies/rotation/{name}`
+
+**Vault API docs:** https://developer.hashicorp.com/vault/api-docs/system/policies-rotation
+
+**Acceptance Criteria:**
+
+**Given** a RotationPolicy CR is created with `rotation_schedule` (cron expression) and `rotation_window`
+**When** the reconciler processes it
+**Then** the rotation policy exists in Vault and ReconcileSuccessful=True
+
+**Given** the CR spec is updated (e.g., schedule changed)
+**When** the reconciler processes the update
+**Then** the Vault rotation policy is updated
+
+**Given** the CR is deleted
+**When** the reconciler processes deletion
+**Then** the rotation policy is removed from Vault
+
+**Given** the CRD type is implemented
+**When** the story is marked done
+**Then** a documentation file exists at `docs/system-backend/rotation-policy.md`
+
+**Implementation notes:**
+- Directly mirrors the `PasswordPolicy` pattern — `GetPath()` returns `sys/policies/rotation/{name}`
+- Fields: `rotation_schedule` (cron), `rotation_window` (duration), `rotation_period` (duration — alternative to schedule)
+- Duration fields must use `durationToSeconds()` per established convention
+- Uses the generic `VaultResource` reconciler
+
+**Complexity:** Low
+**Novelty Risk:** LOW — near-copy of PasswordPolicy pattern
+
+---
+
+### Story 17.4: UI and Observability CRDs (UICustomHeader + LoggerConfig)
+
+As an operator developer,
+I want CRDs for UICustomHeader and LoggerConfig,
+So that Vault's custom UI response headers and runtime log levels can be managed declaratively.
+
+**Vault API paths:**
+- `sys/config/ui/headers/{name}` (custom UI response headers)
+- `sys/loggers/{name}` (runtime logger level)
+
+**Vault API docs:**
+- https://developer.hashicorp.com/vault/api-docs/system/config-ui
+- https://developer.hashicorp.com/vault/api-docs/system/loggers
+
+**Acceptance Criteria:**
+
+**Given** a UICustomHeader CR is created with a header name and values
+**When** the reconciler processes it
+**Then** the header is configured in Vault's UI config
+
+**Given** a LoggerConfig CR is created with a logger name and level (trace, debug, info, warn, error)
+**When** the reconciler processes it
+**Then** the logger level is set in Vault
+
+**Given** CRs are deleted
+**When** the reconciler processes deletion
+**Then** the header or logger setting is removed from Vault
+
+**Given** the CRD types are implemented
+**When** the story is marked done
+**Then** documentation files exist at `docs/system-backend/ui-headers.md` and `docs/system-backend/loggers.md`
+
+**Implementation notes:**
+- Both are simple named resources following the standard `VaultObject` + `VaultResource` pattern.
+- `UICustomHeader.GetPath()` returns `sys/config/ui/headers/{name}`. Payload: `{"values": ["value1", "value2"]}`.
+- `LoggerConfig.GetPath()` returns `sys/loggers/{name}`. Payload: `{"level": "info"}`.
+- `LoggerConfig` resets on Vault restart. Document this. The operator re-applies on reconcile, which is correct.
+- Logger level should be validated via webhook: enum of `trace`, `debug`, `info`, `warn`, `error`.
+
+**Complexity:** Low
+**Novelty Risk:** LOW — standard named-resource pattern

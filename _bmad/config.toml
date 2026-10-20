@@ -39,6 +39,10 @@ risk_threshold = "p1"
 test_design_output = "_bmad-output/test-artifacts/test-design"
 test_review_output = "_bmad-output/test-artifacts/test-reviews"
 trace_output = "_bmad-output/test-artifacts/traceability"
+auto_validate = "true"
+auto_heal_failures = "true"
+max_healing_iterations = "3"
+use_mcp_healing = "true"
 
 [modules.cis]
 visual_tools = "intermediate"
