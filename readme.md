@@ -159,6 +159,7 @@ See the [secret engines index](./docs/secret-engines/index.md) for the full list
 3. [LeaseCountQuota](./docs/system-backend/quotas.md#leasecountquota) Configures a [Vault Lease Count Quota](https://developer.hashicorp.com/vault/api-docs/system/lease-count-quotas) to restrict lease counts (Enterprise only)
 4. [CORSConfig](./docs/system-backend/cors.md#corsconfig) Configures the [Vault CORS Settings](https://developer.hashicorp.com/vault/api-docs/system/config-cors) (allowed origins and headers)
 5. [KeyRotationConfig](./docs/system-backend/key-rotation.md#keyrotationconfig) Configures the [Vault Automatic Key Rotation](https://developer.hashicorp.com/vault/api-docs/system/rotate-config) schedule
+6. [RotationPolicy](./docs/system-backend/rotation-policy.md#rotationpolicy) Configures a [Vault Rotation Policy](https://developer.hashicorp.com/vault/api-docs/system/policies-rotation) for automatic credential rotation retry behavior (Enterprise only)
 
 ## Identities
 

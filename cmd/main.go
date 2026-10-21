@@ -575,6 +575,10 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "KeyRotationConfig")
 		os.Exit(1)
 	}
+	if err = (&controller.RotationPolicyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RotationPolicy")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "RotationPolicy")
+		os.Exit(1)
+	}
 
 	if webhooks, ok := os.LookupEnv("ENABLE_WEBHOOKS"); !ok || webhooks != "false" {
 		if err = (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(mgr); err != nil {
@@ -971,6 +975,10 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.KeyRotationConfig{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "KeyRotationConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.RotationPolicy{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "RotationPolicy")
 			os.Exit(1)
 		}
 	}

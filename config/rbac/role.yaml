@@ -130,6 +130,7 @@ rules:
   - radiusauthengineusers
   - randomsecrets
   - ratelimitquotas
+  - rotationpolicies
   - secretenginemounts
   - sshsecretengineconfigs
   - sshsecretengineroles
@@ -233,6 +234,7 @@ rules:
   - radiusauthengineusers/finalizers
   - randomsecrets/finalizers
   - ratelimitquotas/finalizers
+  - rotationpolicies/finalizers
   - secretenginemounts/finalizers
   - sshsecretengineconfigs/finalizers
   - sshsecretengineroles/finalizers
@@ -331,6 +333,7 @@ rules:
   - radiusauthengineusers/status
   - randomsecrets/status
   - ratelimitquotas/status
+  - rotationpolicies/status
   - secretenginemounts/status
   - sshsecretengineconfigs/status
   - sshsecretengineroles/status

@@ -285,6 +285,9 @@ var _ = BeforeSuite(func() {
 	err = (&KeyRotationConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KeyRotationConfig")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
+	err = (&RotationPolicyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RotationPolicy")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
 	By(fmt.Sprintf("Creating the %v namespace", vaultAdminNamespaceName))
 	vaultAdminNamespace = &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
