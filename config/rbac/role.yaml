@@ -104,6 +104,7 @@ rules:
   - ldapsecretengineconfigs
   - ldapsecretenginedynamicroles
   - ldapsecretenginestaticroles
+  - leasecountquotas
   - mongodbatlassecretengineconfigs
   - mongodbatlassecretengineroles
   - namespaces
@@ -120,11 +121,13 @@ rules:
   - quaysecretengineconfigs
   - quaysecretengineroles
   - quaysecretenginestaticroles
+  - quotaconfigs
   - rabbitmqsecretengineconfigs
   - rabbitmqsecretengineroles
   - radiusauthengineconfigs
   - radiusauthengineusers
   - randomsecrets
+  - ratelimitquotas
   - secretenginemounts
   - sshsecretengineconfigs
   - sshsecretengineroles
@@ -203,6 +206,7 @@ rules:
   - ldapsecretengineconfigs/finalizers
   - ldapsecretenginedynamicroles/finalizers
   - ldapsecretenginestaticroles/finalizers
+  - leasecountquotas/finalizers
   - mongodbatlassecretengineconfigs/finalizers
   - mongodbatlassecretengineroles/finalizers
   - namespaces/finalizers
@@ -219,10 +223,12 @@ rules:
   - quaysecretengineconfigs/finalizers
   - quaysecretengineroles/finalizers
   - quaysecretenginestaticroles/finalizers
+  - quotaconfigs/finalizers
   - rabbitmqsecretengineroles/finalizers
   - radiusauthengineconfigs/finalizers
   - radiusauthengineusers/finalizers
   - randomsecrets/finalizers
+  - ratelimitquotas/finalizers
   - secretenginemounts/finalizers
   - sshsecretengineconfigs/finalizers
   - sshsecretengineroles/finalizers
@@ -295,6 +301,7 @@ rules:
   - ldapsecretengineconfigs/status
   - ldapsecretenginedynamicroles/status
   - ldapsecretenginestaticroles/status
+  - leasecountquotas/status
   - mongodbatlassecretengineconfigs/status
   - mongodbatlassecretengineroles/status
   - namespaces/status
@@ -311,11 +318,13 @@ rules:
   - quaysecretengineconfigs/status
   - quaysecretengineroles/status
   - quaysecretenginestaticroles/status
+  - quotaconfigs/status
   - rabbitmqsecretengineconfigs/status
   - rabbitmqsecretengineroles/status
   - radiusauthengineconfigs/status
   - radiusauthengineusers/status
   - randomsecrets/status
+  - ratelimitquotas/status
   - secretenginemounts/status
   - sshsecretengineconfigs/status
   - sshsecretengineroles/status

@@ -555,6 +555,18 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "KerberosAuthEngineGroup")
 		os.Exit(1)
 	}
+	if err = (&controller.QuotaConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "QuotaConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "QuotaConfig")
+		os.Exit(1)
+	}
+	if err = (&controller.RateLimitQuotaReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RateLimitQuota")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "RateLimitQuota")
+		os.Exit(1)
+	}
+	if err = (&controller.LeaseCountQuotaReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LeaseCountQuota")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "LeaseCountQuota")
+		os.Exit(1)
+	}
 
 	if webhooks, ok := os.LookupEnv("ENABLE_WEBHOOKS"); !ok || webhooks != "false" {
 		if err = (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(mgr); err != nil {
@@ -931,6 +943,18 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.KerberosAuthEngineGroup{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "KerberosAuthEngineGroup")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.QuotaConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "QuotaConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.RateLimitQuota{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "RateLimitQuota")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.LeaseCountQuota{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "LeaseCountQuota")
 			os.Exit(1)
 		}
 	}

@@ -1066,6 +1066,26 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-leasecountquota
+  failurePolicy: Fail
+  name: mleasecountquota.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - leasecountquotas
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /mutate-redhatcop-redhat-io-v1alpha1-mongodbatlassecretengineconfig
   failurePolicy: Fail
   name: mmongodbatlassecretengineconfig.kb.io
@@ -1378,6 +1398,26 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-quotaconfig
+  failurePolicy: Fail
+  name: mquotaconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - quotaconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /mutate-redhatcop-redhat-io-v1alpha1-rabbitmqsecretenginerole
   failurePolicy: Fail
   name: mrabbitmqsecretenginerole.kb.io
@@ -1449,6 +1489,26 @@ webhooks:
     - CREATE
     resources:
     - randomsecrets
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-ratelimitquota
+  failurePolicy: Fail
+  name: mratelimitquota.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - ratelimitquotas
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -2724,6 +2784,27 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-leasecountquota
+  failurePolicy: Fail
+  name: vleasecountquota.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - leasecountquotas
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /validate-redhatcop-redhat-io-v1alpha1-mongodbatlassecretengineconfig
   failurePolicy: Fail
   name: vmongodbatlassecretengineconfig.kb.io
@@ -3048,6 +3129,27 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-quotaconfig
+  failurePolicy: Fail
+  name: vquotaconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - quotaconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /validate-redhatcop-redhat-io-v1alpha1-rabbitmqsecretenginerole
   failurePolicy: Fail
   name: vrabbitmqsecretenginerole.kb.io
@@ -3120,6 +3222,27 @@ webhooks:
     - UPDATE
     resources:
     - randomsecrets
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-ratelimitquota
+  failurePolicy: Fail
+  name: vratelimitquota.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - ratelimitquotas
   sideEffects: None
 - admissionReviewVersions:
   - v1

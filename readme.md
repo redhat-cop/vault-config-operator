@@ -152,6 +152,12 @@ See the [secret engines index](./docs/secret-engines/index.md) for the full list
 1. [RandomSecret](./docs/secret-management.md#randomsecret) Creates a random secret in a vault [kv Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/kv) with one password field generated using a [PasswordPolicy](https://developer.hashicorp.com/vault/docs/concepts/password-policies)
 2. [VaultSecret](./docs/secret-management.md#vaultsecret) Creates a K8s Secret from one or more Vault Secrets
 
+## System Backend
+
+1. [QuotaConfig](./docs/system-backend/quotas.md#quotaconfig) Configures the global [Vault Quota Config](https://developer.hashicorp.com/vault/api-docs/system/quotas-config) (rate-limit audit logging, exempt paths)
+2. [RateLimitQuota](./docs/system-backend/quotas.md#ratelimitquota) Configures a [Vault Rate Limit Quota](https://developer.hashicorp.com/vault/api-docs/system/rate-limit-quotas) to restrict request rates
+3. [LeaseCountQuota](./docs/system-backend/quotas.md#leasecountquota) Configures a [Vault Lease Count Quota](https://developer.hashicorp.com/vault/api-docs/system/lease-count-quotas) to restrict lease counts (Enterprise only)
+
 ## Identities
 
 1. [Entity](./docs/identities.md#entity) Creates a [Vault Entity](https://developer.hashicorp.com/vault/api-docs/secret/identity/entity).

@@ -1,0 +1,10 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: QuotaConfig
+metadata:
+  name: test-quota-config
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  enableRateLimitAuditLogging: false
+  enableRateLimitResponseHeaders: true
