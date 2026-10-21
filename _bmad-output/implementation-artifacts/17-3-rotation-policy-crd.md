@@ -56,6 +56,7 @@ So that Vault's automatic credential rotation retry policies can be managed decl
   - [ ] 8.1 Create `docs/system-backend/` directory if not present
   - [ ] 8.2 Create `docs/system-backend/rotation-policy.md` following `docs/engine-doc-template.md`
   - [ ] 8.3 Add link from docs index (or create `docs/system-backend/index.md` if this is the first system-backend doc)
+  - [ ] 8.4 Add RotationPolicy entry to the System Backend section of `readme.md` with link to the Vault API docs
 
 ## Dev Notes
 

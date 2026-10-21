@@ -78,6 +78,7 @@ So that Vault's CORS settings and automatic barrier key rotation schedule can be
   - [ ] 10.1 Create `docs/system-backend/` directory (first system-backend docs)
   - [ ] 10.2 Create `docs/system-backend/cors.md` following `docs/engine-doc-template.md`
   - [ ] 10.3 Create `docs/system-backend/key-rotation.md` following `docs/engine-doc-template.md`
+  - [ ] 10.4 Add CORSConfig and KeyRotationConfig entries to the System Backend section of `readme.md` with links to the Vault API docs
 
 ## Dev Notes
 

@@ -75,6 +75,7 @@ So that Vault's custom UI response headers and runtime log levels can be managed
   - [ ] 10.1 Create `docs/system-backend/ui-headers.md` following `docs/engine-doc-template.md` adapted for system backend
   - [ ] 10.2 Create `docs/system-backend/loggers.md` following `docs/engine-doc-template.md` adapted for system backend
   - [ ] 10.3 Create `docs/system-backend/index.md` if not already present from Story 17.2 or 17.3
+  - [ ] 10.4 Add UICustomHeader and LoggerConfig entries to the System Backend section of `readme.md` with links to the Vault API docs
 
 ## Dev Notes
 
