@@ -1,6 +1,9 @@
 # Story 17.4: UI and Observability CRDs (UICustomHeader + LoggerConfig)
 
-Status: ready-for-dev
+Status: done
+baseline_revision: 64b1b2eaac08c94f7c09e6d8465e9c33684964c4
+final_revision: 8112326531f06eaf343e61d29e907cabe68d9ca8
+followup_review_recommended: false
 
 ## Story
 
@@ -33,49 +36,49 @@ So that Vault's custom UI response headers and runtime log levels can be managed
 
 ## Tasks / Subtasks
 
-- [ ] Task 1 — UICustomHeader CRD type (AC: #1, #2)
-  - [ ] 1.1 Create `api/v1alpha1/uicustomheader_types.go`: UICustomHeaderSpec with `Connection`, `Authentication`, inline `UICustomHeaderConfig`, `Name`; `GetPath()` → `"sys/config/ui/headers/{name}"`; `IsDeletable()` → `true`; `toMap()` emitting `values` list
-  - [ ] 1.2 Implement custom `IsEquivalentToDesiredState()` that handles Vault's read response shape mismatch (see Dev Notes — Critical API Quirk)
-  - [ ] 1.3 Register `&UICustomHeader{}` and `&UICustomHeaderList{}` in `init()`
-- [ ] Task 2 — UICustomHeader webhook (AC: #4, #5)
-  - [ ] 2.1 Create `api/v1alpha1/uicustomheader_webhook.go`: `admission.Defaulter[*UICustomHeader]`, `admission.Validator[*UICustomHeader]`
-  - [ ] 2.2 `ValidateCreate`: reject if `Values` is empty (len == 0)
-  - [ ] 2.3 `ValidateUpdate`: call `Authentication.ValidateTargetNamespaceUpdate()`, reject `spec.name` changes (immutable), reject if `Values` is empty
-  - [ ] 2.4 Add kubebuilder webhook markers for mutating and validating paths
-- [ ] Task 3 — UICustomHeader controller (AC: #1, #2, #3)
-  - [ ] 3.1 Create `internal/controller/uicustomheader_controller.go` following PasswordPolicy controller pattern
-  - [ ] 3.2 Add RBAC markers for `uicustomheaders` resource
-- [ ] Task 4 — LoggerConfig CRD type (AC: #6, #7, #8)
-  - [ ] 4.1 Create `api/v1alpha1/loggerconfig_types.go`: LoggerConfigSpec with `Connection`, `Authentication`, inline `LoggerConfigConfig`, `Name`; `GetPath()` → `"sys/loggers/{name}"`; `IsDeletable()` → `true`
-  - [ ] 4.2 Implement `toMap()` emitting `{"level": "..."}` (write payload shape)
-  - [ ] 4.3 Implement custom `IsEquivalentToDesiredState()` that handles Vault read response shape mismatch (see Dev Notes — Critical API Quirk)
-  - [ ] 4.4 Register `&LoggerConfig{}` and `&LoggerConfigList{}` in `init()`
-- [ ] Task 5 — LoggerConfig webhook (AC: #9, #10)
-  - [ ] 5.1 Create `api/v1alpha1/loggerconfig_webhook.go`: `admission.Defaulter[*LoggerConfig]`, `admission.Validator[*LoggerConfig]`
-  - [ ] 5.2 `ValidateCreate`/`ValidateUpdate`: `level` validated via `+kubebuilder:validation:Enum` (no runtime check needed)
-  - [ ] 5.3 `ValidateUpdate`: call `Authentication.ValidateTargetNamespaceUpdate()`, reject `spec.name` changes (immutable)
-  - [ ] 5.4 Add kubebuilder webhook markers
-- [ ] Task 6 — Registration (AC: #1, #6)
-  - [ ] 6.1 Register both controllers in `cmd/main.go`
-  - [ ] 6.2 Register both webhooks in `cmd/main.go` inside `ENABLE_WEBHOOKS` guard
-- [ ] Task 7 — Unit tests (AC: #1, #2, #4, #5, #6, #7, #9, #10)
-  - [ ] 7.1 Create `api/v1alpha1/uicustomheader_test.go`: `GetPath` (with/without spec.name), `GetPayload`/toMap, `IsEquivalentToDesiredState` positive (both `value`/`values` read shapes) + negative + extra fields, `IsDeletable` true, `ConditionsAware`
-  - [ ] 7.2 Create `api/v1alpha1/loggerconfig_test.go`: `GetPath` (with/without spec.name), `GetPayload`/toMap, `IsEquivalentToDesiredState` positive (logger-name-keyed read shape) + negative + extra fields, `IsDeletable` true, `ConditionsAware`
-- [ ] Task 8 — Integration tests (AC: #1, #2, #3, #6, #7, #8)
-  - [ ] 8.1 Create test fixtures: `test/uicustomheader/simple-ui-custom-header.yaml`, `test/uicustomheader/named-ui-custom-header.yaml`
-  - [ ] 8.2 Create test fixtures: `test/loggerconfig/simple-logger-config.yaml`, `test/loggerconfig/named-logger-config.yaml`
-  - [ ] 8.3 Create `internal/controller/uicustomheader_controller_test.go` with `//go:build integration`: create → reconcile success → verify Vault state → delete → verify removal
-  - [ ] 8.4 Create `internal/controller/loggerconfig_controller_test.go` with `//go:build integration`: create → reconcile success → verify Vault state → delete → verify logger reverts
-- [ ] Task 9 — Code generation + CRD registration (AC: #12)
-  - [ ] 9.1 Run `make manifests generate fmt vet`
-  - [ ] 9.2 Add new CRD YAML files to `config/crd/kustomization.yaml` resources list
-  - [ ] 9.3 Run `make test` — all unit tests pass
-  - [ ] 9.4 Run `make lint` — zero violations
-- [ ] Task 10 — Documentation (AC: #11)
-  - [ ] 10.1 Create `docs/system-backend/ui-headers.md` following `docs/engine-doc-template.md` adapted for system backend
-  - [ ] 10.2 Create `docs/system-backend/loggers.md` following `docs/engine-doc-template.md` adapted for system backend
-  - [ ] 10.3 Create `docs/system-backend/index.md` if not already present from Story 17.2 or 17.3
-  - [ ] 10.4 Add UICustomHeader and LoggerConfig entries to the System Backend section of `readme.md` with links to the Vault API docs
+- [x] Task 1 — UICustomHeader CRD type (AC: #1, #2)
+  - [x] 1.1 Create `api/v1alpha1/uicustomheader_types.go`: UICustomHeaderSpec with `Connection`, `Authentication`, inline `UICustomHeaderConfig`, `Name`; `GetPath()` → `"sys/config/ui/headers/{name}"`; `IsDeletable()` → `true`; `toMap()` emitting `values` list
+  - [x] 1.2 Implement custom `IsEquivalentToDesiredState()` that handles Vault's read response shape mismatch (see Dev Notes — Critical API Quirk)
+  - [x] 1.3 Register `&UICustomHeader{}` and `&UICustomHeaderList{}` in `init()`
+- [x] Task 2 — UICustomHeader webhook (AC: #4, #5)
+  - [x] 2.1 Create `api/v1alpha1/uicustomheader_webhook.go`: `admission.Defaulter[*UICustomHeader]`, `admission.Validator[*UICustomHeader]`
+  - [x] 2.2 `ValidateCreate`: reject if `Values` is empty (len == 0)
+  - [x] 2.3 `ValidateUpdate`: call `Authentication.ValidateTargetNamespaceUpdate()`, reject `spec.name` changes (immutable), reject if `Values` is empty
+  - [x] 2.4 Add kubebuilder webhook markers for mutating and validating paths
+- [x] Task 3 — UICustomHeader controller (AC: #1, #2, #3)
+  - [x] 3.1 Create `internal/controller/uicustomheader_controller.go` following PasswordPolicy controller pattern
+  - [x] 3.2 Add RBAC markers for `uicustomheaders` resource
+- [x] Task 4 — LoggerConfig CRD type (AC: #6, #7, #8)
+  - [x] 4.1 Create `api/v1alpha1/loggerconfig_types.go`: LoggerConfigSpec with `Connection`, `Authentication`, inline `LoggerConfigConfig`, `Name`; `GetPath()` → `"sys/loggers/{name}"`; `IsDeletable()` → `true`
+  - [x] 4.2 Implement `toMap()` emitting `{"level": "..."}` (write payload shape)
+  - [x] 4.3 Implement custom `IsEquivalentToDesiredState()` that handles Vault read response shape mismatch (see Dev Notes — Critical API Quirk)
+  - [x] 4.4 Register `&LoggerConfig{}` and `&LoggerConfigList{}` in `init()`
+- [x] Task 5 — LoggerConfig webhook (AC: #9, #10)
+  - [x] 5.1 Create `api/v1alpha1/loggerconfig_webhook.go`: `admission.Defaulter[*LoggerConfig]`, `admission.Validator[*LoggerConfig]`
+  - [x] 5.2 `ValidateCreate`/`ValidateUpdate`: `level` validated via `+kubebuilder:validation:Enum` (no runtime check needed)
+  - [x] 5.3 `ValidateUpdate`: call `Authentication.ValidateTargetNamespaceUpdate()`, reject `spec.name` changes (immutable)
+  - [x] 5.4 Add kubebuilder webhook markers
+- [x] Task 6 — Registration (AC: #1, #6)
+  - [x] 6.1 Register both controllers in `cmd/main.go`
+  - [x] 6.2 Register both webhooks in `cmd/main.go` inside `ENABLE_WEBHOOKS` guard
+- [x] Task 7 — Unit tests (AC: #1, #2, #4, #5, #6, #7, #9, #10)
+  - [x] 7.1 Create `api/v1alpha1/uicustomheader_test.go`: `GetPath` (with/without spec.name), `GetPayload`/toMap, `IsEquivalentToDesiredState` positive (both `value`/`values` read shapes) + negative + extra fields, `IsDeletable` true, `ConditionsAware`
+  - [x] 7.2 Create `api/v1alpha1/loggerconfig_test.go`: `GetPath` (with/without spec.name), `GetPayload`/toMap, `IsEquivalentToDesiredState` positive (logger-name-keyed read shape) + negative + extra fields, `IsDeletable` true, `ConditionsAware`
+- [x] Task 8 — Integration tests (AC: #1, #2, #3, #6, #7, #8)
+  - [x] 8.1 Create test fixtures: `test/uicustomheader/simple-ui-custom-header.yaml`, `test/uicustomheader/named-ui-custom-header.yaml`
+  - [x] 8.2 Create test fixtures: `test/loggerconfig/simple-logger-config.yaml`, `test/loggerconfig/named-logger-config.yaml`
+  - [x] 8.3 Create `internal/controller/uicustomheader_controller_test.go` with `//go:build integration`: create → reconcile success → verify Vault state → delete → verify removal
+  - [x] 8.4 Create `internal/controller/loggerconfig_controller_test.go` with `//go:build integration`: create → reconcile success → verify Vault state → delete → verify logger reverts
+- [x] Task 9 — Code generation + CRD registration (AC: #12)
+  - [x] 9.1 Run `make manifests generate fmt vet`
+  - [x] 9.2 Add new CRD YAML files to `config/crd/kustomization.yaml` resources list
+  - [x] 9.3 Run `make test` — all unit tests pass
+  - [x] 9.4 Run `make lint` — zero new violations (5 pre-existing lint issues in unrelated files)
+- [x] Task 10 — Documentation (AC: #11)
+  - [x] 10.1 Create `docs/system-backend/ui-headers.md` following `docs/engine-doc-template.md` adapted for system backend
+  - [x] 10.2 Create `docs/system-backend/loggers.md` following `docs/engine-doc-template.md` adapted for system backend
+  - [x] 10.3 Create `docs/system-backend/index.md`
+  - [x] 10.4 Add UICustomHeader and LoggerConfig entries to the System Backend section of `readme.md` with links to the Vault API docs
 
 ## Dev Notes
 
@@ -639,22 +642,107 @@ After `make manifests`:
 - [Vault API: /sys/config/ui/headers](https://developer.hashicorp.com/vault/api-docs/system/config-ui-headers)
 - [Vault API: /sys/loggers](https://developer.hashicorp.com/vault/api-docs/system/loggers)
 
+## Auto Run Result
+
+**Summary:** Implemented UICustomHeader and LoggerConfig CRDs for Vault system backend. Both follow the PasswordPolicy named-resource pattern with custom `IsEquivalentToDesiredState` logic to handle Vault read/write shape mismatches.
+
+**Files changed:**
+- `api/v1alpha1/uicustomheader_types.go` — CRD type with custom IsEquivalentToDesiredState for single/multi-value read
+- `api/v1alpha1/uicustomheader_webhook.go` — Admission webhooks (spec.name immutability, values non-empty)
+- `api/v1alpha1/uicustomheader_test.go` — 8 unit tests
+- `api/v1alpha1/loggerconfig_types.go` — CRD type with custom IsEquivalentToDesiredState for logger-name-keyed read
+- `api/v1alpha1/loggerconfig_webhook.go` — Admission webhooks (spec.name immutability)
+- `api/v1alpha1/loggerconfig_test.go` — 8 unit tests
+- `internal/controller/uicustomheader_controller.go` — Standard VaultResource controller
+- `internal/controller/loggerconfig_controller.go` — Standard VaultResource controller
+- `internal/controller/uicustomheader_controller_test.go` — Integration test (create/verify/delete)
+- `internal/controller/loggerconfig_controller_test.go` — Integration test (create/verify/delete)
+- `cmd/main.go` — Controller + webhook registration
+- `config/crd/kustomization.yaml` — CRD resource, webhook, and cainjection entries
+- `test/` — 4 YAML test fixtures
+- `docs/system-backend/` — 3 new doc files (ui-headers.md, loggers.md, index.md)
+- `readme.md` — System Backend section updated
+
+**Review findings:** 15 findings from GPT 5.4 adversarial review, 0 from edge case hunter. 1 patch applied (integration test value verification), 14 rejected (noise from abbreviated diff context).
+
+**Follow-up review recommendation:** false
+
+**Verification:** `make manifests generate fmt vet` — pass. `make test` — all unit tests pass. `make lint` — zero new violations. 
+
+**Residual risks:** UICustomHeader with >1 value will re-write on every reconcile due to Vault's read limitation (documented known limitation). Pre-existing lint issues in 3 unrelated files remain untouched.
+
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Opus 4.6 (implementation)
 
 ### Debug Log References
+- `make manifests generate fmt vet` — pass
+- `make test` — pass (all unit tests green)
+- `make lint` — 5 pre-existing violations in unrelated files; zero new violations from Story 17.4
 
 ### Completion Notes List
+- UICustomHeader and LoggerConfig CRDs implemented following PasswordPolicy named-resource pattern
+- Both types have custom `IsEquivalentToDesiredState` due to Vault read/write shape mismatches
+- UICustomHeader multi-value limitation documented (re-writes every reconcile when >1 value)
+- LoggerConfig transient nature documented (levels not persisted across Vault restarts)
+- No new Go dependencies added
 
 ### File List
+| File | Action |
+|------|--------|
+| `api/v1alpha1/uicustomheader_types.go` | CREATE |
+| `api/v1alpha1/uicustomheader_webhook.go` | CREATE |
+| `api/v1alpha1/uicustomheader_test.go` | CREATE |
+| `api/v1alpha1/loggerconfig_types.go` | CREATE |
+| `api/v1alpha1/loggerconfig_webhook.go` | CREATE |
+| `api/v1alpha1/loggerconfig_test.go` | CREATE |
+| `internal/controller/uicustomheader_controller.go` | CREATE |
+| `internal/controller/loggerconfig_controller.go` | CREATE |
+| `internal/controller/uicustomheader_controller_test.go` | CREATE |
+| `internal/controller/loggerconfig_controller_test.go` | CREATE |
+| `test/uicustomheader/simple-ui-custom-header.yaml` | CREATE |
+| `test/uicustomheader/named-ui-custom-header.yaml` | CREATE |
+| `test/loggerconfig/simple-logger-config.yaml` | CREATE |
+| `test/loggerconfig/named-logger-config.yaml` | CREATE |
+| `docs/system-backend/ui-headers.md` | CREATE |
+| `docs/system-backend/loggers.md` | CREATE |
+| `docs/system-backend/index.md` | CREATE |
+| `cmd/main.go` | MODIFY |
+| `config/crd/kustomization.yaml` | MODIFY |
+| `readme.md` | MODIFY |
+| `api/v1alpha1/zz_generated.deepcopy.go` | AUTO-GEN |
+| `config/crd/bases/redhatcop.redhat.io_uicustomheaders.yaml` | AUTO-GEN |
+| `config/crd/bases/redhatcop.redhat.io_loggerconfigs.yaml` | AUTO-GEN |
+| `config/rbac/role.yaml` | AUTO-GEN |
 
 ## Code Review Record
 
 ### Review Model Used
+- Blind Hunter: GPT 5.4 Medium (adversarial review)
+- Edge Case Hunter: Claude Opus 4.6 (path enumeration)
 
 ### Review Findings
 
+Edge Case Hunter: 0 findings (all paths guarded).
+
+GPT 5.4 Adversarial Review: 15 findings total.
+- 1 patch (low): UICustomHeader integration test should verify actual header value, not just Data non-nil.
+- 14 reject: Noise or misunderstanding due to abbreviated diff (schema markers present, docs have caveats, patterns consistent with project conventions).
+
 ### Decisions Needed / Decisions Taken
+- None. All findings triaged without escalation.
 
 ### Fixes Applied
+- Strengthened UICustomHeader integration test to assert `secret.Data["value"]` equals `"test-value-1"` for the simple fixture.
+
+## Review Triage Log
+
+### 2026-10-20 — Review pass
+- intent_gap: 0
+- bad_spec: 0
+- patch: 1: (low 1)
+- defer: 0
+- reject: 14: (low 14)
+- addressed_findings:
+  - `[low]` `[patch]` UICustomHeader integration test now verifies actual header value from Vault read response, not just that Data is non-nil

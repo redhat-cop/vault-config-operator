@@ -39,6 +39,10 @@ last_updated: 2026-10-20
 # Story 17.6 ready-for-dev 2026-10-20
 # Story 17.5 ready-for-dev 2026-10-20
 # Story 17.4 ready-for-dev 2026-10-20
+# Story 17.2 done 2026-10-20
+# Story 17.3 done 2026-10-20
+# Story 17.1 done 2026-10-20
+# Story 17.0 done 2026-10-20
 # Story 17.2 ready-for-dev 2026-10-20
 # Story 17.3 ready-for-dev 2026-10-20
 # Story 17.1 ready-for-dev 2026-10-20
@@ -625,7 +629,7 @@ development_status:
   #   - Only visible when operator runs with -v=6 or higher — zero noise at default verbosity
   # Complexity: Medium (framework-level change touching shared utils, needs careful testing)
   # Design note: Part A is metrics infrastructure — benefits all 80+ existing CRDs immediately
-  17-0-vault-api-observability-metrics-and-reconcile-trace-logging: ready-for-dev
+  17-0-vault-api-observability-metrics-and-reconcile-trace-logging: done
 
   # Story 17.1: Quota Management CRDs (QuotaConfig + RateLimitQuota + LeaseCountQuota)
   # Closes: https://github.com/redhat-cop/vault-config-operator/issues/249
@@ -636,7 +640,7 @@ development_status:
   #            https://developer.hashicorp.com/vault/api-docs/system/rate-limit-quotas
   #            https://developer.hashicorp.com/vault/api-docs/system/lease-count-quotas
   # Complexity: Medium (3 CRDs, singleton + 2 named resources, highest user-facing value)
-  17-1-quota-management-crds-quotaconfig-ratelimitquota-leasecountquota: ready-for-dev
+  17-1-quota-management-crds-quotaconfig-ratelimitquota-leasecountquota: done
 
   # Story 17.2: System Configuration Singleton CRDs (CORSConfig + KeyRotationConfig)
   # - CORSConfig: singleton /sys/config/cors — enable/configure CORS for Vault API
@@ -645,13 +649,13 @@ development_status:
   #            https://developer.hashicorp.com/vault/api-docs/system/rotate-config
   # Complexity: Low (2 singleton CRDs; CORSConfig: DELETE disables, PUT enables; KeyRotationConfig: simple PUT)
   # Design note: Singleton resources — document one-per-cluster convention, consider validating webhook
-  17-2-system-config-singleton-crds-corsconfig-keyrotationconfig: ready-for-dev
+  17-2-system-config-singleton-crds-corsconfig-keyrotationconfig: done
 
   # Story 17.3: Rotation Policy CRD (RotationPolicy)
   # - RotationPolicy: /sys/policies/rotation/{name} — automatic credential rotation schedules
   # Vault API: https://developer.hashicorp.com/vault/api-docs/system/policies-rotation
   # Complexity: Low (1 CRD, follows existing Policy/PasswordPolicy pattern closely)
-  17-3-rotation-policy-crd: ready-for-dev
+  17-3-rotation-policy-crd: done
 
   # Story 17.4: UI and Observability CRDs (UICustomHeader + LoggerConfig)
   # - UICustomHeader: /sys/config/ui/headers/{name} — custom response headers for UI

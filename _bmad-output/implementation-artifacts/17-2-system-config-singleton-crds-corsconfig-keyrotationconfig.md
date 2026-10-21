@@ -1,6 +1,6 @@
 # Story 17.2: System Configuration Singleton CRDs (CORSConfig + KeyRotationConfig)
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 

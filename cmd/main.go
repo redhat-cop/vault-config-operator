@@ -579,6 +579,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "RotationPolicy")
 		os.Exit(1)
 	}
+	if err = (&controller.LoggerConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LoggerConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "LoggerConfig")
+		os.Exit(1)
+	}
+	if err = (&controller.UICustomHeaderReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "UICustomHeader")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "UICustomHeader")
+		os.Exit(1)
+	}
 
 	if webhooks, ok := os.LookupEnv("ENABLE_WEBHOOKS"); !ok || webhooks != "false" {
 		if err = (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(mgr); err != nil {
@@ -979,6 +987,14 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.RotationPolicy{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "RotationPolicy")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.LoggerConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "LoggerConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.UICustomHeader{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "UICustomHeader")
 			os.Exit(1)
 		}
 	}

@@ -1,6 +1,6 @@
 # Story 17.0: Vault API Observability — HTTP Metrics + Reconcile Trace Logging
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 

@@ -1,6 +1,6 @@
 # Story 17.3: Rotation Policy CRD
 
-Status: built
+Status: done
 baseline_revision: 0d3a85fb13df8ee8c08151c3252149145bd31fd8
 review: 'quick'
 review_source: 'pinned'

@@ -1126,6 +1126,26 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-loggerconfig
+  failurePolicy: Fail
+  name: mloggerconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - loggerconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /mutate-redhatcop-redhat-io-v1alpha1-mongodbatlassecretengineconfig
   failurePolicy: Fail
   name: mmongodbatlassecretengineconfig.kb.io
@@ -1707,6 +1727,26 @@ webhooks:
     - CREATE
     resources:
     - transitsecretenginekeys
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-redhatcop-redhat-io-v1alpha1-uicustomheader
+  failurePolicy: Fail
+  name: muicustomheader.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - uicustomheaders
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -2907,6 +2947,27 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-loggerconfig
+  failurePolicy: Fail
+  name: vloggerconfig.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - loggerconfigs
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /validate-redhatcop-redhat-io-v1alpha1-mongodbatlassecretengineconfig
   failurePolicy: Fail
   name: vmongodbatlassecretengineconfig.kb.io
@@ -3510,6 +3571,27 @@ webhooks:
     - UPDATE
     resources:
     - transitsecretenginekeys
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-redhatcop-redhat-io-v1alpha1-uicustomheader
+  failurePolicy: Fail
+  name: vuicustomheader.kb.io
+  rules:
+  - apiGroups:
+    - redhatcop.redhat.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - uicustomheaders
   sideEffects: None
 - admissionReviewVersions:
   - v1

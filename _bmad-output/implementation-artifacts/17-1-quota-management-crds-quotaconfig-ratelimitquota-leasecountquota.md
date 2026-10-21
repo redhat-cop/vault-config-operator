@@ -1,6 +1,6 @@
 # Story 17.1: Quota Management CRDs (QuotaConfig + RateLimitQuota + LeaseCountQuota)
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 

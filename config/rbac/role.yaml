@@ -107,6 +107,7 @@ rules:
   - ldapsecretenginedynamicroles
   - ldapsecretenginestaticroles
   - leasecountquotas
+  - loggerconfigs
   - mongodbatlassecretengineconfigs
   - mongodbatlassecretengineroles
   - namespaces
@@ -138,6 +139,7 @@ rules:
   - terraformcloudsecretengineroles
   - totpsecretenginekeys
   - transitsecretenginekeys
+  - uicustomheaders
   - userpassauthengineusers
   - vaultsecrets
   verbs:
@@ -212,6 +214,7 @@ rules:
   - ldapsecretenginedynamicroles/finalizers
   - ldapsecretenginestaticroles/finalizers
   - leasecountquotas/finalizers
+  - loggerconfigs/finalizers
   - mongodbatlassecretengineconfigs/finalizers
   - mongodbatlassecretengineroles/finalizers
   - namespaces/finalizers
@@ -242,6 +245,7 @@ rules:
   - terraformcloudsecretengineroles/finalizers
   - totpsecretenginekeys/finalizers
   - transitsecretenginekeys/finalizers
+  - uicustomheaders/finalizers
   - userpassauthengineusers/finalizers
   - vaultsecrets/finalizers
   verbs:
@@ -310,6 +314,7 @@ rules:
   - ldapsecretenginedynamicroles/status
   - ldapsecretenginestaticroles/status
   - leasecountquotas/status
+  - loggerconfigs/status
   - mongodbatlassecretengineconfigs/status
   - mongodbatlassecretengineroles/status
   - namespaces/status
@@ -341,6 +346,7 @@ rules:
   - terraformcloudsecretengineroles/status
   - totpsecretenginekeys/status
   - transitsecretenginekeys/status
+  - uicustomheaders/status
   - userpassauthengineusers/status
   - vaultsecrets/status
   verbs:

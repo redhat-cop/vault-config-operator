@@ -160,6 +160,8 @@ See the [secret engines index](./docs/secret-engines/index.md) for the full list
 4. [CORSConfig](./docs/system-backend/cors.md#corsconfig) Configures the [Vault CORS Settings](https://developer.hashicorp.com/vault/api-docs/system/config-cors) (allowed origins and headers)
 5. [KeyRotationConfig](./docs/system-backend/key-rotation.md#keyrotationconfig) Configures the [Vault Automatic Key Rotation](https://developer.hashicorp.com/vault/api-docs/system/rotate-config) schedule
 6. [RotationPolicy](./docs/system-backend/rotation-policy.md#rotationpolicy) Configures a [Vault Rotation Policy](https://developer.hashicorp.com/vault/api-docs/system/policies-rotation) for automatic credential rotation retry behavior (Enterprise only)
+7. [UICustomHeader](./docs/system-backend/ui-headers.md#uicustomheader) Configures a [Vault UI Custom Header](https://developer.hashicorp.com/vault/api-docs/system/config-ui-headers) for custom response headers on UI requests
+8. [LoggerConfig](./docs/system-backend/loggers.md#loggerconfig) Configures a [Vault Logger Level](https://developer.hashicorp.com/vault/api-docs/system/loggers) for runtime log verbosity adjustment
 
 ## Identities
 
