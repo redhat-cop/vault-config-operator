@@ -213,6 +213,8 @@ By default, or if the variable is set to any other value, the operator will crea
 
 SyncPeriod determines the minimum frequency at which watched resources are reconciled. Set the environment variable named `SYNC_PERIOD_SECONDS` to update the frequency at which watched resources are reconciled. It defaults to 10 hours if unset and ONLY works when `ENABLE_DRIFT_DETECTION` is set to `true`. The reconciliation also accounts for any drift that may have happened in Vault since the last reconciliation. This feature is disabled by default to maintain optimal performance.
 
+Set `VAULT_METRICS_NORMALIZE_PATHS` to `"true"` to collapse dynamic path segments in the Vault API Prometheus metrics `path` label (e.g., `sys/policies/acl/my-policy` → `sys/policies/acl/*`). This reduces metric cardinality in large deployments. When unset or `"false"`, the raw Vault path is used. See [Vault API Metrics](#vault-api-metrics) for details.
+
 For certificates, the recommended approach is to mount the secret or configmap containing the certificate as described [here](https://github.com/operator-framework/operator-lifecycle-manager/blob/master/doc/design/subscription-config.md#volumes), and the configure the corresponding variables to point at the files location in the mounted path.
 
 Here is an example:
@@ -389,6 +391,40 @@ Prometheus compatible metrics are exposed by the Operator and can be integrated 
 ```sh
 oc label namespace <namespace> openshift.io/cluster-monitoring="true"
 ```
+
+### Vault API Metrics
+
+The operator automatically records Prometheus metrics for every Vault API call it makes. These metrics are available on the standard `/metrics` endpoint alongside the controller-runtime metrics.
+
+| Metric | Type | Labels | Description |
+|--------|------|--------|-------------|
+| `vault_api_requests_total` | Counter | `vault_address`, `method`, `path`, `status_code` | Total number of Vault API requests |
+| `vault_api_request_duration_seconds` | Histogram | `vault_address`, `method`, `path` | Duration of Vault API requests in seconds |
+
+**Labels:**
+
+- `vault_address` — the `host:port` of the target Vault instance (e.g., `vault.example.com:8200`), allowing multi-instance traffic to be distinguished
+- `method` — the HTTP method (`GET`, `PUT`, `DELETE`, etc.)
+- `path` — the Vault API path with the `v1/` prefix stripped (e.g., `sys/policies/acl/my-policy`, `auth/kubernetes/role/my-role`)
+- `status_code` — the HTTP response status code (e.g., `200`, `404`, `503`)
+
+#### Path Normalization
+
+By default, the `path` label contains the raw Vault API path (with only `v1/` stripped). For large deployments with many CRs, this can produce high-cardinality metrics. Set the environment variable `VAULT_METRICS_NORMALIZE_PATHS=true` to collapse dynamic path segments into `*`:
+
+| Raw Path | Normalized Path |
+|----------|----------------|
+| `sys/policies/acl/my-policy` | `sys/policies/acl/*` |
+| `sys/quotas/rate-limit/my-quota` | `sys/quotas/rate-limit/*` |
+| `auth/kubernetes/role/my-role` | `auth/*/role/*` |
+| `auth/kubernetes/login` | `auth/*/login` |
+| `database/config/my-db` | `*/config/*` |
+| `database/roles/my-role` | `*/roles/*` |
+| `sys/mounts/secret/tune` | `sys/mounts/*/tune` |
+
+#### Reconcile Trace Logging
+
+For troubleshooting reconciliation behavior, set the log verbosity to level 6 (`-v=6` or `--zap-log-level=6`). At this level, the operator logs each reconciliation decision: read result (found/not-found), drift decision (in-sync/out-of-sync), and action taken (create/update/skip) with the Vault path involved. At default verbosity, no additional output is produced.
 
 ### Testing metrics
 
