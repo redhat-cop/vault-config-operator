@@ -77,7 +77,7 @@ func (r *MongoDBAtlasSecretEngineConfigReconciler) Reconcile(ctx context.Context
 
 func (r *MongoDBAtlasSecretEngineConfigReconciler) manageReconcileLogic(ctx context.Context, instance client.Object) error {
 	log := log.FromContext(ctx)
-	if err := instance.(vaultutils.VaultObject).PrepareInternalValues(ctx, instance); err != nil {
+	if err := instance.(vaultutils.VaultInternalValuesPreparer).PrepareInternalValues(ctx, instance); err != nil {
 		log.Error(err, "unable to prepare internal values", "instance", instance)
 		return err
 	}

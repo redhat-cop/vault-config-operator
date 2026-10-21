@@ -18,11 +18,9 @@ package v1alpha1
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
-	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -66,75 +64,75 @@ type LDAPSEConfig struct {
 	// URL is the LDAP server to connect to. Examples: ldaps://ldap.myorg.com, ldaps://ldap.myorg.com:636
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="ldap://127.0.0.1"
-	URL string `json:"url"`
+	URL string `json:"url" vault:"url"`
 
 	// Schema is the LDAP schema to use when storing entry passwords
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="openldap"
 	// +kubebuilder:validation:Enum:={"openldap","ad","racf"}
-	Schema string `json:"schema,omitempty"`
+	Schema string `json:"schema,omitempty" vault:"schema"`
 
 	// BindDN is the Distinguished name of object to bind for managing user entries
 	// +kubebuilder:validation:Optional
-	BindDN string `json:"bindDN,omitempty"`
+	BindDN string `json:"bindDN,omitempty" vault:"binddn,omitempty"`
 
 	// PasswordPolicy is the name of the password policy to use for generating passwords
 	// +kubebuilder:validation:Optional
-	PasswordPolicy string `json:"passwordPolicy,omitempty"`
+	PasswordPolicy string `json:"passwordPolicy,omitempty" vault:"password_policy"`
 
 	// UserDN is the base DN under which to perform user search
 	// +kubebuilder:validation:Optional
-	UserDN string `json:"userDN,omitempty"`
+	UserDN string `json:"userDN,omitempty" vault:"userdn"`
 
 	// UserAttr is the attribute field name used to perform user search
 	// +kubebuilder:validation:Optional
-	UserAttr string `json:"userAttr,omitempty"`
+	UserAttr string `json:"userAttr,omitempty" vault:"userattr"`
 
 	// UPNDomain is used to construct a UPN string for Active Directory
 	// +kubebuilder:validation:Optional
-	UPNDomain string `json:"upnDomain,omitempty"`
+	UPNDomain string `json:"upnDomain,omitempty" vault:"upndomain"`
 
 	// RequestTimeout is timeout in seconds for the connection
 	// +kubebuilder:validation:Optional
-	RequestTimeout string `json:"requestTimeout,omitempty"`
+	RequestTimeout string `json:"requestTimeout,omitempty" vault:"request_timeout"`
 
 	// StartTLS issues a StartTLS command after establishing an unencrypted connection
 	// +kubebuilder:validation:Optional
-	StartTLS bool `json:"startTLS,omitempty"`
+	StartTLS bool `json:"startTLS,omitempty" vault:"starttls"`
 
 	// InsecureTLS skips LDAP server SSL certificate verification
 	// +kubebuilder:validation:Optional
-	InsecureTLS bool `json:"insecureTLS,omitempty"`
+	InsecureTLS bool `json:"insecureTLS,omitempty" vault:"insecure_tls"`
 
 	// Certificate is the CA certificate for verifying LDAP server certificate (PEM)
 	// +kubebuilder:validation:Optional
-	Certificate string `json:"certificate,omitempty"`
+	Certificate string `json:"certificate,omitempty" vault:"certificate"`
 
 	// ClientTLSCert is the client certificate for LDAP (PEM)
 	// +kubebuilder:validation:Optional
-	ClientTLSCert string `json:"clientTLSCert,omitempty"`
+	ClientTLSCert string `json:"clientTLSCert,omitempty" vault:"client_tls_cert"`
 
 	// ClientTLSKey is the client key for LDAP (PEM)
 	// +kubebuilder:validation:Optional
-	ClientTLSKey string `json:"clientTLSKey,omitempty"`
+	ClientTLSKey string `json:"clientTLSKey,omitempty" vault:"client_tls_key"`
 
 	// SkipStaticRoleImportRotation is the default value for skip_import_rotation on static roles
 	// +kubebuilder:validation:Optional
-	SkipStaticRoleImportRotation bool `json:"skipStaticRoleImportRotation,omitempty"`
+	SkipStaticRoleImportRotation bool `json:"skipStaticRoleImportRotation,omitempty" vault:"skip_static_role_import_rotation"`
 
 	// CredentialType is the type of password to generate (password or phrase for RACF)
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"password","phrase"}
-	CredentialType string `json:"credentialType,omitempty"`
+	CredentialType string `json:"credentialType,omitempty" vault:"credential_type,omitempty"`
 
 	// Length is the generated password string length (deprecated: use passwordPolicy)
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	Length *int `json:"length,omitempty"`
+	Length *int `json:"length,omitempty" vault:"length,number,omitempty"`
 
 	// ConnectionTimeout is timeout before trying the next URL (deprecated: use requestTimeout)
 	// +kubebuilder:validation:Optional
-	ConnectionTimeout string `json:"connectionTimeout,omitempty"`
+	ConnectionTimeout string `json:"connectionTimeout,omitempty" vault:"connection_timeout"`
 
 	retrievedBindDN   string `json:"-"`
 	retrievedBindPass string `json:"-"`
@@ -166,16 +164,8 @@ func (d *LDAPSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]a
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (d *LDAPSecretEngineConfig) IsInitialized() bool {
-	return true
-}
-
 func (d *LDAPSecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	return d.setInternalCredentials(context)
-}
-
-func (d *LDAPSecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *LDAPSecretEngineConfig) IsValid() (bool, error) {
@@ -284,39 +274,13 @@ func (r *LDAPSecretEngineConfig) SetBindDNAndBindPass(bindDN string, bindPass st
 }
 
 func (i *LDAPSEConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["url"] = i.URL
-	payload["schema"] = i.Schema
-	payload["starttls"] = i.StartTLS
-	payload["insecure_tls"] = i.InsecureTLS
-	payload["skip_static_role_import_rotation"] = i.SkipStaticRoleImportRotation
-
+	payload := vaultutils.StructToVaultPayload(i)
 	if i.retrievedBindDN != "" {
 		payload["binddn"] = i.retrievedBindDN
-	} else if i.BindDN != "" {
-		payload["binddn"] = i.BindDN
 	}
 	if i.retrievedBindPass != "" {
 		payload["bindpass"] = i.retrievedBindPass
 	}
-
-	payload["password_policy"] = i.PasswordPolicy
-	payload["userdn"] = i.UserDN
-	payload["userattr"] = i.UserAttr
-	payload["upndomain"] = i.UPNDomain
-	payload["request_timeout"] = i.RequestTimeout
-	payload["certificate"] = i.Certificate
-	payload["client_tls_cert"] = i.ClientTLSCert
-	payload["client_tls_key"] = i.ClientTLSKey
-	payload["connection_timeout"] = i.ConnectionTimeout
-
-	if i.CredentialType != "" {
-		payload["credential_type"] = i.CredentialType
-	}
-	if i.Length != nil {
-		payload["length"] = json.Number(strconv.Itoa(*i.Length))
-	}
-
 	return payload
 }
 

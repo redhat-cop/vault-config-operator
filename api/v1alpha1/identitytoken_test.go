@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -60,12 +61,12 @@ func TestIdentityTokenConfigIsEquivalentToDesiredState(t *testing.T) {
 	}
 
 	matching := map[string]any{"issuer": "https://example.com"}
-	if !config.IsEquivalentToDesiredState(matching) {
+	if !vaultutils.IsEquivalentToDesiredState(config, matching) {
 		t.Error("expected matching payload to be equivalent")
 	}
 
 	nonMatching := map[string]any{"issuer": "https://other.com"}
-	if config.IsEquivalentToDesiredState(nonMatching) {
+	if vaultutils.IsEquivalentToDesiredState(config, nonMatching) {
 		t.Error("expected non-matching payload to not be equivalent")
 	}
 }
@@ -123,7 +124,7 @@ func TestIdentityTokenKeyGetPayload(t *testing.T) {
 	if payload["verification_ttl"] != "24h" {
 		t.Errorf("expected verification_ttl '24h', got %v", payload["verification_ttl"])
 	}
-	if !reflect.DeepEqual(payload["allowed_client_ids"], []string{"*"}) {
+	if !reflect.DeepEqual(payload["allowed_client_ids"], []any{"*"}) {
 		t.Errorf("expected allowed_client_ids [*], got %v", payload["allowed_client_ids"])
 	}
 	if payload["algorithm"] != "RS256" {
@@ -146,20 +147,20 @@ func TestIdentityTokenKeyIsEquivalentToDesiredState(t *testing.T) {
 	matching := map[string]any{
 		"rotation_period":    "24h",
 		"verification_ttl":   "24h",
-		"allowed_client_ids": []string{"*"},
+		"allowed_client_ids": []any{"*"},
 		"algorithm":          "RS256",
 	}
-	if !key.IsEquivalentToDesiredState(matching) {
+	if !vaultutils.IsEquivalentToDesiredState(key, matching) {
 		t.Error("expected matching payload to be equivalent")
 	}
 
 	nonMatching := map[string]any{
 		"rotation_period":    "12h",
 		"verification_ttl":   "24h",
-		"allowed_client_ids": []string{"*"},
+		"allowed_client_ids": []any{"*"},
 		"algorithm":          "RS256",
 	}
-	if key.IsEquivalentToDesiredState(nonMatching) {
+	if vaultutils.IsEquivalentToDesiredState(key, nonMatching) {
 		t.Error("expected non-matching payload to not be equivalent")
 	}
 }
@@ -259,7 +260,7 @@ func TestIdentityTokenRoleIsEquivalentToDesiredState(t *testing.T) {
 		"key": "key-001",
 		"ttl": "24h",
 	}
-	if !role.IsEquivalentToDesiredState(matching) {
+	if !vaultutils.IsEquivalentToDesiredState(role, matching) {
 		t.Error("expected matching payload to be equivalent")
 	}
 
@@ -267,7 +268,7 @@ func TestIdentityTokenRoleIsEquivalentToDesiredState(t *testing.T) {
 		"key": "key-002",
 		"ttl": "24h",
 	}
-	if role.IsEquivalentToDesiredState(nonMatching) {
+	if vaultutils.IsEquivalentToDesiredState(role, nonMatching) {
 		t.Error("expected non-matching payload to not be equivalent")
 	}
 }
@@ -285,7 +286,7 @@ func TestIdentityTokenConfigIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 		"issuer":      "https://example.com",
 		"extra_field": "vault-returned-value",
 	}
-	if !config.IsEquivalentToDesiredState(payloadWithExtra) {
+	if !vaultutils.IsEquivalentToDesiredState(config, payloadWithExtra) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
@@ -305,11 +306,11 @@ func TestIdentityTokenKeyIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 	payloadWithExtra := map[string]any{
 		"rotation_period":    "24h",
 		"verification_ttl":   "24h",
-		"allowed_client_ids": []string{"*"},
+		"allowed_client_ids": []any{"*"},
 		"algorithm":          "RS256",
 		"extra_field":        "vault-returned-value",
 	}
-	if !key.IsEquivalentToDesiredState(payloadWithExtra) {
+	if !vaultutils.IsEquivalentToDesiredState(key, payloadWithExtra) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
@@ -329,8 +330,65 @@ func TestIdentityTokenRoleIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 		"ttl":         "24h",
 		"extra_field": "vault-returned-value",
 	}
-	if !role.IsEquivalentToDesiredState(payloadWithExtra) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payloadWithExtra) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
+	}
+}
+
+func TestIdentityTokenConfigIsEquivalentToDesiredStateNonMatching(t *testing.T) {
+	config := &IdentityTokenConfig{
+		Spec: IdentityTokenConfigSpec{
+			IdentityTokenConfigConfig: IdentityTokenConfigConfig{
+				Issuer: "https://example.com",
+			},
+		},
+	}
+
+	nonMatching := map[string]any{"issuer": "https://different.example.com"}
+	if vaultutils.IsEquivalentToDesiredState(config, nonMatching) {
+		t.Error("expected non-matching payload to not be equivalent")
+	}
+}
+
+func TestIdentityTokenKeyIsEquivalentToDesiredStateNonMatching(t *testing.T) {
+	key := &IdentityTokenKey{
+		Spec: IdentityTokenKeySpec{
+			IdentityTokenKeyConfig: IdentityTokenKeyConfig{
+				RotationPeriod:   "24h",
+				VerificationTTL:  "24h",
+				AllowedClientIDs: []string{"*"},
+				Algorithm:        "RS256",
+			},
+		},
+	}
+
+	nonMatching := map[string]any{
+		"rotation_period":    "48h",
+		"verification_ttl":   "24h",
+		"allowed_client_ids": []any{"*"},
+		"algorithm":          "RS256",
+	}
+	if vaultutils.IsEquivalentToDesiredState(key, nonMatching) {
+		t.Error("expected non-matching payload to not be equivalent")
+	}
+}
+
+func TestIdentityTokenRoleIsEquivalentToDesiredStateNonMatching(t *testing.T) {
+	role := &IdentityTokenRole{
+		Spec: IdentityTokenRoleSpec{
+			IdentityTokenRoleConfig: IdentityTokenRoleConfig{
+				Key: "key-001",
+				TTL: "24h",
+			},
+		},
+	}
+
+	nonMatching := map[string]any{
+		"key": "key-999",
+		"ttl": "24h",
+	}
+	if vaultutils.IsEquivalentToDesiredState(role, nonMatching) {
+		t.Error("expected non-matching payload to not be equivalent")
 	}
 }
 
@@ -340,6 +398,27 @@ func TestIdentityTokenIsDeletable(t *testing.T) {
 		t.Error("expected IdentityTokenKey to be deletable")
 	}
 
+	role := &IdentityTokenRole{}
+	if !role.IsDeletable() {
+		t.Error("expected IdentityTokenRole to be deletable")
+	}
+}
+
+func TestIdentityTokenConfigIsDeletable(t *testing.T) {
+	config := &IdentityTokenConfig{}
+	if config.IsDeletable() {
+		t.Error("expected IdentityTokenConfig to NOT be deletable")
+	}
+}
+
+func TestIdentityTokenKeyIsDeletable(t *testing.T) {
+	key := &IdentityTokenKey{}
+	if !key.IsDeletable() {
+		t.Error("expected IdentityTokenKey to be deletable")
+	}
+}
+
+func TestIdentityTokenRoleIsDeletable(t *testing.T) {
 	role := &IdentityTokenRole{}
 	if !role.IsDeletable() {
 		t.Error("expected IdentityTokenRole to be deletable")
@@ -362,6 +441,45 @@ func TestIdentityTokenConditions(t *testing.T) {
 	key.SetConditions([]metav1.Condition{condition})
 	if len(key.GetConditions()) != 1 || key.GetConditions()[0].Type != "Ready" {
 		t.Error("expected IdentityTokenKey conditions to be set and retrieved")
+	}
+
+	role := &IdentityTokenRole{}
+	role.SetConditions([]metav1.Condition{condition})
+	if len(role.GetConditions()) != 1 || role.GetConditions()[0].Type != "Ready" {
+		t.Error("expected IdentityTokenRole conditions to be set and retrieved")
+	}
+}
+
+func TestIdentityTokenConfigConditions(t *testing.T) {
+	condition := metav1.Condition{
+		Type:   "Ready",
+		Status: metav1.ConditionTrue,
+	}
+
+	config := &IdentityTokenConfig{}
+	config.SetConditions([]metav1.Condition{condition})
+	if len(config.GetConditions()) != 1 || config.GetConditions()[0].Type != "Ready" {
+		t.Error("expected IdentityTokenConfig conditions to be set and retrieved")
+	}
+}
+
+func TestIdentityTokenKeyConditions(t *testing.T) {
+	condition := metav1.Condition{
+		Type:   "Ready",
+		Status: metav1.ConditionTrue,
+	}
+
+	key := &IdentityTokenKey{}
+	key.SetConditions([]metav1.Condition{condition})
+	if len(key.GetConditions()) != 1 || key.GetConditions()[0].Type != "Ready" {
+		t.Error("expected IdentityTokenKey conditions to be set and retrieved")
+	}
+}
+
+func TestIdentityTokenRoleConditions(t *testing.T) {
+	condition := metav1.Condition{
+		Type:   "Ready",
+		Status: metav1.ConditionTrue,
 	}
 
 	role := &IdentityTokenRole{}

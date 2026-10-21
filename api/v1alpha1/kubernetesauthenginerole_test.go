@@ -76,14 +76,14 @@ func TestVRoleToMap(t *testing.T) {
 	}
 
 	expected := map[string]any{
-		"bound_service_account_names":      []string{"sa1", "sa2"},
-		"bound_service_account_namespaces": []string{"ns1", "ns2"},
+		"bound_service_account_names":      []any{"sa1", "sa2"},
+		"bound_service_account_namespaces": []any{"ns1", "ns2"},
 		"alias_name_source":                "serviceaccount_uid",
-		"audience":                         &aud,
+		"audience":                         aud,
 		"token_ttl":                        json.Number("3600"),
 		"token_max_ttl":                    json.Number("86400"),
-		"token_policies":                   []string{"policy1", "policy2"},
-		"token_bound_cidrs":                []string{"10.0.0.0/8"},
+		"token_policies":                   []any{"policy1", "policy2"},
+		"token_bound_cidrs":                []any{"10.0.0.0/8"},
 		"token_explicit_max_ttl":           json.Number("0"),
 		"token_no_default_policy":          false,
 		"token_num_uses":                   0,
@@ -130,12 +130,12 @@ func TestVRoleToMapAudienceSet(t *testing.T) {
 		t.Fatal("expected 'audience' key when Audience is non-nil")
 	}
 
-	audPtr, ok := audVal.(*string)
+	audStr, ok := audVal.(string)
 	if !ok {
-		t.Fatalf("expected audience value to be *string, got %T", audVal)
+		t.Fatalf("expected audience value to be string, got %T", audVal)
 	}
-	if *audPtr != "my-aud" {
-		t.Errorf("expected audience value 'my-aud', got '%s'", *audPtr)
+	if audStr != "my-aud" {
+		t.Errorf("expected audience value 'my-aud', got '%s'", audStr)
 	}
 
 	if len(result) != 13 {
@@ -152,11 +152,11 @@ func TestVRoleToMapUnexportedNamespaces(t *testing.T) {
 
 	result := role.toMap()
 
-	ns, ok := result["bound_service_account_namespaces"].([]string)
+	ns, ok := result["bound_service_account_namespaces"].([]any)
 	if !ok {
-		t.Fatal("expected bound_service_account_namespaces to be []string")
+		t.Fatal("expected bound_service_account_namespaces to be []any")
 	}
-	if !reflect.DeepEqual(ns, []string{"ns-a", "ns-b", "ns-c"}) {
+	if !reflect.DeepEqual(ns, []any{"ns-a", "ns-b", "ns-c"}) {
 		t.Errorf("expected namespaces [ns-a ns-b ns-c], got %v", ns)
 	}
 }
@@ -176,7 +176,7 @@ func TestKubernetesAuthEngineRoleIsEquivalentMatching(t *testing.T) {
 
 	payload := role.Spec.VRole.toMap()
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected matching payload to be equivalent")
 	}
 }
@@ -195,7 +195,7 @@ func TestKubernetesAuthEngineRoleIsEquivalentNonMatching(t *testing.T) {
 	payload := role.Spec.VRole.toMap()
 	payload["alias_name_source"] = "serviceaccount_name"
 
-	if role.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected non-matching payload (different alias_name_source) to NOT be equivalent")
 	}
 }
@@ -214,7 +214,7 @@ func TestKubernetesAuthEngineRoleIsEquivalentExtraFields(t *testing.T) {
 	payload := role.Spec.VRole.toMap()
 	payload["extra_vault_field"] = "unexpected"
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }

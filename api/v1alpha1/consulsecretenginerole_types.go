@@ -17,12 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // ConsulSecretEngineRoleSpec defines the desired state of ConsulSecretEngineRole
@@ -54,42 +52,42 @@ type ConsulSERole struct {
 	// ConsulPolicies is the list of Consul ACL policies to assign to the generated token.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	ConsulPolicies []string `json:"consulPolicies,omitempty"`
+	ConsulPolicies []string `json:"consulPolicies,omitempty" vault:"consul_policies"`
 
 	// ConsulRoles is the list of Consul roles to attach to the generated token (Consul 1.5+).
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	ConsulRoles []string `json:"consulRoles,omitempty"`
+	ConsulRoles []string `json:"consulRoles,omitempty" vault:"consul_roles"`
 
 	// ServiceIdentities is the list of Consul service identities to assign (Consul 1.5+).
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	ServiceIdentities []string `json:"serviceIdentities,omitempty"`
+	ServiceIdentities []string `json:"serviceIdentities,omitempty" vault:"service_identities"`
 
 	// NodeIdentities is the list of Consul node identities to assign (Consul 1.8+).
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	NodeIdentities []string `json:"nodeIdentities,omitempty"`
+	NodeIdentities []string `json:"nodeIdentities,omitempty" vault:"node_identities"`
 
 	// ConsulNamespace specifies the Consul Enterprise namespace for the token (Consul 1.7+).
 	// +kubebuilder:validation:Optional
-	ConsulNamespace string `json:"consulNamespace,omitempty"`
+	ConsulNamespace string `json:"consulNamespace,omitempty" vault:"consul_namespace"`
 
 	// Partition specifies the Consul admin partition for the token (Consul 1.11+).
 	// +kubebuilder:validation:Optional
-	Partition string `json:"partition,omitempty"`
+	Partition string `json:"partition,omitempty" vault:"partition"`
 
 	// Local if true creates a token that is not replicated globally (Consul 1.4+).
 	// +kubebuilder:validation:Optional
-	Local bool `json:"local,omitempty"`
+	Local bool `json:"local,omitempty" vault:"local"`
 
 	// TTL specifies the TTL for the generated Consul token. Uses duration format strings.
 	// +kubebuilder:validation:Optional
-	TTL string `json:"ttl,omitempty"`
+	TTL string `json:"ttl,omitempty" vault:"ttl"`
 
 	// MaxTTL specifies the max TTL for the generated Consul token. Uses duration format strings.
 	// +kubebuilder:validation:Optional
-	MaxTTL string `json:"maxTTL,omitempty"`
+	MaxTTL string `json:"maxTTL,omitempty" vault:"max_ttl"`
 }
 
 var _ vaultutils.VaultObject = &ConsulSecretEngineRole{}
@@ -132,34 +130,8 @@ func (d *ConsulSecretEngineRole) IsEquivalentToDesiredState(payload map[string]a
 	return reflect.DeepEqual(desiredState, filteredPayload)
 }
 
-func (d *ConsulSecretEngineRole) IsInitialized() bool {
-	return true
-}
-
-func (d *ConsulSecretEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *ConsulSecretEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *ConsulSecretEngineRole) IsValid() (bool, error) {
-	return true, nil
-}
-
 func (i *ConsulSERole) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["consul_policies"] = toInterfaceArray(i.ConsulPolicies)
-	payload["consul_roles"] = toInterfaceArray(i.ConsulRoles)
-	payload["service_identities"] = toInterfaceArray(i.ServiceIdentities)
-	payload["node_identities"] = toInterfaceArray(i.NodeIdentities)
-	payload["consul_namespace"] = i.ConsulNamespace
-	payload["partition"] = i.Partition
-	payload["local"] = i.Local
-	payload["ttl"] = i.TTL
-	payload["max_ttl"] = i.MaxTTL
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 // ConsulSecretEngineRoleStatus defines the observed state of ConsulSecretEngineRole

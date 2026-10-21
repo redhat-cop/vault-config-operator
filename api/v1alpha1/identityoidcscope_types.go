@@ -17,12 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // IdentityOIDCScopeSpec defines the desired state of IdentityOIDCScope
@@ -36,7 +32,7 @@ type IdentityOIDCScopeSpec struct {
 	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
-	IdentityOIDCScopeConfig `json:",inline"`
+	IdentityOIDCScopeConfig `json:",inline" vault:",inline"`
 
 	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
 	// +kubebuilder:validation:Optional
@@ -48,11 +44,11 @@ type IdentityOIDCScopeConfig struct {
 
 	// Template is the JSON template string for the scope. This may be provided as escaped JSON or base64 encoded JSON.
 	// +kubebuilder:validation:Optional
-	Template string `json:"template,omitempty"`
+	Template string `json:"template,omitempty" vault:"template,omitempty"`
 
 	// Description is a description of the scope.
 	// +kubebuilder:validation:Optional
-	Description string `json:"description,omitempty"`
+	Description string `json:"description,omitempty" vault:"description,omitempty"`
 }
 
 // IdentityOIDCScopeStatus defines the observed state of IdentityOIDCScope
@@ -120,37 +116,9 @@ func (d *IdentityOIDCScope) GetPayload() map[string]any {
 }
 
 func (i *IdentityOIDCScopeSpec) toMap() map[string]any {
-	payload := map[string]any{}
-	if i.Template != "" {
-		payload["template"] = i.Template
-	}
-	if i.Description != "" {
-		payload["description"] = i.Description
-	}
-	return payload
-}
-
-func (d *IdentityOIDCScope) IsInitialized() bool {
-	return true
-}
-
-func (d *IdentityOIDCScope) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *IdentityOIDCScope) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *IdentityOIDCScope) IsValid() (bool, error) {
-	return true, nil
+	return vaultutils.StructToVaultPayload(i)
 }
 
 func (d *IdentityOIDCScope) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
-}
-
-func (d *IdentityOIDCScope) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.Spec.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

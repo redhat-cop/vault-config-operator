@@ -17,14 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"encoding/json"
-	"reflect"
-	"strconv"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // GitHubAuthEngineConfigSpec defines the desired state of GitHubAuthEngineConfig
@@ -51,56 +45,56 @@ type GitHubAuthConfig struct {
 	// Organization is the GitHub organization users must be part of.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
-	Organization string `json:"organization"`
+	Organization string `json:"organization" vault:"organization"`
 
 	// OrganizationID is the numeric ID of the organization. Vault auto-fetches if not provided.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	OrganizationID int64 `json:"organizationID,omitempty"`
+	OrganizationID int64 `json:"organizationID,omitempty" vault:"organization_id,number,omitempty"`
 
 	// BaseURL is the API endpoint for GitHub Enterprise. Leave empty for public GitHub.
 	// +kubebuilder:validation:Optional
-	BaseURL string `json:"baseURL,omitempty"`
+	BaseURL string `json:"baseURL,omitempty" vault:"base_url,omitempty"`
 
 	// TokenTTL is the incremental lifetime for generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenTTL string `json:"tokenTTL,omitempty"`
+	TokenTTL string `json:"tokenTTL,omitempty" vault:"token_ttl,duration,omitempty"`
 
 	// TokenMaxTTL is the maximum lifetime for generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenMaxTTL string `json:"tokenMaxTTL,omitempty"`
+	TokenMaxTTL string `json:"tokenMaxTTL,omitempty" vault:"token_max_ttl,duration,omitempty"`
 
 	// TokenPolicies are policies to encode onto generated tokens.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	TokenPolicies []string `json:"tokenPolicies,omitempty"`
+	TokenPolicies []string `json:"tokenPolicies,omitempty" vault:"token_policies,omitempty"`
 
 	// TokenBoundCIDRs are CIDR blocks that restrict authentication.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty"`
+	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty" vault:"token_bound_cidrs,omitempty"`
 
 	// TokenExplicitMaxTTL is the hard cap max TTL for tokens.
 	// +kubebuilder:validation:Optional
-	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty"`
+	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty" vault:"token_explicit_max_ttl,duration,omitempty"`
 
 	// TokenNoDefaultPolicy if true, omits the default policy from generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty"`
+	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty" vault:"token_no_default_policy,omitempty"`
 
 	// TokenNumUses is the max number of times a token may be used (0 = unlimited).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	TokenNumUses int64 `json:"tokenNumUses,omitempty"`
+	TokenNumUses int64 `json:"tokenNumUses,omitempty" vault:"token_num_uses,number,omitempty"`
 
 	// TokenPeriod is the maximum allowed period for periodic tokens.
 	// +kubebuilder:validation:Optional
-	TokenPeriod string `json:"tokenPeriod,omitempty"`
+	TokenPeriod string `json:"tokenPeriod,omitempty" vault:"token_period,duration,omitempty"`
 
 	// TokenType is the type of token to generate (service, batch, default).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum={"service","batch","default","default-service","default-batch",""}
-	TokenType string `json:"tokenType,omitempty"`
+	TokenType string `json:"tokenType,omitempty" vault:"token_type,omitempty"`
 }
 
 // GitHubAuthEngineConfigStatus defines the observed state of GitHubAuthEngineConfig
@@ -160,29 +154,8 @@ func (r *GitHubAuthEngineConfig) GetPayload() map[string]any {
 	return r.Spec.GitHubAuthConfig.toMap()
 }
 
-func (r *GitHubAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := r.Spec.GitHubAuthConfig.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (r *GitHubAuthEngineConfig) IsInitialized() bool {
-	return true
-}
-
-func (r *GitHubAuthEngineConfig) IsValid() (bool, error) {
-	return true, nil
-}
-
 func (r *GitHubAuthEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &r.Spec.Authentication
-}
-
-func (r *GitHubAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *GitHubAuthEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func init() {
@@ -190,40 +163,5 @@ func init() {
 }
 
 func (c *GitHubAuthConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["organization"] = c.Organization
-	if c.OrganizationID != 0 {
-		payload["organization_id"] = json.Number(strconv.FormatInt(c.OrganizationID, 10))
-	}
-	if c.BaseURL != "" {
-		payload["base_url"] = c.BaseURL
-	}
-	if c.TokenTTL != "" {
-		payload["token_ttl"] = durationToSeconds(c.TokenTTL)
-	}
-	if c.TokenMaxTTL != "" {
-		payload["token_max_ttl"] = durationToSeconds(c.TokenMaxTTL)
-	}
-	if len(c.TokenPolicies) > 0 {
-		payload["token_policies"] = toInterfaceArray(c.TokenPolicies)
-	}
-	if len(c.TokenBoundCIDRs) > 0 {
-		payload["token_bound_cidrs"] = toInterfaceArray(c.TokenBoundCIDRs)
-	}
-	if c.TokenExplicitMaxTTL != "" {
-		payload["token_explicit_max_ttl"] = durationToSeconds(c.TokenExplicitMaxTTL)
-	}
-	if c.TokenNoDefaultPolicy {
-		payload["token_no_default_policy"] = c.TokenNoDefaultPolicy
-	}
-	if c.TokenNumUses != 0 {
-		payload["token_num_uses"] = json.Number(strconv.FormatInt(c.TokenNumUses, 10))
-	}
-	if c.TokenPeriod != "" {
-		payload["token_period"] = durationToSeconds(c.TokenPeriod)
-	}
-	if c.TokenType != "" {
-		payload["token_type"] = c.TokenType
-	}
-	return payload
+	return vaultutils.StructToVaultPayload(c)
 }

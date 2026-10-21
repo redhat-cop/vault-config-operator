@@ -83,21 +83,21 @@ type AzureAuthEngineConfigList struct {
 type AzureConfig struct {
 	//The tenant id for the Azure Active Directory organization. This value can also be provided with the AZURE_TENANT_ID environment variable.
 	// +kubebuilder:validation:Required
-	TenantID string `json:"tenantID"`
+	TenantID string `json:"tenantID" vault:"tenant_id"`
 
 	//The resource URL for the application registered in Azure Active Directory.
 	//The value is expected to match the audience (aud claim) of the JWT provided to the login API.
 	//See the resource parameter for how the audience is set when requesting a JWT access token from the Azure Instance Metadata Service (IMDS) endpoint.
 	//This value can also be provided with the AZURE_AD_RESOURCE environment variable.
 	// +kubebuilder:validation:Required
-	Resource string `json:"resource"`
+	Resource string `json:"resource" vault:"resource"`
 
 	//The Azure cloud environment. Valid values: AzurePublicCloud, AzureUSGovernmentCloud, AzureChinaCloud, AzureGermanCloud.
 	//This value can also be provided with the AZURE_ENVIRONMENT environment variable
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="AzurePublicCloud"
 	// +kubebuilder:validation:Enum={"AzurePublicCloud","AzureUSGovernmentCloud","AzureChinaCloud","AzureGermanCloud"}
-	Environment string `json:"environment,omitempty"`
+	Environment string `json:"environment,omitempty" vault:"environment"`
 
 	//The client id for credentials to query the Azure APIs.
 	//Currently read permissions to query compute resources are required.
@@ -108,18 +108,18 @@ type AzureConfig struct {
 	//The maximum number of attempts a failed operation will be retried before producing an error.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=3
-	MaxRetries int64 `json:"maxRetries"`
+	MaxRetries int64 `json:"maxRetries" vault:"max_retries"`
 
 	//The maximum delay, in seconds, allowed before retrying an operation
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=60
-	MaxRetryDelay int64 `json:"maxRetryDelay"`
+	MaxRetryDelay int64 `json:"maxRetryDelay" vault:"max_retry_delay"`
 
 	//The initial amount of delay, in seconds, to use before retrying an operation.
 	//Increases exponentially
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=4
-	RetryDelay int64 `json:"retryDelay"`
+	RetryDelay int64 `json:"retryDelay" vault:"retry_delay"`
 
 	retrievedClientID string `json:"-"`
 
@@ -158,19 +158,6 @@ func (r *AzureAuthEngineConfig) GetPayload() map[string]any {
 	return r.Spec.AzureConfig.toMap()
 }
 
-func (r *AzureAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := r.Spec.AzureConfig.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (r *AzureAuthEngineConfig) IsInitialized() bool {
-	return true
-}
-
-func (r *AzureAuthEngineConfig) IsValid() (bool, error) {
-	return true, nil
-}
-
 func (r *AzureAuthEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &r.Spec.Authentication
 }
@@ -182,10 +169,6 @@ func (r *AzureAuthEngineConfig) PrepareInternalValues(context context.Context, o
 	}
 
 	return r.setInternalCredentials(context)
-}
-
-func (r *AzureAuthEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *AzureAuthEngineConfig) setInternalCredentials(context context.Context) error {
@@ -269,15 +252,8 @@ func init() {
 }
 
 func (i *AzureConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["tenant_id"] = i.TenantID
-	payload["resource"] = i.Resource
-	payload["environment"] = i.Environment
+	payload := vaultutils.StructToVaultPayload(i)
 	payload["client_id"] = i.retrievedClientID
 	payload["client_secret"] = i.retrievedClientPassword
-	payload["max_retries"] = i.MaxRetries
-	payload["max_retry_delay"] = i.MaxRetryDelay
-	payload["retry_delay"] = i.RetryDelay
-
 	return payload
 }

@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -404,7 +405,7 @@ func TestTerraformCloudSecretEngineRole_ValidateUpdate_RejectsPathChange(t *test
 			Path: "terraform-new",
 		},
 	}
-	_, err := r.ValidateUpdate(nil, oldObj, newObj)
+	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
 	if err == nil {
 		t.Error("expected error when spec.path is changed")
 	}
@@ -424,7 +425,7 @@ func TestTerraformCloudSecretEngineRole_ValidateUpdate_RejectsNameChange(t *test
 			Name: "new-name",
 		},
 	}
-	_, err := r.ValidateUpdate(nil, oldObj, newObj)
+	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
 	if err == nil {
 		t.Error("expected error when spec.name is changed")
 	}

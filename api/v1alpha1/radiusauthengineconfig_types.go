@@ -18,12 +18,10 @@ package v1alpha1
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"reflect"
-	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -58,78 +56,78 @@ type RADIUSAuthEngineConfigSpec struct {
 type RADIUSAuthConfig struct {
 	// Host is the RADIUS server to connect to (e.g. "radius.myorg.com", "127.0.0.1").
 	// +kubebuilder:validation:Required
-	Host string `json:"host"`
+	Host string `json:"host" vault:"host"`
 
 	// Port is the UDP port where the RADIUS server is listening. Defaults to 1812.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=65535
 	// +kubebuilder:default=1812
-	Port int `json:"port"`
+	Port int `json:"port" vault:"port,number"`
 
 	// UnregisteredUserPolicies is a comma-separated list of policies to grant to
 	// users who authenticate via RADIUS but have no explicit user mapping.
 	// +kubebuilder:validation:Optional
-	UnregisteredUserPolicies string `json:"unregisteredUserPolicies,omitempty"`
+	UnregisteredUserPolicies string `json:"unregisteredUserPolicies,omitempty" vault:"unregistered_user_policies"`
 
 	// DialTimeout is the number of seconds to wait for a backend connection before timing out.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:default=10
-	DialTimeout int `json:"dialTimeout"`
+	DialTimeout int `json:"dialTimeout" vault:"dial_timeout,number"`
 
 	// ReadTimeout is the number of seconds before a response times out.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:default=10
-	ReadTimeout int `json:"readTimeout"`
+	ReadTimeout int `json:"readTimeout" vault:"read_timeout,number"`
 
 	// NASPort is the NAS-Port attribute of the RADIUS request.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:default=10
-	NASPort int `json:"nasPort"`
+	NASPort int `json:"nasPort" vault:"nas_port,number"`
 
 	// TokenTTL is the incremental lifetime for generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenTTL string `json:"tokenTTL,omitempty"`
+	TokenTTL string `json:"tokenTTL,omitempty" vault:"token_ttl,duration"`
 
 	// TokenMaxTTL is the maximum lifetime for generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenMaxTTL string `json:"tokenMaxTTL,omitempty"`
+	TokenMaxTTL string `json:"tokenMaxTTL,omitempty" vault:"token_max_ttl,duration"`
 
 	// TokenPolicies are policies to encode onto generated tokens.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	TokenPolicies []string `json:"tokenPolicies,omitempty"`
+	TokenPolicies []string `json:"tokenPolicies,omitempty" vault:"token_policies"`
 
 	// TokenBoundCIDRs are CIDR blocks restricting authentication and tying the token.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty"`
+	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty" vault:"token_bound_cidrs"`
 
 	// TokenExplicitMaxTTL is the hard cap max TTL for tokens.
 	// +kubebuilder:validation:Optional
-	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty"`
+	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty" vault:"token_explicit_max_ttl,duration"`
 
 	// TokenNoDefaultPolicy if true, omits the default policy from generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty"`
+	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty" vault:"token_no_default_policy"`
 
 	// TokenNumUses is the max number of times a generated token may be used (0 = unlimited).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	TokenNumUses int `json:"tokenNumUses,omitempty"`
+	TokenNumUses int `json:"tokenNumUses,omitempty" vault:"token_num_uses,number"`
 
 	// TokenPeriod is the maximum allowed period for periodic tokens.
 	// +kubebuilder:validation:Optional
-	TokenPeriod string `json:"tokenPeriod,omitempty"`
+	TokenPeriod string `json:"tokenPeriod,omitempty" vault:"token_period,duration"`
 
 	// TokenType is the type of token to generate.
 	// Omitted/empty is treated as Vault's read-default of "default".
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum={"service","batch","default","default-service","default-batch",""}
-	TokenType string `json:"tokenType,omitempty"`
+	TokenType string `json:"tokenType,omitempty" vault:"token_type"`
 
 	retrievedSecret string `json:"-"`
 }
@@ -195,16 +193,8 @@ func (d *RADIUSAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]a
 	return reflect.DeepEqual(desiredState, filteredPayload)
 }
 
-func (d *RADIUSAuthEngineConfig) IsInitialized() bool {
-	return true
-}
-
 func (d *RADIUSAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	return d.setInternalCredentials(context)
-}
-
-func (d *RADIUSAuthEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *RADIUSAuthEngineConfig) IsValid() (bool, error) {
@@ -317,28 +307,10 @@ func (r *RADIUSAuthEngineConfig) isValid() error {
 }
 
 func (c *RADIUSAuthConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["host"] = c.Host
+	payload := vaultutils.StructToVaultPayload(c)
 	payload["secret"] = c.retrievedSecret
-	payload["port"] = json.Number(strconv.Itoa(c.Port))
-	payload["dial_timeout"] = json.Number(strconv.Itoa(c.DialTimeout))
-	payload["read_timeout"] = json.Number(strconv.Itoa(c.ReadTimeout))
-	payload["nas_port"] = json.Number(strconv.Itoa(c.NASPort))
-	payload["unregistered_user_policies"] = c.UnregisteredUserPolicies
-	payload["token_ttl"] = durationToSeconds(c.TokenTTL)
-	payload["token_max_ttl"] = durationToSeconds(c.TokenMaxTTL)
-	payload["token_policies"] = toInterfaceArray(c.TokenPolicies)
-	payload["token_bound_cidrs"] = toInterfaceArray(c.TokenBoundCIDRs)
-	payload["token_explicit_max_ttl"] = durationToSeconds(c.TokenExplicitMaxTTL)
-	payload["token_no_default_policy"] = c.TokenNoDefaultPolicy
-	payload["token_num_uses"] = json.Number(strconv.Itoa(c.TokenNumUses))
-	payload["token_period"] = durationToSeconds(c.TokenPeriod)
-	// Vault reads omitted token_type back as "default". Emit that read shape so
-	// sparse configs converge instead of false-drifting on "" vs "default".
 	if c.TokenType == "" {
 		payload["token_type"] = "default"
-	} else {
-		payload["token_type"] = c.TokenType
 	}
 	return payload
 }

@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -79,7 +80,7 @@ func TestEntityIsEquivalentMatching(t *testing.T) {
 	// All 11 Vault-only keys are deleted before comparison
 	payload := map[string]any{
 		"metadata":            map[string]string{"team": "platform"},
-		"policies":            []string{"default"},
+		"policies":            []any{"default"},
 		"disabled":            false,
 		"name":                "my-entity",
 		"id":                  "entity-id-1",
@@ -93,7 +94,7 @@ func TestEntityIsEquivalentMatching(t *testing.T) {
 		"namespace_id":        "root",
 		"bucket_key_hash":     "abc123",
 	}
-	if !entity.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(entity, payload) {
 		t.Error("expected matching payload (with 11 Vault-only keys) to be equivalent after deletion")
 	}
 }
@@ -111,10 +112,10 @@ func TestEntityIsEquivalentNonMatching(t *testing.T) {
 
 	payload := map[string]any{
 		"metadata": map[string]string{"team": "platform"},
-		"policies": []string{"default"},
+		"policies": []any{"default"},
 		"disabled": true,
 	}
-	if entity.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(entity, payload) {
 		t.Error("expected different disabled value to not be equivalent")
 	}
 }
@@ -133,11 +134,11 @@ func TestEntityIsEquivalentExtraFields(t *testing.T) {
 
 	payload := map[string]any{
 		"metadata":      map[string]string{"team": "platform"},
-		"policies":      []string{"default"},
+		"policies":      []any{"default"},
 		"disabled":      false,
 		"unknown_field": "unexpected",
 	}
-	if !entity.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(entity, payload) {
 		t.Error("expected true: extra keys not in desiredState are filtered from payload")
 	}
 }

@@ -48,20 +48,22 @@ func (r *VaultAuditResource) manageReconcileLogic(context context.Context, insta
 	log := log.FromContext(context)
 
 	// prepare internal values
-	err := instance.(vaultutils.VaultObject).PrepareInternalValues(context, instance)
-	if err != nil {
-		log.Error(err, "unable to prepare internal values", "instance", instance)
-		return err
+	if preparer, ok := instance.(vaultutils.VaultInternalValuesPreparer); ok {
+		if err := preparer.PrepareInternalValues(context, instance); err != nil {
+			log.Error(err, "unable to prepare internal values", "instance", instance)
+			return err
+		}
 	}
 
-	err = instance.(vaultutils.VaultObject).PrepareTLSConfig(context, instance)
-	if err != nil {
-		log.Error(err, "unable to prepare TLS Config values", "instance", instance)
-		return err
+	if tlsPreparer, ok := instance.(vaultutils.VaultTLSPreparer); ok {
+		if err := tlsPreparer.PrepareTLSConfig(context, instance); err != nil {
+			log.Error(err, "unable to prepare TLS Config values", "instance", instance)
+			return err
+		}
 	}
 
 	// Enable or update the audit device
-	err = r.vaultAuditEndpoint.CreateOrUpdate(context)
+	err := r.vaultAuditEndpoint.CreateOrUpdate(context)
 	if err != nil {
 		log.Error(err, "unable to enable/update audit device", "instance", instance)
 		return err

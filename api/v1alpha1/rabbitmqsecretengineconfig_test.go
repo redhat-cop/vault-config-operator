@@ -112,7 +112,7 @@ func TestRabbitMQSecretEngineConfigIsEquivalentMatching(t *testing.T) {
 		"max_ttl": 7200,
 	}
 
-	if !rabbitMQ.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(rabbitMQ, payload) {
 		t.Error("expected true for lease payload matching leasesToMap()")
 	}
 }
@@ -133,7 +133,7 @@ func TestRabbitMQSecretEngineConfigIsEquivalentNonMatching(t *testing.T) {
 		"max_ttl": 9999,
 	}
 
-	if rabbitMQ.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(rabbitMQ, payload) {
 		t.Error("expected false when max_ttl differs")
 	}
 }
@@ -155,7 +155,7 @@ func TestRabbitMQSecretEngineConfigIsEquivalentExtraFields(t *testing.T) {
 		"extra_key": "x",
 	}
 
-	if !rabbitMQ.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(rabbitMQ, payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
@@ -178,7 +178,7 @@ func TestRabbitMQSecretEngineConfigIsEquivalentRejectsConnectionPayload(t *testi
 
 	payload := rabbitMQ.Spec.rabbitMQToMap()
 
-	if rabbitMQ.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(rabbitMQ, payload) {
 		t.Error("expected false: IsEquivalentToDesiredState uses leasesToMap(), not rabbitMQToMap(); connection payload has different keys")
 	}
 }

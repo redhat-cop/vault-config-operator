@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -59,14 +60,14 @@ func TestGCPRoleToMap(t *testing.T) {
 	expected := map[string]any{
 		"name":                    "test-role",
 		"type":                    "iam",
-		"bound_service_accounts":  []string{"sa@project.iam.gserviceaccount.com"},
-		"bound_projects":          []string{"project-1"},
+		"bound_service_accounts":  []any{"sa@project.iam.gserviceaccount.com"},
+		"bound_projects":          []any{"project-1"},
 		"add_group_aliases":       true,
 		"token_ttl":               json.Number("3600"),
 		"token_max_ttl":           json.Number("86400"),
-		"token_policies":          []string{"reader"},
-		"policies":                []string{"legacy-policy"},
-		"token_bound_cidrs":       []string{"10.0.0.0/8"},
+		"token_policies":          []any{"reader"},
+		"policies":                []any{"legacy-policy"},
+		"token_bound_cidrs":       []any{"10.0.0.0/8"},
 		"token_explicit_max_ttl":  json.Number("0"),
 		"token_no_default_policy": false,
 		"token_num_uses":          int64(0),
@@ -74,10 +75,10 @@ func TestGCPRoleToMap(t *testing.T) {
 		"token_type":              "service",
 		"max_jwt_exp":             json.Number("900"),
 		"allow_gce_inference":     true,
-		"bound_zones":             []string{"us-central1-a"},
-		"bound_regions":           []string{"us-central1"},
-		"bound_instance_groups":   []string{"ig-1"},
-		"bound_labels":            []string{"env:production"},
+		"bound_zones":             []any{"us-central1-a"},
+		"bound_regions":           []any{"us-central1"},
+		"bound_instance_groups":   []any{"ig-1"},
+		"bound_labels":            []any{"env:production"},
 	}
 
 	if !reflect.DeepEqual(result, expected) {
@@ -106,10 +107,10 @@ func TestGCPRoleToMapDualPoliciesField(t *testing.T) {
 		t.Error("expected 'policies' key to exist (legacy/backward-compatibility field)")
 	}
 
-	if !reflect.DeepEqual(result["token_policies"], []string{"token-policy"}) {
+	if !reflect.DeepEqual(result["token_policies"], []any{"token-policy"}) {
 		t.Errorf("expected token_policies = [token-policy], got %v", result["token_policies"])
 	}
-	if !reflect.DeepEqual(result["policies"], []string{"legacy-policy"}) {
+	if !reflect.DeepEqual(result["policies"], []any{"legacy-policy"}) {
 		t.Errorf("expected policies = [legacy-policy], got %v", result["policies"])
 	}
 }
@@ -127,7 +128,7 @@ func TestGCPAuthEngineRoleIsEquivalentMatching(t *testing.T) {
 
 	payload := role.Spec.GCPRole.toMap()
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected matching payload to be equivalent")
 	}
 }
@@ -145,7 +146,7 @@ func TestGCPAuthEngineRoleIsEquivalentNonMatching(t *testing.T) {
 	payload := role.Spec.GCPRole.toMap()
 	payload["type"] = "gce"
 
-	if role.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected non-matching payload (different type) to NOT be equivalent")
 	}
 }
@@ -163,7 +164,7 @@ func TestGCPAuthEngineRoleIsEquivalentExtraFields(t *testing.T) {
 	payload := role.Spec.GCPRole.toMap()
 	payload["extra_field"] = "unexpected"
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -56,7 +57,7 @@ func TestLDAPAuthEngineGroupIsEquivalentMatching(t *testing.T) {
 
 	payload := group.toMap()
 
-	if !group.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(group, payload) {
 		t.Error("expected matching payload to be equivalent")
 	}
 }
@@ -72,7 +73,7 @@ func TestLDAPAuthEngineGroupIsEquivalentNonMatching(t *testing.T) {
 	payload := group.toMap()
 	payload["policies"] = "different-policy"
 
-	if group.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(group, payload) {
 		t.Error("expected non-matching payload (different policies) to NOT be equivalent")
 	}
 }
@@ -88,7 +89,7 @@ func TestLDAPAuthEngineGroupIsEquivalentExtraFields(t *testing.T) {
 	payload := group.toMap()
 	payload["extra_field"] = "unexpected"
 
-	if !group.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(group, payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }

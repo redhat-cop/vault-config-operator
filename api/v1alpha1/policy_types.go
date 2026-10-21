@@ -40,16 +40,11 @@ func (d *Policy) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *Policy) GetPath() string {
-	if d.Spec.Name != "" {
-		if d.Spec.Type != "" {
-			return vaultutils.CleansePath("sys/policies/" + d.Spec.Type + "/" + d.Spec.Name)
-		}
-		return vaultutils.CleansePath("sys/policy/" + d.Spec.Name)
-	}
+	name := vaultutils.ResourceName(d.Spec.Name, d.Name)
 	if d.Spec.Type != "" {
-		return vaultutils.CleansePath("sys/policies/" + d.Spec.Type + "/" + d.Name)
+		return vaultutils.CleansePath("sys/policies/" + d.Spec.Type + "/" + name)
 	}
-	return vaultutils.CleansePath("sys/policy/" + d.Name)
+	return vaultutils.CleansePath("sys/policy/" + name)
 }
 func (d *Policy) GetPayload() map[string]any {
 	return map[string]any{
@@ -64,10 +59,6 @@ func (d *Policy) IsEquivalentToDesiredState(payload map[string]any) bool {
 		delete(desiredState, "policy")
 	}
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (d *Policy) IsInitialized() bool {
-	return true
 }
 
 func (d *Policy) IsDeletable() bool {
@@ -105,14 +96,6 @@ func (d *Policy) PrepareInternalValues(context context.Context, object client.Ob
 
 	log.V(1).Info("Auth engine accessor(s) resolved", "policy", d.Spec.Policy)
 	return nil
-}
-
-func (d *Policy) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *Policy) IsValid() (bool, error) {
-	return true, nil
 }
 
 // PolicySpec defines the desired state of Policy

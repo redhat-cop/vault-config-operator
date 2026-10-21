@@ -17,12 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -62,33 +58,27 @@ type PermissionSet struct {
 
 	//  InstallationID the ID of the app installation. Note the Installation ID from the URL of this page (usually: https://github.com/settings/installations/<installation id>) if you wish to configure using the installation ID directly. Only one of installationID or organizationName is required. If both are provided, installationID takes precedence.
 	// +kubebuilder:validation:Optional
-	InstallationID int64 `json:"installationID,omitempty"`
+	InstallationID int64 `json:"installationID,omitempty" vault:"installation_id"`
 
 	// OrganizationName the name of the organization with the GitHub App installation. Only one of installationID or organizationName is required. If both are provided, installationID takes precedence.
 	// +kubebuilder:validation:Optional
-	OrganizationName string `json:"organizationName,omitempty"`
+	OrganizationName string `json:"organizationName,omitempty" vault:"org_name"`
 
 	// Repositories a list of the names of the repositories within the organisation that the installation token can access
 	// +kubebuilder:validation:Optional
-	Repositories []string `json:"repositories,omitempty"`
+	Repositories []string `json:"repositories,omitempty" vault:"repositories"`
 
 	// Repositories a list of the IDs of the repositories that the installation token can access. See [this StackOverflow](https://stackoverflow.com/a/47223479) post for the quickest way to find a repository ID
 	// +kubebuilder:validation:Optional
-	RepositoriesIDs []string `json:"repositoriesIDs,omitempty"`
+	RepositoriesIDs []string `json:"repositoriesIDs,omitempty" vault:"repository_ids"`
 
 	// Permissions a key value map of permission names to their access type (read or write). See [GitHub’s documentation](https://developer.github.com/v3/apps/permissions) on permission names and access types.
 	// +kubebuilder:validation:Optional
-	Permissions map[string]string `json:"permissions,omitempty"`
+	Permissions map[string]string `json:"permissions,omitempty" vault:"permissions"`
 }
 
 func (i *PermissionSet) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["installation_id"] = i.InstallationID
-	payload["org_name"] = i.OrganizationName
-	payload["repositories"] = i.Repositories
-	payload["repository_ids"] = i.RepositoriesIDs
-	payload["permissions"] = i.Permissions
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 var _ vaultutils.VaultObject = &GitHubSecretEngineRole{}
@@ -106,29 +96,9 @@ func (d *GitHubSecretEngineRole) GetPath() string {
 func (d *GitHubSecretEngineRole) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
-func (d *GitHubSecretEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.Spec.PermissionSet.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (d *GitHubSecretEngineRole) IsInitialized() bool {
-	return true
-}
 
 func (d *GitHubSecretEngineRole) IsDeletable() bool {
 	return true
-}
-
-func (d *GitHubSecretEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *GitHubSecretEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *GitHubSecretEngineRole) IsValid() (bool, error) {
-	return true, nil
 }
 
 // GitHubSecretEngineRoleStatus defines the observed state of GitHubSecretEngineRole

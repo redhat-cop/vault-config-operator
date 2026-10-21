@@ -17,12 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // OktaAuthEngineGroupSpec defines the desired state of OktaAuthEngineGroup
@@ -45,7 +41,7 @@ type OktaAuthEngineGroupSpec struct {
 
 	// Policies is a comma-separated list of policies associated with the group.
 	// +kubebuilder:validation:Optional
-	Policies string `json:"policies,omitempty"`
+	Policies string `json:"policies,omitempty" vault:"policies"`
 }
 
 var _ vaultutils.VaultObject = &OktaAuthEngineGroup{}
@@ -65,27 +61,6 @@ func (d *OktaAuthEngineGroup) IsDeletable() bool {
 
 func (d *OktaAuthEngineGroup) GetPayload() map[string]any {
 	return d.toMap()
-}
-
-func (d *OktaAuthEngineGroup) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.GetPayload()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (d *OktaAuthEngineGroup) IsInitialized() bool {
-	return true
-}
-
-func (d *OktaAuthEngineGroup) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *OktaAuthEngineGroup) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *OktaAuthEngineGroup) IsValid() (bool, error) {
-	return true, nil
 }
 
 // OktaAuthEngineGroupStatus defines the observed state of OktaAuthEngineGroup
@@ -131,9 +106,7 @@ func init() {
 }
 
 func (i *OktaAuthEngineGroup) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["policies"] = i.Spec.Policies
-	return payload
+	return vaultutils.StructToVaultPayload(&i.Spec)
 }
 
 func (d *OktaAuthEngineGroup) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {

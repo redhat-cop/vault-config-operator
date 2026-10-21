@@ -74,16 +74,10 @@ func (d *DatabaseSecretEngineConfig) IsDeletable() bool {
 }
 
 func (d *DatabaseSecretEngineConfig) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "config" + "/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "config" + "/" + d.Name)
+	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "config" + "/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 func (d *DatabaseSecretEngineConfig) GetRootPasswordRotationPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "rotate-root" + "/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "rotate-root" + "/" + d.Name)
+	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "rotate-root" + "/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 func (d *DatabaseSecretEngineConfig) GetPayload() map[string]any {
 	return d.Spec.toMap()
@@ -158,24 +152,8 @@ func (d *DatabaseSecretEngineConfig) IsEquivalentToDesiredState(payload map[stri
 	return reflect.DeepEqual(filteredDesired, filteredPayload)
 }
 
-func toInterfaceArray(values []string) []any {
-	result := []any{}
-	for _, value := range values {
-		result = append(result, value)
-	}
-	return result
-}
-
-func (d *DatabaseSecretEngineConfig) IsInitialized() bool {
-	return true
-}
-
 func (d *DatabaseSecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	return d.setInternalCredentials(context)
-}
-
-func (d *DatabaseSecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *DatabaseSecretEngineConfig) IsValid() (bool, error) {
@@ -264,29 +242,29 @@ type DBSEConfig struct {
 
 	// PluginName Specifies the name of the plugin to use for this connection.
 	// +kubebuilder:validation:Optional
-	PluginName string `json:"pluginName,omitempty"`
+	PluginName string `json:"pluginName,omitempty" vault:"plugin_name"`
 
 	// PluginVersion Specifies the semantic version of the plugin to use for this connection.
 	// +kubebuilder:validation:Optional
-	PluginVersion string `json:"pluginVersion,omitempty"`
+	PluginVersion string `json:"pluginVersion,omitempty" vault:"plugin_version"`
 
 	// VerifyConnection Specifies if the connection is verified during initial configuration. Defaults to true.
 	// When nil (not specified), the operator sends true to match Vault's default behavior.
 	// +kubebuilder:validation:Optional
-	VerifyConnection *bool `json:"verifyConnection,omitempty"`
+	VerifyConnection *bool `json:"verifyConnection,omitempty" vault:"verify_connection,default=true"`
 
 	// AllowedRoles List of the roles allowed to use this connection. Defaults to empty (no roles), if contains a "*" any role can use this connection.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default={"*"}
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	AllowedRoles []string `json:"allowedRoles"`
+	AllowedRoles []string `json:"allowedRoles" vault:"allowed_roles"`
 
 	// RootRotationStatements Specifies the database statements to be executed to rotate the root user's credentials. See the plugin's API page for more information on support and formatting for this parameter.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	RootRotationStatements []string `json:"rootRotationStatements,omitempty"`
+	RootRotationStatements []string `json:"rootRotationStatements,omitempty" vault:"root_credentials_rotate_statements"`
 
 	// PasswordAuthentication When set to "scram-sha-256", passwords will be hashed by Vault and stored as-is by PostgreSQL. Using "scram-sha-256" requires a minimum version of PostgreSQL 10. Available options are "scram-sha-256" and "password". The default is "password". When set to "password", passwords will be sent to PostgreSQL in plaintext format and may appear in PostgreSQL logs as-is.
 	// +kubebuilder:validation:Optional
@@ -296,25 +274,25 @@ type DBSEConfig struct {
 
 	// PasswordPolicy The name of the password policy to use when generating passwords for this database. If not specified, this will use a default policy defined as: 20 characters with at least 1 uppercase, 1 lowercase, 1 number, and 1 dash character.
 	// +kubebuilder:validation:Optional
-	PasswordPolicy string `json:"passwordPolicy,omitempty"`
+	PasswordPolicy string `json:"passwordPolicy,omitempty" vault:"password_policy"`
 
 	// ConnectionURL Specifies the connection string used to connect to the database. Some plugins use url rather than connection_url. This allows for simple templating of the username and password of the root user. Typically, this is done by including a "{{"username"}}", "{{"name"}}", and/or "{{"password"}}" field within the string. These fields are typically be replaced with the values in the username and password fields.
 	// +kubebuilder:validation:Optional
-	ConnectionURL string `json:"connectionURL,omitempty"`
+	ConnectionURL string `json:"connectionURL,omitempty" vault:"connection_url"`
 
 	// Username Specifies the name of the user to use as the "root" user when connecting to the database. This "root" user is used to create/update/delete users managed by these plugins, so you will need to ensure that this user has permissions to manipulate users appropriate to the database. This is typically used in the connection_url field via the templating directive "{{"username"}}" or "{{"name"}}"
 	// If username is provided it takes precedence over the username retrieved from the referenced secrets
 	// +kubebuilder:validation:Optional
-	Username string `json:"username,omitempty"`
+	Username string `json:"username,omitempty" vault:"username,omitempty"`
 
 	// DisableEscaping Determines whether special characters in the username and password fields will be escaped. Useful for alternate connection string formats like ADO. More information regarding this parameter can be found on the databases secrets engine docs. Defaults to false
 	// +kubebuilder:validation:Optional
-	DisableEscaping bool `json:"disableEscaping,omitempty"`
+	DisableEscaping bool `json:"disableEscaping,omitempty" vault:"disable_escaping"`
 
 	// DatabaseSpecificConfig this are the configuration specific to each database type
 	// +kubebuilder:validation:Optional
 	// +mapType=granular
-	DatabaseSpecificConfig map[string]string `json:"databaseSpecificConfig,omitempty"`
+	DatabaseSpecificConfig map[string]string `json:"databaseSpecificConfig,omitempty" vault:"databaseSpecificConfig,spreadmap"`
 
 	retrievedPassword string `json:"-"`
 
@@ -415,32 +393,13 @@ func init() {
 }
 
 func (i *DBSEConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["plugin_name"] = i.PluginName
-	payload["plugin_version"] = i.PluginVersion
-	if i.VerifyConnection != nil {
-		payload["verify_connection"] = *i.VerifyConnection
-	} else {
-		payload["verify_connection"] = true
-	}
-
-	payload["allowed_roles"] = toInterfaceArray(i.AllowedRoles)
-	payload["root_credentials_rotate_statements"] = toInterfaceArray(i.RootRotationStatements)
-	payload["password_policy"] = i.PasswordPolicy
-	payload["connection_url"] = i.ConnectionURL
-	for key, value := range i.DatabaseSpecificConfig {
-		payload[key] = value
-	}
-	if i.Username != "" {
-		payload["username"] = i.Username
-	} else if i.retrievedUsername != "" { // Only set the username in payload if retrieved - see setInternalCredentials()
+	payload := vaultutils.StructToVaultPayload(i)
+	if i.retrievedUsername != "" {
 		payload["username"] = i.retrievedUsername
 	}
-	payload["disable_escaping"] = i.DisableEscaping
-	if i.retrievedPassword != "" { // Only set the password in payload if retrieved - see setInternalCredentials()
+	if i.retrievedPassword != "" {
 		payload["password"] = i.retrievedPassword
 	}
-
 	return payload
 }
 

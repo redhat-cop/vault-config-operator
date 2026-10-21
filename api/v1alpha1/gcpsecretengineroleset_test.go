@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"context"
 	"testing"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
@@ -424,7 +425,7 @@ func TestGCPSecretEngineRoleset_ValidateUpdate_RejectsPathChange(t *testing.T) {
 			},
 		},
 	}
-	_, err := r.ValidateUpdate(nil, oldObj, newObj)
+	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
 	if err == nil {
 		t.Error("expected error when spec.path is changed")
 	}
@@ -450,7 +451,7 @@ func TestGCPSecretEngineRoleset_ValidateUpdate_RejectsSecretTypeChange(t *testin
 			},
 		},
 	}
-	_, err := r.ValidateUpdate(nil, oldObj, newObj)
+	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
 	if err == nil {
 		t.Error("expected error when spec.secretType is changed")
 	}
@@ -476,7 +477,7 @@ func TestGCPSecretEngineRoleset_ValidateUpdate_RejectsProjectChange(t *testing.T
 			},
 		},
 	}
-	_, err := r.ValidateUpdate(nil, oldObj, newObj)
+	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
 	if err == nil {
 		t.Error("expected error when spec.project is changed")
 	}
@@ -506,7 +507,7 @@ func TestGCPSecretEngineRoleset_ValidateUpdate_AllowsBindingsChange(t *testing.T
 			},
 		},
 	}
-	_, err := r.ValidateUpdate(nil, oldObj, newObj)
+	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
 	if err != nil {
 		t.Errorf("expected no error when only bindings change, got: %v", err)
 	}

@@ -18,11 +18,9 @@ package v1alpha1
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
-	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -58,39 +56,39 @@ type AWSAuthEngineClientConfigSpec struct {
 type AWSAuthClientConfig struct {
 	// AccessKey is the AWS access key ID for API calls.
 	// +kubebuilder:validation:Optional
-	AccessKey string `json:"accessKey,omitempty"`
+	AccessKey string `json:"accessKey,omitempty" vault:"access_key,omitempty"`
 
 	// Endpoint is a custom URL for EC2 API calls.
 	// +kubebuilder:validation:Optional
-	Endpoint string `json:"endpoint,omitempty"`
+	Endpoint string `json:"endpoint,omitempty" vault:"endpoint"`
 
 	// IAMEndpoint is a custom URL for IAM API calls.
 	// +kubebuilder:validation:Optional
-	IAMEndpoint string `json:"iamEndpoint,omitempty"`
+	IAMEndpoint string `json:"iamEndpoint,omitempty" vault:"iam_endpoint"`
 
 	// STSEndpoint is a custom URL for STS API calls.
 	// +kubebuilder:validation:Optional
-	STSEndpoint string `json:"stsEndpoint,omitempty"`
+	STSEndpoint string `json:"stsEndpoint,omitempty" vault:"sts_endpoint"`
 
 	// STSRegion is the region for STS API calls (set with stsEndpoint).
 	// +kubebuilder:validation:Optional
-	STSRegion string `json:"stsRegion,omitempty"`
+	STSRegion string `json:"stsRegion,omitempty" vault:"sts_region"`
 
 	// UseSTSRegionFromClient overrides stsEndpoint/stsRegion to use client request region.
 	// +kubebuilder:validation:Optional
-	UseSTSRegionFromClient bool `json:"useSTSRegionFromClient,omitempty"`
+	UseSTSRegionFromClient bool `json:"useSTSRegionFromClient,omitempty" vault:"use_sts_region_from_client"`
 
 	// IAMServerIDHeaderValue is the value to require in the X-Vault-AWS-IAM-Server-ID header.
 	// +kubebuilder:validation:Optional
-	IAMServerIDHeaderValue string `json:"iamServerIDHeaderValue,omitempty"`
+	IAMServerIDHeaderValue string `json:"iamServerIDHeaderValue,omitempty" vault:"iam_server_id_header_value"`
 
 	// AllowedSTSHeaderValues is a comma-separated list of additional permitted STS request headers.
 	// +kubebuilder:validation:Optional
-	AllowedSTSHeaderValues string `json:"allowedSTSHeaderValues,omitempty"`
+	AllowedSTSHeaderValues string `json:"allowedSTSHeaderValues,omitempty" vault:"allowed_sts_header_values"`
 
 	// MaxRetries is the max retries for recoverable errors (-1 = AWS SDK default).
 	// +kubebuilder:validation:Optional
-	MaxRetries *int `json:"maxRetries,omitempty"`
+	MaxRetries *int `json:"maxRetries,omitempty" vault:"-"`
 
 	retrievedAccessKey string `json:"-"`
 	retrievedSecretKey string `json:"-"`
@@ -165,10 +163,6 @@ func (r *AWSAuthEngineClientConfig) IsEquivalentToDesiredState(payload map[strin
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (r *AWSAuthEngineClientConfig) IsInitialized() bool {
-	return true
-}
-
 func (r *AWSAuthEngineClientConfig) IsValid() (bool, error) {
 	err := r.isValid()
 	return err == nil, err
@@ -180,10 +174,6 @@ func (r *AWSAuthEngineClientConfig) GetKubeAuthConfiguration() *vaultutils.KubeA
 
 func (r *AWSAuthEngineClientConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	return r.setInternalCredentials(context)
-}
-
-func (r *AWSAuthEngineClientConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *AWSAuthEngineClientConfig) setInternalCredentials(context context.Context) error {
@@ -290,26 +280,17 @@ func (r *AWSAuthEngineClientConfig) isValid() error {
 }
 
 func (i *AWSAuthClientConfig) toMap() map[string]any {
-	payload := map[string]any{}
+	payload := vaultutils.StructToVaultPayload(i)
+	if i.MaxRetries != nil {
+		payload["max_retries"] = *i.MaxRetries
+	} else {
+		payload["max_retries"] = -1
+	}
 	if i.retrievedAccessKey != "" {
 		payload["access_key"] = i.retrievedAccessKey
-	} else if i.AccessKey != "" {
-		payload["access_key"] = i.AccessKey
 	}
 	if i.retrievedSecretKey != "" {
 		payload["secret_key"] = i.retrievedSecretKey
-	}
-	payload["endpoint"] = i.Endpoint
-	payload["iam_endpoint"] = i.IAMEndpoint
-	payload["sts_endpoint"] = i.STSEndpoint
-	payload["sts_region"] = i.STSRegion
-	payload["use_sts_region_from_client"] = i.UseSTSRegionFromClient
-	payload["iam_server_id_header_value"] = i.IAMServerIDHeaderValue
-	payload["allowed_sts_header_values"] = i.AllowedSTSHeaderValues
-	if i.MaxRetries != nil {
-		payload["max_retries"] = json.Number(strconv.Itoa(*i.MaxRetries))
-	} else {
-		payload["max_retries"] = json.Number("-1")
 	}
 	return payload
 }

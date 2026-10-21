@@ -86,11 +86,11 @@ type AzureSEConfig struct {
 
 	// The subscription id for the Azure Active Directory. This value can also be provided with the AZURE_SUBSCRIPTION_ID environment variable.
 	// +kubebuilder:validation:Required
-	SubscriptionID string `json:"subscriptionID"`
+	SubscriptionID string `json:"subscriptionID" vault:"subscription_id"`
 
 	// The tenant id for the Azure Active Directory organization. This value can also be provided with the AZURE_TENANT_ID environment variable.
 	// +kubebuilder:validation:Required
-	TenantID string `json:"tenantID"`
+	TenantID string `json:"tenantID" vault:"tenant_id"`
 
 	// The client id for credentials to query the Azure APIs.
 	// Currently read permissions to query compute resources are required.
@@ -103,16 +103,16 @@ type AzureSEConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="AzurePublicCloud"
 	// +kubebuilder:validation:Enum={"AzurePublicCloud","AzureUSGovernmentCloud","AzureChinaCloud","AzureGermanCloud"}
-	Environment string `json:"environment,omitempty"`
+	Environment string `json:"environment,omitempty" vault:"environment"`
 
 	// Specifies a password policy to use when creating dynamic credentials. Defaults to generating an alphanumeric password if not set.
 	// +kubebuilder:validation:Optional
-	PasswordPolicy string `json:"passwordPolicy,omitempty"`
+	PasswordPolicy string `json:"passwordPolicy,omitempty" vault:"password_policy"`
 
 	// Specifies how long the root password is valid for in Azure when rotate-root generates a new client secret. Uses duration format strings.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="182d"
-	RootPasswordTTL string `json:"rootPasswordTTL"`
+	RootPasswordTTL string `json:"rootPasswordTTL" vault:"root_password_ttl"`
 
 	retrievedClientID string `json:"-"`
 
@@ -154,15 +154,6 @@ func (d *AzureSecretEngineConfig) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
 
-func (r *AzureSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := r.Spec.AzureSEConfig.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (r *AzureSecretEngineConfig) IsInitialized() bool {
-	return true
-}
-
 func (r *AzureSecretEngineConfig) IsValid() (bool, error) {
 	err := r.isValid()
 	return err == nil, err
@@ -179,10 +170,6 @@ func (r *AzureSecretEngineConfig) PrepareInternalValues(context context.Context,
 	}
 
 	return r.setInternalCredentials(context)
-}
-
-func (d *AzureSecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *AzureSecretEngineConfig) setInternalCredentials(context context.Context) error {
@@ -267,14 +254,8 @@ func (r *AzureSecretEngineConfig) SetClientIDAndClientSecret(ClientID string, Cl
 }
 
 func (i *AzureSEConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["subscription_id"] = i.SubscriptionID
-	payload["tenant_id"] = i.TenantID
+	payload := vaultutils.StructToVaultPayload(i)
 	payload["client_id"] = i.retrievedClientID
 	payload["client_secret"] = i.retrievedClientPassword
-	payload["environment"] = i.Environment
-	payload["password_policy"] = i.PasswordPolicy
-	payload["root_password_ttl"] = i.RootPasswordTTL
-
 	return payload
 }

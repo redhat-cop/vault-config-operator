@@ -686,12 +686,12 @@ func TestToInterfaceArray(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := toInterfaceArray(tt.input)
+			result := vaultutils.ToInterfaceArray(tt.input)
 			if !reflect.DeepEqual(result, tt.expected) {
-				t.Errorf("toInterfaceArray(%v) = %v, expected %v", tt.input, result, tt.expected)
+				t.Errorf("ToInterfaceArray(%v) = %v, expected %v", tt.input, result, tt.expected)
 			}
 			if result == nil {
-				t.Error("toInterfaceArray should return empty slice, not nil")
+				t.Error("ToInterfaceArray should return empty slice, not nil")
 			}
 		})
 	}

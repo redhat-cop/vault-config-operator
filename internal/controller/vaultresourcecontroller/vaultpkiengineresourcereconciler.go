@@ -47,10 +47,11 @@ func (r *VaultPKIEngineResource) Reconcile(ctx context.Context, instance client.
 func (r *VaultPKIEngineResource) manageReconcileLogic(context context.Context, instance client.Object) error {
 	log := log.FromContext(context)
 	// prepare internal values
-	err := instance.(vaultutils.VaultObject).PrepareInternalValues(context, instance)
-	if err != nil {
-		log.Error(err, "unable to prepare internal values", "instance", instance)
-		return err
+	if preparer, ok := instance.(vaultutils.VaultInternalValuesPreparer); ok {
+		if err := preparer.PrepareInternalValues(context, instance); err != nil {
+			log.Error(err, "unable to prepare internal values", "instance", instance)
+			return err
+		}
 	}
 
 	//Generate
@@ -76,8 +77,7 @@ func (r *VaultPKIEngineResource) manageReconcileLogic(context context.Context, i
 	// Sign Intermediate
 	signed := instance.(vaultutils.VaultPKIEngineObject).GetSignedStatus()
 	if !signed {
-		err = r.vaultPKIEngineEndpoint.CreateIntermediate(context)
-		if err != nil {
+		if err := r.vaultPKIEngineEndpoint.CreateIntermediate(context); err != nil {
 			log.Error(err, "unable to create intermediate configuration", "instance", instance)
 			return err
 		}
@@ -85,13 +85,11 @@ func (r *VaultPKIEngineResource) manageReconcileLogic(context context.Context, i
 	}
 
 	// Config
-	err = r.vaultPKIEngineEndpoint.CreateOrUpdateConfigUrls(context)
-	if err != nil {
+	if err := r.vaultPKIEngineEndpoint.CreateOrUpdateConfigUrls(context); err != nil {
 		log.Error(err, "unable to create or update url config", "instance", instance)
 		return err
 	}
-	err = r.vaultPKIEngineEndpoint.CreateOrUpdateConfigCrl(context)
-	if err != nil {
+	if err := r.vaultPKIEngineEndpoint.CreateOrUpdateConfigCrl(context); err != nil {
 		log.Error(err, "unable to create or update crl config", "instance", instance)
 		return err
 	}
@@ -99,8 +97,7 @@ func (r *VaultPKIEngineResource) manageReconcileLogic(context context.Context, i
 	// Cluster config (must be set before ACME)
 	clusterPayload := instance.(vaultutils.VaultPKIEngineObject).GetConfigClusterPayload()
 	if clusterPayload != nil {
-		err = r.vaultPKIEngineEndpoint.CreateOrUpdateConfigCluster(context)
-		if err != nil {
+		if err := r.vaultPKIEngineEndpoint.CreateOrUpdateConfigCluster(context); err != nil {
 			log.Error(err, "unable to create or update cluster config", "instance", instance)
 			return err
 		}
@@ -109,8 +106,7 @@ func (r *VaultPKIEngineResource) manageReconcileLogic(context context.Context, i
 	// ACME config
 	acmePayload := instance.(vaultutils.VaultPKIEngineObject).GetConfigACMEPayload()
 	if acmePayload != nil {
-		err = r.vaultPKIEngineEndpoint.CreateOrUpdateConfigACME(context)
-		if err != nil {
+		if err := r.vaultPKIEngineEndpoint.CreateOrUpdateConfigACME(context); err != nil {
 			log.Error(err, "unable to create or update ACME config", "instance", instance)
 			return err
 		}

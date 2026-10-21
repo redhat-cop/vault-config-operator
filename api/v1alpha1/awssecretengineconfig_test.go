@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"context"
 	"testing"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
@@ -592,7 +593,7 @@ func TestAWSSecretEngineConfig_ValidateUpdate_RejectsNameChange(t *testing.T) {
 			},
 		},
 	}
-	_, err := r.ValidateUpdate(nil, oldObj, newObj)
+	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
 	if err == nil {
 		t.Error("expected error when spec.name is changed")
 	}
@@ -621,7 +622,7 @@ func TestAWSSecretEngineConfig_ValidateUpdate_AllowsSameNameUpdate(t *testing.T)
 			},
 		},
 	}
-	_, err := r.ValidateUpdate(nil, oldObj, newObj)
+	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
 	if err != nil {
 		t.Errorf("expected no error when spec.name unchanged, got: %v", err)
 	}

@@ -124,7 +124,7 @@ func TestInstrumentedRoundTripper(t *testing.T) {
 	if err != nil {
 		t.Fatalf("round trip: %v", err)
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 
 	// Verify counter was incremented
 	families, err := reg.Gather()

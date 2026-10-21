@@ -17,14 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"encoding/json"
 	"reflect"
-	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // CFAuthEngineRoleSpec defines the desired state of CFAuthEngineRole
@@ -55,71 +51,71 @@ type CFAuthRole struct {
 	// BoundApplicationIDs constrains instances to specific application IDs.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	BoundApplicationIDs []string `json:"boundApplicationIDs,omitempty"`
+	BoundApplicationIDs []string `json:"boundApplicationIDs,omitempty" vault:"bound_application_ids"`
 
 	// BoundSpaceIDs constrains instances to specific space IDs.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	BoundSpaceIDs []string `json:"boundSpaceIDs,omitempty"`
+	BoundSpaceIDs []string `json:"boundSpaceIDs,omitempty" vault:"bound_space_ids"`
 
 	// BoundOrganizationIDs constrains instances to specific organization IDs.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	BoundOrganizationIDs []string `json:"boundOrganizationIDs,omitempty"`
+	BoundOrganizationIDs []string `json:"boundOrganizationIDs,omitempty" vault:"bound_organization_ids"`
 
 	// BoundInstanceIDs constrains to specific instance IDs. Changes on cf push.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	BoundInstanceIDs []string `json:"boundInstanceIDs,omitempty"`
+	BoundInstanceIDs []string `json:"boundInstanceIDs,omitempty" vault:"bound_instance_ids"`
 
 	// DisableIPMatching if true, disables IP-to-cert matching for proxied logins.
 	// +kubebuilder:validation:Optional
-	DisableIPMatching bool `json:"disableIPMatching,omitempty"`
+	DisableIPMatching bool `json:"disableIPMatching,omitempty" vault:"disable_ip_matching"`
 
 	// TokenTTL is the incremental lifetime for generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenTTL string `json:"tokenTTL,omitempty"`
+	TokenTTL string `json:"tokenTTL,omitempty" vault:"token_ttl,duration"`
 
 	// TokenMaxTTL is the maximum lifetime for generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenMaxTTL string `json:"tokenMaxTTL,omitempty"`
+	TokenMaxTTL string `json:"tokenMaxTTL,omitempty" vault:"token_max_ttl,duration"`
 
 	// TokenPolicies are policies to encode onto generated tokens.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	TokenPolicies []string `json:"tokenPolicies,omitempty"`
+	TokenPolicies []string `json:"tokenPolicies,omitempty" vault:"token_policies"`
 
 	// Policies is deprecated — use tokenPolicies instead.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	Policies []string `json:"policies,omitempty"`
+	Policies []string `json:"policies,omitempty" vault:"policies"`
 
 	// TokenBoundCIDRs are CIDR blocks restricting authentication and tying the token.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty"`
+	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty" vault:"token_bound_cidrs"`
 
 	// TokenExplicitMaxTTL is the hard cap max TTL for tokens.
 	// +kubebuilder:validation:Optional
-	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty"`
+	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty" vault:"token_explicit_max_ttl,duration"`
 
 	// TokenNoDefaultPolicy if true, omits the default policy from generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty"`
+	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty" vault:"token_no_default_policy"`
 
 	// TokenNumUses is the max number of times a generated token may be used (0 = unlimited).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	TokenNumUses int64 `json:"tokenNumUses,omitempty"`
+	TokenNumUses int64 `json:"tokenNumUses,omitempty" vault:"token_num_uses,number"`
 
 	// TokenPeriod is the maximum allowed period for periodic tokens.
 	// +kubebuilder:validation:Optional
-	TokenPeriod string `json:"tokenPeriod,omitempty"`
+	TokenPeriod string `json:"tokenPeriod,omitempty" vault:"token_period,duration"`
 
 	// TokenType is the type of token to generate.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum={"service","batch","default","default-service","default-batch"}
-	TokenType string `json:"tokenType,omitempty"`
+	TokenType string `json:"tokenType,omitempty" vault:"token_type"`
 }
 
 // CFAuthEngineRoleStatus defines the observed state of CFAuthEngineRole
@@ -180,10 +176,7 @@ func (r *CFAuthEngineRole) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfig
 }
 
 func (r *CFAuthEngineRole) GetPath() string {
-	if r.Spec.Name != "" {
-		return vaultutils.CleansePath("auth/" + string(r.Spec.Path) + "/roles/" + r.Spec.Name)
-	}
-	return vaultutils.CleansePath("auth/" + string(r.Spec.Path) + "/roles/" + r.Name)
+	return vaultutils.CleansePath("auth/" + string(r.Spec.Path) + "/roles/" + vaultutils.ResourceName(r.Spec.Name, r.Name))
 }
 
 func (r *CFAuthEngineRole) GetPayload() map[string]any {
@@ -215,38 +208,6 @@ func (r *CFAuthEngineRole) IsEquivalentToDesiredState(payload map[string]any) bo
 	return reflect.DeepEqual(desiredState, filteredPayload)
 }
 
-func (r *CFAuthEngineRole) IsInitialized() bool {
-	return true
-}
-
-func (r *CFAuthEngineRole) IsValid() (bool, error) {
-	return true, nil
-}
-
-func (d *CFAuthEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *CFAuthEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
 func (r *CFAuthRole) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["bound_application_ids"] = toInterfaceArray(r.BoundApplicationIDs)
-	payload["bound_space_ids"] = toInterfaceArray(r.BoundSpaceIDs)
-	payload["bound_organization_ids"] = toInterfaceArray(r.BoundOrganizationIDs)
-	payload["bound_instance_ids"] = toInterfaceArray(r.BoundInstanceIDs)
-	payload["disable_ip_matching"] = r.DisableIPMatching
-	payload["token_ttl"] = durationToSeconds(r.TokenTTL)
-	payload["token_max_ttl"] = durationToSeconds(r.TokenMaxTTL)
-	payload["token_policies"] = toInterfaceArray(r.TokenPolicies)
-	payload["policies"] = toInterfaceArray(r.Policies)
-	payload["token_bound_cidrs"] = toInterfaceArray(r.TokenBoundCIDRs)
-	payload["token_explicit_max_ttl"] = durationToSeconds(r.TokenExplicitMaxTTL)
-	payload["token_no_default_policy"] = r.TokenNoDefaultPolicy
-	payload["token_num_uses"] = json.Number(strconv.FormatInt(r.TokenNumUses, 10))
-	payload["token_period"] = durationToSeconds(r.TokenPeriod)
-	payload["token_type"] = r.TokenType
-	return payload
+	return vaultutils.StructToVaultPayload(r)
 }

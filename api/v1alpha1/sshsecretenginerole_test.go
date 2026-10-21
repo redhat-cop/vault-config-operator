@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -183,7 +184,7 @@ func TestSSHSecretEngineRoleIsEquivalentCA(t *testing.T) {
 		"not_before_duration":         json.Number("0"),
 	}
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected true for matching CA role payload")
 	}
 }
@@ -214,7 +215,7 @@ func TestSSHSecretEngineRoleIsEquivalentOTP(t *testing.T) {
 		"exclude_cidr_list":      "",
 	}
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected true for matching OTP role payload")
 	}
 }
@@ -245,7 +246,7 @@ func TestSSHSecretEngineRoleIsEquivalentNonMatching(t *testing.T) {
 		"exclude_cidr_list":      "",
 	}
 
-	if role.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected false when default_user differs")
 	}
 }
@@ -315,7 +316,7 @@ func TestSSHSecretEngineRoleIsEquivalentMapFieldsNoDrift(t *testing.T) {
 		"not_before_duration":         json.Number("0"),
 	}
 
-	if !role.IsEquivalentToDesiredState(vaultPayload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, vaultPayload) {
 		t.Error("expected no drift: map fields should match Vault's JSON-deserialized types (json.Number for numbers)")
 	}
 }
@@ -363,7 +364,7 @@ func TestSSHSecretEngineRoleIsEquivalentNilMapsVsEmptyMaps(t *testing.T) {
 		"not_before_duration":         json.Number("0"),
 	}
 
-	if !role.IsEquivalentToDesiredState(vaultPayload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, vaultPayload) {
 		t.Error("expected no drift: nil CRD maps should match Vault's empty map {} response")
 	}
 }
@@ -395,7 +396,7 @@ func TestSSHSecretEngineRoleIsEquivalentExtraFields(t *testing.T) {
 		"extra_vault_field":      "should-be-ignored",
 	}
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected true: extra keys not in desiredState are filtered from payload")
 	}
 }

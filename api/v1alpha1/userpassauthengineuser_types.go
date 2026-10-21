@@ -18,11 +18,9 @@ package v1alpha1
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
-	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -65,43 +63,43 @@ type UserpassAuthEngineUserSpec struct {
 type UserpassUser struct {
 	// TokenTTL is the incremental lifetime for generated tokens (e.g. "1h")
 	// +kubebuilder:validation:Optional
-	TokenTTL string `json:"tokenTTL,omitempty"`
+	TokenTTL string `json:"tokenTTL,omitempty" vault:"token_ttl,duration,omitempty"`
 
 	// TokenMaxTTL is the maximum lifetime for generated tokens (e.g. "24h")
 	// +kubebuilder:validation:Optional
-	TokenMaxTTL string `json:"tokenMaxTTL,omitempty"`
+	TokenMaxTTL string `json:"tokenMaxTTL,omitempty" vault:"token_max_ttl,duration,omitempty"`
 
 	// TokenPolicies is the list of token policies
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	TokenPolicies []string `json:"tokenPolicies,omitempty"`
+	TokenPolicies []string `json:"tokenPolicies,omitempty" vault:"token_policies,omitempty"`
 
 	// TokenBoundCIDRs is the list of CIDR blocks for token authentication
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty"`
+	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty" vault:"token_bound_cidrs,omitempty"`
 
 	// TokenExplicitMaxTTL is the hard cap max TTL (e.g. "24h")
 	// +kubebuilder:validation:Optional
-	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty"`
+	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty" vault:"token_explicit_max_ttl,duration,omitempty"`
 
 	// TokenNoDefaultPolicy excludes the default policy from generated tokens
 	// +kubebuilder:validation:Optional
-	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty"`
+	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty" vault:"token_no_default_policy,omitempty"`
 
 	// TokenNumUses is the max number of token uses (0=unlimited)
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	TokenNumUses int `json:"tokenNumUses,omitempty"`
+	TokenNumUses int `json:"tokenNumUses,omitempty" vault:"token_num_uses,number,omitempty"`
 
 	// TokenPeriod is the renewal period for periodic tokens (e.g. "24h")
 	// +kubebuilder:validation:Optional
-	TokenPeriod string `json:"tokenPeriod,omitempty"`
+	TokenPeriod string `json:"tokenPeriod,omitempty" vault:"token_period,duration,omitempty"`
 
 	// TokenType is the type of token to generate: service, batch, or default
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"service","batch","default","default-service","default-batch",""}
-	TokenType string `json:"tokenType,omitempty"`
+	TokenType string `json:"tokenType,omitempty" vault:"token_type,omitempty"`
 
 	retrievedPassword string `json:"-"`
 }
@@ -148,10 +146,7 @@ func (d *UserpassAuthEngineUser) IsDeletable() bool {
 }
 
 func (d *UserpassAuthEngineUser) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/users/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/users/" + d.Name)
+	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/users/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 
 func (d *UserpassAuthEngineUser) GetPayload() map[string]any {
@@ -179,16 +174,8 @@ func (d *UserpassAuthEngineUser) IsEquivalentToDesiredState(payload map[string]a
 	return reflect.DeepEqual(desiredState, filteredPayload)
 }
 
-func (d *UserpassAuthEngineUser) IsInitialized() bool {
-	return true
-}
-
 func (d *UserpassAuthEngineUser) PrepareInternalValues(ctx context.Context, object client.Object) error {
 	return d.setInternalCredentials(ctx)
-}
-
-func (d *UserpassAuthEngineUser) PrepareTLSConfig(ctx context.Context, object client.Object) error {
-	return nil
 }
 
 func (d *UserpassAuthEngineUser) IsValid() (bool, error) {
@@ -282,36 +269,9 @@ func (d *UserpassAuthEngineUser) isValid() error {
 }
 
 func (d *UserpassUser) toMap() map[string]any {
-	payload := map[string]any{}
+	payload := vaultutils.StructToVaultPayload(d)
 	if d.retrievedPassword != "" {
 		payload["password"] = d.retrievedPassword
-	}
-	if d.TokenTTL != "" {
-		payload["token_ttl"] = durationToSeconds(d.TokenTTL)
-	}
-	if d.TokenMaxTTL != "" {
-		payload["token_max_ttl"] = durationToSeconds(d.TokenMaxTTL)
-	}
-	if len(d.TokenPolicies) > 0 {
-		payload["token_policies"] = toInterfaceArray(d.TokenPolicies)
-	}
-	if len(d.TokenBoundCIDRs) > 0 {
-		payload["token_bound_cidrs"] = toInterfaceArray(d.TokenBoundCIDRs)
-	}
-	if d.TokenExplicitMaxTTL != "" {
-		payload["token_explicit_max_ttl"] = durationToSeconds(d.TokenExplicitMaxTTL)
-	}
-	if d.TokenNoDefaultPolicy {
-		payload["token_no_default_policy"] = d.TokenNoDefaultPolicy
-	}
-	if d.TokenNumUses != 0 {
-		payload["token_num_uses"] = json.Number(strconv.Itoa(d.TokenNumUses))
-	}
-	if d.TokenPeriod != "" {
-		payload["token_period"] = durationToSeconds(d.TokenPeriod)
-	}
-	if d.TokenType != "" {
-		payload["token_type"] = d.TokenType
 	}
 	return payload
 }

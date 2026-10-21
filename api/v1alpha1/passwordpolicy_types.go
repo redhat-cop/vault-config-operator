@@ -17,12 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -36,39 +32,16 @@ func (d *PasswordPolicy) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *PasswordPolicy) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath("sys/policies/password/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath("sys/policies/password/" + d.Name)
+	return vaultutils.CleansePath("sys/policies/password/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 func (d *PasswordPolicy) GetPayload() map[string]any {
 	return map[string]any{
 		"policy": d.Spec.PasswordPolicy,
 	}
 }
-func (d *PasswordPolicy) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.GetPayload()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (d *PasswordPolicy) IsInitialized() bool {
-	return true
-}
 
 func (d *PasswordPolicy) IsDeletable() bool {
 	return true
-}
-
-func (d *PasswordPolicy) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *PasswordPolicy) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *PasswordPolicy) IsValid() (bool, error) {
-	return true, nil
 }
 
 // PasswordPolicySpec defines the desired state of PasswordPolicy

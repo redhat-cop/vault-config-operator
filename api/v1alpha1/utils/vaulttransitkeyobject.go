@@ -73,7 +73,7 @@ func (ve *VaultTransitKeyEndpoint) CreateOrUpdate(ctx context.Context) error {
 		}
 		return nil
 	}
-	if !ve.transitKeyObject.IsEquivalentToDesiredState(currentPayload) {
+	if !IsEquivalentToDesiredState(ve.transitKeyObject, currentPayload) {
 		return write(ctx, ve.transitKeyObject.GetConfigPath(), ve.transitKeyObject.GetConfigPayload())
 	}
 	return nil

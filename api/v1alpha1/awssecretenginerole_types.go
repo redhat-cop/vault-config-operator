@@ -17,14 +17,12 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
 	"errors"
 	"reflect"
 	"sort"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // AWSSecretEngineRoleSpec defines the desired state of AWSSecretEngineRole
@@ -56,62 +54,62 @@ type AWSRole struct {
 	// CredentialType specifies the type of credential to be used when this role is requested (iam_user, assumed_role, federation_token, session_token)
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum:={"iam_user","assumed_role","federation_token","session_token"}
-	CredentialType string `json:"credentialType"`
+	CredentialType string `json:"credentialType" vault:"credential_type"`
 
 	// RoleArns specifies ARNs of AWS roles to be assumed (required for assumed_role)
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	RoleArns []string `json:"roleArns,omitempty"`
+	RoleArns []string `json:"roleArns,omitempty" vault:"role_arns"`
 
 	// PolicyArns specifies AWS managed policy ARNs
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	PolicyArns []string `json:"policyArns,omitempty"`
+	PolicyArns []string `json:"policyArns,omitempty" vault:"policy_arns"`
 
 	// PolicyDocument is the IAM policy document JSON
 	// +kubebuilder:validation:Optional
-	PolicyDocument string `json:"policyDocument,omitempty"`
+	PolicyDocument string `json:"policyDocument,omitempty" vault:"policy_document"`
 
 	// IAMGroups specifies IAM group names. For iam_user, generated users are added
 	// to these groups. For assumed_role and federation_token, the group policies are
 	// combined with policyArns/policyDocument for the STS call. Not valid for session_token.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	IAMGroups []string `json:"iamGroups,omitempty"`
+	IAMGroups []string `json:"iamGroups,omitempty" vault:"iam_groups"`
 
 	// IAMTags specifies key=value tags for iam_user
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	IAMTags []string `json:"iamTags,omitempty"`
+	IAMTags []string `json:"iamTags,omitempty" vault:"iam_tags"`
 
 	// DefaultSTSTTL is the default TTL for STS credentials
 	// +kubebuilder:validation:Optional
-	DefaultSTSTTL string `json:"defaultSTSTTL,omitempty"`
+	DefaultSTSTTL string `json:"defaultSTSTTL,omitempty" vault:"default_sts_ttl"`
 
 	// MaxSTSTTL is the max TTL for STS credentials
 	// +kubebuilder:validation:Optional
-	MaxSTSTTL string `json:"maxSTSTTL,omitempty"`
+	MaxSTSTTL string `json:"maxSTSTTL,omitempty" vault:"max_sts_ttl"`
 
 	// UserPath is the IAM user path (iam_user only)
 	// +kubebuilder:validation:Optional
-	UserPath string `json:"userPath,omitempty"`
+	UserPath string `json:"userPath,omitempty" vault:"user_path"`
 
 	// PermissionsBoundaryARN is the permissions boundary (iam_user only)
 	// +kubebuilder:validation:Optional
-	PermissionsBoundaryARN string `json:"permissionsBoundaryARN,omitempty"`
+	PermissionsBoundaryARN string `json:"permissionsBoundaryARN,omitempty" vault:"permissions_boundary_arn"`
 
 	// ExternalID is the external ID for assume role
 	// +kubebuilder:validation:Optional
-	ExternalID string `json:"externalID,omitempty"`
+	ExternalID string `json:"externalID,omitempty" vault:"external_id"`
 
 	// SessionTags are STS session tags (assumed_role only)
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	SessionTags []string `json:"sessionTags,omitempty"`
+	SessionTags []string `json:"sessionTags,omitempty" vault:"session_tags"`
 
 	// MFASerialNumber is the MFA device ARN
 	// +kubebuilder:validation:Optional
-	MFASerialNumber string `json:"mfaSerialNumber,omitempty"`
+	MFASerialNumber string `json:"mfaSerialNumber,omitempty" vault:"mfa_serial_number"`
 }
 
 var _ vaultutils.VaultObject = &AWSSecretEngineRole{}
@@ -167,18 +165,6 @@ func sortAnyStringSlice(m map[string]any, key string) {
 		sj, _ := s[j].(string)
 		return si < sj
 	})
-}
-
-func (d *AWSSecretEngineRole) IsInitialized() bool {
-	return true
-}
-
-func (d *AWSSecretEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *AWSSecretEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *AWSSecretEngineRole) IsValid() (bool, error) {
@@ -244,21 +230,7 @@ func (r *AWSSecretEngineRole) isValid() error {
 }
 
 func (i *AWSRole) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["credential_type"] = i.CredentialType
-	payload["role_arns"] = toInterfaceArray(i.RoleArns)
-	payload["policy_arns"] = toInterfaceArray(i.PolicyArns)
-	payload["policy_document"] = i.PolicyDocument
-	payload["iam_groups"] = toInterfaceArray(i.IAMGroups)
-	payload["iam_tags"] = toInterfaceArray(i.IAMTags)
-	payload["default_sts_ttl"] = i.DefaultSTSTTL
-	payload["max_sts_ttl"] = i.MaxSTSTTL
-	payload["user_path"] = i.UserPath
-	payload["permissions_boundary_arn"] = i.PermissionsBoundaryARN
-	payload["external_id"] = i.ExternalID
-	payload["session_tags"] = toInterfaceArray(i.SessionTags)
-	payload["mfa_serial_number"] = i.MFASerialNumber
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 // AWSSecretEngineRoleStatus defines the observed state of AWSSecretEngineRole

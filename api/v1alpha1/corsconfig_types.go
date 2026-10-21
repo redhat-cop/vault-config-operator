@@ -17,11 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // CORSConfigSpec defines the desired state of CORSConfig
@@ -45,21 +42,16 @@ type CORSConfigConfig struct {
 	// Use ["*"] to allow all origins.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
-	AllowedOrigins []string `json:"allowedOrigins"`
+	AllowedOrigins []string `json:"allowedOrigins" vault:"allowed_origins"`
 
 	// AllowedHeaders is the list of additional headers permitted in cross-origin requests.
 	// Vault always includes its own default headers; specifying extras here is additive.
 	// +kubebuilder:validation:Optional
-	AllowedHeaders []string `json:"allowedHeaders,omitempty"`
+	AllowedHeaders []string `json:"allowedHeaders,omitempty" vault:"allowed_headers,omitempty"`
 }
 
 func (i *CORSConfigConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["allowed_origins"] = toInterfaceArray(i.AllowedOrigins)
-	if len(i.AllowedHeaders) > 0 {
-		payload["allowed_headers"] = toInterfaceArray(i.AllowedHeaders)
-	}
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 // CORSConfigStatus defines the observed state of CORSConfig
@@ -142,24 +134,8 @@ func (d *CORSConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	return true
 }
 
-func (d *CORSConfig) IsInitialized() bool {
-	return true
-}
-
 func (d *CORSConfig) IsDeletable() bool {
 	return true
-}
-
-func (d *CORSConfig) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *CORSConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *CORSConfig) IsValid() (bool, error) {
-	return true, nil
 }
 
 func (d *CORSConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {

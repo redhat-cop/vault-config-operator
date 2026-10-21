@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -80,7 +81,7 @@ func TestGroupAliasIsEquivalentMatching(t *testing.T) {
 		"mount_path":                "auth/kubernetes/",
 		"mount_type":                "kubernetes",
 	}
-	if !ga.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(ga, payload) {
 		t.Error("expected matching payload (with 6 Vault-only keys) to be equivalent after deletion")
 	}
 }
@@ -101,7 +102,7 @@ func TestGroupAliasIsEquivalentNonMatching(t *testing.T) {
 		"mount_accessor": "auth_different_accessor",
 		"canonical_id":   "canonical-id-1",
 	}
-	if ga.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(ga, payload) {
 		t.Error("expected different mount_accessor to not be equivalent")
 	}
 }
@@ -124,7 +125,7 @@ func TestGroupAliasIsEquivalentExtraFields(t *testing.T) {
 		"canonical_id":   "canonical-id-1",
 		"unknown_field":  "unexpected",
 	}
-	if !ga.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(ga, payload) {
 		t.Error("expected true: extra keys not in desiredState are filtered from payload")
 	}
 }

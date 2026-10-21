@@ -17,14 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"encoding/json"
-	"reflect"
-	"strconv"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ vaultutils.VaultObject = &RotationPolicy{}
@@ -35,39 +29,15 @@ func (d *RotationPolicy) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *RotationPolicy) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath("sys/policies/rotation/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath("sys/policies/rotation/" + d.Name)
+	return vaultutils.CleansePath("sys/policies/rotation/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 
 func (d *RotationPolicy) GetPayload() map[string]any {
 	return d.Spec.RotationPolicyConfig.toMap()
 }
 
-func (d *RotationPolicy) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.GetPayload()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (d *RotationPolicy) IsInitialized() bool {
-	return true
-}
-
 func (d *RotationPolicy) IsDeletable() bool {
 	return true
-}
-
-func (d *RotationPolicy) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *RotationPolicy) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *RotationPolicy) IsValid() (bool, error) {
-	return true, nil
 }
 
 // RotationPolicySpec defines the desired state of RotationPolicy
@@ -96,24 +66,17 @@ type RotationPolicyConfig struct {
 	// backoff for rotation entries after a rotation failure.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	MaxRetriesPerCycle int `json:"maxRetriesPerCycle,omitempty"`
+	MaxRetriesPerCycle int `json:"maxRetriesPerCycle,omitempty" vault:"max_retries_per_cycle,number,omitempty"`
 
 	// MaxRetryCycles is the maximum number of times Vault should requeue
 	// rotation entries after reaching the maxRetriesPerCycle limit.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	MaxRetryCycles int `json:"maxRetryCycles,omitempty"`
+	MaxRetryCycles int `json:"maxRetryCycles,omitempty" vault:"max_retry_cycles,number,omitempty"`
 }
 
 func (d *RotationPolicyConfig) toMap() map[string]any {
-	result := map[string]any{}
-	if d.MaxRetriesPerCycle != 0 {
-		result["max_retries_per_cycle"] = json.Number(strconv.Itoa(d.MaxRetriesPerCycle))
-	}
-	if d.MaxRetryCycles != 0 {
-		result["max_retry_cycles"] = json.Number(strconv.Itoa(d.MaxRetryCycles))
-	}
-	return result
+	return vaultutils.StructToVaultPayload(d)
 }
 
 // RotationPolicyStatus defines the observed state of RotationPolicy

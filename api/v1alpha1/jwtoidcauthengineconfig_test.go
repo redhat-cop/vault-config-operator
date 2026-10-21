@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -54,14 +55,14 @@ func TestJWTOIDCConfigToMap(t *testing.T) {
 		"oidc_client_id":         "my-client-id",
 		"oidc_client_secret":     "my-client-secret",
 		"oidc_response_mode":     "query",
-		"oidc_response_types":    []string{"code"},
+		"oidc_response_types":    []any{"code"},
 		"jwks_url":               "https://jwks.example.com",
 		"jwks_ca_pem":            "jwks-ca-pem",
-		"jwt_validation_pubkeys": []string{"pubkey1"},
+		"jwt_validation_pubkeys": []any{"pubkey1"},
 		"bound_issuer":           "https://issuer.example.com",
-		"jwt_supported_algs":     []string{"RS256"},
+		"jwt_supported_algs":     []any{"RS256"},
 		"default_role":           "default-role",
-		"provider_config":        providerConfig,
+		"provider_config":        *providerConfig,
 		"namespace_in_state":     true,
 	}
 
@@ -95,11 +96,11 @@ func TestJWTOIDCConfigToMapProviderConfigJSON(t *testing.T) {
 
 	result := config.toMap()
 
-	val, ok := result["provider_config"].(*apiextensionsv1.JSON)
+	val, ok := result["provider_config"].(apiextensionsv1.JSON)
 	if !ok {
-		t.Fatalf("expected provider_config to be *apiextensionsv1.JSON, got %T", result["provider_config"])
+		t.Fatalf("expected provider_config to be apiextensionsv1.JSON, got %T", result["provider_config"])
 	}
-	if !reflect.DeepEqual(val, providerConfig) {
+	if !reflect.DeepEqual(val, *providerConfig) {
 		t.Errorf("expected provider_config to be stored directly, got %v", val)
 	}
 }
@@ -117,7 +118,7 @@ func TestJWTOIDCAuthEngineConfigIsEquivalentMatching(t *testing.T) {
 
 	payload := config.Spec.JWTOIDCConfig.toMap()
 
-	if !config.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected matching payload to be equivalent")
 	}
 }
@@ -134,7 +135,7 @@ func TestJWTOIDCAuthEngineConfigIsEquivalentNonMatching(t *testing.T) {
 	payload := config.Spec.JWTOIDCConfig.toMap()
 	payload["oidc_discovery_url"] = "https://different.example.com"
 
-	if config.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected non-matching payload (different oidc_discovery_url) to NOT be equivalent")
 	}
 }
@@ -151,7 +152,7 @@ func TestJWTOIDCAuthEngineConfigIsEquivalentExtraFields(t *testing.T) {
 	payload := config.Spec.JWTOIDCConfig.toMap()
 	payload["extra_field"] = "unexpected"
 
-	if !config.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }

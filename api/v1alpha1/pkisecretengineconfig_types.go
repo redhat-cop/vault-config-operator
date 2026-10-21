@@ -20,14 +20,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"reflect"
 
 	vault "github.com/hashicorp/vault/api"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -49,7 +47,7 @@ type PKISecretEngineConfigSpec struct {
 	// The final path in Vault will be {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/{spec.path}/config/{metadata.name}.
 	// The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
 	// +kubebuilder:validation:Optional
-	Path vaultutils.Path `json:"path,omitempty"`
+	Path vaultutils.Path `json:"path,omitempty" vault:"path"`
 
 	PKIType `json:",inline"`
 
@@ -89,97 +87,97 @@ type PKICommon struct {
 
 	// Specifies the requested CN for the certificate.
 	// +kubebuilder:validation:Optional
-	CommonName string `json:"commonName,omitempty"`
+	CommonName string `json:"commonName,omitempty" vault:"common_name"`
 
 	// Specifies the requested Subject Alternative Names, in a comma-delimited list. These can be host names or email addresses; they will be parsed into their respective fields.
 	// +kubebuilder:validation:Optional
-	AltNames string `json:"altNames,omitempty"`
+	AltNames string `json:"altNames,omitempty" vault:"alt_names"`
 
 	// Specifies the requested IP Subject Alternative Names, in a comma-delimited list.
 	// +kubebuilder:validation:Optional
-	IPSans string `json:"IPSans,omitempty"`
+	IPSans string `json:"IPSans,omitempty" vault:"ip_sans"`
 
 	// Specifies the requested URI Subject Alternative Names, in a comma-delimited list.
 	// +kubebuilder:validation:Optional
-	URISans string `json:"URISans,omitempty"`
+	URISans string `json:"URISans,omitempty" vault:"uri_sans"`
 
 	// Specifies custom OID/UTF8-string SANs. These must match values specified on the role in allowed_other_sans (see role creation for allowed_other_sans globbing rules). The format is the same as OpenSSL: <oid>;<type>:<value> where the only current valid type is UTF8. This can be a comma-delimited list or a JSON string slice.
 	// +kubebuilder:validation:Optional
-	OtherSans string `json:"otherSans,omitempty"`
+	OtherSans string `json:"otherSans,omitempty" vault:"other_sans"`
 
 	// Specifies the requested Time To Live (after which the certificate will be expired). This cannot be larger than the engine's max (or, if not set, the system max).
 	// +kubebuilder:validation:Optional
-	TTL metav1.Duration `json:"TTL,omitempty"`
+	TTL metav1.Duration `json:"TTL,omitempty" vault:"ttl"`
 
 	// Specifies the format for returned data. Can be pem, der, or pem_bundle. If der, the output is base64 encoded. If pem_bundle, the certificate field will contain the private key (if exported) and certificate, concatenated; if the issuing CA is not a Vault-derived self-signed root, this will be included as well.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"pem","pem_bundle", "der"}
 	// +kubebuilder:default="pem"
-	Format string `json:"format,omitempty"`
+	Format string `json:"format,omitempty" vault:"format"`
 
 	// Specifies the format for marshaling the private key. Defaults to der which will return either base64-encoded DER or PEM-encoded DER, depending on the value of format. The other option is pkcs8 which will return the key marshalled as PEM-encoded PKCS8.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum={"der","pkcs8"}
-	PrivateKeyFormat string `json:"privateKeyFormat,omitempty"`
+	PrivateKeyFormat string `json:"privateKeyFormat,omitempty" vault:"private_key_format"`
 
 	// Specifies the desired key type; must be rsa or ec.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"rsa","ec"}
 	// +kubebuilder:default="rsa"
-	KeyType string `json:"keyType,omitempty"`
+	KeyType string `json:"keyType,omitempty" vault:"key_type"`
 
 	// Specifies the number of bits to use. This must be changed to a valid value if the key_type is ec, e.g., 224, 256, 384 or 521.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=2048
-	KeyBits int `json:"keyBits"`
+	KeyBits int `json:"keyBits" vault:"key_bits"`
 
 	// Specifies the maximum path length to encode in the generated certificate. -1 means no limit. Unless the signing certificate has a maximum path length set, in which case the path length is set to one less than that of the signing certificate. A limit of 0 means a literal path length of zero.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=-1
 	// +kubebuilder:validation:Minimum=-1
-	MaxPathLength int `json:"maxPathLength"`
+	MaxPathLength int `json:"maxPathLength" vault:"max_path_length"`
 
 	// If set, the given common_name will not be included in DNS or Email Subject Alternate Names (as appropriate). Useful if the CN is not a hostname or email address, but is instead some human-readable identifier.
 	// +kubebuilder:validation:Optional
-	ExcludeCnFromSans bool `json:"excludeCnFromSans,omitempty"`
+	ExcludeCnFromSans bool `json:"excludeCnFromSans,omitempty" vault:"exclude_cn_from_sans"`
 
 	// A comma separated string (or, string array) containing DNS domains for which certificates are allowed to be issued or signed by this CA certificate. Note that subdomains are allowed, as per RFC.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	PermittedDnsDomains []string `json:"permittedDnsDomains,omitempty"`
+	PermittedDnsDomains []string `json:"permittedDnsDomains,omitempty" vault:"permitted_dns_domains"`
 
 	// Specifies the OU (OrganizationalUnit) values in the subject field of issued certificates. This is a comma-separated string or JSON array.
 	// +kubebuilder:validation:Optional
-	OU string `json:"ou,omitempty"`
+	OU string `json:"ou,omitempty" vault:"ou"`
 
 	// Specifies the O (Organization) values in the subject field of issued certificates. This is a comma-separated string or JSON array.
 	// +kubebuilder:validation:Optional
-	Organization string `json:"organization,omitempty"`
+	Organization string `json:"organization,omitempty" vault:"organization"`
 
 	// Specifies the C (Country) values in the subject field of issued certificates. This is a comma-separated string or JSON array.
 	// +kubebuilder:validation:Optional
-	Country string `json:"country,omitempty"`
+	Country string `json:"country,omitempty" vault:"country"`
 
 	// Specifies the L (Locality) values in the subject field of issued certificates. This is a comma-separated string or JSON array.
 	// +kubebuilder:validation:Optional
-	Locality string `json:"locality,omitempty"`
+	Locality string `json:"locality,omitempty" vault:"locality"`
 
 	// Specifies the ST (Province) values in the subject field of issued certificates. This is a comma-separated string or JSON array.
 	// +kubebuilder:validation:Optional
-	Province string `json:"province,omitempty"`
+	Province string `json:"province,omitempty" vault:"province"`
 
 	// Specifies the Street Address values in the subject field of issued certificates. This is a comma-separated string or JSON array.
 	// +kubebuilder:validation:Optional
-	StreetAddress string `json:"streetAddress,omitempty"`
+	StreetAddress string `json:"streetAddress,omitempty" vault:"street_address"`
 
 	// Specifies the Postal Code values in the subject field of issued certificates. This is a comma-separated string or JSON array.
 	// +kubebuilder:validation:Optional
-	PostalCode string `json:"postalCode,omitempty"`
+	PostalCode string `json:"postalCode,omitempty" vault:"postal_code"`
 
 	// Specifies the Serial Number, if any. Otherwise Vault will generate a random serial for you. If you want more than one, specify alternative names in the alt_names map using OID 2.5.4.5.
 	// +kubebuilder:validation:Optional
-	SerialNumber string `json:"serialNumber,omitempty"`
+	SerialNumber string `json:"serialNumber,omitempty" vault:"serial_number"`
 }
 
 type PKIConfig struct {
@@ -194,70 +192,70 @@ type PKIConfigUrls struct {
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	IssuingCertificates []string `json:"issuingCertificates,omitempty"`
+	IssuingCertificates []string `json:"issuingCertificates,omitempty" vault:"issuing_certificates"`
 
 	// Specifies the URL values for the CRL Distribution Points field. This can be an array or a comma-separated string list.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	CRLDistributionPoints []string `json:"CRLDistributionPoints,omitempty"`
+	CRLDistributionPoints []string `json:"CRLDistributionPoints,omitempty" vault:"crl_distribution_points"`
 
 	// Specifies the URL values for the OCSP Servers field. This can be an array or a comma-separated string list.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	OcspServers []string `json:"ocspServers,omitempty"`
+	OcspServers []string `json:"ocspServers,omitempty" vault:"ocsp_servers"`
 }
 
 type PKIConfigCRL struct {
 	// Specifies the time until expiration.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="72h"
-	CRLExpiry metav1.Duration `json:"CRLExpiry"`
+	CRLExpiry metav1.Duration `json:"CRLExpiry" vault:"expiry"`
 
 	// Disables or enables CRL building.
 	// +kubebuilder:validation:Optional
-	CRLDisable bool `json:"CRLDisable,omitempty"`
+	CRLDisable bool `json:"CRLDisable,omitempty" vault:"disable"`
 }
 
 type PKIConfigCluster struct {
 	// Path is the base URL of the Vault cluster for ACME directory discovery (e.g. https://vault.example.com/v1/pki).
 	// +kubebuilder:validation:Required
-	Path string `json:"path"`
+	Path string `json:"path" vault:"path"`
 
 	// AIAPath is the optional AIA base URL. When empty, Vault derives it from Path.
 	// +kubebuilder:validation:Optional
-	AIAPath string `json:"aiaPath,omitempty"`
+	AIAPath string `json:"aiaPath,omitempty" vault:"aia_path"`
 }
 
 type PKIConfigACME struct {
 	// Enabled specifies whether ACME is enabled on this mount.
 	// +kubebuilder:validation:Required
-	Enabled bool `json:"enabled"`
+	Enabled bool `json:"enabled" vault:"enabled"`
 
 	// AllowedIssuers restricts which issuers can be used with ACME. When empty, all issuers are allowed.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	AllowedIssuers []string `json:"allowedIssuers,omitempty"`
+	AllowedIssuers []string `json:"allowedIssuers,omitempty" vault:"allowed_issuers"`
 
 	// AllowedRoles restricts which roles can be used with ACME. When empty, all roles are allowed.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	AllowedRoles []string `json:"allowedRoles,omitempty"`
+	AllowedRoles []string `json:"allowedRoles,omitempty" vault:"allowed_roles"`
 
 	// AllowRoleExtKeyUsage allows ACME to honor role extended key usage flags.
 	// +kubebuilder:validation:Optional
-	AllowRoleExtKeyUsage bool `json:"allowRoleExtKeyUsage,omitempty"`
+	AllowRoleExtKeyUsage bool `json:"allowRoleExtKeyUsage,omitempty" vault:"allow_role_ext_key_usage"`
 
 	// DefaultDirectoryPolicy controls which role/issuer is used for the default ACME directory.
 	// Valid values include "sign-verbatim", "role:<role_name>", or "forbid".
 	// +kubebuilder:validation:Optional
-	DefaultDirectoryPolicy string `json:"defaultDirectoryPolicy,omitempty"`
+	DefaultDirectoryPolicy string `json:"defaultDirectoryPolicy,omitempty" vault:"default_directory_policy"`
 
 	// EABPolicy specifies the External Account Binding policy for ACME.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum={"not-required","new-account-required","always-required"}
-	EABPolicy string `json:"eabPolicy,omitempty"`
+	EABPolicy string `json:"eabPolicy,omitempty" vault:"eab_policy"`
 }
 
 type PKIIntermediate struct {
@@ -511,15 +509,6 @@ func (p *PKISecretEngineConfig) GetConfigACMEPayload() map[string]any {
 	return p.Spec.ACME.toMap()
 }
 
-func (p *PKISecretEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := p.Spec.PKICommon.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (p *PKISecretEngineConfig) IsInitialized() bool {
-	return true
-}
-
 func (p *PKISecretEngineConfig) IsValid() (bool, error) {
 	err := p.isValid()
 	return err == nil, err
@@ -529,13 +518,6 @@ func (p *PKISecretEngineConfig) isValid() error {
 	if p.Spec.ACME != nil && p.Spec.Cluster == nil {
 		return errors.New("spec.acme requires spec.cluster to be set")
 	}
-	return nil
-}
-func (p *PKISecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (p *PKISecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
 	return nil
 }
 
@@ -599,73 +581,23 @@ func init() {
 }
 
 func (i *PKICommon) toMap() map[string]any {
-	payload := map[string]any{}
-
-	// payload["type"] = i.Type
-	payload["common_name"] = i.CommonName
-	payload["alt_names"] = i.AltNames
-	payload["ip_sans"] = i.IPSans
-	payload["uri_sans"] = i.URISans
-	payload["other_sans"] = i.OtherSans
-	payload["ttl"] = i.TTL
-	payload["format"] = i.Format
-	payload["private_key_format"] = i.PrivateKeyFormat
-	payload["key_type"] = i.KeyType
-	payload["key_bits"] = i.KeyBits
-	payload["max_path_length"] = i.MaxPathLength
-	payload["exclude_cn_from_sans"] = i.ExcludeCnFromSans
-	payload["permitted_dns_domains"] = i.PermittedDnsDomains
-	payload["ou"] = i.OU
-	payload["organization"] = i.Organization
-	payload["country"] = i.Country
-	payload["locality"] = i.Locality
-	payload["province"] = i.Province
-	payload["street_address"] = i.StreetAddress
-	payload["postal_code"] = i.PostalCode
-	payload["serial_number"] = i.SerialNumber
-
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 func (i *PKIConfigUrls) toMap() map[string]any {
-	payload := map[string]any{}
-
-	payload["issuing_certificates"] = i.IssuingCertificates
-	payload["crl_distribution_points"] = i.CRLDistributionPoints
-	payload["ocsp_servers"] = i.OcspServers
-
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 func (i *PKIConfigCRL) toMap() map[string]any {
-	payload := map[string]any{}
-
-	payload["expiry"] = i.CRLExpiry
-	payload["disable"] = i.CRLDisable
-
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 func (i *PKIConfigCluster) toMap() map[string]any {
-	payload := map[string]any{}
-
-	payload["path"] = i.Path
-	payload["aia_path"] = i.AIAPath
-
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 func (i *PKIConfigACME) toMap() map[string]any {
-	payload := map[string]any{}
-
-	payload["enabled"] = i.Enabled
-	payload["allowed_issuers"] = i.AllowedIssuers
-	payload["allowed_roles"] = i.AllowedRoles
-	payload["allow_role_ext_key_usage"] = i.AllowRoleExtKeyUsage
-	payload["default_directory_policy"] = i.DefaultDirectoryPolicy
-	payload["eab_policy"] = i.EABPolicy
-
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 func (d *PKISecretEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {

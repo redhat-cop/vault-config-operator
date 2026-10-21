@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"context"
 	"testing"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
@@ -383,7 +384,7 @@ func TestMongoDBAtlasSecretEngineConfig_ValidateUpdate_RejectsPathChange(t *test
 			},
 		},
 	}
-	_, err := r.ValidateUpdate(nil, oldObj, newObj)
+	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
 	if err == nil {
 		t.Error("expected error when spec.path is changed")
 	}
@@ -410,7 +411,7 @@ func TestMongoDBAtlasSecretEngineConfig_ValidateUpdate_AllowsSamePathUpdate(t *t
 			},
 		},
 	}
-	_, err := r.ValidateUpdate(nil, oldObj, newObj)
+	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
 	if err != nil {
 		t.Errorf("expected no error when spec.path unchanged, got: %v", err)
 	}

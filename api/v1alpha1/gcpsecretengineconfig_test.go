@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"context"
 	"testing"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
@@ -282,7 +283,7 @@ func TestGCPSecretEngineConfig_Default_SetsCredentialsPasswordKey(t *testing.T) 
 			},
 		},
 	}
-	if err := r.Default(nil, obj); err != nil {
+	if err := r.Default(context.TODO(), obj); err != nil {
 		t.Fatalf("Default() error: %v", err)
 	}
 	if obj.Spec.GCPCredentials.PasswordKey != "credentials" {
@@ -301,7 +302,7 @@ func TestGCPSecretEngineConfig_Default_OverridesPasswordDefault(t *testing.T) {
 			},
 		},
 	}
-	if err := r.Default(nil, obj); err != nil {
+	if err := r.Default(context.TODO(), obj); err != nil {
 		t.Fatalf("Default() error: %v", err)
 	}
 	if obj.Spec.GCPCredentials.PasswordKey != "credentials" {
@@ -320,7 +321,7 @@ func TestGCPSecretEngineConfig_Default_PreservesCustomPasswordKey(t *testing.T) 
 			},
 		},
 	}
-	if err := r.Default(nil, obj); err != nil {
+	if err := r.Default(context.TODO(), obj); err != nil {
 		t.Fatalf("Default() error: %v", err)
 	}
 	if obj.Spec.GCPCredentials.PasswordKey != "my_custom_key" {
@@ -346,7 +347,7 @@ func TestGCPSecretEngineConfig_ValidateUpdate_RejectsPathChange(t *testing.T) {
 			},
 		},
 	}
-	_, err := r.ValidateUpdate(nil, oldObj, newObj)
+	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
 	if err == nil {
 		t.Error("expected error when spec.path is changed")
 	}
@@ -372,7 +373,7 @@ func TestGCPSecretEngineConfig_ValidateUpdate_RejectsNameChange(t *testing.T) {
 			},
 		},
 	}
-	_, err := r.ValidateUpdate(nil, oldObj, newObj)
+	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
 	if err == nil {
 		t.Error("expected error when spec.name is changed")
 	}

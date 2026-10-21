@@ -17,12 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -76,63 +72,43 @@ func (d *DatabaseSecretEngineRole) GetPath() string {
 func (d *DatabaseSecretEngineRole) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
-func (d *DatabaseSecretEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.Spec.DBSERole.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (d *DatabaseSecretEngineRole) IsInitialized() bool {
-	return true
-}
-
-func (d *DatabaseSecretEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *DatabaseSecretEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *DatabaseSecretEngineRole) IsValid() (bool, error) {
-	return true, nil
-}
 
 type DBSERole struct {
 	// DBName The name of the database connection to use for this role.
 	// +kubebuilder:validation:Optional
-	DBName string `json:"dBName,omitempty"`
+	DBName string `json:"dBName,omitempty" vault:"db_name"`
 
 	// DeafulTTL Specifies the TTL for the leases associated with this role. Accepts time suffixed strings ("1h") or an integer number of seconds. Defaults to system/engine default TTL time.
 	// +kubebuilder:validation:Optional
-	DefaultTTL metav1.Duration `json:"defaultTTL,omitempty"`
+	DefaultTTL metav1.Duration `json:"defaultTTL,omitempty" vault:"default_ttl"`
 
 	// MaxTTL Specifies the maximum TTL for the leases associated with this role. Accepts time suffixed strings ("1h") or an integer number of seconds. Defaults to system/mount default TTL time; this value is allowed to be less than the mount max TTL (or, if not set, the system max TTL), but it is not allowed to be longer. See also The TTL General Case.
 	// +kubebuilder:validation:Optional
-	MaxTTL metav1.Duration `json:"maxTTL,omitempty"`
+	MaxTTL metav1.Duration `json:"maxTTL,omitempty" vault:"max_ttl"`
 
 	// CreationStatements Specifies the database statements executed to create and configure a user. See the plugin's API page for more information on support and formatting for this parameter.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	CreationStatements []string `json:"creationStatements,omitempty"`
+	CreationStatements []string `json:"creationStatements,omitempty" vault:"creation_statements"`
 
 	// RevocationStatements Specifies the database statements to be executed to revoke a user. See the plugin's API page for more information on support and formatting for this parameter.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	RevocationStatements []string `json:"revocationStatements,omitempty"`
+	RevocationStatements []string `json:"revocationStatements,omitempty" vault:"revocation_statements"`
 
 	// RollbackStatements Specifies the database statements to be executed to rollback a create operation in the event of an error. Not every plugin type will support this functionality. See the plugin's API page for more information on support and formatting for this parameter.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	RollbackStatements []string `json:"rollbackStatements,omitempty"`
+	RollbackStatements []string `json:"rollbackStatements,omitempty" vault:"rollback_statements"`
 
 	// RenewStatements Specifies the database statements to be executed to renew a user. Not every plugin type will support this functionality. See the plugin's API page for more information on support and formatting for this parameter.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	RenewStatements []string `json:"renewStatements,omitempty"`
+	RenewStatements []string `json:"renewStatements,omitempty" vault:"renew_statements"`
 }
 
 // DatabaseSecretEngineRoleStatus defines the observed state of DatabaseSecretEngineRole
@@ -179,15 +155,7 @@ func init() {
 }
 
 func (i *DBSERole) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["db_name"] = i.DBName
-	payload["default_ttl"] = i.DefaultTTL
-	payload["max_ttl"] = i.MaxTTL
-	payload["creation_statements"] = i.CreationStatements
-	payload["revocation_statements"] = i.RevocationStatements
-	payload["rollback_statements"] = i.RollbackStatements
-	payload["renew_statements"] = i.RenewStatements
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 func (d *DatabaseSecretEngineRole) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {

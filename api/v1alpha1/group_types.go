@@ -19,7 +19,6 @@ package v1alpha1
 import (
 	"context"
 	"errors"
-	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,7 +39,7 @@ type GroupSpec struct {
 	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
-	GroupConfig `json:",inline"`
+	GroupConfig `json:",inline" vault:",inline"`
 
 	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
 	// +kubebuilder:validation:Optional
@@ -54,24 +53,24 @@ type GroupConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"internal","external"}
 	// +kubebuilder:default:="internal"
-	Type string `json:"type,omitempty"`
+	Type string `json:"type,omitempty" vault:"type"`
 
 	// Metadata Metadata to be associated with the group.
 	// +kubebuilder:validation:Optional
 	// +mapType=granular
-	Metadata map[string]string `json:"metadata,omitempty"`
+	Metadata map[string]string `json:"metadata,omitempty" vault:"metadata"`
 
 	// Policies Policies to be tied to the group.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	Policies []string `json:"policies,omitempty"`
+	Policies []string `json:"policies,omitempty" vault:"policies"`
 
 	// MemberGroupIDs Group IDs to be assigned as group members.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	MemberGroupIDs []string `json:"memberGroupIDs,omitempty"`
+	MemberGroupIDs []string `json:"memberGroupIDs,omitempty" vault:"-"`
 
 	// MemberGroupNames Group names to be resolved to IDs and assigned as group members.
 	// Each name is looked up via Vault's identity API at reconciliation time.
@@ -79,13 +78,13 @@ type GroupConfig struct {
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	MemberGroupNames []string `json:"memberGroupNames,omitempty"`
+	MemberGroupNames []string `json:"memberGroupNames,omitempty" vault:"-"`
 
 	// MemberEntityIDs Entity IDs to be assigned as group members.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	MemberEntityIDs []string `json:"memberEntityIDs,omitempty"`
+	MemberEntityIDs []string `json:"memberEntityIDs,omitempty" vault:"-"`
 
 	// MemberEntityNames Entity names to be resolved to IDs and assigned as group members.
 	// Each name is looked up via Vault's identity API at reconciliation time.
@@ -93,7 +92,7 @@ type GroupConfig struct {
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	MemberEntityNames []string `json:"memberEntityNames,omitempty"`
+	MemberEntityNames []string `json:"memberEntityNames,omitempty" vault:"-"`
 
 	// resolvedMemberGroupIDs holds the IDs resolved from MemberGroupNames during PrepareInternalValues.
 	resolvedMemberGroupIDs []string `json:"-"`
@@ -106,7 +105,7 @@ type GroupConfig struct {
 type GroupStatus struct {
 	// ID is the Vault-assigned unique identifier for this identity group.
 	// +kubebuilder:validation:Optional
-	ID string `json:"id,omitempty"`
+	ID string `json:"id,omitempty" vault:"-"`
 
 	// +patchMergeKey=type
 	// +patchStrategy=merge
@@ -121,7 +120,7 @@ type GroupStatus struct {
 // Group is the Schema for the groups API
 type Group struct {
 	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.ObjectMeta `json:"metadata,omitempty" vault:"metadata"`
 
 	Spec   GroupSpec   `json:"spec,omitempty"`
 	Status GroupStatus `json:"status,omitempty"`
@@ -132,7 +131,7 @@ type Group struct {
 // GroupList contains a list of Group
 type GroupList struct {
 	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
+	metav1.ListMeta `json:"metadata,omitempty" vault:"metadata"`
 	Items           []Group `json:"items"`
 }
 
@@ -161,10 +160,7 @@ func (d *Group) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *Group) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath(string("/identity/group/name/" + d.Spec.Name))
-	}
-	return vaultutils.CleansePath(string("/identity/group/name/" + d.Name))
+	return vaultutils.CleansePath("/identity/group/name/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 
 func (d *Group) GetPayload() map[string]any {
@@ -172,13 +168,10 @@ func (d *Group) GetPayload() map[string]any {
 }
 
 func (i *GroupSpec) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["type"] = i.Type
-	payload["metadata"] = i.Metadata
-	payload["policies"] = i.Policies
+	payload := vaultutils.StructToVaultPayload(i)
 	if i.Type == "internal" {
-		payload["member_group_ids"] = mergeUniqueStrings(i.MemberGroupIDs, i.resolvedMemberGroupIDs)
-		payload["member_entity_ids"] = mergeUniqueStrings(i.MemberEntityIDs, i.resolvedMemberEntityIDs)
+		payload["member_group_ids"] = vaultutils.ToInterfaceArray(mergeUniqueStrings(i.MemberGroupIDs, i.resolvedMemberGroupIDs))
+		payload["member_entity_ids"] = vaultutils.ToInterfaceArray(mergeUniqueStrings(i.MemberEntityIDs, i.resolvedMemberEntityIDs))
 	}
 	return payload
 }
@@ -204,10 +197,6 @@ func mergeUniqueStrings(a, b []string) []string {
 		}
 	}
 	return result
-}
-
-func (d *Group) IsInitialized() bool {
-	return true
 }
 
 func (d *Group) PrepareInternalValues(context context.Context, object client.Object) error {
@@ -265,21 +254,8 @@ func resolveIdentityNames(ctx context.Context, identityType string, names []stri
 	return ids, nil
 }
 
-func (d *Group) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *Group) IsValid() (bool, error) {
-	return true, nil
-}
-
 func (d *Group) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
-}
-
-func (d *Group) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.Spec.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
 // EnrichStatus reads the group back from Vault and persists the Vault-assigned ID in status.

@@ -2,7 +2,7 @@ package v1alpha1
 
 import (
 	"context"
-	"encoding/json"
+
 	"testing"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
@@ -57,8 +57,8 @@ func TestAWSAuthEngineClientConfig_toMap(t *testing.T) {
 	if result["allowed_sts_header_values"] != "X-Custom-Header" {
 		t.Errorf("expected allowed_sts_header_values=X-Custom-Header, got %v", result["allowed_sts_header_values"])
 	}
-	if result["max_retries"] != json.Number("3") {
-		t.Errorf("expected max_retries=json.Number(3), got %v", result["max_retries"])
+	if result["max_retries"] != 3 {
+		t.Errorf("expected max_retries=3 (int), got %v", result["max_retries"])
 	}
 }
 
@@ -70,8 +70,8 @@ func TestAWSAuthEngineClientConfig_toMap_DefaultMaxRetries(t *testing.T) {
 
 	result := config.toMap()
 
-	if result["max_retries"] != json.Number("-1") {
-		t.Errorf("expected max_retries=json.Number(-1) when nil, got %v", result["max_retries"])
+	if result["max_retries"] != -1 {
+		t.Errorf("expected max_retries=-1 (int) when nil, got %v", result["max_retries"])
 	}
 }
 
@@ -114,7 +114,7 @@ func TestAWSAuthEngineClientConfig_IsEquivalentToDesiredState_MatchNoCredentials
 		"use_sts_region_from_client": false,
 		"iam_server_id_header_value": "vault.example.com",
 		"allowed_sts_header_values":  "",
-		"max_retries":                json.Number("3"),
+		"max_retries":                3,
 	}
 
 	if !instance.IsEquivalentToDesiredState(vaultPayload) {
@@ -147,7 +147,7 @@ func TestAWSAuthEngineClientConfig_IsEquivalentToDesiredState_SecretKeyExcludedF
 		"use_sts_region_from_client": false,
 		"iam_server_id_header_value": "vault.example.com",
 		"allowed_sts_header_values":  "",
-		"max_retries":                json.Number("3"),
+		"max_retries":                3,
 	}
 
 	if !instance.IsEquivalentToDesiredState(vaultPayload) {
@@ -174,7 +174,7 @@ func TestAWSAuthEngineClientConfig_IsEquivalentToDesiredState_Mismatch(t *testin
 		"use_sts_region_from_client": false,
 		"iam_server_id_header_value": "",
 		"allowed_sts_header_values":  "",
-		"max_retries":                json.Number("3"),
+		"max_retries":                3,
 	}
 
 	if instance.IsEquivalentToDesiredState(vaultPayload) {
@@ -199,7 +199,7 @@ func TestAWSAuthEngineClientConfig_IsEquivalentToDesiredState_ExtraVaultFields(t
 		"use_sts_region_from_client": false,
 		"iam_server_id_header_value": "",
 		"allowed_sts_header_values":  "",
-		"max_retries":                json.Number("-1"),
+		"max_retries":                -1,
 		"request_id":                 "extra-vault-field",
 		"lease_duration":             0,
 	}

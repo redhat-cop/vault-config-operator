@@ -142,7 +142,7 @@ func (ve *VaultAuditEndpoint) IsEquivalentToDesired(context context.Context) (bo
 		"options":     currentAudit.Options,
 	}
 
-	return ve.vaultObject.IsEquivalentToDesiredState(currentPayload), nil
+	return IsEquivalentToDesiredState(ve.vaultObject, currentPayload), nil
 }
 
 // CreateOrUpdate enables or updates the audit device configuration

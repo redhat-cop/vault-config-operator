@@ -50,7 +50,7 @@ type JWTOIDCAuthEngineConfigSpec struct {
 	// OIDCCredentials from the provider for OIDC roles
 	// OIDCCredentials consists in OIDCClientID and OIDCClientSecret, which can be created as Kubernetes Secret, VaultSecret or RandomSecret
 	// +kubebuilder:validation:Optional
-	OIDCCredentials *vaultutils.RootCredentialConfig `json:"OIDCCredentials,omitempty"`
+	OIDCCredentials *vaultutils.RootCredentialConfig `json:"OIDCCredentials,omitempty" vault:"-"`
 }
 
 // JWTOIDCAuthEngineConfigStatus defines the observed state of JWTOIDCAuthEngineConfig
@@ -86,65 +86,65 @@ type JWTOIDCAuthEngineConfigList struct {
 type JWTOIDCConfig struct {
 	// The OIDC Discovery URL, without any .well-known component (base path). Cannot be used with "jwks_url" or "jwt_validation_pubkeys"
 	// +kubebuilder:validation:Optional
-	OIDCDiscoveryURL string `json:"OIDCDiscoveryURL,omitempty"`
+	OIDCDiscoveryURL string `json:"OIDCDiscoveryURL,omitempty" vault:"oidc_discovery_url"`
 
 	// The CA certificate or chain of certificates, in PEM format, to use to validate connections to the OIDC Discovery URL.
 	// If not set, system certificates are used
 	// +kubebuilder:validation:Optional
-	OIDCDiscoveryCAPEM string `json:"OIDCDiscoveryCAPEM,omitempty"`
+	OIDCDiscoveryCAPEM string `json:"OIDCDiscoveryCAPEM,omitempty" vault:"oidc_discovery_ca_pem"`
 
 	// The OAuth Client ID from the provider for OIDC roles.
 	// +kubebuilder:validation:Optional
-	OIDCClientID string `json:"OIDCClientID,omitempty"`
+	OIDCClientID string `json:"OIDCClientID,omitempty" vault:"-"`
 
 	// The response mode to be used in the OAuth2 request.
 	// Allowed values are "query" and "form_post". Defaults to "query".
 	// If using Vault namespaces, and oidc_response_mode is "form_post", then "namespace_in_state" should be set to false
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum={"query","form_post"}
-	OIDCResponseMode string `json:"OIDCResponseMode,omitempty"`
+	OIDCResponseMode string `json:"OIDCResponseMode,omitempty" vault:"oidc_response_mode"`
 
 	// The response types to request. Allowed values are "code" and "id_token". Defaults to "code".
 	// Note: "id_token" may only be used if "oidc_response_mode" is set to "form_post"
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	OIDCResponseTypes []string `json:"OIDCResponseTypes,omitempty"`
+	OIDCResponseTypes []string `json:"OIDCResponseTypes,omitempty" vault:"oidc_response_types"`
 
 	// JWKS URL to use to authenticate signatures.
 	// Cannot be used with "oidc_discovery_url" or "jwt_validation_pubkeys"
 	// +kubebuilder:validation:Optional
-	JWKSURL string `json:"JWKSURL,omitempty"`
+	JWKSURL string `json:"JWKSURL,omitempty" vault:"jwks_url"`
 
 	// The CA certificate or chain of certificates, in PEM format, to use to validate connections to the JWKS URL.
 	// If not set, system certificates are used.
 	// +kubebuilder:validation:Optional
-	JWKSCAPEM string `json:"JWKSCAPEM,omitempty"`
+	JWKSCAPEM string `json:"JWKSCAPEM,omitempty" vault:"jwks_ca_pem"`
 
 	// A list of PEM-encoded public keys to use to authenticate signatures locally. Cannot be used with "jwks_url" or "oidc_discovery_url"
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	JWTValidationPubKeys []string `json:"JWTValidationPubKeys,omitempty"`
+	JWTValidationPubKeys []string `json:"JWTValidationPubKeys,omitempty" vault:"jwt_validation_pubkeys"`
 
 	// The value against which to match the iss claim in a JWT
 	// +kubebuilder:validation:Optional
-	BoundIssuer string `json:"boundIssuer,omitempty"`
+	BoundIssuer string `json:"boundIssuer,omitempty" vault:"bound_issuer"`
 
 	// A list of supported signing algorithms. Defaults to [RS256] for OIDC roles. Defaults to all available algorithms for JWT roles
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	JWTSupportedAlgs []string `json:"JWTSupportedAlgs,omitempty"`
+	JWTSupportedAlgs []string `json:"JWTSupportedAlgs,omitempty" vault:"jwt_supported_algs"`
 
 	// The default role to use if none is provided during login
 	// +kubebuilder:validation:Optional
-	DefaultRole string `json:"defaultRole,omitempty"`
+	DefaultRole string `json:"defaultRole,omitempty" vault:"default_role"`
 
 	// Configuration options for provider-specific handling. Providers with specific handling include: Azure, Google.
 	// The options are described in each provider's section in OIDC Provider Setup
 	// +kubebuilder:validation:Optional
-	ProviderConfig *apiextensionsv1.JSON `json:"providerConfig,omitempty"`
+	ProviderConfig *apiextensionsv1.JSON `json:"providerConfig,omitempty" vault:"provider_config"`
 
 	// Pass namespace in the OIDC state parameter instead of as a separate query parameter.
 	// With this setting, the allowed redirect URL(s) in Vault and on the provider side should not contain a namespace query parameter.
@@ -152,7 +152,7 @@ type JWTOIDCConfig struct {
 	// Defaults to true for new configs
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=true
-	NamespaceInState bool `json:"namespaceInState"`
+	NamespaceInState bool `json:"namespaceInState" vault:"namespace_in_state"`
 
 	retrievedClientID string `json:"-"`
 
@@ -191,19 +191,6 @@ func (r *JWTOIDCAuthEngineConfig) GetPayload() map[string]any {
 	return r.Spec.JWTOIDCConfig.toMap()
 }
 
-func (r *JWTOIDCAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := r.Spec.JWTOIDCConfig.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (r *JWTOIDCAuthEngineConfig) IsInitialized() bool {
-	return true
-}
-
-func (r *JWTOIDCAuthEngineConfig) IsValid() (bool, error) {
-	return true, nil
-}
-
 func (r *JWTOIDCAuthEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &r.Spec.Authentication
 }
@@ -215,10 +202,6 @@ func (r *JWTOIDCAuthEngineConfig) PrepareInternalValues(context context.Context,
 	}
 
 	return r.setInternalCredentials(context)
-}
-
-func (r *JWTOIDCAuthEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *JWTOIDCAuthEngineConfig) setInternalCredentials(context context.Context) error {
@@ -305,21 +288,8 @@ func init() {
 }
 
 func (i *JWTOIDCConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["oidc_discovery_url"] = i.OIDCDiscoveryURL
-	payload["oidc_discovery_ca_pem"] = i.OIDCDiscoveryCAPEM
+	payload := vaultutils.StructToVaultPayload(i)
 	payload["oidc_client_id"] = i.retrievedClientID
 	payload["oidc_client_secret"] = i.retrievedClientPassword
-	payload["oidc_response_mode"] = i.OIDCResponseMode
-	payload["oidc_response_types"] = i.OIDCResponseTypes
-	payload["jwks_url"] = i.JWKSURL
-	payload["jwks_ca_pem"] = i.JWKSCAPEM
-	payload["jwt_validation_pubkeys"] = i.JWTValidationPubKeys
-	payload["bound_issuer"] = i.BoundIssuer
-	payload["jwt_supported_algs"] = i.JWTSupportedAlgs
-	payload["default_role"] = i.DefaultRole
-	payload["provider_config"] = i.ProviderConfig
-	payload["namespace_in_state"] = i.NamespaceInState
-
 	return payload
 }

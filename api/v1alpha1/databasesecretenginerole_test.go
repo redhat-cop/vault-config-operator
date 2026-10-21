@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -123,7 +124,7 @@ func TestDatabaseSecretEngineRoleIsEquivalentMatching(t *testing.T) {
 
 	payload := role.Spec.DBSERole.toMap()
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected matching payload to be equivalent")
 	}
 }
@@ -144,7 +145,7 @@ func TestDatabaseSecretEngineRoleIsEquivalentNonMatching(t *testing.T) {
 	payload := role.Spec.DBSERole.toMap()
 	payload["db_name"] = "other-db" // changed
 
-	if role.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected non-matching payload (different db_name) to NOT be equivalent")
 	}
 }
@@ -167,7 +168,7 @@ func TestDatabaseSecretEngineRoleIsEquivalentExtraFields(t *testing.T) {
 	payload := role.Spec.DBSERole.toMap()
 	payload["extra_vault_field"] = "some-value"
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
@@ -198,8 +199,8 @@ func TestDatabaseSecretEngineRoleIsEquivalentStatementTypeSkew(t *testing.T) {
 		"renew_statements":      []any{},
 	}
 
-	if role.IsEquivalentToDesiredState(payload) {
-		t.Error("expected false: []string from toMap() != []any from Vault JSON (bare DeepEqual, no type coercion)")
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
+		t.Error("expected true: toMap() now returns []any matching Vault JSON representation")
 	}
 }
 

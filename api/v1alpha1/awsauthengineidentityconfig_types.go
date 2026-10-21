@@ -17,12 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // AWSAuthEngineIdentityConfigSpec defines the desired state of AWSAuthEngineIdentityConfig
@@ -49,23 +45,23 @@ type AWSAuthIdentityConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="role_id"
 	// +kubebuilder:validation:Enum={"role_id","unique_id","canonical_arn","full_arn"}
-	IAMAlias string `json:"iamAlias,omitempty"`
+	IAMAlias string `json:"iamAlias,omitempty" vault:"iam_alias"`
 
 	// IAMMetadata is the metadata to include on the login token for IAM auth.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="default"
-	IAMMetadata string `json:"iamMetadata"`
+	IAMMetadata string `json:"iamMetadata" vault:"iam_metadata"`
 
 	// EC2Alias controls identity alias generation for EC2 auth.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="role_id"
 	// +kubebuilder:validation:Enum={"role_id","instance_id","image_id"}
-	EC2Alias string `json:"ec2Alias,omitempty"`
+	EC2Alias string `json:"ec2Alias,omitempty" vault:"ec2_alias"`
 
 	// EC2Metadata is the metadata to include on the login token for EC2 auth.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="default"
-	EC2Metadata string `json:"ec2Metadata"`
+	EC2Metadata string `json:"ec2Metadata" vault:"ec2_metadata"`
 }
 
 // AWSAuthEngineIdentityConfigStatus defines the observed state of AWSAuthEngineIdentityConfig
@@ -125,38 +121,12 @@ func (r *AWSAuthEngineIdentityConfig) GetPayload() map[string]any {
 	return r.Spec.AWSAuthIdentityConfig.toMap()
 }
 
-func (r *AWSAuthEngineIdentityConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := r.Spec.AWSAuthIdentityConfig.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (r *AWSAuthEngineIdentityConfig) IsInitialized() bool {
-	return true
-}
-
-func (r *AWSAuthEngineIdentityConfig) IsValid() (bool, error) {
-	return true, nil
-}
-
 func (r *AWSAuthEngineIdentityConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &r.Spec.Authentication
 }
 
-func (r *AWSAuthEngineIdentityConfig) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *AWSAuthEngineIdentityConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
 func (i *AWSAuthIdentityConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["iam_alias"] = i.IAMAlias
-	payload["iam_metadata"] = i.IAMMetadata
-	payload["ec2_alias"] = i.EC2Alias
-	payload["ec2_metadata"] = i.EC2Metadata
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 func init() {

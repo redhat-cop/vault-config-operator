@@ -17,12 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ vaultutils.VaultObject = &UICustomHeader{}
@@ -33,10 +31,7 @@ func (d *UICustomHeader) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *UICustomHeader) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath("sys/config/ui/headers/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath("sys/config/ui/headers/" + d.Name)
+	return vaultutils.CleansePath("sys/config/ui/headers/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 
 func (d *UICustomHeader) GetPayload() map[string]any {
@@ -48,7 +43,7 @@ func (d *UICustomHeader) IsEquivalentToDesiredState(payload map[string]any) bool
 
 	// Case 1: Vault returned multivalue format (if API evolves or proxy adds param)
 	if vaultValues, ok := payload["values"]; ok {
-		return reflect.DeepEqual(toInterfaceArray(desiredValues), vaultValues)
+		return reflect.DeepEqual(vaultutils.ToInterfaceArray(desiredValues), vaultValues)
 	}
 
 	// Case 2: Vault returned single-value format (standard GET behavior)
@@ -65,24 +60,8 @@ func (d *UICustomHeader) IsEquivalentToDesiredState(payload map[string]any) bool
 	return len(desiredValues) == 0
 }
 
-func (d *UICustomHeader) IsInitialized() bool {
-	return true
-}
-
 func (d *UICustomHeader) IsDeletable() bool {
 	return true
-}
-
-func (d *UICustomHeader) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *UICustomHeader) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *UICustomHeader) IsValid() (bool, error) {
-	return true, nil
 }
 
 // UICustomHeaderSpec defines the desired state of UICustomHeader
@@ -108,13 +87,11 @@ type UICustomHeaderConfig struct {
 	// Values is the list of values to return for this custom header.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
-	Values []string `json:"values"`
+	Values []string `json:"values" vault:"values"`
 }
 
 func (c *UICustomHeaderConfig) toMap() map[string]any {
-	return map[string]any{
-		"values": toInterfaceArray(c.Values),
-	}
+	return vaultutils.StructToVaultPayload(c)
 }
 
 // UICustomHeaderStatus defines the observed state of UICustomHeader

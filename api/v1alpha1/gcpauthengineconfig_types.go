@@ -95,7 +95,7 @@ type GCPConfig struct {
 	// If role_id is specified, the ID of the Vault role will be used. Only used if role type is iam.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="default"
-	IAMalias string `json:"IAMalias"`
+	IAMalias string `json:"IAMalias" vault:"iam_alias"`
 
 	// The metadata to include on the token returned by the login endpoint. This metadata will be added to both audit logs, and on the iam_alias.
 	// By default, it includes project_id, role, service_account_id, and service_account_email.
@@ -105,14 +105,14 @@ type GCPConfig struct {
 	// Only used if role type is iam.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="default"
-	IAMmetadata string `json:"IAMmetadata"`
+	IAMmetadata string `json:"IAMmetadata" vault:"iam_metadata"`
 
 	// Must be either instance_id or role_id. If instance_id is specified, the GCE instance ID will be used for alias names during login.
 	// If role_id is specified, the ID of the Vault role will be used. Only used if role type is gce.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="role_id"
 	// +kubebuilder:validation:Enum={"instance_id","role_id"}
-	GCEalias string `json:"GCEalias,omitempty"`
+	GCEalias string `json:"GCEalias,omitempty" vault:"gce_alias"`
 
 	// The metadata to include on the token returned by the login endpoint. This metadata will be added to both audit logs, and on the gce_alias.
 	// By default, it includes instance_creation_timestamp, instance_id, instance_name, project_id, project_number, role, service_account_id, service_account_email, and zone.
@@ -121,7 +121,7 @@ type GCPConfig struct {
 	// Only used if role type is gce.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="default"
-	GCEmetadata string `json:"GCEmetadata"`
+	GCEmetadata string `json:"GCEmetadata" vault:"gce_metadata"`
 
 	// Specifies overrides to service endpoints used when making API requests.
 	// This allows specific requests made during authentication to target alternative service endpoints for use in Private Google Access environments.
@@ -133,7 +133,7 @@ type GCPConfig struct {
 	// The endpoint value provided for a given key has the form of scheme://host:port. The scheme:// and :port portions of the endpoint value are optional.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default={}
-	CustomEndpoint *apiextensionsv1.JSON `json:"customEndpoint,omitempty"`
+	CustomEndpoint *apiextensionsv1.JSON `json:"customEndpoint,omitempty" vault:"custom_endpoint"`
 
 	retrievedServiceAccount string `json:"-"`
 	retrievedCredentials    string `json:"-"`
@@ -171,19 +171,6 @@ func (r *GCPAuthEngineConfig) GetPayload() map[string]any {
 	return r.Spec.GCPConfig.toMap()
 }
 
-func (r *GCPAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := r.Spec.GCPConfig.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (r *GCPAuthEngineConfig) IsInitialized() bool {
-	return true
-}
-
-func (r *GCPAuthEngineConfig) IsValid() (bool, error) {
-	return true, nil
-}
-
 func (r *GCPAuthEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &r.Spec.Authentication
 }
@@ -195,10 +182,6 @@ func (r *GCPAuthEngineConfig) PrepareInternalValues(context context.Context, obj
 	}
 
 	return r.setInternalCredentials(context)
-}
-
-func (r *GCPAuthEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *GCPAuthEngineConfig) setInternalCredentials(context context.Context) error {
@@ -282,13 +265,7 @@ func init() {
 }
 
 func (i *GCPConfig) toMap() map[string]any {
-	payload := map[string]any{}
+	payload := vaultutils.StructToVaultPayload(i)
 	payload["credentials"] = i.retrievedCredentials
-	payload["iam_alias"] = i.IAMalias
-	payload["iam_metadata"] = i.IAMmetadata
-	payload["gce_alias"] = i.GCEalias
-	payload["gce_metadata"] = i.GCEmetadata
-	payload["custom_endpoint"] = i.CustomEndpoint
-
 	return payload
 }

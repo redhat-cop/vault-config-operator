@@ -17,14 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // KeyRotationConfigSpec defines the desired state of KeyRotationConfig
@@ -46,28 +42,20 @@ type KeyRotationConfigConfig struct {
 
 	// MaxOperations is the number of operations performed before the barrier key is automatically rotated.
 	// +kubebuilder:validation:Optional
-	MaxOperations int64 `json:"maxOperations,omitempty"`
+	MaxOperations int64 `json:"maxOperations,omitempty" vault:"max_operations,number,omitempty"`
 
 	// Interval is the duration after which the barrier key is automatically rotated (e.g., "4320h").
 	// Must be at least 24h if specified.
 	// +kubebuilder:validation:Optional
-	Interval string `json:"interval,omitempty"`
+	Interval string `json:"interval,omitempty" vault:"interval,omitempty"`
 
 	// Enabled controls whether automatic rotation is active. Defaults to true.
 	// +kubebuilder:default=true
-	Enabled bool `json:"enabled"`
+	Enabled bool `json:"enabled" vault:"enabled"`
 }
 
 func (i *KeyRotationConfigConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	if i.MaxOperations != 0 {
-		payload["max_operations"] = json.Number(fmt.Sprintf("%d", i.MaxOperations))
-	}
-	if i.Interval != "" {
-		payload["interval"] = i.Interval
-	}
-	payload["enabled"] = i.Enabled
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 // KeyRotationConfigStatus defines the observed state of KeyRotationConfig
@@ -133,24 +121,8 @@ func (d *KeyRotationConfig) IsEquivalentToDesiredState(payload map[string]any) b
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (d *KeyRotationConfig) IsInitialized() bool {
-	return true
-}
-
 func (d *KeyRotationConfig) IsDeletable() bool {
 	return false
-}
-
-func (d *KeyRotationConfig) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *KeyRotationConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *KeyRotationConfig) IsValid() (bool, error) {
-	return true, nil
 }
 
 func (d *KeyRotationConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {

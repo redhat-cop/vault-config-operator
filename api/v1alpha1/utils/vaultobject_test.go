@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	vault "github.com/hashicorp/vault/api"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // mockVaultObject implements VaultObject for testing.
@@ -20,16 +19,9 @@ type mockVaultObject struct {
 
 func (m *mockVaultObject) GetPath() string                                  { return m.path }
 func (m *mockVaultObject) GetPayload() map[string]any                       { return m.payload }
-func (m *mockVaultObject) IsEquivalentToDesiredState(_ map[string]any) bool { return false }
-func (m *mockVaultObject) IsInitialized() bool                              { return true }
-func (m *mockVaultObject) IsValid() (bool, error)                           { return true, nil }
 func (m *mockVaultObject) IsDeletable() bool                                { return true }
-func (m *mockVaultObject) PrepareInternalValues(_ context.Context, _ client.Object) error {
-	return nil
-}
-func (m *mockVaultObject) PrepareTLSConfig(_ context.Context, _ client.Object) error { return nil }
-func (m *mockVaultObject) GetKubeAuthConfiguration() *KubeAuthConfiguration          { return nil }
-func (m *mockVaultObject) GetVaultConnection() *VaultConnection                      { return nil }
+func (m *mockVaultObject) GetKubeAuthConfiguration() *KubeAuthConfiguration { return nil }
+func (m *mockVaultObject) GetVaultConnection() *VaultConnection             { return nil }
 
 // fakeVaultStore holds in-memory KV data and serves Vault-compatible HTTP responses.
 type fakeVaultStore struct {

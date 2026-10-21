@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -54,17 +55,17 @@ func TestAzureRoleToMap(t *testing.T) {
 
 	expected := map[string]any{
 		"name":                        "test-role",
-		"bound_service_principal_ids": []string{"sp-1", "sp-2"},
-		"bound_group_ids":             []string{"group-1"},
-		"bound_locations":             []string{"eastus"},
-		"bound_subscription_ids":      []string{"sub-1"},
-		"bound_resource_groups":       []string{"rg-1"},
-		"bound_scale_sets":            []string{"ss-1"},
+		"bound_service_principal_ids": []any{"sp-1", "sp-2"},
+		"bound_group_ids":             []any{"group-1"},
+		"bound_locations":             []any{"eastus"},
+		"bound_subscription_ids":      []any{"sub-1"},
+		"bound_resource_groups":       []any{"rg-1"},
+		"bound_scale_sets":            []any{"ss-1"},
 		"token_ttl":                   json.Number("3600"),
 		"token_max_ttl":               json.Number("86400"),
-		"token_policies":              []string{"reader"},
-		"policies":                    []string{"legacy-policy"},
-		"token_bound_cidrs":           []string{"10.0.0.0/8"},
+		"token_policies":              []any{"reader"},
+		"policies":                    []any{"legacy-policy"},
+		"token_bound_cidrs":           []any{"10.0.0.0/8"},
 		"token_explicit_max_ttl":      json.Number("0"),
 		"token_no_default_policy":     false,
 		"token_num_uses":              int64(0),
@@ -93,10 +94,10 @@ func TestAzureRoleToMapDualPoliciesField(t *testing.T) {
 		t.Error("expected 'policies' key to exist (legacy/backward-compatibility field)")
 	}
 
-	if !reflect.DeepEqual(result["token_policies"], []string{"token-policy"}) {
+	if !reflect.DeepEqual(result["token_policies"], []any{"token-policy"}) {
 		t.Errorf("expected token_policies = [token-policy], got %v", result["token_policies"])
 	}
-	if !reflect.DeepEqual(result["policies"], []string{"legacy-policy"}) {
+	if !reflect.DeepEqual(result["policies"], []any{"legacy-policy"}) {
 		t.Errorf("expected policies = [legacy-policy], got %v", result["policies"])
 	}
 }
@@ -115,7 +116,7 @@ func TestAzureAuthEngineRoleIsEquivalentMatching(t *testing.T) {
 
 	payload := role.Spec.AzureRole.toMap()
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected matching payload to be equivalent")
 	}
 }
@@ -133,7 +134,7 @@ func TestAzureAuthEngineRoleIsEquivalentNonMatching(t *testing.T) {
 	payload := role.Spec.AzureRole.toMap()
 	payload["name"] = "different-role"
 
-	if role.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected non-matching payload (different name) to NOT be equivalent")
 	}
 }
@@ -150,7 +151,7 @@ func TestAzureAuthEngineRoleIsEquivalentExtraFields(t *testing.T) {
 	payload := role.Spec.AzureRole.toMap()
 	payload["extra_field"] = "unexpected"
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }

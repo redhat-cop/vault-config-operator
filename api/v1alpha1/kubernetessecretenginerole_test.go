@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -87,7 +88,7 @@ func TestKubeSERoleToMap(t *testing.T) {
 		}
 	}
 
-	ns, ok := result["allowed_kubernetes_namespaces"].([]string)
+	ns, ok := result["allowed_kubernetes_namespaces"].([]any)
 	if !ok {
 		t.Fatalf("allowed_kubernetes_namespaces = %T", result["allowed_kubernetes_namespaces"])
 	}
@@ -146,7 +147,7 @@ func TestKubernetesSecretEngineRoleIsEquivalentMatching(t *testing.T) {
 
 	payload := role.Spec.KubeSERole.toMap()
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected matching payload to be equivalent")
 	}
 }
@@ -164,7 +165,7 @@ func TestKubernetesSecretEngineRoleIsEquivalentNonMatching(t *testing.T) {
 	payload := role.Spec.KubeSERole.toMap()
 	payload["service_account_name"] = "sa2"
 
-	if role.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected non-matching payload to NOT be equivalent")
 	}
 }
@@ -182,7 +183,7 @@ func TestKubernetesSecretEngineRoleIsEquivalentExtraFields(t *testing.T) {
 	payload := role.Spec.KubeSERole.toMap()
 	payload["extra_vault_field"] = "some-value"
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }

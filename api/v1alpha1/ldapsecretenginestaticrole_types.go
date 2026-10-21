@@ -17,14 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"encoding/json"
 	"reflect"
-	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // LDAPSecretEngineStaticRoleSpec defines the desired state of LDAPSecretEngineStaticRole
@@ -55,20 +51,20 @@ type LDAPSecretEngineStaticRoleSpec struct {
 type LDAPSEStaticRole struct {
 	// Username is the existing LDAP username to manage password rotation for. Cannot be modified after creation.
 	// +kubebuilder:validation:Required
-	Username string `json:"username"`
+	Username string `json:"username" vault:"username"`
 
 	// DN is the Distinguished Name of the existing LDAP entry. Takes precedence over username. Cannot be modified after creation.
 	// +kubebuilder:validation:Optional
-	DN string `json:"dn,omitempty"`
+	DN string `json:"dn,omitempty" vault:"dn"`
 
 	// RotationPeriod is the time in seconds before credential rotation (minimum 10s)
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Minimum=10
-	RotationPeriod int `json:"rotationPeriod"`
+	RotationPeriod int `json:"rotationPeriod" vault:"rotation_period,number"`
 
 	// SkipImportRotation when true skips the initial password rotation on role creation
 	// +kubebuilder:validation:Optional
-	SkipImportRotation bool `json:"skipImportRotation,omitempty"`
+	SkipImportRotation bool `json:"skipImportRotation,omitempty" vault:"skip_import_rotation"`
 }
 
 var _ vaultutils.VaultObject = &LDAPSecretEngineStaticRole{}
@@ -99,29 +95,8 @@ func (d *LDAPSecretEngineStaticRole) IsEquivalentToDesiredState(payload map[stri
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (d *LDAPSecretEngineStaticRole) IsInitialized() bool {
-	return true
-}
-
-func (d *LDAPSecretEngineStaticRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *LDAPSecretEngineStaticRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *LDAPSecretEngineStaticRole) IsValid() (bool, error) {
-	return true, nil
-}
-
 func (i *LDAPSEStaticRole) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["username"] = i.Username
-	payload["dn"] = i.DN
-	payload["rotation_period"] = json.Number(strconv.Itoa(i.RotationPeriod))
-	payload["skip_import_rotation"] = i.SkipImportRotation
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 // LDAPSecretEngineStaticRoleStatus defines the observed state of LDAPSecretEngineStaticRole

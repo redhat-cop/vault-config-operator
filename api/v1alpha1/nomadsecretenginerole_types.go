@@ -17,12 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // NomadSecretEngineRoleSpec defines the desired state of NomadSecretEngineRole
@@ -55,17 +53,17 @@ type NomadSERole struct {
 	// These must be created beforehand in Nomad.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	Policies []string `json:"policies,omitempty"`
+	Policies []string `json:"policies,omitempty" vault:"policies"`
 
 	// Global specifies if the token should be global (replicated across Nomad regions).
 	// +kubebuilder:validation:Optional
-	Global bool `json:"global,omitempty"`
+	Global bool `json:"global,omitempty" vault:"global"`
 
 	// Type specifies the type of Nomad token to create: "client" or "management".
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="client"
 	// +kubebuilder:validation:Enum:={"client","management"}
-	Type string `json:"type,omitempty"`
+	Type string `json:"type,omitempty" vault:"type"`
 }
 
 var _ vaultutils.VaultObject = &NomadSecretEngineRole{}
@@ -111,28 +109,8 @@ func (d *NomadSecretEngineRole) IsEquivalentToDesiredState(payload map[string]an
 	return reflect.DeepEqual(desiredState, filteredPayload)
 }
 
-func (d *NomadSecretEngineRole) IsInitialized() bool {
-	return true
-}
-
-func (d *NomadSecretEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *NomadSecretEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *NomadSecretEngineRole) IsValid() (bool, error) {
-	return true, nil
-}
-
 func (i *NomadSERole) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["policies"] = toInterfaceArray(i.Policies)
-	payload["global"] = i.Global
-	payload["type"] = i.Type
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 // NomadSecretEngineRoleStatus defines the observed state of NomadSecretEngineRole

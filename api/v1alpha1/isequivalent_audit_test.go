@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -21,10 +22,8 @@ import (
 //                Audit/AuditRequestHeader use field-by-field; RandomSecret always returns false
 
 type auditCase struct {
-	name    string
-	setupFn func() (instance interface {
-		IsEquivalentToDesiredState(map[string]any) bool
-	}, basePayload map[string]any)
+	name           string
+	setupFn        func() (instance vaultutils.VaultObject, basePayload map[string]any)
 	extraFields    map[string]any
 	expectWithBase bool
 }
@@ -33,18 +32,10 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 	tests := []auditCase{
 		{
 			name: "AuthEngineMount",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				desc := "test"
 				m := &AuthEngineMount{Spec: AuthEngineMountSpec{AuthMount: AuthMount{Config: AuthMountConfig{DefaultLeaseTTL: "1h", MaxLeaseTTL: "24h", Description: &desc}}}}
-				p := map[string]any{
-					"default_lease_ttl": "1h", "max_lease_ttl": "24h",
-					"audit_non_hmac_request_keys": []string(nil), "audit_non_hmac_response_keys": []string(nil),
-					"listing_visibility": "", "passthrough_request_headers": []string(nil),
-					"allowed_response_headers": []string(nil), "token_type": "",
-					"description": &desc, "options": map[string]string(nil),
-				}
+				p := m.Spec.Config.toMap()
 				return m, p
 			},
 			extraFields:    map[string]any{"force_no_cache": false, "plugin_version": ""},
@@ -52,16 +43,9 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 		},
 		{
 			name: "KubernetesAuthEngineConfig",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &KubernetesAuthEngineConfig{Spec: KubernetesAuthEngineConfigSpec{KAECConfig: KAECConfig{KubernetesHost: "https://kubernetes.default.svc:443"}}}
-				p := map[string]any{
-					"kubernetes_host": "https://kubernetes.default.svc:443", "kubernetes_ca_cert": "",
-					"pem_keys": []string(nil), "issuer": "",
-					"disable_iss_validation": false, "disable_local_ca_jwt": false,
-					"use_annotations_as_alias_metadata": false,
-				}
+				p := m.GetPayload()
 				return m, p
 			},
 			extraFields:    map[string]any{"accessor": "auth_kubernetes_abc123", "local": false, "seal_wrap": false},
@@ -69,18 +53,9 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 		},
 		{
 			name: "KubernetesAuthEngineRole",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &KubernetesAuthEngineRole{Spec: KubernetesAuthEngineRoleSpec{VRole: VRole{TargetServiceAccounts: []string{"default"}}}}
-				p := map[string]any{
-					"bound_service_account_names": []string{"default"}, "bound_service_account_namespaces": []string(nil),
-					"alias_name_source": "",
-					"token_ttl":         json.Number("0"), "token_max_ttl": json.Number("0"), "token_policies": []string(nil),
-					"token_bound_cidrs": []string(nil), "token_explicit_max_ttl": json.Number("0"),
-					"token_no_default_policy": false, "token_num_uses": 0,
-					"token_period": json.Number("0"), "token_type": "",
-				}
+				p := m.GetPayload()
 				return m, p
 			},
 			extraFields:    map[string]any{"token_strictly_bind_ip": false},
@@ -88,12 +63,10 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 		},
 		{
 			name: "IdentityOIDCClient",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &IdentityOIDCClient{Spec: IdentityOIDCClientSpec{IdentityOIDCClientConfig: IdentityOIDCClientConfig{Key: "default", ClientType: "confidential", IDTokenTTL: "24h", AccessTokenTTL: "24h"}}}
 				p := map[string]any{
-					"key": "default", "redirect_uris": []string(nil), "assignments": []string(nil),
+					"key": "default", "redirect_uris": []any{}, "assignments": []any{},
 					"client_type": "confidential", "id_token_ttl": "24h", "access_token_ttl": "24h",
 				}
 				return m, p
@@ -103,9 +76,7 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 		},
 		{
 			name: "IdentityOIDCScope",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &IdentityOIDCScope{Spec: IdentityOIDCScopeSpec{IdentityOIDCScopeConfig: IdentityOIDCScopeConfig{Template: "tmpl", Description: "desc"}}}
 				p := map[string]any{"template": "tmpl", "description": "desc"}
 				return m, p
@@ -115,11 +86,9 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 		},
 		{
 			name: "IdentityOIDCProvider",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &IdentityOIDCProvider{Spec: IdentityOIDCProviderSpec{IdentityOIDCProviderConfig: IdentityOIDCProviderConfig{Issuer: "https://example.com", AllowedClientIDs: []string{"*"}}}}
-				p := map[string]any{"issuer": "https://example.com", "allowed_client_ids": []string{"*"}, "scopes_supported": []string(nil)}
+				p := map[string]any{"issuer": "https://example.com", "allowed_client_ids": []any{"*"}, "scopes_supported": []any{}}
 				return m, p
 			},
 			extraFields:    map[string]any{"issuer_id": "oidc-id-123"},
@@ -127,11 +96,9 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 		},
 		{
 			name: "IdentityOIDCAssignment",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &IdentityOIDCAssignment{Spec: IdentityOIDCAssignmentSpec{IdentityOIDCAssignmentConfig: IdentityOIDCAssignmentConfig{EntityIDs: []string{"e1"}, GroupIDs: []string{"g1"}}}}
-				p := map[string]any{"entity_ids": []string{"e1"}, "group_ids": []string{"g1"}}
+				p := map[string]any{"entity_ids": []any{"e1"}, "group_ids": []any{"g1"}}
 				return m, p
 			},
 			extraFields:    map[string]any{"name": "assignment-name"},
@@ -139,9 +106,7 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 		},
 		{
 			name: "IdentityTokenConfig",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &IdentityTokenConfig{Spec: IdentityTokenConfigSpec{IdentityTokenConfigConfig: IdentityTokenConfigConfig{Issuer: "https://vault.example.com"}}}
 				p := map[string]any{"issuer": "https://vault.example.com"}
 				return m, p
@@ -151,11 +116,9 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 		},
 		{
 			name: "IdentityTokenKey",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &IdentityTokenKey{Spec: IdentityTokenKeySpec{IdentityTokenKeyConfig: IdentityTokenKeyConfig{Algorithm: "RS256", RotationPeriod: "24h", VerificationTTL: "24h"}}}
-				p := map[string]any{"algorithm": "RS256", "rotation_period": "24h", "verification_ttl": "24h", "allowed_client_ids": []string(nil)}
+				p := map[string]any{"algorithm": "RS256", "rotation_period": "24h", "verification_ttl": "24h", "allowed_client_ids": []any{}}
 				return m, p
 			},
 			extraFields:    map[string]any{"name": "key-name", "id": "key-id"},
@@ -163,9 +126,7 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 		},
 		{
 			name: "IdentityTokenRole",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &IdentityTokenRole{Spec: IdentityTokenRoleSpec{IdentityTokenRoleConfig: IdentityTokenRoleConfig{Key: "default", Template: "tmpl"}}}
 				p := map[string]any{
 					"key": "default", "template": "tmpl", "ttl": "",
@@ -177,9 +138,7 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 		},
 		{
 			name: "PasswordPolicy",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &PasswordPolicy{
 					ObjectMeta: metav1.ObjectMeta{Name: "my-policy"},
 					Spec:       PasswordPolicySpec{PasswordPolicy: "length = 20\nrule \"charset\" { ... }"},
@@ -192,14 +151,12 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 		},
 		{
 			name: "DatabaseSecretEngineRole",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &DatabaseSecretEngineRole{Spec: DatabaseSecretEngineRoleSpec{DBSERole: DBSERole{DBName: "mydb"}}}
 				p := map[string]any{
 					"db_name": "mydb", "default_ttl": metav1.Duration{}, "max_ttl": metav1.Duration{},
-					"creation_statements": []string(nil), "revocation_statements": []string(nil),
-					"rollback_statements": []string(nil), "renew_statements": []string(nil),
+					"creation_statements": []any{}, "revocation_statements": []any{},
+					"rollback_statements": []any{}, "renew_statements": []any{},
 				}
 				return m, p
 			},
@@ -208,9 +165,7 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 		},
 		{
 			name: "AzureAuthEngineConfig",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &AzureAuthEngineConfig{Spec: AzureAuthEngineConfigSpec{AzureConfig: AzureConfig{TenantID: "tenant-123", Resource: "https://management.azure.com/"}}}
 				p := map[string]any{
 					"tenant_id": "tenant-123", "resource": "https://management.azure.com/",
@@ -224,9 +179,7 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 		},
 		{
 			name: "CertAuthEngineConfig",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &CertAuthEngineConfig{Spec: CertAuthEngineConfigSpec{CertAuthEngineConfigInternal: CertAuthEngineConfigInternal{DisableBinding: false, OCSPCacheSize: 100}}}
 				p := map[string]any{
 					"disable_binding": false, "enable_identity_alias_metadata": false,
@@ -239,9 +192,7 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 		},
 		{
 			name: "GCPAuthEngineConfig",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &GCPAuthEngineConfig{Spec: GCPAuthEngineConfigSpec{GCPConfig: GCPConfig{IAMalias: "unique_id"}}}
 				p := map[string]any{
 					"credentials": "", "iam_alias": "unique_id", "iam_metadata": "",
@@ -254,18 +205,9 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 		},
 		{
 			name: "JWTOIDCAuthEngineConfig",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &JWTOIDCAuthEngineConfig{Spec: JWTOIDCAuthEngineConfigSpec{JWTOIDCConfig: JWTOIDCConfig{OIDCDiscoveryURL: "https://accounts.google.com"}}}
-				p := map[string]any{
-					"oidc_discovery_url": "https://accounts.google.com", "oidc_discovery_ca_pem": "",
-					"oidc_client_id": "", "oidc_client_secret": "", "oidc_response_mode": "",
-					"oidc_response_types": []string(nil), "jwks_url": "", "jwks_ca_pem": "",
-					"jwt_validation_pubkeys": []string(nil), "bound_issuer": "",
-					"jwt_supported_algs": []string(nil), "default_role": "",
-					"provider_config": (*apiextensionsv1.JSON)(nil), "namespace_in_state": false,
-				}
+				p := m.GetPayload()
 				return m, p
 			},
 			extraFields:    map[string]any{"accessor": "auth_jwt_abc123"},
@@ -273,9 +215,7 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 		},
 		{
 			name: "RabbitMQSecretEngineConfig",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &RabbitMQSecretEngineConfig{Spec: RabbitMQSecretEngineConfigSpec{RMQSEConfig: RMQSEConfig{LeaseTTL: 3600, LeaseMaxTTL: 86400}}}
 				p := map[string]any{"ttl": 3600, "max_ttl": 86400}
 				return m, p
@@ -285,9 +225,7 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 		},
 		{
 			name: "PKISecretEngineRole",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &PKISecretEngineRole{Spec: PKISecretEngineRoleSpec{PKIRole: PKIRole{
 					TTL: metav1.Duration{}, MaxTTL: metav1.Duration{},
 					AllowLocalhost: true, KeyType: "rsa", KeyBits: 2048,
@@ -297,23 +235,23 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 				}}}
 				p := map[string]any{
 					"ttl": metav1.Duration{}, "max_ttl": metav1.Duration{},
-					"allow_localhost": true, "allowed_domains": []string(nil),
+					"allow_localhost": true, "allowed_domains": []any{},
 					"allowed_domains_template": false, "allow_bare_domains": false,
 					"allow_subdomains": false, "allow_glob_domains": false,
 					"allow_any_name": false, "enforce_hostnames": true,
-					"allow_ip_sans": false, "allowed_uri_sans": []string(nil),
+					"allow_ip_sans": false, "allowed_uri_sans": []any{},
 					"allowed_other_sans": "", "server_flag": true,
 					"client_flag": true, "code_signing_flag": false,
 					"email_protection_flag": false, "key_type": "rsa",
-					"key_bits": 2048, "key_usage": []KeyUsage(nil),
-					"ext_key_usage": []ExtKeyUsage(nil), "ext_key_usage_oids": []string(nil),
+					"key_bits": 2048, "key_usage": []any{},
+					"ext_key_usage": []any{}, "ext_key_usage_oids": []any{},
 					"use_csr_common_name": true, "use_csr_sans": true,
 					"ou": "", "organization": "",
 					"country": "", "locality": "",
 					"province": "", "street_address": "",
 					"postal_code": "", "serial_number": "",
 					"generate_lease": false, "no_store": false,
-					"require_cn": true, "policy_identifiers": []string(nil),
+					"require_cn": true, "policy_identifiers": []any{},
 					"basic_constraints_valid_for_non_ca": false,
 					"not_before_duration":                metav1.Duration{},
 				}
@@ -328,7 +266,7 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			instance, basePayload := tc.setupFn()
 
-			if !instance.IsEquivalentToDesiredState(basePayload) {
+			if !vaultutils.IsEquivalentToDesiredState(instance, basePayload) {
 				t.Errorf("[%s] expected true for base payload (no extra fields)", tc.name)
 			}
 
@@ -340,7 +278,7 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 				payloadWithExtras[k] = v
 			}
 
-			if tc.expectWithBase && !instance.IsEquivalentToDesiredState(payloadWithExtras) {
+			if tc.expectWithBase && !vaultutils.IsEquivalentToDesiredState(instance, payloadWithExtras) {
 				t.Errorf("[%s] expected true: extra Vault fields %v should be ignored", tc.name, keys(tc.extraFields))
 			}
 		})
@@ -349,19 +287,15 @@ func TestAuditCategoryA_BareDeepEqualTypes_ExtraFieldTolerance(t *testing.T) {
 
 func TestAuditCategoryB_DesiredSideDeleteTypes_ExtraFieldTolerance(t *testing.T) {
 	tests := []struct {
-		name    string
-		setupFn func() (interface {
-			IsEquivalentToDesiredState(map[string]any) bool
-		}, map[string]any)
+		name       string
+		setupFn    func() (vaultutils.VaultObject, map[string]any)
 		secretKey  string
 		secretVal  any
 		extraField string
 	}{
 		{
 			name: "GitHubSecretEngineConfig (prv_key deleted)",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &GitHubSecretEngineConfig{Spec: GitHubSecretEngineConfigSpec{GHConfig: GHConfig{ApplicationID: 12345, GitHubAPIBaseURL: "https://api.github.com"}}}
 				p := map[string]any{"app_id": int64(12345), "base_url": "https://api.github.com"}
 				return m, p
@@ -371,9 +305,7 @@ func TestAuditCategoryB_DesiredSideDeleteTypes_ExtraFieldTolerance(t *testing.T)
 		},
 		{
 			name: "KubernetesSecretEngineConfig (service_account_jwt deleted)",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &KubernetesSecretEngineConfig{Spec: KubernetesSecretEngineConfigSpec{KubeSEConfig: KubeSEConfig{KubernetesHost: "https://k8s.example.com"}}}
 				p := map[string]any{"kubernetes_host": "https://k8s.example.com", "kubernetes_ca_cert": "", "disable_local_ca_jwt": false}
 				return m, p
@@ -383,9 +315,7 @@ func TestAuditCategoryB_DesiredSideDeleteTypes_ExtraFieldTolerance(t *testing.T)
 		},
 		{
 			name: "QuaySecretEngineConfig (password deleted)",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &QuaySecretEngineConfig{Spec: QuaySecretEngineConfigSpec{QuayConfig: QuayConfig{URL: "https://quay.example.com"}}}
 				p := map[string]any{"url": "https://quay.example.com", "token": "", "ca_certificate": "", "disable_ssl_verification": false}
 				return m, p
@@ -395,9 +325,7 @@ func TestAuditCategoryB_DesiredSideDeleteTypes_ExtraFieldTolerance(t *testing.T)
 		},
 		{
 			name: "LDAPAuthEngineConfig (bindpass deleted)",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &LDAPAuthEngineConfig{Spec: LDAPAuthEngineConfigSpec{LDAPConfig: LDAPConfig{URL: "ldap://ldap.example.com", UserAttr: "cn"}}}
 				p := map[string]any{
 					"url": "ldap://ldap.example.com", "userattr": "cn",
@@ -419,9 +347,7 @@ func TestAuditCategoryB_DesiredSideDeleteTypes_ExtraFieldTolerance(t *testing.T)
 		},
 		{
 			name: "Policy (name/rules remapping)",
-			setupFn: func() (interface {
-				IsEquivalentToDesiredState(map[string]any) bool
-			}, map[string]any) {
+			setupFn: func() (vaultutils.VaultObject, map[string]any) {
 				m := &Policy{
 					ObjectMeta: metav1.ObjectMeta{Name: "my-policy"},
 					Spec:       PolicySpec{Policy: "path \"secret/*\" { capabilities = [\"read\"] }"},
@@ -441,7 +367,7 @@ func TestAuditCategoryB_DesiredSideDeleteTypes_ExtraFieldTolerance(t *testing.T)
 		t.Run(tc.name, func(t *testing.T) {
 			instance, basePayload := tc.setupFn()
 
-			if !instance.IsEquivalentToDesiredState(basePayload) {
+			if !vaultutils.IsEquivalentToDesiredState(instance, basePayload) {
 				t.Errorf("[%s] expected true for base payload without secret key", tc.name)
 			}
 
@@ -450,7 +376,7 @@ func TestAuditCategoryB_DesiredSideDeleteTypes_ExtraFieldTolerance(t *testing.T)
 				payloadWithSecret[k] = v
 			}
 			payloadWithSecret[tc.secretKey] = tc.secretVal
-			if !instance.IsEquivalentToDesiredState(payloadWithSecret) {
+			if !vaultutils.IsEquivalentToDesiredState(instance, payloadWithSecret) {
 				t.Errorf("[%s] expected true: secret key %q is not in desiredState so filter removes it", tc.name, tc.secretKey)
 			}
 
@@ -459,7 +385,7 @@ func TestAuditCategoryB_DesiredSideDeleteTypes_ExtraFieldTolerance(t *testing.T)
 				payloadWithExtra[k] = v
 			}
 			payloadWithExtra[tc.extraField] = "vault-value"
-			if !instance.IsEquivalentToDesiredState(payloadWithExtra) {
+			if !vaultutils.IsEquivalentToDesiredState(instance, payloadWithExtra) {
 				t.Errorf("[%s] expected true: extra field %q should be ignored", tc.name, tc.extraField)
 			}
 		})
@@ -475,14 +401,14 @@ func TestAuditCategoryC_CustomHandlingTypes(t *testing.T) {
 		}}}
 		payload := map[string]any{
 			"disabled": false,
-			"policies": []string{"default"},
+			"policies": []any{"default"},
 			"metadata": map[string]string{"env": "test"},
 			"name":     "entity-name", "id": "entity-id-123", "aliases": []any{},
 			"creation_time": "2024-01-01T00:00:00Z", "last_update_time": "2024-01-01T00:00:00Z",
 			"merged_entity_ids": nil, "direct_group_ids": nil, "group_ids": nil,
 			"inherited_group_ids": nil, "namespace_id": "root", "bucket_key_hash": "abc123",
 		}
-		if !e.IsEquivalentToDesiredState(payload) {
+		if !vaultutils.IsEquivalentToDesiredState(e, payload) {
 			t.Error("Entity should ignore all Vault-added identity fields")
 		}
 	})
@@ -492,17 +418,15 @@ func TestAuditCategoryC_CustomHandlingTypes(t *testing.T) {
 			Type:     "internal",
 			Policies: []string{"default"},
 		}}}
-		payload := map[string]any{
-			"type":              "internal",
-			"metadata":          map[string]string(nil),
-			"policies":          []string{"default"},
-			"member_group_ids":  []string(nil),
-			"member_entity_ids": []string(nil),
-			"name":              "group-name", "id": "group-id", "alias": nil,
-			"creation_time": "2024-01-01T00:00:00Z", "last_update_time": "2024-01-01T00:00:00Z",
-			"namespace_id": "root", "parent_group_ids": nil,
-		}
-		if !g.IsEquivalentToDesiredState(payload) {
+		payload := g.GetPayload()
+		payload["name"] = "group-name"
+		payload["id"] = "group-id"
+		payload["alias"] = nil
+		payload["creation_time"] = "2024-01-01T00:00:00Z"
+		payload["last_update_time"] = "2024-01-01T00:00:00Z"
+		payload["namespace_id"] = "root"
+		payload["parent_group_ids"] = nil
+		if !vaultutils.IsEquivalentToDesiredState(g, payload) {
 			t.Error("Group should ignore all Vault-added identity fields")
 		}
 	})
@@ -520,7 +444,7 @@ func TestAuditCategoryC_CustomHandlingTypes(t *testing.T) {
 			"mount_path": "auth/kubernetes/", "mount_type": "kubernetes",
 			"local": false, "merged_from_canonical_ids": nil,
 		}
-		if !ea.IsEquivalentToDesiredState(payload) {
+		if !vaultutils.IsEquivalentToDesiredState(ea, payload) {
 			t.Error("EntityAlias should ignore all Vault-added identity fields")
 		}
 	})
@@ -537,7 +461,7 @@ func TestAuditCategoryC_CustomHandlingTypes(t *testing.T) {
 			"creation_time": "2024-01-01T00:00:00Z", "last_update_time": "2024-01-01T00:00:00Z",
 			"mount_path": "auth/oidc/", "mount_type": "oidc",
 		}
-		if !ga.IsEquivalentToDesiredState(payload) {
+		if !vaultutils.IsEquivalentToDesiredState(ga, payload) {
 			t.Error("GroupAlias should ignore all Vault-added identity fields")
 		}
 	})
@@ -546,23 +470,21 @@ func TestAuditCategoryC_CustomHandlingTypes(t *testing.T) {
 		m := &SecretEngineMount{Spec: SecretEngineMountSpec{Mount: Mount{Config: MountConfig{
 			DefaultLeaseTTL: "1h", MaxLeaseTTL: "24h", ListingVisibility: "hidden",
 		}}}}
-		payload := map[string]any{
-			"default_lease_ttl": "1h", "max_lease_ttl": "24h",
-			"force_no_cache":              false,
-			"audit_non_hmac_request_keys": []string(nil), "audit_non_hmac_response_keys": []string(nil),
-			"listing_visibility":          "hidden",
-			"passthrough_request_headers": []string(nil), "allowed_response_headers": []string(nil),
-			"plugin_version": "", "user_lockout_config": map[string]any{},
-			"token_type": "default-service",
-		}
-		if !m.IsEquivalentToDesiredState(payload) {
+		configMap := m.Spec.Config.toMap()
+		delete(configMap, "options")
+		delete(configMap, "description")
+		payload := configMap
+		payload["plugin_version"] = ""
+		payload["user_lockout_config"] = map[string]any{}
+		payload["token_type"] = "default-service"
+		if !vaultutils.IsEquivalentToDesiredState(m, payload) {
 			t.Error("SecretEngineMount should ignore extra tune response fields")
 		}
 	})
 
 	t.Run("RandomSecret always returns false (intentional)", func(t *testing.T) {
 		rs := &RandomSecret{}
-		if rs.IsEquivalentToDesiredState(map[string]any{}) {
+		if vaultutils.IsEquivalentToDesiredState(rs, map[string]any{}) {
 			t.Error("RandomSecret should always return false")
 		}
 	})
@@ -578,7 +500,7 @@ func TestAuditNegativeCases_WrongManagedFieldValues(t *testing.T) {
 			"use_annotations_as_alias_metadata": false,
 			"accessor":                          "extra-field",
 		}
-		if m.IsEquivalentToDesiredState(payload) {
+		if vaultutils.IsEquivalentToDesiredState(m, payload) {
 			t.Error("expected false: wrong managed field value should still trigger drift")
 		}
 	})
@@ -590,7 +512,7 @@ func TestAuditNegativeCases_WrongManagedFieldValues(t *testing.T) {
 			"client_type": "confidential", "id_token_ttl": "", "access_token_ttl": "",
 			"client_id": "extra", "client_secret": "extra",
 		}
-		if c.IsEquivalentToDesiredState(payload) {
+		if vaultutils.IsEquivalentToDesiredState(c, payload) {
 			t.Error("expected false: wrong managed field value should still trigger drift")
 		}
 	})
@@ -605,7 +527,7 @@ func TestAuditNegativeCases_WrongManagedFieldValues(t *testing.T) {
 			"rules": "WRONG RULES",
 			"extra": "ignored",
 		}
-		if p.IsEquivalentToDesiredState(payload) {
+		if vaultutils.IsEquivalentToDesiredState(p, payload) {
 			t.Error("expected false: wrong policy rules should still trigger drift")
 		}
 	})
@@ -626,7 +548,7 @@ func TestAuditNegativeCases_WrongManagedFieldValues(t *testing.T) {
 			"token_no_default_policy": false, "token_num_uses": int64(0),
 			"token_period": json.Number("0"), "token_type": "",
 		}
-		if m.IsEquivalentToDesiredState(payload) {
+		if vaultutils.IsEquivalentToDesiredState(m, payload) {
 			t.Error("expected false: wrong URL should still trigger drift")
 		}
 	})
@@ -641,7 +563,7 @@ func TestAuditNegativeCases_WrongManagedFieldValues(t *testing.T) {
 			"name": "alias-name", "id": "alias-id-1",
 			"mount_accessor": "auth_kubernetes_abc", "canonical_id": "WRONG-ENTITY-ID",
 		}
-		if ea.IsEquivalentToDesiredState(payload) {
+		if vaultutils.IsEquivalentToDesiredState(ea, payload) {
 			t.Error("expected false: wrong canonical_id should still trigger drift")
 		}
 	})
@@ -656,7 +578,7 @@ func TestAuditNegativeCases_WrongManagedFieldValues(t *testing.T) {
 			"name": "group-alias", "id": "ga-id",
 			"mount_accessor": "WRONG-ACCESSOR", "canonical_id": "group-id",
 		}
-		if ga.IsEquivalentToDesiredState(payload) {
+		if vaultutils.IsEquivalentToDesiredState(ga, payload) {
 			t.Error("expected false: wrong mount_accessor should still trigger drift")
 		}
 	})
@@ -667,7 +589,7 @@ func TestAuditNegativeCases_WrongManagedFieldValues(t *testing.T) {
 			"credentials": "", "iam_alias": "WRONG", "iam_metadata": "",
 			"gce_alias": "", "gce_metadata": "", "custom_endpoint": (*apiextensionsv1.JSON)(nil),
 		}
-		if m.IsEquivalentToDesiredState(payload) {
+		if vaultutils.IsEquivalentToDesiredState(m, payload) {
 			t.Error("expected false: wrong iam_alias should still trigger drift")
 		}
 	})
@@ -675,7 +597,7 @@ func TestAuditNegativeCases_WrongManagedFieldValues(t *testing.T) {
 	t.Run("RabbitMQSecretEngineConfig wrong ttl still returns false", func(t *testing.T) {
 		m := &RabbitMQSecretEngineConfig{Spec: RabbitMQSecretEngineConfigSpec{RMQSEConfig: RMQSEConfig{LeaseTTL: 3600, LeaseMaxTTL: 86400}}}
 		payload := map[string]any{"ttl": 9999, "max_ttl": 86400}
-		if m.IsEquivalentToDesiredState(payload) {
+		if vaultutils.IsEquivalentToDesiredState(m, payload) {
 			t.Error("expected false: wrong ttl should still trigger drift")
 		}
 	})
@@ -714,7 +636,7 @@ func TestAC3_TypeCoercionNotNeeded(t *testing.T) {
 			"ttl":     3600,
 			"max_ttl": 86400,
 		}
-		if !m.IsEquivalentToDesiredState(payload) {
+		if !vaultutils.IsEquivalentToDesiredState(m, payload) {
 			t.Error("expected true: same-type int values should match")
 		}
 	})
@@ -725,7 +647,7 @@ func TestAC3_TypeCoercionNotNeeded(t *testing.T) {
 			"ttl":     float64(3600),
 			"max_ttl": float64(86400),
 		}
-		if m.IsEquivalentToDesiredState(payload) {
+		if vaultutils.IsEquivalentToDesiredState(m, payload) {
 			t.Error("expected false: float64 vs int mismatch is detected as drift (self-correcting on next reconcile)")
 		}
 	})
@@ -733,14 +655,8 @@ func TestAC3_TypeCoercionNotNeeded(t *testing.T) {
 	t.Run("string TTL fields match without coercion", func(t *testing.T) {
 		desc := "test"
 		m := &AuthEngineMount{Spec: AuthEngineMountSpec{AuthMount: AuthMount{Config: AuthMountConfig{DefaultLeaseTTL: "1h", MaxLeaseTTL: "24h", Description: &desc}}}}
-		payload := map[string]any{
-			"default_lease_ttl": "1h", "max_lease_ttl": "24h",
-			"audit_non_hmac_request_keys": []string(nil), "audit_non_hmac_response_keys": []string(nil),
-			"listing_visibility": "", "passthrough_request_headers": []string(nil),
-			"allowed_response_headers": []string(nil), "token_type": "",
-			"description": &desc, "options": map[string]string(nil),
-		}
-		if !m.IsEquivalentToDesiredState(payload) {
+		payload := m.Spec.Config.toMap()
+		if !vaultutils.IsEquivalentToDesiredState(m, payload) {
 			t.Error("expected true: string TTLs match natively")
 		}
 	})

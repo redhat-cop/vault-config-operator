@@ -77,10 +77,6 @@ func (q *QuaySecretEngineConfig) IsEquivalentToDesiredState(payload map[string]a
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (q *QuaySecretEngineConfig) IsInitialized() bool {
-	return true
-}
-
 func (q *QuaySecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	return q.setInternalCredentials(context)
 }
@@ -162,15 +158,15 @@ type QuayConfig struct {
 
 	// url Specifies the location of the Quay instance
 	// +kubebuilder:validation:Optional
-	URL string `json:"url,omitempty"`
+	URL string `json:"url,omitempty" vault:"url"`
 
 	// CACertertificate PEM encoded CA cert for use by the TLS client used to communicate with Quay.
 	// +kubebuilder:validation:Optional
-	CACertertificate string `json:"caCertificate,omitempty"`
+	CACertertificate string `json:"caCertificate,omitempty" vault:"ca_certificate"`
 
 	// DisableSslVerification Disable SSL verification when communicating with Quay.
 	// +kubebuilder:validation:Optional
-	DisableSslVerification bool `json:"disableSslVerification,omitempty"`
+	DisableSslVerification bool `json:"disableSslVerification,omitempty" vault:"disable_ssl_verification"`
 
 	retrievedToken string `json:"-"`
 }
@@ -220,11 +216,8 @@ type QuaySecretEngineConfigList struct {
 }
 
 func (i *QuayConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["url"] = i.URL
+	payload := vaultutils.StructToVaultPayload(i)
 	payload["token"] = i.retrievedToken
-	payload["ca_certificate"] = i.CACertertificate
-	payload["disable_ssl_verification"] = i.DisableSslVerification
 	return payload
 }
 

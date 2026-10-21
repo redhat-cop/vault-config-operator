@@ -17,12 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // QuaySecretEngineStaticRoleSpec defines the desired state of QuaySecretEngineStaticRole
@@ -57,50 +53,24 @@ func (d *QuaySecretEngineStaticRole) GetVaultConnection() *vaultutils.VaultConne
 }
 
 func (d *QuaySecretEngineStaticRole) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "static-roles" + "/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "static-roles" + "/" + d.Name)
+	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "static-roles" + "/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 func (q *QuaySecretEngineStaticRole) GetPayload() map[string]any {
 	return q.Spec.toMap()
-}
-func (q *QuaySecretEngineStaticRole) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := q.Spec.QuayBaseRole.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (q *QuaySecretEngineStaticRole) IsInitialized() bool {
-	return true
 }
 
 func (d *QuaySecretEngineStaticRole) IsDeletable() bool {
 	return true
 }
 
-func (q *QuaySecretEngineStaticRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (q *QuaySecretEngineStaticRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (q *QuaySecretEngineStaticRole) IsValid() (bool, error) {
-	return true, nil
-}
-
 func (r *QuayBaseRole) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["namespace_type"] = r.NamespaceType
-	payload["namespace_name"] = r.NamespaceName
+	payload := vaultutils.StructToVaultPayload(r)
 	payload["create_repositories"] = r.CreateRepositories
 	if r.DefaultPermission != nil {
 		payload["default_permission"] = r.DefaultPermission
 	}
 	if r.Teams != nil {
 		setMapJson(payload, "teams", r.Teams)
-
 	}
 	if r.Repositories != nil {
 		setMapJson(payload, "repositories", r.Repositories)

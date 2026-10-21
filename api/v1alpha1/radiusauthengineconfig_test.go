@@ -556,7 +556,7 @@ func TestResolveRADIUSPasswordKey_PasswordRemappedWhenWebhooksDisabled(t *testin
 }
 
 func TestResolveRADIUSPasswordKey_PasswordPreservedWhenWebhooksEnabled(t *testing.T) {
-	os.Unsetenv("ENABLE_WEBHOOKS")
+	_ = os.Unsetenv("ENABLE_WEBHOOKS")
 	got := resolveRADIUSPasswordKey("password")
 	if got != "password" {
 		t.Errorf("resolveRADIUSPasswordKey(\"password\") with webhooks enabled = %q, want \"password\"", got)

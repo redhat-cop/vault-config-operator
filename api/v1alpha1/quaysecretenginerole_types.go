@@ -17,13 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
 	"encoding/json"
-	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // +kubebuilder:validation:Enum:={"admin","read","write"}
@@ -89,42 +86,9 @@ func (d *QuaySecretEngineRole) GetPath() string {
 func (q *QuaySecretEngineRole) GetPayload() map[string]any {
 	return q.Spec.toMap()
 }
-func (q *QuaySecretEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := q.Spec.QuayRole.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (q *QuaySecretEngineRole) IsInitialized() bool {
-	return true
-}
-
-func (q *QuaySecretEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (q *QuaySecretEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (q *QuaySecretEngineRole) IsValid() (bool, error) {
-	return true, nil
-}
 
 func (r *QuayRole) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["namespace_type"] = r.NamespaceType
-	payload["namespace_name"] = r.NamespaceName
-	payload["create_repositories"] = r.CreateRepositories
-	if r.DefaultPermission != nil {
-		payload["default_permission"] = r.DefaultPermission
-	}
-	if r.Teams != nil {
-		setMapJson(payload, "teams", r.Teams)
-
-	}
-	if r.Repositories != nil {
-		setMapJson(payload, "repositories", r.Repositories)
-	}
+	payload := r.QuayBaseRole.toMap()
 	payload["ttl"] = r.TTL
 	payload["max_ttl"] = r.MaxTTL
 	return payload
@@ -162,31 +126,31 @@ type QuayBaseRole struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"organization","user"}
 	// +kubebuilder:default="organization"
-	NamespaceType NamespaceType `json:"namespaceType,omitempty"`
+	NamespaceType NamespaceType `json:"namespaceType,omitempty" vault:"namespace_type"`
 
 	// NamespaceName Name of the Quay account.
 	// +kubebuilder:validation:Optional
-	NamespaceName string `json:"namespaceName,omitempty"`
+	NamespaceName string `json:"namespaceName,omitempty" vault:"namespace_name"`
 
 	// CreateRepositories Access to create Quay repositories.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=false
-	CreateRepositories *bool `json:"createRepositories"`
+	CreateRepositories *bool `json:"createRepositories" vault:"-"`
 
 	// Teams Permissions granted to the Robot Account to Teams.
 	// +kubebuilder:validation:Optional
-	Teams *map[string]TeamRole `json:"teams,omitempty"`
+	Teams *map[string]TeamRole `json:"teams,omitempty" vault:"-"`
 
 	// Repositories Permissions granted to the Robot Account to Repositories.
 	// +kubebuilder:validation:Optional
-	Repositories *map[string]Permission `json:"repositories,omitempty"`
+	Repositories *map[string]Permission `json:"repositories,omitempty" vault:"-"`
 
 	// DefaultPermission Default permission applied to existing and newly created repositories in the namespace.
 	// When set on an organization namespace, the robot account receives this permission on all current
 	// repositories and an organization prototype is created so future repositories inherit the same permission.
 	// Per-repository overrides in the Repositories field take precedence over this default.
 	// +kubebuilder:validation:Optional
-	DefaultPermission *Permission `json:"defaultPermission,omitempty"`
+	DefaultPermission *Permission `json:"defaultPermission,omitempty" vault:"-"`
 }
 
 type QuayRole struct {
@@ -194,11 +158,11 @@ type QuayRole struct {
 
 	// TTL Time-to-Live for the credential
 	// +kubebuilder:validation:Optional
-	TTL *metav1.Duration `json:"TTL,omitempty"`
+	TTL *metav1.Duration `json:"TTL,omitempty" vault:"-"`
 
 	// MaxTTL Maximum Time-to-Live for the credential
 	// +kubebuilder:validation:Optional
-	MaxTTL *metav1.Duration `json:"maxTTL,omitempty"`
+	MaxTTL *metav1.Duration `json:"maxTTL,omitempty" vault:"-"`
 }
 
 //+kubebuilder:object:root=true

@@ -19,7 +19,6 @@ package v1alpha1
 import (
 	"context"
 	"errors"
-	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,7 +39,7 @@ type EntityAliasSpec struct {
 	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
-	EntityAliasConfig `json:",inline"`
+	EntityAliasConfig `json:",inline" vault:",inline"`
 
 	retrievedMountAccessor string `json:"-"`
 
@@ -63,22 +62,22 @@ type EntityAliasSpec struct {
 type EntityAliasConfig struct {
 	// AuthEngineMountPath is the path where the auth engine is mounted
 	// +kubebuilder:validation:Optional
-	AuthEngineMountPath string `json:"authEngineMountPath,omitempty"`
+	AuthEngineMountPath string `json:"authEngineMountPath,omitempty" vault:"-"`
 
 	// EntityName is the name of the entity to which this alias belongs
 	// +kubebuilder:validation:Optional
-	EntityName string `json:"entityName,omitempty"`
+	EntityName string `json:"entityName,omitempty" vault:"-"`
 
 	// CustomMetadata is a map of arbitrary string to string valued user-provided metadata meant to describe the alias.
 	// +kubebuilder:validation:Optional
 	// +mapType=granular
-	CustomMetadata map[string]string `json:"customMetadata,omitempty"`
+	CustomMetadata map[string]string `json:"customMetadata,omitempty" vault:"custom_metadata,omitempty"`
 }
 
 // EntityAliasStatus defines the observed state of EntityAlias
 type EntityAliasStatus struct {
 	// +kubebuilder:validation:Optional
-	ID string `json:"id,omitempty"`
+	ID string `json:"id,omitempty" vault:"-"`
 
 	// +patchMergeKey=type
 	// +patchStrategy=merge
@@ -140,19 +139,12 @@ func (d *EntityAlias) GetPayload() map[string]any {
 }
 
 func (i *EntityAliasSpec) toMap() map[string]any {
-	payload := map[string]any{}
+	payload := vaultutils.StructToVaultPayload(i)
 	payload["name"] = i.retrievedName
 	payload["id"] = i.retrievedAliasID
 	payload["mount_accessor"] = i.retrievedMountAccessor
 	payload["canonical_id"] = i.retrievedCanonicalID
-	if len(i.CustomMetadata) > 0 {
-		payload["custom_metadata"] = i.CustomMetadata
-	}
 	return payload
-}
-
-func (d *EntityAlias) IsInitialized() bool {
-	return true
 }
 
 func (d *EntityAlias) PrepareInternalValues(context context.Context, object client.Object) error {
@@ -181,11 +173,7 @@ func (d *EntityAlias) PrepareInternalValues(context context.Context, object clie
 		return err
 	}
 	d.Spec.retrievedCanonicalID = secret.Data["id"].(string)
-	if d.Spec.Name != "" {
-		d.Spec.retrievedName = d.Spec.Name
-	} else {
-		d.Spec.retrievedName = d.Name
-	}
+	d.Spec.retrievedName = vaultutils.ResourceName(d.Spec.Name, d.Name)
 
 	if d.Status.ID == "" {
 		//we have to create the entity alias as unfortunately this api is asymmetric
@@ -217,19 +205,6 @@ func (d *EntityAlias) PrepareInternalValues(context context.Context, object clie
 	return nil
 }
 
-func (d *EntityAlias) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *EntityAlias) IsValid() (bool, error) {
-	return true, nil
-}
-
 func (d *EntityAlias) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
-}
-
-func (d *EntityAlias) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.Spec.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

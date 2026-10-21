@@ -17,12 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -74,26 +70,6 @@ func (d *KubernetesSecretEngineRole) GetPath() string {
 func (d *KubernetesSecretEngineRole) GetPayload() map[string]any {
 	return d.Spec.toMap()
 }
-func (d *KubernetesSecretEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.Spec.KubeSERole.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (d *KubernetesSecretEngineRole) IsInitialized() bool {
-	return true
-}
-
-func (d *KubernetesSecretEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *KubernetesSecretEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *KubernetesSecretEngineRole) IsValid() (bool, error) {
-	return true, nil
-}
 
 type KubeSERole struct {
 
@@ -101,73 +77,60 @@ type KubeSERole struct {
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	AllowedKubernetesNamespaces []string `json:"allowedKubernetesNamespaces,omitempty"`
+	AllowedKubernetesNamespaces []string `json:"allowedKubernetesNamespaces,omitempty" vault:"allowed_kubernetes_namespaces"`
 
 	// A label selector for Kubernetes namespaces in which credentials can be generated.
 	// Accepts either a JSON or YAML object. The value should be of type LabelSelector as illustrated: "'{'matchLabels':{'stage':'prod','sa-generator':'vault'}}".
 	// If set with allowed_kubernetes_namespaces, the conditions are ORed.
 	// +kubebuilder:validation:Optional
-	AllowedKubernetesNamespaceSelector string `json:"allowedKubernetesNamespaceSelector,omitempty"`
+	AllowedKubernetesNamespaceSelector string `json:"allowedKubernetesNamespaceSelector,omitempty" vault:"allowed_kubernetes_namespace_selector"`
 
 	// DeafulTTL Specifies the TTL for the leases associated with this role. Accepts time suffixed strings ("1h") or an integer number of seconds. Defaults to system/engine default TTL time.
 	// +kubebuilder:validation:Optional
-	DefaultTTL metav1.Duration `json:"defaultTTL,omitempty"`
+	DefaultTTL metav1.Duration `json:"defaultTTL,omitempty" vault:"token_default_ttl"`
 
 	// MaxTTL Specifies the maximum TTL for the leases associated with this role. Accepts time suffixed strings ("1h") or an integer number of seconds. Defaults to system/mount default TTL time; this value is allowed to be less than the mount max TTL (or, if not set, the system max TTL), but it is not allowed to be longer. See also The TTL General Case.
 	// +kubebuilder:validation:Optional
-	MaxTTL metav1.Duration `json:"maxTTL,omitempty"`
+	MaxTTL metav1.Duration `json:"maxTTL,omitempty" vault:"token_max_ttl"`
 
 	// DefaultAudiences The default intended audiences for generated Kubernetes tokens, specified by a comma separated string. e.g "custom-audience-0,custom-audience-1".
 	// If not set or set to "", the Kubernetes cluster default for audiences of service account tokens will be used.
 	// +kubebuilder:validation:Optional
-	DefaultAudiences string `json:"defaultAudiences,omitempty"`
+	DefaultAudiences string `json:"defaultAudiences,omitempty" vault:"token_default_audiences"`
 
 	// ServiceAccountName The pre-existing service account to generate tokens for. Mutually exclusive with all role parameters. If set, only a Kubernetes token will be created when credentials are requested. See the Kubernetes service account documentation for more details on service accounts.
 	// +kubebuilder:validation:Optional
-	ServiceAccountName string `json:"serviceAccountName,omitempty"`
+	ServiceAccountName string `json:"serviceAccountName,omitempty" vault:"service_account_name"`
 
 	// KubernetesRoleName The pre-existing Role or ClusterRole to bind a generated service account to. If set, Kubernetes token, service account, and role binding objects will be created when credentials are requested. See the Kubernetes roles documentation for more details on Kubernetes roles.
 	// +kubebuilder:validation:Optional
-	KubernetesRoleName string `json:"kubernetesRoleName,omitempty"`
+	KubernetesRoleName string `json:"kubernetesRoleName,omitempty" vault:"kubernetes_role_name"`
 
 	// KubernetesRoleType Specifies whether the Kubernetes role is a Role or ClusterRole
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="Role"
 	// +kubebuilder:validation:Enum={"Role","ClusterRole"}
-	KubernetesRoleType string `json:"kubernetesRoleType,omitempty"`
+	KubernetesRoleType string `json:"kubernetesRoleType,omitempty" vault:"kubernetes_role_type"`
 
 	// GenerateRoleRules The Role or ClusterRole rules to use when generating a role. Accepts either JSON or YAML formatted rules. If set, the entire chain of Kubernetes objects will be generated when credentials are requested. The value should be a rules key with an array of PolicyRule objects, as illustrated in the Kubernetes RBAC documentation and Sample Payload 3 below.
 	// +kubebuilder:validation:Optional
-	GenerateRoleRules string `json:"generateRoleRules,omitempty"`
+	GenerateRoleRules string `json:"generateRoleRules,omitempty" vault:"generated_role_rules"`
 
 	// NameTemplate The name template to use when generating service accounts, roles and role bindings. If unset, a default template is used. See username templating for details on how to write a custom template.
 	// +kubebuilder:validation:Optional
-	NameTemplate string `json:"nameTemplate,omitempty"`
+	NameTemplate string `json:"nameTemplate,omitempty" vault:"name_template"`
 
 	// ExtraAnnotations Additional annotations to apply to all generated Kubernetes objects. See the Kubernetes annotations documentation for more details on annotations.
 	// +kubebuilder:validation:Optional
-	ExtraAnnotations map[string]string `json:"extraAnnotations,omitempty"`
+	ExtraAnnotations map[string]string `json:"extraAnnotations,omitempty" vault:"extra_annotations"`
 
 	// ExtraLabels Additional labels to apply to all generated Kubernetes objects. See the Kubernetes labels documentation for more details on labels.
 	// +kubebuilder:validation:Optional
-	ExtraLabels map[string]string `json:"extraLabels,omitempty"`
+	ExtraLabels map[string]string `json:"extraLabels,omitempty" vault:"extra_labels"`
 }
 
 func (i *KubeSERole) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["allowed_kubernetes_namespaces"] = i.AllowedKubernetesNamespaces
-	payload["allowed_kubernetes_namespace_selector"] = i.AllowedKubernetesNamespaceSelector
-	payload["token_max_ttl"] = i.MaxTTL
-	payload["token_default_ttl"] = i.DefaultTTL
-	payload["token_default_audiences"] = i.DefaultAudiences
-	payload["service_account_name"] = i.ServiceAccountName
-	payload["kubernetes_role_name"] = i.KubernetesRoleName
-	payload["kubernetes_role_type"] = i.KubernetesRoleType
-	payload["generated_role_rules"] = i.GenerateRoleRules
-	payload["name_template"] = i.NameTemplate
-	payload["extra_annotations"] = i.ExtraAnnotations
-	payload["extra_labels"] = i.ExtraLabels
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 // KubernetesSecretEngineRoleStatus defines the observed state of KubernetesSecretEngineRole

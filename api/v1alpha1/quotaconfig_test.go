@@ -74,14 +74,30 @@ func TestQuotaConfigToMap(t *testing.T) {
 	}
 }
 
-func TestQuotaConfigToMapSortsSlices(t *testing.T) {
+func TestQuotaConfigToMapPreservesSliceOrder(t *testing.T) {
 	data := QuotaConfigData{
 		RateLimitExemptPaths: []string{"z-path", "a-path", "m-path"},
 	}
 	result := data.toMap()
 	paths := result["rate_limit_exempt_paths"].([]any)
-	if paths[0].(string) != "a-path" || paths[1].(string) != "m-path" || paths[2].(string) != "z-path" {
-		t.Errorf("expected sorted paths, got %v", paths)
+	if paths[0].(string) != "z-path" || paths[1].(string) != "a-path" || paths[2].(string) != "m-path" {
+		t.Errorf("expected original order preserved, got %v", paths)
+	}
+}
+
+func TestQuotaConfigIsEquivalentSortsBeforeCompare(t *testing.T) {
+	qc := &QuotaConfig{
+		Spec: QuotaConfigSpec{
+			QuotaConfigData: QuotaConfigData{
+				RateLimitExemptPaths: []string{"z-path", "a-path", "m-path"},
+			},
+		},
+	}
+	payload := map[string]any{
+		"rate_limit_exempt_paths": []any{"a-path", "m-path", "z-path"},
+	}
+	if !qc.IsEquivalentToDesiredState(payload) {
+		t.Error("expected equivalent after sorting")
 	}
 }
 

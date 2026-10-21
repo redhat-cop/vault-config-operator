@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
@@ -323,7 +324,7 @@ func TestKAECConfigToMap(t *testing.T) {
 	expected := map[string]any{
 		"kubernetes_host":                   "https://kubernetes.default.svc:443",
 		"kubernetes_ca_cert":                "-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----",
-		"pem_keys":                          []string{"pem-key-1", "pem-key-2"},
+		"pem_keys":                          []any{"pem-key-1", "pem-key-2"},
 		"issuer":                            "https://kubernetes.default.svc",
 		"disable_iss_validation":            true,
 		"disable_local_ca_jwt":              true,
@@ -364,7 +365,7 @@ func TestKubernetesAuthEngineConfigIsEquivalentMatching(t *testing.T) {
 
 	payload := config.Spec.KAECConfig.toMap()
 
-	if !config.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected matching payload to be equivalent")
 	}
 }
@@ -382,7 +383,7 @@ func TestKubernetesAuthEngineConfigIsEquivalentNonMatching(t *testing.T) {
 	payload := config.Spec.KAECConfig.toMap()
 	payload["kubernetes_host"] = "https://different-host.com"
 
-	if config.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected non-matching payload (different kubernetes_host) to NOT be equivalent")
 	}
 }
@@ -401,7 +402,7 @@ func TestKubernetesAuthEngineConfigIsEquivalentExtraFields(t *testing.T) {
 	payload := config.Spec.KAECConfig.toMap()
 	payload["extra_field"] = "unexpected"
 
-	if !config.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }

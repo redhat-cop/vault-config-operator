@@ -17,11 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ vaultutils.VaultObject = &LoggerConfig{}
@@ -32,10 +29,7 @@ func (d *LoggerConfig) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *LoggerConfig) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath("sys/loggers/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath("sys/loggers/" + d.Name)
+	return vaultutils.CleansePath("sys/loggers/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 
 func (d *LoggerConfig) GetPayload() map[string]any {
@@ -61,24 +55,8 @@ func (d *LoggerConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	return false
 }
 
-func (d *LoggerConfig) IsInitialized() bool {
-	return true
-}
-
 func (d *LoggerConfig) IsDeletable() bool {
 	return true
-}
-
-func (d *LoggerConfig) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *LoggerConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *LoggerConfig) IsValid() (bool, error) {
-	return true, nil
 }
 
 // LoggerConfigSpec defines the desired state of LoggerConfig
@@ -106,13 +84,11 @@ type LoggerConfigConfig struct {
 	// trace, debug, info, warn, error.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum={"trace","debug","info","warn","error"}
-	Level string `json:"level"`
+	Level string `json:"level" vault:"level"`
 }
 
 func (c *LoggerConfigConfig) toMap() map[string]any {
-	return map[string]any{
-		"level": c.Level,
-	}
+	return vaultutils.StructToVaultPayload(c)
 }
 
 // LoggerConfigStatus defines the observed state of LoggerConfig

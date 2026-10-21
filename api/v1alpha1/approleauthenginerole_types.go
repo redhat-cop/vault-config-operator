@@ -17,14 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"encoding/json"
 	"reflect"
-	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // AppRoleAuthEngineRoleSpec defines the desired state of AppRoleAuthEngineRole
@@ -56,65 +52,65 @@ type AppRoleRole struct {
 	// BindSecretID requires the secret_id to be presented during login
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=true
-	BindSecretID bool `json:"bindSecretID"`
+	BindSecretID bool `json:"bindSecretID" vault:"bind_secret_id"`
 
 	// SecretIDBoundCIDRs is the list of CIDR blocks for login operations
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	SecretIDBoundCIDRs []string `json:"secretIDBoundCIDRs,omitempty"`
+	SecretIDBoundCIDRs []string `json:"secretIDBoundCIDRs,omitempty" vault:"secret_id_bound_cidrs"`
 
 	// SecretIDNumUses is the number of times a SecretID can be used (0=unlimited)
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	SecretIDNumUses int `json:"secretIDNumUses,omitempty"`
+	SecretIDNumUses int `json:"secretIDNumUses,omitempty" vault:"secret_id_num_uses,number"`
 
 	// SecretIDTTL is the duration after which a SecretID expires (e.g. "10m", "1h")
 	// +kubebuilder:validation:Optional
-	SecretIDTTL string `json:"secretIDTTL,omitempty"`
+	SecretIDTTL string `json:"secretIDTTL,omitempty" vault:"secret_id_ttl,duration"`
 
 	// LocalSecretIDs makes SecretIDs cluster-local. Immutable after creation.
 	// +kubebuilder:validation:Optional
-	LocalSecretIDs bool `json:"localSecretIDs,omitempty"`
+	LocalSecretIDs bool `json:"localSecretIDs,omitempty" vault:"local_secret_ids"`
 
 	// TokenTTL is the incremental lifetime for generated tokens (e.g. "1h")
 	// +kubebuilder:validation:Optional
-	TokenTTL string `json:"tokenTTL,omitempty"`
+	TokenTTL string `json:"tokenTTL,omitempty" vault:"token_ttl,duration"`
 
 	// TokenMaxTTL is the maximum lifetime for generated tokens (e.g. "24h")
 	// +kubebuilder:validation:Optional
-	TokenMaxTTL string `json:"tokenMaxTTL,omitempty"`
+	TokenMaxTTL string `json:"tokenMaxTTL,omitempty" vault:"token_max_ttl,duration"`
 
 	// TokenPolicies is the list of token policies
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	TokenPolicies []string `json:"tokenPolicies,omitempty"`
+	TokenPolicies []string `json:"tokenPolicies,omitempty" vault:"token_policies"`
 
 	// TokenBoundCIDRs is the list of CIDR blocks for token authentication
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty"`
+	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty" vault:"token_bound_cidrs"`
 
 	// TokenExplicitMaxTTL is the hard cap max TTL (e.g. "24h")
 	// +kubebuilder:validation:Optional
-	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty"`
+	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty" vault:"token_explicit_max_ttl,duration"`
 
 	// TokenNoDefaultPolicy excludes the default policy from generated tokens
 	// +kubebuilder:validation:Optional
-	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty"`
+	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty" vault:"token_no_default_policy"`
 
 	// TokenNumUses is the max number of token uses (0=unlimited)
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	TokenNumUses int `json:"tokenNumUses,omitempty"`
+	TokenNumUses int `json:"tokenNumUses,omitempty" vault:"token_num_uses,number"`
 
 	// TokenPeriod is the renewal period for periodic tokens (e.g. "24h")
 	// +kubebuilder:validation:Optional
-	TokenPeriod string `json:"tokenPeriod,omitempty"`
+	TokenPeriod string `json:"tokenPeriod,omitempty" vault:"token_period,duration"`
 
 	// TokenType is the type of token to generate: service, batch, or default
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"service","batch","default","default-service","default-batch",""}
-	TokenType string `json:"tokenType,omitempty"`
+	TokenType string `json:"tokenType,omitempty" vault:"token_type"`
 }
 
 var _ vaultutils.VaultObject = &AppRoleAuthEngineRole{}
@@ -130,10 +126,7 @@ func (d *AppRoleAuthEngineRole) IsDeletable() bool {
 }
 
 func (d *AppRoleAuthEngineRole) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/role/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/role/" + d.Name)
+	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/role/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 
 func (d *AppRoleAuthEngineRole) GetPayload() map[string]any {
@@ -176,44 +169,12 @@ func (d *AppRoleAuthEngineRole) IsEquivalentToDesiredState(payload map[string]an
 	return reflect.DeepEqual(desiredState, filteredPayload)
 }
 
-func (d *AppRoleAuthEngineRole) IsInitialized() bool {
-	return true
-}
-
-func (d *AppRoleAuthEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *AppRoleAuthEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *AppRoleAuthEngineRole) IsValid() (bool, error) {
-	return true, nil
-}
-
 func (d *AppRoleAuthEngineRole) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
 }
 
 func (d *AppRoleRole) toMap() map[string]any {
-	payload := map[string]any{
-		"bind_secret_id":          d.BindSecretID,
-		"secret_id_bound_cidrs":   toInterfaceArray(d.SecretIDBoundCIDRs),
-		"secret_id_num_uses":      json.Number(strconv.Itoa(d.SecretIDNumUses)),
-		"secret_id_ttl":           durationToSeconds(d.SecretIDTTL),
-		"local_secret_ids":        d.LocalSecretIDs,
-		"token_ttl":               durationToSeconds(d.TokenTTL),
-		"token_max_ttl":           durationToSeconds(d.TokenMaxTTL),
-		"token_policies":          toInterfaceArray(d.TokenPolicies),
-		"token_bound_cidrs":       toInterfaceArray(d.TokenBoundCIDRs),
-		"token_explicit_max_ttl":  durationToSeconds(d.TokenExplicitMaxTTL),
-		"token_no_default_policy": d.TokenNoDefaultPolicy,
-		"token_num_uses":          json.Number(strconv.Itoa(d.TokenNumUses)),
-		"token_period":            durationToSeconds(d.TokenPeriod),
-		"token_type":              d.TokenType,
-	}
-	return payload
+	return vaultutils.StructToVaultPayload(d)
 }
 
 // AppRoleAuthEngineRoleStatus defines the observed state of AppRoleAuthEngineRole

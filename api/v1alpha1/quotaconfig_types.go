@@ -17,12 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ vaultutils.VaultObject = &QuotaConfig{}
@@ -42,30 +40,16 @@ func (d *QuotaConfig) GetPayload() map[string]any {
 
 func (d *QuotaConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.QuotaConfigData.toMap()
+	sortAnyStringSlice(desiredState, "rate_limit_exempt_paths")
+	sortAnyStringSlice(desiredState, "absolute_rate_limit_exempt_paths")
 	sortAnyStringSlice(payload, "rate_limit_exempt_paths")
 	sortAnyStringSlice(payload, "absolute_rate_limit_exempt_paths")
 	removeUnsetFields(desiredState, payload)
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (d *QuotaConfig) IsInitialized() bool {
-	return true
-}
-
 func (d *QuotaConfig) IsDeletable() bool {
 	return false
-}
-
-func (d *QuotaConfig) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *QuotaConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *QuotaConfig) IsValid() (bool, error) {
-	return true, nil
 }
 
 // QuotaConfigSpec defines the desired state of QuotaConfig
@@ -85,30 +69,23 @@ type QuotaConfigSpec struct {
 type QuotaConfigData struct {
 	// EnableRateLimitAuditLogging toggles whether audit log entries also include rate-limit quota rejections.
 	// +kubebuilder:validation:Optional
-	EnableRateLimitAuditLogging bool `json:"enableRateLimitAuditLogging,omitempty"`
+	EnableRateLimitAuditLogging bool `json:"enableRateLimitAuditLogging,omitempty" vault:"enable_rate_limit_audit_logging"`
 
 	// EnableRateLimitResponseHeaders controls whether Vault returns rate-limit quota information in HTTP response headers.
 	// +kubebuilder:validation:Optional
-	EnableRateLimitResponseHeaders bool `json:"enableRateLimitResponseHeaders,omitempty"`
+	EnableRateLimitResponseHeaders bool `json:"enableRateLimitResponseHeaders,omitempty" vault:"enable_rate_limit_response_headers"`
 
 	// RateLimitExemptPaths is a list of path suffixes exempted from rate limiting. Vault may add its own built-in paths.
 	// +kubebuilder:validation:Optional
-	RateLimitExemptPaths []string `json:"rateLimitExemptPaths,omitempty"`
+	RateLimitExemptPaths []string `json:"rateLimitExemptPaths,omitempty" vault:"rate_limit_exempt_paths"`
 
 	// AbsoluteRateLimitExemptPaths is a list of exact paths exempted from rate limiting. Overrides any built-in behaviour.
 	// +kubebuilder:validation:Optional
-	AbsoluteRateLimitExemptPaths []string `json:"absoluteRateLimitExemptPaths,omitempty"`
+	AbsoluteRateLimitExemptPaths []string `json:"absoluteRateLimitExemptPaths,omitempty" vault:"absolute_rate_limit_exempt_paths"`
 }
 
 func (i *QuotaConfigData) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["enable_rate_limit_audit_logging"] = i.EnableRateLimitAuditLogging
-	payload["enable_rate_limit_response_headers"] = i.EnableRateLimitResponseHeaders
-	payload["rate_limit_exempt_paths"] = toInterfaceArray(i.RateLimitExemptPaths)
-	payload["absolute_rate_limit_exempt_paths"] = toInterfaceArray(i.AbsoluteRateLimitExemptPaths)
-	sortAnyStringSlice(payload, "rate_limit_exempt_paths")
-	sortAnyStringSlice(payload, "absolute_rate_limit_exempt_paths")
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 // QuotaConfigStatus defines the observed state of QuotaConfig

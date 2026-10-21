@@ -105,11 +105,11 @@ func (c *GCPCredentialConfig) ValidateCredentialSource() error {
 type GCPSEConfig struct {
 	// TTL specifies the default TTL for long-lived credentials (service account keys). Duration format.
 	// +kubebuilder:validation:Optional
-	TTL string `json:"ttl,omitempty"`
+	TTL string `json:"ttl,omitempty" vault:"ttl"`
 
 	// MaxTTL specifies the maximum TTL for long-lived credentials. Duration format.
 	// +kubebuilder:validation:Optional
-	MaxTTL string `json:"maxTTL,omitempty"`
+	MaxTTL string `json:"maxTTL,omitempty" vault:"max_ttl"`
 
 	retrievedCredentials string `json:"-"`
 }
@@ -140,10 +140,6 @@ func (d *GCPSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]an
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (d *GCPSecretEngineConfig) IsInitialized() bool {
-	return true
-}
-
 func (d *GCPSecretEngineConfig) IsValid() (bool, error) {
 	err := d.isValid()
 	return err == nil, err
@@ -159,10 +155,6 @@ func (d *GCPSecretEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthC
 
 func (d *GCPSecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	return d.setInternalCredentials(context)
-}
-
-func (d *GCPSecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (d *GCPSecretEngineConfig) setInternalCredentials(context context.Context) error {
@@ -234,10 +226,8 @@ func (d *GCPSecretEngineConfig) setInternalCredentials(context context.Context) 
 }
 
 func (i *GCPSEConfig) toMap() map[string]any {
-	payload := map[string]any{}
+	payload := vaultutils.StructToVaultPayload(i)
 	payload["credentials"] = i.retrievedCredentials
-	payload["ttl"] = i.TTL
-	payload["max_ttl"] = i.MaxTTL
 	return payload
 }
 

@@ -17,12 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -58,87 +56,84 @@ func (d *AuthEngineMount) IsDeletable() bool {
 }
 
 func (d *AuthEngineMount) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath(d.GetEngineListPath() + "/" + string(d.Spec.Path) + "/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath(d.GetEngineListPath() + "/" + string(d.Spec.Path) + "/" + d.Name)
+	return vaultutils.CleansePath(d.GetEngineListPath() + "/" + string(d.Spec.Path) + "/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 
 type AuthMount struct {
 
 	// Description Specifies a human-friendly description of the auth method.
 	// +kubebuilder:validation:Optional
-	Description string `json:"description,omitempty"`
+	Description string `json:"description,omitempty" vault:"description"`
 
 	// Type Specifies the name of the authentication method type, such as "github" or "token".
 	// +kubebuilder:validation:Optional
-	Type string `json:"type,omitempty"`
+	Type string `json:"type,omitempty" vault:"type"`
 
 	// Config Specifies configuration options for this auth method.
 	// +kubebuilder:validation:Optional
-	Config AuthMountConfig `json:"config,omitempty"`
+	Config AuthMountConfig `json:"config,omitempty" vault:"-"`
 
 	// Local Specifies if the auth method is local only. Local auth methods are not replicated nor (if a secondary) removed by replication. Logins via local auth methods do not make use of identity, i.e. no entity or groups will be attached to the token.
 	// +kubebuilder:validation:Optional
-	Local bool `json:"local,omitempty"`
+	Local bool `json:"local,omitempty" vault:"local"`
 
 	// SealWrap Enable seal wrapping for the mount, causing values stored by the mount to be wrapped by the seal's encryption capability.
 	// +kubebuilder:validation:Optional
-	SealWrap bool `json:"sealwrap,omitempty"`
+	SealWrap bool `json:"sealwrap,omitempty" vault:"seal_wrap"`
 }
 
 type AuthMountConfig struct {
 	// DefaultLeaseTTL  The default lease duration, specified as a string duration like "5s" or "30m".
 	// +kubebuilder:validation:Optional
-	DefaultLeaseTTL string `json:"defaultLeaseTTL"`
+	DefaultLeaseTTL string `json:"defaultLeaseTTL" vault:"default_lease_ttl"`
 
 	// MaxLeaseTTL The maximum lease duration, specified as a string duration like "5s" or "30m".
 	// +kubebuilder:validation:Optional
-	MaxLeaseTTL string `json:"maxLeaseTTL"`
+	MaxLeaseTTL string `json:"maxLeaseTTL" vault:"max_lease_ttl"`
 
 	// AuditNonHMACRequestKeys list of keys that will not be HMAC'd by audit devices in the request data object.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems:=true
-	AuditNonHMACRequestKeys []string `json:"auditNonHMACRequestKeys,omitempty"`
+	AuditNonHMACRequestKeys []string `json:"auditNonHMACRequestKeys,omitempty" vault:"audit_non_hmac_request_keys"`
 
 	// AuditNonHMACResponseKeys list of keys that will not be HMAC'd by audit devices in the response data object.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	AuditNonHMACResponseKeys []string `json:"auditNonHMACResponseKeys,omitempty"`
+	AuditNonHMACResponseKeys []string `json:"auditNonHMACResponseKeys,omitempty" vault:"audit_non_hmac_response_keys"`
 
 	// ListingVisibility Specifies whether to show this mount in the UI-specific listing endpoint. Valid values are "unauth" or "hidden". If not set, behaves like "hidden"
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"unauth","hidden"}
 	// +kubebuilder:default:="hidden"
-	ListingVisibility string `json:"listingVisibility,omitempty"`
+	ListingVisibility string `json:"listingVisibility,omitempty" vault:"listing_visibility"`
 
 	// PassthroughRequestHeaders list of headers to whitelist and pass from the request to the plugin.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems:=true
-	PassthroughRequestHeaders []string `json:"passthroughRequestHeaders,omitempty"`
+	PassthroughRequestHeaders []string `json:"passthroughRequestHeaders,omitempty" vault:"passthrough_request_headers"`
 
 	// AllowedResponseHeaders list of headers to whitelist, allowing a plugin to include them in the response.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	AllowedResponseHeaders []string `json:"allowedResponseHeaders,omitempty"`
+	AllowedResponseHeaders []string `json:"allowedResponseHeaders,omitempty" vault:"allowed_response_headers"`
 
 	// Options undocumented
 	// +kubebuilder:validation:Optional
 	// +mapType=granular
-	Options map[string]string `json:"options,omitempty"`
+	Options map[string]string `json:"options,omitempty" vault:"options,stringmap"`
 
 	// TokenType undocumented
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum={"service","batch","default","default-service","default-batch"}
-	TokenType string `json:"tokenType,omitempty"`
+	TokenType string `json:"tokenType,omitempty" vault:"token_type"`
 
 	// Description another description...
 	// +kubebuilder:validation:Optional
-	Description *string `json:"description,omitempty"`
+	Description *string `json:"description,omitempty" vault:"description"`
 }
 
 var _ vaultutils.VaultObject = &AuthEngineMount{}
@@ -146,28 +141,14 @@ var _ vaultutils.VaultEngineObject = &AuthEngineMount{}
 var _ vaultutils.ConditionsAware = &AuthEngineMount{}
 
 func (mc *AuthMountConfig) toMap() map[string]any {
-	return map[string]any{
-		"default_lease_ttl":            mc.DefaultLeaseTTL,
-		"max_lease_ttl":                mc.MaxLeaseTTL,
-		"audit_non_hmac_request_keys":  mc.AuditNonHMACRequestKeys,
-		"audit_non_hmac_response_keys": mc.AuditNonHMACResponseKeys,
-		"listing_visibility":           mc.ListingVisibility,
-		"passthrough_request_headers":  mc.PassthroughRequestHeaders,
-		"allowed_response_headers":     mc.AllowedResponseHeaders,
-		"token_type":                   mc.TokenType,
-		"description":                  mc.Description,
-		"options":                      mc.Options,
-	}
+	return vaultutils.StructToVaultPayload(mc)
 }
 
 func (m *AuthMount) toMap() map[string]any {
-	return map[string]any{
-		"type":        m.Type,
-		"description": m.Description,
-		"config":      m.Config.toMap(),
-		"local":       m.Local,
-		"seal_wrap":   m.SealWrap,
-	}
+	payload := vaultutils.StructToVaultPayload(m)
+	payload["description"] = m.Description
+	payload["config"] = m.Config.toMap()
+	return payload
 }
 
 func (d *AuthEngineMount) GetVaultConnection() *vaultutils.VaultConnection {
@@ -184,22 +165,6 @@ func (d *AuthEngineMount) GetPayload() map[string]any {
 func (d *AuthEngineMount) IsEquivalentToDesiredState(payload map[string]any) bool {
 	configMap := d.Spec.Config.toMap()
 	return reflect.DeepEqual(configMap, filterPayloadToDesiredKeys(configMap, payload))
-}
-
-func (d *AuthEngineMount) IsInitialized() bool {
-	return true
-}
-
-func (d *AuthEngineMount) IsValid() (bool, error) {
-	return true, nil
-}
-
-func (d *AuthEngineMount) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *AuthEngineMount) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (d *AuthEngineMount) GetEngineListPath() string {

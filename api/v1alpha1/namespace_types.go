@@ -17,12 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -36,10 +34,7 @@ func (d *Namespace) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *Namespace) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath("sys/namespaces/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath("sys/namespaces/" + d.Name)
+	return vaultutils.CleansePath("sys/namespaces/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 
 func (d *Namespace) GetPayload() map[string]interface{} {
@@ -51,24 +46,8 @@ func (d *Namespace) IsEquivalentToDesiredState(payload map[string]interface{}) b
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (d *Namespace) IsInitialized() bool {
-	return true
-}
-
 func (d *Namespace) IsDeletable() bool {
 	return true
-}
-
-func (d *Namespace) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *Namespace) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *Namespace) IsValid() (bool, error) {
-	return true, nil
 }
 
 // NamespaceSpec defines the desired state of Namespace
@@ -149,6 +128,6 @@ func (d *Namespace) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration
 }
 
 // Vault takes the namespace name from the request path and its parent from the namespace header.
-func (i *Namespace) toMap() map[string]interface{} {
-	return map[string]interface{}{}
+func (i *Namespace) toMap() map[string]any {
+	return vaultutils.StructToVaultPayload(i)
 }

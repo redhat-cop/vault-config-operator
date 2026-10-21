@@ -17,15 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"encoding/json"
-	"reflect"
-	"strconv"
-	"time"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ vaultutils.VaultObject = &SSHSecretEngineRole{}
@@ -59,202 +52,123 @@ type SSHSERole struct {
 	// KeyType specifies the type of credentials generated. Must be "otp" or "ca".
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum={"otp","ca"}
-	KeyType string `json:"keyType"`
+	KeyType string `json:"keyType" vault:"key_type"`
 
 	// DefaultUser specifies the default username. Required for OTP type.
 	// +kubebuilder:validation:Optional
-	DefaultUser string `json:"defaultUser,omitempty"`
+	DefaultUser string `json:"defaultUser,omitempty" vault:"default_user"`
 
 	// DefaultUserTemplate if set, default_user can contain identity templates.
 	// +kubebuilder:validation:Optional
-	DefaultUserTemplate bool `json:"defaultUserTemplate,omitempty"`
+	DefaultUserTemplate bool `json:"defaultUserTemplate,omitempty" vault:"default_user_template"`
 
 	// AllowedUsers comma-separated list or "*" for any user.
 	// +kubebuilder:validation:Optional
-	AllowedUsers string `json:"allowedUsers,omitempty"`
+	AllowedUsers string `json:"allowedUsers,omitempty" vault:"allowed_users"`
 
 	// AllowedUsersTemplate if set, allowed_users can contain identity templates.
 	// +kubebuilder:validation:Optional
-	AllowedUsersTemplate bool `json:"allowedUsersTemplate,omitempty"`
+	AllowedUsersTemplate bool `json:"allowedUsersTemplate,omitempty" vault:"allowed_users_template"`
 
 	// TTL for credentials. Uses duration format strings.
 	// +kubebuilder:validation:Optional
-	TTL string `json:"ttl,omitempty"`
+	TTL string `json:"ttl,omitempty" vault:"ttl,duration"`
 
 	// MaxTTL maximum TTL for credentials.
 	// +kubebuilder:validation:Optional
-	MaxTTL string `json:"maxTTL,omitempty"`
+	MaxTTL string `json:"maxTTL,omitempty" vault:"max_ttl,duration"`
 
 	// Port SSH port number.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=22
-	Port int `json:"port"`
+	Port int `json:"port" vault:"port,number"`
 
 	// --- OTP-only fields ---
 
 	// CIDRList comma-separated CIDR blocks. Required for OTP unless zero-address.
 	// +kubebuilder:validation:Optional
-	CIDRList string `json:"cidrList,omitempty"`
+	CIDRList string `json:"cidrList,omitempty" vault:"cidr_list,when=KeyType:otp"`
 
 	// ExcludeCIDRList comma-separated CIDR blocks to exclude.
 	// +kubebuilder:validation:Optional
-	ExcludeCIDRList string `json:"excludeCidrList,omitempty"`
+	ExcludeCIDRList string `json:"excludeCidrList,omitempty" vault:"exclude_cidr_list,when=KeyType:otp"`
 
 	// --- CA-only fields ---
 
 	// AllowedDomains comma-separated domains for host certificates.
 	// +kubebuilder:validation:Optional
-	AllowedDomains string `json:"allowedDomains,omitempty"`
+	AllowedDomains string `json:"allowedDomains,omitempty" vault:"allowed_domains,when=KeyType:ca"`
 
 	// AllowedDomainsTemplate if set, allowed_domains can contain identity templates.
 	// +kubebuilder:validation:Optional
-	AllowedDomainsTemplate bool `json:"allowedDomainsTemplate,omitempty"`
+	AllowedDomainsTemplate bool `json:"allowedDomainsTemplate,omitempty" vault:"allowed_domains_template,when=KeyType:ca"`
 
 	// AllowUserCertificates if true, certificates can be signed for user use.
 	// +kubebuilder:validation:Optional
-	AllowUserCertificates bool `json:"allowUserCertificates,omitempty"`
+	AllowUserCertificates bool `json:"allowUserCertificates,omitempty" vault:"allow_user_certificates,when=KeyType:ca"`
 
 	// AllowHostCertificates if true, certificates can be signed for host use.
 	// +kubebuilder:validation:Optional
-	AllowHostCertificates bool `json:"allowHostCertificates,omitempty"`
+	AllowHostCertificates bool `json:"allowHostCertificates,omitempty" vault:"allow_host_certificates,when=KeyType:ca"`
 
 	// AllowBareDomains if true, host certs can use base domains from allowed_domains.
 	// +kubebuilder:validation:Optional
-	AllowBareDomains bool `json:"allowBareDomains,omitempty"`
+	AllowBareDomains bool `json:"allowBareDomains,omitempty" vault:"allow_bare_domains,when=KeyType:ca"`
 
 	// AllowSubdomains if true, host certs can use subdomains of allowed_domains.
 	// +kubebuilder:validation:Optional
-	AllowSubdomains bool `json:"allowSubdomains,omitempty"`
+	AllowSubdomains bool `json:"allowSubdomains,omitempty" vault:"allow_subdomains,when=KeyType:ca"`
 
 	// AllowUserKeyIDs if true, users can override the key ID.
 	// +kubebuilder:validation:Optional
-	AllowUserKeyIDs bool `json:"allowUserKeyIDs,omitempty"`
+	AllowUserKeyIDs bool `json:"allowUserKeyIDs,omitempty" vault:"allow_user_key_ids,when=KeyType:ca"`
 
 	// KeyIDFormat custom format for key id of signed certificate.
 	// +kubebuilder:validation:Optional
-	KeyIDFormat string `json:"keyIDFormat,omitempty"`
+	KeyIDFormat string `json:"keyIDFormat,omitempty" vault:"key_id_format,when=KeyType:ca"`
 
 	// AllowedUserKeyLengths map of ssh key types to allowed lengths.
 	// +kubebuilder:validation:Optional
 	// +mapType=granular
-	AllowedUserKeyLengths map[string]int `json:"allowedUserKeyLengths,omitempty"`
+	AllowedUserKeyLengths map[string]int `json:"allowedUserKeyLengths,omitempty" vault:"allowed_user_key_lengths,intmap,when=KeyType:ca"`
 
 	// AllowedCriticalOptions comma-separated list of critical options.
 	// +kubebuilder:validation:Optional
-	AllowedCriticalOptions string `json:"allowedCriticalOptions,omitempty"`
+	AllowedCriticalOptions string `json:"allowedCriticalOptions,omitempty" vault:"allowed_critical_options,when=KeyType:ca"`
 
 	// AllowedExtensions comma-separated list of extensions or "*".
 	// +kubebuilder:validation:Optional
-	AllowedExtensions string `json:"allowedExtensions,omitempty"`
+	AllowedExtensions string `json:"allowedExtensions,omitempty" vault:"allowed_extensions,when=KeyType:ca"`
 
 	// DefaultCriticalOptions map of default critical options.
 	// +kubebuilder:validation:Optional
 	// +mapType=granular
-	DefaultCriticalOptions map[string]string `json:"defaultCriticalOptions,omitempty"`
+	DefaultCriticalOptions map[string]string `json:"defaultCriticalOptions,omitempty" vault:"default_critical_options,stringmap,when=KeyType:ca"`
 
 	// DefaultExtensions map of default extensions.
 	// +kubebuilder:validation:Optional
 	// +mapType=granular
-	DefaultExtensions map[string]string `json:"defaultExtensions,omitempty"`
+	DefaultExtensions map[string]string `json:"defaultExtensions,omitempty" vault:"default_extensions,stringmap,when=KeyType:ca"`
 
 	// DefaultExtensionsTemplate if set, default_extensions can contain identity templates.
 	// +kubebuilder:validation:Optional
-	DefaultExtensionsTemplate bool `json:"defaultExtensionsTemplate,omitempty"`
+	DefaultExtensionsTemplate bool `json:"defaultExtensionsTemplate,omitempty" vault:"default_extensions_template,when=KeyType:ca"`
 
 	// AllowEmptyPrincipals allow signing certs with no valid principals.
 	// +kubebuilder:validation:Optional
-	AllowEmptyPrincipals bool `json:"allowEmptyPrincipals,omitempty"`
+	AllowEmptyPrincipals bool `json:"allowEmptyPrincipals,omitempty" vault:"allow_empty_principals,when=KeyType:ca"`
 
 	// AlgorithmSigner algorithm to sign keys with (ssh-rsa, rsa-sha2-256, rsa-sha2-512, default).
 	// +kubebuilder:validation:Optional
-	AlgorithmSigner string `json:"algorithmSigner,omitempty"`
+	AlgorithmSigner string `json:"algorithmSigner,omitempty" vault:"algorithm_signer,when=KeyType:ca"`
 
 	// NotBeforeDuration duration to backdate ValidAfter property.
 	// +kubebuilder:validation:Optional
-	NotBeforeDuration string `json:"notBeforeDuration,omitempty"`
+	NotBeforeDuration string `json:"notBeforeDuration,omitempty" vault:"not_before_duration,duration,when=KeyType:ca"`
 }
 
 func (i *SSHSERole) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["key_type"] = i.KeyType
-	payload["default_user"] = i.DefaultUser
-	payload["default_user_template"] = i.DefaultUserTemplate
-	payload["allowed_users"] = i.AllowedUsers
-	payload["allowed_users_template"] = i.AllowedUsersTemplate
-	payload["ttl"] = durationToSeconds(i.TTL)
-	payload["max_ttl"] = durationToSeconds(i.MaxTTL)
-	payload["port"] = json.Number(strconv.Itoa(i.Port))
-
-	if i.KeyType == "otp" {
-		payload["cidr_list"] = i.CIDRList
-		payload["exclude_cidr_list"] = i.ExcludeCIDRList
-	}
-
-	if i.KeyType == "ca" {
-		payload["allowed_domains"] = i.AllowedDomains
-		payload["allowed_domains_template"] = i.AllowedDomainsTemplate
-		payload["allow_user_certificates"] = i.AllowUserCertificates
-		payload["allow_host_certificates"] = i.AllowHostCertificates
-		payload["allow_bare_domains"] = i.AllowBareDomains
-		payload["allow_subdomains"] = i.AllowSubdomains
-		payload["allow_user_key_ids"] = i.AllowUserKeyIDs
-		payload["key_id_format"] = i.KeyIDFormat
-		payload["allowed_user_key_lengths"] = toAnyMapJsonNumber(i.AllowedUserKeyLengths)
-		payload["allowed_critical_options"] = i.AllowedCriticalOptions
-		payload["allowed_extensions"] = i.AllowedExtensions
-		payload["default_critical_options"] = toAnyMapString(i.DefaultCriticalOptions)
-		payload["default_extensions"] = toAnyMapString(i.DefaultExtensions)
-		payload["default_extensions_template"] = i.DefaultExtensionsTemplate
-		payload["allow_empty_principals"] = i.AllowEmptyPrincipals
-		payload["algorithm_signer"] = i.AlgorithmSigner
-		payload["not_before_duration"] = durationToSeconds(i.NotBeforeDuration)
-	}
-
-	return payload
-}
-
-// durationToSeconds converts a Go duration string (e.g. "4h", "30s") to a
-// json.Number representing integer seconds, matching the Vault API response
-// format where durations are returned as numeric seconds.
-func durationToSeconds(s string) json.Number {
-	if s == "" {
-		return json.Number("0")
-	}
-	d, err := time.ParseDuration(s)
-	if err != nil {
-		return json.Number(s)
-	}
-	return json.Number(strconv.FormatInt(int64(d.Seconds()), 10))
-}
-
-// toAnyMapJsonNumber converts map[string]int to map[string]any with json.Number
-// values, matching the Vault API response where the Go client decodes JSON
-// numbers via UseNumber(). Returns an empty map (not nil) for nil input,
-// because Vault returns empty JSON objects {} for unset map fields.
-func toAnyMapJsonNumber(m map[string]int) map[string]any {
-	if len(m) == 0 {
-		return map[string]any{}
-	}
-	result := make(map[string]any, len(m))
-	for k, v := range m {
-		result[k] = json.Number(strconv.Itoa(v))
-	}
-	return result
-}
-
-// toAnyMapString converts map[string]string to map[string]any,
-// matching the representation Vault returns after JSON deserialization.
-// Returns an empty map (not nil) for nil input, because Vault returns
-// empty JSON objects {} for unset map fields.
-func toAnyMapString(m map[string]string) map[string]any {
-	if len(m) == 0 {
-		return map[string]any{}
-	}
-	result := make(map[string]any, len(m))
-	for k, v := range m {
-		result[k] = v
-	}
-	return result
+	return vaultutils.StructToVaultPayload(i)
 }
 
 // SSHSecretEngineRoleStatus defines the observed state of SSHSecretEngineRole
@@ -308,35 +222,11 @@ func (d *SSHSecretEngineRole) IsDeletable() bool {
 }
 
 func (d *SSHSecretEngineRole) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + d.Name)
+	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 
 func (d *SSHSecretEngineRole) GetPayload() map[string]any {
 	return d.Spec.toMap()
-}
-
-func (d *SSHSecretEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.Spec.SSHSERole.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (d *SSHSecretEngineRole) IsInitialized() bool {
-	return true
-}
-
-func (d *SSHSecretEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *SSHSecretEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *SSHSecretEngineRole) IsValid() (bool, error) {
-	return true, nil
 }
 
 func (d *SSHSecretEngineRole) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {

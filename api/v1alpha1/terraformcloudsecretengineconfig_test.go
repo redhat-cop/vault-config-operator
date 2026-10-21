@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"context"
 	"testing"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
@@ -255,7 +256,7 @@ func TestTerraformCloudSecretEngineConfig_Default_SetsTokenPasswordKey(t *testin
 			},
 		},
 	}
-	if err := r.Default(nil, obj); err != nil {
+	if err := r.Default(context.TODO(), obj); err != nil {
 		t.Fatalf("Default() error: %v", err)
 	}
 	if obj.Spec.TFCCredentials.PasswordKey != "token" {
@@ -274,7 +275,7 @@ func TestTerraformCloudSecretEngineConfig_Default_OverridesPasswordDefault(t *te
 			},
 		},
 	}
-	if err := r.Default(nil, obj); err != nil {
+	if err := r.Default(context.TODO(), obj); err != nil {
 		t.Fatalf("Default() error: %v", err)
 	}
 	if obj.Spec.TFCCredentials.PasswordKey != "token" {
@@ -293,7 +294,7 @@ func TestTerraformCloudSecretEngineConfig_Default_PreservesCustomPasswordKey(t *
 			},
 		},
 	}
-	if err := r.Default(nil, obj); err != nil {
+	if err := r.Default(context.TODO(), obj); err != nil {
 		t.Fatalf("Default() error: %v", err)
 	}
 	if obj.Spec.TFCCredentials.PasswordKey != "my_custom_key" {
@@ -319,7 +320,7 @@ func TestTerraformCloudSecretEngineConfig_ValidateUpdate_RejectsPathChange(t *te
 			},
 		},
 	}
-	_, err := r.ValidateUpdate(nil, oldObj, newObj)
+	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
 	if err == nil {
 		t.Error("expected error when spec.path is changed")
 	}
@@ -345,7 +346,7 @@ func TestTerraformCloudSecretEngineConfig_ValidateUpdate_RejectsNameChange(t *te
 			},
 		},
 	}
-	_, err := r.ValidateUpdate(nil, oldObj, newObj)
+	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
 	if err == nil {
 		t.Error("expected error when spec.name is changed")
 	}
@@ -456,7 +457,7 @@ func TestTerraformCloudSecretEngineConfig_ValidateUpdate_RejectsEmptyPasswordKey
 			},
 		},
 	}
-	_, err := r.ValidateUpdate(nil, oldObj, newObj)
+	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
 	if err == nil {
 		t.Error("expected error when passwordKey is blanked on update")
 	}

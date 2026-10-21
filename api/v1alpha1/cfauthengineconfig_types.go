@@ -18,11 +18,9 @@ package v1alpha1
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
-	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -62,41 +60,41 @@ type CFAuthConfig struct {
 	// to supply the username for Cloud Foundry. When using Secret or VaultSecret
 	// credentials, the username is retrieved from the secret using usernameKey instead.
 	// +kubebuilder:validation:Optional
-	CFUsername string `json:"cfUsername,omitempty"`
+	CFUsername string `json:"cfUsername,omitempty" vault:"cf_username,omitempty"`
 
 	// IdentityCACertificates is the root CA certificate(s) for verifying CF_INSTANCE_CERT.
 	// +kubebuilder:validation:Required
 	// +listType=set
-	IdentityCACertificates []string `json:"identityCACertificates"`
+	IdentityCACertificates []string `json:"identityCACertificates" vault:"identity_ca_certificates"`
 
 	// CFAPIAddr is the full API address of the CF deployment.
 	// +kubebuilder:validation:Required
-	CFAPIAddr string `json:"cfAPIAddr"`
+	CFAPIAddr string `json:"cfAPIAddr" vault:"cf_api_addr"`
 
 	// CFAPITrustedCertificates is the certificate(s) presented by the CF API.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	CFAPITrustedCertificates []string `json:"cfAPITrustedCertificates,omitempty"`
+	CFAPITrustedCertificates []string `json:"cfAPITrustedCertificates,omitempty" vault:"cf_api_trusted_certificates"`
 
 	// LoginMaxSecondsNotBefore is the max seconds in the past for signature creation.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:default=300
-	LoginMaxSecondsNotBefore int `json:"loginMaxSecondsNotBefore"`
+	LoginMaxSecondsNotBefore int `json:"loginMaxSecondsNotBefore" vault:"login_max_seconds_not_before,number"`
 
 	// LoginMaxSecondsNotAfter is the max seconds in the future for signature creation.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:default=60
-	LoginMaxSecondsNotAfter int `json:"loginMaxSecondsNotAfter"`
+	LoginMaxSecondsNotAfter int `json:"loginMaxSecondsNotAfter" vault:"login_max_seconds_not_after,number"`
 
 	// CFAPIMutualTLSCertificate is the client certificate for mutual TLS with the CF API.
 	// +kubebuilder:validation:Optional
-	CFAPIMutualTLSCertificate string `json:"cfAPIMutualTLSCertificate,omitempty"`
+	CFAPIMutualTLSCertificate string `json:"cfAPIMutualTLSCertificate,omitempty" vault:"cf_api_mutual_tls_certificate"`
 
 	// CFAPIMutualTLSKey is the client key for mutual TLS with the CF API. Write-only.
 	// +kubebuilder:validation:Optional
-	CFAPIMutualTLSKey string `json:"cfAPIMutualTLSKey,omitempty"`
+	CFAPIMutualTLSKey string `json:"cfAPIMutualTLSKey,omitempty" vault:"cf_api_mutual_tls_key"`
 
 	retrievedCFUsername string `json:"-"`
 	retrievedCFPassword string `json:"-"`
@@ -177,10 +175,6 @@ func (r *CFAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]any) 
 	return reflect.DeepEqual(desiredState, filteredPayload)
 }
 
-func (r *CFAuthEngineConfig) IsInitialized() bool {
-	return true
-}
-
 func (r *CFAuthEngineConfig) IsValid() (bool, error) {
 	err := r.isValid()
 	return err == nil, err
@@ -192,10 +186,6 @@ func (r *CFAuthEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConf
 
 func (r *CFAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	return r.setInternalCredentials(context)
-}
-
-func (r *CFAuthEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *CFAuthEngineConfig) setInternalCredentials(context context.Context) error {
@@ -286,20 +276,11 @@ func (r *CFAuthEngineConfig) isValid() error {
 }
 
 func (c *CFAuthConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["identity_ca_certificates"] = toInterfaceArray(c.IdentityCACertificates)
-	payload["cf_api_addr"] = c.CFAPIAddr
+	payload := vaultutils.StructToVaultPayload(c)
 	if c.retrievedCFUsername != "" {
 		payload["cf_username"] = c.retrievedCFUsername
-	} else if c.CFUsername != "" {
-		payload["cf_username"] = c.CFUsername
 	}
 	payload["cf_password"] = c.retrievedCFPassword
-	payload["cf_api_trusted_certificates"] = toInterfaceArray(c.CFAPITrustedCertificates)
-	payload["login_max_seconds_not_before"] = json.Number(strconv.Itoa(c.LoginMaxSecondsNotBefore))
-	payload["login_max_seconds_not_after"] = json.Number(strconv.Itoa(c.LoginMaxSecondsNotAfter))
-	payload["cf_api_mutual_tls_certificate"] = c.CFAPIMutualTLSCertificate
-	payload["cf_api_mutual_tls_key"] = c.CFAPIMutualTLSKey
 	return payload
 }
 

@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"context"
 	"testing"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -255,7 +256,7 @@ func TestMongoDBAtlasSecretEngineRole_ValidateUpdate_RejectsPathChange(t *testin
 			Name: "role-1",
 		},
 	}
-	_, err := r.ValidateUpdate(nil, oldObj, newObj)
+	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
 	if err == nil {
 		t.Error("expected error when spec.path is changed")
 	}
@@ -275,7 +276,7 @@ func TestMongoDBAtlasSecretEngineRole_ValidateUpdate_RejectsNameChange(t *testin
 			Name: "new-name",
 		},
 	}
-	_, err := r.ValidateUpdate(nil, oldObj, newObj)
+	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
 	if err == nil {
 		t.Error("expected error when spec.name is changed")
 	}
@@ -301,7 +302,7 @@ func TestMongoDBAtlasSecretEngineRole_ValidateUpdate_AllowsFieldUpdate(t *testin
 			},
 		},
 	}
-	_, err := r.ValidateUpdate(nil, oldObj, newObj)
+	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
 	if err != nil {
 		t.Errorf("expected no error when only role fields changed, got: %v", err)
 	}

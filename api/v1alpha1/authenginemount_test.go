@@ -70,14 +70,14 @@ func TestAuthMountConfigToMap(t *testing.T) {
 	expected := map[string]any{
 		"default_lease_ttl":            "1h",
 		"max_lease_ttl":                "24h",
-		"audit_non_hmac_request_keys":  []string{"key1", "key2"},
-		"audit_non_hmac_response_keys": []string{"resp1"},
+		"audit_non_hmac_request_keys":  []any{"key1", "key2"},
+		"audit_non_hmac_response_keys": []any{"resp1"},
 		"listing_visibility":           "unauth",
-		"passthrough_request_headers":  []string{"X-Custom"},
-		"allowed_response_headers":     []string{"X-Response"},
+		"passthrough_request_headers":  []any{"X-Custom"},
+		"allowed_response_headers":     []any{"X-Response"},
 		"token_type":                   "default-service",
-		"description":                  &desc,
-		"options":                      map[string]string{"version": "2"},
+		"description":                  desc,
+		"options":                      map[string]any{"version": "2"},
 	}
 
 	if len(result) != 10 {
@@ -96,11 +96,9 @@ func TestAuthMountConfigToMapNilDescription(t *testing.T) {
 
 	result := config.toMap()
 
-	// The map value is a *string(nil) — not a bare nil interface.
-	// reflect.ValueOf correctly detects the nil pointer inside the interface.
-	descVal := result["description"]
-	if descVal != nil && !reflect.ValueOf(descVal).IsNil() {
-		t.Errorf("expected nil *string description when pointer is nil, got %v", descVal)
+	// nil *string is skipped by the walker — the key should be absent.
+	if _, ok := result["description"]; ok {
+		t.Errorf("expected description key to be absent when pointer is nil, got %v", result["description"])
 	}
 }
 
@@ -311,18 +309,8 @@ func TestAuthEngineMountIsEquivalentToDesiredStateNonMatching(t *testing.T) {
 		},
 	}
 
-	payload := map[string]any{
-		"default_lease_ttl":            "2h", // changed
-		"max_lease_ttl":                "24h",
-		"audit_non_hmac_request_keys":  []string(nil),
-		"audit_non_hmac_response_keys": []string(nil),
-		"listing_visibility":           "hidden",
-		"passthrough_request_headers":  []string(nil),
-		"allowed_response_headers":     []string(nil),
-		"token_type":                   "",
-		"description":                  &desc,
-		"options":                      map[string]string(nil),
-	}
+	payload := mount.Spec.Config.toMap()
+	payload["default_lease_ttl"] = "2h" // changed
 
 	if mount.IsEquivalentToDesiredState(payload) {
 		t.Error("expected non-matching payload (different default_lease_ttl) to NOT be equivalent")
@@ -344,20 +332,10 @@ func TestAuthEngineMountIsEquivalentToDesiredStateExtraFields(t *testing.T) {
 		},
 	}
 
-	payload := map[string]any{
-		"default_lease_ttl":            "1h",
-		"max_lease_ttl":                "24h",
-		"audit_non_hmac_request_keys":  []string(nil),
-		"audit_non_hmac_response_keys": []string(nil),
-		"listing_visibility":           "hidden",
-		"passthrough_request_headers":  []string(nil),
-		"allowed_response_headers":     []string(nil),
-		"token_type":                   "",
-		"description":                  (*string)(nil),
-		"options":                      map[string]string(nil),
-		"force_no_cache":               false,
-		"plugin_version":               "",
-	}
+	// Build a payload that includes what Config.toMap() produces plus extra Vault fields.
+	payload := mount.Spec.Config.toMap()
+	payload["force_no_cache"] = false
+	payload["plugin_version"] = ""
 
 	if !mount.IsEquivalentToDesiredState(payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")

@@ -17,12 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // AzureSecretEngineRoleSpec defines the desired state of AzureSecretEngineRole
@@ -83,47 +79,47 @@ type AzureSERole struct {
 	// List of Azure roles to be assigned to the generated service principal.
 	// The array must be in JSON format, properly escaped as a string. See roles docs for details on role definition.
 	// +kubebuilder:validation:Optional
-	AzureRoles string `json:"azureRoles,omitempty"`
+	AzureRoles string `json:"azureRoles,omitempty" vault:"azure_roles"`
 
 	// List of Azure groups that the generated service principal will be assigned to.
 	// The array must be in JSON format, properly escaped as a string. See groups docs for more details.
 	// +kubebuilder:validation:Optional
-	AzureGroups string `json:"azureGroups,omitempty"`
+	AzureGroups string `json:"azureGroups,omitempty" vault:"azure_groups"`
 
 	// Application Object ID for an existing service principal that will be used instead of creating dynamic service principals.
 	// If present, azure_roles will be ignored. See roles docs for details on role definition.
 	// +kubebuilder:validation:Optional
-	ApplicationObjectID string `json:"applicationObjectID,omitempty"`
+	ApplicationObjectID string `json:"applicationObjectID,omitempty" vault:"application_object_id"`
 
 	// If set to true, persists the created service principal and application for the lifetime of the role.
 	// Useful for when the Service Principal needs to maintain ownership of objects it creates
 	// +kubebuilder:validation:Optional
-	PersistApp bool `json:"persistApp,omitempty"`
+	PersistApp bool `json:"persistApp,omitempty" vault:"persist_app"`
 
 	// Specifies the default TTL for service principals generated using this role.
 	// Accepts time suffixed strings ("1h") or an integer number of seconds. Defaults to the system/engine default TTL time.
 	// +kubebuilder:validation:Optional
-	TTL string `json:"TTL,omitempty"`
+	TTL string `json:"TTL,omitempty" vault:"ttl"`
 
 	// Specifies the maximum TTL for service principals generated using this role.
 	// Accepts time suffixed strings ("1h") or an integer number of seconds. Defaults to the system/engine max TTL time.
 	// +kubebuilder:validation:Optional
-	MaxTTL string `json:"maxTTL,omitempty"`
+	MaxTTL string `json:"maxTTL,omitempty" vault:"max_ttl"`
 
 	// Specifies whether to permanently delete Applications and Service Principals that are dynamically created by Vault.
 	// If application_object_id is present, permanently_delete must be false.
 	// +kubebuilder:validation:Optional
-	PermanentlyDelete string `json:"permanentlyDelete,omitempty"`
+	PermanentlyDelete string `json:"permanentlyDelete,omitempty" vault:"permanently_delete"`
 
 	// Specifies the security principal types that are allowed to sign in to the application.
 	// Valid values are: AzureADMyOrg, AzureADMultipleOrgs, AzureADandPersonalMicrosoftAccount, PersonalMicrosoftAccount.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum={"AzureADMyOrg","AzureADMultipleOrgs","AzureADandPersonalMicrosoftAccount","PersonalMicrosoftAccount"}
-	SignInAudience string `json:"signInAudience,omitempty"`
+	SignInAudience string `json:"signInAudience,omitempty" vault:"sign_in_audience"`
 
 	// A comma-separated string of Azure tags to attach to an application.
 	// +kubebuilder:validation:Optional
-	Tags string `json:"tags,omitempty"`
+	Tags string `json:"tags,omitempty" vault:"tags"`
 }
 
 var _ vaultutils.VaultObject = &AzureSecretEngineRole{}
@@ -156,27 +152,6 @@ func (d *AzureSecretEngineRole) GetVaultConnection() *vaultutils.VaultConnection
 	return d.Spec.Connection
 }
 
-func (d *AzureSecretEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.Spec.AzureSERole.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (d *AzureSecretEngineRole) IsInitialized() bool {
-	return true
-}
-
-func (r *AzureSecretEngineRole) IsValid() (bool, error) {
-	return true, nil
-}
-
-func (d *AzureSecretEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *AzureSecretEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
 func (r *AzureSecretEngineRole) GetConditions() []metav1.Condition {
 	return r.Status.Conditions
 }
@@ -186,16 +161,5 @@ func (r *AzureSecretEngineRole) SetConditions(conditions []metav1.Condition) {
 }
 
 func (i *AzureSERole) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["azure_roles"] = i.AzureRoles
-	payload["azure_groups"] = i.AzureGroups
-	payload["application_object_id"] = i.ApplicationObjectID
-	payload["persist_app"] = i.PersistApp
-	payload["ttl"] = i.TTL
-	payload["max_ttl"] = i.MaxTTL
-	payload["permanently_delete"] = i.PermanentlyDelete
-	payload["sign_in_audience"] = i.SignInAudience
-	payload["tags"] = i.Tags
-
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }

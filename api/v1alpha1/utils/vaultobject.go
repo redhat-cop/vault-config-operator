@@ -18,6 +18,7 @@ package utils
 
 import (
 	"context"
+	"reflect"
 	"strings"
 
 	vault "github.com/hashicorp/vault/api"
@@ -28,15 +29,36 @@ import (
 type VaultObject interface {
 	GetPath() string
 	GetPayload() map[string]any
-	// IsEquivalentToDesiredState returns wether the passed payload is equivalent to the payload that the current object would generate. When this is a engine object the tune payload will be compared
-	IsEquivalentToDesiredState(payload map[string]any) bool
-	IsInitialized() bool
-	IsValid() (bool, error)
 	IsDeletable() bool
-	PrepareInternalValues(context context.Context, object client.Object) error
-	PrepareTLSConfig(context context.Context, object client.Object) error
 	GetKubeAuthConfiguration() *KubeAuthConfiguration
 	GetVaultConnection() *VaultConnection
+}
+
+// VaultEquivalenceChecker is an optional interface. Types that need custom
+// comparison logic implement this; otherwise CreateOrUpdate uses
+// filterPayloadToDesiredKeys + reflect.DeepEqual.
+type VaultEquivalenceChecker interface {
+	IsEquivalentToDesiredState(payload map[string]any) bool
+}
+
+// VaultInitializer is an optional interface. When absent, the default is true.
+type VaultInitializer interface {
+	IsInitialized() bool
+}
+
+// VaultValidator is an optional interface. When absent, the default is (true, nil).
+type VaultValidator interface {
+	IsValid() (bool, error)
+}
+
+// VaultInternalValuesPreparer is an optional interface. When absent, the default is nil (no-op).
+type VaultInternalValuesPreparer interface {
+	PrepareInternalValues(context context.Context, object client.Object) error
+}
+
+// VaultTLSPreparer is an optional interface. When absent, the default is nil (no-op).
+type VaultTLSPreparer interface {
+	PrepareTLSConfig(context context.Context, object client.Object) error
 }
 
 // VaultStatusEnricher is an optional interface that VaultObjects can implement
@@ -184,7 +206,7 @@ func (ve *VaultEndpoint) CreateOrUpdate(context context.Context) error {
 		log.V(6).Info("vault object not found, creating", "path", ve.vaultObject.GetPath())
 		return write(context, ve.vaultObject.GetPath(), ve.vaultObject.GetPayload())
 	} else {
-		if !ve.vaultObject.IsEquivalentToDesiredState(currentPayload) {
+		if !IsEquivalentToDesiredState(ve.vaultObject, currentPayload) {
 			log.V(6).Info("vault object out of sync, updating", "path", ve.vaultObject.GetPath())
 			payload := ve.vaultObject.GetPayload()
 			if provider, ok := ve.vaultObject.(CreateOnlyFieldsProvider); ok {
@@ -197,6 +219,23 @@ func (ve *VaultEndpoint) CreateOrUpdate(context context.Context) error {
 		log.V(6).Info("vault object in sync, skipping write", "path", ve.vaultObject.GetPath())
 	}
 	return nil
+}
+
+// IsEquivalentToDesiredState checks if the Vault payload matches desired state.
+// If the VaultObject implements VaultEquivalenceChecker, it delegates to that.
+// Otherwise, it uses filterPayloadToDesiredKeys + reflect.DeepEqual as the default.
+func IsEquivalentToDesiredState(obj VaultObject, payload map[string]any) bool {
+	if checker, ok := obj.(VaultEquivalenceChecker); ok {
+		return checker.IsEquivalentToDesiredState(payload)
+	}
+	desiredState := obj.GetPayload()
+	filtered := make(map[string]any, len(desiredState))
+	for key := range desiredState {
+		if val, exists := payload[key]; exists {
+			filtered[key] = val
+		}
+	}
+	return reflect.DeepEqual(desiredState, filtered)
 }
 
 type RabbitMQEngineConfigVaultObject interface {
@@ -224,7 +263,7 @@ func (ve *RabbitMQEngineConfigVaultEndpoint) CreateOrUpdateLease(context context
 	if !found {
 		return write(context, ve.rabbitMQEngineConfigVaultEndpoint.GetLeasePath(), ve.rabbitMQEngineConfigVaultEndpoint.GetLeasePayload())
 	} else {
-		if !ve.rabbitMQEngineConfigVaultEndpoint.IsEquivalentToDesiredState(currentPayload) {
+		if !IsEquivalentToDesiredState(ve.rabbitMQEngineConfigVaultEndpoint, currentPayload) {
 			return write(context, ve.rabbitMQEngineConfigVaultEndpoint.GetLeasePath(), ve.rabbitMQEngineConfigVaultEndpoint.GetLeasePayload())
 		}
 	}

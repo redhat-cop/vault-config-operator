@@ -17,15 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 	"reflect"
-	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ vaultutils.VaultObject = &LeaseCountQuota{}
@@ -36,10 +32,7 @@ func (d *LeaseCountQuota) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *LeaseCountQuota) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath("sys/quotas/lease-count/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath("sys/quotas/lease-count/" + d.Name)
+	return vaultutils.CleansePath("sys/quotas/lease-count/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 
 func (d *LeaseCountQuota) GetPayload() map[string]any {
@@ -52,20 +45,8 @@ func (d *LeaseCountQuota) IsEquivalentToDesiredState(payload map[string]any) boo
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (d *LeaseCountQuota) IsInitialized() bool {
-	return true
-}
-
 func (d *LeaseCountQuota) IsDeletable() bool {
 	return true
-}
-
-func (d *LeaseCountQuota) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *LeaseCountQuota) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *LeaseCountQuota) IsValid() (bool, error) {
@@ -99,28 +80,23 @@ type LeaseCountQuotaConfig struct {
 	// MaxLeases is the maximum number of leases allowed by this quota rule. Must be >= 1.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Minimum=1
-	MaxLeases int `json:"maxLeases"`
+	MaxLeases int `json:"maxLeases" vault:"max_leases,number"`
 
 	// QuotaPath is an optional Vault API path prefix to scope this quota to. Named "quotaPath" to avoid collision with the VaultObject Path concept. Mapped to "path" in the Vault API payload.
 	// +kubebuilder:validation:Optional
-	QuotaPath string `json:"quotaPath,omitempty"`
+	QuotaPath string `json:"quotaPath,omitempty" vault:"path"`
 
 	// Role is an optional auth role to scope this quota to. Only leases from this role will count.
 	// +kubebuilder:validation:Optional
-	Role string `json:"role,omitempty"`
+	Role string `json:"role,omitempty" vault:"role"`
 
 	// Inheritable if true, sub-namespaces inherit this quota.
 	// +kubebuilder:validation:Optional
-	Inheritable bool `json:"inheritable,omitempty"`
+	Inheritable bool `json:"inheritable,omitempty" vault:"inheritable"`
 }
 
 func (i *LeaseCountQuotaConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["max_leases"] = json.Number(strconv.Itoa(i.MaxLeases))
-	payload["path"] = i.QuotaPath
-	payload["role"] = i.Role
-	payload["inheritable"] = i.Inheritable
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 // LeaseCountQuotaStatus defines the observed state of LeaseCountQuota

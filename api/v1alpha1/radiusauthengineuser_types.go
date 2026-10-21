@@ -17,12 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // RADIUSAuthEngineUserSpec defines the desired state of RADIUSAuthEngineUser
@@ -45,7 +41,7 @@ type RADIUSAuthEngineUserSpec struct {
 
 	// Policies is a comma-separated list of policies associated with this user.
 	// +kubebuilder:validation:Optional
-	Policies string `json:"policies,omitempty"`
+	Policies string `json:"policies,omitempty" vault:"policies"`
 }
 
 var _ vaultutils.VaultObject = &RADIUSAuthEngineUser{}
@@ -69,27 +65,6 @@ func (d *RADIUSAuthEngineUser) IsDeletable() bool {
 
 func (d *RADIUSAuthEngineUser) GetPayload() map[string]any {
 	return d.toMap()
-}
-
-func (d *RADIUSAuthEngineUser) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.GetPayload()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (d *RADIUSAuthEngineUser) IsInitialized() bool {
-	return true
-}
-
-func (d *RADIUSAuthEngineUser) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *RADIUSAuthEngineUser) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *RADIUSAuthEngineUser) IsValid() (bool, error) {
-	return true, nil
 }
 
 // RADIUSAuthEngineUserStatus defines the observed state of RADIUSAuthEngineUser
@@ -135,9 +110,7 @@ func init() {
 }
 
 func (d *RADIUSAuthEngineUser) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["policies"] = d.Spec.Policies
-	return payload
+	return vaultutils.StructToVaultPayload(&d.Spec)
 }
 
 func (d *RADIUSAuthEngineUser) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {

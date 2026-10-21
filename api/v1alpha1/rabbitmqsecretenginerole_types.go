@@ -17,14 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // RabbitMQSecretEngineRoleSpec defines the desired state of RabbitMQSecretEngineRole
@@ -166,33 +163,10 @@ func init() {
 var _ vaultutils.VaultObject = &RabbitMQSecretEngineRole{}
 
 func (d *RabbitMQSecretEngineRole) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + d.Name)
+	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "roles" + "/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 func (rabbitMQ *RabbitMQSecretEngineRole) GetPayload() map[string]any {
 	return rabbitMQ.Spec.rabbitMQToMap()
-}
-func (rabbitMQ *RabbitMQSecretEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := rabbitMQ.Spec.RMQSERole.rabbitMQToMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (rabbitMQ *RabbitMQSecretEngineRole) IsInitialized() bool {
-	return true
-}
-
-func (rabbitMQ *RabbitMQSecretEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (rabbitMQ *RabbitMQSecretEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (rabbitMQ *RabbitMQSecretEngineRole) IsValid() (bool, error) {
-	return true, nil
 }
 
 func convertVhostsToJson(vhosts []Vhost) string {

@@ -17,7 +17,6 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -26,7 +25,6 @@ import (
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ vaultutils.VaultObject = &RateLimitQuota{}
@@ -37,10 +35,7 @@ func (d *RateLimitQuota) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *RateLimitQuota) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath("sys/quotas/rate-limit/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath("sys/quotas/rate-limit/" + d.Name)
+	return vaultutils.CleansePath("sys/quotas/rate-limit/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 
 func (d *RateLimitQuota) GetPayload() map[string]any {
@@ -53,20 +48,8 @@ func (d *RateLimitQuota) IsEquivalentToDesiredState(payload map[string]any) bool
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (d *RateLimitQuota) IsInitialized() bool {
-	return true
-}
-
 func (d *RateLimitQuota) IsDeletable() bool {
 	return true
-}
-
-func (d *RateLimitQuota) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *RateLimitQuota) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *RateLimitQuota) IsValid() (bool, error) {
@@ -102,38 +85,31 @@ type RateLimitQuotaSpec struct {
 type RateLimitQuotaConfig struct {
 	// Rate is the maximum number of requests per interval allowed by this quota rule, expressed as a numeric string (e.g. "100", "897.3").
 	// +kubebuilder:validation:Required
-	Rate string `json:"rate"`
+	Rate string `json:"rate" vault:"rate,number"`
 
 	// Interval is the duration over which the rate is evaluated (e.g. "1m", "30s"). Default is "1s" if omitted.
 	// +kubebuilder:validation:Optional
-	Interval string `json:"interval,omitempty"`
+	Interval string `json:"interval,omitempty" vault:"interval,duration"`
 
 	// BlockInterval is how long a client is blocked when the rate is exceeded (e.g. "5m"). Default is "0s" (no block).
 	// +kubebuilder:validation:Optional
-	BlockInterval string `json:"blockInterval,omitempty"`
+	BlockInterval string `json:"blockInterval,omitempty" vault:"block_interval,duration"`
 
 	// QuotaPath is an optional Vault API path prefix to scope this quota to. Named "quotaPath" to avoid collision with the VaultObject Path concept. Mapped to "path" in the Vault API payload.
 	// +kubebuilder:validation:Optional
-	QuotaPath string `json:"quotaPath,omitempty"`
+	QuotaPath string `json:"quotaPath,omitempty" vault:"path"`
 
 	// Role is an optional auth role to scope this quota to. Only requests authenticated via this role will count.
 	// +kubebuilder:validation:Optional
-	Role string `json:"role,omitempty"`
+	Role string `json:"role,omitempty" vault:"role"`
 
 	// Inheritable if true, sub-namespaces inherit this quota.
 	// +kubebuilder:validation:Optional
-	Inheritable bool `json:"inheritable,omitempty"`
+	Inheritable bool `json:"inheritable,omitempty" vault:"inheritable"`
 }
 
 func (i *RateLimitQuotaConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["rate"] = rateToJsonNumber(i.Rate)
-	payload["interval"] = durationToSeconds(i.Interval)
-	payload["block_interval"] = durationToSeconds(i.BlockInterval)
-	payload["path"] = i.QuotaPath
-	payload["role"] = i.Role
-	payload["inheritable"] = i.Inheritable
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 func rateToJsonNumber(rate string) json.Number {
