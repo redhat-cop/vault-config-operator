@@ -21,11 +21,11 @@ package controller
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
-
-	"net/http"
+	"time"
 
 	vault "github.com/hashicorp/vault/api"
 	. "github.com/onsi/ginkgo/v2"
@@ -87,12 +87,24 @@ var _ = BeforeSuite(func() {
 		if vaultPort == "" {
 			vaultPort = "8200"
 		}
-		Expect(os.Setenv("VAULT_ADDR", "http://localhost:"+vaultPort)).To(Succeed())
+		Expect(os.Setenv("VAULT_ADDR", "http://127.0.0.1:"+vaultPort)).To(Succeed())
 		vaultAddress = os.Getenv("VAULT_ADDR")
 	}
 
-	_, err := http.Get(os.Getenv("VAULT_ADDR"))
-	Expect(err).To(BeNil())
+	// Vault health check with timeout and retry.
+	// Podman rootless port-forwarding can accept TCP connections before the
+	// backing ingress is ready, causing a bare http.Get to hang indefinitely.
+	httpClient := &http.Client{Timeout: 5 * time.Second}
+	var err error
+	for attempt := 1; attempt <= 12; attempt++ {
+		_, err = httpClient.Get(os.Getenv("VAULT_ADDR"))
+		if err == nil {
+			break
+		}
+		_, _ = fmt.Fprintf(GinkgoWriter, "Vault not reachable (attempt %d/12): %v\n", attempt, err)
+		time.Sleep(5 * time.Second)
+	}
+	Expect(err).To(BeNil(), "Vault at %s did not become reachable", os.Getenv("VAULT_ADDR"))
 
 	vaultToken, isSet := os.LookupEnv("VAULT_TOKEN")
 	Expect(isSet).To(BeTrue())

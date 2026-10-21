@@ -11,7 +11,9 @@ nodes:
   extraPortMappings:
   - containerPort: 80
     hostPort: VAULT_HOST_PORT_PLACEHOLDER
+    listenAddress: "127.0.0.1"
     protocol: TCP
   - containerPort: 443
     hostPort: HTTPS_HOST_PORT_PLACEHOLDER
+    listenAddress: "127.0.0.1"
     protocol: TCP

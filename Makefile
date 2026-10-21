@@ -9,9 +9,20 @@ KUBECTL_VERSION ?= v1.37.1
 KIND_NODE_VERSION ?= v1.37.0
 KUSTOMIZE_VERSION ?= v5.8.3
 VAULT_HOST_PORT ?= 8200
-# Override HTTPS_HOST_PORT and VAULT_HOST_PORT (along with KIND_CLUSTER_NAME) to run
-# parallel integration tests in separate Kind clusters — see project-context.md.
 HTTPS_HOST_PORT ?= 8443
+
+# --- Per-target Kind cluster settings (ports must not overlap) ---
+# `make integration` and `make helmchart-test` each get their own Kind cluster
+# so they can run independently or in parallel.  Override the INT_*/HELM_*
+# variables to customise names and ports.
+INT_CLUSTER_NAME  ?= vco-integration
+INT_VAULT_PORT    ?= 8200
+INT_HTTPS_PORT    ?= 8443
+
+HELM_CLUSTER_NAME ?= vco-helmchart
+HELM_VAULT_PORT   ?= 8201
+HELM_HTTPS_PORT   ?= 8444
+
 KUBE_CONTEXT ?= kind-$(KIND_CLUSTER_NAME)
 KUBE_CONFIG_FILE ?= /tmp/$(KIND_CLUSTER_NAME)-kubeconfig
 # Container runtime: use docker in CI (GitHub Actions), podman on local dev machines.
@@ -154,6 +165,11 @@ test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
 
 # note: envtest requires a container runtime (docker or podman)
+# Target-specific overrides: each top-level target gets its own Kind cluster.
+# These propagate to all prerequisite targets (kind-setup, deploy-vault, …).
+integration: KIND_CLUSTER_NAME = $(INT_CLUSTER_NAME)
+integration: VAULT_HOST_PORT = $(INT_VAULT_PORT)
+integration: HTTPS_HOST_PORT = $(INT_HTTPS_PORT)
 .PHONY: integration
 integration: kind-setup deploy-vault deploy-ingress deploy-postgresql deploy-rabbitmq deploy-ldap deploy-keycloak deploy-nomad vault manifests generate fmt vet envtest ## Run tests.
 	export VAULT_TOKEN=$$(KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
@@ -208,6 +224,14 @@ kind-teardown: kind ## Delete the Kind cluster and its kubeconfig.
 	  echo "Kind cluster '$(KIND_CLUSTER_NAME)' does not exist, nothing to delete"; \
 	fi
 	@rm -f $(KUBE_CONFIG_FILE)
+
+.PHONY: integration-teardown
+integration-teardown: KIND_CLUSTER_NAME = $(INT_CLUSTER_NAME)
+integration-teardown: kind-teardown ## Delete the integration Kind cluster.
+
+.PHONY: helmchart-teardown
+helmchart-teardown: KIND_CLUSTER_NAME = $(HELM_CLUSTER_NAME)
+helmchart-teardown: kind-teardown ## Delete the helmchart-test Kind cluster.
 
 .PHONY: deploy-postgresql
 deploy-postgresql: kubectl helm
@@ -505,6 +529,9 @@ HELM_TEST_SIDECAR_IMG ?= busybox:1.37
 
 # Deploy the helmchart to a kind cluster to test deployment.
 # If the test-metrics sidecar in the prometheus pod is ready, the metrics work and the test is successful.
+helmchart-test: KIND_CLUSTER_NAME = $(HELM_CLUSTER_NAME)
+helmchart-test: VAULT_HOST_PORT = $(HELM_VAULT_PORT)
+helmchart-test: HTTPS_HOST_PORT = $(HELM_HTTPS_PORT)
 .PHONY: helmchart-test
 helmchart-test: kind-setup deploy-vault helmchart
 	$(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker-build
