@@ -567,6 +567,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "LeaseCountQuota")
 		os.Exit(1)
 	}
+	if err = (&controller.CORSConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "CORSConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "CORSConfig")
+		os.Exit(1)
+	}
+	if err = (&controller.KeyRotationConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KeyRotationConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "KeyRotationConfig")
+		os.Exit(1)
+	}
 
 	if webhooks, ok := os.LookupEnv("ENABLE_WEBHOOKS"); !ok || webhooks != "false" {
 		if err = (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(mgr); err != nil {
@@ -955,6 +963,14 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.LeaseCountQuota{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "LeaseCountQuota")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.CORSConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "CORSConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.KeyRotationConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "KeyRotationConfig")
 			os.Exit(1)
 		}
 	}

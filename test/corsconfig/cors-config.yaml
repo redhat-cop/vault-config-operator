@@ -1,0 +1,12 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: CORSConfig
+metadata:
+  name: test-cors-config
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  allowedOrigins:
+    - "https://example.com"
+  allowedHeaders:
+    - "X-Custom-Header"

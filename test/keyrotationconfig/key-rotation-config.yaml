@@ -1,0 +1,11 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KeyRotationConfig
+metadata:
+  name: test-key-rotation-config
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  maxOperations: 3888000000
+  interval: "4320h"
+  enabled: true

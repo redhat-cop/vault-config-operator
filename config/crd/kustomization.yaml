@@ -93,6 +93,8 @@ resources:
 - bases/redhatcop.redhat.io_quotaconfigs.yaml
 - bases/redhatcop.redhat.io_ratelimitquotas.yaml
 - bases/redhatcop.redhat.io_leasecountquotas.yaml
+- bases/redhatcop.redhat.io_corsconfigs.yaml
+- bases/redhatcop.redhat.io_keyrotationconfigs.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches: []

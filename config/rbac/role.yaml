@@ -66,6 +66,7 @@ rules:
   - cfauthengineroles
   - consulsecretengineconfigs
   - consulsecretengineroles
+  - corsconfigs
   - databasesecretengineconfigs
   - databasesecretengineroles
   - databasesecretenginestaticroles
@@ -95,6 +96,7 @@ rules:
   - kerberosauthengineconfigs
   - kerberosauthenginegroups
   - kerberosauthengineldapconfigs
+  - keyrotationconfigs
   - kubernetesauthengineconfigs
   - kubernetesauthengineroles
   - kubernetessecretengineconfigs
@@ -168,6 +170,7 @@ rules:
   - cfauthengineroles/finalizers
   - consulsecretengineconfigs/finalizers
   - consulsecretengineroles/finalizers
+  - corsconfigs/finalizers
   - databasesecretengineconfigs/finalizers
   - databasesecretengineroles/finalizers
   - databasesecretenginestaticroles/finalizers
@@ -197,6 +200,7 @@ rules:
   - kerberosauthengineconfigs/finalizers
   - kerberosauthenginegroups/finalizers
   - kerberosauthengineldapconfigs/finalizers
+  - keyrotationconfigs/finalizers
   - kubernetesauthengineconfigs/finalizers
   - kubernetesauthengineroles/finalizers
   - kubernetessecretengineconfigs/finalizers
@@ -263,6 +267,7 @@ rules:
   - cfauthengineroles/status
   - consulsecretengineconfigs/status
   - consulsecretengineroles/status
+  - corsconfigs/status
   - databasesecretengineconfigs/status
   - databasesecretengineroles/status
   - databasesecretenginestaticroles/status
@@ -292,6 +297,7 @@ rules:
   - kerberosauthengineconfigs/status
   - kerberosauthenginegroups/status
   - kerberosauthengineldapconfigs/status
+  - keyrotationconfigs/status
   - kubernetesauthengineconfigs/status
   - kubernetesauthengineroles/status
   - kubernetessecretengineconfigs/status

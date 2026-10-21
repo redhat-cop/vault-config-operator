@@ -157,6 +157,8 @@ See the [secret engines index](./docs/secret-engines/index.md) for the full list
 1. [QuotaConfig](./docs/system-backend/quotas.md#quotaconfig) Configures the global [Vault Quota Config](https://developer.hashicorp.com/vault/api-docs/system/quotas-config) (rate-limit audit logging, exempt paths)
 2. [RateLimitQuota](./docs/system-backend/quotas.md#ratelimitquota) Configures a [Vault Rate Limit Quota](https://developer.hashicorp.com/vault/api-docs/system/rate-limit-quotas) to restrict request rates
 3. [LeaseCountQuota](./docs/system-backend/quotas.md#leasecountquota) Configures a [Vault Lease Count Quota](https://developer.hashicorp.com/vault/api-docs/system/lease-count-quotas) to restrict lease counts (Enterprise only)
+4. [CORSConfig](./docs/system-backend/cors.md#corsconfig) Configures the [Vault CORS Settings](https://developer.hashicorp.com/vault/api-docs/system/config-cors) (allowed origins and headers)
+5. [KeyRotationConfig](./docs/system-backend/key-rotation.md#keyrotationconfig) Configures the [Vault Automatic Key Rotation](https://developer.hashicorp.com/vault/api-docs/system/rotate-config) schedule
 
 ## Identities
 
