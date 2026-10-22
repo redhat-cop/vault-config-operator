@@ -6,6 +6,6 @@ spec:
   authentication:
     path: kubernetes
     role: policy-admin
-  maxOperations: 3888000000
+  maxOperations: 3800000000
   interval: "4320h"
   enabled: true

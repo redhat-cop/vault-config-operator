@@ -37,6 +37,8 @@ spec:
           volumeMounts:
             - name: nomad-config
               mountPath: /etc/nomad.d
+            - name: nomad-data
+              mountPath: /tmp/nomad
           resources:
             requests:
               memory: "128Mi"
@@ -53,3 +55,5 @@ spec:
         - name: nomad-config
           configMap:
             name: nomad-config
+        - name: nomad-data
+          emptyDir: {}

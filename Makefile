@@ -18,6 +18,7 @@ HTTPS_HOST_PORT ?= 8443
 INT_CLUSTER_NAME  ?= vco-integration
 INT_VAULT_PORT    ?= 8200
 INT_HTTPS_PORT    ?= 8443
+INT_VAULT_PF_PORT ?= 9200
 
 HELM_CLUSTER_NAME ?= vco-helmchart
 HELM_VAULT_PORT   ?= 8201
@@ -172,9 +173,33 @@ integration: VAULT_HOST_PORT = $(INT_VAULT_PORT)
 integration: HTTPS_HOST_PORT = $(INT_HTTPS_PORT)
 .PHONY: integration
 integration: kind-setup deploy-vault deploy-ingress deploy-postgresql deploy-rabbitmq deploy-ldap deploy-keycloak deploy-nomad vault manifests generate fmt vet envtest ## Run tests.
+	@echo "Cleaning up leftover resources from previous runs..."
+	@CRD_TYPES=$$(KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) api-resources --api-group=redhatcop.redhat.io -o name 2>/dev/null | tr '\n' ',' | sed 's/,$$//') ;\
+	if [ -n "$$CRD_TYPES" ]; then \
+		for ns in vault-admin test-vault-config-operator; do \
+			for item in $$(KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) get $$CRD_TYPES -n $$ns -o name 2>/dev/null); do \
+				KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) patch $$item -n $$ns -p '{"metadata":{"finalizers":null}}' --type=merge 2>/dev/null || true ;\
+			done ;\
+			KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) delete $$CRD_TYPES -n $$ns --all --ignore-not-found --wait=false 2>/dev/null || true ;\
+		done ;\
+	fi
+	@echo "Cleaning up leftover test secrets..."
+	@for secret in dummy-error-path-creds test-userpass-password; do \
+		KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) delete secret $$secret -n vault-admin --ignore-not-found 2>/dev/null || true ;\
+	done
+	@echo "Starting kubectl port-forward to Vault (localhost:$(INT_VAULT_PF_PORT) → vault-0:8200)..."
+	@fuser -k $(INT_VAULT_PF_PORT)/tcp 2>/dev/null || true
+	@KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) port-forward -n vault vault-0 --address 127.0.0.1 $(INT_VAULT_PF_PORT):8200 & \
+	PF_PID=$$! ;\
+	sleep 2 ;\
+	trap "kill $$PF_PID 2>/dev/null; wait $$PF_PID 2>/dev/null" EXIT ;\
 	export VAULT_TOKEN=$$(KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
-	export VAULT_ADDR="http://localhost:$(VAULT_HOST_PORT)" ;\
-	KUBECONFIG=$(KUBE_CONFIG_FILE) KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration -timeout 30m
+	export VAULT_ADDR="http://127.0.0.1:$(INT_VAULT_PF_PORT)" ;\
+	KUBECONFIG=$(KUBE_CONFIG_FILE) KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -v -coverprofile cover.out --tags=integration -timeout 30m 2>&1 | grep -v '^Handling connection' ;\
+	TEST_EXIT=$${PIPESTATUS[0]} ;\
+	trap - EXIT ;\
+	kill $$PF_PID 2>/dev/null; wait $$PF_PID 2>/dev/null || true ;\
+	exit $$TEST_EXIT
 
 .PHONY: deploy-ingress
 deploy-ingress: kubectl helm
@@ -279,7 +304,19 @@ deploy-nomad: kubectl
 	done ;\
 	if [ -z "$$NOMAD_TOKEN" ]; then \
 		echo "Nomad ACL already bootstrapped or bootstrap failed, trying to read existing secret..." ;\
-		NOMAD_TOKEN=$$($(KUBECTL) --context $(KUBE_CONTEXT) get secret nomad-token-secret -n vault-admin -o jsonpath='{.data.token}' 2>/dev/null | base64 -d) ;\
+		NOMAD_TOKEN=$$($(KUBECTL) --context $(KUBE_CONTEXT) get secret nomad-token-secret -n vault-admin -o jsonpath='{.data.token}' 2>/dev/null | base64 -d 2>/dev/null || true) ;\
+	fi ;\
+	if [ -z "$$NOMAD_TOKEN" ]; then \
+		echo "Nomad bootstrap stale — recycling pod to reset ACL state..." ;\
+		$(KUBECTL) --context $(KUBE_CONTEXT) delete pod -n nomad -l app=nomad --wait=true ;\
+		$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready -n nomad pod -l app=nomad --timeout=$(KUBECTL_WAIT_TIMEOUT) ;\
+		NOMAD_POD=$$($(KUBECTL) --context $(KUBE_CONTEXT) get pods -n nomad -l app=nomad -o jsonpath='{.items[0].metadata.name}') ;\
+		for i in 1 2 3 4 5 6 7 8 9 10; do \
+			NOMAD_TOKEN=$$($(KUBECTL) --context $(KUBE_CONTEXT) exec -n nomad $$NOMAD_POD -- sh -c 'nomad acl bootstrap -json 2>/dev/null | grep -o "\"SecretID\":\"[^\"]*\"" | cut -d\" -f4' 2>/dev/null || echo "") ;\
+			if [ -n "$$NOMAD_TOKEN" ]; then break; fi ;\
+			echo "Waiting for Nomad ACL system after pod recycle (attempt $$i/10)..." ;\
+			sleep 2 ;\
+		done ;\
 	fi ;\
 	if [ -z "$$NOMAD_TOKEN" ]; then \
 		echo "ERROR: Could not obtain Nomad management token." ;\

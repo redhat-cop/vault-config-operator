@@ -300,6 +300,18 @@ var _ = BeforeSuite(func() {
 	err = (&RotationPolicyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RotationPolicy")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
+	err = (&UICustomHeaderReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "UICustomHeader")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&RateLimitQuotaReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RateLimitQuota")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&LoggerConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LoggerConfig")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&QuotaConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "QuotaConfig")}).SetupWithManager(mgr)
+	Expect(err).ToNot(HaveOccurred())
+
 	By(fmt.Sprintf("Creating the %v namespace", vaultAdminNamespaceName))
 	vaultAdminNamespace = &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{

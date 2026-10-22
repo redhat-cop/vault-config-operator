@@ -215,17 +215,19 @@ server:
             if [[ "$(vault status | grep "Sealed" | grep "false")" ]]; then
               if [[ -z "$(vault policy list | grep "vault-admin")" ]]; then
                 vault auth enable kubernetes
-                vault write auth/kubernetes/config token_reviewer_jwt=@/var/run/secrets/kubernetes.io/serviceaccount/token kubernetes_host=https://kubernetes.default.svc:443 kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt 
-                vault write auth/kubernetes/role/policy-admin bound_service_account_names=default bound_service_account_namespaces=vault-admin policies=vault-admin ttl=1h
+              fi
+              vault write auth/kubernetes/config token_reviewer_jwt=@/var/run/secrets/kubernetes.io/serviceaccount/token kubernetes_host=https://kubernetes.default.svc:443 kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+              vault write auth/kubernetes/role/policy-admin bound_service_account_names=default bound_service_account_namespaces=vault-admin,test-vault-config-operator policies=vault-admin ttl=1h
+              if [[ -z "$(vault policy list | grep "vault-admin")" ]]; then
                 cat << EOF | vault policy write vault-admin -
                   path "/*" {
                     capabilities = ["create", "read", "update", "delete", "list","sudo"]
                   }
         EOF
-              else 
+              else
                 echo vault admin already configured
                 sleep 5
-              fi      
+              fi
             else
               echo vault still sealed
             fi    

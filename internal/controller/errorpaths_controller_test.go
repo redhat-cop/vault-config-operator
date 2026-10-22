@@ -155,6 +155,7 @@ var _ = Describe("Error path handling", Ordered, func() {
 					"password": []byte("fakepass"),
 				},
 			}
+			_ = k8sIntegrationClient.Delete(ctx, dummySecret)
 			Expect(k8sIntegrationClient.Create(ctx, dummySecret)).Should(Succeed())
 
 			By("Loading the DatabaseSecretEngineConfig fixture with non-existent mount")

@@ -8,3 +8,4 @@ spec:
     role: policy-admin
   rate: "100"
   interval: "1m"
+  inheritable: true
