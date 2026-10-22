@@ -265,12 +265,10 @@ helmchart-teardown: KIND_CLUSTER_NAME = $(HELM_CLUSTER_NAME)
 helmchart-teardown: kind-teardown ## Delete the helmchart-test Kind cluster.
 
 .PHONY: deploy-postgresql
-deploy-postgresql: kubectl helm
-	$(HELM) --kube-context $(KUBE_CONTEXT) repo add bitnami https://charts.bitnami.com/bitnami --force-update
-	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i postgresql bitnami/postgresql \
-		-n test-vault-config-operator --create-namespace --rollback-on-failure \
-		-f ./integration/postgresql-values.yaml
-	$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready pod -l app.kubernetes.io/instance=postgresql \
+deploy-postgresql: kubectl
+	$(KUBECTL) --context $(KUBE_CONTEXT) create namespace test-vault-config-operator --dry-run=client -o yaml | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f -
+	$(KUBECTL) --context $(KUBE_CONTEXT) apply -f ./integration/postgresql -n test-vault-config-operator
+	$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready pod -l app=postgresql \
 		-n test-vault-config-operator --timeout=$(KUBECTL_WAIT_TIMEOUT)
 
 .PHONY: deploy-rabbitmq
