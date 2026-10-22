@@ -92,7 +92,7 @@ The UBI9 runtime image does not need a Go version bump (it only packages the com
 - For engine mounts (`VaultEngineObject`), `IsEquivalentToDesiredState` compares the **tune config** (`Config.toMap()`) not the full mount spec, because Vault's read response for mounts returns only tune-level fields.
 
 #### Context-Carried Values
-- `prepareContext()` in `controllers/commons.go` enriches the context with 4 typed keys using setter functions from `api/v1alpha1/utils/contextkeys.go`: `vaultutils.ContextWithKubeClient(ctx, ...)`, `vaultutils.ContextWithRestConfig(ctx, ...)`, `vaultutils.ContextWithVaultConnection(ctx, ...)`, `vaultutils.ContextWithVaultClient(ctx, ...)`.
+- `PrepareContext()` (canonical implementation in `internal/controller/vaultresourcecontroller/utils.go`; a backward-compatible `prepareContext()` wrapper remains in `internal/controller/commons.go`) enriches the context with 4 typed keys using setter functions from `api/v1alpha1/utils/contextkeys.go`: `vaultutils.ContextWithKubeClient(ctx, ...)`, `vaultutils.ContextWithRestConfig(ctx, ...)`, `vaultutils.ContextWithVaultConnection(ctx, ...)`, `vaultutils.ContextWithVaultClient(ctx, ...)`.
 - All downstream code retrieves these via matching accessor functions: `vaultutils.KubeClientFromContext(ctx)`, `vaultutils.RestConfigFromContext(ctx)`, `vaultutils.VaultConnectionFromContext(ctx)`, `vaultutils.VaultClientFromContext(ctx)`. The accessors use typed `contextKey` constants (not bare strings), so a typo causes a compile error instead of a runtime panic.
 - The accessors still use unchecked type assertions internally — if a key is missing from the context, the operator will panic early. This is intentional.
 - The `vaultClient` is obtained per-reconcile via `GetKubeAuthConfiguration().GetVaultClient(ctx, namespace)`.
@@ -115,14 +115,14 @@ The UBI9 runtime image does not need a Go version bump (it only packages the com
 ### Framework-Specific Rules (Kubernetes Operator)
 
 #### Controller Structure
-- Every controller embeds `vaultresourcecontroller.ReconcilerBase` (not a pointer).
-- Controller registration in `main.go` always uses: `&controllers.MyTypeReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "MyType")}`.
-- `SetupWithManager` uses `builder.WithPredicates(vaultresourcecontroller.NewDefaultPeriodicReconcilePredicate())` on the `For()` call to enable generation-based filtering. The predicate is generation-only — it reconciles when `spec` changes (generation increment) and ignores metadata-only updates. Drift detection is handled separately by `RequeueAfter` (see Reconcile Flow below).
+- Standard controllers use `vaultresourcecontroller.SetupGenericController[MyType](mgr, "MyType", factory)` — no hand-written `Reconcile` body or explicit struct needed. Custom controllers still embed `vaultresourcecontroller.ReconcilerBase` (not a pointer).
+- Controller registration in `main.go`: generic-migrated controllers use `controller.SetupMyTypeController(mgr)` in a compact loop; custom controllers (Category 5) use the older `&controller.MyTypeReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "MyType")}` pattern.
+- `SetupGenericController` (and custom `SetupWithManager`) uses `builder.WithPredicates(vaultresourcecontroller.NewDefaultPeriodicReconcilePredicate())` on the `For()` call to enable generation-based filtering. The predicate is generation-only — it reconciles when `spec` changes (generation increment) and ignores metadata-only updates. Drift detection is handled separately by `RequeueAfter` (see Reconcile Flow below).
 
 #### Reconcile Flow (Standard Types)
 1. Fetch instance via `r.GetClient().Get(ctx, req.NamespacedName, instance)`.
 2. If `apierrors.IsNotFound` → return `reconcile.Result{}, nil`.
-3. Call `prepareContext(ctx, r.ReconcilerBase, instance)` to build enriched context.
+3. Call `vaultresourcecontroller.PrepareContext(ctx, r.ReconcilerBase, instance)` to build enriched context. (The generic reconciler calls this automatically; custom controllers call it directly.)
 4. Delegate to `vaultresourcecontroller.ReconcileWithFunctions(ctx, r.ReconcilerBase, instance, ...)` — the shared skeleton handles finalizer management, deletion cleanup, create/update via `VaultResource`/`VaultEngineResource`, and `ManageOutcome`.
 5. `ManageOutcome` returns `Result{RequeueAfter: SyncPeriod}` when drift detection is enabled and reconcile succeeds — the controller-runtime work queue schedules the next drift-detection reconcile automatically. No predicate involvement for drift detection.
 
@@ -141,7 +141,7 @@ The UBI9 runtime image does not need a Go version bump (it only packages the com
 - It encapsulates: deletion/finalizer management, create-or-update via Vault resource, and `ManageOutcome` for condition management and requeue.
 - Controllers pass type-specific functions (create, update, delete) and the skeleton handles the common lifecycle flow.
 - `ManageOutcome` returns `Result{RequeueAfter: SyncPeriod}` when drift detection is enabled and reconcile succeeds — enabling automatic periodic drift checks via the controller-runtime work queue.
-- **Critical rule — Shared framework protection:** Story-scoped work must not **modify existing behavior** in shared framework files. Adding new exported functions or types is acceptable. Any behavioral change to existing functions (e.g., finalizer timing, deletion gates, condition management) affects all 40+ reconcilers and requires explicit escalation to the user before implementation. Shared framework files include: `reconcile_skeleton.go`, `vaultresourcereconciler.go`, `vaultobject.go`, `vaultutils.go`, `payload_filter.go`, `commons.go`.
+- **Critical rule — Shared framework protection:** Story-scoped work must not **modify existing behavior** in shared framework files. Adding new exported functions or types is acceptable. Any behavioral change to existing functions (e.g., finalizer timing, deletion gates, condition management) affects all 40+ reconcilers and requires explicit escalation to the user before implementation. Shared framework files include: `reconcile_skeleton.go`, `vaultresourcereconciler.go`, `generic_reconciler.go`, `vaultobject.go`, `vaultutils.go`, `payload_filter.go`, `commons.go`.
 
 #### Kubebuilder RBAC Markers
 - Every controller must declare RBAC markers for its resource (get/list/watch/create/update/patch/delete), status subresource, and finalizers.
@@ -227,7 +227,7 @@ This rule applies to all current and future integration tests. When adding a new
 - All CRD types, interface implementations, and `toMap()` live together in `*_types.go` — not split across files.
 - Shared Vault utilities: `api/v1alpha1/utils/` — `VaultObject`, `VaultEndpoint`, `VaultConnection`, `KubeAuthConfiguration`, helper functions.
 - Shared controller logic: `controllers/vaultresourcecontroller/` — `ReconcilerBase`, `ManageOutcome`, predicates, reconciler variants.
-- Common controller helpers: `controllers/commons.go` — `prepareContext()`, `VaultAuthenticableResource` interface.
+- Common controller helpers: `internal/controller/vaultresourcecontroller/utils.go` — `PrepareContext()`, `VaultAuthenticableResource` interface (canonical location). `internal/controller/commons.go` retains backward-compatible thin wrappers.
 
 #### Kubebuilder Markers
 - All exported Spec fields must have `// +kubebuilder:validation:Required` or `// +kubebuilder:validation:Optional`.
@@ -340,7 +340,7 @@ The base port `8200` and default cluster name `vault-config-operator` are reserv
 - `zz_generated.deepcopy.go` is auto-generated — never edit it manually.
 
 #### Context Value Contract
-- The enriched context from `prepareContext()` carries four typed keys (`KubeClientKey`, `RestConfigKey`, `VaultConnectionKey`, `VaultClientKey`) set via `vaultutils.ContextWith*` and read via `vaultutils.*FromContext`. The accessors use unchecked type assertions — if any key is missing, the operator will panic. New context values must follow the same typed-key pattern in `api/v1alpha1/utils/contextkeys.go`.
+- The enriched context from `vaultresourcecontroller.PrepareContext()` (in `internal/controller/vaultresourcecontroller/utils.go`) carries four typed keys (`KubeClientKey`, `RestConfigKey`, `VaultConnectionKey`, `VaultClientKey`) set via `vaultutils.ContextWith*` and read via `vaultutils.*FromContext`. The accessors use unchecked type assertions — if any key is missing, the operator will panic. New context values must follow the same typed-key pattern in `api/v1alpha1/utils/contextkeys.go`.
 
 #### Deletion Safety
 - `manageCleanUpLogic` only deletes from Vault if the CR previously had a `ReconcileSuccessful=True` condition. This prevents deleting Vault resources that were never successfully created.
