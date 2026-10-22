@@ -30,24 +30,31 @@ Otherwise output: GATE_RESULT: integration_test_baseline = PASS""",
 ]
 
 # Post-completion gate: executed after the build is marked complete (step-05 / oneshot finalize).
-on_complete = """GATE — Post-review regression and helm chart check.
+# Tests MUST pass before the commit. The commit step in the framework templates
+# fires before on_complete, so we undo it here, gate on tests, then re-commit.
+on_complete = """OVERRIDE — Commit gated by tests.
+The ### Commit (or ### Commit and Complete) step above may have already created a commit.
+Undo it now: run `git reset --soft HEAD~1` to move HEAD back one commit while keeping all
+changes staged. If the reset fails (nothing was committed, or no VCS), that is fine — continue.
+
+Then run every gate below IN ORDER. Only commit after ALL test gates pass.
 
 1. Run `make test 2>&1` in the project root.
    If exit code is non-zero:
      Output: GATE_RESULT: post_review_unit_tests = FAIL
-     HALT: "Unit tests must pass after code review. Fix regressions."
+     HALT: "Unit tests must pass after code review. Fix regressions, then re-run this gate."
    Otherwise output: GATE_RESULT: post_review_unit_tests = PASS
 
 2. Run `make integration 2>&1` in the project root.
    If exit code is non-zero:
      Output: GATE_RESULT: post_review_integration_tests = FAIL
-     HALT: "Integration tests must pass after code review. Fix regressions."
+     HALT: "Integration tests must pass after code review. Fix regressions, then re-run this gate."
    Otherwise output: GATE_RESULT: post_review_integration_tests = PASS
 
 3. Run `make helmchart-test 2>&1` in the project root.
    If exit code is non-zero:
      Output: GATE_RESULT: post_review_helmchart_test = FAIL
-     HALT: "Helm chart tests must pass after code review. Fix regressions."
+     HALT: "Helm chart tests must pass after code review. Fix regressions, then re-run this gate."
    Otherwise output: GATE_RESULT: post_review_helmchart_test = PASS
 
 4. Ensure the dev agent record is filled out in the story/plan file.
@@ -57,7 +64,11 @@ on_complete = """GATE — Post-review regression and helm chart check.
      HALT: "Dev agent record must be filled out before completing the story. Add ## Dev Agent Record with: Model Used, Summary of Changes, Outcome, and any Notes."
    Otherwise output: GATE_RESULT: dev_agent_record = PASS
 
-5. Update sprint-status.yaml.
+5. ALL gates passed — now commit.
+   If git is available and there are uncommitted or staged changes, commit with a
+   conventional message based on the Intent. If git is not available, skip.
+
+6. Update sprint-status.yaml.
    Run `python3 ./scripts/finalize-story.py {story_key} --impl-dir {implementation_artifacts}` if the finalize script exists, where {story_key} is derived from the plan/story file name.
    If the script does not exist, manually update the story's status in `_bmad-output/implementation-artifacts/sprint-status.yaml` to reflect the current state (e.g. `review` or `done`).
    Output: GATE_RESULT: sprint_status_updated = PASS"""
