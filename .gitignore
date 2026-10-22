@@ -37,7 +37,6 @@ test/vault-secret-engine.private-key.pem
 .history/
 config/local-development/tilt/replace-image.yaml
 test/artifactory/secrets.sh
-integration/cluster-kind.yaml
 .bmad-loop/runs/
 .bmad-loop/cache/
 .bmad-loop/policy.toml

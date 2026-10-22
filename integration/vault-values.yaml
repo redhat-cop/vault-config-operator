@@ -12,6 +12,9 @@ ui:
 
 server:
 
+  service:
+    type: LoadBalancer
+
   volumes:    
     - name: plugins
       emptyDir: {}
