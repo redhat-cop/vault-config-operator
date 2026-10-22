@@ -1,26 +1,10 @@
-/*
-Copyright 2021.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package controller
 
 import (
 	"context"
-
+	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -28,16 +12,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
-	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 )
 
-// RADIUSAuthEngineConfigReconciler reconciles a RADIUSAuthEngineConfig object
-type RADIUSAuthEngineConfigReconciler struct {
+// rADIUSAuthEngineConfigHelper provides Watch handler methods for RADIUSAuthEngineConfig.
+type rADIUSAuthEngineConfigHelper struct {
 	vaultresourcecontroller.ReconcilerBase
 }
 
@@ -48,30 +28,16 @@ type RADIUSAuthEngineConfigReconciler struct {
 //+kubebuilder:rbac:groups="",resources=serviceaccounts/token,verbs=create
 //+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
 
-func (r *RADIUSAuthEngineConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
-	instance := &redhatcopv1alpha1.RADIUSAuthEngineConfig{}
-	err := r.GetClient().Get(ctx, req.NamespacedName, instance)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return reconcile.Result{}, nil
-		}
-		return reconcile.Result{}, err
+// SetupRADIUSAuthEngineConfigController registers the RADIUSAuthEngineConfig controller with the Manager.
+func SetupRADIUSAuthEngineConfigController(mgr ctrl.Manager) error {
+	reconciler := &vaultresourcecontroller.GenericVaultReconciler[
+		redhatcopv1alpha1.RADIUSAuthEngineConfig,
+		*redhatcopv1alpha1.RADIUSAuthEngineConfig,
+	]{
+		ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RADIUSAuthEngineConfig"),
+		Factory:        vaultresourcecontroller.StandardVaultResourceFactory,
 	}
-
-	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
-	if err != nil {
-		r.Log.Error(err, "unable to prepare context", "instance", instance)
-		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
-	}
-	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
-
-	return vaultResource.Reconcile(ctx1, instance)
-}
-
-// SetupWithManager sets up the controller with the Manager.
-func (r *RADIUSAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	h := &rADIUSAuthEngineConfigHelper{ReconcilerBase: reconciler.ReconcilerBase}
 
 	isSharedSecretSecret := predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
@@ -135,9 +101,9 @@ func (r *RADIUSAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) er
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			s := a.(*corev1.Secret)
-			raecs, err := r.findApplicableRAECForSecret(ctx, s)
+			raecs, err := h.findApplicableRAECForSecret(ctx, s)
 			if err != nil {
-				r.Log.Error(err, "unable to find applicable RADIUSAuthEngineConfigs for namespace", "namespace", s.Namespace)
+				h.Log.Error(err, "unable to find applicable RADIUSAuthEngineConfigs for namespace", "namespace", s.Namespace)
 				return []reconcile.Request{}
 			}
 			for _, raec := range raecs {
@@ -157,9 +123,9 @@ func (r *RADIUSAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) er
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			rs := a.(*redhatcopv1alpha1.RandomSecret)
-			raecs, err := r.findApplicableRAECForRandomSecret(ctx, rs)
+			raecs, err := h.findApplicableRAECForRandomSecret(ctx, rs)
 			if err != nil {
-				r.Log.Error(err, "unable to find applicable RADIUSAuthEngineConfigs for namespace", "namespace", rs.Namespace)
+				h.Log.Error(err, "unable to find applicable RADIUSAuthEngineConfigs for namespace", "namespace", rs.Namespace)
 				return []reconcile.Request{}
 			}
 			for _, raec := range raecs {
@@ -172,17 +138,17 @@ func (r *RADIUSAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) er
 			}
 			return res
 		}), builder.WithPredicates(isUpdatedRandomSecret)).
-		Complete(r)
+		Complete(reconciler)
 }
 
-func (r *RADIUSAuthEngineConfigReconciler) findApplicableRAECForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.RADIUSAuthEngineConfig, error) {
+func (h *rADIUSAuthEngineConfigHelper) findApplicableRAECForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.RADIUSAuthEngineConfig, error) {
 	result := []redhatcopv1alpha1.RADIUSAuthEngineConfig{}
 	vrl := &redhatcopv1alpha1.RADIUSAuthEngineConfigList{}
-	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
+	err := h.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: secret.Namespace,
 	})
 	if err != nil {
-		r.Log.Error(err, "unable to retrieve the list of RADIUSAuthEngineConfig")
+		h.Log.Error(err, "unable to retrieve the list of RADIUSAuthEngineConfig")
 		return nil, err
 	}
 	for _, vr := range vrl.Items {
@@ -193,14 +159,14 @@ func (r *RADIUSAuthEngineConfigReconciler) findApplicableRAECForSecret(ctx conte
 	return result, nil
 }
 
-func (r *RADIUSAuthEngineConfigReconciler) findApplicableRAECForRandomSecret(ctx context.Context, randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.RADIUSAuthEngineConfig, error) {
+func (h *rADIUSAuthEngineConfigHelper) findApplicableRAECForRandomSecret(ctx context.Context, randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.RADIUSAuthEngineConfig, error) {
 	result := []redhatcopv1alpha1.RADIUSAuthEngineConfig{}
 	vrl := &redhatcopv1alpha1.RADIUSAuthEngineConfigList{}
-	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
+	err := h.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: randomSecret.Namespace,
 	})
 	if err != nil {
-		r.Log.Error(err, "unable to retrieve the list of RADIUSAuthEngineConfig")
+		h.Log.Error(err, "unable to retrieve the list of RADIUSAuthEngineConfig")
 		return nil, err
 	}
 	for _, vr := range vrl.Items {

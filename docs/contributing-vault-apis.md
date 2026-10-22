@@ -156,7 +156,41 @@ Before you begin, make sure you have:
    }
    ```
 
-6. Implement the controller — under normal circumstances, just use this pattern:
+6. Implement the controller — use the generic reconciler pattern (no hand-written `Reconcile` body needed):
+
+   ```go
+   package controller
+
+   import (
+       redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+       "github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
+       ctrl "sigs.k8s.io/controller-runtime"
+   )
+
+   //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=myvaulttypes,verbs=get;list;watch;create;update;patch;delete
+   //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=myvaulttypes/status,verbs=get;update;patch
+   //+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=myvaulttypes/finalizers,verbs=update
+   //+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+   //+kubebuilder:rbac:groups="",resources=serviceaccounts/token,verbs=create
+   //+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
+
+   func SetupMyVaultTypeController(mgr ctrl.Manager) error {
+       return vaultresourcecontroller.SetupGenericController[
+           redhatcopv1alpha1.MyVaultType,
+       ](mgr, "MyVaultType", vaultresourcecontroller.StandardVaultResourceFactory)
+   }
+   ```
+
+   The generic reconciler handles Get → PrepareContext → NewVaultResource → Reconcile automatically.
+
+   **For engine mount types** use `vaultresourcecontroller.VaultEngineResourceFactory` instead.
+   **For audit types** use `vaultresourcecontroller.VaultAuditResourceFactory`.
+   **For PKI engine types** use `vaultresourcecontroller.VaultPKIEngineResourceFactory`.
+
+   <details>
+   <summary>Custom controller pattern (for types needing hand-written Reconcile logic)</summary>
+
+   If your type requires custom reconcile logic (e.g., credential rotation, always-write patterns), use the full hand-written pattern:
 
    ```go
    type MyVaultTypeReconciler struct {
@@ -172,18 +206,29 @@ Before you begin, make sure you have:
            }
            return reconcile.Result{}, err
        }
-
-       ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
+       ctx1, err := vaultresourcecontroller.PrepareContext(ctx, r.ReconcilerBase, instance)
        if err != nil {
            r.Log.Error(err, "unable to prepare context", "instance", instance)
            return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
        }
-       vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
-       return vaultResource.Reconcile(ctx1, instance)
+       // ... custom reconcile logic ...
    }
    ```
 
-7. On the `main.go` update the controller reconciler and webhooks.
+   </details>
+
+7. Register the controller and webhooks in `main.go`:
+
+   ```go
+   // For generic-migrated controllers — add to the setup loop:
+   {"MyVaultType", controller.SetupMyVaultTypeController},
+
+   // For custom controllers — use the old pattern:
+   if err = (&controller.MyVaultTypeReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "MyVaultType")}).SetupWithManager(mgr); err != nil {
+       setupLog.Error(err, "unable to create controller", "controller", "MyVaultType")
+       os.Exit(1)
+   }
+   ```
 
 8. Regenerate the CRD manifests, RBAC, and DeepCopy methods:
 

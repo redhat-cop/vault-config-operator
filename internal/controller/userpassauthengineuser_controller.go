@@ -1,27 +1,11 @@
-/*
-Copyright 2021.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package controller
 
 import (
 	"bytes"
 	"context"
-
+	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -29,16 +13,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
-	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 )
 
-// UserpassAuthEngineUserReconciler reconciles a UserpassAuthEngineUser object
-type UserpassAuthEngineUserReconciler struct {
+// userpassAuthEngineUserHelper provides Watch handler methods for UserpassAuthEngineUser.
+type userpassAuthEngineUserHelper struct {
 	vaultresourcecontroller.ReconcilerBase
 }
 
@@ -49,30 +29,17 @@ type UserpassAuthEngineUserReconciler struct {
 //+kubebuilder:rbac:groups="",resources=serviceaccounts/token,verbs=create
 //+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
 
-func (r *UserpassAuthEngineUserReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
-	instance := &redhatcopv1alpha1.UserpassAuthEngineUser{}
-	err := r.GetClient().Get(ctx, req.NamespacedName, instance)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return reconcile.Result{}, nil
-		}
-		return reconcile.Result{}, err
+// SetupUserpassAuthEngineUserController registers the UserpassAuthEngineUser controller with the Manager.
+func SetupUserpassAuthEngineUserController(mgr ctrl.Manager) error {
+	reconciler := &vaultresourcecontroller.GenericVaultReconciler[
+		redhatcopv1alpha1.UserpassAuthEngineUser,
+		*redhatcopv1alpha1.UserpassAuthEngineUser,
+	]{
+		ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "UserpassAuthEngineUser"),
+		Factory:        vaultresourcecontroller.StandardVaultResourceFactory,
 	}
+	h := &userpassAuthEngineUserHelper{ReconcilerBase: reconciler.ReconcilerBase}
 
-	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
-	if err != nil {
-		r.Log.Error(err, "unable to prepare context", "instance", instance)
-		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
-	}
-	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
-
-	return vaultResource.Reconcile(ctx1, instance)
-}
-
-// SetupWithManager sets up the controller with the Manager.
-func (r *UserpassAuthEngineUserReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	isPasswordSecret := predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			newSecret, ok := e.ObjectNew.DeepCopyObject().(*corev1.Secret)
@@ -139,9 +106,9 @@ func (r *UserpassAuthEngineUserReconciler) SetupWithManager(mgr ctrl.Manager) er
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			s := a.(*corev1.Secret)
-			users, err := r.findApplicableUsersForSecret(ctx, s)
+			users, err := h.findApplicableUsersForSecret(ctx, s)
 			if err != nil {
-				r.Log.Error(err, "unable to find applicable UserpassAuthEngineUser for secret", "secret", s.Name)
+				h.Log.Error(err, "unable to find applicable UserpassAuthEngineUser for secret", "secret", s.Name)
 				return []reconcile.Request{}
 			}
 			for _, user := range users {
@@ -161,9 +128,9 @@ func (r *UserpassAuthEngineUserReconciler) SetupWithManager(mgr ctrl.Manager) er
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			rs := a.(*redhatcopv1alpha1.RandomSecret)
-			users, err := r.findApplicableUsersForRandomSecret(ctx, rs)
+			users, err := h.findApplicableUsersForRandomSecret(ctx, rs)
 			if err != nil {
-				r.Log.Error(err, "unable to find applicable UserpassAuthEngineUser for RandomSecret", "randomSecret", rs.Name)
+				h.Log.Error(err, "unable to find applicable UserpassAuthEngineUser for RandomSecret", "randomSecret", rs.Name)
 				return []reconcile.Request{}
 			}
 			for _, user := range users {
@@ -176,17 +143,17 @@ func (r *UserpassAuthEngineUserReconciler) SetupWithManager(mgr ctrl.Manager) er
 			}
 			return res
 		}), builder.WithPredicates(isUpdatedRandomSecret)).
-		Complete(r)
+		Complete(reconciler)
 }
 
-func (r *UserpassAuthEngineUserReconciler) findApplicableUsersForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.UserpassAuthEngineUser, error) {
+func (h *userpassAuthEngineUserHelper) findApplicableUsersForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.UserpassAuthEngineUser, error) {
 	result := []redhatcopv1alpha1.UserpassAuthEngineUser{}
 	vrl := &redhatcopv1alpha1.UserpassAuthEngineUserList{}
-	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
+	err := h.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: secret.Namespace,
 	})
 	if err != nil {
-		r.Log.Error(err, "unable to retrieve the list of UserpassAuthEngineUser")
+		h.Log.Error(err, "unable to retrieve the list of UserpassAuthEngineUser")
 		return nil, err
 	}
 	for _, vr := range vrl.Items {
@@ -197,14 +164,14 @@ func (r *UserpassAuthEngineUserReconciler) findApplicableUsersForSecret(ctx cont
 	return result, nil
 }
 
-func (r *UserpassAuthEngineUserReconciler) findApplicableUsersForRandomSecret(ctx context.Context, randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.UserpassAuthEngineUser, error) {
+func (h *userpassAuthEngineUserHelper) findApplicableUsersForRandomSecret(ctx context.Context, randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.UserpassAuthEngineUser, error) {
 	result := []redhatcopv1alpha1.UserpassAuthEngineUser{}
 	vrl := &redhatcopv1alpha1.UserpassAuthEngineUserList{}
-	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
+	err := h.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: randomSecret.Namespace,
 	})
 	if err != nil {
-		r.Log.Error(err, "unable to retrieve the list of UserpassAuthEngineUser")
+		h.Log.Error(err, "unable to retrieve the list of UserpassAuthEngineUser")
 		return nil, err
 	}
 	for _, vr := range vrl.Items {

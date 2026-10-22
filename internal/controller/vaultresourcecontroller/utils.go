@@ -237,7 +237,9 @@ func (p PeriodicReconcilePredicate) Update(e event.UpdateEvent) bool {
 func (r *ReconcilerBase) CreateOrUpdateResource(context context.Context, owner client.Object, namespace string, obj client.Object) error {
 	log := log.FromContext(context)
 	if owner != nil {
-		_ = controllerutil.SetControllerReference(owner, obj, r.GetScheme())
+		if err := controllerutil.SetControllerReference(owner, obj, r.GetScheme()); err != nil {
+			log.Error(err, "unable to set controller reference", "owner", owner, "object", obj)
+		}
 	}
 	if namespace != "" {
 		obj.SetNamespace(namespace)
@@ -282,4 +284,25 @@ func (r *ReconcilerBase) DeleteResourceIfExists(context context.Context, obj cli
 		return err
 	}
 	return nil
+}
+
+// VaultAuthenticableResource is a resource that can be authenticated against Vault.
+type VaultAuthenticableResource interface {
+	client.Object
+	vaultutils.VaultObject
+}
+
+// PrepareContext enriches the context with kubeClient, restConfig, vaultConnection, and vaultClient.
+func PrepareContext(ctx context.Context, r ReconcilerBase, VAR VaultAuthenticableResource) (context.Context, error) {
+	rlog := log.FromContext(ctx)
+	ctx = vaultutils.ContextWithKubeClient(ctx, r.GetClient())
+	ctx = vaultutils.ContextWithRestConfig(ctx, r.GetRestConfig())
+	ctx = vaultutils.ContextWithVaultConnection(ctx, VAR.GetVaultConnection())
+	vaultClient, err := VAR.GetKubeAuthConfiguration().GetVaultClient(ctx, VAR.GetNamespace())
+	if err != nil {
+		rlog.Error(err, "unable to create vault client", "KubeAuthConfiguration", VAR.GetKubeAuthConfiguration(), "namespace", VAR.GetNamespace())
+		return nil, err
+	}
+	ctx = vaultutils.ContextWithVaultClient(ctx, vaultClient)
+	return ctx, nil
 }

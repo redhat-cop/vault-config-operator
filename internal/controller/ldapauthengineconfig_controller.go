@@ -1,27 +1,11 @@
-/*
-Copyright 2021.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package controller
 
 import (
 	"bytes"
 	"context"
-
+	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -29,16 +13,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
-	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 )
 
-// LDAPAuthEngineConfigReconciler reconciles a LDAPAuthEngineConfig object
-type LDAPAuthEngineConfigReconciler struct {
+// lDAPAuthEngineConfigHelper provides Watch handler methods for LDAPAuthEngineConfig.
+type lDAPAuthEngineConfigHelper struct {
 	vaultresourcecontroller.ReconcilerBase
 }
 
@@ -49,39 +29,16 @@ type LDAPAuthEngineConfigReconciler struct {
 //+kubebuilder:rbac:groups="",resources=serviceaccounts/token,verbs=create
 //+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the LDAPAuthEngineConfig object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
-func (r *LDAPAuthEngineConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
-	instance := &redhatcopv1alpha1.LDAPAuthEngineConfig{}
-	err := r.GetClient().Get(ctx, req.NamespacedName, instance)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return reconcile.Result{}, nil
-		}
-		return reconcile.Result{}, err
+// SetupLDAPAuthEngineConfigController registers the LDAPAuthEngineConfig controller with the Manager.
+func SetupLDAPAuthEngineConfigController(mgr ctrl.Manager) error {
+	reconciler := &vaultresourcecontroller.GenericVaultReconciler[
+		redhatcopv1alpha1.LDAPAuthEngineConfig,
+		*redhatcopv1alpha1.LDAPAuthEngineConfig,
+	]{
+		ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LDAPAuthEngineConfig"),
+		Factory:        vaultresourcecontroller.StandardVaultResourceFactory,
 	}
-
-	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
-	if err != nil {
-		r.Log.Error(err, "unable to prepare context", "instance", instance)
-		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
-	}
-	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
-
-	return vaultResource.Reconcile(ctx1, instance)
-}
-
-// SetupWithManager sets up the controller with the Manager.
-func (r *LDAPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	h := &lDAPAuthEngineConfigHelper{ReconcilerBase: reconciler.ReconcilerBase}
 
 	isBasicAuthSecret := predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
@@ -180,9 +137,9 @@ func (r *LDAPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) erro
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			s := a.(*corev1.Secret)
-			dbsecs, err := r.findApplicableLAECForSecret(ctx, s)
+			dbsecs, err := h.findApplicableLAECForSecret(ctx, s)
 			if err != nil {
-				r.Log.Error(err, "unable to find applicable LDAPAuthEngines for namespace", "namespace", s.Name)
+				h.Log.Error(err, "unable to find applicable LDAPAuthEngines for namespace", "namespace", s.Name)
 				return []reconcile.Request{}
 			}
 			for _, dbsec := range dbsecs {
@@ -202,9 +159,9 @@ func (r *LDAPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) erro
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			s := a.(*corev1.Secret)
-			dbsecs, err := r.findApplicableLAECForTLSSecret(ctx, s)
+			dbsecs, err := h.findApplicableLAECForTLSSecret(ctx, s)
 			if err != nil {
-				r.Log.Error(err, "unable to find applicable LDAPAuthEngines for namespace", "namespace", s.Name)
+				h.Log.Error(err, "unable to find applicable LDAPAuthEngines for namespace", "namespace", s.Name)
 				return []reconcile.Request{}
 			}
 			for _, dbsec := range dbsecs {
@@ -224,9 +181,9 @@ func (r *LDAPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) erro
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			rs := a.(*redhatcopv1alpha1.RandomSecret)
-			dbsecs, err := r.findApplicableLAECForRandomSecret(ctx, rs)
+			dbsecs, err := h.findApplicableLAECForRandomSecret(ctx, rs)
 			if err != nil {
-				r.Log.Error(err, "unable to find applicable LDAPAuthEngines for namespace", "namespace", rs.Name)
+				h.Log.Error(err, "unable to find applicable LDAPAuthEngines for namespace", "namespace", rs.Name)
 				return []reconcile.Request{}
 			}
 			for _, dbsec := range dbsecs {
@@ -239,18 +196,17 @@ func (r *LDAPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) erro
 			}
 			return res
 		}), builder.WithPredicates(isUpdatedRandomSecret)).
-		Complete(r)
-
+		Complete(reconciler)
 }
 
-func (r *LDAPAuthEngineConfigReconciler) findApplicableLAECForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.LDAPAuthEngineConfig, error) {
+func (h *lDAPAuthEngineConfigHelper) findApplicableLAECForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.LDAPAuthEngineConfig, error) {
 	result := []redhatcopv1alpha1.LDAPAuthEngineConfig{}
 	vrl := &redhatcopv1alpha1.LDAPAuthEngineConfigList{}
-	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
+	err := h.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: secret.Namespace,
 	})
 	if err != nil {
-		r.Log.Error(err, "unable to retrieve the list of LDAPAuthEngineConfig")
+		h.Log.Error(err, "unable to retrieve the list of LDAPAuthEngineConfig")
 		return nil, err
 	}
 	for _, vr := range vrl.Items {
@@ -261,14 +217,14 @@ func (r *LDAPAuthEngineConfigReconciler) findApplicableLAECForSecret(ctx context
 	return result, nil
 }
 
-func (r *LDAPAuthEngineConfigReconciler) findApplicableLAECForTLSSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.LDAPAuthEngineConfig, error) {
+func (h *lDAPAuthEngineConfigHelper) findApplicableLAECForTLSSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.LDAPAuthEngineConfig, error) {
 	result := []redhatcopv1alpha1.LDAPAuthEngineConfig{}
 	vrl := &redhatcopv1alpha1.LDAPAuthEngineConfigList{}
-	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
+	err := h.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: secret.Namespace,
 	})
 	if err != nil {
-		r.Log.Error(err, "unable to retrieve the list of LDAPAuthEngineConfig")
+		h.Log.Error(err, "unable to retrieve the list of LDAPAuthEngineConfig")
 		return nil, err
 	}
 	for _, vr := range vrl.Items {
@@ -279,14 +235,14 @@ func (r *LDAPAuthEngineConfigReconciler) findApplicableLAECForTLSSecret(ctx cont
 	return result, nil
 }
 
-func (r *LDAPAuthEngineConfigReconciler) findApplicableLAECForRandomSecret(ctx context.Context, randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.LDAPAuthEngineConfig, error) {
+func (h *lDAPAuthEngineConfigHelper) findApplicableLAECForRandomSecret(ctx context.Context, randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.LDAPAuthEngineConfig, error) {
 	result := []redhatcopv1alpha1.LDAPAuthEngineConfig{}
 	vrl := &redhatcopv1alpha1.LDAPAuthEngineConfigList{}
-	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
+	err := h.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: randomSecret.Namespace,
 	})
 	if err != nil {
-		r.Log.Error(err, "unable to retrieve the list of LDAPAuthEngineConfig")
+		h.Log.Error(err, "unable to retrieve the list of LDAPAuthEngineConfig")
 		return nil, err
 	}
 	for _, vr := range vrl.Items {

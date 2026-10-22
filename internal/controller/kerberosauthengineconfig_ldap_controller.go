@@ -1,44 +1,24 @@
-/*
-Copyright 2021.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package controller
 
 import (
 	"context"
-	"reflect"
-
+	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
-	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 )
 
-// KerberosAuthEngineLDAPConfigReconciler reconciles a KerberosAuthEngineLDAPConfig object
-type KerberosAuthEngineLDAPConfigReconciler struct {
+// kerberosAuthEngineLDAPConfigHelper provides Watch handler methods for KerberosAuthEngineLDAPConfig.
+type kerberosAuthEngineLDAPConfigHelper struct {
 	vaultresourcecontroller.ReconcilerBase
 }
 
@@ -49,30 +29,17 @@ type KerberosAuthEngineLDAPConfigReconciler struct {
 //+kubebuilder:rbac:groups="",resources=serviceaccounts/token,verbs=create
 //+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
 
-func (r *KerberosAuthEngineLDAPConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
-	instance := &redhatcopv1alpha1.KerberosAuthEngineLDAPConfig{}
-	err := r.GetClient().Get(ctx, req.NamespacedName, instance)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return reconcile.Result{}, nil
-		}
-		return reconcile.Result{}, err
+// SetupKerberosAuthEngineLDAPConfigController registers the KerberosAuthEngineLDAPConfig controller with the Manager.
+func SetupKerberosAuthEngineLDAPConfigController(mgr ctrl.Manager) error {
+	reconciler := &vaultresourcecontroller.GenericVaultReconciler[
+		redhatcopv1alpha1.KerberosAuthEngineLDAPConfig,
+		*redhatcopv1alpha1.KerberosAuthEngineLDAPConfig,
+	]{
+		ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KerberosAuthEngineLDAPConfig"),
+		Factory:        vaultresourcecontroller.StandardVaultResourceFactory,
 	}
+	h := &kerberosAuthEngineLDAPConfigHelper{ReconcilerBase: reconciler.ReconcilerBase}
 
-	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
-	if err != nil {
-		r.Log.Error(err, "unable to prepare context", "instance", instance)
-		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
-	}
-	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
-
-	return vaultResource.Reconcile(ctx1, instance)
-}
-
-// SetupWithManager sets up the controller with the Manager.
-func (r *KerberosAuthEngineLDAPConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	isSecretDataChanged := predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			newSecret, ok := e.ObjectNew.DeepCopyObject().(*corev1.Secret)
@@ -134,9 +101,9 @@ func (r *KerberosAuthEngineLDAPConfigReconciler) SetupWithManager(mgr ctrl.Manag
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			s := a.(*corev1.Secret)
-			configs, err := r.findApplicableKLDAPForSecret(ctx, s)
+			configs, err := h.findApplicableKLDAPForSecret(ctx, s)
 			if err != nil {
-				r.Log.Error(err, "unable to find applicable KerberosAuthEngineLDAPConfig for namespace", "namespace", s.Namespace)
+				h.Log.Error(err, "unable to find applicable KerberosAuthEngineLDAPConfig for namespace", "namespace", s.Namespace)
 				return []reconcile.Request{}
 			}
 			for _, cfg := range configs {
@@ -156,9 +123,9 @@ func (r *KerberosAuthEngineLDAPConfigReconciler) SetupWithManager(mgr ctrl.Manag
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			rs := a.(*redhatcopv1alpha1.RandomSecret)
-			configs, err := r.findApplicableKLDAPForRandomSecret(ctx, rs)
+			configs, err := h.findApplicableKLDAPForRandomSecret(ctx, rs)
 			if err != nil {
-				r.Log.Error(err, "unable to find applicable KerberosAuthEngineLDAPConfig for namespace", "namespace", rs.Namespace)
+				h.Log.Error(err, "unable to find applicable KerberosAuthEngineLDAPConfig for namespace", "namespace", rs.Namespace)
 				return []reconcile.Request{}
 			}
 			for _, cfg := range configs {
@@ -171,17 +138,17 @@ func (r *KerberosAuthEngineLDAPConfigReconciler) SetupWithManager(mgr ctrl.Manag
 			}
 			return res
 		}), builder.WithPredicates(isUpdatedRandomSecret)).
-		Complete(r)
+		Complete(reconciler)
 }
 
-func (r *KerberosAuthEngineLDAPConfigReconciler) findApplicableKLDAPForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.KerberosAuthEngineLDAPConfig, error) {
+func (h *kerberosAuthEngineLDAPConfigHelper) findApplicableKLDAPForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.KerberosAuthEngineLDAPConfig, error) {
 	result := []redhatcopv1alpha1.KerberosAuthEngineLDAPConfig{}
 	vrl := &redhatcopv1alpha1.KerberosAuthEngineLDAPConfigList{}
-	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
+	err := h.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: secret.Namespace,
 	})
 	if err != nil {
-		r.Log.Error(err, "unable to retrieve the list of KerberosAuthEngineLDAPConfig")
+		h.Log.Error(err, "unable to retrieve the list of KerberosAuthEngineLDAPConfig")
 		return nil, err
 	}
 	for _, vr := range vrl.Items {
@@ -195,14 +162,14 @@ func (r *KerberosAuthEngineLDAPConfigReconciler) findApplicableKLDAPForSecret(ct
 	return result, nil
 }
 
-func (r *KerberosAuthEngineLDAPConfigReconciler) findApplicableKLDAPForRandomSecret(ctx context.Context, randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.KerberosAuthEngineLDAPConfig, error) {
+func (h *kerberosAuthEngineLDAPConfigHelper) findApplicableKLDAPForRandomSecret(ctx context.Context, randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.KerberosAuthEngineLDAPConfig, error) {
 	result := []redhatcopv1alpha1.KerberosAuthEngineLDAPConfig{}
 	vrl := &redhatcopv1alpha1.KerberosAuthEngineLDAPConfigList{}
-	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
+	err := h.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: randomSecret.Namespace,
 	})
 	if err != nil {
-		r.Log.Error(err, "unable to retrieve the list of KerberosAuthEngineLDAPConfig")
+		h.Log.Error(err, "unable to retrieve the list of KerberosAuthEngineLDAPConfig")
 		return nil, err
 	}
 	for _, vr := range vrl.Items {

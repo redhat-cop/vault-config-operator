@@ -302,13 +302,12 @@ The base port `8200` and default cluster name `vault-config-operator` are reserv
 2. `operator-sdk create webhook --group redhatcop --version v1alpha1 --kind MyType --defaulting --programmatic-validation`
 3. Define `*_types.go`: Spec with `Connection`, `Authentication`, inline config struct, `Path`, `Name`; add `vault:` struct tags to inline config fields; implement `VaultObject` (5 required methods: `GetPath`, `GetPayload`, `IsDeletable`, `GetKubeAuthConfiguration`, `GetVaultConnection`) + `ConditionsAware`. `GetPayload()` returns `vaultutils.StructToVaultPayload(&d.Spec.InlineConfig)`. Use `vaultutils.ResourceName(d.Spec.Name, d.Name)` in `GetPath()`. Only implement `VaultEquivalenceChecker`, `VaultValidator`, `VaultInternalValuesPreparer`, or `VaultTLSPreparer` if non-trivial logic is needed — trivial no-ops are NOT required.
 4. Implement webhook in `*_webhook.go`: `admission.Defaulter[*T]`, `admission.Validator[*T]`, immutable `spec.path` rule
-5. Implement controller in `*_controller.go`: embed `ReconcilerBase`, standard reconcile flow
-6. Register controller + webhook in `main.go`
-7. Add decoder method in `controllertestutils/decoder.go`
-8. Create test YAML fixtures in `test/`
-9. Write integration test with `//go:build integration` tag
-10. Run `make manifests generate fmt vet test`
-11. Create documentation file at `docs/{auth|secret}-engines/{name}.md` following `docs/engine-doc-template.md` (DNFR5) and update the corresponding `index.md`
+5. Create `*_controller.go` with RBAC markers + `SetupXxxController(mgr)` calling `vaultresourcecontroller.SetupGenericController[MyType](mgr, "MyType", vaultresourcecontroller.StandardVaultResourceFactory)`. No hand-written `Reconcile` body needed. For custom controllers needing hand-written logic, embed `ReconcilerBase` and write a custom `Reconcile` method.
+6. Register controller via `controller.SetupMyTypeController(mgr)` in the setup loop in `main.go`. Register webhook in the webhook section.
+7. Create test YAML fixtures in `test/`
+8. Write integration test with `//go:build integration` tag
+9. Run `make manifests generate fmt vet test`
+10. Create documentation file at `docs/{auth|secret}-engines/{name}.md` following `docs/engine-doc-template.md` (DNFR5) and update the corresponding `index.md`
 
 ### Critical Don't-Miss Rules
 

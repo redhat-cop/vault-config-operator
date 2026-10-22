@@ -1,44 +1,24 @@
-/*
-Copyright 2021.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package controller
 
 import (
 	"context"
-	"reflect"
-
+	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
-	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 )
 
-// KerberosAuthEngineConfigReconciler reconciles a KerberosAuthEngineConfig object
-type KerberosAuthEngineConfigReconciler struct {
+// kerberosAuthEngineConfigHelper provides Watch handler methods for KerberosAuthEngineConfig.
+type kerberosAuthEngineConfigHelper struct {
 	vaultresourcecontroller.ReconcilerBase
 }
 
@@ -49,30 +29,17 @@ type KerberosAuthEngineConfigReconciler struct {
 //+kubebuilder:rbac:groups="",resources=serviceaccounts/token,verbs=create
 //+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
 
-func (r *KerberosAuthEngineConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
-	instance := &redhatcopv1alpha1.KerberosAuthEngineConfig{}
-	err := r.GetClient().Get(ctx, req.NamespacedName, instance)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return reconcile.Result{}, nil
-		}
-		return reconcile.Result{}, err
+// SetupKerberosAuthEngineConfigController registers the KerberosAuthEngineConfig controller with the Manager.
+func SetupKerberosAuthEngineConfigController(mgr ctrl.Manager) error {
+	reconciler := &vaultresourcecontroller.GenericVaultReconciler[
+		redhatcopv1alpha1.KerberosAuthEngineConfig,
+		*redhatcopv1alpha1.KerberosAuthEngineConfig,
+	]{
+		ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KerberosAuthEngineConfig"),
+		Factory:        vaultresourcecontroller.StandardVaultResourceFactory,
 	}
+	h := &kerberosAuthEngineConfigHelper{ReconcilerBase: reconciler.ReconcilerBase}
 
-	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
-	if err != nil {
-		r.Log.Error(err, "unable to prepare context", "instance", instance)
-		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
-	}
-	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
-
-	return vaultResource.Reconcile(ctx1, instance)
-}
-
-// SetupWithManager sets up the controller with the Manager.
-func (r *KerberosAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	isKeytabSecret := predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			newSecret, ok := e.ObjectNew.DeepCopyObject().(*corev1.Secret)
@@ -105,9 +72,9 @@ func (r *KerberosAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) 
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			s := a.(*corev1.Secret)
-			configs, err := r.findApplicableKAECForSecret(ctx, s)
+			configs, err := h.findApplicableKAECForSecret(ctx, s)
 			if err != nil {
-				r.Log.Error(err, "unable to find applicable KerberosAuthEngineConfig for namespace", "namespace", s.Namespace)
+				h.Log.Error(err, "unable to find applicable KerberosAuthEngineConfig for namespace", "namespace", s.Namespace)
 				return []reconcile.Request{}
 			}
 			for _, cfg := range configs {
@@ -120,17 +87,17 @@ func (r *KerberosAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) 
 			}
 			return res
 		}), builder.WithPredicates(isKeytabSecret)).
-		Complete(r)
+		Complete(reconciler)
 }
 
-func (r *KerberosAuthEngineConfigReconciler) findApplicableKAECForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.KerberosAuthEngineConfig, error) {
+func (h *kerberosAuthEngineConfigHelper) findApplicableKAECForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.KerberosAuthEngineConfig, error) {
 	result := []redhatcopv1alpha1.KerberosAuthEngineConfig{}
 	vrl := &redhatcopv1alpha1.KerberosAuthEngineConfigList{}
-	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
+	err := h.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: secret.Namespace,
 	})
 	if err != nil {
-		r.Log.Error(err, "unable to retrieve the list of KerberosAuthEngineConfig")
+		h.Log.Error(err, "unable to retrieve the list of KerberosAuthEngineConfig")
 		return nil, err
 	}
 	for _, vr := range vrl.Items {
