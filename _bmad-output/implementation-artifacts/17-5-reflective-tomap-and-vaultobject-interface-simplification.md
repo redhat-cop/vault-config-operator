@@ -1,7 +1,6 @@
 # Story 17.5: Reflective toMap via vault Struct Tags + VaultObject Interface Simplification
 
-Status: ready-for-dev
-
+Status: done
 ## Story
 
 As an operator developer,
@@ -402,8 +401,23 @@ This is critical: if the docs aren't updated, future CRD contributors (human or 
 
 ### Review Model Used
 
+- Quick lens: GPT 5.4 Medium (adversarial review)
+
 ### Review Findings
+
+Pass 1 — 6 findings: 0 high, 2 medium, 2 low, 2 false
+- `[false]` `[reject]` DurationToSeconds() returns json.Number(s) on parse failure — pre-migration had identical behavior
+- `[low]` `[reject]` Identity token/OIDC types missing duration codec on TTL fields — migration correctly preserved pre-existing behavior
+- `[low]` `[reject]` isequivalent_audit_test.go still uses toMap()/GetPayload() — tests comparison behavior, not payload output
+- `[low]` `[reject]` vaultsecret_test.go coverage incomplete — VaultSecret excluded from walker migration
+- `[medium]` `[patch]` ~22 types still had trivial IsInitialized, PrepareTLSConfig after Phase C — fixed: deleted remaining no-ops across 24 files
+- `[medium]` `[patch]` Local helper duplicates (durationToSeconds, toInterfaceArray) still in SSH/DB type files — fixed: deleted dead functions
 
 ### Decisions Needed / Decisions Taken
 
+None — all findings resolved during review pass.
+
 ### Fixes Applied
+
+- Deleted remaining trivial no-op interface methods across 24 files (Phase C completion)
+- Deleted dead local helper functions from sshsecretenginerole_types.go and databasesecretengineconfig_types.go

@@ -725,8 +725,22 @@ import (
 
 ### Review Model Used
 
+- Quick lens: GPT 5.4 Medium (adversarial review)
+
 ### Review Findings
+
+Pass 1 — 5 findings: 0 high, 3 medium, 1 low, 2 false
+- `[false]` `[reject]` Rate field as string instead of float64 — Kubernetes auto-coerces YAML numbers to strings for string-typed CRD fields
+- `[low]` `[reject]` Omitting interval sends 0 instead of Vault default 1s — follows majority project pattern; Vault likely treats 0 as "use default"
+- `[medium]` `[patch]` RateLimitQuota spec.name guard allows empty-to-non-empty mutation — removed extra guard to match existing webhook pattern
+- `[medium]` `[patch]` LeaseCountQuota spec.name — same immutability hole — same fix as above
+- `[medium]` `[patch]` QuotaConfig IsEquivalentToDesiredState doesn't sort string slices — added sortAnyStringSlice calls
 
 ### Decisions Needed / Decisions Taken
 
+None — all findings resolved during review pass.
+
 ### Fixes Applied
+
+- Removed extra spec.name immutability guard in RateLimitQuota and LeaseCountQuota webhooks
+- Added sortAnyStringSlice calls to QuotaConfig IsEquivalentToDesiredState

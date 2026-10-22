@@ -1,7 +1,6 @@
 # Story 17.6: Generic Reconciler + Error Handling Enforcement
 
-Status: ready-for-dev
-
+Status: done
 ## Story
 
 As an operator developer,
@@ -571,8 +570,19 @@ Recent commits show:
 
 ### Review Model Used
 
+- Quick lens: GPT 5.4 Medium
+
 ### Review Findings
+
+Pass 1 — 3 findings: 0 high, 0 medium, 1 low, 2 false
+- `[false]` `[reject]` GenericVaultReconciler.Reconcile() returns raw Get() error without ManageOutcome — all 96 pre-migration controllers had identical behavior; ManageOutcome requires a valid instance unavailable on Get failure
+- `[false]` `[reject]` SetControllerReference errcheck fix continues on error, may create orphaned resources — original code used explicit discard (`_ =`); story mandates errcheck compliance, not control flow changes
+- `[low]` `[patch]` project-context.md still references commons.go as canonical home of prepareContext — fixed: updated 4 sections to reference vaultresourcecontroller.PrepareContext
 
 ### Decisions Needed / Decisions Taken
 
+None — all findings resolved during review pass.
+
 ### Fixes Applied
+
+- Updated project-context.md sections (Context-Carried Values, Reconcile Flow, Code Organization, Context Value Contract) to reference vaultresourcecontroller.PrepareContext as canonical location
