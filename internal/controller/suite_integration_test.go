@@ -141,136 +141,74 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&KubernetesAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KubernetesAuthEngineRole")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
+	// --- Generic-migrated controllers ---
+	for _, setup := range []struct {
+		name string
+		fn   func(ctrl.Manager) error
+	}{
+		{"KubernetesAuthEngineRole", SetupKubernetesAuthEngineRoleController},
+		{"Policy", SetupPolicyController},
+		{"DatabaseSecretEngineRole", SetupDatabaseSecretEngineRoleController},
+		{"SecretEngineMount", SetupSecretEngineMountController},
+		{"AuthEngineMount", SetupAuthEngineMountController},
+		{"KubernetesAuthEngineConfig", SetupKubernetesAuthEngineConfigController},
+		{"LDAPAuthEngineConfig", SetupLDAPAuthEngineConfigController},
+		{"LDAPAuthEngineGroup", SetupLDAPAuthEngineGroupController},
+		{"JWTOIDCAuthEngineConfig", SetupJWTOIDCAuthEngineConfigController},
+		{"JWTOIDCAuthEngineRole", SetupJWTOIDCAuthEngineRoleController},
+		{"PasswordPolicy", SetupPasswordPolicyController},
+		{"RabbitMQSecretEngineRole", SetupRabbitMQSecretEngineRoleController},
+		{"PKISecretEngineConfig", SetupPKISecretEngineConfigController},
+		{"PKISecretEngineRole", SetupPKISecretEngineRoleController},
+		{"GitHubSecretEngineConfig", SetupGitHubSecretEngineConfigController},
+		{"GitHubSecretEngineRole", SetupGitHubSecretEngineRoleController},
+		{"QuaySecretEngineConfig", SetupQuaySecretEngineConfigController},
+		{"QuaySecretEngineRole", SetupQuaySecretEngineRoleController},
+		{"QuaySecretEngineStaticRole", SetupQuaySecretEngineStaticRoleController},
+		{"KubernetesSecretEngineConfig", SetupKubernetesSecretEngineConfigController},
+		{"KubernetesSecretEngineRole", SetupKubernetesSecretEngineRoleController},
+		{"SSHSecretEngineConfig", SetupSSHSecretEngineConfigController},
+		{"SSHSecretEngineRole", SetupSSHSecretEngineRoleController},
+		{"LDAPSecretEngineStaticRole", SetupLDAPSecretEngineStaticRoleController},
+		{"LDAPSecretEngineDynamicRole", SetupLDAPSecretEngineDynamicRoleController},
+		{"DatabaseSecretEngineStaticRole", SetupDatabaseSecretEngineStaticRoleController},
+		{"Group", SetupGroupController},
+		{"GroupAlias", SetupGroupAliasController},
+		{"Entity", SetupEntityController},
+		{"EntityAlias", SetupEntityAliasController},
+		{"IdentityOIDCScope", SetupIdentityOIDCScopeController},
+		{"IdentityOIDCAssignment", SetupIdentityOIDCAssignmentController},
+		{"IdentityOIDCClient", SetupIdentityOIDCClientController},
+		{"IdentityOIDCProvider", SetupIdentityOIDCProviderController},
+		{"IdentityTokenConfig", SetupIdentityTokenConfigController},
+		{"IdentityTokenKey", SetupIdentityTokenKeyController},
+		{"IdentityTokenRole", SetupIdentityTokenRoleController},
+		{"Audit", SetupAuditController},
+		{"AuditRequestHeader", SetupAuditRequestHeaderController},
+		{"NomadSecretEngineRole", SetupNomadSecretEngineRoleController},
+		{"AppRoleAuthEngineRole", SetupAppRoleAuthEngineRoleController},
+		{"UserpassAuthEngineUser", SetupUserpassAuthEngineUserController},
+		{"CORSConfig", SetupCORSConfigController},
+		{"KeyRotationConfig", SetupKeyRotationConfigController},
+		{"RotationPolicy", SetupRotationPolicyController},
+		{"UICustomHeader", SetupUICustomHeaderController},
+		{"LoggerConfig", SetupLoggerConfigController},
+	} {
+		err = setup.fn(mgr)
+		Expect(err).ToNot(HaveOccurred())
+	}
 
-	err = (&PolicyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "Policy")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
+	// --- Custom controllers (Category 5 — hand-written Reconcile) ---
 	err = (&DatabaseSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "DatabaseSecretEngineConfig")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&DatabaseSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "DatabaseSecretEngineRole")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&SecretEngineMountReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "SecretEngineMount")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
 	err = (&RandomSecretReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RandomSecret")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&AuthEngineMountReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AuthEngineMount")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&KubernetesAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KubernetesAuthEngineConfig")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&LDAPAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LDAPAuthEngineConfig")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&LDAPAuthEngineGroupReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LDAPAuthEngineGroup")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&JWTOIDCAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "JWTOIDCAuthEngineConfig")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&JWTOIDCAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "JWTOIDCAuthEngineRole")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
 	err = (&VaultSecretReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "VaultSecret")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&PasswordPolicyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "PasswordPolicy")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
 	err = (&RabbitMQSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RabbitMQSecretEngineConfig")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&RabbitMQSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RabbitMQSecretEngineRole")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&PKISecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "PKISecretEngineConfig")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&PKISecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "PKISecretEngineRole")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&GitHubSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GitHubSecretEngineConfig")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&GitHubSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GitHubSecretEngineRole")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&QuaySecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "QuaySecretEngineConfig")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&QuaySecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "QuaySecretEngineRole")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&QuaySecretEngineStaticRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "QuaySecretEngineStaticRole")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&KubernetesSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KubernetesSecretEngineConfig")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&KubernetesSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KubernetesSecretEngineRole")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&SSHSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "SSHSecretEngineConfig")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&SSHSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "SSHSecretEngineRole")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&LDAPSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LDAPSecretEngineConfig")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&LDAPSecretEngineStaticRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LDAPSecretEngineStaticRole")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&LDAPSecretEngineDynamicRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LDAPSecretEngineDynamicRole")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&DatabaseSecretEngineStaticRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "DatabaseSecretEngineStaticRole")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&GroupReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "Group")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&GroupAliasReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GroupAlias")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&EntityReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "Entity")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&EntityAliasReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "EntityAlias")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&IdentityOIDCScopeReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCScope")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&IdentityOIDCAssignmentReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCAssignment")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&IdentityOIDCClientReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCClient")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&IdentityOIDCProviderReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCProvider")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&IdentityTokenConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityTokenConfig")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&IdentityTokenKeyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityTokenKey")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&IdentityTokenRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityTokenRole")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&AuditReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "Audit")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&AuditRequestHeaderReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AuditRequestHeader")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
 	err = (&TransitSecretEngineKeyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "TransitSecretEngineKey")}).SetupWithManager(mgr)
@@ -282,37 +220,16 @@ var _ = BeforeSuite(func() {
 	err = (&NomadSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "NomadSecretEngineConfig")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&NomadSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "NomadSecretEngineRole")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&AppRoleAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AppRoleAuthEngineRole")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&UserpassAuthEngineUserReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "UserpassAuthEngineUser")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&CORSConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "CORSConfig")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&KeyRotationConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KeyRotationConfig")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&RotationPolicyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RotationPolicy")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&UICustomHeaderReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "UICustomHeader")}).SetupWithManager(mgr)
+	err = (&LDAPSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LDAPSecretEngineConfig")}).SetupWithManager(mgr)
 	Expect(err).ToNot(HaveOccurred())
 
 	// Temporarily disabled: RateLimitQuota creates a global quota that poisons
 	// Vault on repeated runs (conflicting quota definitions detected).
-	// err = (&RateLimitQuotaReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RateLimitQuota")}).SetupWithManager(mgr)
+	// err = SetupRateLimitQuotaController(mgr)
 	// Expect(err).ToNot(HaveOccurred())
 
-	err = (&LoggerConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LoggerConfig")}).SetupWithManager(mgr)
-	Expect(err).ToNot(HaveOccurred())
-
 	// Temporarily disabled: QuotaConfig shares the same conflict issue.
-	// err = (&QuotaConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "QuotaConfig")}).SetupWithManager(mgr)
+	// err = SetupQuotaConfigController(mgr)
 	// Expect(err).ToNot(HaveOccurred())
 
 	By(fmt.Sprintf("Creating the %v namespace", vaultAdminNamespaceName))
