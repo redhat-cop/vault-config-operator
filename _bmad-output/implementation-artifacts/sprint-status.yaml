@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-10-20
+last_updated: 2026-10-23
 # Story 17.6 ready-for-dev 2026-10-20
 # Story 17.5 ready-for-dev 2026-10-20
 # Story 17.4 ready-for-dev 2026-10-20
@@ -664,7 +664,7 @@ development_status:
   #            https://developer.hashicorp.com/vault/api-docs/system/loggers
   # Complexity: Low (2 CRDs, simple key-value configs)
   # Design note: LoggerConfig resets on Vault restart — operator re-applies on reconcile (documented behavior)
-  17-4-ui-and-observability-crds-uicustomheader-loggerconfig: ready-for-dev
+  17-4-ui-and-observability-crds-uicustomheader-loggerconfig: done
 
   # Story 17.5: Reflective toMap via vault Struct Tags + VaultObject Interface Simplification
   # - Part A0 (PREREQUISITE) — toMap/IsEquivalentToDesiredState unit test audit + gap fill
@@ -686,7 +686,7 @@ development_status:
   # Complexity: High (touches every type file; Part A0 test audit is prerequisite gate)
   # Novelty Risk: HIGH — shared framework refactor across all 88 types
   # Safety: Part A0 builds comprehensive test oracle BEFORE migration; integration tests provide end-to-end regression
-  17-5-reflective-tomap-and-vaultobject-interface-simplification: ready-for-dev
+  17-5-reflective-tomap-and-vaultobject-interface-simplification: done
 
   # Story 17.6: Generic Reconciler + Error Handling Enforcement
   # - Part A — Generic VaultResource reconciler using Go generics (Go 1.18+ type params, we're on 1.27)
@@ -699,7 +699,7 @@ development_status:
   #   - Add errcheck to CI pipeline as blocking gate
   # Complexity: High (Part A touches every controller file; Part B is a sweep with potential behavior changes)
   # Novelty Risk: MEDIUM — generics are well-understood in Go 1.27; errcheck is mechanical
-  17-6-generic-reconciler-and-error-handling-enforcement: ready-for-dev
+  17-6-generic-reconciler-and-error-handling-enforcement: done
 
 action_items:
   # Epic 10 action items (status from Epic 11 retro follow-through)

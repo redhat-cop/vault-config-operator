@@ -374,8 +374,18 @@ No new imports needed for trace logging files — they already import `log "sigs
 
 ### Review Model Used
 
+- Quick lens: GPT 5.4
+
 ### Review Findings
+
+Pass 1 (quick) — 2 findings: 0 high, 0 medium, 2 low, 0 false
+- `[low]` `[reject]` normalizePath doesn't collapse 3+ segment subpath names for identity/oidc paths — real but rare; plan targets ~95% coverage
+- `[low]` `[reject]` sysNamedRe doesn't cover sys/config/auditing/request-headers/<name> — real but rare; fix adds regex maintenance surface
 
 ### Decisions Needed / Decisions Taken
 
+None — both low findings rejected as acceptable coverage gaps within plan's ~95% target.
+
 ### Fixes Applied
+
+None — no patches required.
