@@ -141,7 +141,7 @@ func TestRabbitMQSecretEngineRoleIsEquivalentMatching(t *testing.T) {
 
 	payload := role.Spec.RMQSERole.rabbitMQToMap()
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected matching payload to be equivalent")
 	}
 }
@@ -167,7 +167,7 @@ func TestRabbitMQSecretEngineRoleIsEquivalentNonMatching(t *testing.T) {
 	payload := role.Spec.RMQSERole.rabbitMQToMap()
 	payload["tags"] = "management"
 
-	if role.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected non-matching payload to NOT be equivalent")
 	}
 }
@@ -193,7 +193,7 @@ func TestRabbitMQSecretEngineRoleIsEquivalentExtraFields(t *testing.T) {
 	payload := role.Spec.RMQSERole.rabbitMQToMap()
 	payload["extra_vault_field"] = "x"
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
@@ -473,7 +473,7 @@ func TestRabbitMQSecretEngineRoleIsEquivalentMultipleVhosts(t *testing.T) {
 		"extra_field":  "should-be-ignored",
 	}
 
-	if !role.IsEquivalentToDesiredState(matchingPayload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, matchingPayload) {
 		t.Error("expected matching multi-entry payload to be equivalent")
 	}
 
@@ -483,7 +483,7 @@ func TestRabbitMQSecretEngineRoleIsEquivalentMultipleVhosts(t *testing.T) {
 		"vhost_topics": `{"/":{"amq.topic":{"write":".*","read":".*"}},"/staging":{"amq.direct":{"write":"staging-.*","read":"staging-.*"}}}`,
 	}
 
-	if role.IsEquivalentToDesiredState(mismatchPayload) {
+	if vaultutils.IsEquivalentToDesiredState(role, mismatchPayload) {
 		t.Error("expected payload missing /staging vhost to NOT be equivalent")
 	}
 }

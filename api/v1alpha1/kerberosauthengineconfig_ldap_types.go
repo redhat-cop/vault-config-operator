@@ -18,10 +18,8 @@ package v1alpha1
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"reflect"
-	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -50,132 +48,132 @@ type KerberosAuthEngineLDAPConfigSpec struct {
 	// LDAPCredentials is used to connect to the LDAP service.
 	// Consists in bindDN and bindPass, sourced from a K8s Secret, VaultSecret, or RandomSecret.
 	// +kubebuilder:validation:Optional
-	LDAPCredentials vaultutils.RootCredentialConfig `json:"ldapCredentials,omitempty"`
+	LDAPCredentials vaultutils.RootCredentialConfig `json:"ldapCredentials,omitempty" vault:"-"`
 
 	// TLSConfig represents the LDAP service certificate configuration.
 	// +kubebuilder:validation:Optional
-	TLSConfig vaultutils.TLSConfig `json:"tLSConfig,omitempty"`
+	TLSConfig vaultutils.TLSConfig `json:"tLSConfig,omitempty" vault:"-"`
 }
 
 type KerberosLDAPConfig struct {
 	// URL is the LDAP server to connect to. Multiple URLs can be comma-separated.
 	// +kubebuilder:validation:Required
-	URL string `json:"url"`
+	URL string `json:"url" vault:"url"`
 
 	// CaseSensitiveNames if set, user and group names are case sensitive for policy matching.
 	// +kubebuilder:validation:Optional
-	CaseSensitiveNames bool `json:"caseSensitiveNames,omitempty"`
+	CaseSensitiveNames bool `json:"caseSensitiveNames,omitempty" vault:"case_sensitive_names"`
 
 	// StartTLS issues a StartTLS command after establishing an unencrypted connection.
 	// +kubebuilder:validation:Optional
-	StartTLS bool `json:"startTLS,omitempty"`
+	StartTLS bool `json:"startTLS,omitempty" vault:"starttls"`
 
 	// TLSMinVersion is the minimum TLS version to use.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="tls12"
 	// +kubebuilder:validation:Enum={"tls10","tls11","tls12","tls13"}
-	TLSMinVersion string `json:"tlsMinVersion,omitempty"`
+	TLSMinVersion string `json:"tlsMinVersion,omitempty" vault:"tls_min_version"`
 
 	// TLSMaxVersion is the maximum TLS version to use.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="tls12"
 	// +kubebuilder:validation:Enum={"tls10","tls11","tls12","tls13"}
-	TLSMaxVersion string `json:"tlsMaxVersion,omitempty"`
+	TLSMaxVersion string `json:"tlsMaxVersion,omitempty" vault:"tls_max_version"`
 
 	// InsecureTLS skips LDAP server SSL certificate verification.
 	// +kubebuilder:validation:Optional
-	InsecureTLS bool `json:"insecureTLS,omitempty"`
+	InsecureTLS bool `json:"insecureTLS,omitempty" vault:"insecure_tls"`
 
 	// Certificate is the CA certificate for verifying the LDAP server certificate (x509 PEM).
 	// +kubebuilder:validation:Optional
-	Certificate string `json:"certificate,omitempty"`
+	Certificate string `json:"certificate,omitempty" vault:"certificate"`
 
 	// ClientTLSCert is the client certificate to provide to the LDAP server (x509 PEM).
 	// +kubebuilder:validation:Optional
-	ClientTLSCert string `json:"clientTLSCert,omitempty"`
+	ClientTLSCert string `json:"clientTLSCert,omitempty" vault:"client_tls_cert"`
 
 	// ClientTLSKey is the client certificate key to provide to the LDAP server (x509 PEM).
 	// +kubebuilder:validation:Optional
-	ClientTLSKey string `json:"clientTLSKey,omitempty"`
+	ClientTLSKey string `json:"clientTLSKey,omitempty" vault:"client_tls_key"`
 
 	// AliasMetadata configures alias metadata for the Kerberos auth mount.
 	// +kubebuilder:validation:Optional
-	AliasMetadata map[string]string `json:"aliasMetadata,omitempty"`
+	AliasMetadata map[string]string `json:"aliasMetadata,omitempty" vault:"alias_metadata,stringmap,omitempty"`
 
 	// BindDN is the distinguished name used to bind when performing user search.
 	// +kubebuilder:validation:Optional
-	BindDN string `json:"bindDN,omitempty"`
+	BindDN string `json:"bindDN,omitempty" vault:"binddn,omitempty"`
 
 	// UserDN is the base DN for user search.
 	// +kubebuilder:validation:Optional
-	UserDN string `json:"userDN,omitempty"`
+	UserDN string `json:"userDN,omitempty" vault:"userdn"`
 
 	// UserAttr is the attribute on user objects matching the authenticating username.
 	// +kubebuilder:validation:Optional
-	UserAttr string `json:"userAttr,omitempty"`
+	UserAttr string `json:"userAttr,omitempty" vault:"userattr"`
 
 	// DiscoverDN uses anonymous bind to discover the bind DN of a user.
 	// +kubebuilder:validation:Optional
-	DiscoverDN bool `json:"discoverDN,omitempty"`
+	DiscoverDN bool `json:"discoverDN,omitempty" vault:"discoverdn"`
 
 	// DenyNullBind prevents users from bypassing authentication with an empty password.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=true
-	DenyNullBind bool `json:"denyNullBind"`
+	DenyNullBind bool `json:"denyNullBind" vault:"deny_null_bind"`
 
 	// UPNDomain is the userPrincipalDomain for constructing UPN strings.
 	// +kubebuilder:validation:Optional
-	UPNDomain string `json:"upnDomain,omitempty"`
+	UPNDomain string `json:"upnDomain,omitempty" vault:"upndomain"`
 
 	// GroupFilter is a Go template for constructing the group membership query.
 	// +kubebuilder:validation:Optional
-	GroupFilter string `json:"groupFilter,omitempty"`
+	GroupFilter string `json:"groupFilter,omitempty" vault:"groupfilter"`
 
 	// GroupDN is the LDAP search base for group membership search.
 	// +kubebuilder:validation:Optional
-	GroupDN string `json:"groupDN,omitempty"`
+	GroupDN string `json:"groupDN,omitempty" vault:"groupdn"`
 
 	// GroupAttr is the LDAP attribute for enumerating user group membership.
 	// +kubebuilder:validation:Optional
-	GroupAttr string `json:"groupAttr,omitempty"`
+	GroupAttr string `json:"groupAttr,omitempty" vault:"groupattr"`
 
 	// TokenTTL is the incremental lifetime for generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenTTL string `json:"tokenTTL,omitempty"`
+	TokenTTL string `json:"tokenTTL,omitempty" vault:"token_ttl,duration"`
 
 	// TokenMaxTTL is the maximum lifetime for generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenMaxTTL string `json:"tokenMaxTTL,omitempty"`
+	TokenMaxTTL string `json:"tokenMaxTTL,omitempty" vault:"token_max_ttl,duration"`
 
 	// TokenPolicies are policies to encode onto generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenPolicies string `json:"tokenPolicies,omitempty"`
+	TokenPolicies string `json:"tokenPolicies,omitempty" vault:"token_policies"`
 
 	// TokenBoundCIDRs are CIDR blocks restricting authentication.
 	// +kubebuilder:validation:Optional
-	TokenBoundCIDRs string `json:"tokenBoundCIDRs,omitempty"`
+	TokenBoundCIDRs string `json:"tokenBoundCIDRs,omitempty" vault:"token_bound_cidrs"`
 
 	// TokenExplicitMaxTTL is the hard cap max TTL for tokens.
 	// +kubebuilder:validation:Optional
-	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty"`
+	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty" vault:"token_explicit_max_ttl,duration"`
 
 	// TokenNoDefaultPolicy if true, omits the default policy from generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty"`
+	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty" vault:"token_no_default_policy"`
 
 	// TokenNumUses is the max number of times a generated token may be used (0 = unlimited).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	TokenNumUses int64 `json:"tokenNumUses,omitempty"`
+	TokenNumUses int64 `json:"tokenNumUses,omitempty" vault:"token_num_uses,number"`
 
 	// TokenPeriod is the maximum allowed period for periodic tokens.
 	// +kubebuilder:validation:Optional
-	TokenPeriod string `json:"tokenPeriod,omitempty"`
+	TokenPeriod string `json:"tokenPeriod,omitempty" vault:"token_period,duration"`
 
 	// TokenType is the type of token to generate.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum={"service","batch","default","default-service","default-batch"}
-	TokenType string `json:"tokenType,omitempty"`
+	TokenType string `json:"tokenType,omitempty" vault:"token_type"`
 
 	retrievedPassword      string `json:"-"`
 	retrievedUsername      string `json:"-"`
@@ -238,10 +236,6 @@ func (d *KerberosAuthEngineLDAPConfig) IsEquivalentToDesiredState(payload map[st
 	delete(desiredState, "bindpass")
 	delete(desiredState, "client_tls_key")
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (d *KerberosAuthEngineLDAPConfig) IsInitialized() bool {
-	return true
 }
 
 func (d *KerberosAuthEngineLDAPConfig) PrepareInternalValues(context context.Context, object client.Object) error {
@@ -386,38 +380,12 @@ func (r *KerberosAuthEngineLDAPConfig) isValid() error {
 }
 
 func (c *KerberosLDAPConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["url"] = c.URL
-	payload["case_sensitive_names"] = c.CaseSensitiveNames
-	payload["starttls"] = c.StartTLS
-	payload["tls_min_version"] = c.TLSMinVersion
-	payload["tls_max_version"] = c.TLSMaxVersion
-	payload["insecure_tls"] = c.InsecureTLS
+	payload := vaultutils.StructToVaultPayload(c)
 	payload["certificate"] = c.retrievedCertificate
 	payload["client_tls_cert"] = c.retrievedClientTLSCert
 	payload["client_tls_key"] = c.retrievedClientTLSKey
-	if len(c.AliasMetadata) > 0 {
-		payload["alias_metadata"] = toAnyMapString(c.AliasMetadata)
-	}
 	payload["binddn"] = c.retrievedUsername
 	payload["bindpass"] = c.retrievedPassword
-	payload["userdn"] = c.UserDN
-	payload["userattr"] = c.UserAttr
-	payload["discoverdn"] = c.DiscoverDN
-	payload["deny_null_bind"] = c.DenyNullBind
-	payload["upndomain"] = c.UPNDomain
-	payload["groupfilter"] = c.GroupFilter
-	payload["groupdn"] = c.GroupDN
-	payload["groupattr"] = c.GroupAttr
-	payload["token_ttl"] = durationToSeconds(c.TokenTTL)
-	payload["token_max_ttl"] = durationToSeconds(c.TokenMaxTTL)
-	payload["token_policies"] = c.TokenPolicies
-	payload["token_bound_cidrs"] = c.TokenBoundCIDRs
-	payload["token_explicit_max_ttl"] = durationToSeconds(c.TokenExplicitMaxTTL)
-	payload["token_no_default_policy"] = c.TokenNoDefaultPolicy
-	payload["token_num_uses"] = json.Number(strconv.FormatInt(c.TokenNumUses, 10))
-	payload["token_period"] = durationToSeconds(c.TokenPeriod)
-	payload["token_type"] = c.TokenType
 	return payload
 }
 

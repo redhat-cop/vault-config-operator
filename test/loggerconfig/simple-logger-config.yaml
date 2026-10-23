@@ -1,0 +1,9 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: LoggerConfig
+metadata:
+  name: core
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  level: debug

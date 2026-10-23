@@ -2,6 +2,8 @@ package v1alpha1
 
 import (
 	"testing"
+
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 )
 
 func TestGitHubAuthEngineTeamMap_toMap(t *testing.T) {
@@ -38,7 +40,7 @@ func TestGitHubAuthEngineTeamMap_IsEquivalentToDesiredState_Match(t *testing.T) 
 		"value": "dev-policy",
 	}
 
-	if !instance.IsEquivalentToDesiredState(vaultPayload) {
+	if !vaultutils.IsEquivalentToDesiredState(instance, vaultPayload) {
 		t.Error("expected IsEquivalentToDesiredState to return true (key field should be filtered out)")
 	}
 }
@@ -52,7 +54,7 @@ func TestGitHubAuthEngineTeamMap_IsEquivalentToDesiredState_Mismatch(t *testing.
 		"value": "different-policy",
 	}
 
-	if instance.IsEquivalentToDesiredState(vaultPayload) {
+	if vaultutils.IsEquivalentToDesiredState(instance, vaultPayload) {
 		t.Error("expected IsEquivalentToDesiredState to return false for mismatched value")
 	}
 }

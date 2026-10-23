@@ -81,23 +81,25 @@ The UBI9 runtime image does not need a Go version bump (it only packages the com
 - Implement `GetConditions()` and `SetConditions()` — simple getter/setter on `m.Status.Conditions`.
 - The framework (`ManageOutcome`) handles setting `ReconcileSuccessful`/`ReconcileFailed` conditions automatically; controllers must **not** set conditions directly.
 
-#### Imperative-to-Declarative Bridge: `toMap()` and `IsEquivalentToDesiredState()`
-- `toMap()` is defined on the inline Vault-specific config struct (e.g., `DBSEConfig`, `AuthMount`) and converts CRD spec fields to a `map[string]any` matching the Vault API's JSON field names (snake_case).
-- `GetPayload()` calls `d.Spec.toMap()` to produce the map sent to Vault on write.
-- `IsEquivalentToDesiredState(payload)` compares the current Vault state (read response) against the desired state (from `toMap()`) using `reflect.DeepEqual`. This is the core declarative reconciliation check — if equivalent, no write is issued.
-- **Critical nuance:** Vault often returns extra fields not sent by the operator, or restructures fields (e.g., DB config moves `connection_url`/`username` into a `connection_details` sub-map). `IsEquivalentToDesiredState` must account for these transformations — filter payload to only managed keys, remap fields as Vault returns them.
-- **Critical rule — `toMap()` output normalization:** When Vault transforms a field's format on read (e.g., duration string `"2h"` → integer seconds `7200`, HCL/JSON string → parsed map object), `toMap()` must emit the **Vault-read format** so that `IsEquivalentToDesiredState` compares matching shapes. Use `durationToSeconds()` for duration→seconds conversion (returns `json.Number`). Use `json.Unmarshal` or HCL parsing for string→map conversion. If parsing fails, exclude the field from comparison as a graceful fallback (prevents perpetual drift). This ensures updates propagate correctly through the `CreateOrUpdate` flow while avoiding false drift from format mismatches.
-- **Mandatory — duration fields in `toMap()`:** Every duration/TTL field that Vault returns as integer seconds MUST go through `durationToSeconds()` (string specs) or `json.Number(strconv.Itoa(...))` (integer specs). Emitting raw duration strings (`"1h"`) is a latent drift bug. Do not copy older types that still emit strings — those were a defect, now corrected for the auth-engine TTL set. New types (including all Epic 16 auth methods) must use this rule from the first commit.
-- **Critical rule — `json.Number` for Vault-facing numeric fields:** Vault's Go client (`hashicorp/vault/api`) uses `json.Decoder.UseNumber()`, so all JSON numbers in Vault read responses arrive as `json.Number` (not `float64` or `int`). Therefore, `toMap()` must emit `json.Number` for all numeric fields — use `json.Number(strconv.Itoa(v))` for integers and a `durationToSeconds()` helper returning `json.Number` for duration strings. Map fields with numeric values (e.g., `map[string]int`) must be converted to `map[string]any` with `json.Number` values. Nil maps must return empty `map[string]any{}` (not `nil`) because Vault returns `{}` for unset map fields. Unit tests for `IsEquivalentToDesiredState` must use `json.Number` in simulated Vault payloads — using Go `int` or `float64` would mask real type-mismatch bugs.
+#### Imperative-to-Declarative Bridge: `StructToVaultPayload` and `vault:` Struct Tags
+- **Primary mechanism:** `vaultutils.StructToVaultPayload(&config)` is a reflection-based walker in `api/v1alpha1/utils/struct_to_vault_payload.go` that reads `vault:` struct tags from inline config structs and produces a `map[string]any` matching the Vault API's JSON field names. This replaces hand-written `toMap()` methods for 92 of 95 types.
+- **Tag grammar:** `vault:"<vault_key>[,<codec>][,omitempty][,when=Field:value][,default=X][,spreadmap]"` | `vault:"-"` | `vault:",inline"`. Codecs: identity (default), `duration` (→ `json.Number` seconds), `number` (→ `json.Number`), `intmap` (`map[string]int` → `map[string]any{json.Number}`), `stringmap` (`map[string]string` → `map[string]any`).
+- `GetPayload()` calls `vaultutils.StructToVaultPayload(&d.Spec.InlineConfig)` (or delegates to `toMap()` for the 3 types that keep hand-written methods: TransitSecretEngineKey, types with multiple map methods).
+- **Default `IsEquivalentToDesiredState`:** Types that don't implement `VaultEquivalenceChecker` get automatic comparison via `filterPayloadToDesiredKeys` + `reflect.DeepEqual` in `VaultEndpoint.CreateOrUpdate`. ~25 types with custom comparison logic implement `VaultEquivalenceChecker`.
+- **Critical nuance:** Vault often returns extra fields not sent by the operator, or restructures fields (e.g., DB config moves `connection_url`/`username` into a `connection_details` sub-map). Custom `IsEquivalentToDesiredState` implementations must account for these transformations.
+- **Duration/TTL rule:** The `duration` codec handles conversion automatically. For any hand-written toMap(), use `vaultutils.DurationToSeconds()` for string → `json.Number` seconds.
+- **json.Number rule:** The `number` codec handles conversion automatically. Vault's Go client uses `json.Decoder.UseNumber()`, so all numerics arrive as `json.Number`. The walker's codecs ensure correct emission.
 - For engine mounts (`VaultEngineObject`), `IsEquivalentToDesiredState` compares the **tune config** (`Config.toMap()`) not the full mount spec, because Vault's read response for mounts returns only tune-level fields.
 
 #### Context-Carried Values
-- `prepareContext()` in `controllers/commons.go` enriches the context with 4 typed keys using setter functions from `api/v1alpha1/utils/contextkeys.go`: `vaultutils.ContextWithKubeClient(ctx, ...)`, `vaultutils.ContextWithRestConfig(ctx, ...)`, `vaultutils.ContextWithVaultConnection(ctx, ...)`, `vaultutils.ContextWithVaultClient(ctx, ...)`.
+- `PrepareContext()` (canonical implementation in `internal/controller/vaultresourcecontroller/utils.go`; a backward-compatible `prepareContext()` wrapper remains in `internal/controller/commons.go`) enriches the context with 4 typed keys using setter functions from `api/v1alpha1/utils/contextkeys.go`: `vaultutils.ContextWithKubeClient(ctx, ...)`, `vaultutils.ContextWithRestConfig(ctx, ...)`, `vaultutils.ContextWithVaultConnection(ctx, ...)`, `vaultutils.ContextWithVaultClient(ctx, ...)`.
 - All downstream code retrieves these via matching accessor functions: `vaultutils.KubeClientFromContext(ctx)`, `vaultutils.RestConfigFromContext(ctx)`, `vaultutils.VaultConnectionFromContext(ctx)`, `vaultutils.VaultClientFromContext(ctx)`. The accessors use typed `contextKey` constants (not bare strings), so a typo causes a compile error instead of a runtime panic.
 - The accessors still use unchecked type assertions internally — if a key is missing from the context, the operator will panic early. This is intentional.
 - The `vaultClient` is obtained per-reconcile via `GetKubeAuthConfiguration().GetVaultClient(ctx, namespace)`.
 
 #### Error Management Pattern
+- **Mandatory error checking:** Every function call that returns an error **must** have the error checked. Never assign an error to `_` or ignore a returned error value. This is enforced by the `errcheck` linter (enabled via golangci-lint `default: standard` preset in `.golangci.yml`). `make lint` must pass with zero `errcheck` violations.
+- **Mandatory error logging:** When an error is caught and not immediately returned, it **must** be logged with context before any fallback/continue/skip logic: `log.Error(err, "descriptive message", "key", value)`. Never silently swallow an error by checking it and then doing nothing.
 - Controllers: `apierrors.IsNotFound(err)` → return `reconcile.Result{}, nil` (don't requeue on deleted objects).
 - All other errors from Get/context-preparation → `ManageOutcome(ctx, r.ReconcilerBase, instance, err)` which sets a `ReconcileFailed` condition on the CR status and returns the error for requeue.
 - In `_types.go` methods: log the error with `log.Error(err, "descriptive message", "key", value)` then return the error up the chain. Never swallow errors silently.
@@ -113,14 +115,14 @@ The UBI9 runtime image does not need a Go version bump (it only packages the com
 ### Framework-Specific Rules (Kubernetes Operator)
 
 #### Controller Structure
-- Every controller embeds `vaultresourcecontroller.ReconcilerBase` (not a pointer).
-- Controller registration in `main.go` always uses: `&controllers.MyTypeReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "MyType")}`.
-- `SetupWithManager` uses `builder.WithPredicates(vaultresourcecontroller.NewDefaultPeriodicReconcilePredicate())` on the `For()` call to enable generation-based filtering. The predicate is generation-only — it reconciles when `spec` changes (generation increment) and ignores metadata-only updates. Drift detection is handled separately by `RequeueAfter` (see Reconcile Flow below).
+- Standard controllers use `vaultresourcecontroller.SetupGenericController[MyType](mgr, "MyType", factory)` — no hand-written `Reconcile` body or explicit struct needed. Custom controllers still embed `vaultresourcecontroller.ReconcilerBase` (not a pointer).
+- Controller registration in `main.go`: generic-migrated controllers use `controller.SetupMyTypeController(mgr)` in a compact loop; custom controllers (Category 5) use the older `&controller.MyTypeReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "MyType")}` pattern.
+- `SetupGenericController` (and custom `SetupWithManager`) uses `builder.WithPredicates(vaultresourcecontroller.NewDefaultPeriodicReconcilePredicate())` on the `For()` call to enable generation-based filtering. The predicate is generation-only — it reconciles when `spec` changes (generation increment) and ignores metadata-only updates. Drift detection is handled separately by `RequeueAfter` (see Reconcile Flow below).
 
 #### Reconcile Flow (Standard Types)
 1. Fetch instance via `r.GetClient().Get(ctx, req.NamespacedName, instance)`.
 2. If `apierrors.IsNotFound` → return `reconcile.Result{}, nil`.
-3. Call `prepareContext(ctx, r.ReconcilerBase, instance)` to build enriched context.
+3. Call `vaultresourcecontroller.PrepareContext(ctx, r.ReconcilerBase, instance)` to build enriched context. (The generic reconciler calls this automatically; custom controllers call it directly.)
 4. Delegate to `vaultresourcecontroller.ReconcileWithFunctions(ctx, r.ReconcilerBase, instance, ...)` — the shared skeleton handles finalizer management, deletion cleanup, create/update via `VaultResource`/`VaultEngineResource`, and `ManageOutcome`.
 5. `ManageOutcome` returns `Result{RequeueAfter: SyncPeriod}` when drift detection is enabled and reconcile succeeds — the controller-runtime work queue schedules the next drift-detection reconcile automatically. No predicate involvement for drift detection.
 
@@ -139,7 +141,7 @@ The UBI9 runtime image does not need a Go version bump (it only packages the com
 - It encapsulates: deletion/finalizer management, create-or-update via Vault resource, and `ManageOutcome` for condition management and requeue.
 - Controllers pass type-specific functions (create, update, delete) and the skeleton handles the common lifecycle flow.
 - `ManageOutcome` returns `Result{RequeueAfter: SyncPeriod}` when drift detection is enabled and reconcile succeeds — enabling automatic periodic drift checks via the controller-runtime work queue.
-- **Critical rule — Shared framework protection:** Story-scoped work must not **modify existing behavior** in shared framework files. Adding new exported functions or types is acceptable. Any behavioral change to existing functions (e.g., finalizer timing, deletion gates, condition management) affects all 40+ reconcilers and requires explicit escalation to the user before implementation. Shared framework files include: `reconcile_skeleton.go`, `vaultresourcereconciler.go`, `vaultobject.go`, `vaultutils.go`, `payload_filter.go`, `commons.go`.
+- **Critical rule — Shared framework protection:** Story-scoped work must not **modify existing behavior** in shared framework files. Adding new exported functions or types is acceptable. Any behavioral change to existing functions (e.g., finalizer timing, deletion gates, condition management) affects all 40+ reconcilers and requires explicit escalation to the user before implementation. Shared framework files include: `reconcile_skeleton.go`, `vaultresourcereconciler.go`, `generic_reconciler.go`, `vaultobject.go`, `vaultutils.go`, `payload_filter.go`, `commons.go`.
 
 #### Kubebuilder RBAC Markers
 - Every controller must declare RBAC markers for its resource (get/list/watch/create/update/patch/delete), status subresource, and finalizers.
@@ -225,7 +227,7 @@ This rule applies to all current and future integration tests. When adding a new
 - All CRD types, interface implementations, and `toMap()` live together in `*_types.go` — not split across files.
 - Shared Vault utilities: `api/v1alpha1/utils/` — `VaultObject`, `VaultEndpoint`, `VaultConnection`, `KubeAuthConfiguration`, helper functions.
 - Shared controller logic: `controllers/vaultresourcecontroller/` — `ReconcilerBase`, `ManageOutcome`, predicates, reconciler variants.
-- Common controller helpers: `controllers/commons.go` — `prepareContext()`, `VaultAuthenticableResource` interface.
+- Common controller helpers: `internal/controller/vaultresourcecontroller/utils.go` — `PrepareContext()`, `VaultAuthenticableResource` interface (canonical location). `internal/controller/commons.go` retains backward-compatible thin wrappers.
 
 #### Kubebuilder Markers
 - All exported Spec fields must have `// +kubebuilder:validation:Required` or `// +kubebuilder:validation:Optional`.
@@ -252,9 +254,11 @@ These rules govern the interaction between `kubebuilder:default`, `omitempty`, a
 - `Path` is a custom type `vaultutils.Path` (string alias), serialized as `json:"path,omitempty"`.
 
 #### Code Quality Gates
-- CI runs `go fmt`, `go vet`, and `make test` (envtest-based unit tests). No golangci-lint in CI.
-- golangci-lint v1.64.8 is available locally via `make golangci-lint` but has no committed config (`.golangci.yml`) and is not wired into `make test` or the CI workflow.
-- Effective quality enforcement: `go fmt` formatting + `go vet` static analysis only.
+- CI runs `go fmt`, `go vet`, and `make test` (envtest-based unit tests).
+- **golangci-lint v2** is configured via `.golangci.yml` with `default: standard` preset (includes `errcheck`, `govet`, `staticcheck`, and other standard linters). Run locally via `make lint` (pins `GOTOOLCHAIN=go1.27.2`).
+- **`errcheck` is mandatory:** The `default: standard` preset enables `errcheck`. Every function returning an error must have the error checked — unchecked errors fail `make lint`. This is a blocking quality gate (Story 17.6 Part B).
+- **`staticcheck`** is configured with `checks: ["all"]` minus select `QF*` and `ST*` rules (see `.golangci.yml`).
+- Effective quality enforcement: `go fmt` formatting + `go vet` + golangci-lint (errcheck, staticcheck, standard linters).
 
 ### Development Workflow Rules
 
@@ -296,15 +300,14 @@ The base port `8200` and default cluster name `vault-config-operator` are reserv
 #### Adding a New Vault API Type (Full Checklist)
 1. `operator-sdk create api --group redhatcop --version v1alpha1 --kind MyType --resource --controller`
 2. `operator-sdk create webhook --group redhatcop --version v1alpha1 --kind MyType --defaulting --programmatic-validation`
-3. Define `*_types.go`: Spec with `Connection`, `Authentication`, inline config struct, `Path`, `Name`; implement `VaultObject` + `ConditionsAware`; add `toMap()` and `IsEquivalentToDesiredState()`
+3. Define `*_types.go`: Spec with `Connection`, `Authentication`, inline config struct, `Path`, `Name`; add `vault:` struct tags to inline config fields; implement `VaultObject` (5 required methods: `GetPath`, `GetPayload`, `IsDeletable`, `GetKubeAuthConfiguration`, `GetVaultConnection`) + `ConditionsAware`. `GetPayload()` returns `vaultutils.StructToVaultPayload(&d.Spec.InlineConfig)`. Use `vaultutils.ResourceName(d.Spec.Name, d.Name)` in `GetPath()`. Only implement `VaultEquivalenceChecker`, `VaultValidator`, `VaultInternalValuesPreparer`, or `VaultTLSPreparer` if non-trivial logic is needed — trivial no-ops are NOT required.
 4. Implement webhook in `*_webhook.go`: `admission.Defaulter[*T]`, `admission.Validator[*T]`, immutable `spec.path` rule
-5. Implement controller in `*_controller.go`: embed `ReconcilerBase`, standard reconcile flow
-6. Register controller + webhook in `main.go`
-7. Add decoder method in `controllertestutils/decoder.go`
-8. Create test YAML fixtures in `test/`
-9. Write integration test with `//go:build integration` tag
-10. Run `make manifests generate fmt vet test`
-11. Create documentation file at `docs/{auth|secret}-engines/{name}.md` following `docs/engine-doc-template.md` (DNFR5) and update the corresponding `index.md`
+5. Create `*_controller.go` with RBAC markers + `SetupXxxController(mgr)` calling `vaultresourcecontroller.SetupGenericController[MyType](mgr, "MyType", vaultresourcecontroller.StandardVaultResourceFactory)`. No hand-written `Reconcile` body needed. For custom controllers needing hand-written logic, embed `ReconcilerBase` and write a custom `Reconcile` method.
+6. Register controller via `controller.SetupMyTypeController(mgr)` in the setup loop in `main.go`. Register webhook in the webhook section.
+7. Create test YAML fixtures in `test/`
+8. Write integration test with `//go:build integration` tag
+9. Run `make manifests generate fmt vet test`
+10. Create documentation file at `docs/{auth|secret}-engines/{name}.md` following `docs/engine-doc-template.md` (DNFR5) and update the corresponding `index.md`
 
 ### Critical Don't-Miss Rules
 
@@ -337,7 +340,7 @@ The base port `8200` and default cluster name `vault-config-operator` are reserv
 - `zz_generated.deepcopy.go` is auto-generated — never edit it manually.
 
 #### Context Value Contract
-- The enriched context from `prepareContext()` carries four typed keys (`KubeClientKey`, `RestConfigKey`, `VaultConnectionKey`, `VaultClientKey`) set via `vaultutils.ContextWith*` and read via `vaultutils.*FromContext`. The accessors use unchecked type assertions — if any key is missing, the operator will panic. New context values must follow the same typed-key pattern in `api/v1alpha1/utils/contextkeys.go`.
+- The enriched context from `vaultresourcecontroller.PrepareContext()` (in `internal/controller/vaultresourcecontroller/utils.go`) carries four typed keys (`KubeClientKey`, `RestConfigKey`, `VaultConnectionKey`, `VaultClientKey`) set via `vaultutils.ContextWith*` and read via `vaultutils.*FromContext`. The accessors use unchecked type assertions — if any key is missing, the operator will panic. New context values must follow the same typed-key pattern in `api/v1alpha1/utils/contextkeys.go`.
 
 #### Deletion Safety
 - `manageCleanUpLogic` only deletes from Vault if the CR previously had a `ReconcileSuccessful=True` condition. This prevents deleting Vault resources that were never successfully created.

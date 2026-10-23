@@ -207,7 +207,7 @@ func TestTransitSecretEngineKeyIsEquivalentMatching(t *testing.T) {
 		"auto_rotate_period":     "0",
 	}
 
-	if !key.IsEquivalentToDesiredState(vaultPayload) {
+	if !vaultutils.IsEquivalentToDesiredState(key, vaultPayload) {
 		t.Error("expected matching payload to be equivalent")
 	}
 }
@@ -246,7 +246,7 @@ func TestTransitSecretEngineKeyIsEquivalentExtraFields(t *testing.T) {
 		"auto_rotate_period":     "0",
 	}
 
-	if !key.IsEquivalentToDesiredState(vaultPayload) {
+	if !vaultutils.IsEquivalentToDesiredState(key, vaultPayload) {
 		t.Error("expected extra Vault metadata fields (keys, name, supports_*, imported, type, derived) to be filtered out")
 	}
 }
@@ -276,7 +276,7 @@ func TestTransitSecretEngineKeyIsEquivalentMismatch(t *testing.T) {
 		"auto_rotate_period":     "0",
 	}
 
-	if key.IsEquivalentToDesiredState(vaultPayload) {
+	if vaultutils.IsEquivalentToDesiredState(key, vaultPayload) {
 		t.Error("expected mismatched min_decryption_version to return false")
 	}
 }
@@ -306,8 +306,138 @@ func TestTransitSecretEngineKeyIsEquivalentFloat64Match(t *testing.T) {
 		"auto_rotate_period":     "24h",
 	}
 
-	if !key.IsEquivalentToDesiredState(vaultPayload) {
+	if !vaultutils.IsEquivalentToDesiredState(key, vaultPayload) {
 		t.Error("expected float64 numeric values from Vault to match without false drift detection")
+	}
+}
+
+func TestTransitSecretEngineKeyGetPayload(t *testing.T) {
+	key := &TransitSecretEngineKey{
+		Spec: TransitSecretEngineKeySpec{
+			TransitKeyConfig: TransitKeyConfig{
+				Type:                 "aes256-gcm96",
+				Derived:              true,
+				ConvergentEncryption: true,
+				Exportable:           true,
+				AllowPlaintextBackup: true,
+				KeySize:              32,
+				AutoRotatePeriod:     "720h",
+			},
+		},
+	}
+
+	payload := key.GetPayload()
+
+	if payload["type"] != "aes256-gcm96" {
+		t.Errorf("expected type 'aes256-gcm96', got %v", payload["type"])
+	}
+	if payload["derived"] != true {
+		t.Errorf("expected derived true, got %v", payload["derived"])
+	}
+	if payload["convergent_encryption"] != true {
+		t.Errorf("expected convergent_encryption true, got %v", payload["convergent_encryption"])
+	}
+	if payload["exportable"] != true {
+		t.Errorf("expected exportable true, got %v", payload["exportable"])
+	}
+	if payload["allow_plaintext_backup"] != true {
+		t.Errorf("expected allow_plaintext_backup true, got %v", payload["allow_plaintext_backup"])
+	}
+	if payload["key_size"] != 32 {
+		t.Errorf("expected key_size 32, got %v", payload["key_size"])
+	}
+	if payload["auto_rotate_period"] != "720h" {
+		t.Errorf("expected auto_rotate_period '720h', got %v", payload["auto_rotate_period"])
+	}
+	if len(payload) != 7 {
+		t.Errorf("expected exactly 7 keys in payload, got %d", len(payload))
+	}
+}
+
+func TestTransitSecretEngineKeyIsEquivalentToDesiredState(t *testing.T) {
+	key := &TransitSecretEngineKey{
+		Spec: TransitSecretEngineKeySpec{
+			Path: "transit",
+			TransitKeyConfig: TransitKeyConfig{
+				MinDecryptionVersion: 1,
+				MinEncryptionVersion: 1,
+				DeletionAllowed:      false,
+				Exportable:           false,
+				AllowPlaintextBackup: false,
+				AutoRotatePeriod:     "720h",
+			},
+		},
+	}
+
+	matching := map[string]any{
+		"min_decryption_version": float64(1),
+		"min_encryption_version": float64(1),
+		"deletion_allowed":       false,
+		"exportable":             false,
+		"allow_plaintext_backup": false,
+		"auto_rotate_period":     "720h",
+	}
+	if !key.IsEquivalentToDesiredState(matching) {
+		t.Error("expected matching payload to be equivalent")
+	}
+}
+
+func TestTransitSecretEngineKeyIsEquivalentToDesiredStateNonMatching(t *testing.T) {
+	key := &TransitSecretEngineKey{
+		Spec: TransitSecretEngineKeySpec{
+			Path: "transit",
+			TransitKeyConfig: TransitKeyConfig{
+				MinDecryptionVersion: 2,
+				MinEncryptionVersion: 0,
+				DeletionAllowed:      false,
+				Exportable:           false,
+				AllowPlaintextBackup: false,
+				AutoRotatePeriod:     "",
+			},
+		},
+	}
+
+	nonMatching := map[string]any{
+		"min_decryption_version": float64(1),
+		"min_encryption_version": float64(0),
+		"deletion_allowed":       false,
+		"exportable":             false,
+		"allow_plaintext_backup": false,
+		"auto_rotate_period":     "0",
+	}
+	if key.IsEquivalentToDesiredState(nonMatching) {
+		t.Error("expected non-matching payload to not be equivalent")
+	}
+}
+
+func TestTransitSecretEngineKeyIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
+	key := &TransitSecretEngineKey{
+		Spec: TransitSecretEngineKeySpec{
+			Path: "transit",
+			TransitKeyConfig: TransitKeyConfig{
+				MinDecryptionVersion: 1,
+				MinEncryptionVersion: 0,
+				DeletionAllowed:      false,
+				Exportable:           false,
+				AllowPlaintextBackup: false,
+				AutoRotatePeriod:     "",
+			},
+		},
+	}
+
+	payloadWithExtra := map[string]any{
+		"min_decryption_version": float64(1),
+		"min_encryption_version": float64(0),
+		"deletion_allowed":       false,
+		"exportable":             false,
+		"allow_plaintext_backup": false,
+		"auto_rotate_period":     "0",
+		"keys":                   map[string]any{},
+		"latest_version":         float64(1),
+		"type":                   "aes256-gcm96",
+	}
+	if !key.IsEquivalentToDesiredState(payloadWithExtra) {
+		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
 

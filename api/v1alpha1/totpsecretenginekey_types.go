@@ -17,14 +17,12 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
 	"encoding/json"
 	"reflect"
 	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // TOTPSecretEngineKeySpec defines the desired state of TOTPSecretEngineKey
@@ -59,42 +57,42 @@ type TOTPKeyConfig struct {
 	// When true, Vault generates the secret key internally.
 	// When false, provide key or url to import an existing TOTP secret.
 	// +kubebuilder:validation:Optional
-	Generate bool `json:"generate,omitempty"`
+	Generate bool `json:"generate,omitempty" vault:"generate"`
 
 	// Exported controls whether a QR code and url are returned when generating a key.
 	// Only used when generate is true.
 	// +kubebuilder:validation:Optional
-	Exported *bool `json:"exported,omitempty"`
+	Exported *bool `json:"exported,omitempty" vault:"exported,default=true"`
 
 	// KeySize specifies the size in bytes of the Vault-generated key.
 	// Only used when generate is true.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	KeySize int `json:"keySize,omitempty"`
+	KeySize int `json:"keySize,omitempty" vault:"-"`
 
 	// URL specifies a TOTP key URL (otpauth:// format) for importing.
 	// Only used when generate is false.
 	// +kubebuilder:validation:Optional
-	URL string `json:"url,omitempty"`
+	URL string `json:"url,omitempty" vault:"url,omitempty"`
 
 	// Key specifies the Base32-encoded root key for importing.
 	// Only used when generate is false.
 	// +kubebuilder:validation:Optional
-	Key string `json:"key,omitempty"`
+	Key string `json:"key,omitempty" vault:"key,omitempty"`
 
 	// Issuer specifies the name of the key's issuing organization.
 	// +kubebuilder:validation:Optional
-	Issuer string `json:"issuer,omitempty"`
+	Issuer string `json:"issuer,omitempty" vault:"issuer"`
 
 	// AccountName specifies the name of the account associated with the key.
 	// +kubebuilder:validation:Optional
-	AccountName string `json:"accountName,omitempty"`
+	AccountName string `json:"accountName,omitempty" vault:"account_name"`
 
 	// Period specifies the length of time in seconds used to generate a counter for the TOTP code.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=30
 	// +kubebuilder:validation:Minimum=1
-	Period int `json:"period"`
+	Period int `json:"period" vault:"-"`
 
 	// Algorithm specifies the hashing algorithm used to generate the TOTP code.
 	// +kubebuilder:validation:Optional
@@ -113,14 +111,14 @@ type TOTPKeyConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=1
-	Skew *int `json:"skew,omitempty"`
+	Skew *int `json:"skew,omitempty" vault:"skew,number,omitempty"`
 
 	// QRSize specifies the pixel size of the square QR code when generating a key.
 	// Only used when generate is true and exported is true.
 	// Set to 0 explicitly to suppress QR code generation; omit to use Vault's default (200).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	QRSize *int `json:"qrSize,omitempty"`
+	QRSize *int `json:"qrSize,omitempty" vault:"qr_size,number,omitempty"`
 }
 
 // TOTPSecretEngineKeyStatus defines the observed state of TOTPSecretEngineKey
@@ -178,36 +176,18 @@ func init() {
 var _ vaultutils.VaultObject = &TOTPSecretEngineKey{}
 
 func (d *TOTPSecretEngineKey) GetPath() string {
-	name := d.Name
-	if d.Spec.Name != "" {
-		name = d.Spec.Name
-	}
-	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "keys" + "/" + name)
+	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "keys" + "/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 
 func (d *TOTPSecretEngineKey) GetPayload() map[string]any {
 	return d.Spec.TOTPKeyConfig.toMap()
 }
 
+var _ vaultutils.VaultEquivalenceChecker = &TOTPSecretEngineKey{}
+
 func (d *TOTPSecretEngineKey) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.TOTPKeyConfig.readVisibleMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (d *TOTPSecretEngineKey) IsInitialized() bool {
-	return true
-}
-
-func (d *TOTPSecretEngineKey) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *TOTPSecretEngineKey) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *TOTPSecretEngineKey) IsValid() (bool, error) {
-	return true, nil
 }
 
 func (d *TOTPSecretEngineKey) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
@@ -256,33 +236,16 @@ func (c *TOTPKeyConfig) readVisibleMap() map[string]any {
 
 // toMap returns the full write payload for POST {path}/keys/{name}.
 func (c *TOTPKeyConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["generate"] = c.Generate
-	payload["issuer"] = c.Issuer
-	payload["account_name"] = c.AccountName
+	payload := vaultutils.StructToVaultPayload(c)
+	payload["key_size"] = json.Number(strconv.Itoa(c.keySizeOrDefault()))
 	payload["algorithm"] = c.algorithmOrDefault()
 	payload["digits"] = json.Number(strconv.Itoa(c.digitsOrDefault()))
 	payload["period"] = json.Number(strconv.Itoa(c.periodOrDefault()))
-	if c.Generate {
-		exported := true
-		if c.Exported != nil {
-			exported = *c.Exported
-		}
-		payload["exported"] = exported
-		payload["key_size"] = json.Number(strconv.Itoa(c.keySizeOrDefault()))
-		if c.Skew != nil {
-			payload["skew"] = json.Number(strconv.Itoa(*c.Skew))
-		}
-		if c.QRSize != nil {
-			payload["qr_size"] = json.Number(strconv.Itoa(*c.QRSize))
-		}
-	} else {
-		if c.Key != "" {
-			payload["key"] = c.Key
-		}
-		if c.URL != "" {
-			payload["url"] = c.URL
-		}
+	if !c.Generate {
+		delete(payload, "exported")
+		delete(payload, "key_size")
+		delete(payload, "skew")
+		delete(payload, "qr_size")
 	}
 	return payload
 }

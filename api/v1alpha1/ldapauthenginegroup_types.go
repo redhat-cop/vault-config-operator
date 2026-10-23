@@ -17,12 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // LDAPAuthEngineGroupSpec defines the desired state of LDAPAuthEngineGroup
@@ -48,7 +44,7 @@ type LDAPAuthEngineGroupSpec struct {
 
 	// Comma-separated list of policies associated to the group
 	// +kubebuilder:validation:Optional
-	Policies string `json:"policies,omitempty"`
+	Policies string `json:"policies,omitempty" vault:"policies"`
 }
 
 var _ vaultutils.VaultObject = &LDAPAuthEngineGroup{}
@@ -68,27 +64,6 @@ func (d *LDAPAuthEngineGroup) IsDeletable() bool {
 
 func (d *LDAPAuthEngineGroup) GetPayload() map[string]any {
 	return d.toMap()
-}
-
-func (d *LDAPAuthEngineGroup) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.GetPayload()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (d *LDAPAuthEngineGroup) IsInitialized() bool {
-	return true
-}
-
-func (d *LDAPAuthEngineGroup) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *LDAPAuthEngineGroup) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *LDAPAuthEngineGroup) IsValid() (bool, error) {
-	return true, nil
 }
 
 // LDAPAuthEngineGroupStatus defines the observed state of LDAPAuthEngineGroup
@@ -134,10 +109,8 @@ func init() {
 }
 
 func (i *LDAPAuthEngineGroup) toMap() map[string]any {
-	payload := map[string]any{}
+	payload := vaultutils.StructToVaultPayload(&i.Spec)
 	payload["name"] = i.Spec.Name
-	payload["policies"] = i.Spec.Policies
-
 	return payload
 }
 

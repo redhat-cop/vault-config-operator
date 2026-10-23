@@ -93,7 +93,7 @@ func (r *RabbitMQSecretEngineConfigReconciler) manageReconcileLogic(context cont
 	log := log.FromContext(context)
 	rabbitMQVaultEndpoint := vaultutils.NewRabbitMQEngineConfigVaultEndpoint(instance)
 	// prepare internal values
-	if err := instance.(vaultutils.VaultObject).PrepareInternalValues(context, instance); err != nil {
+	if err := instance.(vaultutils.VaultInternalValuesPreparer).PrepareInternalValues(context, instance); err != nil {
 		log.Error(err, "unable to prepare internal values", "instance", instance)
 		return err
 	}

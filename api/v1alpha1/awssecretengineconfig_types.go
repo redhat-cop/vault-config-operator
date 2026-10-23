@@ -62,27 +62,27 @@ type AWSSecretEngineConfigSpec struct {
 type AWSRootConfig struct {
 	// AccessKey is the AWS access key ID (set via spec or resolved from credentials)
 	// +kubebuilder:validation:Optional
-	AccessKey string `json:"accessKey,omitempty"`
+	AccessKey string `json:"accessKey,omitempty" vault:"access_key,omitempty"`
 
 	// Region is the AWS region (defaults to us-east-1 if not set)
 	// +kubebuilder:validation:Optional
-	Region string `json:"region,omitempty"`
+	Region string `json:"region,omitempty" vault:"region"`
 
 	// IAMEndpoint is a custom HTTP IAM endpoint
 	// +kubebuilder:validation:Optional
-	IAMEndpoint string `json:"iamEndpoint,omitempty"`
+	IAMEndpoint string `json:"iamEndpoint,omitempty" vault:"iam_endpoint"`
 
 	// STSEndpoint is a custom HTTP STS endpoint
 	// +kubebuilder:validation:Optional
-	STSEndpoint string `json:"stsEndpoint,omitempty"`
+	STSEndpoint string `json:"stsEndpoint,omitempty" vault:"sts_endpoint"`
 
 	// MaxRetries is the max retries for recoverable errors (-1 = SDK default)
 	// +kubebuilder:validation:Optional
-	MaxRetries *int `json:"maxRetries,omitempty"`
+	MaxRetries *int `json:"maxRetries,omitempty" vault:"-"`
 
 	// UsernameTemplate is a Go template for dynamic username generation
 	// +kubebuilder:validation:Optional
-	UsernameTemplate string `json:"usernameTemplate,omitempty"`
+	UsernameTemplate string `json:"usernameTemplate,omitempty" vault:"username_template"`
 
 	retrievedAccessKey string `json:"-"`
 	retrievedSecretKey string `json:"-"`
@@ -113,16 +113,8 @@ func (d *AWSSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]an
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (d *AWSSecretEngineConfig) IsInitialized() bool {
-	return true
-}
-
 func (d *AWSSecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	return d.setInternalCredentials(context)
-}
-
-func (d *AWSSecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *AWSSecretEngineConfig) IsValid() (bool, error) {
@@ -221,23 +213,17 @@ func (r *AWSSecretEngineConfig) SetAccessKeyAndSecretKey(accessKey string, secre
 }
 
 func (i *AWSRootConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	if i.retrievedAccessKey != "" {
-		payload["access_key"] = i.retrievedAccessKey
-	} else if i.AccessKey != "" {
-		payload["access_key"] = i.AccessKey
-	}
-	if i.retrievedSecretKey != "" {
-		payload["secret_key"] = i.retrievedSecretKey
-	}
-	payload["region"] = i.Region
-	payload["iam_endpoint"] = i.IAMEndpoint
-	payload["sts_endpoint"] = i.STSEndpoint
-	payload["username_template"] = i.UsernameTemplate
+	payload := vaultutils.StructToVaultPayload(i)
 	if i.MaxRetries != nil {
 		payload["max_retries"] = *i.MaxRetries
 	} else {
 		payload["max_retries"] = -1
+	}
+	if i.retrievedAccessKey != "" {
+		payload["access_key"] = i.retrievedAccessKey
+	}
+	if i.retrievedSecretKey != "" {
+		payload["secret_key"] = i.retrievedSecretKey
 	}
 	return payload
 }

@@ -19,7 +19,6 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -54,7 +53,7 @@ type KubernetesAuthEngineConfigSpec struct {
 	// TokenReviewerServiceAccount A service account JWT used to access the TokenReview API to validate other JWTs during login. If not set, the JWT submitted in the login payload will be used to access the Kubernetes TokenReview API.
 	// Mutually exclusive with TokenReviewerJWTSecret.
 	// +kubebuilder:validation:Optional
-	TokenReviewerServiceAccount *corev1.LocalObjectReference `json:"tokenReviewerServiceAccount,omitempty"`
+	TokenReviewerServiceAccount *corev1.LocalObjectReference `json:"tokenReviewerServiceAccount,omitempty" vault:"-"`
 
 	// TokenReviewerJWTSecret sources the token_reviewer_jwt from a Kubernetes Secret.
 	// This is useful when the Kubernetes auth backend's kubernetesHost points at a remote cluster,
@@ -62,7 +61,7 @@ type KubernetesAuthEngineConfigSpec struct {
 	// The Secret is read from the CR's namespace.
 	// Mutually exclusive with TokenReviewerServiceAccount.
 	// +kubebuilder:validation:Optional
-	TokenReviewerJWTSecret *corev1.SecretKeySelector `json:"tokenReviewerJWTSecret,omitempty"`
+	TokenReviewerJWTSecret *corev1.SecretKeySelector `json:"tokenReviewerJWTSecret,omitempty" vault:"-"`
 
 	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
 	// +kubebuilder:validation:Optional
@@ -75,26 +74,15 @@ func (d *KubernetesAuthEngineConfig) GetVaultConnection() *vaultutils.VaultConne
 }
 
 func (d *KubernetesAuthEngineConfig) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/" + d.Spec.Name + "/config")
-	}
-	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/" + d.Name + "/config")
+	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/" + vaultutils.ResourceName(d.Spec.Name, d.Name) + "/config")
 }
 
 func (d *KubernetesAuthEngineConfig) GetPayload() map[string]any {
 	return d.Spec.KAECConfig.toMap()
 }
-func (d *KubernetesAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.Spec.KAECConfig.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
 
 var _ vaultutils.VaultObject = &KubernetesAuthEngineConfig{}
 var _ vaultutils.ConditionsAware = &KubernetesAuthEngineConfig{}
-
-func (d *KubernetesAuthEngineConfig) IsInitialized() bool {
-	return true
-}
 
 func (d *KubernetesAuthEngineConfig) IsDeletable() bool {
 	return false
@@ -138,10 +126,6 @@ func (d *KubernetesAuthEngineConfig) PrepareInternalValues(context context.Conte
 	return nil
 }
 
-func (d *KubernetesAuthEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
 func (kc *KubernetesAuthEngineConfig) getJWTToken(context context.Context) (string, error) {
 	expiration := int64(60 * 60 * 24 * 365)
 	return vaultutils.GetJWTTokenWithDuration(context, kc.Spec.TokenReviewerServiceAccount.Name, kc.Namespace, expiration)
@@ -159,39 +143,39 @@ type KAECConfig struct {
 	// KubernetesHost Host must be a host string, a host:port pair, or a URL to the base of the Kubernetes API server.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default="https://kubernetes.default.svc:443"
-	KubernetesHost string `json:"kubernetesHost"`
+	KubernetesHost string `json:"kubernetesHost" vault:"kubernetes_host"`
 
 	// kubernetesCACert PEM encoded CA cert for use by the TLS client used to talk with the Kubernetes API. NOTE: Every line must end with a newline: \n
 	// if omitted will default to the content of the file "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt" in the operator pod
 	// +kubebuilder:validation:Optional
-	KubernetesCACert string `json:"kubernetesCACert,omitempty"`
+	KubernetesCACert string `json:"kubernetesCACert,omitempty" vault:"kubernetes_ca_cert"`
 
 	// PEMKeys Optional list of PEM-formatted public keys or certificates used to verify the signatures of Kubernetes service account JWTs. If a certificate is given, its public key will be extracted. Not every installation of Kubernetes exposes these keys.
 	// +kubebuilder:validation:Optional
-	PEMKeys []string `json:"PEMKeys,omitempty"`
+	PEMKeys []string `json:"PEMKeys,omitempty" vault:"pem_keys"`
 
 	// Issuer Optional JWT issuer. If no issuer is specified, then this plugin will use kubernetes/serviceaccount as the default issuer. See these instructions for looking up the issuer for a given Kubernetes cluster.
 	// +kubebuilder:validation:Optional
-	Issuer string `json:"issuer,omitempty"`
+	Issuer string `json:"issuer,omitempty" vault:"issuer"`
 
 	// DisableISSValidation Disable JWT issuer validation. Allows to skip ISS validation.
 	// +kubebuilder:validation:Optional
-	DisableISSValidation bool `json:"disableISSValidation,omitempty"`
+	DisableISSValidation bool `json:"disableISSValidation,omitempty" vault:"disable_iss_validation"`
 
 	// DisableLocalCAJWT Disable defaulting to the local CA cert and service account JWT when running in a Kubernetes pod.
 	// +kubebuilder:validation:Optional
-	DisableLocalCAJWT bool `json:"disableLocalCAJWT,omitempty"`
+	DisableLocalCAJWT bool `json:"disableLocalCAJWT,omitempty" vault:"disable_local_ca_jwt"`
 
 	// UseOperatorPodCA . This field is considered only if `kubernetesCACert` is not set and `disableLocalCAJWT` is set to true.
 	// In this case if this field is set to true the operator pod's CA is injected. This is the original behavior before the introduction of this field
 	// If tis field is set to false, the os ca bundle of where vault is running will be used.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=true
-	UseOperatorPodCA bool `json:"useOperatorPodCA"`
+	UseOperatorPodCA bool `json:"useOperatorPodCA" vault:"-"`
 
 	// UseAnnotationsAsAliasMetadata  Use annotations from the client token's associated service account as alias metadata for the Vault entity. Only annotations with the vault.hashicorp.com/alias-metadata- key prefix are targeted as alias metadata and your annotations must be 512 characters or less due to the Vault alias metadata value limit. For example, if you configure the annotation vault.hashicorp.com/alias-metadata-foo, Vault saves the string "foo" along with the annotation value to the alias metadata. To save alias metadata, Vault must have permission to read service accounts from the Kubernetes API.
 	// +kubebuilder:validation:Optional
-	UseAnnotationsAsAliasMetadata bool `json:"useAnnotationsAsAliasMetadata,omitempty"`
+	UseAnnotationsAsAliasMetadata bool `json:"useAnnotationsAsAliasMetadata,omitempty" vault:"use_annotations_as_alias_metadata"`
 
 	retrievedTokenReviewerJWT string `json:"-"`
 }
@@ -240,18 +224,10 @@ func init() {
 }
 
 func (i *KAECConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["kubernetes_host"] = i.KubernetesHost
-	payload["kubernetes_ca_cert"] = i.KubernetesCACert
+	payload := vaultutils.StructToVaultPayload(i)
 	if i.retrievedTokenReviewerJWT != "" {
 		payload["token_reviewer_jwt"] = i.retrievedTokenReviewerJWT
 	}
-	payload["pem_keys"] = i.PEMKeys
-	payload["issuer"] = i.Issuer
-	payload["disable_iss_validation"] = i.DisableISSValidation
-	payload["disable_local_ca_jwt"] = i.DisableLocalCAJWT
-	payload["use_annotations_as_alias_metadata"] = i.UseAnnotationsAsAliasMetadata
-
 	return payload
 }
 

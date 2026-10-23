@@ -17,14 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"encoding/json"
 	"reflect"
-	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // OCIAuthEngineRoleSpec defines the desired state of OCIAuthEngineRole
@@ -80,58 +76,58 @@ type OCIAuthRole struct {
 	// Name is an optional Vault role-name override. If omitted, metadata.name is used.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Pattern:=`[a-z0-9]([-a-z0-9]*[a-z0-9])?`
-	Name string `json:"name,omitempty"`
+	Name string `json:"name,omitempty" vault:"-"`
 
 	// OCIDList is a list of Group or Dynamic Group OCIDs that can take this role.
 	// +kubebuilder:validation:Required
 	// +listType=set
-	OCIDList []string `json:"ocidList"`
+	OCIDList []string `json:"ocidList" vault:"ocid_list"`
 
 	// TokenTTL is the incremental lifetime for generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenTTL string `json:"tokenTTL,omitempty"`
+	TokenTTL string `json:"tokenTTL,omitempty" vault:"token_ttl,duration"`
 
 	// TokenMaxTTL is the maximum lifetime for generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenMaxTTL string `json:"tokenMaxTTL,omitempty"`
+	TokenMaxTTL string `json:"tokenMaxTTL,omitempty" vault:"token_max_ttl,duration"`
 
 	// TokenPolicies are policies to encode onto generated tokens.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	TokenPolicies []string `json:"tokenPolicies,omitempty"`
+	TokenPolicies []string `json:"tokenPolicies,omitempty" vault:"token_policies"`
 
 	// Policies is deprecated — use tokenPolicies instead.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	Policies []string `json:"policies,omitempty"`
+	Policies []string `json:"policies,omitempty" vault:"policies"`
 
 	// TokenBoundCIDRs are CIDR blocks restricting authentication and tying the token.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty"`
+	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty" vault:"token_bound_cidrs"`
 
 	// TokenExplicitMaxTTL is the hard cap max TTL for tokens.
 	// +kubebuilder:validation:Optional
-	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty"`
+	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty" vault:"token_explicit_max_ttl,duration"`
 
 	// TokenNoDefaultPolicy if true, omits the default policy from generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty"`
+	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty" vault:"token_no_default_policy"`
 
 	// TokenNumUses is the max number of times a generated token may be used (0 = unlimited).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	TokenNumUses int64 `json:"tokenNumUses,omitempty"`
+	TokenNumUses int64 `json:"tokenNumUses,omitempty" vault:"token_num_uses,number"`
 
 	// TokenPeriod is the maximum allowed period for periodic tokens.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	TokenPeriod int64 `json:"tokenPeriod,omitempty"`
+	TokenPeriod int64 `json:"tokenPeriod,omitempty" vault:"token_period,number"`
 
 	// TokenType is the type of token to generate.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum={"service","batch","default","default-service","default-batch"}
-	TokenType string `json:"tokenType,omitempty"`
+	TokenType string `json:"tokenType,omitempty" vault:"token_type"`
 }
 
 var _ vaultutils.VaultObject = &OCIAuthEngineRole{}
@@ -162,10 +158,7 @@ func (r *OCIAuthEngineRole) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfi
 }
 
 func (r *OCIAuthEngineRole) GetPath() string {
-	if r.Spec.Name != "" {
-		return vaultutils.CleansePath("auth/" + string(r.Spec.Path) + "/role/" + r.Spec.Name)
-	}
-	return vaultutils.CleansePath("auth/" + string(r.Spec.Path) + "/role/" + r.Name)
+	return vaultutils.CleansePath("auth/" + string(r.Spec.Path) + "/role/" + vaultutils.ResourceName(r.Spec.Name, r.Name))
 }
 
 func (r *OCIAuthEngineRole) GetPayload() map[string]any {
@@ -184,34 +177,6 @@ func (r *OCIAuthEngineRole) IsEquivalentToDesiredState(payload map[string]any) b
 	return reflect.DeepEqual(desiredState, filteredPayload)
 }
 
-func (r *OCIAuthEngineRole) IsInitialized() bool {
-	return true
-}
-
-func (r *OCIAuthEngineRole) IsValid() (bool, error) {
-	return true, nil
-}
-
-func (d *OCIAuthEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *OCIAuthEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
 func (r *OCIAuthRole) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["ocid_list"] = toInterfaceArray(r.OCIDList)
-	payload["token_ttl"] = durationToSeconds(r.TokenTTL)
-	payload["token_max_ttl"] = durationToSeconds(r.TokenMaxTTL)
-	payload["token_policies"] = toInterfaceArray(r.TokenPolicies)
-	payload["policies"] = toInterfaceArray(r.Policies)
-	payload["token_bound_cidrs"] = toInterfaceArray(r.TokenBoundCIDRs)
-	payload["token_explicit_max_ttl"] = durationToSeconds(r.TokenExplicitMaxTTL)
-	payload["token_no_default_policy"] = r.TokenNoDefaultPolicy
-	payload["token_num_uses"] = json.Number(strconv.FormatInt(r.TokenNumUses, 10))
-	payload["token_period"] = json.Number(strconv.FormatInt(r.TokenPeriod, 10))
-	payload["token_type"] = r.TokenType
-	return payload
+	return vaultutils.StructToVaultPayload(r)
 }

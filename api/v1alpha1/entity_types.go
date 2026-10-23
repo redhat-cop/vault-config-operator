@@ -17,12 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -38,7 +34,7 @@ type EntitySpec struct {
 	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
-	EntityConfig `json:",inline"`
+	EntityConfig `json:",inline" vault:",inline"`
 
 	// The name of the object created in Vault. If this is specified it takes precedence over {metadata.name}
 	// +kubebuilder:validation:Optional
@@ -51,17 +47,17 @@ type EntityConfig struct {
 	// Metadata Metadata to be associated with the entity.
 	// +kubebuilder:validation:Optional
 	// +mapType=granular
-	Metadata map[string]string `json:"metadata,omitempty"`
+	Metadata map[string]string `json:"metadata,omitempty" vault:"metadata"`
 
 	// Policies Policies to be tied to the entity.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	Policies []string `json:"policies,omitempty"`
+	Policies []string `json:"policies,omitempty" vault:"policies"`
 
 	// Disabled Whether the entity is disabled. Disabled entities' associated tokens cannot be used, but are not revoked.
 	// +kubebuilder:validation:Optional
-	Disabled bool `json:"disabled,omitempty"`
+	Disabled bool `json:"disabled,omitempty" vault:"disabled"`
 }
 
 // EntityStatus defines the observed state of Entity
@@ -129,34 +125,9 @@ func (d *Entity) GetPayload() map[string]any {
 }
 
 func (i *EntitySpec) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["metadata"] = i.Metadata
-	payload["policies"] = i.Policies
-	payload["disabled"] = i.Disabled
-	return payload
-}
-
-func (d *Entity) IsInitialized() bool {
-	return true
-}
-
-func (d *Entity) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *Entity) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *Entity) IsValid() (bool, error) {
-	return true, nil
+	return vaultutils.StructToVaultPayload(i)
 }
 
 func (d *Entity) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
-}
-
-func (d *Entity) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.Spec.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

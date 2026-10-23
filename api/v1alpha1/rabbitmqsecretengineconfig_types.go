@@ -175,21 +175,15 @@ func (rabbitMQ *RabbitMQSecretEngineConfig) GetPayload() map[string]any {
 	return rabbitMQ.Spec.rabbitMQToMap()
 }
 
+var _ vaultutils.VaultEquivalenceChecker = &RabbitMQSecretEngineConfig{}
+
 func (rabbitMQ *RabbitMQSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := rabbitMQ.Spec.RMQSEConfig.leasesToMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (rabbitMQ *RabbitMQSecretEngineConfig) IsInitialized() bool {
-	return true
-}
-
 func (rabbitMQ *RabbitMQSecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	return rabbitMQ.setInternalCredentials(context)
-}
-
-func (rabbitMQ *RabbitMQSecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (rabbitMQ *RabbitMQSecretEngineConfig) IsValid() (bool, error) {

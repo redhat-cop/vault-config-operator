@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -29,7 +30,7 @@ func TestRADIUSAuthEngineUser_IsEquivalentToDesiredState_Match(t *testing.T) {
 		"policies": "default,dev",
 	}
 
-	if !instance.IsEquivalentToDesiredState(vaultPayload) {
+	if !vaultutils.IsEquivalentToDesiredState(instance, vaultPayload) {
 		t.Error("expected IsEquivalentToDesiredState to return true for matching state")
 	}
 }
@@ -42,7 +43,7 @@ func TestRADIUSAuthEngineUser_IsEquivalentToDesiredState_Mismatch(t *testing.T) 
 		"policies": "admin,superuser",
 	}
 
-	if instance.IsEquivalentToDesiredState(vaultPayload) {
+	if vaultutils.IsEquivalentToDesiredState(instance, vaultPayload) {
 		t.Error("expected IsEquivalentToDesiredState to return false for mismatched policies")
 	}
 }
@@ -57,7 +58,7 @@ func TestRADIUSAuthEngineUser_IsEquivalentToDesiredState_ExtraVaultFields(t *tes
 		"lease_duration": json.Number("0"),
 	}
 
-	if !instance.IsEquivalentToDesiredState(vaultPayload) {
+	if !vaultutils.IsEquivalentToDesiredState(instance, vaultPayload) {
 		t.Error("expected IsEquivalentToDesiredState to return true when Vault returns extra fields")
 	}
 }

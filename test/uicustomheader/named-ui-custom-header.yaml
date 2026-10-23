@@ -1,0 +1,12 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: UICustomHeader
+metadata:
+  name: test-named-header-metadata
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  name: X-Named-Test-Header
+  values:
+    - "named-value-1"
+    - "named-value-2"

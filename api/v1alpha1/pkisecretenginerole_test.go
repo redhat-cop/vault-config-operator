@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -123,9 +124,9 @@ func TestPKIRoleToMap(t *testing.T) {
 	if result["key_bits"] != 2048 {
 		t.Errorf("key_bits = %v, want 2048", result["key_bits"])
 	}
-	ku, ok := result["key_usage"].([]KeyUsage)
+	ku, ok := result["key_usage"].([]any)
 	if !ok || len(ku) != 2 {
-		t.Errorf("key_usage = %v, want []KeyUsage len 2", result["key_usage"])
+		t.Errorf("key_usage = %v (%T), want []any len 2", result["key_usage"], result["key_usage"])
 	}
 	if !reflect.DeepEqual(result["not_before_duration"], metav1.Duration{Duration: 45 * time.Second}) {
 		t.Errorf("not_before_duration = %v", result["not_before_duration"])
@@ -142,7 +143,7 @@ func TestPKISecretEngineRoleIsEquivalentMatching(t *testing.T) {
 		},
 	}
 	payload := config.Spec.PKIRole.toMap()
-	if !config.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected true for matching payload")
 	}
 }
@@ -157,7 +158,7 @@ func TestPKISecretEngineRoleIsEquivalentNonMatching(t *testing.T) {
 	}
 	payload := config.Spec.PKIRole.toMap()
 	payload["key_type"] = "ec"
-	if config.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected false when key_type differs")
 	}
 }
@@ -172,7 +173,7 @@ func TestPKISecretEngineRoleIsEquivalentExtraFields(t *testing.T) {
 	}
 	payload := config.Spec.PKIRole.toMap()
 	payload["vault_extra"] = true
-	if !config.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }

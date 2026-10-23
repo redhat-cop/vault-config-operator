@@ -1,27 +1,11 @@
-/*
-Copyright 2021.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package controller
 
 import (
 	"bytes"
 	"context"
-
+	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -29,16 +13,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
-	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 )
 
-// QuaySecretEngineConfigReconciler reconciles a QuaySecretEngineConfig object
-type QuaySecretEngineConfigReconciler struct {
+// quaySecretEngineConfigHelper provides Watch handler methods for QuaySecretEngineConfig.
+type quaySecretEngineConfigHelper struct {
 	vaultresourcecontroller.ReconcilerBase
 }
 
@@ -49,35 +29,16 @@ type QuaySecretEngineConfigReconciler struct {
 //+kubebuilder:rbac:groups="",resources=serviceaccounts/token,verbs=create
 //+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
 
-func (r *QuaySecretEngineConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
-	// Fetch the instance
-	instance := &redhatcopv1alpha1.QuaySecretEngineConfig{}
-	err := r.GetClient().Get(ctx, req.NamespacedName, instance)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
-			return reconcile.Result{}, nil
-		}
-		// Error reading the object - requeue the request.
-		return reconcile.Result{}, err
+// SetupQuaySecretEngineConfigController registers the QuaySecretEngineConfig controller with the Manager.
+func SetupQuaySecretEngineConfigController(mgr ctrl.Manager) error {
+	reconciler := &vaultresourcecontroller.GenericVaultReconciler[
+		redhatcopv1alpha1.QuaySecretEngineConfig,
+		*redhatcopv1alpha1.QuaySecretEngineConfig,
+	]{
+		ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "QuaySecretEngineConfig"),
+		Factory:        vaultresourcecontroller.StandardVaultResourceFactory,
 	}
-
-	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
-	if err != nil {
-		r.Log.Error(err, "unable to prepare context", "instance", instance)
-		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
-	}
-	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
-
-	return vaultResource.Reconcile(ctx1, instance)
-}
-
-// SetupWithManager sets up the controller with the Manager.
-func (r *QuaySecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	h := &quaySecretEngineConfigHelper{ReconcilerBase: reconciler.ReconcilerBase}
 
 	// this will filter routes that have the annotation and on update only if the annotation is changed.
 	isBasicAuthSecret := predicate.Funcs{
@@ -148,9 +109,9 @@ func (r *QuaySecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) er
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			s := a.(*corev1.Secret)
-			quaysecs, err := r.findApplicableQuaySCForSecret(ctx, s)
+			quaysecs, err := h.findApplicableQuaySCForSecret(ctx, s)
 			if err != nil {
-				r.Log.Error(err, "unable to find applicable databaseSecretEngines for namespace", "namespace", s.Name)
+				h.Log.Error(err, "unable to find applicable databaseSecretEngines for namespace", "namespace", s.Name)
 				return []reconcile.Request{}
 			}
 			for _, quaysec := range quaysecs {
@@ -170,9 +131,9 @@ func (r *QuaySecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) er
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			rs := a.(*redhatcopv1alpha1.RandomSecret)
-			quaysecs, err := r.findApplicableQuaySCForRandomSecret(ctx, rs)
+			quaysecs, err := h.findApplicableQuaySCForRandomSecret(ctx, rs)
 			if err != nil {
-				r.Log.Error(err, "unable to find applicable QuaySecretEngineConfig for namespace", "namespace", rs.Name)
+				h.Log.Error(err, "unable to find applicable QuaySecretEngineConfig for namespace", "namespace", rs.Name)
 				return []reconcile.Request{}
 			}
 			for _, quaysec := range quaysecs {
@@ -185,17 +146,17 @@ func (r *QuaySecretEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) er
 			}
 			return res
 		}), builder.WithPredicates(isUpdatedRandomSecret)).
-		Complete(r)
+		Complete(reconciler)
 }
 
-func (r *QuaySecretEngineConfigReconciler) findApplicableQuaySCForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.QuaySecretEngineConfig, error) {
+func (h *quaySecretEngineConfigHelper) findApplicableQuaySCForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.QuaySecretEngineConfig, error) {
 	result := []redhatcopv1alpha1.QuaySecretEngineConfig{}
 	vrl := &redhatcopv1alpha1.QuaySecretEngineConfigList{}
-	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
+	err := h.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: secret.Namespace,
 	})
 	if err != nil {
-		r.Log.Error(err, "unable to retrieve the list of QuaySecretEngineConfig")
+		h.Log.Error(err, "unable to retrieve the list of QuaySecretEngineConfig")
 		return nil, err
 	}
 	for _, vr := range vrl.Items {
@@ -205,14 +166,14 @@ func (r *QuaySecretEngineConfigReconciler) findApplicableQuaySCForSecret(ctx con
 	}
 	return result, nil
 }
-func (r *QuaySecretEngineConfigReconciler) findApplicableQuaySCForRandomSecret(ctx context.Context, randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.QuaySecretEngineConfig, error) {
+func (h *quaySecretEngineConfigHelper) findApplicableQuaySCForRandomSecret(ctx context.Context, randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.QuaySecretEngineConfig, error) {
 	result := []redhatcopv1alpha1.QuaySecretEngineConfig{}
 	vrl := &redhatcopv1alpha1.QuaySecretEngineConfigList{}
-	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
+	err := h.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: randomSecret.Namespace,
 	})
 	if err != nil {
-		r.Log.Error(err, "unable to retrieve the list of QuaySecretEngineConfig")
+		h.Log.Error(err, "unable to retrieve the list of QuaySecretEngineConfig")
 		return nil, err
 	}
 	for _, vr := range vrl.Items {

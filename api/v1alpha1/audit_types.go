@@ -17,11 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -154,24 +151,8 @@ func (d *Audit) IsEquivalentToDesiredState(payload map[string]any) bool {
 	return true
 }
 
-func (d *Audit) IsInitialized() bool {
-	return true
-}
-
-func (d *Audit) IsValid() (bool, error) {
-	return true, nil
-}
-
 func (d *Audit) IsDeletable() bool {
 	return true
-}
-
-func (d *Audit) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *Audit) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (i *Audit) GetConditions() []metav1.Condition {

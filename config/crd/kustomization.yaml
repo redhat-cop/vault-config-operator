@@ -90,6 +90,14 @@ resources:
 - bases/redhatcop.redhat.io_kerberosauthengineconfigs.yaml
 - bases/redhatcop.redhat.io_kerberosauthengineldapconfigs.yaml
 - bases/redhatcop.redhat.io_kerberosauthenginegroups.yaml
+- bases/redhatcop.redhat.io_quotaconfigs.yaml
+- bases/redhatcop.redhat.io_ratelimitquotas.yaml
+- bases/redhatcop.redhat.io_leasecountquotas.yaml
+- bases/redhatcop.redhat.io_corsconfigs.yaml
+- bases/redhatcop.redhat.io_keyrotationconfigs.yaml
+- bases/redhatcop.redhat.io_rotationpolicies.yaml
+- bases/redhatcop.redhat.io_loggerconfigs.yaml
+- bases/redhatcop.redhat.io_uicustomheaders.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches: []
@@ -138,6 +146,9 @@ patches: []
 #- patches/webhook_in_identitytokenconfigs.yaml
 #- patches/webhook_in_identitytokenkeys.yaml
 #- patches/webhook_in_identitytokenroles.yaml
+#- patches/webhook_in_rotationpolicies.yaml
+#- patches/webhook_in_loggerconfigs.yaml
+#- patches/webhook_in_uicustomheaders.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable cert-manager, uncomment all the sections with [CERTMANAGER] prefix.
@@ -187,6 +198,9 @@ patches: []
 #- patches/cainjection_in_identitytokenconfigs.yaml
 #- patches/cainjection_in_identitytokenkeys.yaml
 #- patches/cainjection_in_identitytokenroles.yaml
+#- patches/cainjection_in_rotationpolicies.yaml
+#- patches/cainjection_in_loggerconfigs.yaml
+#- patches/cainjection_in_uicustomheaders.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.

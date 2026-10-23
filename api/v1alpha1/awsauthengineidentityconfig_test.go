@@ -2,6 +2,8 @@ package v1alpha1
 
 import (
 	"testing"
+
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 )
 
 func TestAWSAuthEngineIdentityConfig_toMap(t *testing.T) {
@@ -44,7 +46,7 @@ func TestAWSAuthEngineIdentityConfig_IsEquivalentToDesiredState_Match(t *testing
 		"ec2_metadata": "default",
 	}
 
-	if !instance.IsEquivalentToDesiredState(vaultPayload) {
+	if !vaultutils.IsEquivalentToDesiredState(instance, vaultPayload) {
 		t.Error("expected IsEquivalentToDesiredState to return true for matching payload")
 	}
 }
@@ -65,7 +67,7 @@ func TestAWSAuthEngineIdentityConfig_IsEquivalentToDesiredState_Mismatch(t *test
 		"ec2_metadata": "default",
 	}
 
-	if instance.IsEquivalentToDesiredState(vaultPayload) {
+	if vaultutils.IsEquivalentToDesiredState(instance, vaultPayload) {
 		t.Error("expected IsEquivalentToDesiredState to return false for mismatched iam_alias")
 	}
 }

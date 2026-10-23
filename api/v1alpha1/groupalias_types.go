@@ -19,7 +19,6 @@ package v1alpha1
 import (
 	"context"
 	"errors"
-	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -130,16 +129,12 @@ func (d *GroupAlias) GetPayload() map[string]any {
 }
 
 func (i *GroupAliasSpec) toMap() map[string]any {
-	payload := map[string]any{}
+	payload := vaultutils.StructToVaultPayload(i)
 	payload["name"] = i.retrievedName
 	payload["id"] = i.retrievedAliasID
 	payload["mount_accessor"] = i.retrievedMountAccessor
 	payload["canonical_id"] = i.retrievedCanonicalID
 	return payload
-}
-
-func (d *GroupAlias) IsInitialized() bool {
-	return true
 }
 
 func (d *GroupAlias) PrepareInternalValues(context context.Context, object client.Object) error {
@@ -197,27 +192,10 @@ func (d *GroupAlias) PrepareInternalValues(context context.Context, object clien
 	d.Spec.retrievedMountAccessor = mountAccessor
 	d.Spec.retrievedCanonicalID = canonicalID
 	d.Spec.retrievedAliasID = d.Status.ID
-	if d.Spec.Name != "" {
-		d.Spec.retrievedName = d.Spec.Name
-	} else {
-		d.Spec.retrievedName = d.Name
-	}
+	d.Spec.retrievedName = vaultutils.ResourceName(d.Spec.Name, d.Name)
 	return nil
-}
-
-func (d *GroupAlias) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *GroupAlias) IsValid() (bool, error) {
-	return true, nil
 }
 
 func (d *GroupAlias) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
-}
-
-func (d *GroupAlias) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.Spec.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

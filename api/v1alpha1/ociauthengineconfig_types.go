@@ -17,12 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // OCIAuthEngineConfigSpec defines the desired state of OCIAuthEngineConfig
@@ -77,7 +73,7 @@ type OCIAuthEngineConfigList struct {
 type OCIAuthConfig struct {
 	// HomeTenancyID is the Tenancy OCID of the OCI account.
 	// +kubebuilder:validation:Required
-	HomeTenancyID string `json:"homeTenancyID"`
+	HomeTenancyID string `json:"homeTenancyID" vault:"home_tenancy_id"`
 }
 
 var _ vaultutils.VaultObject = &OCIAuthEngineConfig{}
@@ -107,29 +103,8 @@ func (r *OCIAuthEngineConfig) GetPayload() map[string]any {
 	return r.Spec.OCIAuthConfig.toMap()
 }
 
-func (r *OCIAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := r.Spec.OCIAuthConfig.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (r *OCIAuthEngineConfig) IsInitialized() bool {
-	return true
-}
-
-func (r *OCIAuthEngineConfig) IsValid() (bool, error) {
-	return true, nil
-}
-
 func (r *OCIAuthEngineConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &r.Spec.Authentication
-}
-
-func (r *OCIAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *OCIAuthEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func init() {
@@ -137,7 +112,5 @@ func init() {
 }
 
 func (c *OCIAuthConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["home_tenancy_id"] = c.HomeTenancyID
-	return payload
+	return vaultutils.StructToVaultPayload(c)
 }

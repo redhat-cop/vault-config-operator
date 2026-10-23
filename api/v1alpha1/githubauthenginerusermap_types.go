@@ -17,12 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // GitHubAuthEngineUserMapSpec defines the desired state of GitHubAuthEngineUserMap
@@ -48,7 +44,7 @@ type GitHubAuthEngineUserMapSpec struct {
 
 	// Policies is a comma-separated list of policies to assign to this user.
 	// +kubebuilder:validation:Optional
-	Policies string `json:"policies,omitempty"`
+	Policies string `json:"policies,omitempty" vault:"value"`
 }
 
 // GitHubAuthEngineUserMapStatus defines the observed state of GitHubAuthEngineUserMap
@@ -100,27 +96,6 @@ func (d *GitHubAuthEngineUserMap) GetPayload() map[string]any {
 	return d.toMap()
 }
 
-func (d *GitHubAuthEngineUserMap) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.GetPayload()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (d *GitHubAuthEngineUserMap) IsInitialized() bool {
-	return true
-}
-
-func (d *GitHubAuthEngineUserMap) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *GitHubAuthEngineUserMap) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *GitHubAuthEngineUserMap) IsValid() (bool, error) {
-	return true, nil
-}
-
 func (d *GitHubAuthEngineUserMap) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
 }
@@ -138,7 +113,5 @@ func init() {
 }
 
 func (d *GitHubAuthEngineUserMap) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["value"] = d.Spec.Policies
-	return payload
+	return vaultutils.StructToVaultPayload(&d.Spec)
 }

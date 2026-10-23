@@ -17,12 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // MongoDBAtlasSecretEngineRoleSpec defines the desired state of MongoDBAtlasSecretEngineRole
@@ -53,44 +51,44 @@ type MongoDBAtlasSERole struct {
 	// OrganizationID is the unique identifier for the Atlas organization.
 	// Required if projectID is not set.
 	// +kubebuilder:validation:Optional
-	OrganizationID string `json:"organizationID,omitempty"`
+	OrganizationID string `json:"organizationID,omitempty" vault:"organization_id"`
 
 	// ProjectID is the unique identifier for the Atlas project.
 	// Required if organizationID is not set.
 	// +kubebuilder:validation:Optional
-	ProjectID string `json:"projectID,omitempty"`
+	ProjectID string `json:"projectID,omitempty" vault:"project_id"`
 
 	// Roles is the list of Atlas roles that the API Key needs to have.
 	// At least one role is required.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
 	// +listType=set
-	Roles []string `json:"roles"`
+	Roles []string `json:"roles" vault:"roles"`
 
 	// IPAddresses is the list of IP addresses to add to the API key whitelist.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	IPAddresses []string `json:"ipAddresses,omitempty"`
+	IPAddresses []string `json:"ipAddresses,omitempty" vault:"ip_addresses"`
 
 	// CIDRBlocks is the list of CIDR notation entries to add to the API key whitelist.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	CIDRBlocks []string `json:"cidrBlocks,omitempty"`
+	CIDRBlocks []string `json:"cidrBlocks,omitempty" vault:"cidr_blocks"`
 
 	// ProjectRoles is the list of roles assigned when an Organization API key is
 	// assigned to a Project API key.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	ProjectRoles []string `json:"projectRoles,omitempty"`
+	ProjectRoles []string `json:"projectRoles,omitempty" vault:"project_roles"`
 
 	// TTL specifies the duration after which the issued credential should expire.
 	// Uses duration format strings (e.g., "2h", "30m").
 	// +kubebuilder:validation:Optional
-	TTL string `json:"ttl,omitempty"`
+	TTL string `json:"ttl,omitempty" vault:"ttl"`
 
 	// MaxTTL specifies the maximum allowed lifetime of credentials issued using this role.
 	// +kubebuilder:validation:Optional
-	MaxTTL string `json:"maxTTL,omitempty"`
+	MaxTTL string `json:"maxTTL,omitempty" vault:"max_ttl"`
 }
 
 var _ vaultutils.VaultObject = &MongoDBAtlasSecretEngineRole{}
@@ -128,33 +126,8 @@ func (d *MongoDBAtlasSecretEngineRole) IsEquivalentToDesiredState(payload map[st
 	return reflect.DeepEqual(desiredState, filteredPayload)
 }
 
-func (d *MongoDBAtlasSecretEngineRole) IsInitialized() bool {
-	return true
-}
-
-func (d *MongoDBAtlasSecretEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *MongoDBAtlasSecretEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *MongoDBAtlasSecretEngineRole) IsValid() (bool, error) {
-	return true, nil
-}
-
 func (i *MongoDBAtlasSERole) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["organization_id"] = i.OrganizationID
-	payload["project_id"] = i.ProjectID
-	payload["roles"] = toInterfaceArray(i.Roles)
-	payload["ip_addresses"] = toInterfaceArray(i.IPAddresses)
-	payload["cidr_blocks"] = toInterfaceArray(i.CIDRBlocks)
-	payload["project_roles"] = toInterfaceArray(i.ProjectRoles)
-	payload["ttl"] = i.TTL
-	payload["max_ttl"] = i.MaxTTL
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 // MongoDBAtlasSecretEngineRoleStatus defines the observed state of MongoDBAtlasSecretEngineRole

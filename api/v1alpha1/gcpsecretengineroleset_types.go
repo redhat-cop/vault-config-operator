@@ -17,7 +17,6 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
 	"encoding/json"
 	"reflect"
 
@@ -25,7 +24,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // GCPSecretEngineRolesetSpec defines the desired state of GCPSecretEngineRoleset
@@ -57,23 +55,23 @@ type GCPSERoleset struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum:={"access_token","service_account_key"}
 	// +kubebuilder:default="access_token"
-	SecretType string `json:"secretType,omitempty"`
+	SecretType string `json:"secretType,omitempty" vault:"secret_type"`
 
 	// Project is the GCP project ID that this roleset's service account belongs to. Cannot be updated.
 	// +kubebuilder:validation:Required
-	Project string `json:"project"`
+	Project string `json:"project" vault:"project"`
 
 	// Bindings is the bindings configuration string. Both JSON and HCL formats are supported.
 	// When comparing with Vault state, JSON is parsed first; if that fails, HCL resource blocks
 	// are parsed (extracting resource names and roles). If neither format can be parsed,
 	// bindings are excluded from drift detection as a graceful fallback.
 	// +kubebuilder:validation:Optional
-	Bindings string `json:"bindings,omitempty"`
+	Bindings string `json:"bindings,omitempty" vault:"bindings"`
 
 	// TokenScopes is a list of OAuth scopes for access_token type rolesets only.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	TokenScopes []string `json:"tokenScopes,omitempty"`
+	TokenScopes []string `json:"tokenScopes,omitempty" vault:"token_scopes"`
 }
 
 var _ vaultutils.VaultObject = &GCPSecretEngineRoleset{}
@@ -194,33 +192,12 @@ func parseHCLBindings(hclStr string) (map[string]any, error) {
 	return result, nil
 }
 
-func (d *GCPSecretEngineRoleset) IsInitialized() bool {
-	return true
-}
-
-func (d *GCPSecretEngineRoleset) IsValid() (bool, error) {
-	return true, nil
-}
-
-func (d *GCPSecretEngineRoleset) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *GCPSecretEngineRoleset) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
 func (d *GCPSecretEngineRoleset) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
 }
 
 func (i *GCPSERoleset) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["secret_type"] = i.SecretType
-	payload["project"] = i.Project
-	payload["bindings"] = i.Bindings
-	payload["token_scopes"] = toInterfaceArray(i.TokenScopes)
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 // GCPSecretEngineRolesetStatus defines the observed state of GCPSecretEngineRoleset

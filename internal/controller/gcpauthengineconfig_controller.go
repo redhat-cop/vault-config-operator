@@ -1,27 +1,11 @@
-/*
-Copyright 2021.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package controller
 
 import (
 	"bytes"
 	"context"
-
+	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
+	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -29,16 +13,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
-	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 )
 
-// GCPAuthEngineConfigReconciler reconciles a GCPAuthEngineConfig object
-type GCPAuthEngineConfigReconciler struct {
+// gCPAuthEngineConfigHelper provides Watch handler methods for GCPAuthEngineConfig.
+type gCPAuthEngineConfigHelper struct {
 	vaultresourcecontroller.ReconcilerBase
 }
 
@@ -49,35 +29,17 @@ type GCPAuthEngineConfigReconciler struct {
 //+kubebuilder:rbac:groups="",resources=serviceaccounts/token,verbs=create
 //+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch;create;patch
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.4/pkg/reconcile
-func (r *GCPAuthEngineConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
-	instance := &redhatcopv1alpha1.GCPAuthEngineConfig{}
-	err := r.GetClient().Get(ctx, req.NamespacedName, instance)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return reconcile.Result{}, nil
-		}
-		return reconcile.Result{}, err
+// SetupGCPAuthEngineConfigController registers the GCPAuthEngineConfig controller with the Manager.
+func SetupGCPAuthEngineConfigController(mgr ctrl.Manager) error {
+	reconciler := &vaultresourcecontroller.GenericVaultReconciler[
+		redhatcopv1alpha1.GCPAuthEngineConfig,
+		*redhatcopv1alpha1.GCPAuthEngineConfig,
+	]{
+		ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GCPAuthEngineConfig"),
+		Factory:        vaultresourcecontroller.StandardVaultResourceFactory,
 	}
+	h := &gCPAuthEngineConfigHelper{ReconcilerBase: reconciler.ReconcilerBase}
 
-	ctx1, err := prepareContext(ctx, r.ReconcilerBase, instance)
-	if err != nil {
-		r.Log.Error(err, "unable to prepare context", "instance", instance)
-		return vaultresourcecontroller.ManageOutcome(ctx, r.ReconcilerBase, instance, err)
-	}
-	vaultResource := vaultresourcecontroller.NewVaultResource(&r.ReconcilerBase, instance)
-
-	return vaultResource.Reconcile(ctx1, instance)
-}
-
-// SetupWithManager sets up the controller with the Manager.
-func (r *GCPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	isBasicAuthSecret := predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			newSecret, ok := e.ObjectNew.DeepCopyObject().(*corev1.Secret)
@@ -146,9 +108,9 @@ func (r *GCPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) error
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			s := a.(*corev1.Secret)
-			dbsecs, err := r.findApplicableGAEForSecret(ctx, s)
+			dbsecs, err := h.findApplicableGAEForSecret(ctx, s)
 			if err != nil {
-				r.Log.Error(err, "unable to find applicable GCPAuthEngine for namespace", "namespace", s.Name)
+				h.Log.Error(err, "unable to find applicable GCPAuthEngine for namespace", "namespace", s.Name)
 				return []reconcile.Request{}
 			}
 			for _, dbsec := range dbsecs {
@@ -168,9 +130,9 @@ func (r *GCPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) error
 		}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a client.Object) []reconcile.Request {
 			res := []reconcile.Request{}
 			rs := a.(*redhatcopv1alpha1.RandomSecret)
-			dbsecs, err := r.findApplicableGAEForRandomSecret(ctx, rs)
+			dbsecs, err := h.findApplicableGAEForRandomSecret(ctx, rs)
 			if err != nil {
-				r.Log.Error(err, "unable to find applicable GCPAuthEngine for namespace", "namespace", rs.Name)
+				h.Log.Error(err, "unable to find applicable GCPAuthEngine for namespace", "namespace", rs.Name)
 				return []reconcile.Request{}
 			}
 			for _, dbsec := range dbsecs {
@@ -183,18 +145,17 @@ func (r *GCPAuthEngineConfigReconciler) SetupWithManager(mgr ctrl.Manager) error
 			}
 			return res
 		}), builder.WithPredicates(isUpdatedRandomSecret)).
-		Complete(r)
-
+		Complete(reconciler)
 }
 
-func (r *GCPAuthEngineConfigReconciler) findApplicableGAEForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.GCPAuthEngineConfig, error) {
+func (h *gCPAuthEngineConfigHelper) findApplicableGAEForSecret(ctx context.Context, secret *corev1.Secret) ([]redhatcopv1alpha1.GCPAuthEngineConfig, error) {
 	result := []redhatcopv1alpha1.GCPAuthEngineConfig{}
 	vrl := &redhatcopv1alpha1.GCPAuthEngineConfigList{}
-	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
+	err := h.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: secret.Namespace,
 	})
 	if err != nil {
-		r.Log.Error(err, "unable to retrieve the list of GCPAuthEngineConfig")
+		h.Log.Error(err, "unable to retrieve the list of GCPAuthEngineConfig")
 		return nil, err
 	}
 	for _, vr := range vrl.Items {
@@ -205,14 +166,14 @@ func (r *GCPAuthEngineConfigReconciler) findApplicableGAEForSecret(ctx context.C
 	return result, nil
 }
 
-func (r *GCPAuthEngineConfigReconciler) findApplicableGAEForRandomSecret(ctx context.Context, randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.GCPAuthEngineConfig, error) {
+func (h *gCPAuthEngineConfigHelper) findApplicableGAEForRandomSecret(ctx context.Context, randomSecret *redhatcopv1alpha1.RandomSecret) ([]redhatcopv1alpha1.GCPAuthEngineConfig, error) {
 	result := []redhatcopv1alpha1.GCPAuthEngineConfig{}
 	vrl := &redhatcopv1alpha1.GCPAuthEngineConfigList{}
-	err := r.GetClient().List(ctx, vrl, &client.ListOptions{
+	err := h.GetClient().List(ctx, vrl, &client.ListOptions{
 		Namespace: randomSecret.Namespace,
 	})
 	if err != nil {
-		r.Log.Error(err, "unable to retrieve the list of GCPAuthEngineConfig")
+		h.Log.Error(err, "unable to retrieve the list of GCPAuthEngineConfig")
 		return nil, err
 	}
 	for _, vr := range vrl.Items {

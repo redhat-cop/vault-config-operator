@@ -17,12 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // GCPSecretEngineStaticAccountSpec defines the desired state of GCPSecretEngineStaticAccount
@@ -54,23 +52,23 @@ type GCPSEStaticAccount struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum:={"access_token","service_account_key"}
 	// +kubebuilder:default="access_token"
-	SecretType string `json:"secretType,omitempty"`
+	SecretType string `json:"secretType,omitempty" vault:"secret_type"`
 
 	// ServiceAccountEmail is the email of the GCP service account to manage. Cannot be updated.
 	// +kubebuilder:validation:Required
-	ServiceAccountEmail string `json:"serviceAccountEmail"`
+	ServiceAccountEmail string `json:"serviceAccountEmail" vault:"service_account_email"`
 
 	// Bindings is the bindings configuration string. Both JSON and HCL formats are supported.
 	// When comparing with Vault state, JSON is parsed first; if that fails, HCL resource blocks
 	// are parsed (extracting resource names and roles). If neither format can be parsed,
 	// bindings are excluded from drift detection as a graceful fallback.
 	// +kubebuilder:validation:Optional
-	Bindings string `json:"bindings,omitempty"`
+	Bindings string `json:"bindings,omitempty" vault:"bindings"`
 
 	// TokenScopes is a list of OAuth scopes for access_token type static accounts only.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	TokenScopes []string `json:"tokenScopes,omitempty"`
+	TokenScopes []string `json:"tokenScopes,omitempty" vault:"token_scopes"`
 }
 
 var _ vaultutils.VaultObject = &GCPSecretEngineStaticAccount{}
@@ -105,33 +103,12 @@ func (d *GCPSecretEngineStaticAccount) IsEquivalentToDesiredState(payload map[st
 	return reflect.DeepEqual(desiredState, filteredPayload)
 }
 
-func (d *GCPSecretEngineStaticAccount) IsInitialized() bool {
-	return true
-}
-
-func (d *GCPSecretEngineStaticAccount) IsValid() (bool, error) {
-	return true, nil
-}
-
-func (d *GCPSecretEngineStaticAccount) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *GCPSecretEngineStaticAccount) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
 func (d *GCPSecretEngineStaticAccount) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
 }
 
 func (i *GCPSEStaticAccount) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["secret_type"] = i.SecretType
-	payload["service_account_email"] = i.ServiceAccountEmail
-	payload["bindings"] = i.Bindings
-	payload["token_scopes"] = toInterfaceArray(i.TokenScopes)
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 // GCPSecretEngineStaticAccountStatus defines the observed state of GCPSecretEngineStaticAccount

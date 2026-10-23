@@ -18,11 +18,9 @@ package v1alpha1
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
-	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -59,27 +57,27 @@ type NomadSecretEngineConfigSpec struct {
 type NomadSEConfig struct {
 	// Address specifies the Nomad instance address as "protocol://host:port" (e.g., "http://127.0.0.1:4646")
 	// +kubebuilder:validation:Required
-	Address string `json:"address"`
+	Address string `json:"address" vault:"address"`
 
 	// MaxTokenNameLength specifies the maximum length for generated Nomad token names.
 	// 0 uses Nomad's default (64 for ≤0.8.3, 256 for ≥0.8.4).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	MaxTokenNameLength int `json:"maxTokenNameLength,omitempty"`
+	MaxTokenNameLength int `json:"maxTokenNameLength,omitempty" vault:"max_token_name_length,number,omitempty"`
 
 	// CACert is the CA certificate for verifying the Nomad server certificate (x509 PEM)
 	// +kubebuilder:validation:Optional
-	CACert string `json:"caCert,omitempty"`
+	CACert string `json:"caCert,omitempty" vault:"ca_cert"`
 
 	// ClientCert is the client certificate for Nomad TLS communication (x509 PEM).
 	// If set, clientKey must also be set.
 	// +kubebuilder:validation:Optional
-	ClientCert string `json:"clientCert,omitempty"`
+	ClientCert string `json:"clientCert,omitempty" vault:"client_cert"`
 
 	// ClientKey is the client key for Nomad TLS communication (x509 PEM).
 	// If set, clientCert must also be set.
 	// +kubebuilder:validation:Optional
-	ClientKey string `json:"clientKey,omitempty"`
+	ClientKey string `json:"clientKey,omitempty" vault:"client_key"`
 
 	retrievedToken string `json:"-"`
 }
@@ -112,10 +110,6 @@ func (d *NomadSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (d *NomadSecretEngineConfig) IsInitialized() bool {
-	return true
-}
-
 func (d *NomadSecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	if err := d.setInternalCredentials(context); err != nil {
 		return err
@@ -123,10 +117,6 @@ func (d *NomadSecretEngineConfig) PrepareInternalValues(context context.Context,
 	if d.Spec.NomadSEConfig.retrievedToken == "" {
 		return fmt.Errorf("credential source resolved to an empty token; verify the referenced Secret/VaultSecret/RandomSecret contains a valid non-empty value")
 	}
-	return nil
-}
-
-func (d *NomadSecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
 	return nil
 }
 
@@ -205,15 +195,8 @@ func (r *NomadSecretEngineConfig) setInternalCredentials(context context.Context
 }
 
 func (i *NomadSEConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["address"] = i.Address
-	if i.MaxTokenNameLength != 0 {
-		payload["max_token_name_length"] = json.Number(strconv.Itoa(i.MaxTokenNameLength))
-	}
+	payload := vaultutils.StructToVaultPayload(i)
 	payload["token"] = i.retrievedToken
-	payload["ca_cert"] = i.CACert
-	payload["client_cert"] = i.ClientCert
-	payload["client_key"] = i.ClientKey
 	return payload
 }
 

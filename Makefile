@@ -8,10 +8,14 @@ KIND_CLUSTER_NAME ?= vault-config-operator
 KUBECTL_VERSION ?= v1.37.1
 KIND_NODE_VERSION ?= v1.37.0
 KUSTOMIZE_VERSION ?= v5.8.3
-VAULT_HOST_PORT ?= 8200
-# Override HTTPS_HOST_PORT and VAULT_HOST_PORT (along with KIND_CLUSTER_NAME) to run
-# parallel integration tests in separate Kind clusters — see project-context.md.
-HTTPS_HOST_PORT ?= 8443
+# --- Per-target Kind cluster settings ---
+# `make integration` and `make helmchart-test` each get their own Kind cluster
+# so they can run independently or in parallel.
+INT_CLUSTER_NAME  ?= vco-integration
+HELM_CLUSTER_NAME ?= vco-helmchart
+
+CLOUD_PROVIDER_KIND_VERSION ?= v0.12.0
+
 KUBE_CONTEXT ?= kind-$(KIND_CLUSTER_NAME)
 KUBE_CONFIG_FILE ?= /tmp/$(KIND_CLUSTER_NAME)-kubeconfig
 # Container runtime: use docker in CI (GitHub Actions), podman on local dev machines.
@@ -154,18 +158,58 @@ test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
 
 # note: envtest requires a container runtime (docker or podman)
+# Target-specific overrides: each top-level target gets its own Kind cluster.
+# These propagate to all prerequisite targets (kind-setup, deploy-vault, …).
+integration: KIND_CLUSTER_NAME = $(INT_CLUSTER_NAME)
 .PHONY: integration
-integration: kind-setup deploy-vault deploy-ingress deploy-postgresql deploy-rabbitmq deploy-ldap deploy-keycloak deploy-nomad vault manifests generate fmt vet envtest ## Run tests.
+integration: kind-setup deploy-vault start-cloud-provider deploy-postgresql deploy-rabbitmq deploy-ldap deploy-keycloak deploy-nomad vault manifests generate fmt vet envtest ## Run tests.
+	@echo "Cleaning up leftover resources from previous runs..."
+	@CRD_TYPES=$$(KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) api-resources --api-group=redhatcop.redhat.io -o name 2>/dev/null | tr '\n' ',' | sed 's/,$$//') ;\
+	if [ -n "$$CRD_TYPES" ]; then \
+		for ns in vault-admin test-vault-config-operator; do \
+			for item in $$(KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) get $$CRD_TYPES -n $$ns -o name 2>/dev/null); do \
+				KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) patch $$item -n $$ns -p '{"metadata":{"finalizers":null}}' --type=merge 2>/dev/null || true ;\
+			done ;\
+			KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) delete $$CRD_TYPES -n $$ns --all --ignore-not-found --wait=false 2>/dev/null || true ;\
+		done ;\
+	fi
+	@echo "Cleaning up leftover test secrets..."
+	@for secret in dummy-error-path-creds test-userpass-password; do \
+		KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) delete secret $$secret -n vault-admin --ignore-not-found 2>/dev/null || true ;\
+	done
+	@echo "Waiting for Vault LoadBalancer container..."
+	@cleanup_cloud_provider() { \
+		if [ -f /tmp/cloud-provider-kind.pid ]; then \
+			echo "Stopping cloud-provider-kind (PID $$(cat /tmp/cloud-provider-kind.pid))..."; \
+			kill $$(cat /tmp/cloud-provider-kind.pid) 2>/dev/null || true; \
+			rm -f /tmp/cloud-provider-kind.pid; \
+		fi; \
+	}; \
+	trap cleanup_cloud_provider EXIT; \
+	LB_CONTAINER=""; \
+	for i in $$(seq 1 60); do \
+		LB_CONTAINER=$$($(CONTAINER_RUNTIME) ps -q --filter 'label=io.x-k8s.cloud-provider-kind.loadbalancer.name=$(KIND_CLUSTER_NAME)/vault/vault' 2>/dev/null | head -1) ;\
+		if [ -n "$$LB_CONTAINER" ]; then break; fi ;\
+		echo "  attempt $$i/60: LB container not yet created, retrying in 5s..." ;\
+		sleep 5 ;\
+	done ;\
+	if [ -z "$$LB_CONTAINER" ]; then \
+		echo "ERROR: Vault LoadBalancer container was not created after 60 attempts." ;\
+		KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) get svc vault -n vault -o yaml ;\
+		cat /tmp/cloud-provider-kind.log 2>/dev/null ;\
+		exit 1 ;\
+	fi ;\
+	VAULT_HOST_PORT=$$($(CONTAINER_RUNTIME) port $$LB_CONTAINER 8200/tcp 2>/dev/null | head -1 | sed 's/.*://') ;\
+	if [ -z "$$VAULT_HOST_PORT" ]; then \
+		echo "ERROR: Could not determine Vault LoadBalancer mapped port." ;\
+		$(CONTAINER_RUNTIME) port $$LB_CONTAINER ;\
+		exit 1 ;\
+	fi ;\
+	echo "Vault LoadBalancer accessible at 127.0.0.1:$$VAULT_HOST_PORT" ;\
 	export VAULT_TOKEN=$$(KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
-	export VAULT_ADDR="http://localhost:$(VAULT_HOST_PORT)" ;\
-	KUBECONFIG=$(KUBE_CONFIG_FILE) KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out --tags=integration -timeout 30m
-
-.PHONY: deploy-ingress
-deploy-ingress: kubectl helm
-	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i ingress-nginx ./integration/helm/ingress-nginx -n vault --rollback-on-failure --create-namespace
-	$(KUBECTL) --context $(KUBE_CONTEXT) apply -f ./integration/manifests/ingress-nginx-kind-deploy.yaml
-	$(KUBECTL) --context $(KUBE_CONTEXT) rollout status deployment ingress-nginx-controller -n ingress-nginx -w
-	$(KUBECTL) --context $(KUBE_CONTEXT) wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=${KUBECTL_WAIT_TIMEOUT}
+	export VAULT_ADDR="http://127.0.0.1:$$VAULT_HOST_PORT" ;\
+	KUBECONFIG=$(KUBE_CONFIG_FILE) KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -v -coverprofile cover.out --tags=integration -timeout 30m ;\
+	exit $$?
 
 .PHONY: deploy-vault
 deploy-vault: kubectl helm
@@ -178,15 +222,12 @@ deploy-vault: kubectl helm
 
 .PHONY: kind-setup
 kind-setup: kind
-	@sed -e 's/VAULT_HOST_PORT_PLACEHOLDER/$(VAULT_HOST_PORT)/' -e 's/HTTPS_HOST_PORT_PLACEHOLDER/$(HTTPS_HOST_PORT)/' ./integration/cluster-kind.yaml.tpl > ./integration/cluster-kind.yaml
 	@if $(KIND) get clusters 2>/dev/null | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
 	  CURRENT_IMAGE=$$($(CONTAINER_RUNTIME) inspect $(KIND_CLUSTER_NAME)-control-plane --format='{{.Config.Image}}' 2>/dev/null || echo ""); \
-	  CURRENT_PORT=$$($(CONTAINER_RUNTIME) inspect $(KIND_CLUSTER_NAME)-control-plane --format='{{(index (index .HostConfig.PortBindings "80/tcp") 0).HostPort}}' 2>/dev/null || echo ""); \
-	  CURRENT_HTTPS_PORT=$$($(CONTAINER_RUNTIME) inspect $(KIND_CLUSTER_NAME)-control-plane --format='{{(index (index .HostConfig.PortBindings "443/tcp") 0).HostPort}}' 2>/dev/null || echo ""); \
-	  if [ "$$CURRENT_IMAGE" = "docker.io/kindest/node:$(KIND_NODE_VERSION)" ] && [ "$$CURRENT_PORT" = "$(VAULT_HOST_PORT)" ] && [ "$$CURRENT_HTTPS_PORT" = "$(HTTPS_HOST_PORT)" ]; then \
-	    echo "Kind cluster '$(KIND_CLUSTER_NAME)' already exists with correct image and ports, skipping recreation"; \
+	  if [ "$$CURRENT_IMAGE" = "docker.io/kindest/node:$(KIND_NODE_VERSION)" ]; then \
+	    echo "Kind cluster '$(KIND_CLUSTER_NAME)' already exists with correct image, skipping recreation"; \
 	  else \
-	    echo "Kind cluster '$(KIND_CLUSTER_NAME)' exists but config mismatch (image=$$CURRENT_IMAGE, port=$$CURRENT_PORT, https_port=$$CURRENT_HTTPS_PORT), recreating..."; \
+	    echo "Kind cluster '$(KIND_CLUSTER_NAME)' exists but image mismatch (image=$$CURRENT_IMAGE), recreating..."; \
 	    $(KIND) delete cluster --name $(KIND_CLUSTER_NAME); \
 	    $(KIND) create cluster --name $(KIND_CLUSTER_NAME) --image docker.io/kindest/node:$(KIND_NODE_VERSION) --config=./integration/cluster-kind.yaml; \
 	  fi \
@@ -209,13 +250,25 @@ kind-teardown: kind ## Delete the Kind cluster and its kubeconfig.
 	fi
 	@rm -f $(KUBE_CONFIG_FILE)
 
+.PHONY: integration-teardown
+integration-teardown: KIND_CLUSTER_NAME = $(INT_CLUSTER_NAME)
+integration-teardown: ## Delete the integration Kind cluster and stop cloud-provider-kind.
+	@if [ -f /tmp/cloud-provider-kind.pid ]; then \
+	  echo "Stopping cloud-provider-kind (PID $$(cat /tmp/cloud-provider-kind.pid))..."; \
+	  kill $$(cat /tmp/cloud-provider-kind.pid) 2>/dev/null || true; \
+	  rm -f /tmp/cloud-provider-kind.pid; \
+	fi
+	$(MAKE) kind-teardown KIND_CLUSTER_NAME=$(INT_CLUSTER_NAME)
+
+.PHONY: helmchart-teardown
+helmchart-teardown: KIND_CLUSTER_NAME = $(HELM_CLUSTER_NAME)
+helmchart-teardown: kind-teardown ## Delete the helmchart-test Kind cluster.
+
 .PHONY: deploy-postgresql
-deploy-postgresql: kubectl helm
-	$(HELM) --kube-context $(KUBE_CONTEXT) repo add bitnami https://charts.bitnami.com/bitnami --force-update
-	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i postgresql bitnami/postgresql \
-		-n test-vault-config-operator --create-namespace --rollback-on-failure \
-		-f ./integration/postgresql-values.yaml
-	$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready pod -l app.kubernetes.io/instance=postgresql \
+deploy-postgresql: kubectl
+	$(KUBECTL) --context $(KUBE_CONTEXT) create namespace test-vault-config-operator --dry-run=client -o yaml | $(KUBECTL) --context $(KUBE_CONTEXT) apply -f -
+	$(KUBECTL) --context $(KUBE_CONTEXT) apply -f ./integration/postgresql -n test-vault-config-operator
+	$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready pod -l app=postgresql \
 		-n test-vault-config-operator --timeout=$(KUBECTL_WAIT_TIMEOUT)
 
 .PHONY: deploy-rabbitmq
@@ -255,7 +308,19 @@ deploy-nomad: kubectl
 	done ;\
 	if [ -z "$$NOMAD_TOKEN" ]; then \
 		echo "Nomad ACL already bootstrapped or bootstrap failed, trying to read existing secret..." ;\
-		NOMAD_TOKEN=$$($(KUBECTL) --context $(KUBE_CONTEXT) get secret nomad-token-secret -n vault-admin -o jsonpath='{.data.token}' 2>/dev/null | base64 -d) ;\
+		NOMAD_TOKEN=$$($(KUBECTL) --context $(KUBE_CONTEXT) get secret nomad-token-secret -n vault-admin -o jsonpath='{.data.token}' 2>/dev/null | base64 -d 2>/dev/null || true) ;\
+	fi ;\
+	if [ -z "$$NOMAD_TOKEN" ]; then \
+		echo "Nomad bootstrap stale — recycling pod to reset ACL state..." ;\
+		$(KUBECTL) --context $(KUBE_CONTEXT) delete pod -n nomad -l app=nomad --wait=true ;\
+		$(KUBECTL) --context $(KUBE_CONTEXT) wait --for=condition=ready -n nomad pod -l app=nomad --timeout=$(KUBECTL_WAIT_TIMEOUT) ;\
+		NOMAD_POD=$$($(KUBECTL) --context $(KUBE_CONTEXT) get pods -n nomad -l app=nomad -o jsonpath='{.items[0].metadata.name}') ;\
+		for i in 1 2 3 4 5 6 7 8 9 10; do \
+			NOMAD_TOKEN=$$($(KUBECTL) --context $(KUBE_CONTEXT) exec -n nomad $$NOMAD_POD -- sh -c 'nomad acl bootstrap -json 2>/dev/null | grep -o "\"SecretID\":\"[^\"]*\"" | cut -d\" -f4' 2>/dev/null || echo "") ;\
+			if [ -n "$$NOMAD_TOKEN" ]; then break; fi ;\
+			echo "Waiting for Nomad ACL system after pod recycle (attempt $$i/10)..." ;\
+			sleep 2 ;\
+		done ;\
 	fi ;\
 	if [ -z "$$NOMAD_TOKEN" ]; then \
 		echo "ERROR: Could not obtain Nomad management token." ;\
@@ -505,6 +570,7 @@ HELM_TEST_SIDECAR_IMG ?= busybox:1.37
 
 # Deploy the helmchart to a kind cluster to test deployment.
 # If the test-metrics sidecar in the prometheus pod is ready, the metrics work and the test is successful.
+helmchart-test: KIND_CLUSTER_NAME = $(HELM_CLUSTER_NAME)
 .PHONY: helmchart-test
 helmchart-test: kind-setup deploy-vault helmchart
 	$(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker-build
@@ -553,6 +619,29 @@ KIND ?= $(LOCALBIN)/kind
 kind: $(KIND) ## Download kind locally if necessary.
 $(KIND): $(LOCALBIN)
 	test -s $(LOCALBIN)/kind || echo "Downloading kind to ${KIND}..." && GOBIN=$(LOCALBIN) go install sigs.k8s.io/kind@${KIND_VERSION}
+
+.PHONY: cloud-provider-kind
+CLOUD_PROVIDER_KIND ?= $(LOCALBIN)/cloud-provider-kind
+cloud-provider-kind: $(CLOUD_PROVIDER_KIND) ## Download cloud-provider-kind locally if necessary.
+$(CLOUD_PROVIDER_KIND): $(LOCALBIN)
+	$(call go-install-tool,$(CLOUD_PROVIDER_KIND),sigs.k8s.io/cloud-provider-kind,$(CLOUD_PROVIDER_KIND_VERSION))
+
+.PHONY: start-cloud-provider
+start-cloud-provider: cloud-provider-kind ## Start cloud-provider-kind if not already running.
+	@if [ -f /tmp/cloud-provider-kind.pid ] && kill -0 $$(cat /tmp/cloud-provider-kind.pid) 2>/dev/null; then \
+	  echo "cloud-provider-kind is already running (PID $$(cat /tmp/cloud-provider-kind.pid)), skipping start"; \
+	else \
+	  echo "Starting cloud-provider-kind (logging to /tmp/cloud-provider-kind.log)..."; \
+	  $(CLOUD_PROVIDER_KIND) --enable-lb-port-mapping > /tmp/cloud-provider-kind.log 2>&1 & \
+	  echo $$! > /tmp/cloud-provider-kind.pid; \
+	  sleep 3; \
+	  if ! kill -0 $$(cat /tmp/cloud-provider-kind.pid) 2>/dev/null; then \
+	    echo "ERROR: cloud-provider-kind failed to start. Log:"; \
+	    cat /tmp/cloud-provider-kind.log; \
+	    exit 1; \
+	  fi; \
+	  echo "cloud-provider-kind started (PID $$(cat /tmp/cloud-provider-kind.pid))"; \
+	fi
 
 .PHONY: kubectl
 KUBECTL ?= $(LOCALBIN)/kubectl

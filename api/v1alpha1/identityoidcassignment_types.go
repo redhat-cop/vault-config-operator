@@ -17,12 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // IdentityOIDCAssignmentSpec defines the desired state of IdentityOIDCAssignment
@@ -36,7 +32,7 @@ type IdentityOIDCAssignmentSpec struct {
 	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
-	IdentityOIDCAssignmentConfig `json:",inline"`
+	IdentityOIDCAssignmentConfig `json:",inline" vault:",inline"`
 
 	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
 	// +kubebuilder:validation:Optional
@@ -49,12 +45,12 @@ type IdentityOIDCAssignmentConfig struct {
 	// EntityIDs is a list of Vault entity IDs.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	EntityIDs []string `json:"entityIDs,omitempty"`
+	EntityIDs []string `json:"entityIDs,omitempty" vault:"entity_ids"`
 
 	// GroupIDs is a list of Vault group IDs.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	GroupIDs []string `json:"groupIDs,omitempty"`
+	GroupIDs []string `json:"groupIDs,omitempty" vault:"group_ids"`
 }
 
 // IdentityOIDCAssignmentStatus defines the observed state of IdentityOIDCAssignment
@@ -122,33 +118,9 @@ func (d *IdentityOIDCAssignment) GetPayload() map[string]any {
 }
 
 func (i *IdentityOIDCAssignmentSpec) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["entity_ids"] = i.EntityIDs
-	payload["group_ids"] = i.GroupIDs
-	return payload
-}
-
-func (d *IdentityOIDCAssignment) IsInitialized() bool {
-	return true
-}
-
-func (d *IdentityOIDCAssignment) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *IdentityOIDCAssignment) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *IdentityOIDCAssignment) IsValid() (bool, error) {
-	return true, nil
+	return vaultutils.StructToVaultPayload(i)
 }
 
 func (d *IdentityOIDCAssignment) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
-}
-
-func (d *IdentityOIDCAssignment) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.Spec.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

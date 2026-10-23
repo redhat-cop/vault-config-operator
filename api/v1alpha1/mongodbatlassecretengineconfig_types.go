@@ -59,7 +59,7 @@ type MongoDBAtlasSEConfig struct {
 	// Can be set directly here or resolved from credentials via RootCredentials.
 	// When using RandomSecret, this field must be set (RandomSecret only provides the private key).
 	// +kubebuilder:validation:Optional
-	PublicKey string `json:"publicKey,omitempty"`
+	PublicKey string `json:"publicKey,omitempty" vault:"public_key,omitempty"`
 
 	retrievedPublicKey  string `json:"-"`
 	retrievedPrivateKey string `json:"-"`
@@ -90,16 +90,8 @@ func (d *MongoDBAtlasSecretEngineConfig) IsEquivalentToDesiredState(payload map[
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (d *MongoDBAtlasSecretEngineConfig) IsInitialized() bool {
-	return true
-}
-
 func (d *MongoDBAtlasSecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	return d.setInternalCredentials(context)
-}
-
-func (d *MongoDBAtlasSecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *MongoDBAtlasSecretEngineConfig) IsValid() (bool, error) {
@@ -198,11 +190,9 @@ func (r *MongoDBAtlasSecretEngineConfig) SetPublicKeyAndPrivateKey(publicKey str
 }
 
 func (i *MongoDBAtlasSEConfig) toMap() map[string]any {
-	payload := map[string]any{}
+	payload := vaultutils.StructToVaultPayload(i)
 	if i.retrievedPublicKey != "" {
 		payload["public_key"] = i.retrievedPublicKey
-	} else if i.PublicKey != "" {
-		payload["public_key"] = i.PublicKey
 	}
 	if i.retrievedPrivateKey != "" {
 		payload["private_key"] = i.retrievedPrivateKey

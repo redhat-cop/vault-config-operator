@@ -3,6 +3,8 @@ package v1alpha1
 import (
 	"encoding/json"
 	"testing"
+
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 )
 
 func TestOCIAuthEngineConfig_toMap(t *testing.T) {
@@ -31,7 +33,7 @@ func TestOCIAuthEngineConfig_IsEquivalentToDesiredState_Match(t *testing.T) {
 		"home_tenancy_id": "ocid1.tenancy.oc1..aaaaaaaah7zkvaffv26pzyauoe2zbnionqvhvsexamplee557wakiofi4ysgqq",
 	}
 
-	if !instance.IsEquivalentToDesiredState(vaultPayload) {
+	if !vaultutils.IsEquivalentToDesiredState(instance, vaultPayload) {
 		t.Error("expected IsEquivalentToDesiredState to return true for matching state")
 	}
 }
@@ -46,7 +48,7 @@ func TestOCIAuthEngineConfig_IsEquivalentToDesiredState_Mismatch(t *testing.T) {
 		"home_tenancy_id": "ocid1.tenancy.oc1..different-tenancy-id",
 	}
 
-	if instance.IsEquivalentToDesiredState(vaultPayload) {
+	if vaultutils.IsEquivalentToDesiredState(instance, vaultPayload) {
 		t.Error("expected IsEquivalentToDesiredState to return false for mismatched home_tenancy_id")
 	}
 }
@@ -64,7 +66,7 @@ func TestOCIAuthEngineConfig_IsEquivalentToDesiredState_ExtraVaultFields(t *test
 		"renewable":       false,
 	}
 
-	if !instance.IsEquivalentToDesiredState(vaultPayload) {
+	if !vaultutils.IsEquivalentToDesiredState(instance, vaultPayload) {
 		t.Error("expected IsEquivalentToDesiredState to return true when Vault returns extra fields")
 	}
 }

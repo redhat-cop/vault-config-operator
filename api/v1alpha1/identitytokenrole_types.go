@@ -17,12 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // IdentityTokenRoleSpec defines the desired state of IdentityTokenRole
@@ -36,7 +32,7 @@ type IdentityTokenRoleSpec struct {
 	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
-	IdentityTokenRoleConfig `json:",inline"`
+	IdentityTokenRoleConfig `json:",inline" vault:",inline"`
 
 	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
 	// +kubebuilder:validation:Optional
@@ -48,22 +44,22 @@ type IdentityTokenRoleConfig struct {
 
 	// Key is a configured named key, the key must already exist.
 	// +kubebuilder:validation:Required
-	Key string `json:"key"`
+	Key string `json:"key" vault:"key"`
 
 	// Template is the template string to use for generating tokens.
 	// This may be in string-ified JSON or base64 format.
 	// +kubebuilder:validation:Optional
-	Template string `json:"template,omitempty"`
+	Template string `json:"template,omitempty" vault:"template,omitempty"`
 
 	// ClientID is an optional client ID. A random ID will be generated if left unset.
 	// +kubebuilder:validation:Optional
-	ClientID string `json:"clientID,omitempty"`
+	ClientID string `json:"clientID,omitempty" vault:"client_id,omitempty"`
 
 	// TTL is the TTL of the tokens generated against the role.
 	// Uses duration format strings.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:="24h"
-	TTL string `json:"ttl"`
+	TTL string `json:"ttl" vault:"ttl"`
 }
 
 // IdentityTokenRoleStatus defines the observed state of IdentityTokenRole
@@ -120,10 +116,7 @@ func (d *IdentityTokenRole) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *IdentityTokenRole) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath("identity/oidc/role/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath("identity/oidc/role/" + d.Name)
+	return vaultutils.CleansePath("identity/oidc/role/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 
 func (d *IdentityTokenRole) GetPayload() map[string]any {
@@ -131,39 +124,9 @@ func (d *IdentityTokenRole) GetPayload() map[string]any {
 }
 
 func (i *IdentityTokenRoleSpec) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["key"] = i.Key
-	if i.Template != "" {
-		payload["template"] = i.Template
-	}
-	if i.ClientID != "" {
-		payload["client_id"] = i.ClientID
-	}
-	payload["ttl"] = i.TTL
-	return payload
-}
-
-func (d *IdentityTokenRole) IsInitialized() bool {
-	return true
-}
-
-func (d *IdentityTokenRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *IdentityTokenRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *IdentityTokenRole) IsValid() (bool, error) {
-	return true, nil
+	return vaultutils.StructToVaultPayload(i)
 }
 
 func (d *IdentityTokenRole) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
-}
-
-func (d *IdentityTokenRole) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.Spec.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

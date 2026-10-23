@@ -74,7 +74,7 @@ func TestAzureSecretEngineConfigIsEquivalentMatching(t *testing.T) {
 
 	payload := config.Spec.AzureSEConfig.toMap()
 
-	if !config.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected matching payload to be equivalent")
 	}
 }
@@ -98,7 +98,7 @@ func TestAzureSecretEngineConfigIsEquivalentNonMatching(t *testing.T) {
 	payload := config.Spec.AzureSEConfig.toMap()
 	payload["tenant_id"] = "other-tenant"
 
-	if config.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected non-matching payload (different tenant_id) to NOT be equivalent")
 	}
 }
@@ -122,7 +122,7 @@ func TestAzureSecretEngineConfigIsEquivalentExtraFields(t *testing.T) {
 	payload := config.Spec.AzureSEConfig.toMap()
 	payload["extra_vault_field"] = "some-value"
 
-	if !config.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }

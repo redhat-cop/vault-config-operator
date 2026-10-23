@@ -17,14 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
 	"errors"
-	"reflect"
 	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -58,40 +55,40 @@ type DatabaseSecretEngineStaticRoleSpec struct {
 type DBSEStaticRole struct {
 	// DBName The name of the database connection to use for this role.
 	// +kubebuilder:validation:Optional
-	DBName string `json:"dBName,omitempty"`
+	DBName string `json:"dBName,omitempty" vault:"db_name"`
 
 	// Username Specifies the database username that this Vault role corresponds to.
 	// +kubebuilder:validation:Optional
-	Username string `json:"username,omitempty"`
+	Username string `json:"username,omitempty" vault:"username"`
 
 	// RotationPeriod Specifies the amount of time Vault should wait before rotating the password.
 	// The minimum is 5 seconds. Mutually exclusive with RotationSchedule.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=5
-	RotationPeriod *int `json:"rotationPeriod,omitempty"`
+	RotationPeriod *int `json:"rotationPeriod,omitempty" vault:"rotation_period,omitempty"`
 
 	// RotationSchedule Specifies a cron-style rotation schedule for the static role.
 	// Mutually exclusive with RotationPeriod. Uses standard 5-field cron format (minute, hour,
 	// day of month, month, day of week). For example, "0 0 * * SAT" rotates every Saturday at midnight UTC.
 	// +kubebuilder:validation:Optional
-	RotationSchedule string `json:"rotationSchedule,omitempty"`
+	RotationSchedule string `json:"rotationSchedule,omitempty" vault:"rotation_schedule,omitempty"`
 
 	// RotationWindow Specifies the maximum duration (in seconds) in which a scheduled rotation
 	// is allowed to occur. Only valid when RotationSchedule is set. The minimum is 3600 (1 hour).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=3600
-	RotationWindow *int `json:"rotationWindow,omitempty"`
+	RotationWindow *int `json:"rotationWindow,omitempty" vault:"rotation_window,omitempty"`
 
 	// RotationStatements Specifies the database statements to be executed to rotate the password for the configured database user. Not every plugin type will support this functionality. See the plugin's API page for more information on support and formatting for this parameter.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	RotationStatements []string `json:"rotationStatements,omitempty"`
+	RotationStatements []string `json:"rotationStatements,omitempty" vault:"rotation_statements"`
 
 	// CredentialType Specifies the type of credential that will be generated for the role. Options include: password, rsa_private_key. See the plugin's API page for credential types supported by individual databases.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum={"password","rsa_private_key"}
-	CredentialType string `json:"credentialType,omitempty"`
+	CredentialType string `json:"credentialType,omitempty" vault:"credential_type"`
 
 	// PasswordCredentialConfig specifies the configuraiton when the password credential type is chosen.
 	// +kubebuilder:validation:Optional
@@ -106,7 +103,7 @@ type DBSEStaticRole struct {
 type PasswordCredentialConfig struct {
 	// PasswordPolicy The policy used for password generation. If not provided, defaults to the password policy of the database configuration
 	// +kubebuilder:validation:Optional
-	PasswordPolicy string `json:"passwordPolicy,omitempty"`
+	PasswordPolicy string `json:"passwordPolicy,omitempty" vault:"password_policy"`
 }
 
 func (i *PasswordCredentialConfig) toMap() map[string]string {
@@ -134,20 +131,7 @@ func (i *RSAPrivateKeyCredentialConfig) toMap() map[string]string {
 }
 
 func (i *DBSEStaticRole) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["db_name"] = i.DBName
-	payload["username"] = i.Username
-	if i.RotationPeriod != nil {
-		payload["rotation_period"] = *i.RotationPeriod
-	}
-	if i.RotationSchedule != "" {
-		payload["rotation_schedule"] = i.RotationSchedule
-	}
-	if i.RotationWindow != nil {
-		payload["rotation_window"] = *i.RotationWindow
-	}
-	payload["rotation_statements"] = i.RotationStatements
-	payload["credential_type"] = i.CredentialType
+	payload := vaultutils.StructToVaultPayload(i)
 	if i.PasswordCredentialConfig != nil {
 		payload["credential_config"] = i.PasswordCredentialConfig.toMap()
 	}
@@ -170,29 +154,10 @@ func (d *DatabaseSecretEngineStaticRole) IsDeletable() bool {
 }
 
 func (d *DatabaseSecretEngineStaticRole) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "static-roles" + "/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "static-roles" + "/" + d.Name)
+	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "static-roles" + "/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 func (d *DatabaseSecretEngineStaticRole) GetPayload() map[string]any {
 	return d.Spec.toMap()
-}
-func (d *DatabaseSecretEngineStaticRole) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.Spec.DBSEStaticRole.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (d *DatabaseSecretEngineStaticRole) IsInitialized() bool {
-	return true
-}
-
-func (d *DatabaseSecretEngineStaticRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *DatabaseSecretEngineStaticRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *DatabaseSecretEngineStaticRole) IsValid() (bool, error) {

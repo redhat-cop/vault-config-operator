@@ -97,10 +97,7 @@ func (d *RandomSecret) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *RandomSecret) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath(string(d.Spec.Path) + "/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + d.Name)
+	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 
 func (d *RandomSecret) IsDeletable() bool {
@@ -137,16 +134,8 @@ func (d *RandomSecret) IsEquivalentToDesiredState(payload map[string]any) bool {
 	return false
 }
 
-func (d *RandomSecret) IsInitialized() bool {
-	return true
-}
-
 func (d *RandomSecret) PrepareInternalValues(context context.Context, object client.Object) error {
 	return d.GenerateNewPassword(context)
-}
-
-func (d *RandomSecret) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 type VaultPasswordPolicy struct {

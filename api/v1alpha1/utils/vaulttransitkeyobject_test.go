@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -9,7 +8,6 @@ import (
 	"testing"
 
 	vault "github.com/hashicorp/vault/api"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // mockTransitKeyObject implements VaultTransitKeyObject for testing.
@@ -21,20 +19,14 @@ type mockTransitKeyObject struct {
 	equivalent    bool
 }
 
-func (m *mockTransitKeyObject) GetPath() string                                  { return m.path }
-func (m *mockTransitKeyObject) GetPayload() map[string]any                       { return m.payload }
-func (m *mockTransitKeyObject) GetConfigPath() string                            { return m.configPath }
-func (m *mockTransitKeyObject) GetConfigPayload() map[string]any                 { return m.configPayload }
-func (m *mockTransitKeyObject) IsEquivalentToDesiredState(_ map[string]any) bool { return m.equivalent }
-func (m *mockTransitKeyObject) IsInitialized() bool                              { return true }
-func (m *mockTransitKeyObject) IsValid() (bool, error)                           { return true, nil }
+func (m *mockTransitKeyObject) GetPath() string                  { return m.path }
+func (m *mockTransitKeyObject) GetPayload() map[string]any       { return m.payload }
+func (m *mockTransitKeyObject) GetConfigPath() string            { return m.configPath }
+func (m *mockTransitKeyObject) GetConfigPayload() map[string]any { return m.configPayload }
+func (m *mockTransitKeyObject) IsEquivalentToDesiredState(_ map[string]any) bool {
+	return m.equivalent
+}
 func (m *mockTransitKeyObject) IsDeletable() bool                                { return true }
-func (m *mockTransitKeyObject) PrepareInternalValues(_ context.Context, _ client.Object) error {
-	return nil
-}
-func (m *mockTransitKeyObject) PrepareTLSConfig(_ context.Context, _ client.Object) error {
-	return nil
-}
 func (m *mockTransitKeyObject) GetKubeAuthConfiguration() *KubeAuthConfiguration { return nil }
 func (m *mockTransitKeyObject) GetVaultConnection() *VaultConnection             { return nil }
 

@@ -17,12 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // IdentityTokenKeySpec defines the desired state of IdentityTokenKey
@@ -36,7 +32,7 @@ type IdentityTokenKeySpec struct {
 	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
-	IdentityTokenKeyConfig `json:",inline"`
+	IdentityTokenKeyConfig `json:",inline" vault:",inline"`
 
 	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
 	// +kubebuilder:validation:Optional
@@ -50,26 +46,26 @@ type IdentityTokenKeyConfig struct {
 	// Uses duration format strings.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:="24h"
-	RotationPeriod string `json:"rotationPeriod"`
+	RotationPeriod string `json:"rotationPeriod" vault:"rotation_period"`
 
 	// VerificationTTL controls how long the public portion of a signing key will be
 	// available for verification after being rotated. Uses duration format strings.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:="24h"
-	VerificationTTL string `json:"verificationTTL"`
+	VerificationTTL string `json:"verificationTTL" vault:"verification_ttl"`
 
 	// AllowedClientIDs is a list of role client IDs allowed to use this key for signing.
 	// If empty, no roles are allowed. If "*", all roles are allowed.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	AllowedClientIDs []string `json:"allowedClientIDs,omitempty"`
+	AllowedClientIDs []string `json:"allowedClientIDs,omitempty" vault:"allowed_client_ids"`
 
 	// Algorithm is the signing algorithm to use.
 	// Allowed values are: RS256 (default), RS384, RS512, ES256, ES384, ES512, EdDSA.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"RS256","RS384","RS512","ES256","ES384","ES512","EdDSA"}
 	// +kubebuilder:default:="RS256"
-	Algorithm string `json:"algorithm,omitempty"`
+	Algorithm string `json:"algorithm,omitempty" vault:"algorithm"`
 }
 
 // IdentityTokenKeyStatus defines the observed state of IdentityTokenKey
@@ -137,35 +133,9 @@ func (d *IdentityTokenKey) GetPayload() map[string]any {
 }
 
 func (i *IdentityTokenKeySpec) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["rotation_period"] = i.RotationPeriod
-	payload["verification_ttl"] = i.VerificationTTL
-	payload["allowed_client_ids"] = i.AllowedClientIDs
-	payload["algorithm"] = i.Algorithm
-	return payload
-}
-
-func (d *IdentityTokenKey) IsInitialized() bool {
-	return true
-}
-
-func (d *IdentityTokenKey) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *IdentityTokenKey) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *IdentityTokenKey) IsValid() (bool, error) {
-	return true, nil
+	return vaultutils.StructToVaultPayload(i)
 }
 
 func (d *IdentityTokenKey) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
-}
-
-func (d *IdentityTokenKey) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.Spec.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

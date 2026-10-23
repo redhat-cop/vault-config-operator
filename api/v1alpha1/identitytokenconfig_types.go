@@ -17,12 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // IdentityTokenConfigSpec defines the desired state of IdentityTokenConfig
@@ -36,7 +32,7 @@ type IdentityTokenConfigSpec struct {
 	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
-	IdentityTokenConfigConfig `json:",inline"`
+	IdentityTokenConfigConfig `json:",inline" vault:",inline"`
 }
 
 type IdentityTokenConfigConfig struct {
@@ -45,7 +41,7 @@ type IdentityTokenConfigConfig struct {
 	// If not set, Vault's api_addr will be used. The issuer is a case sensitive URL
 	// using the https scheme that contains scheme, host, and an optional port number.
 	// +kubebuilder:validation:Optional
-	Issuer string `json:"issuer,omitempty"`
+	Issuer string `json:"issuer,omitempty" vault:"issuer"`
 }
 
 // IdentityTokenConfigStatus defines the observed state of IdentityTokenConfig
@@ -110,32 +106,9 @@ func (d *IdentityTokenConfig) GetPayload() map[string]any {
 }
 
 func (i *IdentityTokenConfigSpec) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["issuer"] = i.Issuer
-	return payload
-}
-
-func (d *IdentityTokenConfig) IsInitialized() bool {
-	return true
-}
-
-func (d *IdentityTokenConfig) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *IdentityTokenConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *IdentityTokenConfig) IsValid() (bool, error) {
-	return true, nil
+	return vaultutils.StructToVaultPayload(i)
 }
 
 func (d *IdentityTokenConfig) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
-}
-
-func (d *IdentityTokenConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.Spec.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

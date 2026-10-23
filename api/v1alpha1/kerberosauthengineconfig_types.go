@@ -48,26 +48,26 @@ type KerberosAuthEngineConfigSpec struct {
 	// KeytabSecret references a Kubernetes Secret containing the base64-encoded keytab file.
 	// The Secret must contain a key (default: "keytab") with the base64 keytab content.
 	// +kubebuilder:validation:Required
-	KeytabSecret corev1.LocalObjectReference `json:"keytabSecret"`
+	KeytabSecret corev1.LocalObjectReference `json:"keytabSecret" vault:"-"`
 
 	// KeytabKey is the key within the KeytabSecret that contains the base64-encoded keytab.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="keytab"
-	KeytabKey string `json:"keytabKey"`
+	KeytabKey string `json:"keytabKey" vault:"-"`
 }
 
 type KerberosAuthConfig struct {
 	// ServiceAccount is the service account associated with both the keytab entry and an LDAP service account.
 	// +kubebuilder:validation:Required
-	ServiceAccount string `json:"serviceAccount"`
+	ServiceAccount string `json:"serviceAccount" vault:"service_account"`
 
 	// RemoveInstanceName strips instance names from a Kerberos service principal name when parsing the keytab.
 	// +kubebuilder:validation:Optional
-	RemoveInstanceName bool `json:"removeInstanceName,omitempty"`
+	RemoveInstanceName bool `json:"removeInstanceName,omitempty" vault:"remove_instance_name"`
 
 	// AddGroupAliases adds any LDAP groups found for the user as group aliases.
 	// +kubebuilder:validation:Optional
-	AddGroupAliases bool `json:"addGroupAliases,omitempty"`
+	AddGroupAliases bool `json:"addGroupAliases,omitempty" vault:"add_group_aliases"`
 
 	retrievedKeytab string `json:"-"`
 }
@@ -127,20 +127,8 @@ func (d *KerberosAuthEngineConfig) IsEquivalentToDesiredState(payload map[string
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (d *KerberosAuthEngineConfig) IsInitialized() bool {
-	return true
-}
-
 func (d *KerberosAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	return d.setKeytabFromSecret(context)
-}
-
-func (d *KerberosAuthEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *KerberosAuthEngineConfig) IsValid() (bool, error) {
-	return true, nil
 }
 
 func (r *KerberosAuthEngineConfig) GetConditions() []metav1.Condition {
@@ -183,11 +171,8 @@ func (d *KerberosAuthEngineConfig) setKeytabFromSecret(context context.Context) 
 }
 
 func (c *KerberosAuthConfig) toMap() map[string]any {
-	payload := map[string]any{}
+	payload := vaultutils.StructToVaultPayload(c)
 	payload["keytab"] = c.retrievedKeytab
-	payload["service_account"] = c.ServiceAccount
-	payload["remove_instance_name"] = c.RemoveInstanceName
-	payload["add_group_aliases"] = c.AddGroupAliases
 	return payload
 }
 

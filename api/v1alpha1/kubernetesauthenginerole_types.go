@@ -18,10 +18,7 @@ package v1alpha1
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"reflect"
-	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -54,7 +51,7 @@ type KubernetesAuthEngineRoleSpec struct {
 
 	// TargetNamespaces specifies how to retrieve the namespaces bound to this Vault role.
 	// +kubebuilder:validation:Optional
-	TargetNamespaces vaultutils.TargetNamespaceConfig `json:"targetNamespaces,omitempty"`
+	TargetNamespaces vaultutils.TargetNamespaceConfig `json:"targetNamespaces,omitempty" vault:"-"`
 
 	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
 	// +kubebuilder:validation:Optional
@@ -74,21 +71,10 @@ func (d *KubernetesAuthEngineRole) IsDeletable() bool {
 }
 
 func (d *KubernetesAuthEngineRole) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/role/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/role/" + d.Name)
+	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/role/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 func (d *KubernetesAuthEngineRole) GetPayload() map[string]any {
 	return d.Spec.VRole.toMap()
-}
-func (d *KubernetesAuthEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.Spec.VRole.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (d *KubernetesAuthEngineRole) IsInitialized() bool {
-	return true
 }
 
 func (d *KubernetesAuthEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
@@ -108,11 +94,6 @@ func (d *KubernetesAuthEngineRole) PrepareInternalValues(context context.Context
 	} else {
 		d.SetInternalNamespaces(d.Spec.TargetNamespaces.TargetNamespaces)
 	}
-	return nil
-}
-
-func (d *KubernetesAuthEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-
 	return nil
 }
 
@@ -150,64 +131,64 @@ type VRole struct {
 	// +kubebuilder:validation:MinItems=1
 	// kubebuilder:validation:UniqueItems=true
 	// +kubebuilder:default={"default"}
-	TargetServiceAccounts []string `json:"targetServiceAccounts"`
+	TargetServiceAccounts []string `json:"targetServiceAccounts" vault:"bound_service_account_names"`
 
 	// Audience Audience claim to verify in the JWT.
 	// +kubebuilder:validation:Optional
-	Audience *string `json:"audience,omitempty"`
+	Audience *string `json:"audience,omitempty" vault:"audience,omitempty"`
 
 	// AliasNameSource Configures how identity aliases are generated. Valid choices are: serviceaccount_uid, serviceaccount_name When serviceaccount_uid is specified, the machine generated UID from the service account will be used as the identity alias name. When serviceaccount_name is specified, the service account's namespace and name will be used as the identity alias name e.g vault/vault-auth. While it is strongly advised that you use serviceaccount_uid, you may also use serviceaccount_name in cases where you want to set the alias ahead of time, and the risks are mitigated or otherwise acceptable given your use case. It is very important to limit who is able to delete/create service accounts within a given cluster. See the Create an Entity Alias document which further expands on the potential security implications mentioned above.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"serviceaccount_uid", "serviceaccount_name"}
 	// +kubebuilder:default="serviceaccount_uid"
-	AliasNameSource string `json:"aliasNameSource,omitempty"`
+	AliasNameSource string `json:"aliasNameSource,omitempty" vault:"alias_name_source"`
 
 	// TokenTTL The incremental lifetime for generated tokens. This current value of this will be referenced at renewal time.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	TokenTTL int `json:"tokenTTL,omitempty"`
+	TokenTTL int `json:"tokenTTL,omitempty" vault:"token_ttl,number"`
 
 	// Policies is a list of policy names to be bound to this role.
 	// +kubebuilder:validation:MinItems=1
 	// kubebuilder:validation:UniqueItems=true
 	// +kubebuilder:validation:Required
-	Policies []string `json:"policies"`
+	Policies []string `json:"policies" vault:"token_policies"`
 
 	// TokenMaxTTL The maximum lifetime for generated tokens. This current value of this will be referenced at renewal time.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	TokenMaxTTL int `json:"tokenMaxTTL,omitempty"`
+	TokenMaxTTL int `json:"tokenMaxTTL,omitempty" vault:"token_max_ttl,number"`
 
 	// TokenBoundCIDRs List of CIDR blocks; if set, specifies blocks of IP addresses which can authenticate successfully, and ties the resulting token to these blocks as well.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty"`
+	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty" vault:"token_bound_cidrs"`
 
 	// TokenExplicitMaxTTL If set, will encode an explicit max TTL onto the token. This is a hard cap even if token_ttl and token_max_ttl would otherwise allow a renewal.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	TokenExplicitMaxTTL int `json:"tokenExplicitMaxTTL,omitempty"`
+	TokenExplicitMaxTTL int `json:"tokenExplicitMaxTTL,omitempty" vault:"token_explicit_max_ttl,number"`
 
 	// TokenNoDefaultPolicy If set, the default policy will not be set on generated tokens; otherwise it will be added to the policies set in token_policies
 	// +kubebuilder:validation:Optional
-	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty"`
+	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty" vault:"token_no_default_policy"`
 
 	// TokenNumUses The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited. If you require the token to have the ability to create child tokens, you will need to set this value to 0.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	TokenNumUses int `json:"tokenNumUses,omitempty"`
+	TokenNumUses int `json:"tokenNumUses,omitempty" vault:"token_num_uses"`
 
 	// TokenPeriod The period, if any, to set on the token.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	TokenPeriod int `json:"tokenPeriod,omitempty"`
+	TokenPeriod int `json:"tokenPeriod,omitempty" vault:"token_period,number"`
 
 	// TokenType The type of token that should be generated. Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens). For token store roles, there are two additional possibilities: default-service and default-batch which specify the type to return unless the client requests a different type at generation time.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"service","batch","default","default-service","default-batch"}
 	// +kubebuilder:default="default"
-	TokenType string `json:"tokenType,omitempty"`
+	TokenType string `json:"tokenType,omitempty" vault:"token_type"`
 
 	// this field is for internal use and will not be serialized
 	namespaces []string `json:"-"`
@@ -261,22 +242,8 @@ func init() {
 }
 
 func (i *VRole) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["bound_service_account_names"] = i.TargetServiceAccounts
-	payload["bound_service_account_namespaces"] = i.namespaces
-	payload["alias_name_source"] = i.AliasNameSource
-	if i.Audience != nil {
-		payload["audience"] = i.Audience
-	}
-	payload["token_ttl"] = json.Number(strconv.Itoa(i.TokenTTL))
-	payload["token_max_ttl"] = json.Number(strconv.Itoa(i.TokenMaxTTL))
-	payload["token_policies"] = i.Policies
-	payload["token_bound_cidrs"] = i.TokenBoundCIDRs
-	payload["token_explicit_max_ttl"] = json.Number(strconv.Itoa(i.TokenExplicitMaxTTL))
-	payload["token_no_default_policy"] = i.TokenNoDefaultPolicy
-	payload["token_num_uses"] = i.TokenNumUses
-	payload["token_period"] = json.Number(strconv.Itoa(i.TokenPeriod))
-	payload["token_type"] = i.TokenType
+	payload := vaultutils.StructToVaultPayload(i)
+	payload["bound_service_account_namespaces"] = vaultutils.ToInterfaceArray(i.namespaces)
 	return payload
 }
 

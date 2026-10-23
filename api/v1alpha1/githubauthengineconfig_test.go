@@ -3,6 +3,8 @@ package v1alpha1
 import (
 	"encoding/json"
 	"testing"
+
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 )
 
 func TestGitHubAuthEngineConfig_toMap_AllFields(t *testing.T) {
@@ -138,7 +140,7 @@ func TestGitHubAuthEngineConfig_IsEquivalentToDesiredState_Match(t *testing.T) {
 		"token_policies":  []any{"default", "dev-policy"},
 	}
 
-	if !instance.IsEquivalentToDesiredState(vaultPayload) {
+	if !vaultutils.IsEquivalentToDesiredState(instance, vaultPayload) {
 		t.Error("expected IsEquivalentToDesiredState to return true for matching payload")
 	}
 }
@@ -155,7 +157,7 @@ func TestGitHubAuthEngineConfig_IsEquivalentToDesiredState_Mismatch(t *testing.T
 		"token_ttl":    json.Number("3600"),
 	}
 
-	if instance.IsEquivalentToDesiredState(vaultPayload) {
+	if vaultutils.IsEquivalentToDesiredState(instance, vaultPayload) {
 		t.Error("expected IsEquivalentToDesiredState to return false for mismatched organization")
 	}
 }
@@ -176,7 +178,7 @@ func TestGitHubAuthEngineConfig_IsEquivalentToDesiredState_ExtraVaultFields(t *t
 		"lease_duration":  json.Number("0"),
 	}
 
-	if !instance.IsEquivalentToDesiredState(vaultPayload) {
+	if !vaultutils.IsEquivalentToDesiredState(instance, vaultPayload) {
 		t.Error("expected IsEquivalentToDesiredState to return true when Vault returns extra fields not in desired state")
 	}
 }

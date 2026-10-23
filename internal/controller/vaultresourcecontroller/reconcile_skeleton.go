@@ -58,6 +58,7 @@ func ReconcileWithFunctions(ctx context.Context, reconcilerBase *ReconcilerBase,
 	log.Info("starting reconcile cycle")
 	log.V(1).Info("reconcile", "instance", instance)
 	if !instance.GetDeletionTimestamp().IsZero() {
+		log.V(6).Info("reconcile entering deletion path", "instance", instance.GetName())
 		if !controllerutil.ContainsFinalizer(instance, vaultutils.GetFinalizer(instance)) {
 			return reconcile.Result{}, nil
 		}
@@ -74,6 +75,7 @@ func ReconcileWithFunctions(ctx context.Context, reconcilerBase *ReconcilerBase,
 		}
 		return reconcile.Result{}, nil
 	}
+	log.V(6).Info("reconcile entering reconcile path", "instance", instance.GetName())
 	err := reconcileFn(ctx, instance)
 	if err != nil {
 		log.Error(err, "unable to complete reconcile logic", "instance", instance)

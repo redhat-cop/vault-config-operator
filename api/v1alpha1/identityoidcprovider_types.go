@@ -17,12 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // IdentityOIDCProviderSpec defines the desired state of IdentityOIDCProvider
@@ -36,7 +32,7 @@ type IdentityOIDCProviderSpec struct {
 	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
-	IdentityOIDCProviderConfig `json:",inline"`
+	IdentityOIDCProviderConfig `json:",inline" vault:",inline"`
 
 	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
 	// +kubebuilder:validation:Optional
@@ -51,18 +47,18 @@ type IdentityOIDCProviderConfig struct {
 	// /v1/:namespace/identity/oidc/provider/:name as the path component.
 	// If provided explicitly, it must point to a Vault instance that is network reachable by clients for ID token validation.
 	// +kubebuilder:validation:Optional
-	Issuer string `json:"issuer,omitempty"`
+	Issuer string `json:"issuer,omitempty" vault:"issuer,omitempty"`
 
 	// AllowedClientIDs is the list of client IDs that are permitted to use the provider.
 	// If empty, no clients are allowed. If "*" is provided, all clients are allowed.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	AllowedClientIDs []string `json:"allowedClientIDs,omitempty"`
+	AllowedClientIDs []string `json:"allowedClientIDs,omitempty" vault:"allowed_client_ids"`
 
 	// ScopesSupported is the list of scopes available for requesting on the provider.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	ScopesSupported []string `json:"scopesSupported,omitempty"`
+	ScopesSupported []string `json:"scopesSupported,omitempty" vault:"scopes_supported"`
 }
 
 // IdentityOIDCProviderStatus defines the observed state of IdentityOIDCProvider
@@ -130,36 +126,9 @@ func (d *IdentityOIDCProvider) GetPayload() map[string]any {
 }
 
 func (i *IdentityOIDCProviderSpec) toMap() map[string]any {
-	payload := map[string]any{}
-	if i.Issuer != "" {
-		payload["issuer"] = i.Issuer
-	}
-	payload["allowed_client_ids"] = i.AllowedClientIDs
-	payload["scopes_supported"] = i.ScopesSupported
-	return payload
-}
-
-func (d *IdentityOIDCProvider) IsInitialized() bool {
-	return true
-}
-
-func (d *IdentityOIDCProvider) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *IdentityOIDCProvider) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *IdentityOIDCProvider) IsValid() (bool, error) {
-	return true, nil
+	return vaultutils.StructToVaultPayload(i)
 }
 
 func (d *IdentityOIDCProvider) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
-}
-
-func (d *IdentityOIDCProvider) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.Spec.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

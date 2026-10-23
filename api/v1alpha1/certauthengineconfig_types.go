@@ -17,13 +17,9 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	"github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // CertAuthEngineConfigSpec defines the desired state of CertAuthEngineConfig
@@ -83,33 +79,27 @@ type CertAuthEngineConfigList struct {
 type CertAuthEngineConfigInternal struct {
 	// If set, during renewal, skips the matching of presented client identity with the client identity used during login.
 	// +kubebuilder:validation:Optional
-	DisableBinding bool `json:"disableBinding,omitempty"`
+	DisableBinding bool `json:"disableBinding,omitempty" vault:"disable_binding"`
 
 	// If set, metadata of the certificate including the metadata corresponding to allowedMetadataExtensions will be stored in the alias.
 	// +kubebuilder:validation:Optional
-	EnableIdentityAliasMetadata bool `json:"enableIdentityAliasMetadata,omitempty"`
+	EnableIdentityAliasMetadata bool `json:"enableIdentityAliasMetadata,omitempty" vault:"enable_identity_alias_metadata"`
 
 	// The size of the OCSP response LRU cache. Note that this cache is used for all configured certificates.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=100
 	// +kubebuilder:validation:Minimum=0
-	OCSPCacheSize int `json:"ocspCacheSize"`
+	OCSPCacheSize int `json:"ocspCacheSize" vault:"ocsp_cache_size"`
 
 	// The size of the role cache. Use -1 to disable role caching.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=200
 	// +kubebuilder:validation:Minimum=-1
-	RoleCacheSize int `json:"roleCacheSize"`
+	RoleCacheSize int `json:"roleCacheSize" vault:"role_cache_size"`
 }
 
 func (c *CertAuthEngineConfigInternal) toMap() map[string]any {
-	payload := make(map[string]any)
-	payload["disable_binding"] = c.DisableBinding
-	payload["enable_identity_alias_metadata"] = c.EnableIdentityAliasMetadata
-	payload["ocsp_cache_size"] = c.OCSPCacheSize
-	payload["role_cache_size"] = c.RoleCacheSize
-
-	return payload
+	return vaultutils.StructToVaultPayload(c)
 }
 
 var _ vaultutils.VaultObject = &CertAuthEngineConfig{}
@@ -127,31 +117,8 @@ func (r *CertAuthEngineConfig) GetPayload() map[string]any {
 	return r.Spec.CertAuthEngineConfigInternal.toMap()
 }
 
-// IsEquivalentToDesiredState returns wether the passed payload is equivalent to the payload that the current object would generate. When this is a engine object the tune payload will be compared
-func (r *CertAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := r.Spec.CertAuthEngineConfigInternal.toMap()
-
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (r *CertAuthEngineConfig) IsInitialized() bool {
-	return true
-}
-
-func (r *CertAuthEngineConfig) IsValid() (bool, error) {
-	return true, nil
-}
-
 func (r *CertAuthEngineConfig) IsDeletable() bool {
 	return true
-}
-
-func (r *CertAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *CertAuthEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *CertAuthEngineConfig) GetKubeAuthConfiguration() *utils.KubeAuthConfiguration {

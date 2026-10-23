@@ -1,4 +1,4 @@
-apiVersion: v1
+apiVersion: v2
 name: vault-config-operator
 version: ${version}
 appVersion: ${version}
@@ -11,4 +11,3 @@ keywords:
   - monitoring
 sources:
   - https://github.com/redhat-cop/vault-config-operator
-engine: gotpl

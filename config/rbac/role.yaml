@@ -66,6 +66,7 @@ rules:
   - cfauthengineroles
   - consulsecretengineconfigs
   - consulsecretengineroles
+  - corsconfigs
   - databasesecretengineconfigs
   - databasesecretengineroles
   - databasesecretenginestaticroles
@@ -95,6 +96,7 @@ rules:
   - kerberosauthengineconfigs
   - kerberosauthenginegroups
   - kerberosauthengineldapconfigs
+  - keyrotationconfigs
   - kubernetesauthengineconfigs
   - kubernetesauthengineroles
   - kubernetessecretengineconfigs
@@ -104,6 +106,8 @@ rules:
   - ldapsecretengineconfigs
   - ldapsecretenginedynamicroles
   - ldapsecretenginestaticroles
+  - leasecountquotas
+  - loggerconfigs
   - mongodbatlassecretengineconfigs
   - mongodbatlassecretengineroles
   - namespaces
@@ -120,11 +124,14 @@ rules:
   - quaysecretengineconfigs
   - quaysecretengineroles
   - quaysecretenginestaticroles
+  - quotaconfigs
   - rabbitmqsecretengineconfigs
   - rabbitmqsecretengineroles
   - radiusauthengineconfigs
   - radiusauthengineusers
   - randomsecrets
+  - ratelimitquotas
+  - rotationpolicies
   - secretenginemounts
   - sshsecretengineconfigs
   - sshsecretengineroles
@@ -132,6 +139,7 @@ rules:
   - terraformcloudsecretengineroles
   - totpsecretenginekeys
   - transitsecretenginekeys
+  - uicustomheaders
   - userpassauthengineusers
   - vaultsecrets
   verbs:
@@ -165,6 +173,7 @@ rules:
   - cfauthengineroles/finalizers
   - consulsecretengineconfigs/finalizers
   - consulsecretengineroles/finalizers
+  - corsconfigs/finalizers
   - databasesecretengineconfigs/finalizers
   - databasesecretengineroles/finalizers
   - databasesecretenginestaticroles/finalizers
@@ -194,6 +203,7 @@ rules:
   - kerberosauthengineconfigs/finalizers
   - kerberosauthenginegroups/finalizers
   - kerberosauthengineldapconfigs/finalizers
+  - keyrotationconfigs/finalizers
   - kubernetesauthengineconfigs/finalizers
   - kubernetesauthengineroles/finalizers
   - kubernetessecretengineconfigs/finalizers
@@ -203,6 +213,8 @@ rules:
   - ldapsecretengineconfigs/finalizers
   - ldapsecretenginedynamicroles/finalizers
   - ldapsecretenginestaticroles/finalizers
+  - leasecountquotas/finalizers
+  - loggerconfigs/finalizers
   - mongodbatlassecretengineconfigs/finalizers
   - mongodbatlassecretengineroles/finalizers
   - namespaces/finalizers
@@ -219,10 +231,13 @@ rules:
   - quaysecretengineconfigs/finalizers
   - quaysecretengineroles/finalizers
   - quaysecretenginestaticroles/finalizers
+  - quotaconfigs/finalizers
   - rabbitmqsecretengineroles/finalizers
   - radiusauthengineconfigs/finalizers
   - radiusauthengineusers/finalizers
   - randomsecrets/finalizers
+  - ratelimitquotas/finalizers
+  - rotationpolicies/finalizers
   - secretenginemounts/finalizers
   - sshsecretengineconfigs/finalizers
   - sshsecretengineroles/finalizers
@@ -230,6 +245,7 @@ rules:
   - terraformcloudsecretengineroles/finalizers
   - totpsecretenginekeys/finalizers
   - transitsecretenginekeys/finalizers
+  - uicustomheaders/finalizers
   - userpassauthengineusers/finalizers
   - vaultsecrets/finalizers
   verbs:
@@ -257,6 +273,7 @@ rules:
   - cfauthengineroles/status
   - consulsecretengineconfigs/status
   - consulsecretengineroles/status
+  - corsconfigs/status
   - databasesecretengineconfigs/status
   - databasesecretengineroles/status
   - databasesecretenginestaticroles/status
@@ -286,6 +303,7 @@ rules:
   - kerberosauthengineconfigs/status
   - kerberosauthenginegroups/status
   - kerberosauthengineldapconfigs/status
+  - keyrotationconfigs/status
   - kubernetesauthengineconfigs/status
   - kubernetesauthengineroles/status
   - kubernetessecretengineconfigs/status
@@ -295,6 +313,8 @@ rules:
   - ldapsecretengineconfigs/status
   - ldapsecretenginedynamicroles/status
   - ldapsecretenginestaticroles/status
+  - leasecountquotas/status
+  - loggerconfigs/status
   - mongodbatlassecretengineconfigs/status
   - mongodbatlassecretengineroles/status
   - namespaces/status
@@ -311,11 +331,14 @@ rules:
   - quaysecretengineconfigs/status
   - quaysecretengineroles/status
   - quaysecretenginestaticroles/status
+  - quotaconfigs/status
   - rabbitmqsecretengineconfigs/status
   - rabbitmqsecretengineroles/status
   - radiusauthengineconfigs/status
   - radiusauthengineusers/status
   - randomsecrets/status
+  - ratelimitquotas/status
+  - rotationpolicies/status
   - secretenginemounts/status
   - sshsecretengineconfigs/status
   - sshsecretengineroles/status
@@ -323,6 +346,7 @@ rules:
   - terraformcloudsecretengineroles/status
   - totpsecretenginekeys/status
   - transitsecretenginekeys/status
+  - uicustomheaders/status
   - userpassauthengineusers/status
   - vaultsecrets/status
   verbs:

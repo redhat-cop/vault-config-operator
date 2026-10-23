@@ -17,13 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
 	"errors"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // TerraformCloudSecretEngineRoleSpec defines the desired state of TerraformCloudSecretEngineRole
@@ -52,32 +50,32 @@ type TerraformCloudSecretEngineRoleSpec struct {
 type TFCSERole struct {
 	// Organization is the name of the Terraform Cloud organization. Conflicts with UserID.
 	// +kubebuilder:validation:Optional
-	Organization string `json:"organization,omitempty"`
+	Organization string `json:"organization,omitempty" vault:"organization,omitempty"`
 
 	// TeamID is the Terraform Cloud team ID. Conflicts with UserID.
 	// +kubebuilder:validation:Optional
-	TeamID string `json:"teamID,omitempty"`
+	TeamID string `json:"teamID,omitempty" vault:"team_id,omitempty"`
 
 	// UserID is the Terraform Cloud user ID. Conflicts with Organization and TeamID.
 	// +kubebuilder:validation:Optional
-	UserID string `json:"userID,omitempty"`
+	UserID string `json:"userID,omitempty" vault:"user_id,omitempty"`
 
 	// CredentialType specifies the type of credential to generate.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"team","team_legacy","user","organization"}
-	CredentialType string `json:"credentialType,omitempty"`
+	CredentialType string `json:"credentialType,omitempty" vault:"credential_type,omitempty"`
 
 	// Description is a human-readable description used as a prefix in HCP Terraform UI. Applies to User and Team tokens.
 	// +kubebuilder:validation:Optional
-	Description string `json:"description,omitempty"`
+	Description string `json:"description,omitempty" vault:"description,omitempty"`
 
 	// TTL specifies the TTL for generated tokens (duration format, e.g. "1h")
 	// +kubebuilder:validation:Optional
-	TTL string `json:"ttl,omitempty"`
+	TTL string `json:"ttl,omitempty" vault:"ttl,duration,omitempty"`
 
 	// MaxTTL specifies the maximum TTL for generated tokens (duration format, e.g. "24h")
 	// +kubebuilder:validation:Optional
-	MaxTTL string `json:"maxTTL,omitempty"`
+	MaxTTL string `json:"maxTTL,omitempty" vault:"max_ttl,duration,omitempty"`
 }
 
 var _ vaultutils.VaultObject = &TerraformCloudSecretEngineRole{}
@@ -106,10 +104,6 @@ func (d *TerraformCloudSecretEngineRole) IsEquivalentToDesiredState(payload map[
 	desiredState := d.Spec.TFCSERole.toMap()
 	removeUnsetFields(desiredState, payload)
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (d *TerraformCloudSecretEngineRole) IsInitialized() bool {
-	return true
 }
 
 func (d *TerraformCloudSecretEngineRole) IsValid() (bool, error) {
@@ -165,38 +159,8 @@ func (d *TerraformCloudSecretEngineRole) GetKubeAuthConfiguration() *vaultutils.
 	return &d.Spec.Authentication
 }
 
-func (d *TerraformCloudSecretEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *TerraformCloudSecretEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
 func (d *TFCSERole) toMap() map[string]any {
-	payload := map[string]any{}
-	if d.Organization != "" {
-		payload["organization"] = d.Organization
-	}
-	if d.TeamID != "" {
-		payload["team_id"] = d.TeamID
-	}
-	if d.UserID != "" {
-		payload["user_id"] = d.UserID
-	}
-	if d.CredentialType != "" {
-		payload["credential_type"] = d.CredentialType
-	}
-	if d.Description != "" {
-		payload["description"] = d.Description
-	}
-	if d.TTL != "" {
-		payload["ttl"] = durationToSeconds(d.TTL)
-	}
-	if d.MaxTTL != "" {
-		payload["max_ttl"] = durationToSeconds(d.MaxTTL)
-	}
-	return payload
+	return vaultutils.StructToVaultPayload(d)
 }
 
 // TerraformCloudSecretEngineRoleStatus defines the observed state of TerraformCloudSecretEngineRole

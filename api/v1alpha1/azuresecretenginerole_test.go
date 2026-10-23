@@ -127,7 +127,7 @@ func TestAzureSecretEngineRoleIsEquivalentMatching(t *testing.T) {
 
 	payload := role.Spec.AzureSERole.toMap()
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected matching payload to be equivalent")
 	}
 }
@@ -147,7 +147,7 @@ func TestAzureSecretEngineRoleIsEquivalentNonMatching(t *testing.T) {
 	payload := role.Spec.AzureSERole.toMap()
 	payload["ttl"] = "2h"
 
-	if role.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected non-matching payload (different ttl) to NOT be equivalent")
 	}
 }
@@ -167,7 +167,7 @@ func TestAzureSecretEngineRoleIsEquivalentExtraFields(t *testing.T) {
 	payload := role.Spec.AzureSERole.toMap()
 	payload["extra_vault_field"] = "some-value"
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }

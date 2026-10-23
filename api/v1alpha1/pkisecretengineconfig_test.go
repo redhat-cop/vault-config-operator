@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -75,9 +76,9 @@ func TestPKICommonToMap(t *testing.T) {
 	if result["exclude_cn_from_sans"] != true {
 		t.Errorf("exclude_cn_from_sans = %v, want true", result["exclude_cn_from_sans"])
 	}
-	domains, ok := result["permitted_dns_domains"].([]string)
+	domains, ok := result["permitted_dns_domains"].([]any)
 	if !ok || len(domains) != 2 {
-		t.Errorf("permitted_dns_domains = %v, want []string of len 2", result["permitted_dns_domains"])
+		t.Errorf("permitted_dns_domains = %v, want []any of len 2", result["permitted_dns_domains"])
 	}
 }
 
@@ -96,7 +97,7 @@ func TestPKIConfigUrlsToMap(t *testing.T) {
 			t.Errorf("expected key %q", key)
 		}
 	}
-	issuing, ok := result["issuing_certificates"].([]string)
+	issuing, ok := result["issuing_certificates"].([]any)
 	if !ok || len(issuing) != 1 {
 		t.Errorf("issuing_certificates = %v", result["issuing_certificates"])
 	}
@@ -130,7 +131,7 @@ func TestPKISecretEngineConfigIsEquivalentMatching(t *testing.T) {
 		},
 	}
 	payload := config.Spec.PKICommon.toMap()
-	if !config.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected true for matching PKICommon map")
 	}
 }
@@ -146,7 +147,7 @@ func TestPKISecretEngineConfigIsEquivalentNonMatching(t *testing.T) {
 	}
 	payload := config.Spec.PKICommon.toMap()
 	payload["common_name"] = "other-ca"
-	if config.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected false when common_name differs")
 	}
 }
@@ -161,7 +162,7 @@ func TestPKISecretEngineConfigIsEquivalentExtraFields(t *testing.T) {
 	}
 	payload := config.Spec.PKICommon.toMap()
 	payload["extra_from_vault"] = "x"
-	if !config.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
@@ -216,11 +217,11 @@ func TestPKIConfigACMEToMap(t *testing.T) {
 	if result["enabled"] != true {
 		t.Errorf("enabled = %v, want true", result["enabled"])
 	}
-	issuers, ok := result["allowed_issuers"].([]string)
+	issuers, ok := result["allowed_issuers"].([]any)
 	if !ok || len(issuers) != 1 || issuers[0] != "default" {
 		t.Errorf("allowed_issuers = %v, want [default]", result["allowed_issuers"])
 	}
-	roles, ok := result["allowed_roles"].([]string)
+	roles, ok := result["allowed_roles"].([]any)
 	if !ok || len(roles) != 1 || roles[0] != "web-server" {
 		t.Errorf("allowed_roles = %v, want [web-server]", result["allowed_roles"])
 	}

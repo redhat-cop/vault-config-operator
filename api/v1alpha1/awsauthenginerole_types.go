@@ -17,14 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"encoding/json"
 	"reflect"
-	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // AWSAuthEngineRoleSpec defines the desired state of AWSAuthEngineRole
@@ -49,129 +45,129 @@ type AWSAuthEngineRoleSpec struct {
 type AWSAuthRole struct {
 	// Name of the role.
 	// +kubebuilder:validation:Required
-	Name string `json:"name"`
+	Name string `json:"name" vault:"-"`
 
 	// AuthType specifies the auth type for this role (iam or ec2).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="iam"
 	// +kubebuilder:validation:Enum={"iam","ec2"}
-	AuthType string `json:"authType,omitempty"`
+	AuthType string `json:"authType,omitempty" vault:"auth_type"`
 
 	// BoundAmiID constrains EC2 instances to specific AMI IDs.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	BoundAmiID []string `json:"boundAmiID,omitempty"`
+	BoundAmiID []string `json:"boundAmiID,omitempty" vault:"bound_ami_id"`
 
 	// BoundAccountID constrains EC2 instances to specific account IDs.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	BoundAccountID []string `json:"boundAccountID,omitempty"`
+	BoundAccountID []string `json:"boundAccountID,omitempty" vault:"bound_account_id"`
 
 	// BoundRegion constrains EC2 instances to specific regions.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	BoundRegion []string `json:"boundRegion,omitempty"`
+	BoundRegion []string `json:"boundRegion,omitempty" vault:"bound_region"`
 
 	// BoundVpcID constrains EC2 instances to specific VPC IDs.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	BoundVpcID []string `json:"boundVpcID,omitempty"`
+	BoundVpcID []string `json:"boundVpcID,omitempty" vault:"bound_vpc_id"`
 
 	// BoundSubnetID constrains EC2 instances to specific subnet IDs.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	BoundSubnetID []string `json:"boundSubnetID,omitempty"`
+	BoundSubnetID []string `json:"boundSubnetID,omitempty" vault:"bound_subnet_id"`
 
 	// BoundIAMRoleARN constrains EC2 instances to specific IAM role ARNs.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	BoundIAMRoleARN []string `json:"boundIAMRoleARN,omitempty"`
+	BoundIAMRoleARN []string `json:"boundIAMRoleARN,omitempty" vault:"bound_iam_role_arn"`
 
 	// BoundIAMInstanceProfileARN constrains EC2 instances to specific instance profile ARNs.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	BoundIAMInstanceProfileARN []string `json:"boundIAMInstanceProfileARN,omitempty"`
+	BoundIAMInstanceProfileARN []string `json:"boundIAMInstanceProfileARN,omitempty" vault:"bound_iam_instance_profile_arn"`
 
 	// BoundEC2InstanceID constrains to specific EC2 instance IDs.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	BoundEC2InstanceID []string `json:"boundEC2InstanceID,omitempty"`
+	BoundEC2InstanceID []string `json:"boundEC2InstanceID,omitempty" vault:"bound_ec2_instance_id"`
 
 	// RoleTag enables role tags for EC2 auth. Value is the tag key on the instance.
 	// +kubebuilder:validation:Optional
-	RoleTag string `json:"roleTag,omitempty"`
+	RoleTag string `json:"roleTag,omitempty" vault:"role_tag"`
 
 	// BoundIAMPrincipalARN constrains IAM auth to specific principal ARNs. Wildcards supported.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	BoundIAMPrincipalARN []string `json:"boundIAMPrincipalARN,omitempty"`
+	BoundIAMPrincipalARN []string `json:"boundIAMPrincipalARN,omitempty" vault:"bound_iam_principal_arn"`
 
 	// InferredEntityType enables IAM role inferencing. Only valid value: "ec2_instance".
 	// +kubebuilder:validation:Optional
-	InferredEntityType string `json:"inferredEntityType,omitempty"`
+	InferredEntityType string `json:"inferredEntityType,omitempty" vault:"inferred_entity_type"`
 
 	// InferredAWSRegion is the region to search for inferred entities. Required with inferredEntityType.
 	// +kubebuilder:validation:Optional
-	InferredAWSRegion string `json:"inferredAWSRegion,omitempty"`
+	InferredAWSRegion string `json:"inferredAWSRegion,omitempty" vault:"inferred_aws_region"`
 
 	// ResolveAWSUniqueIDs resolves bound_iam_principal_arn to AWS unique IDs.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=true
-	ResolveAWSUniqueIDs bool `json:"resolveAWSUniqueIDs"`
+	ResolveAWSUniqueIDs bool `json:"resolveAWSUniqueIDs" vault:"resolve_aws_unique_ids,when=AuthType:iam"`
 
 	// AllowInstanceMigration allows migration of the underlying EC2 instance. EC2 auth only.
 	// +kubebuilder:validation:Optional
-	AllowInstanceMigration bool `json:"allowInstanceMigration,omitempty"`
+	AllowInstanceMigration bool `json:"allowInstanceMigration,omitempty" vault:"allow_instance_migration"`
 
 	// DisallowReauthentication if true, only allows a single token per instance ID. EC2 auth only.
 	// +kubebuilder:validation:Optional
-	DisallowReauthentication bool `json:"disallowReauthentication,omitempty"`
+	DisallowReauthentication bool `json:"disallowReauthentication,omitempty" vault:"disallow_reauthentication"`
 
 	// TokenTTL is the incremental lifetime for generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenTTL string `json:"tokenTTL,omitempty"`
+	TokenTTL string `json:"tokenTTL,omitempty" vault:"token_ttl,duration"`
 
 	// TokenMaxTTL is the maximum lifetime for generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenMaxTTL string `json:"tokenMaxTTL,omitempty"`
+	TokenMaxTTL string `json:"tokenMaxTTL,omitempty" vault:"token_max_ttl,duration"`
 
 	// TokenPolicies are policies to encode onto generated tokens.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	TokenPolicies []string `json:"tokenPolicies,omitempty"`
+	TokenPolicies []string `json:"tokenPolicies,omitempty" vault:"token_policies"`
 
 	// Policies is deprecated — use tokenPolicies instead.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	Policies []string `json:"policies,omitempty"`
+	Policies []string `json:"policies,omitempty" vault:"policies"`
 
 	// TokenBoundCIDRs are CIDR blocks that restrict authentication and tie the token.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty"`
+	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty" vault:"token_bound_cidrs"`
 
 	// TokenExplicitMaxTTL is the hard cap max TTL for tokens.
 	// +kubebuilder:validation:Optional
-	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty"`
+	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty" vault:"token_explicit_max_ttl,duration"`
 
 	// TokenNoDefaultPolicy if true, omits the default policy from generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty"`
+	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty" vault:"token_no_default_policy"`
 
 	// TokenNumUses is the max number of times a token may be used (0 = unlimited).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	TokenNumUses int64 `json:"tokenNumUses,omitempty"`
+	TokenNumUses int64 `json:"tokenNumUses,omitempty" vault:"token_num_uses,number"`
 
 	// TokenPeriod is the maximum allowed period for periodic tokens.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	TokenPeriod int64 `json:"tokenPeriod,omitempty"`
+	TokenPeriod int64 `json:"tokenPeriod,omitempty" vault:"token_period,number"`
 
 	// TokenType is the type of token to generate (service, batch, default).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum={"service","batch","default","default-service","default-batch"}
-	TokenType string `json:"tokenType,omitempty"`
+	TokenType string `json:"tokenType,omitempty" vault:"token_type"`
 }
 
 // AWSAuthEngineRoleStatus defines the observed state of AWSAuthEngineRole
@@ -253,51 +249,6 @@ func (r *AWSAuthEngineRole) IsEquivalentToDesiredState(payload map[string]any) b
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (r *AWSAuthEngineRole) IsInitialized() bool {
-	return true
-}
-
-func (r *AWSAuthEngineRole) IsValid() (bool, error) {
-	return true, nil
-}
-
-func (d *AWSAuthEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *AWSAuthEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
 func (r *AWSAuthRole) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["auth_type"] = r.AuthType
-	payload["bound_ami_id"] = toInterfaceArray(r.BoundAmiID)
-	payload["bound_account_id"] = toInterfaceArray(r.BoundAccountID)
-	payload["bound_region"] = toInterfaceArray(r.BoundRegion)
-	payload["bound_vpc_id"] = toInterfaceArray(r.BoundVpcID)
-	payload["bound_subnet_id"] = toInterfaceArray(r.BoundSubnetID)
-	payload["bound_iam_role_arn"] = toInterfaceArray(r.BoundIAMRoleARN)
-	payload["bound_iam_instance_profile_arn"] = toInterfaceArray(r.BoundIAMInstanceProfileARN)
-	payload["bound_ec2_instance_id"] = toInterfaceArray(r.BoundEC2InstanceID)
-	payload["role_tag"] = r.RoleTag
-	payload["bound_iam_principal_arn"] = toInterfaceArray(r.BoundIAMPrincipalARN)
-	payload["inferred_entity_type"] = r.InferredEntityType
-	payload["inferred_aws_region"] = r.InferredAWSRegion
-	if r.AuthType != "ec2" {
-		payload["resolve_aws_unique_ids"] = r.ResolveAWSUniqueIDs
-	}
-	payload["allow_instance_migration"] = r.AllowInstanceMigration
-	payload["disallow_reauthentication"] = r.DisallowReauthentication
-	payload["token_ttl"] = durationToSeconds(r.TokenTTL)
-	payload["token_max_ttl"] = durationToSeconds(r.TokenMaxTTL)
-	payload["token_policies"] = toInterfaceArray(r.TokenPolicies)
-	payload["policies"] = toInterfaceArray(r.Policies)
-	payload["token_bound_cidrs"] = toInterfaceArray(r.TokenBoundCIDRs)
-	payload["token_explicit_max_ttl"] = durationToSeconds(r.TokenExplicitMaxTTL)
-	payload["token_no_default_policy"] = r.TokenNoDefaultPolicy
-	payload["token_num_uses"] = json.Number(strconv.FormatInt(r.TokenNumUses, 10))
-	payload["token_period"] = json.Number(strconv.FormatInt(r.TokenPeriod, 10))
-	payload["token_type"] = r.TokenType
-	return payload
+	return vaultutils.StructToVaultPayload(r)
 }

@@ -152,6 +152,17 @@ See the [secret engines index](./docs/secret-engines/index.md) for the full list
 1. [RandomSecret](./docs/secret-management.md#randomsecret) Creates a random secret in a vault [kv Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/kv) with one password field generated using a [PasswordPolicy](https://developer.hashicorp.com/vault/docs/concepts/password-policies)
 2. [VaultSecret](./docs/secret-management.md#vaultsecret) Creates a K8s Secret from one or more Vault Secrets
 
+## System Backend
+
+1. [QuotaConfig](./docs/system-backend/quotas.md#quotaconfig) Configures the global [Vault Quota Config](https://developer.hashicorp.com/vault/api-docs/system/quotas-config) (rate-limit audit logging, exempt paths)
+2. [RateLimitQuota](./docs/system-backend/quotas.md#ratelimitquota) Configures a [Vault Rate Limit Quota](https://developer.hashicorp.com/vault/api-docs/system/rate-limit-quotas) to restrict request rates
+3. [LeaseCountQuota](./docs/system-backend/quotas.md#leasecountquota) Configures a [Vault Lease Count Quota](https://developer.hashicorp.com/vault/api-docs/system/lease-count-quotas) to restrict lease counts (Enterprise only)
+4. [CORSConfig](./docs/system-backend/cors.md#corsconfig) Configures the [Vault CORS Settings](https://developer.hashicorp.com/vault/api-docs/system/config-cors) (allowed origins and headers)
+5. [KeyRotationConfig](./docs/system-backend/key-rotation.md#keyrotationconfig) Configures the [Vault Automatic Key Rotation](https://developer.hashicorp.com/vault/api-docs/system/rotate-config) schedule
+6. [RotationPolicy](./docs/system-backend/rotation-policy.md#rotationpolicy) Configures a [Vault Rotation Policy](https://developer.hashicorp.com/vault/api-docs/system/policies-rotation) for automatic credential rotation retry behavior (Enterprise only)
+7. [UICustomHeader](./docs/system-backend/ui-headers.md#uicustomheader) Configures a [Vault UI Custom Header](https://developer.hashicorp.com/vault/api-docs/system/config-ui-headers) for custom response headers on UI requests
+8. [LoggerConfig](./docs/system-backend/loggers.md#loggerconfig) Configures a [Vault Logger Level](https://developer.hashicorp.com/vault/api-docs/system/loggers) for runtime log verbosity adjustment
+
 ## Identities
 
 1. [Entity](./docs/identities.md#entity) Creates a [Vault Entity](https://developer.hashicorp.com/vault/api-docs/secret/identity/entity).
@@ -206,6 +217,8 @@ Additionally, the operator checks for an environment variable named `CACHE_VAULT
 By default, or if the variable is set to any other value, the operator will create a new client with a new token for each request it makes to Vault.
 
 SyncPeriod determines the minimum frequency at which watched resources are reconciled. Set the environment variable named `SYNC_PERIOD_SECONDS` to update the frequency at which watched resources are reconciled. It defaults to 10 hours if unset and ONLY works when `ENABLE_DRIFT_DETECTION` is set to `true`. The reconciliation also accounts for any drift that may have happened in Vault since the last reconciliation. This feature is disabled by default to maintain optimal performance.
+
+Set `VAULT_METRICS_NORMALIZE_PATHS` to `"true"` to collapse dynamic path segments in the Vault API Prometheus metrics `path` label (e.g., `sys/policies/acl/my-policy` → `sys/policies/acl/*`). This reduces metric cardinality in large deployments. When unset or `"false"`, the raw Vault path is used. See [Vault API Metrics](#vault-api-metrics) for details.
 
 For certificates, the recommended approach is to mount the secret or configmap containing the certificate as described [here](https://github.com/operator-framework/operator-lifecycle-manager/blob/master/doc/design/subscription-config.md#volumes), and the configure the corresponding variables to point at the files location in the mounted path.
 
@@ -383,6 +396,40 @@ Prometheus compatible metrics are exposed by the Operator and can be integrated 
 ```sh
 oc label namespace <namespace> openshift.io/cluster-monitoring="true"
 ```
+
+### Vault API Metrics
+
+The operator automatically records Prometheus metrics for every Vault API call it makes. These metrics are available on the standard `/metrics` endpoint alongside the controller-runtime metrics.
+
+| Metric | Type | Labels | Description |
+|--------|------|--------|-------------|
+| `vault_api_requests_total` | Counter | `vault_address`, `method`, `path`, `status_code` | Total number of Vault API requests |
+| `vault_api_request_duration_seconds` | Histogram | `vault_address`, `method`, `path` | Duration of Vault API requests in seconds |
+
+**Labels:**
+
+- `vault_address` — the `host:port` of the target Vault instance (e.g., `vault.example.com:8200`), allowing multi-instance traffic to be distinguished
+- `method` — the HTTP method (`GET`, `PUT`, `DELETE`, etc.)
+- `path` — the Vault API path with the `v1/` prefix stripped (e.g., `sys/policies/acl/my-policy`, `auth/kubernetes/role/my-role`)
+- `status_code` — the HTTP response status code (e.g., `200`, `404`, `503`)
+
+#### Path Normalization
+
+By default, the `path` label contains the raw Vault API path (with only `v1/` stripped). For large deployments with many CRs, this can produce high-cardinality metrics. Set the environment variable `VAULT_METRICS_NORMALIZE_PATHS=true` to collapse dynamic path segments into `*`:
+
+| Raw Path | Normalized Path |
+|----------|----------------|
+| `sys/policies/acl/my-policy` | `sys/policies/acl/*` |
+| `sys/quotas/rate-limit/my-quota` | `sys/quotas/rate-limit/*` |
+| `auth/kubernetes/role/my-role` | `auth/*/role/*` |
+| `auth/kubernetes/login` | `auth/*/login` |
+| `database/config/my-db` | `*/config/*` |
+| `database/roles/my-role` | `*/roles/*` |
+| `sys/mounts/secret/tune` | `sys/mounts/*/tune` |
+
+#### Reconcile Trace Logging
+
+For troubleshooting reconciliation behavior, set the log verbosity to level 6 (`-v=6` or `--zap-log-level=6`). At this level, the operator logs each reconciliation decision: read result (found/not-found), drift decision (in-sync/out-of-sync), and action taken (create/update/skip) with the Vault path involved. At default verbosity, no additional output is produced.
 
 ### Testing metrics
 

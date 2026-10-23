@@ -90,11 +90,11 @@ func TestMountConfigToMap(t *testing.T) {
 		"default_lease_ttl":            "1h",
 		"max_lease_ttl":                "24h",
 		"force_no_cache":               true,
-		"audit_non_hmac_request_keys":  []string{"key1", "key2"},
-		"audit_non_hmac_response_keys": []string{"resp1"},
+		"audit_non_hmac_request_keys":  []any{"key1", "key2"},
+		"audit_non_hmac_response_keys": []any{"resp1"},
 		"listing_visibility":           "unauth",
-		"passthrough_request_headers":  []string{"X-Custom"},
-		"allowed_response_headers":     []string{"X-Response"},
+		"passthrough_request_headers":  []any{"X-Custom"},
+		"allowed_response_headers":     []any{"X-Response"},
 	}
 
 	if len(result) != 8 {
@@ -318,16 +318,10 @@ func TestSecretEngineMountIsEquivalentToDesiredStateNonMatching(t *testing.T) {
 		},
 	}
 
-	payload := map[string]any{
-		"default_lease_ttl":            "2h", // changed
-		"max_lease_ttl":                "24h",
-		"force_no_cache":               false,
-		"audit_non_hmac_request_keys":  []string(nil),
-		"audit_non_hmac_response_keys": []string(nil),
-		"listing_visibility":           "hidden",
-		"passthrough_request_headers":  []string(nil),
-		"allowed_response_headers":     []string(nil),
-	}
+	payload := mount.Spec.Config.toMap()
+	delete(payload, "options")
+	delete(payload, "description")
+	payload["default_lease_ttl"] = "2h" // changed
 
 	if mount.IsEquivalentToDesiredState(payload) {
 		t.Error("expected non-matching payload (different default_lease_ttl) to NOT be equivalent")
@@ -349,18 +343,11 @@ func TestSecretEngineMountIsEquivalentToDesiredStateExtraFields(t *testing.T) {
 		},
 	}
 
-	payload := map[string]any{
-		"default_lease_ttl":            "1h",
-		"max_lease_ttl":                "24h",
-		"force_no_cache":               false,
-		"audit_non_hmac_request_keys":  []string(nil),
-		"audit_non_hmac_response_keys": []string(nil),
-		"listing_visibility":           "hidden",
-		"passthrough_request_headers":  []string(nil),
-		"allowed_response_headers":     []string(nil),
-		"plugin_version":               "",
-		"user_lockout_config":          map[string]any{},
-	}
+	payload := mount.Spec.Config.toMap()
+	delete(payload, "options")
+	delete(payload, "description")
+	payload["plugin_version"] = ""
+	payload["user_lockout_config"] = map[string]any{}
 
 	if !mount.IsEquivalentToDesiredState(payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")

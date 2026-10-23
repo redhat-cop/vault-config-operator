@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -220,7 +221,7 @@ func TestDatabaseSecretEngineStaticRoleIsEquivalentMatching(t *testing.T) {
 
 	payload := role.Spec.DBSEStaticRole.toMap()
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected matching payload to be equivalent")
 	}
 }
@@ -241,7 +242,7 @@ func TestDatabaseSecretEngineStaticRoleIsEquivalentNonMatching(t *testing.T) {
 	payload := role.Spec.DBSEStaticRole.toMap()
 	payload["username"] = "different-user" // changed
 
-	if role.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected non-matching payload (different username) to NOT be equivalent")
 	}
 }
@@ -262,7 +263,7 @@ func TestDatabaseSecretEngineStaticRoleIsEquivalentExtraFields(t *testing.T) {
 	payload := role.Spec.DBSEStaticRole.toMap()
 	payload["extra_vault_field"] = "some-value"
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
@@ -292,7 +293,7 @@ func TestDatabaseSecretEngineStaticRoleIsEquivalentCredentialConfigTypeMismatch(
 		"credential_config":   map[string]any{"password_policy": "my-policy"},
 	}
 
-	if role.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected false: map[string]string != map[string]any in reflect.DeepEqual")
 	}
 }
@@ -511,7 +512,7 @@ func TestDatabaseSecretEngineStaticRoleIsEquivalentWithSchedule(t *testing.T) {
 
 	payload := role.Spec.DBSEStaticRole.toMap()
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected matching payload with rotation_schedule to be equivalent")
 	}
 }

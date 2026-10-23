@@ -64,11 +64,15 @@ func (r *TOTPSecretEngineKeyReconciler) Reconcile(ctx context.Context, req ctrl.
 	return vaultresourcecontroller.ReconcileWithFunctions(ctx1, &r.ReconcilerBase, instance,
 		endpoint.DeleteIfExists,
 		func(ctx context.Context, obj client.Object) error {
-			if err := obj.(vaultutils.VaultObject).PrepareInternalValues(ctx, obj); err != nil {
-				return err
+			if preparer, ok := obj.(vaultutils.VaultInternalValuesPreparer); ok {
+				if err := preparer.PrepareInternalValues(ctx, obj); err != nil {
+					return err
+				}
 			}
-			if err := obj.(vaultutils.VaultObject).PrepareTLSConfig(ctx, obj); err != nil {
-				return err
+			if tlsPreparer, ok := obj.(vaultutils.VaultTLSPreparer); ok {
+				if err := tlsPreparer.PrepareTLSConfig(ctx, obj); err != nil {
+					return err
+				}
 			}
 			return endpoint.CreateOrUpdate(ctx)
 		},

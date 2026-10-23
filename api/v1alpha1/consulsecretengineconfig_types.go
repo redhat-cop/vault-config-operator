@@ -57,27 +57,27 @@ type ConsulSecretEngineConfigSpec struct {
 type ConsulSEConfig struct {
 	// Address specifies the Consul instance address as "host:port".
 	// +kubebuilder:validation:Required
-	Address string `json:"address"`
+	Address string `json:"address" vault:"address"`
 
 	// Scheme specifies the URL scheme (http or https).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="http"
 	// +kubebuilder:validation:Enum:={"http","https"}
-	Scheme string `json:"scheme,omitempty"`
+	Scheme string `json:"scheme,omitempty" vault:"scheme"`
 
 	// CACert is the CA certificate for verifying the Consul server certificate (x509 PEM).
 	// +kubebuilder:validation:Optional
-	CACert string `json:"caCert,omitempty"`
+	CACert string `json:"caCert,omitempty" vault:"ca_cert"`
 
 	// ClientCert is the client certificate for Consul TLS communication (x509 PEM).
 	// If set, clientKey must also be set.
 	// +kubebuilder:validation:Optional
-	ClientCert string `json:"clientCert,omitempty"`
+	ClientCert string `json:"clientCert,omitempty" vault:"client_cert"`
 
 	// ClientKey is the client key for Consul TLS communication (x509 PEM).
 	// If set, clientCert must also be set.
 	// +kubebuilder:validation:Optional
-	ClientKey string `json:"clientKey,omitempty"`
+	ClientKey string `json:"clientKey,omitempty" vault:"client_key"`
 
 	retrievedToken string `json:"-"`
 }
@@ -110,16 +110,8 @@ func (d *ConsulSecretEngineConfig) IsEquivalentToDesiredState(payload map[string
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (d *ConsulSecretEngineConfig) IsInitialized() bool {
-	return true
-}
-
 func (d *ConsulSecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	return d.setInternalCredentials(context)
-}
-
-func (d *ConsulSecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *ConsulSecretEngineConfig) IsValid() (bool, error) {
@@ -197,15 +189,10 @@ func (r *ConsulSecretEngineConfig) setInternalCredentials(context context.Contex
 }
 
 func (i *ConsulSEConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["address"] = i.Address
-	payload["scheme"] = i.Scheme
+	payload := vaultutils.StructToVaultPayload(i)
 	if i.retrievedToken != "" {
 		payload["token"] = i.retrievedToken
 	}
-	payload["ca_cert"] = i.CACert
-	payload["client_cert"] = i.ClientCert
-	payload["client_key"] = i.ClientKey
 	return payload
 }
 

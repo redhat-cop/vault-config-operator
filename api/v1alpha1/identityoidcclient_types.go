@@ -17,12 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // IdentityOIDCClientSpec defines the desired state of IdentityOIDCClient
@@ -36,7 +32,7 @@ type IdentityOIDCClientSpec struct {
 	// +kubebuilder:validation:Optional
 	Authentication vaultutils.KubeAuthConfiguration `json:"authentication,omitempty"`
 
-	IdentityOIDCClientConfig `json:",inline"`
+	IdentityOIDCClientConfig `json:",inline" vault:",inline"`
 
 	// The name of the obejct created in Vault. If this is specified it takes precedence over {metatada.name}
 	// +kubebuilder:validation:Optional
@@ -50,13 +46,13 @@ type IdentityOIDCClientConfig struct {
 	// This cannot be modified after creation. If not supplied, defaults to the built-in default key.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:="default"
-	Key string `json:"key"`
+	Key string `json:"key" vault:"key"`
 
 	// RedirectURIs is the list of redirection URI values used by the client.
 	// One of these values must exactly match the redirect_uri parameter value used in each authentication request.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	RedirectURIs []string `json:"redirectURIs,omitempty"`
+	RedirectURIs []string `json:"redirectURIs,omitempty" vault:"redirect_uris"`
 
 	// Assignments is a list of assignment resources associated with the client.
 	// Client assignments limit the Vault entities and groups that are allowed to authenticate through the client.
@@ -64,26 +60,26 @@ type IdentityOIDCClientConfig struct {
 	// supply the built-in allow_all assignment.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	Assignments []string `json:"assignments,omitempty"`
+	Assignments []string `json:"assignments,omitempty" vault:"assignments"`
 
 	// ClientType is the client type based on its ability to maintain confidentiality of credentials.
 	// This cannot be modified after creation. Must be "confidential" or "public".
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"confidential","public"}
 	// +kubebuilder:default:="confidential"
-	ClientType string `json:"clientType,omitempty"`
+	ClientType string `json:"clientType,omitempty" vault:"client_type"`
 
 	// IDTokenTTL is the time-to-live for ID tokens obtained by the client.
 	// Accepts duration format strings. The value should be less than the verification_ttl on the key.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:="24h"
-	IDTokenTTL string `json:"idTokenTTL"`
+	IDTokenTTL string `json:"idTokenTTL" vault:"id_token_ttl"`
 
 	// AccessTokenTTL is the time-to-live for access tokens obtained by the client.
 	// Accepts duration format strings.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:="24h"
-	AccessTokenTTL string `json:"accessTokenTTL"`
+	AccessTokenTTL string `json:"accessTokenTTL" vault:"access_token_ttl"`
 }
 
 // IdentityOIDCClientStatus defines the observed state of IdentityOIDCClient
@@ -140,10 +136,7 @@ func (d *IdentityOIDCClient) GetVaultConnection() *vaultutils.VaultConnection {
 }
 
 func (d *IdentityOIDCClient) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath("identity/oidc/client/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath("identity/oidc/client/" + d.Name)
+	return vaultutils.CleansePath("identity/oidc/client/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 
 func (d *IdentityOIDCClient) GetPayload() map[string]any {
@@ -151,37 +144,9 @@ func (d *IdentityOIDCClient) GetPayload() map[string]any {
 }
 
 func (i *IdentityOIDCClientSpec) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["key"] = i.Key
-	payload["redirect_uris"] = i.RedirectURIs
-	payload["assignments"] = i.Assignments
-	payload["client_type"] = i.ClientType
-	payload["id_token_ttl"] = i.IDTokenTTL
-	payload["access_token_ttl"] = i.AccessTokenTTL
-	return payload
-}
-
-func (d *IdentityOIDCClient) IsInitialized() bool {
-	return true
-}
-
-func (d *IdentityOIDCClient) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *IdentityOIDCClient) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *IdentityOIDCClient) IsValid() (bool, error) {
-	return true, nil
+	return vaultutils.StructToVaultPayload(i)
 }
 
 func (d *IdentityOIDCClient) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
 	return &d.Spec.Authentication
-}
-
-func (d *IdentityOIDCClient) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := d.Spec.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }

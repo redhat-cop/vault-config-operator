@@ -124,11 +124,11 @@ func TestGroupIsEquivalentMatching(t *testing.T) {
 		"name":              "some-group",
 		"type":              "internal",
 		"metadata":          map[string]string{"team": "platform"},
-		"policies":          []string{"default"},
-		"member_group_ids":  []string{"group-1"},
-		"member_entity_ids": []string{"entity-1"},
+		"policies":          []any{"default"},
+		"member_group_ids":  []any{"group-1"},
+		"member_entity_ids": []any{"entity-1"},
 	}
-	if !group.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(group, payload) {
 		t.Error("expected matching payload (with extra 'name' key) to be equivalent")
 	}
 }
@@ -149,11 +149,11 @@ func TestGroupIsEquivalentNonMatching(t *testing.T) {
 	payload := map[string]any{
 		"type":              "internal",
 		"metadata":          map[string]string{"team": "other-team"},
-		"policies":          []string{"default"},
-		"member_group_ids":  []string{"group-1"},
-		"member_entity_ids": []string{"entity-1"},
+		"policies":          []any{"default"},
+		"member_group_ids":  []any{"group-1"},
+		"member_entity_ids": []any{"entity-1"},
 	}
-	if group.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(group, payload) {
 		t.Error("expected different metadata to not be equivalent")
 	}
 }
@@ -176,12 +176,12 @@ func TestGroupIsEquivalentExtraFields(t *testing.T) {
 		"name":              "some-group",
 		"type":              "internal",
 		"metadata":          map[string]string{"team": "platform"},
-		"policies":          []string{"default"},
-		"member_group_ids":  []string{"group-1"},
-		"member_entity_ids": []string{"entity-1"},
+		"policies":          []any{"default"},
+		"member_group_ids":  []any{"group-1"},
+		"member_entity_ids": []any{"entity-1"},
 		"extra_field":       "unexpected",
 	}
-	if !group.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(group, payload) {
 		t.Error("expected true: extra keys not in desiredState are filtered from payload")
 	}
 }
@@ -385,7 +385,7 @@ func TestGroupToMapWithResolvedNames(t *testing.T) {
 
 	m := spec.toMap()
 
-	groupIDs := m["member_group_ids"].([]string)
+	groupIDs := m["member_group_ids"].([]any)
 	if len(groupIDs) != 2 {
 		t.Fatalf("expected 2 member_group_ids, got %d: %v", len(groupIDs), groupIDs)
 	}
@@ -393,7 +393,7 @@ func TestGroupToMapWithResolvedNames(t *testing.T) {
 		t.Errorf("unexpected member_group_ids: %v", groupIDs)
 	}
 
-	entityIDs := m["member_entity_ids"].([]string)
+	entityIDs := m["member_entity_ids"].([]any)
 	if len(entityIDs) != 2 {
 		t.Fatalf("expected 2 member_entity_ids, got %d: %v", len(entityIDs), entityIDs)
 	}
@@ -413,7 +413,7 @@ func TestGroupToMapWithResolvedNamesDeduplicated(t *testing.T) {
 
 	m := spec.toMap()
 
-	groupIDs := m["member_group_ids"].([]string)
+	groupIDs := m["member_group_ids"].([]any)
 	if len(groupIDs) != 1 {
 		t.Fatalf("expected deduplication to 1 ID, got %d: %v", len(groupIDs), groupIDs)
 	}
@@ -461,11 +461,11 @@ func TestGroupPrepareInternalValuesResolvesNames(t *testing.T) {
 	}
 
 	payload := group.GetPayload()
-	groupIDs := payload["member_group_ids"].([]string)
+	groupIDs := payload["member_group_ids"].([]any)
 	if len(groupIDs) != 1 || groupIDs[0] != groupID {
 		t.Errorf("expected resolved group ID %q, got %v", groupID, groupIDs)
 	}
-	entityIDs := payload["member_entity_ids"].([]string)
+	entityIDs := payload["member_entity_ids"].([]any)
 	if len(entityIDs) != 1 || entityIDs[0] != entityID {
 		t.Errorf("expected resolved entity ID %q, got %v", entityID, entityIDs)
 	}
@@ -529,7 +529,7 @@ func TestGroupPrepareInternalValuesNoNames(t *testing.T) {
 	}
 
 	payload := group.GetPayload()
-	groupIDs := payload["member_group_ids"].([]string)
+	groupIDs := payload["member_group_ids"].([]any)
 	if len(groupIDs) != 1 || groupIDs[0] != "explicit-id" {
 		t.Errorf("expected only explicit ID, got %v", groupIDs)
 	}

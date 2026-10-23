@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -92,25 +93,25 @@ func TestJWTOIDCRoleToMap(t *testing.T) {
 	expected := map[string]any{
 		"name":                    "test-role",
 		"role_type":               "oidc",
-		"bound_audiences":         []string{"aud1", "aud2"},
+		"bound_audiences":         []any{"aud1", "aud2"},
 		"user_claim":              "sub",
 		"user_claim_json_pointer": false,
 		"clock_skew_leeway":       int64(60),
 		"expiration_leeway":       int64(150),
 		"not_before_leeway":       int64(150),
 		"bound_subject":           "subject",
-		"bound_claims":            boundClaims,
+		"bound_claims":            *boundClaims,
 		"bound_claims_type":       "string",
 		"groups_claim":            "groups",
 		"claim_mappings":          claimMappings,
-		"oidc_scopes":             []string{"profile", "email"},
-		"allowed_redirect_uris":   []string{"https://vault.example.com/callback"},
+		"oidc_scopes":             []any{"profile", "email"},
+		"allowed_redirect_uris":   []any{"https://vault.example.com/callback"},
 		"verbose_oidc_logging":    false,
 		"max_age":                 int64(0),
 		"token_ttl":               json.Number("3600"),
 		"token_max_ttl":           json.Number("86400"),
-		"token_policies":          []string{"reader"},
-		"token_bound_cidrs":       []string{"10.0.0.0/8"},
+		"token_policies":          []any{"reader"},
+		"token_bound_cidrs":       []any{"10.0.0.0/8"},
 		"token_explicit_max_ttl":  json.Number("0"),
 		"token_no_default_policy": false,
 		"token_num_uses":          int64(0),
@@ -137,12 +138,12 @@ func TestJWTOIDCRoleToMapBoundClaimsJSON(t *testing.T) {
 
 	result := role.toMap()
 
-	val, ok := result["bound_claims"].(*apiextensionsv1.JSON)
+	val, ok := result["bound_claims"].(apiextensionsv1.JSON)
 	if !ok {
-		t.Fatalf("expected bound_claims to be *apiextensionsv1.JSON, got %T", result["bound_claims"])
+		t.Fatalf("expected bound_claims to be apiextensionsv1.JSON, got %T", result["bound_claims"])
 	}
-	if !reflect.DeepEqual(val, boundClaims) {
-		t.Errorf("expected bound_claims to be stored directly")
+	if !reflect.DeepEqual(val, *boundClaims) {
+		t.Errorf("expected bound_claims to be stored directly (dereferenced)")
 	}
 }
 
@@ -178,7 +179,7 @@ func TestJWTOIDCAuthEngineRoleIsEquivalentMatching(t *testing.T) {
 
 	payload := role.Spec.JWTOIDCRole.toMap()
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected matching payload to be equivalent")
 	}
 }
@@ -196,7 +197,7 @@ func TestJWTOIDCAuthEngineRoleIsEquivalentNonMatching(t *testing.T) {
 	payload := role.Spec.JWTOIDCRole.toMap()
 	payload["user_claim"] = "email"
 
-	if role.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected non-matching payload (different user_claim) to NOT be equivalent")
 	}
 }
@@ -214,7 +215,7 @@ func TestJWTOIDCAuthEngineRoleIsEquivalentExtraFields(t *testing.T) {
 	payload := role.Spec.JWTOIDCRole.toMap()
 	payload["extra_field"] = "unexpected"
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }

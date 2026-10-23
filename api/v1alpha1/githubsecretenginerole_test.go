@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -75,14 +76,14 @@ func TestPermissionSetToMap(t *testing.T) {
 	if on, ok := result["org_name"].(string); !ok || on != "my-org" {
 		t.Errorf("org_name = %v (%T), expected string my-org", result["org_name"], result["org_name"])
 	}
-	repos, ok := result["repositories"].([]string)
+	repos, ok := result["repositories"].([]any)
 	if !ok {
 		t.Fatalf("repositories should be []string, got %T", result["repositories"])
 	}
 	if len(repos) != 2 || repos[0] != "repo1" || repos[1] != "repo2" {
 		t.Errorf("repositories = %v, expected [repo1 repo2]", repos)
 	}
-	ids, ok := result["repository_ids"].([]string)
+	ids, ok := result["repository_ids"].([]any)
 	if !ok {
 		t.Fatalf("repository_ids should be []string, got %T", result["repository_ids"])
 	}
@@ -115,12 +116,12 @@ func TestGitHubSecretEngineRoleIsEquivalentMatching(t *testing.T) {
 	payload := map[string]any{
 		"installation_id": int64(123),
 		"org_name":        "my-org",
-		"repositories":    []string{"repo1", "repo2"},
-		"repository_ids":  []string{"111", "222"},
+		"repositories":    []any{"repo1", "repo2"},
+		"repository_ids":  []any{"111", "222"},
 		"permissions":     map[string]string{"contents": "read", "pull_requests": "write"},
 	}
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected matching payload to be equivalent")
 	}
 }
@@ -142,7 +143,7 @@ func TestGitHubSecretEngineRoleIsEquivalentNonMatching(t *testing.T) {
 	payload := role.Spec.PermissionSet.toMap()
 	payload["org_name"] = "other-org"
 
-	if role.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected non-matching payload (different org_name) to NOT be equivalent")
 	}
 }
@@ -160,7 +161,7 @@ func TestGitHubSecretEngineRoleIsEquivalentExtraFields(t *testing.T) {
 	payload := role.Spec.PermissionSet.toMap()
 	payload["extra_vault_field"] = "some-value"
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }

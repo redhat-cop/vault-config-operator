@@ -88,10 +88,12 @@ func (ve *VaultEngineEndpoint) CreateOrUpdateTuneConfig(context context.Context)
 		return err
 	}
 
-	if !ve.vaultObject.IsEquivalentToDesiredState(currentTunePayload) {
+	if !IsEquivalentToDesiredState(ve.vaultObject, currentTunePayload) {
+		log.V(6).Info("vault engine tune out of sync, updating", "path", ve.vaultEngineObject.GetEngineTunePath())
 		return write(context, ve.vaultEngineObject.GetEngineTunePath(), ve.vaultEngineObject.GetTunePayload())
 	}
 
+	log.V(6).Info("vault engine tune in sync, skipping write", "path", ve.vaultEngineObject.GetEngineTunePath())
 	return nil
 }
 

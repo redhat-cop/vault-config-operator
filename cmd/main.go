@@ -141,418 +141,154 @@ func main() {
 	// Set the sync period for use in predicates
 	vaultresourcecontroller.SetSyncPeriod(syncPeriod)
 
-	if err = (&controller.KubernetesAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KubernetesAuthEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "KubernetesAuthEngineRole")
-		os.Exit(1)
+	// --- Generic-migrated controllers (Categories 1-4) ---
+
+	for _, setup := range []struct {
+		name string
+		fn   func(ctrl.Manager) error
+	}{
+		{"AliCloudAuthEngineRole", controller.SetupAliCloudAuthEngineRoleController},
+		{"AppRoleAuthEngineRole", controller.SetupAppRoleAuthEngineRoleController},
+		{"Audit", controller.SetupAuditController},
+		{"AuditRequestHeader", controller.SetupAuditRequestHeaderController},
+		{"AuthEngineMount", controller.SetupAuthEngineMountController},
+		{"AWSAuthEngineClientConfig", controller.SetupAWSAuthEngineClientConfigController},
+		{"AWSAuthEngineIdentityConfig", controller.SetupAWSAuthEngineIdentityConfigController},
+		{"AWSAuthEngineRole", controller.SetupAWSAuthEngineRoleController},
+		{"AWSSecretEngineRole", controller.SetupAWSSecretEngineRoleController},
+		{"AzureAuthEngineConfig", controller.SetupAzureAuthEngineConfigController},
+		{"AzureAuthEngineRole", controller.SetupAzureAuthEngineRoleController},
+		{"AzureSecretEngineConfig", controller.SetupAzureSecretEngineConfigController},
+		{"AzureSecretEngineRole", controller.SetupAzureSecretEngineRoleController},
+		{"CertAuthEngineConfig", controller.SetupCertAuthEngineConfigController},
+		{"CertAuthEngineRole", controller.SetupCertAuthEngineRoleController},
+		{"CFAuthEngineConfig", controller.SetupCFAuthEngineConfigController},
+		{"CFAuthEngineRole", controller.SetupCFAuthEngineRoleController},
+		{"ConsulSecretEngineRole", controller.SetupConsulSecretEngineRoleController},
+		{"CORSConfig", controller.SetupCORSConfigController},
+		{"DatabaseSecretEngineRole", controller.SetupDatabaseSecretEngineRoleController},
+		{"DatabaseSecretEngineStaticRole", controller.SetupDatabaseSecretEngineStaticRoleController},
+		{"Entity", controller.SetupEntityController},
+		{"EntityAlias", controller.SetupEntityAliasController},
+		{"GCPAuthEngineConfig", controller.SetupGCPAuthEngineConfigController},
+		{"GCPAuthEngineRole", controller.SetupGCPAuthEngineRoleController},
+		{"GCPSecretEngineRoleset", controller.SetupGCPSecretEngineRolesetController},
+		{"GCPSecretEngineStaticAccount", controller.SetupGCPSecretEngineStaticAccountController},
+		{"GitHubAuthEngineConfig", controller.SetupGitHubAuthEngineConfigController},
+		{"GitHubAuthEngineTeamMap", controller.SetupGitHubAuthEngineTeamMapController},
+		{"GitHubAuthEngineUserMap", controller.SetupGitHubAuthEngineUserMapController},
+		{"GitHubSecretEngineConfig", controller.SetupGitHubSecretEngineConfigController},
+		{"GitHubSecretEngineRole", controller.SetupGitHubSecretEngineRoleController},
+		{"Group", controller.SetupGroupController},
+		{"GroupAlias", controller.SetupGroupAliasController},
+		{"IdentityOIDCAssignment", controller.SetupIdentityOIDCAssignmentController},
+		{"IdentityOIDCClient", controller.SetupIdentityOIDCClientController},
+		{"IdentityOIDCProvider", controller.SetupIdentityOIDCProviderController},
+		{"IdentityOIDCScope", controller.SetupIdentityOIDCScopeController},
+		{"IdentityTokenConfig", controller.SetupIdentityTokenConfigController},
+		{"IdentityTokenKey", controller.SetupIdentityTokenKeyController},
+		{"IdentityTokenRole", controller.SetupIdentityTokenRoleController},
+		{"JWTOIDCAuthEngineConfig", controller.SetupJWTOIDCAuthEngineConfigController},
+		{"JWTOIDCAuthEngineRole", controller.SetupJWTOIDCAuthEngineRoleController},
+		{"KerberosAuthEngineConfig", controller.SetupKerberosAuthEngineConfigController},
+		{"KerberosAuthEngineLDAPConfig", controller.SetupKerberosAuthEngineLDAPConfigController},
+		{"KerberosAuthEngineGroup", controller.SetupKerberosAuthEngineGroupController},
+		{"KeyRotationConfig", controller.SetupKeyRotationConfigController},
+		{"KubernetesAuthEngineConfig", controller.SetupKubernetesAuthEngineConfigController},
+		{"KubernetesAuthEngineRole", controller.SetupKubernetesAuthEngineRoleController},
+		{"KubernetesSecretEngineConfig", controller.SetupKubernetesSecretEngineConfigController},
+		{"KubernetesSecretEngineRole", controller.SetupKubernetesSecretEngineRoleController},
+		{"LDAPAuthEngineConfig", controller.SetupLDAPAuthEngineConfigController},
+		{"LDAPAuthEngineGroup", controller.SetupLDAPAuthEngineGroupController},
+		{"LDAPSecretEngineDynamicRole", controller.SetupLDAPSecretEngineDynamicRoleController},
+		{"LDAPSecretEngineStaticRole", controller.SetupLDAPSecretEngineStaticRoleController},
+		{"LeaseCountQuota", controller.SetupLeaseCountQuotaController},
+		{"LoggerConfig", controller.SetupLoggerConfigController},
+		{"MongoDBAtlasSecretEngineRole", controller.SetupMongoDBAtlasSecretEngineRoleController},
+		{"Namespace", controller.SetupNamespaceController},
+		{"NomadSecretEngineRole", controller.SetupNomadSecretEngineRoleController},
+		{"OCIAuthEngineConfig", controller.SetupOCIAuthEngineConfigController},
+		{"OCIAuthEngineRole", controller.SetupOCIAuthEngineRoleController},
+		{"OktaAuthEngineConfig", controller.SetupOktaAuthEngineConfigController},
+		{"OktaAuthEngineGroup", controller.SetupOktaAuthEngineGroupController},
+		{"PasswordPolicy", controller.SetupPasswordPolicyController},
+		{"PKISecretEngineConfig", controller.SetupPKISecretEngineConfigController},
+		{"PKISecretEngineRole", controller.SetupPKISecretEngineRoleController},
+		{"Policy", controller.SetupPolicyController},
+		{"QuaySecretEngineConfig", controller.SetupQuaySecretEngineConfigController},
+		{"QuaySecretEngineRole", controller.SetupQuaySecretEngineRoleController},
+		{"QuaySecretEngineStaticRole", controller.SetupQuaySecretEngineStaticRoleController},
+		{"QuotaConfig", controller.SetupQuotaConfigController},
+		{"RabbitMQSecretEngineRole", controller.SetupRabbitMQSecretEngineRoleController},
+		{"RADIUSAuthEngineConfig", controller.SetupRADIUSAuthEngineConfigController},
+		{"RADIUSAuthEngineUser", controller.SetupRADIUSAuthEngineUserController},
+		{"RateLimitQuota", controller.SetupRateLimitQuotaController},
+		{"RotationPolicy", controller.SetupRotationPolicyController},
+		{"SecretEngineMount", controller.SetupSecretEngineMountController},
+		{"SSHSecretEngineConfig", controller.SetupSSHSecretEngineConfigController},
+		{"SSHSecretEngineRole", controller.SetupSSHSecretEngineRoleController},
+		{"TerraformCloudSecretEngineRole", controller.SetupTerraformCloudSecretEngineRoleController},
+		{"UICustomHeader", controller.SetupUICustomHeaderController},
+		{"UserpassAuthEngineUser", controller.SetupUserpassAuthEngineUserController},
+	} {
+		if err = setup.fn(mgr); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", setup.name)
+			os.Exit(1)
+		}
 	}
-	if err = (&controller.PolicyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "Policy")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Policy")
-		os.Exit(1)
-	}
+
+	// --- Custom controllers (Category 5 — hand-written Reconcile) ---
+
 	if err = (&controller.DatabaseSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "DatabaseSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DatabaseSecretEngineConfig")
-		os.Exit(1)
-	}
-	if err = (&controller.DatabaseSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "DatabaseSecretEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "DatabaseSecretEngineRole")
-		os.Exit(1)
-	}
-	if err = (&controller.SecretEngineMountReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "SecretEngineMount")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "SecretEngineMount")
 		os.Exit(1)
 	}
 	if err = (&controller.RandomSecretReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RandomSecret")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RandomSecret")
 		os.Exit(1)
 	}
-	setupLog.Info("starting AuthEngineMountReconciler")
-	if err = (&controller.AuthEngineMountReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AuthEngineMount")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AuthEngineMount")
-		os.Exit(1)
-	}
-	setupLog.Info("started AuthEngineMountReconciler")
-	if err = (&controller.KubernetesAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KubernetesAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "KubernetesAuthEngineConfig")
-		os.Exit(1)
-	}
-
-	if err = (&controller.LDAPAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LDAPAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "LDAPAuthEngineConfig")
-		os.Exit(1)
-	}
-
-	if err = (&controller.LDAPAuthEngineGroupReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LDAPAuthEngineGroup")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "LDAPAuthEngineGroup")
-		os.Exit(1)
-	}
-
-	if err = (&controller.JWTOIDCAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "JWTOIDCAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "JWTOIDCAuthEngineConfig")
-		os.Exit(1)
-	}
-
-	if err = (&controller.JWTOIDCAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "JWTOIDCAuthEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "JWTOIDCAuthEngineRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.AppRoleAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AppRoleAuthEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AppRoleAuthEngineRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.AzureAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AzureAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AzureAuthEngineConfig")
-		os.Exit(1)
-	}
-
-	if err = (&controller.AzureAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AzureAuthEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AzureAuthEngineRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.GCPAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GCPAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "GCPAuthEngineConfig")
-		os.Exit(1)
-	}
-	if err = (&controller.GCPAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GCPAuthEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "GCPAuthEngineRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.GitHubAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GitHubAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "GitHubAuthEngineConfig")
-		os.Exit(1)
-	}
-	if err = (&controller.GitHubAuthEngineTeamMapReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GitHubAuthEngineTeamMap")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "GitHubAuthEngineTeamMap")
-		os.Exit(1)
-	}
-	if err = (&controller.GitHubAuthEngineUserMapReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GitHubAuthEngineUserMap")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "GitHubAuthEngineUserMap")
-		os.Exit(1)
-	}
-
-	if err = (&controller.AWSAuthEngineClientConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AWSAuthEngineClientConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AWSAuthEngineClientConfig")
-		os.Exit(1)
-	}
-	if err = (&controller.AWSAuthEngineIdentityConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AWSAuthEngineIdentityConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AWSAuthEngineIdentityConfig")
-		os.Exit(1)
-	}
-	if err = (&controller.AWSAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AWSAuthEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AWSAuthEngineRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.CertAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "CertAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "CertAuthEngineConfig")
-		os.Exit(1)
-	}
-	if err = (&controller.CertAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "CertAuthEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "CertAuthEngineRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.UserpassAuthEngineUserReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "UserpassAuthEngineUser")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "UserpassAuthEngineUser")
-		os.Exit(1)
-	}
-
 	if err = (&controller.VaultSecretReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "VaultSecret")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VaultSecret")
-		os.Exit(1)
-	}
-	if err = (&controller.PasswordPolicyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "PasswordPolicy")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "PasswordPolicy")
 		os.Exit(1)
 	}
 	if err = (&controller.RabbitMQSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RabbitMQSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RabbitMQSecretEngineConfig")
 		os.Exit(1)
 	}
-	if err = (&controller.RabbitMQSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RabbitMQSecretEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "RabbitMQSecretEngineRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.PKISecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "PKISecretEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "PKISecretEngineConfig")
-		os.Exit(1)
-	}
-	if err = (&controller.PKISecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "PKISecretEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "PKISecretEngineRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.GitHubSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GitHubSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "GitHubSecretEngineConfig")
-		os.Exit(1)
-	}
-
-	if err = (&controller.GitHubSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GitHubSecretEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "GitHubSecretEngineRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.AzureSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AzureSecretEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AzureSecretEngineRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.AzureSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AzureSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AzureSecretEngineConfig")
-		os.Exit(1)
-	}
-
-	if err = (&controller.QuaySecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "QuaySecretEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "QuaySecretEngineConfig")
-		os.Exit(1)
-	}
-
-	if err = (&controller.QuaySecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "QuaySecretEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "QuaySecretEngineRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.QuaySecretEngineStaticRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "QuaySecretEngineStaticRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "QuaySecretEngineStaticRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.KubernetesSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KubernetesSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "KubernetesSecretEngineConfig")
-		os.Exit(1)
-	}
-
-	if err = (&controller.KubernetesSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KubernetesSecretEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "KubernetesSecretEngineRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.SSHSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "SSHSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "SSHSecretEngineConfig")
-		os.Exit(1)
-	}
-
-	if err = (&controller.SSHSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "SSHSecretEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "SSHSecretEngineRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.DatabaseSecretEngineStaticRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "DatabaseSecretEngineStaticRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "DatabaseSecretEngineStaticRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.EntityReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "Entity")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Entity")
-		os.Exit(1)
-	}
-
-	if err = (&controller.EntityAliasReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "EntityAlias")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "EntityAlias")
-		os.Exit(1)
-	}
-
-	if err = (&controller.GroupReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "Group")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Group")
-		os.Exit(1)
-	}
-	if err = (&controller.GroupAliasReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GroupAlias")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "GroupAlias")
-		os.Exit(1)
-	}
-
-	if err = (&controller.AuditReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "Audit")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Audit")
-		os.Exit(1)
-	}
-
-	if err = (&controller.AuditRequestHeaderReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AuditRequestHeader")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AuditRequestHeader")
-		os.Exit(1)
-	}
-
-	if err = (&controller.IdentityOIDCProviderReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCProvider")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "IdentityOIDCProvider")
-		os.Exit(1)
-	}
-
-	if err = (&controller.IdentityOIDCScopeReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCScope")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "IdentityOIDCScope")
-		os.Exit(1)
-	}
-
-	if err = (&controller.IdentityOIDCClientReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCClient")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "IdentityOIDCClient")
-		os.Exit(1)
-	}
-
-	if err = (&controller.IdentityOIDCAssignmentReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityOIDCAssignment")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "IdentityOIDCAssignment")
-		os.Exit(1)
-	}
-
-	if err = (&controller.IdentityTokenConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityTokenConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "IdentityTokenConfig")
-		os.Exit(1)
-	}
-
-	if err = (&controller.IdentityTokenKeyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityTokenKey")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "IdentityTokenKey")
-		os.Exit(1)
-	}
-
-	if err = (&controller.IdentityTokenRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "IdentityTokenRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "IdentityTokenRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.NamespaceReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "Namespace")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Namespace")
-		os.Exit(1)
-	}
-
-	if err = (&controller.AWSSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AWSSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AWSSecretEngineConfig")
-		os.Exit(1)
-	}
-
-	if err = (&controller.AWSSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AWSSecretEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AWSSecretEngineRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.ConsulSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "ConsulSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ConsulSecretEngineConfig")
-		os.Exit(1)
-	}
-
-	if err = (&controller.ConsulSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "ConsulSecretEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ConsulSecretEngineRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.NomadSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "NomadSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "NomadSecretEngineConfig")
-		os.Exit(1)
-	}
-
-	if err = (&controller.NomadSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "NomadSecretEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "NomadSecretEngineRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.LDAPSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LDAPSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "LDAPSecretEngineConfig")
-		os.Exit(1)
-	}
-
-	if err = (&controller.LDAPSecretEngineStaticRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LDAPSecretEngineStaticRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "LDAPSecretEngineStaticRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.LDAPSecretEngineDynamicRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LDAPSecretEngineDynamicRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "LDAPSecretEngineDynamicRole")
-		os.Exit(1)
-	}
-
 	if err = (&controller.TransitSecretEngineKeyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "TransitSecretEngineKey")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "TransitSecretEngineKey")
 		os.Exit(1)
 	}
-
 	if err = (&controller.TOTPSecretEngineKeyReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "TOTPSecretEngineKey")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "TOTPSecretEngineKey")
 		os.Exit(1)
 	}
-
+	if err = (&controller.AWSSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AWSSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AWSSecretEngineConfig")
+		os.Exit(1)
+	}
+	if err = (&controller.ConsulSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "ConsulSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ConsulSecretEngineConfig")
+		os.Exit(1)
+	}
 	if err = (&controller.GCPSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GCPSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GCPSecretEngineConfig")
 		os.Exit(1)
 	}
-
-	if err = (&controller.GCPSecretEngineRolesetReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GCPSecretEngineRoleset")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "GCPSecretEngineRoleset")
+	if err = (&controller.LDAPSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "LDAPSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "LDAPSecretEngineConfig")
 		os.Exit(1)
 	}
-
-	if err = (&controller.GCPSecretEngineStaticAccountReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "GCPSecretEngineStaticAccount")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "GCPSecretEngineStaticAccount")
-		os.Exit(1)
-	}
-
 	if err = (&controller.MongoDBAtlasSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "MongoDBAtlasSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "MongoDBAtlasSecretEngineConfig")
 		os.Exit(1)
 	}
-
-	if err = (&controller.MongoDBAtlasSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "MongoDBAtlasSecretEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "MongoDBAtlasSecretEngineRole")
+	if err = (&controller.NomadSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "NomadSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "NomadSecretEngineConfig")
 		os.Exit(1)
 	}
-
 	if err = (&controller.TerraformCloudSecretEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "TerraformCloudSecretEngineConfig")}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "TerraformCloudSecretEngineConfig")
-		os.Exit(1)
-	}
-
-	if err = (&controller.TerraformCloudSecretEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "TerraformCloudSecretEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "TerraformCloudSecretEngineRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.OktaAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "OktaAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "OktaAuthEngineConfig")
-		os.Exit(1)
-	}
-	if err = (&controller.OktaAuthEngineGroupReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "OktaAuthEngineGroup")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "OktaAuthEngineGroup")
-		os.Exit(1)
-	}
-	if err = (&controller.RADIUSAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RADIUSAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "RADIUSAuthEngineConfig")
-		os.Exit(1)
-	}
-	if err = (&controller.RADIUSAuthEngineUserReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "RADIUSAuthEngineUser")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "RADIUSAuthEngineUser")
-		os.Exit(1)
-	}
-	if err = (&controller.CFAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "CFAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "CFAuthEngineConfig")
-		os.Exit(1)
-	}
-	if err = (&controller.CFAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "CFAuthEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "CFAuthEngineRole")
-		os.Exit(1)
-	}
-	if err = (&controller.OCIAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "OCIAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "OCIAuthEngineConfig")
-		os.Exit(1)
-	}
-	if err = (&controller.OCIAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "OCIAuthEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "OCIAuthEngineRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.AliCloudAuthEngineRoleReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "AliCloudAuthEngineRole")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AliCloudAuthEngineRole")
-		os.Exit(1)
-	}
-
-	if err = (&controller.KerberosAuthEngineConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KerberosAuthEngineConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "KerberosAuthEngineConfig")
-		os.Exit(1)
-	}
-	if err = (&controller.KerberosAuthEngineLDAPConfigReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KerberosAuthEngineLDAPConfig")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "KerberosAuthEngineLDAPConfig")
-		os.Exit(1)
-	}
-	if err = (&controller.KerberosAuthEngineGroupReconciler{ReconcilerBase: vaultresourcecontroller.NewFromManager(mgr, "KerberosAuthEngineGroup")}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "KerberosAuthEngineGroup")
 		os.Exit(1)
 	}
 
@@ -931,6 +667,38 @@ func main() {
 		}
 		if err = (&redhatcopv1alpha1.KerberosAuthEngineGroup{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "KerberosAuthEngineGroup")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.QuotaConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "QuotaConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.RateLimitQuota{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "RateLimitQuota")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.LeaseCountQuota{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "LeaseCountQuota")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.CORSConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "CORSConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.KeyRotationConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "KeyRotationConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.RotationPolicy{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "RotationPolicy")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.LoggerConfig{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "LoggerConfig")
+			os.Exit(1)
+		}
+		if err = (&redhatcopv1alpha1.UICustomHeader{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "UICustomHeader")
 			os.Exit(1)
 		}
 	}

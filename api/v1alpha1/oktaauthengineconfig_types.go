@@ -18,11 +18,9 @@ package v1alpha1
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
-	"strconv"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -57,56 +55,56 @@ type OktaAuthEngineConfigSpec struct {
 type OktaAuthConfig struct {
 	// OrgName is the name of the organization to be used in the Okta API.
 	// +kubebuilder:validation:Required
-	OrgName string `json:"orgName"`
+	OrgName string `json:"orgName" vault:"org_name"`
 
 	// BaseURL is the base domain for Okta API requests.
 	// If unset, "okta.com" is used. Other valid values: "oktapreview.com", "okta-emea.com".
 	// +kubebuilder:validation:Optional
-	BaseURL string `json:"baseURL,omitempty"`
+	BaseURL string `json:"baseURL,omitempty" vault:"base_url"`
 
 	// BypassOktaMFA bypasses an Okta MFA request. Useful when using Vault's built-in MFA.
 	// +kubebuilder:validation:Optional
-	BypassOktaMFA bool `json:"bypassOktaMFA,omitempty"`
+	BypassOktaMFA bool `json:"bypassOktaMFA,omitempty" vault:"bypass_okta_mfa"`
 
 	// TokenTTL is the incremental lifetime for generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenTTL string `json:"tokenTTL,omitempty"`
+	TokenTTL string `json:"tokenTTL,omitempty" vault:"token_ttl,duration"`
 
 	// TokenMaxTTL is the maximum lifetime for generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenMaxTTL string `json:"tokenMaxTTL,omitempty"`
+	TokenMaxTTL string `json:"tokenMaxTTL,omitempty" vault:"token_max_ttl,duration"`
 
 	// TokenPolicies are policies to encode onto generated tokens.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	TokenPolicies []string `json:"tokenPolicies,omitempty"`
+	TokenPolicies []string `json:"tokenPolicies,omitempty" vault:"token_policies"`
 
 	// TokenBoundCIDRs are CIDR blocks restricting authentication and tying the token.
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty"`
+	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty" vault:"token_bound_cidrs"`
 
 	// TokenExplicitMaxTTL is the hard cap max TTL for tokens.
 	// +kubebuilder:validation:Optional
-	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty"`
+	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty" vault:"token_explicit_max_ttl,duration"`
 
 	// TokenNoDefaultPolicy if true, omits the default policy from generated tokens.
 	// +kubebuilder:validation:Optional
-	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty"`
+	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty" vault:"token_no_default_policy"`
 
 	// TokenNumUses is the max number of times a generated token may be used (0 = unlimited).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	TokenNumUses int64 `json:"tokenNumUses,omitempty"`
+	TokenNumUses int64 `json:"tokenNumUses,omitempty" vault:"token_num_uses,number"`
 
 	// TokenPeriod is the maximum allowed period for periodic tokens.
 	// +kubebuilder:validation:Optional
-	TokenPeriod string `json:"tokenPeriod,omitempty"`
+	TokenPeriod string `json:"tokenPeriod,omitempty" vault:"token_period,duration"`
 
 	// TokenType is the type of token to generate.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum={"service","batch","default","default-service","default-batch"}
-	TokenType string `json:"tokenType,omitempty"`
+	TokenType string `json:"tokenType,omitempty" vault:"token_type"`
 
 	retrievedAPIToken string `json:"-"`
 }
@@ -166,16 +164,8 @@ func (d *OktaAuthEngineConfig) IsEquivalentToDesiredState(payload map[string]any
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (d *OktaAuthEngineConfig) IsInitialized() bool {
-	return true
-}
-
 func (d *OktaAuthEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	return d.setInternalCredentials(context)
-}
-
-func (d *OktaAuthEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *OktaAuthEngineConfig) IsValid() (bool, error) {
@@ -269,20 +259,8 @@ func (r *OktaAuthEngineConfig) isValid() error {
 }
 
 func (c *OktaAuthConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["org_name"] = c.OrgName
+	payload := vaultutils.StructToVaultPayload(c)
 	payload["api_token"] = c.retrievedAPIToken
-	payload["base_url"] = c.BaseURL
-	payload["bypass_okta_mfa"] = c.BypassOktaMFA
-	payload["token_ttl"] = durationToSeconds(c.TokenTTL)
-	payload["token_max_ttl"] = durationToSeconds(c.TokenMaxTTL)
-	payload["token_policies"] = toInterfaceArray(c.TokenPolicies)
-	payload["token_bound_cidrs"] = toInterfaceArray(c.TokenBoundCIDRs)
-	payload["token_explicit_max_ttl"] = durationToSeconds(c.TokenExplicitMaxTTL)
-	payload["token_no_default_policy"] = c.TokenNoDefaultPolicy
-	payload["token_num_uses"] = json.Number(strconv.FormatInt(c.TokenNumUses, 10))
-	payload["token_period"] = durationToSeconds(c.TokenPeriod)
-	payload["token_type"] = c.TokenType
 	return payload
 }
 

@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -164,7 +165,7 @@ func TestQuaySecretEngineRoleIsEquivalentMatching(t *testing.T) {
 
 	payload := role.Spec.QuayRole.toMap()
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected matching payload to be equivalent")
 	}
 }
@@ -185,7 +186,7 @@ func TestQuaySecretEngineRoleIsEquivalentNonMatching(t *testing.T) {
 	payload := role.Spec.QuayRole.toMap()
 	payload["namespace_name"] = "otherorg"
 
-	if role.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected non-matching payload to NOT be equivalent")
 	}
 }
@@ -206,7 +207,7 @@ func TestQuaySecretEngineRoleIsEquivalentExtraFields(t *testing.T) {
 	payload := role.Spec.QuayRole.toMap()
 	payload["extra_vault_field"] = "some-value"
 
-	if !role.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }

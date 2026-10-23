@@ -48,7 +48,7 @@ func TestGCPConfigToMap(t *testing.T) {
 		"iam_metadata":    "default",
 		"gce_alias":       "role_id",
 		"gce_metadata":    "default",
-		"custom_endpoint": customEndpoint,
+		"custom_endpoint": *customEndpoint,
 	}
 
 	if !reflect.DeepEqual(result, expected) {
@@ -75,11 +75,11 @@ func TestGCPConfigToMapCustomEndpointJSON(t *testing.T) {
 
 	result := config.toMap()
 
-	val, ok := result["custom_endpoint"].(*apiextensionsv1.JSON)
+	val, ok := result["custom_endpoint"].(apiextensionsv1.JSON)
 	if !ok {
-		t.Fatalf("expected custom_endpoint to be *apiextensionsv1.JSON, got %T", result["custom_endpoint"])
+		t.Fatalf("expected custom_endpoint to be apiextensionsv1.JSON, got %T", result["custom_endpoint"])
 	}
-	if !reflect.DeepEqual(val, customEndpoint) {
+	if !reflect.DeepEqual(val, *customEndpoint) {
 		t.Errorf("expected custom_endpoint to be stored directly")
 	}
 }
@@ -98,7 +98,7 @@ func TestGCPAuthEngineConfigIsEquivalentMatching(t *testing.T) {
 
 	payload := config.Spec.GCPConfig.toMap()
 
-	if !config.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected matching payload to be equivalent")
 	}
 }
@@ -115,7 +115,7 @@ func TestGCPAuthEngineConfigIsEquivalentNonMatching(t *testing.T) {
 	payload := config.Spec.GCPConfig.toMap()
 	payload["iam_alias"] = "role_id"
 
-	if config.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected non-matching payload (different iam_alias) to NOT be equivalent")
 	}
 }
@@ -132,7 +132,7 @@ func TestGCPAuthEngineConfigIsEquivalentExtraFields(t *testing.T) {
 	payload := config.Spec.GCPConfig.toMap()
 	payload["extra_field"] = "unexpected"
 
-	if !config.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }

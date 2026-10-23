@@ -17,14 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"encoding/json"
-	"reflect"
-	"strconv"
-
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // AzureAuthEngineRoleSpec defines the desired state of AzureAuthEngineRole
@@ -80,60 +74,60 @@ type AzureRole struct {
 
 	// Name of the role.
 	// +kubebuilder:validation:Required
-	Name string `json:"name"`
+	Name string `json:"name" vault:"name"`
 
 	// The list of Service Principal IDs that login is restricted to.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	BoundServicePrincipalIDs []string `json:"boundServicePrincipalIDs,omitempty"`
+	BoundServicePrincipalIDs []string `json:"boundServicePrincipalIDs,omitempty" vault:"bound_service_principal_ids"`
 
 	// The list of group ids that login is restricted to.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	BoundGroupIDs []string `json:"boundGroupIDs,omitempty"`
+	BoundGroupIDs []string `json:"boundGroupIDs,omitempty" vault:"bound_group_ids"`
 
 	// The list of locations that login is restricted to.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	BoundLocations []string `json:"boundLocations,omitempty"`
+	BoundLocations []string `json:"boundLocations,omitempty" vault:"bound_locations"`
 
 	// The list of subscription IDs that login is restricted to.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	BoundSubscriptionIDs []string `json:"boundSubscriptionIDs,omitempty"`
+	BoundSubscriptionIDs []string `json:"boundSubscriptionIDs,omitempty" vault:"bound_subscription_ids"`
 
 	// The list of resource groups that login is restricted to.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	BoundResourceGroups []string `json:"boundResourceGroups,omitempty"`
+	BoundResourceGroups []string `json:"boundResourceGroups,omitempty" vault:"bound_resource_groups"`
 
 	// The list of scale set names that the login is restricted to.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	BoundScaleSets []string `json:"boundScaleSets,omitempty"`
+	BoundScaleSets []string `json:"boundScaleSets,omitempty" vault:"bound_scale_sets"`
 
 	// The incremental lifetime for generated tokens.
 	//This current value of this will be referenced at renewal time.
 	// +kubebuilder:validation:Optional
-	TokenTTL string `json:"tokenTTL,omitempty"`
+	TokenTTL string `json:"tokenTTL,omitempty" vault:"token_ttl,duration"`
 
 	// The maximum lifetime for generated tokens.
 	// This current value of this will be referenced at renewal time.
 	// +kubebuilder:validation:Optional
-	TokenMaxTTL string `json:"tokenMaxTTL,omitempty"`
+	TokenMaxTTL string `json:"tokenMaxTTL,omitempty" vault:"token_max_ttl,duration"`
 
 	// List of token policies to encode onto generated tokens.
 	// Depending on the auth method, this list may be supplemented by user/group/other values.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	TokenPolicies []string `json:"tokenPolicies,omitempty"`
+	TokenPolicies []string `json:"tokenPolicies,omitempty" vault:"token_policies"`
 
 	// DEPRECATED: Please use the token_policies parameter instead.
 	// List of token policies to encode onto generated tokens.
@@ -141,34 +135,34 @@ type AzureRole struct {
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	Policies []string `json:"policies,omitempty"`
+	Policies []string `json:"policies,omitempty" vault:"policies"`
 
 	// List of CIDR blocks.
 	// If set, specifies blocks of IP addresses which can authenticate successfully, and ties the resulting token to these blocks as well.
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	// kubebuilder:validation:UniqueItems=true
-	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty"`
+	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty" vault:"token_bound_cidrs"`
 
 	// If set, will encode an explicit max TTL onto the token.
 	// This is a hard cap even if token_ttl and token_max_ttl would otherwise allow a renewal.
 	// +kubebuilder:validation:Optional
-	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty"`
+	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty" vault:"token_explicit_max_ttl,duration"`
 
 	// If set, the default policy will not be set on generated tokens; otherwise it will be added to the policies set in token_policies.
 	// +kubebuilder:validation:Optional
-	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty"`
+	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty" vault:"token_no_default_policy"`
 
 	// The maximum number of times a generated token may be used (within its lifetime); 0 means unlimited.
 	// If you require the token to have the ability to create child tokens, you will need to set this value to 0.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	TokenNumUses int64 `json:"tokenNumUses,omitempty"`
+	TokenNumUses int64 `json:"tokenNumUses,omitempty" vault:"token_num_uses"`
 
 	// The maximum allowed period value when a periodic token is requested from this role.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	TokenPeriod int64 `json:"tokenPeriod,omitempty"`
+	TokenPeriod int64 `json:"tokenPeriod,omitempty" vault:"token_period,number"`
 
 	// The type of token that should be generated.
 	// Can be service, batch, or default to use the mount's tuned default (which unless changed will be service tokens).
@@ -176,7 +170,7 @@ type AzureRole struct {
 	// For machine based authentication cases, you should use batch type tokens.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum={"service","batch","default","default-service","default-batch"}
-	TokenType string `json:"tokenType,omitempty"`
+	TokenType string `json:"tokenType,omitempty" vault:"token_type"`
 }
 
 var _ vaultutils.VaultObject = &AzureAuthEngineRole{}
@@ -214,46 +208,6 @@ func (r *AzureAuthEngineRole) GetPayload() map[string]any {
 	return r.Spec.AzureRole.toMap()
 }
 
-func (r *AzureAuthEngineRole) IsEquivalentToDesiredState(payload map[string]any) bool {
-	desiredState := r.Spec.AzureRole.toMap()
-	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (r *AzureAuthEngineRole) IsInitialized() bool {
-	return true
-}
-
-func (r *AzureAuthEngineRole) IsValid() (bool, error) {
-	return true, nil
-}
-
-func (d *AzureAuthEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *AzureAuthEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
 func (r *AzureRole) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["name"] = r.Name
-	payload["bound_service_principal_ids"] = r.BoundServicePrincipalIDs
-	payload["bound_group_ids"] = r.BoundGroupIDs
-	payload["bound_locations"] = r.BoundLocations
-	payload["bound_subscription_ids"] = r.BoundSubscriptionIDs
-	payload["bound_resource_groups"] = r.BoundResourceGroups
-	payload["bound_scale_sets"] = r.BoundScaleSets
-	payload["token_ttl"] = durationToSeconds(r.TokenTTL)
-	payload["token_max_ttl"] = durationToSeconds(r.TokenMaxTTL)
-	payload["token_policies"] = r.TokenPolicies
-	payload["policies"] = r.Policies
-	payload["token_bound_cidrs"] = r.TokenBoundCIDRs
-	payload["token_explicit_max_ttl"] = durationToSeconds(r.TokenExplicitMaxTTL)
-	payload["token_no_default_policy"] = r.TokenNoDefaultPolicy
-	payload["token_num_uses"] = r.TokenNumUses
-	payload["token_period"] = json.Number(strconv.FormatInt(r.TokenPeriod, 10))
-	payload["token_type"] = r.TokenType
-
-	return payload
+	return vaultutils.StructToVaultPayload(r)
 }

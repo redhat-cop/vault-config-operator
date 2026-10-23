@@ -17,12 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // LDAPSecretEngineDynamicRoleSpec defines the desired state of LDAPSecretEngineDynamicRole
@@ -53,27 +51,27 @@ type LDAPSecretEngineDynamicRoleSpec struct {
 type LDAPSEDynamicRole struct {
 	// CreationLDIF is a templatized LDIF string for creating LDAP user accounts (may be base64 encoded)
 	// +kubebuilder:validation:Required
-	CreationLDIF string `json:"creationLDIF"`
+	CreationLDIF string `json:"creationLDIF" vault:"creation_ldif"`
 
 	// DeletionLDIF is a templatized LDIF string for deleting LDAP user accounts (may be base64 encoded)
 	// +kubebuilder:validation:Required
-	DeletionLDIF string `json:"deletionLDIF"`
+	DeletionLDIF string `json:"deletionLDIF" vault:"deletion_ldif"`
 
 	// RollbackLDIF is a templatized LDIF string for rollback on creation failure (recommended)
 	// +kubebuilder:validation:Optional
-	RollbackLDIF string `json:"rollbackLDIF,omitempty"`
+	RollbackLDIF string `json:"rollbackLDIF,omitempty" vault:"rollback_ldif"`
 
 	// UsernameTemplate is a Go template for dynamic username generation
 	// +kubebuilder:validation:Optional
-	UsernameTemplate string `json:"usernameTemplate,omitempty"`
+	UsernameTemplate string `json:"usernameTemplate,omitempty" vault:"username_template"`
 
 	// DefaultTTL specifies the default TTL for leases (duration format string, e.g. "1h")
 	// +kubebuilder:validation:Optional
-	DefaultTTL string `json:"defaultTTL,omitempty"`
+	DefaultTTL string `json:"defaultTTL,omitempty" vault:"default_ttl,duration"`
 
 	// MaxTTL specifies the maximum TTL for leases (duration format string, e.g. "24h")
 	// +kubebuilder:validation:Optional
-	MaxTTL string `json:"maxTTL,omitempty"`
+	MaxTTL string `json:"maxTTL,omitempty" vault:"max_ttl,duration"`
 }
 
 var _ vaultutils.VaultObject = &LDAPSecretEngineDynamicRole{}
@@ -88,10 +86,7 @@ func (d *LDAPSecretEngineDynamicRole) IsDeletable() bool {
 }
 
 func (d *LDAPSecretEngineDynamicRole) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath(string(d.Spec.Path) + "/role/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath(string(d.Spec.Path) + "/role/" + d.Name)
+	return vaultutils.CleansePath(string(d.Spec.Path) + "/role/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 
 func (d *LDAPSecretEngineDynamicRole) GetPayload() map[string]any {
@@ -104,31 +99,8 @@ func (d *LDAPSecretEngineDynamicRole) IsEquivalentToDesiredState(payload map[str
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (d *LDAPSecretEngineDynamicRole) IsInitialized() bool {
-	return true
-}
-
-func (d *LDAPSecretEngineDynamicRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *LDAPSecretEngineDynamicRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *LDAPSecretEngineDynamicRole) IsValid() (bool, error) {
-	return true, nil
-}
-
 func (i *LDAPSEDynamicRole) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["creation_ldif"] = i.CreationLDIF
-	payload["deletion_ldif"] = i.DeletionLDIF
-	payload["rollback_ldif"] = i.RollbackLDIF
-	payload["username_template"] = i.UsernameTemplate
-	payload["default_ttl"] = durationToSeconds(i.DefaultTTL)
-	payload["max_ttl"] = durationToSeconds(i.MaxTTL)
-	return payload
+	return vaultutils.StructToVaultPayload(i)
 }
 
 // LDAPSecretEngineDynamicRoleStatus defines the observed state of LDAPSecretEngineDynamicRole

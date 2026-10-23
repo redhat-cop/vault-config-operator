@@ -12,6 +12,7 @@ import (
 	redhatcopv1alpha1 "github.com/redhat-cop/vault-config-operator/api/v1alpha1"
 	"github.com/redhat-cop/vault-config-operator/internal/controller/vaultresourcecontroller"
 
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -72,6 +73,12 @@ var _ = Describe("UserpassAuthEngineUser controller", Ordered, func() {
 
 	Context("When creating a password Secret", func() {
 		It("Should create the K8s Secret", func() {
+			By("Cleaning up any leftover password Secret from a previous run")
+			leftover := &corev1.Secret{}
+			leftover.Name = "test-userpass-password"
+			leftover.Namespace = vaultAdminNamespaceName
+			_ = k8sIntegrationClient.Delete(ctx, leftover)
+
 			By("Loading and creating the password Secret fixture")
 			_, err := decoder.CreateFromYAML(ctx, k8sIntegrationClient, "../../test/userpassauthengine/test-userpass-password-secret.yaml", vaultAdminNamespaceName)
 			Expect(err).To(BeNil())

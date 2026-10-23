@@ -1,0 +1,10 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: RotationPolicy
+metadata:
+  name: test-simple-rotation-policy
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  maxRetriesPerCycle: 3
+  maxRetryCycles: 5

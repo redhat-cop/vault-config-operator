@@ -17,14 +17,12 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
 	"reflect"
 	"sort"
 	"strings"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // KerberosAuthEngineGroupSpec defines the desired state of KerberosAuthEngineGroup
@@ -47,7 +45,7 @@ type KerberosAuthEngineGroupSpec struct {
 
 	// Policies is a comma-separated list of policies associated with the group.
 	// +kubebuilder:validation:Optional
-	Policies string `json:"policies,omitempty"`
+	Policies string `json:"policies,omitempty" vault:"policies"`
 }
 
 var _ vaultutils.VaultObject = &KerberosAuthEngineGroup{}
@@ -110,22 +108,6 @@ func normalizePoliciesField(m map[string]any) {
 	m["policies"] = strings.Join(policies, ",")
 }
 
-func (d *KerberosAuthEngineGroup) IsInitialized() bool {
-	return true
-}
-
-func (d *KerberosAuthEngineGroup) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *KerberosAuthEngineGroup) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (r *KerberosAuthEngineGroup) IsValid() (bool, error) {
-	return true, nil
-}
-
 // KerberosAuthEngineGroupStatus defines the observed state of KerberosAuthEngineGroup
 type KerberosAuthEngineGroupStatus struct {
 	// +patchMergeKey=type
@@ -169,9 +151,7 @@ func init() {
 }
 
 func (i *KerberosAuthEngineGroup) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["policies"] = i.Spec.Policies
-	return payload
+	return vaultutils.StructToVaultPayload(&i.Spec)
 }
 
 func (d *KerberosAuthEngineGroup) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {

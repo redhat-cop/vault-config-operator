@@ -17,12 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
 	"reflect"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // TransitSecretEngineKeySpec defines the desired state of TransitSecretEngineKey
@@ -156,11 +154,7 @@ func init() {
 var _ vaultutils.VaultObject = &TransitSecretEngineKey{}
 
 func (d *TransitSecretEngineKey) GetPath() string {
-	name := d.Name
-	if d.Spec.Name != "" {
-		name = d.Spec.Name
-	}
-	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "keys" + "/" + name)
+	return vaultutils.CleansePath(string(d.Spec.Path) + "/" + "keys" + "/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 
 func (d *TransitSecretEngineKey) GetConfigPath() string {
@@ -175,25 +169,11 @@ func (d *TransitSecretEngineKey) GetConfigPayload() map[string]any {
 	return d.Spec.TransitKeyConfig.configToMap()
 }
 
+var _ vaultutils.VaultEquivalenceChecker = &TransitSecretEngineKey{}
+
 func (d *TransitSecretEngineKey) IsEquivalentToDesiredState(payload map[string]any) bool {
 	desiredState := d.Spec.TransitKeyConfig.configToMap()
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (d *TransitSecretEngineKey) IsInitialized() bool {
-	return true
-}
-
-func (d *TransitSecretEngineKey) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *TransitSecretEngineKey) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *TransitSecretEngineKey) IsValid() (bool, error) {
-	return true, nil
 }
 
 func (d *TransitSecretEngineKey) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {

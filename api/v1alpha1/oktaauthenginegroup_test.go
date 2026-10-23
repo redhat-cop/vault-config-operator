@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -35,7 +36,7 @@ func TestOktaAuthEngineGroup_IsEquivalentToDesiredState_Match(t *testing.T) {
 		"policies": "admin,reader",
 	}
 
-	if !group.IsEquivalentToDesiredState(vaultPayload) {
+	if !vaultutils.IsEquivalentToDesiredState(group, vaultPayload) {
 		t.Error("expected matching payload to be equivalent")
 	}
 }
@@ -51,7 +52,7 @@ func TestOktaAuthEngineGroup_IsEquivalentToDesiredState_Mismatch(t *testing.T) {
 		"policies": "different-policy",
 	}
 
-	if group.IsEquivalentToDesiredState(vaultPayload) {
+	if vaultutils.IsEquivalentToDesiredState(group, vaultPayload) {
 		t.Error("expected non-matching payload (different policies) to NOT be equivalent")
 	}
 }
@@ -68,7 +69,7 @@ func TestOktaAuthEngineGroup_IsEquivalentToDesiredState_ExtraVaultFields(t *test
 		"extra_field": "unexpected",
 	}
 
-	if !group.IsEquivalentToDesiredState(vaultPayload) {
+	if !vaultutils.IsEquivalentToDesiredState(group, vaultPayload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }

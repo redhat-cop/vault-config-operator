@@ -54,7 +54,7 @@ type KubernetesSecretEngineConfigSpec struct {
 
 	// JWTReference specifies how to retrieve the JWT token for this Kubernetes Engine connection. Only VaultSecretReference or LocalObjectRefence can be used, random secret is not allowed.
 	// +kubebuilder:validation:Optional
-	JWTReference vaultutils.RootCredentialConfig `json:"jwtReference,omitempty"`
+	JWTReference vaultutils.RootCredentialConfig `json:"jwtReference,omitempty" vault:"-"`
 
 	KubeSEConfig `json:",inline"`
 }
@@ -121,16 +121,8 @@ func (d *KubernetesSecretEngineConfig) IsEquivalentToDesiredState(payload map[st
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (d *KubernetesSecretEngineConfig) IsInitialized() bool {
-	return true
-}
-
 func (d *KubernetesSecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	return d.setInternalCredentials(context)
-}
-
-func (d *KubernetesSecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *KubernetesSecretEngineConfig) IsValid() (bool, error) {
@@ -190,25 +182,22 @@ func (r *KubernetesSecretEngineConfig) setInternalCredentials(context context.Co
 type KubeSEConfig struct {
 	// KubernetesHost Kubernetes API URL to connect to.
 	// +kubebuilder:validation:Optional
-	KubernetesHost string `json:"kubernetesHost,omitempty"`
+	KubernetesHost string `json:"kubernetesHost,omitempty" vault:"kubernetes_host"`
 
 	// KubernetesCACert PEM encoded CA certificate to verify the Kubernetes API server certificate.
 	// +kubebuilder:validation:Optional
-	KubernetesCACert string `json:"kubernetesCACert,omitempty"`
+	KubernetesCACert string `json:"kubernetesCACert,omitempty" vault:"kubernetes_ca_cert"`
 
 	// DisableLocalCAJWT Disable defaulting to the local CA certificate and service account JWT when running in a Kubernetes pod.
 	// +kubebuilder:validation:Optional
-	DisableLocalCAJWT bool `json:"disableLocalCAJWT,omitempty"`
+	DisableLocalCAJWT bool `json:"disableLocalCAJWT,omitempty" vault:"disable_local_ca_jwt"`
 
 	retrievedServiceAccountJWT string `json:"-"`
 }
 
 func (i *KubeSEConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["kubernetes_host"] = i.KubernetesHost
-	payload["kubernetes_ca_cert"] = i.KubernetesCACert
+	payload := vaultutils.StructToVaultPayload(i)
 	payload["service_account_jwt"] = i.retrievedServiceAccountJWT
-	payload["disable_local_ca_jwt"] = i.DisableLocalCAJWT
 	return payload
 }
 

@@ -62,21 +62,19 @@ type GHConfig struct {
 	// ApplicationID the Application ID of the GitHub App.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=1
-	ApplicationID int64 `json:"applicationID,omitempty"`
+	ApplicationID int64 `json:"applicationID,omitempty" vault:"app_id"`
 
 	// GitHubAPIBaseURL the base URL for API requests (defaults to the public GitHub API).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="https://api.github.com"
-	GitHubAPIBaseURL string `json:"gitHubAPIBaseURL"`
+	GitHubAPIBaseURL string `json:"gitHubAPIBaseURL" vault:"base_url"`
 
 	retrievedSSHKey string `json:"-"`
 }
 
 func (i *GHConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["app_id"] = i.ApplicationID
+	payload := vaultutils.StructToVaultPayload(i)
 	payload["prv_key"] = i.retrievedSSHKey
-	payload["base_url"] = i.GitHubAPIBaseURL
 	return payload
 }
 
@@ -110,10 +108,6 @@ func (d *GitHubSecretEngineConfig) IsEquivalentToDesiredState(payload map[string
 	desiredState := d.Spec.GHConfig.toMap()
 	delete(desiredState, "prv_key")
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
-}
-
-func (d *GitHubSecretEngineConfig) IsInitialized() bool {
-	return true
 }
 
 func (d *GitHubSecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {

@@ -3061,3 +3061,214 @@ So that Vault's custom UI response headers and runtime log levels can be managed
 
 **Complexity:** Low
 **Novelty Risk:** LOW — standard named-resource pattern
+
+---
+
+### Story 17.5: Reflective toMap via `vault` Struct Tags + VaultObject Interface Simplification
+
+As an operator developer,
+I want the struct-to-Vault-payload mapping driven by struct tags with a single runtime reflection walker, and the VaultObject interface trimmed to only its essential methods,
+So that adding a new CRD requires only annotated struct fields instead of writing 6+ boilerplate methods per type, and the ~2,000 lines of duplicated no-op methods are eliminated.
+
+**Part A0 — PREREQUISITE: toMap / IsEquivalentToDesiredState Unit Test Audit + Gap Fill:**
+
+The walker migration MUST NOT proceed until every type has comprehensive unit tests that serve as the regression oracle. The tests must pass **before** the walker is implemented and **after** each type is migrated.
+
+**Acceptance Criteria:**
+
+**Given** the 88 existing CRD types
+**When** a test audit is performed
+**Then** every type has at minimum:
+  - A `toMap()` output test verifying all Vault keys and correct codec encoding (duration→seconds, json.Number, intmap, stringmap)
+  - An `IsEquivalentToDesiredState` positive test with a independently-constructed Vault-read-shaped fixture (NOT derived from `toMap()`)
+  - An `IsEquivalentToDesiredState` negative test proving field mismatch returns `false`
+  - An `IsEquivalentToDesiredState` extra-fields test proving unmanaged Vault keys are filtered
+  - For mode-dependent types (SSH, TOTP, DB): tests for each mode branch, including assertion that mode-excluded fields are absent
+
+**Given** the 8 types currently without test files (IdentityOIDCAssignment, IdentityOIDCClient, IdentityOIDCProvider, IdentityOIDCScope, IdentityTokenConfig, IdentityTokenKey, IdentityTokenRole, VaultSecret)
+**When** Part A0 runs
+**Then** test files are created with full coverage matching the patterns established in existing tests (e.g., `sshsecretenginerole_test.go`, `oktaauthenginegroup_test.go`)
+
+**Given** all 83 existing test files
+**When** Part A0 audits them
+**Then** any test that derives expected values from `toMap()` or `GetPayload()` (violating the "never derive expected from code under test" rule) is rewritten with independent fixtures
+
+**Implementation notes:**
+- Current state: 83 of 91 type files have test files; 8 have no test file at all
+- Total existing test lines: ~31,000 across 91 test files — substantial coverage exists
+- Focus gap-fill on the 8 missing types + audit existing tests for anti-pattern violations
+- This is a **prerequisite gate**: Part A1 MUST NOT start until Part A0 is complete and all tests pass
+
+**Part A1 — `StructToVaultPayload` runtime reflection walker:**
+
+**Acceptance Criteria:**
+
+**Given** a struct with `vault:"key[,codec]"` tags
+**When** `StructToVaultPayload(&spec)` is called
+**Then** a `map[string]any` is returned with Vault API keys and correctly encoded values
+
+**Given** a field tagged `vault:"-"`
+**When** the walker processes the struct
+**Then** the field is excluded (Connection, Authentication, Path, credential structs)
+
+**Given** a field tagged `vault:"token_ttl,duration"`
+**When** the walker encodes it
+**Then** the value is converted via `durationToSeconds()` (string → `json.Number` seconds)
+
+**Given** a field tagged `vault:"token_num_uses,number"`
+**When** the walker encodes it
+**Then** the value is converted to `json.Number` matching Vault's `UseNumber()` JSON decoding
+
+**Given** a field tagged `vault:",inline"` (embedded struct)
+**When** the walker processes it
+**Then** the embedded struct's fields are merged into the parent payload
+
+**Given** a field tagged `vault:"cidr_list,when=KeyType:otp"`
+**When** the walker processes a struct where `KeyType` is `"ca"`
+**Then** the field is excluded from the payload
+
+**Given** a field tagged `vault:"cidr_list,when=KeyType:otp"`
+**When** the walker processes a struct where `KeyType` is `"otp"`
+**Then** the field is included in the payload
+
+**Given** a `*bool` field tagged `vault:"verify_connection,default=true"`
+**When** the field is `nil`
+**Then** the walker emits `true` (the default); when non-nil, it emits the dereferenced value
+
+**Given** a `*int` field tagged `vault:"max_retries,number,default=-1"`
+**When** the field is `nil`
+**Then** the walker emits `json.Number("-1")`; when non-nil, it emits `json.Number(strconv.Itoa(*val))`
+
+**Given** a `map[string]string` field tagged `vault:",spreadmap"`
+**When** the walker processes it
+**Then** each key-value pair is merged into the parent payload (not nested under a single key)
+
+**Given** all 8 new Epic 17 CRDs
+**When** they are implemented
+**Then** they MUST use `StructToVaultPayload` — no hand-written `toMap`
+
+**Given** the walker is implemented and all Part A0 tests pass
+**When** all existing types (except TransitSecretEngineKey) are migrated to use vault struct tags
+**Then** all Part A0 unit tests pass unchanged — zero behavioral difference
+
+**Implementation notes:**
+- Extended tag grammar: `vault:"<vault_key>[,<codec>][,omitempty][,when=Field:value][,default=X][,spreadmap]"` | `vault:"-"` | `vault:",inline"`
+- Codecs (closed set): `duration`, `number`, `intmap`, `stringmap` — plus identity (no codec)
+- Extended directives:
+  - `when=Field:value` — conditional field inclusion based on a sibling field's value. The walker resolves `Field` by Go struct field name (not vault key). Handles SSH (otp/ca), TOTP (generate true/false), and similar mode-dependent patterns.
+  - `default=X` — pointer-nil defaulting. When a pointer field is nil, emit the parsed default value instead of skipping. Handles `*bool` (default=true/false) and `*int` (default=-1). The default is parsed to match the field's base type before codec application.
+  - `spreadmap` — merge a `map[string]string` field's entries into the parent payload instead of nesting. Handles DatabaseSecretEngineConfig's `DatabaseSpecificConfig` pattern.
+- All 88 types are eligible with the extended grammar. Only **TransitSecretEngineKey** keeps hand-written `toMap()`/`configToMap()` — it produces two different maps from one struct for two different Vault endpoints, which is not worth a `group=` tag feature for a single type.
+- **Credential-override types** (LDAP, AWS auth/secret, DB): the spec-overrides-retrieved logic currently inside `toMap()` must be moved to `PrepareInternalValues()` / `PrepareTLSConfig()` where it belongs. After that refactor, the `retrieved*` unexported fields get normal vault tags and the walker handles them.
+- **PKI multi-endpoint**: each sub-struct (`PKIConfigUrls`, `PKIConfigCRL`, `PKIConfigCluster`, `PKIConfigACME`, `PKICommon`) is an independent struct — the walker handles each one individually via `StructToVaultPayload(&subStruct)`. No special tag needed.
+- Runtime reflection, not code generation: microsecond cost on a millisecond-network-IO path; single source of truth; Part A0 tests catch regressions.
+- Migration order: start with simple types (10 trivial ones), then standard types (~65), then mode-dependent types (SSH, TOTP, DB), then credential types (LDAP, AWS, DB). Transit is excluded.
+
+**Part B — Default `IsEquivalentToDesiredState`:**
+
+**Acceptance Criteria:**
+
+**Given** a VaultObject that does NOT implement `VaultEquivalenceChecker`
+**When** `VaultEndpoint.CreateOrUpdate` compares desired vs current state
+**Then** it uses `filterPayloadToDesiredKeys` + `reflect.DeepEqual` as the default comparison
+
+**Given** a VaultObject that DOES implement `VaultEquivalenceChecker` (types using `removeUnsetFields`, `normalizeVaultReadAliases`, or tune config)
+**When** `VaultEndpoint.CreateOrUpdate` compares desired vs current state
+**Then** it delegates to the type's custom `IsEquivalentToDesiredState` method
+
+**Implementation notes:**
+- Remove `IsEquivalentToDesiredState` from the required `VaultObject` interface
+- Add `VaultEquivalenceChecker` optional interface
+- ~60 types delete their identical `IsEquivalentToDesiredState` method
+- ~25 types keep their custom implementation (those using `removeUnsetFields`, `normalizeVaultReadAliases`, write-only field stripping, or engine tune comparison)
+
+**Part C — Optional no-op interface methods:**
+
+**Acceptance Criteria:**
+
+**Given** a VaultObject type that has trivial `IsInitialized() → true`, `IsValid() → (true, nil)`, `PrepareInternalValues() → nil`, `PrepareTLSConfig() → nil`
+**When** those methods are removed from the type
+**Then** the reconciler continues to function correctly (type-asserts optional interfaces, absent means no-op)
+
+**Implementation notes:**
+- Remove `IsInitialized`, `IsValid`, `PrepareInternalValues`, `PrepareTLSConfig` from required `VaultObject` interface
+- Define optional interfaces: `VaultInitializer`, `VaultValidator`, `VaultInternalValuesPreparer`, `VaultTLSPreparer`
+- Reconciler type-asserts each; absent = no-op
+- Deletes ~275 no-op method implementations
+- Only ~15 types implement non-trivial `PrepareInternalValues` (credential resolution)
+- Only ~5 types implement non-trivial `IsValid`
+- Zero types have non-trivial `IsInitialized` or `PrepareTLSConfig` (all return `true`/`nil`)
+
+**Part D — `ResourceName` helper:**
+
+**Given** `vaultutils.ResourceName(specName, metaName)` is called
+**When** `specName` is non-empty
+**Then** it returns `specName`; otherwise `metaName`
+
+**Implementation notes:** One-liner replacing ~48 identical `if d.Spec.Name != ""` branches in `GetPath()` methods.
+
+**Complexity:** High
+**Novelty Risk:** HIGH — shared framework refactor across all types. Existing Epic 1 unit tests and Epics 2–7 integration tests are the regression oracle.
+
+---
+
+### Story 17.6: Generic Reconciler + Error Handling Enforcement
+
+As an operator developer,
+I want a generic reconciler that eliminates the duplicated 70-line `Reconcile()` body from ~70 controller files, and comprehensive error checking enforced by linter,
+So that new CRDs need only a type registration line instead of a full controller file, and no error is silently swallowed.
+
+**Part A — Generic `VaultResource` Reconciler:**
+
+**Acceptance Criteria:**
+
+**Given** a new CRD type that implements `VaultObject` and `ConditionsAware`
+**When** a developer registers it with `SetupGenericController[MyType](mgr, "MyType")`
+**Then** the generic reconciler handles Get, prepareContext, NewVaultResource, Reconcile — no hand-written controller
+
+**Given** the generic reconciler is instantiated for all ~70 standard types
+**When** all existing integration tests run
+**Then** all tests pass with identical behavior
+
+**Given** a controller with custom reconcile logic (PKI, Transit, RandomSecret, VaultSecret, DatabaseSecretEngineConfig with rotation, AzureSecretEngineConfig with watchers)
+**When** the generic migration runs
+**Then** these ~10 controllers keep their hand-written `Reconcile` method
+
+**Implementation notes:**
+- Use Go generics (available since 1.18, we're on 1.27):
+  ```go
+  type GenericVaultReconciler[T any, PT interface{ *T; client.Object; VaultObject; ConditionsAware }] struct {
+      ReconcilerBase
+  }
+  ```
+- Per-type controller file still needed for kubebuilder RBAC marker comments — but shrinks to ~15 lines (markers + `SetupWithManager`)
+- Registration in `main.go` becomes one call per type
+- ~70 controllers use the identical body today; ~10 have custom logic and keep hand-written `Reconcile`
+- The Audit controller uses `NewVaultAuditResource` instead of `NewVaultResource` — parameterize the factory or keep that controller hand-written
+
+**Part B — Error Handling Enforcement:**
+
+**Acceptance Criteria:**
+
+**Given** the `errcheck` linter is enabled in `.golangci.yml`
+**When** `make lint` runs
+**Then** every function call returning an error has the error checked
+
+**Given** an error is returned from a Vault API call, K8s client call, or internal helper
+**When** the caller receives it
+**Then** the error is logged with context (path, instance, operation) before being returned or handled
+
+**Given** the codebase passes `errcheck`
+**When** CI runs
+**Then** `errcheck` violations fail the build
+
+**Implementation notes:**
+- Enable `errcheck` in `.golangci.yml` under `linters.enable`
+- Current `.golangci.yml` uses `default: standard` which includes `errcheck` for golangci-lint v2 — verify it's actually active, and if suppressed add it explicitly
+- Scan for patterns: `err :=` without subsequent `if err`, return values ignored (e.g., `vaultClient.Logical().Delete(path)` with `_` for error)
+- The R1 epic (Story R1.2a) did an errcheck pass — verify what was covered and what was added since
+- Focus on `api/v1alpha1/utils/` (Vault client layer) and `internal/controller/` (reconcilers)
+- Webhook validation methods that call `isValid()` must propagate errors, not silently return `true`
+
+**Complexity:** High
+**Novelty Risk:** MEDIUM — generics are well-understood in Go 1.27; errcheck is a mechanical sweep

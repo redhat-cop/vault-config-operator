@@ -47,20 +47,21 @@ func (r *VaultResource) Reconcile(ctx context.Context, instance client.Object) (
 func (r *VaultResource) manageReconcileLogic(context context.Context, instance client.Object) error {
 	log := log.FromContext(context)
 	// prepare internal values
-	err := instance.(vaultutils.VaultObject).PrepareInternalValues(context, instance)
-	if err != nil {
-		log.Error(err, "unable to prepare internal values", "instance", instance)
-		return err
+	if preparer, ok := instance.(vaultutils.VaultInternalValuesPreparer); ok {
+		if err := preparer.PrepareInternalValues(context, instance); err != nil {
+			log.Error(err, "unable to prepare internal values", "instance", instance)
+			return err
+		}
 	}
 
-	err = instance.(vaultutils.VaultObject).PrepareTLSConfig(context, instance)
-	if err != nil {
-		log.Error(err, "unable to prepare TLS Config values", "instance", instance)
-		return err
+	if tlsPreparer, ok := instance.(vaultutils.VaultTLSPreparer); ok {
+		if err := tlsPreparer.PrepareTLSConfig(context, instance); err != nil {
+			log.Error(err, "unable to prepare TLS Config values", "instance", instance)
+			return err
+		}
 	}
 
-	err = r.vaultEndpoint.CreateOrUpdate(context)
-	if err != nil {
+	if err := r.vaultEndpoint.CreateOrUpdate(context); err != nil {
 		log.Error(err, "unable to create/update vault resource", "instance", instance)
 		return err
 	}

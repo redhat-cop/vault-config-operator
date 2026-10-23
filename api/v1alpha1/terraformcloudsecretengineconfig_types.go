@@ -109,7 +109,7 @@ type TFCSEConfig struct {
 	// Address is the URL of the Terraform Cloud/Enterprise instance.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="https://app.terraform.io"
-	Address string `json:"address"`
+	Address string `json:"address" vault:"address"`
 
 	retrievedToken string `json:"-"`
 }
@@ -140,10 +140,6 @@ func (d *TerraformCloudSecretEngineConfig) IsEquivalentToDesiredState(payload ma
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (d *TerraformCloudSecretEngineConfig) IsInitialized() bool {
-	return true
-}
-
 func (d *TerraformCloudSecretEngineConfig) IsValid() (bool, error) {
 	err := d.isValid()
 	return err == nil, err
@@ -165,10 +161,6 @@ func (d *TerraformCloudSecretEngineConfig) GetKubeAuthConfiguration() *vaultutil
 
 func (d *TerraformCloudSecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	return d.setInternalCredentials(context)
-}
-
-func (d *TerraformCloudSecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (d *TerraformCloudSecretEngineConfig) setInternalCredentials(context context.Context) error {
@@ -240,8 +232,7 @@ func (d *TerraformCloudSecretEngineConfig) setInternalCredentials(context contex
 }
 
 func (i *TFCSEConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["address"] = i.Address
+	payload := vaultutils.StructToVaultPayload(i)
 	payload["token"] = i.retrievedToken
 	return payload
 }

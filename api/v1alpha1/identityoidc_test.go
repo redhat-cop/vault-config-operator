@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -63,10 +64,10 @@ func TestIdentityOIDCProviderGetPayload(t *testing.T) {
 	if payload["issuer"] != "https://example.com" {
 		t.Errorf("expected issuer 'https://example.com', got %v", payload["issuer"])
 	}
-	if !reflect.DeepEqual(payload["allowed_client_ids"], []string{"client1", "client2"}) {
+	if !reflect.DeepEqual(payload["allowed_client_ids"], []any{"client1", "client2"}) {
 		t.Errorf("expected allowed_client_ids [client1 client2], got %v", payload["allowed_client_ids"])
 	}
-	if !reflect.DeepEqual(payload["scopes_supported"], []string{"openid", "profile"}) {
+	if !reflect.DeepEqual(payload["scopes_supported"], []any{"openid", "profile"}) {
 		t.Errorf("expected scopes_supported [openid profile], got %v", payload["scopes_supported"])
 	}
 }
@@ -100,19 +101,19 @@ func TestIdentityOIDCProviderIsEquivalentToDesiredState(t *testing.T) {
 
 	matching := map[string]any{
 		"issuer":             "https://example.com",
-		"allowed_client_ids": []string{"client1"},
-		"scopes_supported":   []string{"openid"},
+		"allowed_client_ids": []any{"client1"},
+		"scopes_supported":   []any{"openid"},
 	}
-	if !provider.IsEquivalentToDesiredState(matching) {
+	if !vaultutils.IsEquivalentToDesiredState(provider, matching) {
 		t.Error("expected matching payload to be equivalent")
 	}
 
 	nonMatching := map[string]any{
 		"issuer":             "https://other.com",
-		"allowed_client_ids": []string{"client1"},
-		"scopes_supported":   []string{"openid"},
+		"allowed_client_ids": []any{"client1"},
+		"scopes_supported":   []any{"openid"},
 	}
-	if provider.IsEquivalentToDesiredState(nonMatching) {
+	if vaultutils.IsEquivalentToDesiredState(provider, nonMatching) {
 		t.Error("expected non-matching payload to not be equivalent")
 	}
 }
@@ -208,7 +209,7 @@ func TestIdentityOIDCScopeIsEquivalentToDesiredState(t *testing.T) {
 		"template":    "tmpl",
 		"description": "desc",
 	}
-	if !scope.IsEquivalentToDesiredState(matching) {
+	if !vaultutils.IsEquivalentToDesiredState(scope, matching) {
 		t.Error("expected matching payload to be equivalent")
 	}
 
@@ -216,7 +217,7 @@ func TestIdentityOIDCScopeIsEquivalentToDesiredState(t *testing.T) {
 		"template":    "other",
 		"description": "desc",
 	}
-	if scope.IsEquivalentToDesiredState(nonMatching) {
+	if vaultutils.IsEquivalentToDesiredState(scope, nonMatching) {
 		t.Error("expected non-matching payload to not be equivalent")
 	}
 }
@@ -280,10 +281,10 @@ func TestIdentityOIDCClientGetPayload(t *testing.T) {
 	if payload["key"] != "default" {
 		t.Errorf("expected key 'default', got %v", payload["key"])
 	}
-	if !reflect.DeepEqual(payload["redirect_uris"], []string{"https://example.com/callback"}) {
+	if !reflect.DeepEqual(payload["redirect_uris"], []any{"https://example.com/callback"}) {
 		t.Errorf("expected redirect_uris, got %v", payload["redirect_uris"])
 	}
-	if !reflect.DeepEqual(payload["assignments"], []string{"allow_all"}) {
+	if !reflect.DeepEqual(payload["assignments"], []any{"allow_all"}) {
 		t.Errorf("expected assignments [allow_all], got %v", payload["assignments"])
 	}
 	if payload["client_type"] != "confidential" {
@@ -313,25 +314,25 @@ func TestIdentityOIDCClientIsEquivalentToDesiredState(t *testing.T) {
 
 	matching := map[string]any{
 		"key":              "default",
-		"redirect_uris":    []string{"https://example.com/callback"},
-		"assignments":      []string{"allow_all"},
+		"redirect_uris":    []any{"https://example.com/callback"},
+		"assignments":      []any{"allow_all"},
 		"client_type":      "confidential",
 		"id_token_ttl":     "24h",
 		"access_token_ttl": "24h",
 	}
-	if !c.IsEquivalentToDesiredState(matching) {
+	if !vaultutils.IsEquivalentToDesiredState(c, matching) {
 		t.Error("expected matching payload to be equivalent")
 	}
 
 	nonMatching := map[string]any{
 		"key":              "other-key",
-		"redirect_uris":    []string{"https://example.com/callback"},
-		"assignments":      []string{"allow_all"},
+		"redirect_uris":    []any{"https://example.com/callback"},
+		"assignments":      []any{"allow_all"},
 		"client_type":      "confidential",
 		"id_token_ttl":     "24h",
 		"access_token_ttl": "24h",
 	}
-	if c.IsEquivalentToDesiredState(nonMatching) {
+	if vaultutils.IsEquivalentToDesiredState(c, nonMatching) {
 		t.Error("expected non-matching payload to not be equivalent")
 	}
 }
@@ -388,10 +389,10 @@ func TestIdentityOIDCAssignmentGetPayload(t *testing.T) {
 
 	payload := a.GetPayload()
 
-	if !reflect.DeepEqual(payload["entity_ids"], []string{"entity-1", "entity-2"}) {
+	if !reflect.DeepEqual(payload["entity_ids"], []any{"entity-1", "entity-2"}) {
 		t.Errorf("expected entity_ids [entity-1 entity-2], got %v", payload["entity_ids"])
 	}
-	if !reflect.DeepEqual(payload["group_ids"], []string{"group-1"}) {
+	if !reflect.DeepEqual(payload["group_ids"], []any{"group-1"}) {
 		t.Errorf("expected group_ids [group-1], got %v", payload["group_ids"])
 	}
 }
@@ -407,18 +408,18 @@ func TestIdentityOIDCAssignmentIsEquivalentToDesiredState(t *testing.T) {
 	}
 
 	matching := map[string]any{
-		"entity_ids": []string{"entity-1"},
-		"group_ids":  []string{"group-1"},
+		"entity_ids": []any{"entity-1"},
+		"group_ids":  []any{"group-1"},
 	}
-	if !a.IsEquivalentToDesiredState(matching) {
+	if !vaultutils.IsEquivalentToDesiredState(a, matching) {
 		t.Error("expected matching payload to be equivalent")
 	}
 
 	nonMatching := map[string]any{
-		"entity_ids": []string{"entity-2"},
-		"group_ids":  []string{"group-1"},
+		"entity_ids": []any{"entity-2"},
+		"group_ids":  []any{"group-1"},
 	}
-	if a.IsEquivalentToDesiredState(nonMatching) {
+	if vaultutils.IsEquivalentToDesiredState(a, nonMatching) {
 		t.Error("expected non-matching payload to not be equivalent")
 	}
 }
@@ -438,7 +439,7 @@ func TestIdentityOIDCScopeIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 		"description": "desc",
 		"extra_field": "vault-returned-value",
 	}
-	if !scope.IsEquivalentToDesiredState(payloadWithExtra) {
+	if !vaultutils.IsEquivalentToDesiredState(scope, payloadWithExtra) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
@@ -456,11 +457,11 @@ func TestIdentityOIDCProviderIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 
 	payloadWithExtra := map[string]any{
 		"issuer":             "https://example.com",
-		"allowed_client_ids": []string{"client1"},
-		"scopes_supported":   []string{"openid"},
+		"allowed_client_ids": []any{"client1"},
+		"scopes_supported":   []any{"openid"},
 		"extra_field":        "vault-returned-value",
 	}
-	if !provider.IsEquivalentToDesiredState(payloadWithExtra) {
+	if !vaultutils.IsEquivalentToDesiredState(provider, payloadWithExtra) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
@@ -481,15 +482,15 @@ func TestIdentityOIDCClientIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 
 	payloadWithExtra := map[string]any{
 		"key":              "default",
-		"redirect_uris":    []string{"https://example.com/callback"},
-		"assignments":      []string{"allow_all"},
+		"redirect_uris":    []any{"https://example.com/callback"},
+		"assignments":      []any{"allow_all"},
 		"client_type":      "confidential",
 		"id_token_ttl":     "24h",
 		"access_token_ttl": "24h",
 		"client_id":        "generated-id-from-vault",
 		"client_secret":    "generated-secret-from-vault",
 	}
-	if !c.IsEquivalentToDesiredState(payloadWithExtra) {
+	if !vaultutils.IsEquivalentToDesiredState(c, payloadWithExtra) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }
@@ -505,12 +506,98 @@ func TestIdentityOIDCAssignmentIsEquivalentExtraFieldsReturnsFalse(t *testing.T)
 	}
 
 	payloadWithExtra := map[string]any{
-		"entity_ids":  []string{"entity-1"},
-		"group_ids":   []string{"group-1"},
+		"entity_ids":  []any{"entity-1"},
+		"group_ids":   []any{"group-1"},
 		"extra_field": "vault-returned-value",
 	}
-	if !a.IsEquivalentToDesiredState(payloadWithExtra) {
+	if !vaultutils.IsEquivalentToDesiredState(a, payloadWithExtra) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
+	}
+}
+
+func TestIdentityOIDCAssignmentIsEquivalentToDesiredStateNonMatching(t *testing.T) {
+	a := &IdentityOIDCAssignment{
+		Spec: IdentityOIDCAssignmentSpec{
+			IdentityOIDCAssignmentConfig: IdentityOIDCAssignmentConfig{
+				EntityIDs: []string{"entity-1"},
+				GroupIDs:  []string{"group-1"},
+			},
+		},
+	}
+
+	nonMatching := map[string]any{
+		"entity_ids": []any{"entity-999"},
+		"group_ids":  []any{"group-1"},
+	}
+	if vaultutils.IsEquivalentToDesiredState(a, nonMatching) {
+		t.Error("expected non-matching payload to not be equivalent")
+	}
+}
+
+func TestIdentityOIDCClientIsEquivalentToDesiredStateNonMatching(t *testing.T) {
+	c := &IdentityOIDCClient{
+		Spec: IdentityOIDCClientSpec{
+			IdentityOIDCClientConfig: IdentityOIDCClientConfig{
+				Key:            "default",
+				RedirectURIs:   []string{"https://example.com/callback"},
+				Assignments:    []string{"allow_all"},
+				ClientType:     "confidential",
+				IDTokenTTL:     "24h",
+				AccessTokenTTL: "24h",
+			},
+		},
+	}
+
+	nonMatching := map[string]any{
+		"key":              "other-key",
+		"redirect_uris":    []any{"https://example.com/callback"},
+		"assignments":      []any{"allow_all"},
+		"client_type":      "confidential",
+		"id_token_ttl":     "24h",
+		"access_token_ttl": "24h",
+	}
+	if vaultutils.IsEquivalentToDesiredState(c, nonMatching) {
+		t.Error("expected non-matching payload to not be equivalent")
+	}
+}
+
+func TestIdentityOIDCProviderIsEquivalentToDesiredStateNonMatching(t *testing.T) {
+	provider := &IdentityOIDCProvider{
+		Spec: IdentityOIDCProviderSpec{
+			IdentityOIDCProviderConfig: IdentityOIDCProviderConfig{
+				Issuer:           "https://example.com",
+				AllowedClientIDs: []string{"client1"},
+				ScopesSupported:  []string{"openid"},
+			},
+		},
+	}
+
+	nonMatching := map[string]any{
+		"issuer":             "https://different.example.com",
+		"allowed_client_ids": []any{"client1"},
+		"scopes_supported":   []any{"openid"},
+	}
+	if vaultutils.IsEquivalentToDesiredState(provider, nonMatching) {
+		t.Error("expected non-matching payload to not be equivalent")
+	}
+}
+
+func TestIdentityOIDCScopeIsEquivalentToDesiredStateNonMatching(t *testing.T) {
+	scope := &IdentityOIDCScope{
+		Spec: IdentityOIDCScopeSpec{
+			IdentityOIDCScopeConfig: IdentityOIDCScopeConfig{
+				Template:    "tmpl",
+				Description: "desc",
+			},
+		},
+	}
+
+	nonMatching := map[string]any{
+		"template":    "other-tmpl",
+		"description": "desc",
+	}
+	if vaultutils.IsEquivalentToDesiredState(scope, nonMatching) {
+		t.Error("expected non-matching payload to not be equivalent")
 	}
 }
 
@@ -533,6 +620,34 @@ func TestIdentityOIDCIsDeletable(t *testing.T) {
 	assignment := &IdentityOIDCAssignment{}
 	if !assignment.IsDeletable() {
 		t.Error("expected IdentityOIDCAssignment to be deletable")
+	}
+}
+
+func TestIdentityOIDCAssignmentIsDeletable(t *testing.T) {
+	assignment := &IdentityOIDCAssignment{}
+	if !assignment.IsDeletable() {
+		t.Error("expected IdentityOIDCAssignment to be deletable")
+	}
+}
+
+func TestIdentityOIDCClientIsDeletable(t *testing.T) {
+	client := &IdentityOIDCClient{}
+	if !client.IsDeletable() {
+		t.Error("expected IdentityOIDCClient to be deletable")
+	}
+}
+
+func TestIdentityOIDCProviderIsDeletable(t *testing.T) {
+	provider := &IdentityOIDCProvider{}
+	if !provider.IsDeletable() {
+		t.Error("expected IdentityOIDCProvider to be deletable")
+	}
+}
+
+func TestIdentityOIDCScopeIsDeletable(t *testing.T) {
+	scope := &IdentityOIDCScope{}
+	if !scope.IsDeletable() {
+		t.Error("expected IdentityOIDCScope to be deletable")
 	}
 }
 
@@ -564,5 +679,57 @@ func TestIdentityOIDCConditions(t *testing.T) {
 	assignment.SetConditions([]metav1.Condition{condition})
 	if len(assignment.GetConditions()) != 1 || assignment.GetConditions()[0].Type != "Ready" {
 		t.Error("expected IdentityOIDCAssignment conditions to be set and retrieved")
+	}
+}
+
+func TestIdentityOIDCAssignmentConditions(t *testing.T) {
+	condition := metav1.Condition{
+		Type:   "Ready",
+		Status: metav1.ConditionTrue,
+	}
+
+	assignment := &IdentityOIDCAssignment{}
+	assignment.SetConditions([]metav1.Condition{condition})
+	if len(assignment.GetConditions()) != 1 || assignment.GetConditions()[0].Type != "Ready" {
+		t.Error("expected IdentityOIDCAssignment conditions to be set and retrieved")
+	}
+}
+
+func TestIdentityOIDCClientConditions(t *testing.T) {
+	condition := metav1.Condition{
+		Type:   "Ready",
+		Status: metav1.ConditionTrue,
+	}
+
+	client := &IdentityOIDCClient{}
+	client.SetConditions([]metav1.Condition{condition})
+	if len(client.GetConditions()) != 1 || client.GetConditions()[0].Type != "Ready" {
+		t.Error("expected IdentityOIDCClient conditions to be set and retrieved")
+	}
+}
+
+func TestIdentityOIDCProviderConditions(t *testing.T) {
+	condition := metav1.Condition{
+		Type:   "Ready",
+		Status: metav1.ConditionTrue,
+	}
+
+	provider := &IdentityOIDCProvider{}
+	provider.SetConditions([]metav1.Condition{condition})
+	if len(provider.GetConditions()) != 1 || provider.GetConditions()[0].Type != "Ready" {
+		t.Error("expected IdentityOIDCProvider conditions to be set and retrieved")
+	}
+}
+
+func TestIdentityOIDCScopeConditions(t *testing.T) {
+	condition := metav1.Condition{
+		Type:   "Ready",
+		Status: metav1.ConditionTrue,
+	}
+
+	scope := &IdentityOIDCScope{}
+	scope.SetConditions([]metav1.Condition{condition})
+	if len(scope.GetConditions()) != 1 || scope.GetConditions()[0].Type != "Ready" {
+		t.Error("expected IdentityOIDCScope conditions to be set and retrieved")
 	}
 }

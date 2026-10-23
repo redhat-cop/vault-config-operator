@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -85,7 +86,7 @@ func TestCertAuthEngineConfigIsEquivalentMatching(t *testing.T) {
 
 	payload := config.Spec.CertAuthEngineConfigInternal.toMap()
 
-	if !config.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected matching payload to be equivalent")
 	}
 }
@@ -102,7 +103,7 @@ func TestCertAuthEngineConfigIsEquivalentNonMatching(t *testing.T) {
 	payload := config.Spec.CertAuthEngineConfigInternal.toMap()
 	payload["ocsp_cache_size"] = 999
 
-	if config.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected non-matching payload (different ocsp_cache_size) to NOT be equivalent")
 	}
 }
@@ -119,7 +120,7 @@ func TestCertAuthEngineConfigIsEquivalentExtraFields(t *testing.T) {
 	payload := config.Spec.CertAuthEngineConfigInternal.toMap()
 	payload["extra_field"] = "unexpected"
 
-	if !config.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(config, payload) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }

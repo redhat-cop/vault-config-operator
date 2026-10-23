@@ -52,7 +52,7 @@ type SSHSecretEngineConfigSpec struct {
 	// Only needed when generateSigningKey is false.
 	// Only VaultSecretReference or LocalObjectReference can be used.
 	// +kubebuilder:validation:Optional
-	CAKeyReference *vaultutils.RootCredentialConfig `json:"caKeyReference,omitempty"`
+	CAKeyReference *vaultutils.RootCredentialConfig `json:"caKeyReference,omitempty" vault:"-"`
 
 	SSHSEConfig `json:",inline"`
 }
@@ -61,26 +61,23 @@ type SSHSEConfig struct {
 	// GenerateSigningKey if true, Vault generates the SSH CA key pair internally.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=true
-	GenerateSigningKey bool `json:"generateSigningKey"`
+	GenerateSigningKey bool `json:"generateSigningKey" vault:"generate_signing_key"`
 
 	// KeyType desired key type for generated SSH CA key (ssh-rsa, ecdsa-sha2-nistp256, etc.)
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="ssh-rsa"
-	KeyType string `json:"keyType"`
+	KeyType string `json:"keyType" vault:"key_type"`
 
 	// KeyBits desired key bits for generated SSH CA key (0 = default)
 	// +kubebuilder:validation:Optional
-	KeyBits int `json:"keyBits,omitempty"`
+	KeyBits int `json:"keyBits,omitempty" vault:"key_bits"`
 
 	retrievedPrivateKey string `json:"-"`
 	retrievedPublicKey  string `json:"-"`
 }
 
 func (i *SSHSEConfig) toMap() map[string]any {
-	payload := map[string]any{}
-	payload["generate_signing_key"] = i.GenerateSigningKey
-	payload["key_type"] = i.KeyType
-	payload["key_bits"] = i.KeyBits
+	payload := vaultutils.StructToVaultPayload(i)
 	payload["private_key"] = i.retrievedPrivateKey
 	payload["public_key"] = i.retrievedPublicKey
 	return payload
@@ -161,16 +158,8 @@ func (d *SSHSecretEngineConfig) IsEquivalentToDesiredState(payload map[string]an
 	return reflect.DeepEqual(desiredState, filterPayloadToDesiredKeys(desiredState, payload))
 }
 
-func (d *SSHSecretEngineConfig) IsInitialized() bool {
-	return true
-}
-
 func (d *SSHSecretEngineConfig) PrepareInternalValues(context context.Context, object client.Object) error {
 	return d.setInternalCredentials(context)
-}
-
-func (d *SSHSecretEngineConfig) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *SSHSecretEngineConfig) IsValid() (bool, error) {

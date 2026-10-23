@@ -49,9 +49,6 @@ var _ admission.Validator[*AppRoleAuthEngineRole] = &AppRoleAuthEngineRole{}
 
 func (r *AppRoleAuthEngineRole) ValidateCreate(ctx context.Context, obj *AppRoleAuthEngineRole) (admission.Warnings, error) {
 	approleauthenginerolelog.Info("validate create", "name", obj.Name)
-	if _, err := obj.IsValid(); err != nil {
-		return nil, err
-	}
 	return nil, nil
 }
 
@@ -70,9 +67,6 @@ func (r *AppRoleAuthEngineRole) ValidateUpdate(ctx context.Context, oldObj, newO
 	}
 	if newObj.Spec.LocalSecretIDs != oldObj.Spec.LocalSecretIDs {
 		return nil, errors.New("spec.localSecretIDs cannot be updated")
-	}
-	if _, err := newObj.IsValid(); err != nil {
-		return nil, err
 	}
 	return nil, nil
 }

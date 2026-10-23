@@ -35,7 +35,19 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-10-18
+last_updated: 2026-10-20
+# Story 17.6 ready-for-dev 2026-10-20
+# Story 17.5 ready-for-dev 2026-10-20
+# Story 17.4 ready-for-dev 2026-10-20
+# Story 17.2 done 2026-10-20
+# Story 17.3 done 2026-10-20
+# Story 17.1 done 2026-10-20
+# Story 17.0 done 2026-10-20
+# Story 17.2 ready-for-dev 2026-10-20
+# Story 17.3 ready-for-dev 2026-10-20
+# Story 17.1 ready-for-dev 2026-10-20
+# Story 17.0 ready-for-dev 2026-10-20
+# Epic 17 in-progress 2026-10-20
 # Epic 17 added 2026-10-18 — System Backend API CRDs
 # Epic 16 retrospective 2026-08-19
 # Epic 16 done 2026-08-19
@@ -597,7 +609,7 @@ development_status:
   # Scope: 8 new CRDs covering configurable /sys/ endpoints (OSS Vault only, no Enterprise-only APIs)
   # Framework: All use existing VaultObject + VaultEndpoint + VaultResource generic reconciler — no framework changes needed
   # Excluded from scope: Plugin APIs (/sys/plugins/*), operational/read-only endpoints, Enterprise-only endpoints
-  epic-17: backlog
+  epic-17: in-progress
 
   # Story 17.0: Vault API Observability — Metrics + Reconcile Trace Logging
   # Addresses: https://github.com/redhat-cop/vault-config-operator/issues/193
@@ -617,7 +629,7 @@ development_status:
   #   - Only visible when operator runs with -v=6 or higher — zero noise at default verbosity
   # Complexity: Medium (framework-level change touching shared utils, needs careful testing)
   # Design note: Part A is metrics infrastructure — benefits all 80+ existing CRDs immediately
-  17-0-vault-api-observability-metrics-and-reconcile-trace-logging: backlog
+  17-0-vault-api-observability-metrics-and-reconcile-trace-logging: done
 
   # Story 17.1: Quota Management CRDs (QuotaConfig + RateLimitQuota + LeaseCountQuota)
   # Closes: https://github.com/redhat-cop/vault-config-operator/issues/249
@@ -628,7 +640,7 @@ development_status:
   #            https://developer.hashicorp.com/vault/api-docs/system/rate-limit-quotas
   #            https://developer.hashicorp.com/vault/api-docs/system/lease-count-quotas
   # Complexity: Medium (3 CRDs, singleton + 2 named resources, highest user-facing value)
-  17-1-quota-management-crds-quotaconfig-ratelimitquota-leasecountquota: backlog
+  17-1-quota-management-crds-quotaconfig-ratelimitquota-leasecountquota: done
 
   # Story 17.2: System Configuration Singleton CRDs (CORSConfig + KeyRotationConfig)
   # - CORSConfig: singleton /sys/config/cors — enable/configure CORS for Vault API
@@ -637,13 +649,13 @@ development_status:
   #            https://developer.hashicorp.com/vault/api-docs/system/rotate-config
   # Complexity: Low (2 singleton CRDs; CORSConfig: DELETE disables, PUT enables; KeyRotationConfig: simple PUT)
   # Design note: Singleton resources — document one-per-cluster convention, consider validating webhook
-  17-2-system-config-singleton-crds-corsconfig-keyrotationconfig: backlog
+  17-2-system-config-singleton-crds-corsconfig-keyrotationconfig: done
 
   # Story 17.3: Rotation Policy CRD (RotationPolicy)
   # - RotationPolicy: /sys/policies/rotation/{name} — automatic credential rotation schedules
   # Vault API: https://developer.hashicorp.com/vault/api-docs/system/policies-rotation
   # Complexity: Low (1 CRD, follows existing Policy/PasswordPolicy pattern closely)
-  17-3-rotation-policy-crd: backlog
+  17-3-rotation-policy-crd: done
 
   # Story 17.4: UI and Observability CRDs (UICustomHeader + LoggerConfig)
   # - UICustomHeader: /sys/config/ui/headers/{name} — custom response headers for UI
@@ -652,7 +664,42 @@ development_status:
   #            https://developer.hashicorp.com/vault/api-docs/system/loggers
   # Complexity: Low (2 CRDs, simple key-value configs)
   # Design note: LoggerConfig resets on Vault restart — operator re-applies on reconcile (documented behavior)
-  17-4-ui-and-observability-crds-uicustomheader-loggerconfig: backlog
+  17-4-ui-and-observability-crds-uicustomheader-loggerconfig: ready-for-dev
+
+  # Story 17.5: Reflective toMap via vault Struct Tags + VaultObject Interface Simplification
+  # - Part A0 (PREREQUISITE) — toMap/IsEquivalentToDesiredState unit test audit + gap fill
+  #   - Audit all 88 types for toMap unit test coverage; fill gaps for 8 untested types
+  #   - Every type must have: toMap output test, IsEquivalentToDesiredState positive + negative + extra-fields tests
+  #   - These tests become the regression oracle — they MUST pass before AND after the walker migration
+  # - Part A1 — StructToVaultPayload runtime reflection walker with extended tag grammar
+  #   - Tag grammar: vault:"<key>[,<codec>][,omitempty][,when=Field:value][,default=X][,spreadmap]" | vault:"-" | vault:",inline"
+  #   - Codecs: identity, duration, number, intmap, stringmap
+  #   - Directives: omitempty, when=Field:value (conditional include), default=X (pointer-nil default), spreadmap (merge map into parent), inline, -
+  #   - Implement in api/v1alpha1/utils/ as StructToVaultPayload(any) map[string]any
+  #   - All 88 types eligible with extended grammar; only TransitSecretEngineKey keeps hand-written toMap/configToMap (two maps from one struct)
+  #   - Credential-override types: move override logic from toMap into PrepareInternalValues; tag retrieved* fields normally
+  #   - Apply to all new Epic 17 CRDs; migrate all existing types except Transit
+  #   - All Part A0 unit tests must pass unchanged after migration
+  # - Part B — Default IsEquivalentToDesiredState via optional VaultEquivalenceChecker interface
+  # - Part C — Optional interface methods (IsInitialized, IsValid, PrepareInternalValues, PrepareTLSConfig) — deletes ~275 no-ops
+  # - Part D — ResourceName helper for spec.Name-vs-metadata.Name in GetPath
+  # Complexity: High (touches every type file; Part A0 test audit is prerequisite gate)
+  # Novelty Risk: HIGH — shared framework refactor across all 88 types
+  # Safety: Part A0 builds comprehensive test oracle BEFORE migration; integration tests provide end-to-end regression
+  17-5-reflective-tomap-and-vaultobject-interface-simplification: ready-for-dev
+
+  # Story 17.6: Generic Reconciler + Error Handling Enforcement
+  # - Part A — Generic VaultResource reconciler using Go generics (Go 1.18+ type params, we're on 1.27)
+  #   - GenericVaultReconciler[T, PT] replaces the identical 70-line Reconcile() body in ~70 controller files
+  #   - Per-type controller files shrink to RBAC comments + SetupWithManager one-liner
+  #   - ~10 controllers with custom logic (PKI, Transit, RandomSecret, VaultSecret, etc.) keep hand-written Reconcile
+  # - Part B — Error handling enforcement
+  #   - Enable errcheck linter in .golangci.yml (currently not enabled — only standard linters + staticcheck)
+  #   - Fix all existing errcheck violations: every function returning error must have the error checked and logged
+  #   - Add errcheck to CI pipeline as blocking gate
+  # Complexity: High (Part A touches every controller file; Part B is a sweep with potential behavior changes)
+  # Novelty Risk: MEDIUM — generics are well-understood in Go 1.27; errcheck is mechanical
+  17-6-generic-reconciler-and-error-handling-enforcement: ready-for-dev
 
 action_items:
   # Epic 10 action items (status from Epic 11 retro follow-through)

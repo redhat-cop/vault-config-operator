@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -83,14 +84,14 @@ rule "charset" {
 	matching := map[string]any{
 		"policy": hcl,
 	}
-	if !policy.IsEquivalentToDesiredState(matching) {
+	if !vaultutils.IsEquivalentToDesiredState(policy, matching) {
 		t.Error("expected matching payload to be equivalent")
 	}
 
 	nonMatching := map[string]any{
 		"policy": "length = 10",
 	}
-	if policy.IsEquivalentToDesiredState(nonMatching) {
+	if vaultutils.IsEquivalentToDesiredState(policy, nonMatching) {
 		t.Error("expected non-matching payload to not be equivalent")
 	}
 }
@@ -108,7 +109,7 @@ func TestPasswordPolicyIsEquivalentExtraFieldsReturnsFalse(t *testing.T) {
 		"policy":      "length = 20",
 		"extra_field": "vault-returned-value",
 	}
-	if !policy.IsEquivalentToDesiredState(payloadWithExtra) {
+	if !vaultutils.IsEquivalentToDesiredState(policy, payloadWithExtra) {
 		t.Error("expected extra fields to be ignored by filterPayloadToDesiredKeys")
 	}
 }

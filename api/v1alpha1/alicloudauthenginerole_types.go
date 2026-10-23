@@ -17,16 +17,12 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // AliCloudAuthEngineRoleSpec defines the desired state of AliCloudAuthEngineRole
@@ -57,47 +53,47 @@ type AliCloudAuthEngineRoleSpec struct {
 type AliCloudAuthRole struct {
 	// ARN is the AliCloud RAM role ARN. Must correspond with the name of the role reflected in the arn.
 	// +kubebuilder:validation:Required
-	ARN string `json:"arn"`
+	ARN string `json:"arn" vault:"arn"`
 
 	// TokenTTL is the incremental lifetime for generated tokens (e.g. "1h")
 	// +kubebuilder:validation:Optional
-	TokenTTL string `json:"tokenTTL,omitempty"`
+	TokenTTL string `json:"tokenTTL,omitempty" vault:"token_ttl,duration"`
 
 	// TokenMaxTTL is the maximum lifetime for generated tokens (e.g. "24h")
 	// +kubebuilder:validation:Optional
-	TokenMaxTTL string `json:"tokenMaxTTL,omitempty"`
+	TokenMaxTTL string `json:"tokenMaxTTL,omitempty" vault:"token_max_ttl,duration"`
 
 	// TokenPolicies is the list of token policies
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	TokenPolicies []string `json:"tokenPolicies,omitempty"`
+	TokenPolicies []string `json:"tokenPolicies,omitempty" vault:"token_policies"`
 
 	// TokenBoundCIDRs is the list of CIDR blocks for token authentication
 	// +kubebuilder:validation:Optional
 	// +listType=set
-	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty"`
+	TokenBoundCIDRs []string `json:"tokenBoundCIDRs,omitempty" vault:"token_bound_cidrs"`
 
 	// TokenExplicitMaxTTL is the hard cap max TTL (e.g. "24h")
 	// +kubebuilder:validation:Optional
-	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty"`
+	TokenExplicitMaxTTL string `json:"tokenExplicitMaxTTL,omitempty" vault:"token_explicit_max_ttl,duration"`
 
 	// TokenNoDefaultPolicy excludes the default policy from generated tokens
 	// +kubebuilder:validation:Optional
-	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty"`
+	TokenNoDefaultPolicy bool `json:"tokenNoDefaultPolicy,omitempty" vault:"token_no_default_policy"`
 
 	// TokenNumUses is the max number of token uses (0=unlimited)
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
-	TokenNumUses int `json:"tokenNumUses,omitempty"`
+	TokenNumUses int `json:"tokenNumUses,omitempty" vault:"token_num_uses,number"`
 
 	// TokenPeriod is the renewal period for periodic tokens (e.g. "24h")
 	// +kubebuilder:validation:Optional
-	TokenPeriod string `json:"tokenPeriod,omitempty"`
+	TokenPeriod string `json:"tokenPeriod,omitempty" vault:"token_period,duration"`
 
 	// TokenType is the type of token to generate: service, batch, or default
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum:={"service","batch","default","default-service","default-batch",""}
-	TokenType string `json:"tokenType,omitempty"`
+	TokenType string `json:"tokenType,omitempty" vault:"token_type"`
 }
 
 var _ vaultutils.VaultObject = &AliCloudAuthEngineRole{}
@@ -112,10 +108,7 @@ func (d *AliCloudAuthEngineRole) IsDeletable() bool {
 }
 
 func (d *AliCloudAuthEngineRole) GetPath() string {
-	if d.Spec.Name != "" {
-		return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/role/" + d.Spec.Name)
-	}
-	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/role/" + d.Name)
+	return vaultutils.CleansePath("auth/" + string(d.Spec.Path) + "/role/" + vaultutils.ResourceName(d.Spec.Name, d.Name))
 }
 
 func (d *AliCloudAuthEngineRole) GetPayload() map[string]any {
@@ -152,18 +145,6 @@ func (d *AliCloudAuthEngineRole) IsEquivalentToDesiredState(payload map[string]a
 		sortAnyStringSlice(filteredPayload, key)
 	}
 	return reflect.DeepEqual(desiredState, filteredPayload)
-}
-
-func (d *AliCloudAuthEngineRole) IsInitialized() bool {
-	return true
-}
-
-func (d *AliCloudAuthEngineRole) PrepareInternalValues(context context.Context, object client.Object) error {
-	return nil
-}
-
-func (d *AliCloudAuthEngineRole) PrepareTLSConfig(context context.Context, object client.Object) error {
-	return nil
 }
 
 func (r *AliCloudAuthEngineRole) IsValid() (bool, error) {
@@ -212,19 +193,7 @@ func (d *AliCloudAuthEngineRole) GetKubeAuthConfiguration() *vaultutils.KubeAuth
 }
 
 func (d *AliCloudAuthRole) toMap() map[string]any {
-	payload := map[string]any{
-		"arn":                     d.ARN,
-		"token_ttl":               durationToSeconds(d.TokenTTL),
-		"token_max_ttl":           durationToSeconds(d.TokenMaxTTL),
-		"token_policies":          toInterfaceArray(d.TokenPolicies),
-		"token_bound_cidrs":       toInterfaceArray(d.TokenBoundCIDRs),
-		"token_explicit_max_ttl":  durationToSeconds(d.TokenExplicitMaxTTL),
-		"token_no_default_policy": d.TokenNoDefaultPolicy,
-		"token_num_uses":          json.Number(strconv.Itoa(d.TokenNumUses)),
-		"token_period":            durationToSeconds(d.TokenPeriod),
-		"token_type":              d.TokenType,
-	}
-	return payload
+	return vaultutils.StructToVaultPayload(d)
 }
 
 // AliCloudAuthEngineRoleStatus defines the observed state of AliCloudAuthEngineRole

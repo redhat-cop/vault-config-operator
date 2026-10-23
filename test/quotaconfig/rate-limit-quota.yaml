@@ -1,0 +1,11 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: RateLimitQuota
+metadata:
+  name: test-rate-limit-quota
+spec:
+  authentication:
+    path: kubernetes
+    role: policy-admin
+  rate: "100"
+  interval: "1m"
+  inheritable: true

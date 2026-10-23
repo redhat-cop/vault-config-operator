@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -110,7 +111,7 @@ func TestEntityAliasIsEquivalentMatching(t *testing.T) {
 		"local":                     false,
 		"namespace_id":              "root",
 	}
-	if !ea.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(ea, payload) {
 		t.Error("expected matching payload (with 8 Vault-only keys) to be equivalent after deletion")
 	}
 }
@@ -137,7 +138,7 @@ func TestEntityAliasIsEquivalentMatchingWithCustomMetadata(t *testing.T) {
 		"creation_time":   "2024-01-01T00:00:00Z",
 		"local":           false,
 	}
-	if !ea.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(ea, payload) {
 		t.Error("expected matching payload with custom_metadata to be equivalent")
 	}
 }
@@ -158,7 +159,7 @@ func TestEntityAliasIsEquivalentNonMatching(t *testing.T) {
 		"mount_accessor": "auth_different_accessor",
 		"canonical_id":   "canonical-id-1",
 	}
-	if ea.IsEquivalentToDesiredState(payload) {
+	if vaultutils.IsEquivalentToDesiredState(ea, payload) {
 		t.Error("expected different mount_accessor to not be equivalent")
 	}
 }
@@ -181,7 +182,7 @@ func TestEntityAliasIsEquivalentExtraFields(t *testing.T) {
 		"canonical_id":   "canonical-id-1",
 		"unknown_field":  "unexpected",
 	}
-	if !ea.IsEquivalentToDesiredState(payload) {
+	if !vaultutils.IsEquivalentToDesiredState(ea, payload) {
 		t.Error("expected true: extra keys not in desiredState are filtered from payload")
 	}
 }
