@@ -267,3 +267,67 @@ func TestGroupAlias_PrepareInternalValues_GroupNotFound(t *testing.T) {
 		t.Fatalf("err: %v", err)
 	}
 }
+
+func TestGroupAlias_PrepareInternalValues_ReusesExistingAlias(t *testing.T) {
+	ga := &GroupAlias{
+		ObjectMeta: metav1.ObjectMeta{Name: "group-alias-res", Namespace: "default"},
+		Spec: GroupAliasSpec{
+			GroupAliasConfig: GroupAliasConfig{
+				AuthEngineMountPath: "kubernetes",
+				GroupName:           "my-group",
+			},
+		},
+	}
+	handler := newFakeVaultHandler()
+	handler.setGet("sys/auth/kubernetes", map[string]any{
+		"accessor": "auth_k8s_1234",
+		"type":     "kubernetes",
+	})
+	handler.setGet("identity/group/name/my-group", map[string]any{
+		"id":    "group-uuid-567",
+		"alias": map[string]any{"id": "existing-alias-id", "name": "group-alias-res", "mount_accessor": "auth_k8s_1234"},
+	})
+	handler.setGet("identity/group-alias", map[string]any{"id": "new-alias-id"})
+	vc, ts := newFakeVaultClient(t, handler)
+	defer ts.Close()
+	ctx := pivContext(newFakeKubeClient(ga), vc)
+
+	if err := ga.PrepareInternalValues(ctx, ga); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	if ga.Status.ID != "existing-alias-id" {
+		t.Errorf("Status.ID: got %q want %q", ga.Status.ID, "existing-alias-id")
+	}
+}
+
+func TestGroupAlias_PrepareInternalValues_CreatesAliasWhenNoneMatches(t *testing.T) {
+	ga := &GroupAlias{
+		ObjectMeta: metav1.ObjectMeta{Name: "group-alias-res", Namespace: "default"},
+		Spec: GroupAliasSpec{
+			GroupAliasConfig: GroupAliasConfig{
+				AuthEngineMountPath: "kubernetes",
+				GroupName:           "my-group",
+			},
+		},
+	}
+	handler := newFakeVaultHandler()
+	handler.setGet("sys/auth/kubernetes", map[string]any{
+		"accessor": "auth_k8s_1234",
+		"type":     "kubernetes",
+	})
+	handler.setGet("identity/group/name/my-group", map[string]any{
+		"id":    "group-uuid-567",
+		"alias": map[string]any{"id": "other-mount-alias-id", "name": "group-alias-res", "mount_accessor": "auth_other_mount"},
+	})
+	handler.setGet("identity/group-alias", map[string]any{"id": "new-alias-id"})
+	vc, ts := newFakeVaultClient(t, handler)
+	defer ts.Close()
+	ctx := pivContext(newFakeKubeClient(ga), vc)
+
+	if err := ga.PrepareInternalValues(ctx, ga); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	if ga.Status.ID != "new-alias-id" {
+		t.Errorf("Status.ID: got %q want %q", ga.Status.ID, "new-alias-id")
+	}
+}
