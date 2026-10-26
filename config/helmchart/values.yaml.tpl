@@ -25,6 +25,7 @@ args: []
 volumes: []
 volumeMounts: []
 podAnnotations: {}
+podLabels: {}
 
 podSecurityContext:
   runAsNonRoot: true
