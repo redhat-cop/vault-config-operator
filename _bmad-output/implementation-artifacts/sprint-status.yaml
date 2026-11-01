@@ -718,16 +718,25 @@ development_status:
   # Retain residual mutating webhooks and RabbitMQ cross-resource webhook.
   epic-18: in-progress
 
-  # Story 18.1: VAP Infrastructure + Universal Immutability Policies
-  # - Set up config/vap/ kustomize overlay
-  # - Configure envtest for ValidatingAdmissionPolicy support
-  # - Create 3 shared VAPs: vco-immutable-path (72 CRDs), vco-immutable-name (65 CRDs), vco-target-namespace-guard (92 CRDs)
-  # - Parameterized ConfigMap for VAULT_NAMESPACE fallback
+  # Story 18.1: VAP Infrastructure + Path/Name Immutability Policies
+  # - Set up config/vap/ kustomize overlay and envtest VAP support
+  # - Create 2 shared VAPs: vco-immutable-path (72 CRDs), vco-immutable-name (65 CRDs)
   # - Fixes 4 missing path-immutable + 31 missing name-immutable gaps
-  # - Remove migrated Go validation code from webhook files
-  # Complexity: High — first VAP in project, new CEL patterns, parameterized VAP setup
+  # - Remove path/name Go validation from webhook files
+  # - VAP enforcement smoke tests (vap_enforcement_test.go)
+  # Complexity: High — first VAP in project, new CEL patterns
   # Novelty Risk: HIGH
   18-1-vap-infrastructure-and-universal-immutability-policies: done
+
+  # Story 18.1.1: Target Namespace Guard VAP
+  # - Create parameterized vco-target-namespace-guard VAP (92 CRDs) with CleansePath/JoinNamespace CEL
+  # - Create vco-vap-params ConfigMap for VAULT_NAMESPACE fallback
+  # - Remove ValidateTargetNamespaceUpdate from all 91 webhook files and commons.go
+  # - Completes the universal immutability VAP set from 18.1
+  # - Must complete before 18.3 (webhook code removal)
+  # Complexity: High — parameterized VAP, CEL string manipulation
+  # Novelty Risk: HIGH
+  18-1-1-target-namespace-guard-vap: ready-for-dev
 
   # Story 18.2: Credential Source + CRD-Specific VAPs
   # - Credential source mutual-exclusivity VAPs (rootCredentials group + per-field groups)

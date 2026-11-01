@@ -24,9 +24,9 @@ So that the codebase has a single source of truth for admission validation (VAPs
 ## Tasks / Subtasks
 
 - [ ] Task 1: Phase A — Remove VAP-migrated immutability checks from webhooks (AC: #1, #4)
-  - [ ] 1.1 — Remove `spec.path` immutability checks from all ~68 webhook `ValidateUpdate` methods (covered by `vco-immutable-path` VAP from 18.1)
-  - [ ] 1.2 — Remove `spec.name` immutability checks from all ~65 webhook `ValidateUpdate` methods (covered by `vco-immutable-name` VAP from 18.1)
-  - [ ] 1.3 — Remove `ValidateTargetNamespaceUpdate()` calls from all ~91 webhook `ValidateUpdate` methods (covered by `vco-target-namespace-guard` VAP from 18.1)
+  - [ ] 1.1 — Remove `spec.path` immutability checks from all ~68 webhook `ValidateUpdate` methods (covered by `vco-immutable-path` VAP from 18.1) — **DONE in 18.1**
+  - [ ] 1.2 — Remove `spec.name` immutability checks from all ~65 webhook `ValidateUpdate` methods (covered by `vco-immutable-name` VAP from 18.1) — **DONE in 18.1**
+  - [ ] 1.3 — Remove `ValidateTargetNamespaceUpdate()` calls from all ~91 webhook `ValidateUpdate` methods (covered by `vco-target-namespace-guard` VAP from 18.1.1) — **DONE in 18.1.1**
   - [ ] 1.4 — Run `make test` to verify no regressions
 - [ ] Task 2: Phase B — Remove VAP-migrated isValid() / credential checks from webhooks (AC: #1, #4)
   - [ ] 2.1 — Remove `isValid()` / `IsValid()` calls from `ValidateCreate` and `ValidateUpdate` in ~29 webhook files (covered by 18.2 CRD-specific + credential-source VAPs)
