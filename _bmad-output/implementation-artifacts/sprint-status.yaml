@@ -744,7 +744,7 @@ development_status:
   # - TransitSecretEngineKey, AWSSecretEngineRole, RandomSecret, mounts, etc.
   # Complexity: High — 15+ distinct CEL policies
   # Novelty Risk: MEDIUM
-  18-2-credential-source-and-crd-specific-vaps: ready-for-dev
+  18-2-credential-source-and-crd-specific-vaps: done
 
   # Story 18.3: Webhook Code Removal + Residual Webhook Cleanup + CSV Version Bump
   # - Remove all migrated validating webhook logic

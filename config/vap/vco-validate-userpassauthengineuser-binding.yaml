@@ -1,0 +1,8 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: vco-validate-userpassauthengineuser
+spec:
+  policyName: vco-validate-userpassauthengineuser
+  validationActions:
+  - Deny
