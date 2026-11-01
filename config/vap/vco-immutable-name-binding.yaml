@@ -1,0 +1,8 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: vco-immutable-name-binding
+spec:
+  policyName: vco-immutable-name
+  validationActions:
+  - Deny

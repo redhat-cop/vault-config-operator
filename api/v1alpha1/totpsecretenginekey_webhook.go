@@ -90,13 +90,6 @@ func (r *TOTPSecretEngineKey) ValidateUpdate(ctx context.Context, oldObj, newObj
 	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
 		return nil, err
 	}
-
-	if newObj.Spec.Path != oldObj.Spec.Path {
-		return nil, errors.New("spec.path cannot be updated")
-	}
-	if newObj.Spec.Name != oldObj.Spec.Name {
-		return nil, errors.New("spec.name cannot be updated")
-	}
 	if err := validateTOTPImmutableFields(oldObj, newObj); err != nil {
 		return nil, err
 	}

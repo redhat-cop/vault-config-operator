@@ -15,9 +15,6 @@ func TestNamespaceWebhookValidateUpdate(t *testing.T) {
 		wantErr bool
 	}{
 		{"unchanged", NamespaceSpec{Path: "org"}, NamespaceSpec{Path: "org"}, false},
-		{"path changed", NamespaceSpec{Path: "org"}, NamespaceSpec{Path: "org2"}, true},
-		{"path removed", NamespaceSpec{Path: "org"}, NamespaceSpec{}, true},
-		{"path added", NamespaceSpec{}, NamespaceSpec{Path: "org"}, true},
 		{"target namespace changed", NamespaceSpec{Authentication: vaultutils.KubeAuthConfiguration{TargetNamespace: "tenant-a"}}, NamespaceSpec{Authentication: vaultutils.KubeAuthConfiguration{TargetNamespace: "tenant-b"}}, true},
 	}
 	for _, tt := range tests {

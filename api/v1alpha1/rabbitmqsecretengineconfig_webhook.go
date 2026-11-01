@@ -51,9 +51,6 @@ func (r *RabbitMQSecretEngineConfigValidation) Handle(ctx context.Context, req a
 		if err := json.Unmarshal(req.OldObject.Raw, oldRabbitMQSecretEngineConfig); err != nil {
 			return admission.Errored(http.StatusBadRequest, err)
 		}
-		if rabbitMQSecretEngineConfig.Spec.Path != oldRabbitMQSecretEngineConfig.Spec.Path {
-			return admission.Errored(http.StatusBadRequest, errors.New("spec.path cannot be updated"))
-		}
 		if err := rabbitMQSecretEngineConfig.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldRabbitMQSecretEngineConfig.Spec.Authentication); err != nil {
 			return admission.Errored(http.StatusBadRequest, err)
 		}

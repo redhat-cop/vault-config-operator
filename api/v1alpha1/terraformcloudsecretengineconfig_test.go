@@ -302,56 +302,6 @@ func TestTerraformCloudSecretEngineConfig_Default_PreservesCustomPasswordKey(t *
 	}
 }
 
-func TestTerraformCloudSecretEngineConfig_ValidateUpdate_RejectsPathChange(t *testing.T) {
-	r := &TerraformCloudSecretEngineConfig{}
-	oldObj := &TerraformCloudSecretEngineConfig{
-		Spec: TerraformCloudSecretEngineConfigSpec{
-			Path: "terraform",
-			TFCCredentials: TFCCredentialConfig{
-				Secret: &corev1.LocalObjectReference{Name: "cred"},
-			},
-		},
-	}
-	newObj := &TerraformCloudSecretEngineConfig{
-		Spec: TerraformCloudSecretEngineConfigSpec{
-			Path: "terraform-new",
-			TFCCredentials: TFCCredentialConfig{
-				Secret: &corev1.LocalObjectReference{Name: "cred"},
-			},
-		},
-	}
-	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
-	if err == nil {
-		t.Error("expected error when spec.path is changed")
-	}
-}
-
-func TestTerraformCloudSecretEngineConfig_ValidateUpdate_RejectsNameChange(t *testing.T) {
-	r := &TerraformCloudSecretEngineConfig{}
-	oldObj := &TerraformCloudSecretEngineConfig{
-		Spec: TerraformCloudSecretEngineConfigSpec{
-			Path: "terraform",
-			Name: "old-name",
-			TFCCredentials: TFCCredentialConfig{
-				Secret: &corev1.LocalObjectReference{Name: "cred"},
-			},
-		},
-	}
-	newObj := &TerraformCloudSecretEngineConfig{
-		Spec: TerraformCloudSecretEngineConfigSpec{
-			Path: "terraform",
-			Name: "new-name",
-			TFCCredentials: TFCCredentialConfig{
-				Secret: &corev1.LocalObjectReference{Name: "cred"},
-			},
-		},
-	}
-	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
-	if err == nil {
-		t.Error("expected error when spec.name is changed")
-	}
-}
-
 func TestTFCCredentialConfig_ValidateCredentialSource_EmptySecretName(t *testing.T) {
 	cred := TFCCredentialConfig{
 		Secret: &corev1.LocalObjectReference{Name: ""},

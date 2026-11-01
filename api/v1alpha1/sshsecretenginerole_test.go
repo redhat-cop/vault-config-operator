@@ -401,20 +401,6 @@ func TestSSHSecretEngineRoleIsEquivalentExtraFields(t *testing.T) {
 	}
 }
 
-func TestSSHSecretEngineRoleValidateUpdate_RejectsNameChange(t *testing.T) {
-	r := &SSHSecretEngineRole{}
-	_, err := r.ValidateUpdate(context.Background(),
-		&SSHSecretEngineRole{Spec: SSHSecretEngineRoleSpec{Path: "ssh", Name: "old-name"}},
-		&SSHSecretEngineRole{Spec: SSHSecretEngineRoleSpec{Path: "ssh", Name: "new-name"}},
-	)
-	if err == nil {
-		t.Error("expected error when spec.name changes")
-	}
-	if err != nil && err.Error() != "spec.name cannot be updated" {
-		t.Errorf("unexpected error: %v", err)
-	}
-}
-
 func TestSSHSecretEngineRoleValidateUpdate_AllowsSameNameAndPath(t *testing.T) {
 	r := &SSHSecretEngineRole{}
 	_, err := r.ValidateUpdate(context.Background(),
@@ -423,20 +409,6 @@ func TestSSHSecretEngineRoleValidateUpdate_AllowsSameNameAndPath(t *testing.T) {
 	)
 	if err != nil {
 		t.Errorf("expected no error when name and path unchanged, got: %v", err)
-	}
-}
-
-func TestSSHSecretEngineRoleValidateUpdate_RejectsPathChange(t *testing.T) {
-	r := &SSHSecretEngineRole{}
-	_, err := r.ValidateUpdate(context.Background(),
-		&SSHSecretEngineRole{Spec: SSHSecretEngineRoleSpec{Path: "old-ssh", Name: "role1"}},
-		&SSHSecretEngineRole{Spec: SSHSecretEngineRoleSpec{Path: "new-ssh", Name: "role1"}},
-	)
-	if err == nil {
-		t.Error("expected error when spec.path changes")
-	}
-	if err != nil && err.Error() != "spec.path cannot be updated" {
-		t.Errorf("unexpected error: %v", err)
 	}
 }
 

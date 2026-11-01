@@ -70,11 +70,6 @@ func (r *PKISecretEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newO
 		return nil, err
 	}
 
-	// the path cannot be updated
-	if newObj.Spec.Path != oldObj.Spec.Path {
-		return nil, errors.New("spec.path cannot be updated")
-	}
-
 	if newObj.Spec.Type != oldObj.Spec.Type {
 		return nil, errors.New("spec.type cannot be updated")
 	}

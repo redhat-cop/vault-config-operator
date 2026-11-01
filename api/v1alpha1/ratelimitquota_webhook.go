@@ -76,10 +76,6 @@ func (r *RateLimitQuota) ValidateUpdate(ctx context.Context, oldObj, newObj *Rat
 		return nil, err
 	}
 
-	if newObj.Spec.Name != oldObj.Spec.Name {
-		return nil, fmt.Errorf("spec.name is immutable after creation, was %q, got %q", oldObj.Spec.Name, newObj.Spec.Name)
-	}
-
 	if err := validateRate(newObj.Spec.Rate); err != nil {
 		return nil, err
 	}

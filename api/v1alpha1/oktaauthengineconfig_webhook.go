@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	"context"
-	"errors"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -60,9 +59,6 @@ func (r *OktaAuthEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newOb
 
 	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
 		return nil, err
-	}
-	if newObj.Spec.Path != oldObj.Spec.Path {
-		return nil, errors.New("spec.path cannot be updated")
 	}
 	return nil, newObj.isValid()
 }

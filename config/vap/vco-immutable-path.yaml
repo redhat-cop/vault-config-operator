@@ -1,0 +1,87 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: vco-immutable-path
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups: ["redhatcop.redhat.io"]
+      apiVersions: ["v1alpha1"]
+      operations: ["UPDATE"]
+      resources:
+      - alicloudauthengineroles
+      - approleauthengineroles
+      - authenginemounts
+      - awsauthengineclientconfigs
+      - awsauthengineidentityconfigs
+      - awsauthengineroles
+      - awssecretengineconfigs
+      - awssecretengineroles
+      - azureauthengineconfigs
+      - azureauthengineroles
+      - azuresecretengineconfigs
+      - azuresecretengineroles
+      - certauthengineconfigs
+      - certauthengineroles
+      - cfauthengineconfigs
+      - cfauthengineroles
+      - consulsecretengineconfigs
+      - consulsecretengineroles
+      - databasesecretengineconfigs
+      - databasesecretengineroles
+      - databasesecretenginestaticroles
+      - gcpauthengineconfigs
+      - gcpauthengineroles
+      - gcpsecretengineconfigs
+      - gcpsecretenginerolesets
+      - gcpsecretenginestaticaccounts
+      - githubauthengineconfigs
+      - githubauthengineusermaps
+      - githubauthengineteammaps
+      - githubsecretengineconfigs
+      - githubsecretengineroles
+      - jwtoidcauthengineconfigs
+      - jwtoidcauthengineroles
+      - kerberosauthengineconfigs
+      - kerberosauthengineldapconfigs
+      - kerberosauthenginegroups
+      - kubernetesauthengineconfigs
+      - kubernetesauthengineroles
+      - kubernetessecretengineconfigs
+      - kubernetessecretengineroles
+      - ldapauthengineconfigs
+      - ldapauthenginegroups
+      - ldapsecretengineconfigs
+      - ldapsecretenginedynamicroles
+      - ldapsecretenginestaticroles
+      - mongodbatlassecretengineconfigs
+      - mongodbatlassecretengineroles
+      - namespaces
+      - nomadsecretengineconfigs
+      - nomadsecretengineroles
+      - ociauthengineconfigs
+      - ociauthengineroles
+      - oktaauthengineconfigs
+      - oktaauthenginegroups
+      - pkisecretengineconfigs
+      - pkisecretengineroles
+      - quaysecretengineconfigs
+      - quaysecretengineroles
+      - quaysecretenginestaticroles
+      - rabbitmqsecretengineconfigs
+      - rabbitmqsecretengineroles
+      - radiusauthengineconfigs
+      - radiusauthengineusers
+      - randomsecrets
+      - secretenginemounts
+      - sshsecretengineconfigs
+      - sshsecretengineroles
+      - terraformcloudsecretengineconfigs
+      - terraformcloudsecretengineroles
+      - totpsecretenginekeys
+      - transitsecretenginekeys
+      - userpassauthengineusers
+  validations:
+  - expression: "object.spec.path == oldObject.spec.path"
+    message: "spec.path cannot be updated"

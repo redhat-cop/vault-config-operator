@@ -69,10 +69,6 @@ func (r *SecretEngineMount) ValidateUpdate(ctx context.Context, oldObj, newObj *
 		return nil, err
 	}
 
-	// the path cannot be updated
-	if newObj.Spec.Path != oldObj.Spec.Path {
-		return nil, errors.New("spec.path cannot be updated")
-	}
 	// only mount config can be modified
 	oldMount := oldObj.Spec.Mount
 	newMount := newObj.Spec.Mount

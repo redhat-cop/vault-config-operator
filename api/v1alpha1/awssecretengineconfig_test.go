@@ -573,32 +573,6 @@ func TestAWSSecretEngineConfig_IsEquivalentToDesiredState_AccessKeyChangeDetecte
 	}
 }
 
-func TestAWSSecretEngineConfig_ValidateUpdate_RejectsNameChange(t *testing.T) {
-	r := &AWSSecretEngineConfig{}
-	oldObj := &AWSSecretEngineConfig{
-		Spec: AWSSecretEngineConfigSpec{
-			Path: "aws",
-			Name: "old-name",
-			RootCredentials: vaultutils.RootCredentialConfig{
-				Secret: &corev1.LocalObjectReference{Name: "cred"},
-			},
-		},
-	}
-	newObj := &AWSSecretEngineConfig{
-		Spec: AWSSecretEngineConfigSpec{
-			Path: "aws",
-			Name: "new-name",
-			RootCredentials: vaultutils.RootCredentialConfig{
-				Secret: &corev1.LocalObjectReference{Name: "cred"},
-			},
-		},
-	}
-	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
-	if err == nil {
-		t.Error("expected error when spec.name is changed")
-	}
-}
-
 func TestAWSSecretEngineConfig_ValidateUpdate_AllowsSameNameUpdate(t *testing.T) {
 	r := &AWSSecretEngineConfig{}
 	oldObj := &AWSSecretEngineConfig{

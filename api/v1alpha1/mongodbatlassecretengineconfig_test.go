@@ -366,30 +366,6 @@ func TestMongoDBAtlasSecretEngineConfig_IsValid_RandomSecretWithPublicKey(t *tes
 	}
 }
 
-func TestMongoDBAtlasSecretEngineConfig_ValidateUpdate_RejectsPathChange(t *testing.T) {
-	r := &MongoDBAtlasSecretEngineConfig{}
-	oldObj := &MongoDBAtlasSecretEngineConfig{
-		Spec: MongoDBAtlasSecretEngineConfigSpec{
-			Path: "mongodbatlas",
-			RootCredentials: vaultutils.RootCredentialConfig{
-				Secret: &corev1.LocalObjectReference{Name: "cred"},
-			},
-		},
-	}
-	newObj := &MongoDBAtlasSecretEngineConfig{
-		Spec: MongoDBAtlasSecretEngineConfigSpec{
-			Path: "different-path",
-			RootCredentials: vaultutils.RootCredentialConfig{
-				Secret: &corev1.LocalObjectReference{Name: "cred"},
-			},
-		},
-	}
-	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
-	if err == nil {
-		t.Error("expected error when spec.path is changed")
-	}
-}
-
 func TestMongoDBAtlasSecretEngineConfig_ValidateUpdate_AllowsSamePathUpdate(t *testing.T) {
 	r := &MongoDBAtlasSecretEngineConfig{}
 	oldObj := &MongoDBAtlasSecretEngineConfig{

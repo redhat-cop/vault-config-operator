@@ -351,18 +351,46 @@ func (r *AppRoleAuthEngineRole) ValidateUpdate(ctx context.Context, oldObj, newO
 
 ### Agent Model Used
 
+Claude Opus 4.6 (parent orchestrator + implementation subagent + review subagent)
+
 ### Debug Log References
+
+- Plan: `_bmad-output/vap-migration/plan-18-1-vap-infrastructure-and-universal-immutability-policies.md`
+- Deferred: `_bmad-output/vap-migration/deferred-work.md`
 
 ### Completion Notes List
 
+- Created `config/vap/` with vco-immutable-path (72 CRDs) and vco-immutable-name (65 CRDs) VAPs + bindings
+- Wired into kustomize via `config/default/kustomization.yaml`
+- Configured envtest with VAP admission plugin and manifest loading
+- Removed path checks from 68 webhooks + RabbitMQ Handle method
+- Removed name checks from 34 webhooks
+- Added VAP enforcement smoke tests (vap_enforcement_test.go)
+- Fixed pre-existing duplicate log line in pkisecretenginerole_webhook.go
+- Target-namespace-guard VAP deferred to follow-up plan
+- All tests pass: unit, integration, helmchart-test
+
 ### File List
+
+New: config/vap/kustomization.yaml, vco-immutable-path.yaml, vco-immutable-path-binding.yaml, vco-immutable-name.yaml, vco-immutable-name-binding.yaml, api/v1alpha1/vap_enforcement_test.go
+Modified: config/default/kustomization.yaml, api/v1alpha1/webhook_suite_test.go, 89 *_webhook.go files, webhook_validate_update_test.go, 10 CRD-specific test files
 
 ## Code Review Record
 
 ### Review Model Used
 
+Claude Opus 4.6 (quick lens)
+
 ### Review Findings
+
+4 findings: 2 false positives (Eventually() not needed, ValidateCreate comment removal justified), 1 low rejected (quota error message format change is deliberate), 1 low patched (pre-existing duplicate log line)
 
 ### Decisions Needed / Decisions Taken
 
+- Split target-namespace-guard VAP to follow-up plan (user chose split over keeping full plan)
+- Removed path/name rejection tests from webhook_validate_update_test.go (per plan: Story 18.4 adds comprehensive VAP tests)
+
 ### Fixes Applied
+
+- Fixed 4 merged comments in webhook files (authenginemount, secretenginemount, databasesecretenginestaticrole, kubernetessecretengineconfig)
+- Removed duplicate log line in pkisecretenginerole_webhook.go

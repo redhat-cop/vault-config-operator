@@ -68,11 +68,6 @@ func (r *RandomSecret) ValidateUpdate(ctx context.Context, oldObj, newObj *Rando
 		return nil, err
 	}
 
-	// the path cannot be updated
-	if newObj.Spec.Path != oldObj.Spec.Path {
-		return nil, errors.New("spec.path cannot be updated")
-	}
-
 	// the secret key cannot be updated
 	if newObj.Spec.SecretKey != oldObj.Spec.SecretKey {
 		return nil, errors.New("spec.secretKey cannot be updated")

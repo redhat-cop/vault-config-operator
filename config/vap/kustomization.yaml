@@ -1,0 +1,5 @@
+resources:
+- vco-immutable-path.yaml
+- vco-immutable-path-binding.yaml
+- vco-immutable-name.yaml
+- vco-immutable-name-binding.yaml

@@ -242,46 +242,6 @@ func TestMongoDBAtlasSecretEngineRoleConditions(t *testing.T) {
 	}
 }
 
-func TestMongoDBAtlasSecretEngineRole_ValidateUpdate_RejectsPathChange(t *testing.T) {
-	r := &MongoDBAtlasSecretEngineRole{}
-	oldObj := &MongoDBAtlasSecretEngineRole{
-		Spec: MongoDBAtlasSecretEngineRoleSpec{
-			Path: "mongodbatlas",
-			Name: "role-1",
-		},
-	}
-	newObj := &MongoDBAtlasSecretEngineRole{
-		Spec: MongoDBAtlasSecretEngineRoleSpec{
-			Path: "different-path",
-			Name: "role-1",
-		},
-	}
-	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
-	if err == nil {
-		t.Error("expected error when spec.path is changed")
-	}
-}
-
-func TestMongoDBAtlasSecretEngineRole_ValidateUpdate_RejectsNameChange(t *testing.T) {
-	r := &MongoDBAtlasSecretEngineRole{}
-	oldObj := &MongoDBAtlasSecretEngineRole{
-		Spec: MongoDBAtlasSecretEngineRoleSpec{
-			Path: "mongodbatlas",
-			Name: "old-name",
-		},
-	}
-	newObj := &MongoDBAtlasSecretEngineRole{
-		Spec: MongoDBAtlasSecretEngineRoleSpec{
-			Path: "mongodbatlas",
-			Name: "new-name",
-		},
-	}
-	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
-	if err == nil {
-		t.Error("expected error when spec.name is changed")
-	}
-}
-
 func TestMongoDBAtlasSecretEngineRole_ValidateUpdate_AllowsFieldUpdate(t *testing.T) {
 	r := &MongoDBAtlasSecretEngineRole{}
 	oldObj := &MongoDBAtlasSecretEngineRole{

@@ -17,20 +17,6 @@ func TestTransitKeyWebhookValidateUpdate_ImmutableFields(t *testing.T) {
 		errSubstring string
 	}{
 		{
-			name:         "rejects spec.path change",
-			oldSpec:      TransitSecretEngineKeySpec{Path: "transit", TransitKeyConfig: TransitKeyConfig{Type: "aes256-gcm96"}},
-			newSpec:      TransitSecretEngineKeySpec{Path: "other-transit", TransitKeyConfig: TransitKeyConfig{Type: "aes256-gcm96"}},
-			expectErr:    true,
-			errSubstring: "spec.path cannot be updated",
-		},
-		{
-			name:         "rejects spec.name change",
-			oldSpec:      TransitSecretEngineKeySpec{Path: "transit", Name: "key-a", TransitKeyConfig: TransitKeyConfig{Type: "aes256-gcm96"}},
-			newSpec:      TransitSecretEngineKeySpec{Path: "transit", Name: "key-b", TransitKeyConfig: TransitKeyConfig{Type: "aes256-gcm96"}},
-			expectErr:    true,
-			errSubstring: "spec.name cannot be updated",
-		},
-		{
 			name:         "rejects spec.type change",
 			oldSpec:      TransitSecretEngineKeySpec{Path: "transit", TransitKeyConfig: TransitKeyConfig{Type: "aes256-gcm96"}},
 			newSpec:      TransitSecretEngineKeySpec{Path: "transit", TransitKeyConfig: TransitKeyConfig{Type: "ed25519"}},
