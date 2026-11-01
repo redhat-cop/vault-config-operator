@@ -54,9 +54,6 @@ func (r *OktaAuthEngineGroup) ValidateCreate(ctx context.Context, obj *OktaAuthE
 func (r *OktaAuthEngineGroup) ValidateUpdate(ctx context.Context, oldObj, newObj *OktaAuthEngineGroup) (admission.Warnings, error) {
 	oktaauthenginegrouplog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
 	return nil, nil
 }
 

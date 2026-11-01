@@ -65,10 +65,6 @@ func (r *GitHubSecretEngineConfig) ValidateCreate(ctx context.Context, obj *GitH
 func (r *GitHubSecretEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *GitHubSecretEngineConfig) (admission.Warnings, error) {
 	githubsecretengineconfiglog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
-
 	return nil, newObj.isValid()
 }
 

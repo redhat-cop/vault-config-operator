@@ -1,0 +1,12 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: vco-target-namespace-guard-binding
+spec:
+  policyName: vco-target-namespace-guard
+  paramRef:
+    name: vco-vap-params
+    namespace: default
+    parameterNotFoundAction: Allow
+  validationActions:
+  - Deny

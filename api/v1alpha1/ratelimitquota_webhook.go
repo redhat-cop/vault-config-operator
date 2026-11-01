@@ -72,10 +72,6 @@ func validateRate(rate string) error {
 func (r *RateLimitQuota) ValidateUpdate(ctx context.Context, oldObj, newObj *RateLimitQuota) (admission.Warnings, error) {
 	ratelimitquotalog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
-
 	if err := validateRate(newObj.Spec.Rate); err != nil {
 		return nil, err
 	}

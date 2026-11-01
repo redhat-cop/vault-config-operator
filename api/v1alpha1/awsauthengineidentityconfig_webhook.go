@@ -54,9 +54,6 @@ func (r *AWSAuthEngineIdentityConfig) ValidateCreate(ctx context.Context, obj *A
 func (r *AWSAuthEngineIdentityConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *AWSAuthEngineIdentityConfig) (admission.Warnings, error) {
 	awsauthengineidentityconfiglog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
 	return nil, nil
 }
 

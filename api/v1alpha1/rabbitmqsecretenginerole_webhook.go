@@ -61,10 +61,6 @@ func (r *RabbitMQSecretEngineRole) ValidateCreate(ctx context.Context, obj *Rabb
 func (r *RabbitMQSecretEngineRole) ValidateUpdate(ctx context.Context, oldObj, newObj *RabbitMQSecretEngineRole) (admission.Warnings, error) {
 	rabbitmqsecretenginerolelog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
-
 	return nil, nil
 }
 

@@ -54,9 +54,6 @@ func (r *MongoDBAtlasSecretEngineConfig) ValidateCreate(ctx context.Context, obj
 func (r *MongoDBAtlasSecretEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *MongoDBAtlasSecretEngineConfig) (admission.Warnings, error) {
 	mongodbatlassecretengineconfiglog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
 	return nil, newObj.isValid()
 }
 

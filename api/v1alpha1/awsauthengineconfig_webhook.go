@@ -102,9 +102,6 @@ func (r *AWSAuthEngineClientConfig) ValidateCreate(ctx context.Context, obj *AWS
 func (r *AWSAuthEngineClientConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *AWSAuthEngineClientConfig) (admission.Warnings, error) {
 	awsauthengineclientconfiglog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
 	return nil, newObj.isValid()
 }
 

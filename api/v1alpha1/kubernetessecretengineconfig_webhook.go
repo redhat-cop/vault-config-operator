@@ -65,10 +65,6 @@ func (r *KubernetesSecretEngineConfig) ValidateCreate(ctx context.Context, obj *
 func (r *KubernetesSecretEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *KubernetesSecretEngineConfig) (admission.Warnings, error) {
 	kubernetessecretengineconfiglog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
-
 	// TODO(user): fill in your validation logic upon object update.
 	return nil, newObj.isValid()
 }

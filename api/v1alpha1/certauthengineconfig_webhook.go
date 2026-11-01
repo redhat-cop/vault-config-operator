@@ -59,10 +59,6 @@ func (r *CertAuthEngineConfig) ValidateCreate(ctx context.Context, obj *CertAuth
 func (r *CertAuthEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *CertAuthEngineConfig) (admission.Warnings, error) {
 	certauthengineconfiglog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
-
 	return nil, nil
 }
 

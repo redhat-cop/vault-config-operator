@@ -64,9 +64,6 @@ func (r *TransitSecretEngineKey) ValidateCreate(ctx context.Context, obj *Transi
 func (r *TransitSecretEngineKey) ValidateUpdate(ctx context.Context, oldObj, newObj *TransitSecretEngineKey) (admission.Warnings, error) {
 	transitsecretenginekeylog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
 	if newObj.Spec.Type != oldObj.Spec.Type {
 		return nil, errors.New("spec.type cannot be updated after key creation")
 	}

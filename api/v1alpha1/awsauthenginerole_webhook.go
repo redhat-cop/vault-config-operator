@@ -55,9 +55,6 @@ func (r *AWSAuthEngineRole) ValidateCreate(ctx context.Context, obj *AWSAuthEngi
 func (r *AWSAuthEngineRole) ValidateUpdate(ctx context.Context, oldObj, newObj *AWSAuthEngineRole) (admission.Warnings, error) {
 	awsauthenginerolelog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
 	return nil, validateAWSAuthRoleSpec(&newObj.Spec.AWSAuthRole)
 }
 

@@ -57,10 +57,6 @@ func (r *RotationPolicy) ValidateCreate(ctx context.Context, obj *RotationPolicy
 func (r *RotationPolicy) ValidateUpdate(ctx context.Context, oldObj, newObj *RotationPolicy) (admission.Warnings, error) {
 	rotationpolicylog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
-
 	return nil, nil
 }
 

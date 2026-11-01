@@ -1,7 +1,6 @@
 # Story 18.1.1: Target Namespace Guard VAP
 
-Status: ready-for-dev
-
+Status: done
 ## Story
 
 As an operator developer,
@@ -98,19 +97,32 @@ All 92 webhook types (including VaultSecret) have `spec.authentication`. All are
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Opus 4.6
 
 ### Debug Log References
+None
 
 ### Completion Notes List
+- Created parameterized `vco-target-namespace-guard` VAP with CEL CleansePath/JoinNamespace logic
+- Added `vco-vap-params` ConfigMap and kustomize namespace replacement
+- Added 8 envtest VAP enforcement tests covering all I/O matrix rows
+- Removed `ValidateTargetNamespaceUpdate` from 91 webhook files and `commons.go`
+- Cleaned up associated test files (targetnamespace_webhook_test.go, commons_test.go, etc.)
+- VAP binding covers all 96 CRDs (5 more than the story's 92 — extending protection to audit, auditrequestheader, entity, entityalias, vaultsecret)
 
 ### File List
+103 files changed (+408/−436)
 
 ## Code Review Record
 
 ### Review Model Used
+Claude Opus 4.6 (quick lens)
 
 ### Review Findings
+5 findings, all rejected: 3 false (CEL approach functionally equivalent, ConfigMap created by loader, test cleanup follows existing pattern), 2 low rejected (ConfigMap auto-sync is deployment concern, reflection guard mirrors 18.1 pattern)
 
 ### Decisions Needed / Decisions Taken
+None
 
 ### Fixes Applied
+3 matrix-audit tests added post-review: targetNamespace removal rejection, namespace-to-targetNamespace move allowance, VAULT_NAMESPACE ConfigMap fallback

@@ -63,10 +63,6 @@ func (r *DatabaseSecretEngineConfig) ValidateCreate(ctx context.Context, obj *Da
 func (r *DatabaseSecretEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *DatabaseSecretEngineConfig) (admission.Warnings, error) {
 	databasesecretengineconfiglog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
-
 	//connection_url, username and verify_connection cannot be changed because they cannot be compare with the actual.
 	// if newObj.Spec.ConnectionURL != oldObj.Spec.ConnectionURL {
 	// 	return errors.New("spec.connectionURL cannot be updated")

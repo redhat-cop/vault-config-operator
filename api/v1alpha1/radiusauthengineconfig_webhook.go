@@ -95,9 +95,6 @@ func (r *RADIUSAuthEngineConfig) ValidateCreate(ctx context.Context, obj *RADIUS
 func (r *RADIUSAuthEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *RADIUSAuthEngineConfig) (admission.Warnings, error) {
 	radiusauthengineconfiglog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
 	return nil, newObj.isValid()
 }
 

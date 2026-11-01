@@ -3,8 +3,6 @@ package v1alpha1
 import (
 	"context"
 	"testing"
-
-	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 )
 
 func TestNamespaceWebhookValidateUpdate(t *testing.T) {
@@ -15,7 +13,6 @@ func TestNamespaceWebhookValidateUpdate(t *testing.T) {
 		wantErr bool
 	}{
 		{"unchanged", NamespaceSpec{Path: "org"}, NamespaceSpec{Path: "org"}, false},
-		{"target namespace changed", NamespaceSpec{Authentication: vaultutils.KubeAuthConfiguration{TargetNamespace: "tenant-a"}}, NamespaceSpec{Authentication: vaultutils.KubeAuthConfiguration{TargetNamespace: "tenant-b"}}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

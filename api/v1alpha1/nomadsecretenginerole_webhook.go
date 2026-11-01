@@ -54,9 +54,6 @@ func (r *NomadSecretEngineRole) ValidateCreate(ctx context.Context, obj *NomadSe
 func (r *NomadSecretEngineRole) ValidateUpdate(ctx context.Context, oldObj, newObj *NomadSecretEngineRole) (admission.Warnings, error) {
 	nomadsecretenginerolelog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
 	return nil, nil
 }
 

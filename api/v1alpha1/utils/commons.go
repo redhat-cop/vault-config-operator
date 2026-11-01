@@ -232,24 +232,6 @@ func (kc *KubeAuthConfiguration) GetTargetNamespace() string {
 	return JoinNamespace(kc.getLoginNamespace(), kc.TargetNamespace)
 }
 
-// ValidateTargetNamespaceUpdate rejects an update that moves a resource with a TargetNamespace, because the old resource stays in Vault.
-// Resources without a TargetNamespace keep the old behavior, so a change to Namespace can still move them.
-func (kc *KubeAuthConfiguration) ValidateTargetNamespaceUpdate(old *KubeAuthConfiguration) error {
-	oldNamespace, newNamespace := old.GetTargetNamespace(), kc.GetTargetNamespace()
-	if (kc.TargetNamespace != "" || old.TargetNamespace != "") && newNamespace != oldNamespace {
-		return fmt.Errorf("spec.authentication cannot be updated to a different Vault namespace when targetNamespace is set (from %q to %q): to move the resource, delete it and create it again",
-			displayNamespace(oldNamespace), displayNamespace(newNamespace))
-	}
-	return nil
-}
-
-func displayNamespace(namespace string) string {
-	if namespace == "" {
-		return "root"
-	}
-	return namespace
-}
-
 // withChildNamespace returns a copy of client in child, relative to the client namespace, or client itself when child is empty.
 func withChildNamespace(client *vault.Client, child string) *vault.Client {
 	if CleansePath(child) == "" {

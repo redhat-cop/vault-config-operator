@@ -65,10 +65,6 @@ func (r *SecretEngineMount) ValidateCreate(ctx context.Context, obj *SecretEngin
 func (r *SecretEngineMount) ValidateUpdate(ctx context.Context, oldObj, newObj *SecretEngineMount) (admission.Warnings, error) {
 	secretenginemountlog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
-
 	// only mount config can be modified
 	oldMount := oldObj.Spec.Mount
 	newMount := newObj.Spec.Mount

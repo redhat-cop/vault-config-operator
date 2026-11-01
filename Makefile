@@ -649,10 +649,10 @@ helmchart-test: kind-setup deploy-vault helmchart
 	  rm -f /tmp/kind-helm-image.tar; \
 	done
 	$(HELM) --kube-context $(KUBE_CONTEXT) repo add jetstack https://charts.jetstack.io --force-update
-	$(HELM) --kube-context $(KUBE_CONTEXT) install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.21.1 --set crds.enabled=true
+	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.21.1 --set crds.enabled=true
 	$(HELM) --kube-context $(KUBE_CONTEXT) repo add prometheus-community https://prometheus-community.github.io/helm-charts --force-update
-	$(HELM) --kube-context $(KUBE_CONTEXT) install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n default -f integration/kube-prometheus-stack-values.yaml
-	$(HELM) --kube-context $(KUBE_CONTEXT) install prometheus-rbac integration/helm/prometheus-rbac -n default
+	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i kube-prometheus-stack prometheus-community/kube-prometheus-stack -n default -f integration/kube-prometheus-stack-values.yaml
+	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i prometheus-rbac integration/helm/prometheus-rbac -n default
 	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i ${OPERATOR_NAME}-local charts/${OPERATOR_NAME} -n ${OPERATOR_NAME}-local --create-namespace --force-conflicts \
 	  --set enableCertManager=true \
 	  --set enableMonitoring=true \

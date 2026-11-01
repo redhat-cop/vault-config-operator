@@ -108,9 +108,6 @@ func (r *CFAuthEngineConfig) ValidateCreate(ctx context.Context, obj *CFAuthEngi
 func (r *CFAuthEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *CFAuthEngineConfig) (admission.Warnings, error) {
 	cfauthengineconfiglog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
 	return nil, newObj.isValid()
 }
 

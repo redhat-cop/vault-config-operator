@@ -1,0 +1,136 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: vco-target-namespace-guard
+spec:
+  failurePolicy: Fail
+  paramKind:
+    apiVersion: v1
+    kind: ConfigMap
+  matchConstraints:
+    resourceRules:
+    - apiGroups: ["redhatcop.redhat.io"]
+      apiVersions: ["v1alpha1"]
+      operations: ["UPDATE"]
+      resources:
+      - alicloudauthengineroles
+      - approleauthengineroles
+      - auditrequestheaders
+      - audits
+      - authenginemounts
+      - awsauthengineclientconfigs
+      - awsauthengineidentityconfigs
+      - awsauthengineroles
+      - awssecretengineconfigs
+      - awssecretengineroles
+      - azureauthengineconfigs
+      - azureauthengineroles
+      - azuresecretengineconfigs
+      - azuresecretengineroles
+      - certauthengineconfigs
+      - certauthengineroles
+      - cfauthengineconfigs
+      - cfauthengineroles
+      - consulsecretengineconfigs
+      - consulsecretengineroles
+      - corsconfigs
+      - databasesecretengineconfigs
+      - databasesecretengineroles
+      - databasesecretenginestaticroles
+      - entities
+      - entityaliases
+      - gcpauthengineconfigs
+      - gcpauthengineroles
+      - gcpsecretengineconfigs
+      - gcpsecretenginerolesets
+      - gcpsecretenginestaticaccounts
+      - githubauthengineconfigs
+      - githubauthengineteammaps
+      - githubauthengineusermaps
+      - githubsecretengineconfigs
+      - githubsecretengineroles
+      - groupaliases
+      - groups
+      - identityoidcassignments
+      - identityoidcclients
+      - identityoidcproviders
+      - identityoidcscopes
+      - identitytokenconfigs
+      - identitytokenkeys
+      - identitytokenroles
+      - jwtoidcauthengineconfigs
+      - jwtoidcauthengineroles
+      - kerberosauthengineconfigs
+      - kerberosauthenginegroups
+      - kerberosauthengineldapconfigs
+      - keyrotationconfigs
+      - kubernetesauthengineconfigs
+      - kubernetesauthengineroles
+      - kubernetessecretengineconfigs
+      - kubernetessecretengineroles
+      - ldapauthengineconfigs
+      - ldapauthenginegroups
+      - ldapsecretengineconfigs
+      - ldapsecretenginedynamicroles
+      - ldapsecretenginestaticroles
+      - leasecountquotas
+      - loggerconfigs
+      - mongodbatlassecretengineconfigs
+      - mongodbatlassecretengineroles
+      - namespaces
+      - nomadsecretengineconfigs
+      - nomadsecretengineroles
+      - ociauthengineconfigs
+      - ociauthengineroles
+      - oktaauthengineconfigs
+      - oktaauthenginegroups
+      - passwordpolicies
+      - pkisecretengineconfigs
+      - pkisecretengineroles
+      - policies
+      - quaysecretengineconfigs
+      - quaysecretengineroles
+      - quaysecretenginestaticroles
+      - quotaconfigs
+      - rabbitmqsecretengineconfigs
+      - rabbitmqsecretengineroles
+      - radiusauthengineconfigs
+      - radiusauthengineusers
+      - randomsecrets
+      - ratelimitquotas
+      - rotationpolicies
+      - secretenginemounts
+      - sshsecretengineconfigs
+      - sshsecretengineroles
+      - terraformcloudsecretengineconfigs
+      - terraformcloudsecretengineroles
+      - totpsecretenginekeys
+      - transitsecretenginekeys
+      - uicustomheaders
+      - userpassauthengineusers
+      - vaultsecrets
+  variables:
+  - name: oldLoginNs
+    expression: >-
+      has(oldObject.spec.authentication.namespace) ? oldObject.spec.authentication.namespace
+      : (has(params.data) && 'vaultNamespace' in params.data ? params.data.vaultNamespace : '')
+  - name: newLoginNs
+    expression: >-
+      has(object.spec.authentication.namespace) ? object.spec.authentication.namespace
+      : (has(params.data) && 'vaultNamespace' in params.data ? params.data.vaultNamespace : '')
+  - name: oldTargetNs
+    expression: >-
+      (variables.oldLoginNs + '/' +
+      (has(oldObject.spec.authentication.targetNamespace) ? oldObject.spec.authentication.targetNamespace : ''))
+      .replace('//', '/').replace('//', '/')
+  - name: newTargetNs
+    expression: >-
+      (variables.newLoginNs + '/' +
+      (has(object.spec.authentication.targetNamespace) ? object.spec.authentication.targetNamespace : ''))
+      .replace('//', '/').replace('//', '/')
+  validations:
+  - expression: >-
+      (!has(object.spec.authentication.targetNamespace) && !has(oldObject.spec.authentication.targetNamespace))
+      || ('/' + variables.oldTargetNs + '/').replace('//', '/').replace('//', '/')
+         == ('/' + variables.newTargetNs + '/').replace('//', '/').replace('//', '/')
+    message: "spec.authentication cannot be updated to a different Vault namespace when targetNamespace is set: to move the resource, delete it and create it again"

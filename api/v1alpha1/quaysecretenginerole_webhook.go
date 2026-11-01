@@ -59,10 +59,6 @@ func (r *QuaySecretEngineRole) ValidateCreate(ctx context.Context, obj *QuaySecr
 func (r *QuaySecretEngineRole) ValidateUpdate(ctx context.Context, oldObj, newObj *QuaySecretEngineRole) (admission.Warnings, error) {
 	quaysecretenginerolelog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
-
 	return nil, nil
 }
 
