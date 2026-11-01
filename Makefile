@@ -177,6 +177,30 @@ integration: kind-setup deploy-vault start-cloud-provider deploy-postgresql depl
 	@for secret in dummy-error-path-creds test-userpass-password; do \
 		KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) delete secret $$secret -n vault-admin --ignore-not-found 2>/dev/null || true ;\
 	done
+	@echo "Cleaning up orphaned Vault mounts from previous runs..."
+	@VAULT_TOKEN=$$(KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) get secret vault-init -n vault -o jsonpath='{.data.root_token}' 2>/dev/null | base64 -d 2>/dev/null) ;\
+	if [ -n "$$VAULT_TOKEN" ]; then \
+		KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) exec -n vault vault-0 -c vault -- sh -c " \
+			export VAULT_TOKEN=$$VAULT_TOKEN; \
+			KEEP='cubbyhole/ identity/ secret/ sys/'; \
+			for mount in \$$(vault secrets list -format=json 2>/dev/null | python3 -c 'import sys,json; [print(k.rstrip(\"/\")) for k in json.load(sys.stdin).keys()]' 2>/dev/null); do \
+				case \" \$$KEEP \" in *\" \$$mount/ \"*) continue ;; esac; \
+				echo \"  Disabling orphaned secret engine: \$$mount\"; \
+				vault secrets disable \$$mount/ 2>/dev/null || true; \
+			done; \
+			AUTH_KEEP='token/ kubernetes/'; \
+			for auth in \$$(vault auth list -format=json 2>/dev/null | python3 -c 'import sys,json; [print(k.rstrip(\"/\")) for k in json.load(sys.stdin).keys()]' 2>/dev/null); do \
+				case \" \$$AUTH_KEEP \" in *\" \$$auth/ \"*) continue ;; esac; \
+				echo \"  Disabling orphaned auth engine: \$$auth\"; \
+				vault auth disable \$$auth/ 2>/dev/null || true; \
+			done; \
+			echo '  Cleaning up orphaned policies...'; \
+			for policy in \$$(vault policy list 2>/dev/null | grep -v -E '^(default|root)$$'); do \
+				echo \"  Deleting orphaned policy: \$$policy\"; \
+				vault policy delete \$$policy 2>/dev/null || true; \
+			done; \
+		" 2>/dev/null || true ;\
+	fi
 	@echo "Waiting for Vault LoadBalancer container..."
 	@cleanup_cloud_provider() { \
 		if [ -f /tmp/cloud-provider-kind.pid ]; then \
@@ -208,8 +232,17 @@ integration: kind-setup deploy-vault start-cloud-provider deploy-postgresql depl
 	echo "Vault LoadBalancer accessible at 127.0.0.1:$$VAULT_HOST_PORT" ;\
 	export VAULT_TOKEN=$$(KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
 	export VAULT_ADDR="http://127.0.0.1:$$VAULT_HOST_PORT" ;\
-	KUBECONFIG=$(KUBE_CONFIG_FILE) KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -v -coverprofile cover.out --tags=integration -timeout 30m ;\
-	exit $$?
+	KUBECONFIG=$(KUBE_CONFIG_FILE) KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test $$(go list --tags=integration ./... | grep -v '/internal/controller$$') -v -coverprofile cover-unit.out --tags=integration -timeout 10m ;\
+	UNIT_RC=$$? ;\
+	KUBECONFIG=$(KUBE_CONFIG_FILE) KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./internal/controller -v -coverprofile cover-integration.out --tags=integration -timeout 30m ;\
+	INT_RC=$$? ;\
+	if [ -f cover-unit.out ] && [ -f cover-integration.out ]; then \
+		head -1 cover-unit.out > cover.out ;\
+		tail -n +2 cover-unit.out >> cover.out ;\
+		tail -n +2 cover-integration.out >> cover.out ;\
+	fi ;\
+	if [ $$UNIT_RC -ne 0 ]; then exit $$UNIT_RC; fi ;\
+	exit $$INT_RC
 
 .PHONY: deploy-vault
 deploy-vault: kubectl helm
