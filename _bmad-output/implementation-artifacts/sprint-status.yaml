@@ -35,7 +35,15 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-10-23
+last_updated: 2026-11-01
+# Story 18.4 ready-for-dev 2026-11-01
+# Story 18.6 ready-for-dev 2026-11-01
+# Story 18.5 ready-for-dev 2026-11-01
+# Story 18.2 ready-for-dev 2026-11-01
+# Story 18.1 ready-for-dev 2026-11-01
+# Epic 18 in-progress 2026-11-01
+# Story 18.3 ready-for-dev 2026-11-01
+# Epic 18 added 2026-11-01 — Webhook-to-VAP Migration + Validation Gap Fix
 # Story 17.6 ready-for-dev 2026-10-20
 # Story 17.5 ready-for-dev 2026-10-20
 # Story 17.4 ready-for-dev 2026-10-20
@@ -700,6 +708,71 @@ development_status:
   # Complexity: High (Part A touches every controller file; Part B is a sweep with potential behavior changes)
   # Novelty Risk: MEDIUM — generics are well-understood in Go 1.27; errcheck is mechanical
   17-6-generic-reconciler-and-error-handling-enforcement: done
+
+  # --- Phase 4: Admission Control Modernization (VAP Migration) ---
+
+  # Epic 18: Webhook-to-VAP Migration + Validation Gap Fix
+  # Initiative: vap-migration
+  # Scope: Migrate validating admission webhooks to Kubernetes ValidatingAdmissionPolicies (VAPs)
+  # using a shared-policy strategy. Fix 35 existing validation gaps (4 missing spec.path, 31 missing spec.name).
+  # Retain residual mutating webhooks and RabbitMQ cross-resource webhook.
+  epic-18: in-progress
+
+  # Story 18.1: VAP Infrastructure + Universal Immutability Policies
+  # - Set up config/vap/ kustomize overlay
+  # - Configure envtest for ValidatingAdmissionPolicy support
+  # - Create 3 shared VAPs: vco-immutable-path (72 CRDs), vco-immutable-name (65 CRDs), vco-target-namespace-guard (92 CRDs)
+  # - Parameterized ConfigMap for VAULT_NAMESPACE fallback
+  # - Fixes 4 missing path-immutable + 31 missing name-immutable gaps
+  # - Remove migrated Go validation code from webhook files
+  # Complexity: High — first VAP in project, new CEL patterns, parameterized VAP setup
+  # Novelty Risk: HIGH
+  18-1-vap-infrastructure-and-universal-immutability-policies: ready-for-dev
+
+  # Story 18.2: Credential Source + CRD-Specific VAPs
+  # - Credential source mutual-exclusivity VAPs (rootCredentials group + per-field groups)
+  # - ~15 CRD-specific VAPs for unique isValid() logic
+  # - TransitSecretEngineKey, AWSSecretEngineRole, RandomSecret, mounts, etc.
+  # Complexity: High — 15+ distinct CEL policies
+  # Novelty Risk: MEDIUM
+  18-2-credential-source-and-crd-specific-vaps: ready-for-dev
+
+  # Story 18.3: Webhook Code Removal + Residual Webhook Cleanup + CSV Version Bump
+  # - Remove all migrated validating webhook logic
+  # - Keep residual mutating webhooks (AWS/CF/GCP/Okta/RADIUS/SSH/TFC/Userpass defaulters, K8sAuthConfig CA reader)
+  # - Keep RabbitMQ cross-resource validating webhook
+  # - Evaluate simple defaulters for +kubebuilder:default migration
+  # - Update main.go webhook registration + kustomize webhook config
+  # - Bump CSV minKubeVersion from 1.29.0 → 1.30.0 (VAPs GA in K8s 1.30)
+  # - Bump com.redhat.openshift.versions from v4.16 → v4.17 (OCP 4.17 = K8s 1.30)
+  # Complexity: Medium
+  # Novelty Risk: LOW
+  18-3-webhook-code-removal-and-residual-webhook-cleanup-and-csv-version-bump: ready-for-dev
+
+  # Story 18.4: VAP Test Suite — envtest + Integration Coverage
+  # - Configure envtest to enable ValidatingAdmissionPolicy admission plugin
+  # - envtest tests: vap_test.go — table-driven tests per shared VAP, per CRD-specific VAP
+  # - Integration tests: vap_integration_test.go — Kind cluster VAP enforcement
+  # - Cover the 35 previously-missing gap fixes
+  # - Adapt existing webhook_validate_update_test.go scenarios
+  # Complexity: Medium
+  # Novelty Risk: MEDIUM
+  18-4-vap-test-suite-envtest-and-integration-coverage: ready-for-dev
+
+  # Story 18.5: Documentation — VAP Approach + Admission Control Guide
+  # - Create docs/admission-control.md explaining 3-tier VAP architecture
+  # - Update developer guide for adding new CRD types (VAP binding steps)
+  # - Update project-context.md admission webhook rules for VAP-first approach
+  # Complexity: Low
+  # Novelty Risk: LOW
+  18-5-documentation-vap-approach-and-admission-control-guide: ready-for-dev
+
+  # Story 18.6: Project Context + Sprint Status Finalization
+  # - Final update to sprint-status.yaml, project-context.md, epics.md
+  # - Retrospective
+  # Complexity: Low
+  # Novelty Risk: LOW
+  18-6-project-context-and-sprint-status-finalization: ready-for-dev
 
 action_items:
   # Epic 10 action items (status from Epic 11 retro follow-through)
