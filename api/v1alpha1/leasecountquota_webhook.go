@@ -64,10 +64,6 @@ func (r *LeaseCountQuota) ValidateUpdate(ctx context.Context, oldObj, newObj *Le
 		return nil, err
 	}
 
-	if newObj.Spec.Name != oldObj.Spec.Name {
-		return nil, fmt.Errorf("spec.name is immutable after creation, was %q, got %q", oldObj.Spec.Name, newObj.Spec.Name)
-	}
-
 	if newObj.Spec.MaxLeases < 1 {
 		return nil, fmt.Errorf("spec.maxLeases must be at least 1")
 	}

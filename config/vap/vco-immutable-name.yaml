@@ -1,0 +1,82 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: vco-immutable-name
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups: ["redhatcop.redhat.io"]
+      apiVersions: ["v1alpha1"]
+      operations: ["UPDATE"]
+      resources:
+      - alicloudauthengineroles
+      - approleauthengineroles
+      - auditrequestheaders
+      - authenginemounts
+      - awsauthengineroles
+      - awssecretengineconfigs
+      - awssecretengineroles
+      - azureauthengineroles
+      - azuresecretengineroles
+      - certauthengineconfigs
+      - certauthengineroles
+      - cfauthengineroles
+      - consulsecretengineroles
+      - databasesecretengineconfigs
+      - databasesecretengineroles
+      - databasesecretenginestaticroles
+      - entities
+      - gcpauthengineroles
+      - gcpsecretengineconfigs
+      - gcpsecretenginerolesets
+      - gcpsecretenginestaticaccounts
+      - githubauthengineusermaps
+      - githubauthengineteammaps
+      - githubsecretengineroles
+      - groups
+      - identityoidcassignments
+      - identityoidcclients
+      - identityoidcproviders
+      - identityoidcscopes
+      - identitytokenkeys
+      - identitytokenroles
+      - jwtoidcauthengineroles
+      - kerberosauthenginegroups
+      - kubernetesauthengineconfigs
+      - kubernetesauthengineroles
+      - kubernetessecretengineroles
+      - ldapauthenginegroups
+      - ldapsecretengineconfigs
+      - ldapsecretenginedynamicroles
+      - ldapsecretenginestaticroles
+      - leasecountquotas
+      - loggerconfigs
+      - mongodbatlassecretengineroles
+      - namespaces
+      - nomadsecretengineroles
+      - ociauthengineroles
+      - oktaauthenginegroups
+      - passwordpolicies
+      - pkisecretengineroles
+      - policies
+      - quaysecretengineroles
+      - quaysecretenginestaticroles
+      - rabbitmqsecretengineroles
+      - radiusauthengineusers
+      - randomsecrets
+      - ratelimitquotas
+      - rotationpolicies
+      - secretenginemounts
+      - sshsecretengineroles
+      - terraformcloudsecretengineconfigs
+      - terraformcloudsecretengineroles
+      - totpsecretenginekeys
+      - transitsecretenginekeys
+      - uicustomheaders
+      - userpassauthengineusers
+  validations:
+  - expression: >-
+      !has(oldObject.spec.name) && !has(object.spec.name) ||
+      has(oldObject.spec.name) && has(object.spec.name) && object.spec.name == oldObject.spec.name
+    message: "spec.name cannot be updated"

@@ -17,9 +17,12 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
@@ -31,6 +34,8 @@ import (
 	. "github.com/onsi/gomega"
 
 	admissionv1 "k8s.io/api/admission/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/rest"
 
 	// +kubebuilder:scaffold:imports
@@ -84,6 +89,12 @@ var _ = BeforeSuite(func() {
 		},
 	}
 
+	// Ensure the ValidatingAdmissionPolicy admission plugin is enabled.
+	// VAP is GA since K8s 1.30 and enabled by default, but we explicitly
+	// add it to guarantee enforcement in envtest.
+	testEnv.ControlPlane.GetAPIServer().Configure().
+		Append("enable-admission-plugins", "ValidatingAdmissionPolicy")
+
 	var err error
 	// cfg is defined in this file globally.
 	cfg, err = testEnv.Start()
@@ -102,6 +113,32 @@ var _ = BeforeSuite(func() {
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
+
+	By("loading VAP manifests from config/vap/")
+	vapDir := filepath.Join("..", "..", "config", "vap")
+	vapFiles, err := filepath.Glob(filepath.Join(vapDir, "*.yaml"))
+	Expect(err).NotTo(HaveOccurred())
+	for _, vapFile := range vapFiles {
+		if filepath.Base(vapFile) == "kustomization.yaml" {
+			continue
+		}
+		data, err := os.ReadFile(vapFile)
+		Expect(err).NotTo(HaveOccurred())
+		reader := yaml.NewYAMLReader(bufio.NewReader(bytes.NewReader(data)))
+		for {
+			doc, err := reader.Read()
+			if err == io.EOF {
+				break
+			}
+			Expect(err).NotTo(HaveOccurred())
+			if len(bytes.TrimSpace(doc)) == 0 {
+				continue
+			}
+			obj := &unstructured.Unstructured{}
+			Expect(yaml.NewYAMLOrJSONDecoder(bytes.NewReader(doc), 4096).Decode(obj)).To(Succeed())
+			Expect(k8sClient.Create(ctx, obj)).To(Succeed())
+		}
+	}
 
 	// start webhook server using Manager
 	webhookInstallOptions := &testEnv.WebhookInstallOptions

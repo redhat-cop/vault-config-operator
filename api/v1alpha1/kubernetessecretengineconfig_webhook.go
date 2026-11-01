@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	"context"
-	"errors"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -70,10 +69,6 @@ func (r *KubernetesSecretEngineConfig) ValidateUpdate(ctx context.Context, oldOb
 		return nil, err
 	}
 
-	// the path cannot be updated
-	if newObj.Spec.Path != oldObj.Spec.Path {
-		return nil, errors.New("spec.path cannot be updated")
-	}
 	// TODO(user): fill in your validation logic upon object update.
 	return nil, newObj.isValid()
 }

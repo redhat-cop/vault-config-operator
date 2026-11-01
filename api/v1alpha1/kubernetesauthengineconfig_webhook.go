@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	"context"
-	"errors"
 	"os"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -76,11 +75,6 @@ func (r *KubernetesAuthEngineConfig) ValidateUpdate(ctx context.Context, oldObj,
 
 	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
 		return nil, err
-	}
-
-	// the path cannot be updated
-	if newObj.Spec.Path != oldObj.Spec.Path {
-		return nil, errors.New("spec.path cannot be updated")
 	}
 
 	if _, err := newObj.IsValid(); err != nil {

@@ -883,32 +883,6 @@ func TestAWSSecretEngineRole_IsEquivalentToDesiredState_ReorderedSlicesMatch(t *
 	}
 }
 
-func TestAWSSecretEngineRole_ValidateUpdate_RejectsNameChange(t *testing.T) {
-	r := &AWSSecretEngineRole{}
-	oldObj := &AWSSecretEngineRole{
-		Spec: AWSSecretEngineRoleSpec{
-			Path: "aws",
-			Name: "old-name",
-			AWSRole: AWSRole{
-				CredentialType: "iam_user",
-			},
-		},
-	}
-	newObj := &AWSSecretEngineRole{
-		Spec: AWSSecretEngineRoleSpec{
-			Path: "aws",
-			Name: "new-name",
-			AWSRole: AWSRole{
-				CredentialType: "iam_user",
-			},
-		},
-	}
-	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
-	if err == nil {
-		t.Error("expected error when spec.name is changed")
-	}
-}
-
 func TestAWSSecretEngineRole_ValidateUpdate_AllowsSameNameUpdate(t *testing.T) {
 	r := &AWSSecretEngineRole{}
 	oldObj := &AWSSecretEngineRole{

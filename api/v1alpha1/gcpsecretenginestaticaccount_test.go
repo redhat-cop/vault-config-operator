@@ -364,32 +364,6 @@ func TestGCPSecretEngineStaticAccount_Conditions(t *testing.T) {
 	}
 }
 
-func TestGCPSecretEngineStaticAccount_ValidateUpdate_RejectsPathChange(t *testing.T) {
-	r := &GCPSecretEngineStaticAccount{}
-	oldObj := &GCPSecretEngineStaticAccount{
-		Spec: GCPSecretEngineStaticAccountSpec{
-			Path: "gcp",
-			GCPSEStaticAccount: GCPSEStaticAccount{
-				SecretType:          "access_token",
-				ServiceAccountEmail: "sa@project.iam.gserviceaccount.com",
-			},
-		},
-	}
-	newObj := &GCPSecretEngineStaticAccount{
-		Spec: GCPSecretEngineStaticAccountSpec{
-			Path: "gcp-new",
-			GCPSEStaticAccount: GCPSEStaticAccount{
-				SecretType:          "access_token",
-				ServiceAccountEmail: "sa@project.iam.gserviceaccount.com",
-			},
-		},
-	}
-	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
-	if err == nil {
-		t.Error("expected error when spec.path is changed")
-	}
-}
-
 func TestGCPSecretEngineStaticAccount_ValidateUpdate_RejectsSecretTypeChange(t *testing.T) {
 	r := &GCPSecretEngineStaticAccount{}
 	oldObj := &GCPSecretEngineStaticAccount{

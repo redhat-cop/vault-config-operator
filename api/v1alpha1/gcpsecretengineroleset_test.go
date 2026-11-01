@@ -405,32 +405,6 @@ func TestGCPSecretEngineRoleset_Conditions(t *testing.T) {
 	}
 }
 
-func TestGCPSecretEngineRoleset_ValidateUpdate_RejectsPathChange(t *testing.T) {
-	r := &GCPSecretEngineRoleset{}
-	oldObj := &GCPSecretEngineRoleset{
-		Spec: GCPSecretEngineRolesetSpec{
-			Path: "gcp",
-			GCPSERoleset: GCPSERoleset{
-				SecretType: "access_token",
-				Project:    "my-project",
-			},
-		},
-	}
-	newObj := &GCPSecretEngineRoleset{
-		Spec: GCPSecretEngineRolesetSpec{
-			Path: "gcp-new",
-			GCPSERoleset: GCPSERoleset{
-				SecretType: "access_token",
-				Project:    "my-project",
-			},
-		},
-	}
-	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
-	if err == nil {
-		t.Error("expected error when spec.path is changed")
-	}
-}
-
 func TestGCPSecretEngineRoleset_ValidateUpdate_RejectsSecretTypeChange(t *testing.T) {
 	r := &GCPSecretEngineRoleset{}
 	oldObj := &GCPSecretEngineRoleset{

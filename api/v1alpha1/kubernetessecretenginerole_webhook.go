@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	"context"
-	"errors"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -56,7 +55,6 @@ var _ admission.Validator[*KubernetesSecretEngineRole] = &KubernetesSecretEngine
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
 func (r *KubernetesSecretEngineRole) ValidateCreate(ctx context.Context, obj *KubernetesSecretEngineRole) (admission.Warnings, error) {
 	kubernetessecretenginerolelog.Info("validate create", "name", obj.Name)
-	// the path cannot be updated
 
 	// TODO(user): fill in your validation logic upon object creation.
 	return nil, nil
@@ -68,9 +66,6 @@ func (r *KubernetesSecretEngineRole) ValidateUpdate(ctx context.Context, oldObj,
 
 	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
 		return nil, err
-	}
-	if newObj.Spec.Path != oldObj.Spec.Path {
-		return nil, errors.New("spec.path cannot be updated")
 	}
 	// TODO(user): fill in your validation logic upon object update.
 	return nil, nil

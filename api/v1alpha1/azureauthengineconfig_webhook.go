@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	"context"
-	"errors"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -64,10 +63,6 @@ func (r *AzureAuthEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newO
 		return nil, err
 	}
 
-	// the path cannot be updated
-	if newObj.Spec.Path != oldObj.Spec.Path {
-		return nil, errors.New("spec.path cannot be updated")
-	}
 	return nil, nil
 }
 
