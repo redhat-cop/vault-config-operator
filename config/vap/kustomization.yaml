@@ -1,8 +1,74 @@
 resources:
+# Story 18.1 — Universal immutability VAPs
 - vco-immutable-path.yaml
 - vco-immutable-path-binding.yaml
 - vco-immutable-name.yaml
 - vco-immutable-name-binding.yaml
+# Story 18.1.1 — Target namespace guard VAP
 - vco-target-namespace-guard.yaml
 - vco-target-namespace-guard-binding.yaml
 - vco-vap-params-configmap.yaml
+# Story 18.2 — Credential source shared VAPs
+- vco-exactly-one-root-credential.yaml
+- vco-exactly-one-root-credential-binding.yaml
+- vco-exactly-one-bind-credential.yaml
+- vco-exactly-one-bind-credential-binding.yaml
+# Story 18.2 — Credential-only single-CRD VAPs
+- vco-validate-kerberosauthengineconfig-ldap.yaml
+- vco-validate-kerberosauthengineconfig-ldap-binding.yaml
+- vco-validate-awsauthengineconfig.yaml
+- vco-validate-awsauthengineconfig-binding.yaml
+- vco-validate-azuresecretengineconfig.yaml
+- vco-validate-azuresecretengineconfig-binding.yaml
+- vco-validate-gcpsecretengineconfig.yaml
+- vco-validate-gcpsecretengineconfig-binding.yaml
+- vco-validate-oktaauthengineconfig.yaml
+- vco-validate-oktaauthengineconfig-binding.yaml
+- vco-validate-radiusauthengineconfig.yaml
+- vco-validate-radiusauthengineconfig-binding.yaml
+# Story 18.2 — CRD-specific VAPs (no credential source)
+- vco-validate-transitsecretenginekey.yaml
+- vco-validate-transitsecretenginekey-binding.yaml
+- vco-validate-awssecretenginerole.yaml
+- vco-validate-awssecretenginerole-binding.yaml
+- vco-validate-randomsecret.yaml
+- vco-validate-randomsecret-binding.yaml
+- vco-validate-databasesecretenginestaticrole.yaml
+- vco-validate-databasesecretenginestaticrole-binding.yaml
+- vco-validate-totpsecretenginekey.yaml
+- vco-validate-totpsecretenginekey-binding.yaml
+- vco-validate-terraformcloudsecretenginerole.yaml
+- vco-validate-terraformcloudsecretenginerole-binding.yaml
+- vco-validate-authenginemount.yaml
+- vco-validate-authenginemount-binding.yaml
+- vco-validate-secretenginemount.yaml
+- vco-validate-secretenginemount-binding.yaml
+- vco-validate-pkisecretengineconfig.yaml
+- vco-validate-pkisecretengineconfig-binding.yaml
+- vco-validate-kubernetesauthengineconfig.yaml
+- vco-validate-kubernetesauthengineconfig-binding.yaml
+- vco-validate-kubernetesauthenginerole.yaml
+- vco-validate-kubernetesauthenginerole-binding.yaml
+- vco-validate-sshsecretengineconfig.yaml
+- vco-validate-sshsecretengineconfig-binding.yaml
+# Story 18.2 — Combined credential source + CRD-specific VAPs
+- vco-validate-awssecretengineconfig.yaml
+- vco-validate-awssecretengineconfig-binding.yaml
+- vco-validate-consulsecretengineconfig.yaml
+- vco-validate-consulsecretengineconfig-binding.yaml
+- vco-validate-nomadsecretengineconfig.yaml
+- vco-validate-nomadsecretengineconfig-binding.yaml
+- vco-validate-mongodbatlassecretengineconfig.yaml
+- vco-validate-mongodbatlassecretengineconfig-binding.yaml
+- vco-validate-ldapsecretengineconfig.yaml
+- vco-validate-ldapsecretengineconfig-binding.yaml
+- vco-validate-terraformcloudsecretengineconfig.yaml
+- vco-validate-terraformcloudsecretengineconfig-binding.yaml
+- vco-validate-cfauthengineconfig.yaml
+- vco-validate-cfauthengineconfig-binding.yaml
+- vco-validate-githubsecretengineconfig.yaml
+- vco-validate-githubsecretengineconfig-binding.yaml
+- vco-validate-kubernetessecretengineconfig.yaml
+- vco-validate-kubernetessecretengineconfig-binding.yaml
+- vco-validate-userpassauthengineuser.yaml
+- vco-validate-userpassauthengineuser-binding.yaml

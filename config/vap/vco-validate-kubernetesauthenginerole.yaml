@@ -1,0 +1,18 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: vco-validate-kubernetesauthenginerole
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups: ["redhatcop.redhat.io"]
+      apiVersions: ["v1alpha1"]
+      operations: ["CREATE", "UPDATE"]
+      resources:
+      - kubernetesauthengineroles
+  validations:
+  - expression: >-
+      (has(object.spec.targetNamespaces.targetNamespaceSelector) ? 1 : 0) +
+      (has(object.spec.targetNamespaces.targetNamespaces) ? 1 : 0) == 1
+    message: "only one of TargetNamespaceSelector or TargetNamespaces can be specified"

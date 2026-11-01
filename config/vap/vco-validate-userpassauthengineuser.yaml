@@ -1,0 +1,20 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: vco-validate-userpassauthengineuser
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups: ["redhatcop.redhat.io"]
+      apiVersions: ["v1alpha1"]
+      operations: ["CREATE", "UPDATE"]
+      resources:
+      - userpassauthengineusers
+  validations:
+  # passwordCredentials exactly-one source
+  - expression: |
+      (has(object.spec.passwordCredentials.vaultSecret) ? 1 : 0) +
+      (has(object.spec.passwordCredentials.secret) ? 1 : 0) +
+      (has(object.spec.passwordCredentials.randomSecret) ? 1 : 0) == 1
+    message: "exactly one of spec.passwordCredentials.vaultSecret, spec.passwordCredentials.secret, or spec.passwordCredentials.randomSecret must be specified"

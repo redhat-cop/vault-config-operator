@@ -1,7 +1,6 @@
 # Story 18.2: Credential Source + CRD-Specific VAPs
 
-Status: ready-for-dev
-
+Status: done
 ## Story
 
 As an operator developer,
@@ -467,19 +466,30 @@ For `options` (map type), CEL comparison: `object.spec.mount.options == oldObjec
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Opus 4.6 (implementation), Grok 4.7 xhigh (review — quick lens)
 
-### Debug Log References
+### Summary of Changes
+61 files changed: created 30 ValidatingAdmissionPolicies + 30 ValidatingAdmissionPolicyBindings under `config/vap/`, updated `config/vap/kustomization.yaml`. No Go code changes.
 
-### Completion Notes List
+### Outcome
+All gates passed: unit tests, integration tests (144 specs), helmchart-test. `kustomize build config/default/` produces 66 VAP resources (6 existing + 60 new). Review found 2 high-severity bugs (AuthEngineMount/SecretEngineMount using wrong field paths due to `json:",inline"`) — fixed in loopback.
 
-### File List
+### Notes
+- RandomSecret HCL inline password policy validation intentionally NOT in CEL (stays in Go webhook until Story 18.3)
+- CEL `duration()` for TransitSecretEngineKey autoRotatePeriod needs integration testing in Story 18.4
+- TFC credential inner field emptiness check not replicated in VAP (Go webhook still catches it)
 
 ## Code Review Record
 
 ### Review Model Used
+Grok 4.7 xhigh (quick lens)
 
 ### Review Findings
+6 findings: 2 high (AuthEngineMount/SecretEngineMount inline field paths), 1 low (TFC empty credential), 3 false (omitempty field access — K8s CEL returns zero values for missing schema-declared optional primitives)
 
 ### Decisions Needed / Decisions Taken
+AuthEngineMount/SecretEngineMount field paths fixed (bad_plan loopback). TFC empty credential gap accepted (Go webhook still catches it; deferred to Story 18.3/18.4).
 
 ### Fixes Applied
+- `vco-validate-authenginemount.yaml`: `spec.authMount.*` → `spec.*` (AuthMount is `json:",inline"`)
+- `vco-validate-secretenginemount.yaml`: `spec.mount.*` → `spec.*` (Mount is `json:",inline"`)
