@@ -1,7 +1,6 @@
 # Story 18.1: VAP Infrastructure + Universal Immutability Policies
 
-Status: ready-for-dev
-
+Status: done
 ## Story
 
 As an operator developer,

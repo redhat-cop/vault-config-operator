@@ -727,7 +727,7 @@ development_status:
   # - Remove migrated Go validation code from webhook files
   # Complexity: High — first VAP in project, new CEL patterns, parameterized VAP setup
   # Novelty Risk: HIGH
-  18-1-vap-infrastructure-and-universal-immutability-policies: ready-for-dev
+  18-1-vap-infrastructure-and-universal-immutability-policies: done
 
   # Story 18.2: Credential Source + CRD-Specific VAPs
   # - Credential source mutual-exclusivity VAPs (rootCredentials group + per-field groups)
