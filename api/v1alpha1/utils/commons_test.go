@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strings"
 	"testing"
 
 	vault "github.com/hashicorp/vault/api"
@@ -65,47 +64,6 @@ func TestGetTargetNamespace(t *testing.T) {
 				t.Errorf("GetTargetNamespace() = %q, want %q", got, tt.expected)
 			}
 		})
-	}
-}
-
-func TestValidateTargetNamespaceUpdate(t *testing.T) {
-	tests := []struct {
-		name           string
-		vaultNamespace string
-		old            KubeAuthConfiguration
-		new            KubeAuthConfiguration
-		wantErr        bool
-	}{
-		{"unchanged empty", "", KubeAuthConfiguration{}, KubeAuthConfiguration{}, false},
-		{"unchanged", "", KubeAuthConfiguration{TargetNamespace: "tenant-a"}, KubeAuthConfiguration{TargetNamespace: "tenant-a"}, false},
-		{"changed", "", KubeAuthConfiguration{TargetNamespace: "tenant-a"}, KubeAuthConfiguration{TargetNamespace: "tenant-b"}, true},
-		{"added", "", KubeAuthConfiguration{}, KubeAuthConfiguration{TargetNamespace: "tenant-a"}, true},
-		{"removed", "", KubeAuthConfiguration{TargetNamespace: "tenant-a"}, KubeAuthConfiguration{}, true},
-		{"only slashes in namespace changed", "", KubeAuthConfiguration{Namespace: "org/", TargetNamespace: "tenant-a"}, KubeAuthConfiguration{Namespace: "org", TargetNamespace: "tenant-a"}, false},
-		{"child moved from namespace to targetNamespace", "", KubeAuthConfiguration{Namespace: "org/tenant-a"}, KubeAuthConfiguration{Namespace: "org", TargetNamespace: "tenant-a"}, false},
-		{"child moved from targetNamespace to namespace", "", KubeAuthConfiguration{Namespace: "org", TargetNamespace: "tenant-a"}, KubeAuthConfiguration{Namespace: "org/tenant-a"}, false},
-		{"child moved from VAULT_NAMESPACE to targetNamespace", "admin/tenant-a", KubeAuthConfiguration{}, KubeAuthConfiguration{Namespace: "admin", TargetNamespace: "tenant-a"}, false},
-		{"namespace change moves a resource with targetNamespace", "", KubeAuthConfiguration{Namespace: "org", TargetNamespace: "tenant-a"}, KubeAuthConfiguration{Namespace: "org2", TargetNamespace: "tenant-a"}, true},
-		{"namespace change moves a resource without targetNamespace, as before", "", KubeAuthConfiguration{Namespace: "org"}, KubeAuthConfiguration{Namespace: "org2"}, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Setenv(vault.EnvVaultNamespace, tt.vaultNamespace)
-			err := tt.new.ValidateTargetNamespaceUpdate(&tt.old)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ValidateTargetNamespaceUpdate() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestValidateTargetNamespaceUpdateMessage(t *testing.T) {
-	t.Setenv(vault.EnvVaultNamespace, "")
-	newKc := &KubeAuthConfiguration{TargetNamespace: "tenant-a"}
-	err := newKc.ValidateTargetNamespaceUpdate(&KubeAuthConfiguration{})
-	want := `(from "root" to "tenant-a"): to move the resource, delete it and create it again`
-	if err == nil || !strings.Contains(err.Error(), want) {
-		t.Errorf("ValidateTargetNamespaceUpdate() error = %v, want it to contain %q", err, want)
 	}
 }
 

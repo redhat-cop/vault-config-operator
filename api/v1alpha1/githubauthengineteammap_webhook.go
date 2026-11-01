@@ -54,9 +54,6 @@ func (r *GitHubAuthEngineTeamMap) ValidateCreate(ctx context.Context, obj *GitHu
 func (r *GitHubAuthEngineTeamMap) ValidateUpdate(ctx context.Context, oldObj, newObj *GitHubAuthEngineTeamMap) (admission.Warnings, error) {
 	githubauthengineteammaplog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
 	return nil, nil
 }
 

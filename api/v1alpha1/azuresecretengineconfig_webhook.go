@@ -59,10 +59,6 @@ func (r *AzureSecretEngineConfig) ValidateCreate(ctx context.Context, obj *Azure
 func (r *AzureSecretEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *AzureSecretEngineConfig) (admission.Warnings, error) {
 	azuresecretengineconfiglog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
-
 	return nil, newObj.isValid()
 }
 

@@ -736,7 +736,7 @@ development_status:
   # - Must complete before 18.3 (webhook code removal)
   # Complexity: High — parameterized VAP, CEL string manipulation
   # Novelty Risk: HIGH
-  18-1-1-target-namespace-guard-vap: ready-for-dev
+  18-1-1-target-namespace-guard-vap: done
 
   # Story 18.2: Credential Source + CRD-Specific VAPs
   # - Credential source mutual-exclusivity VAPs (rootCredentials group + per-field groups)

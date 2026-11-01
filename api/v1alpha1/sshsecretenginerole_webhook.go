@@ -54,9 +54,6 @@ func (r *SSHSecretEngineRole) ValidateCreate(ctx context.Context, obj *SSHSecret
 func (r *SSHSecretEngineRole) ValidateUpdate(ctx context.Context, oldObj, newObj *SSHSecretEngineRole) (admission.Warnings, error) {
 	sshsecretenginerolelog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
 	return nil, nil
 }
 

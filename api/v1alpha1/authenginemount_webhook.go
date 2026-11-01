@@ -65,10 +65,6 @@ func (r *AuthEngineMount) ValidateCreate(ctx context.Context, obj *AuthEngineMou
 func (r *AuthEngineMount) ValidateUpdate(ctx context.Context, oldObj, newObj *AuthEngineMount) (admission.Warnings, error) {
 	authenginemountlog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
-
 	// only mount config can be modified
 	oldMount := oldObj.Spec.AuthMount
 	newMount := newObj.Spec.AuthMount

@@ -54,9 +54,6 @@ func (r *KerberosAuthEngineConfig) ValidateCreate(ctx context.Context, obj *Kerb
 func (r *KerberosAuthEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *KerberosAuthEngineConfig) (admission.Warnings, error) {
 	kerberosauthengineconflog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
 	return nil, nil
 }
 

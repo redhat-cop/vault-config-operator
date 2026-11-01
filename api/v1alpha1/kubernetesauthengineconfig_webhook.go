@@ -73,10 +73,6 @@ func (r *KubernetesAuthEngineConfig) ValidateCreate(ctx context.Context, obj *Ku
 func (r *KubernetesAuthEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *KubernetesAuthEngineConfig) (admission.Warnings, error) {
 	kubernetesauthengineconfiglog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
-
 	if _, err := newObj.IsValid(); err != nil {
 		return nil, err
 	}

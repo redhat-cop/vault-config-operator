@@ -58,9 +58,6 @@ func (r *IdentityOIDCScope) ValidateCreate(ctx context.Context, obj *IdentityOID
 func (r *IdentityOIDCScope) ValidateUpdate(ctx context.Context, oldObj, newObj *IdentityOIDCScope) (admission.Warnings, error) {
 	identityoidcscopelog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
 	return nil, nil
 }
 

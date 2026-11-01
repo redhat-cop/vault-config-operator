@@ -60,10 +60,6 @@ func (r *CORSConfig) ValidateCreate(ctx context.Context, obj *CORSConfig) (admis
 func (r *CORSConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *CORSConfig) (admission.Warnings, error) {
 	corsconfiglog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
-
 	if len(newObj.Spec.AllowedOrigins) == 0 {
 		return nil, fmt.Errorf("allowedOrigins must not be empty")
 	}

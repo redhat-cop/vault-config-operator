@@ -59,10 +59,6 @@ func (r *JWTOIDCAuthEngineConfig) ValidateCreate(ctx context.Context, obj *JWTOI
 func (r *JWTOIDCAuthEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *JWTOIDCAuthEngineConfig) (admission.Warnings, error) {
 	jwtoidcauthengineconfiglog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
-
 	return nil, nil
 }
 

@@ -57,9 +57,6 @@ func (r *AliCloudAuthEngineRole) ValidateCreate(ctx context.Context, obj *AliClo
 func (r *AliCloudAuthEngineRole) ValidateUpdate(ctx context.Context, oldObj, newObj *AliCloudAuthEngineRole) (admission.Warnings, error) {
 	alicloudauthenginerolelog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
 	if _, err := newObj.IsValid(); err != nil {
 		return nil, err
 	}

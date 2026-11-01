@@ -54,9 +54,6 @@ func (r *LDAPSecretEngineConfig) ValidateCreate(ctx context.Context, obj *LDAPSe
 func (r *LDAPSecretEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *LDAPSecretEngineConfig) (admission.Warnings, error) {
 	ldapsecretengineconfiglog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
 	return nil, newObj.isValid()
 }
 
