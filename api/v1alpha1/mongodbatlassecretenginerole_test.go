@@ -1,7 +1,6 @@
 package v1alpha1
 
 import (
-	"context"
 	"testing"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -239,32 +238,6 @@ func TestMongoDBAtlasSecretEngineRoleConditions(t *testing.T) {
 	}
 	if got[0].Type != "ReconcileSuccessful" {
 		t.Errorf("expected condition type 'ReconcileSuccessful', got %v", got[0].Type)
-	}
-}
-
-func TestMongoDBAtlasSecretEngineRole_ValidateUpdate_AllowsFieldUpdate(t *testing.T) {
-	r := &MongoDBAtlasSecretEngineRole{}
-	oldObj := &MongoDBAtlasSecretEngineRole{
-		Spec: MongoDBAtlasSecretEngineRoleSpec{
-			Path: "mongodbatlas",
-			Name: "role-1",
-			MongoDBAtlasSERole: MongoDBAtlasSERole{
-				Roles: []string{"ORG_READ_ONLY"},
-			},
-		},
-	}
-	newObj := &MongoDBAtlasSecretEngineRole{
-		Spec: MongoDBAtlasSecretEngineRoleSpec{
-			Path: "mongodbatlas",
-			Name: "role-1",
-			MongoDBAtlasSERole: MongoDBAtlasSERole{
-				Roles: []string{"ORG_OWNER"},
-			},
-		},
-	}
-	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
-	if err != nil {
-		t.Errorf("expected no error when only role fields changed, got: %v", err)
 	}
 }
 

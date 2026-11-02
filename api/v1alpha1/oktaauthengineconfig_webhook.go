@@ -29,7 +29,6 @@ var oktaauthengineconfiglog = logf.Log.WithName("oktaauthengineconfig-resource")
 func (r *OktaAuthEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr, r).
 		WithDefaulter(r).
-		WithValidator(r).
 		Complete()
 }
 
@@ -43,24 +42,4 @@ func (r *OktaAuthEngineConfig) Default(ctx context.Context, obj *OktaAuthEngineC
 		obj.Spec.OktaCredentials.PasswordKey = "api_token"
 	}
 	return nil
-}
-
-//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-oktaauthengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=oktaauthengineconfigs,verbs=create;update,versions=v1alpha1,name=voktaauthengineconfig.kb.io,admissionReviewVersions=v1
-
-var _ admission.Validator[*OktaAuthEngineConfig] = &OktaAuthEngineConfig{}
-
-func (r *OktaAuthEngineConfig) ValidateCreate(ctx context.Context, obj *OktaAuthEngineConfig) (admission.Warnings, error) {
-	oktaauthengineconfiglog.Info("validate create", "name", obj.Name)
-	return nil, obj.isValid()
-}
-
-func (r *OktaAuthEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *OktaAuthEngineConfig) (admission.Warnings, error) {
-	oktaauthengineconfiglog.Info("validate update", "name", newObj.Name)
-
-	return nil, newObj.isValid()
-}
-
-func (r *OktaAuthEngineConfig) ValidateDelete(ctx context.Context, obj *OktaAuthEngineConfig) (admission.Warnings, error) {
-	oktaauthengineconfiglog.Info("validate delete", "name", obj.Name)
-	return nil, nil
 }

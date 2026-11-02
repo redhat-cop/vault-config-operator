@@ -30,7 +30,6 @@ var cfauthengineconfiglog = logf.Log.WithName("cfauthengineconfig-resource")
 func (r *CFAuthEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr, r).
 		WithDefaulter(r).
-		WithValidator(r).
 		Complete()
 }
 
@@ -94,24 +93,4 @@ func cfCredentialKeyOmitted(ctx context.Context, key string) (omitted bool, hasR
 		return true, true
 	}
 	return false, true
-}
-
-//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-cfauthengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=cfauthengineconfigs,verbs=create;update,versions=v1alpha1,name=vcfauthengineconfig.kb.io,admissionReviewVersions=v1
-
-var _ admission.Validator[*CFAuthEngineConfig] = &CFAuthEngineConfig{}
-
-func (r *CFAuthEngineConfig) ValidateCreate(ctx context.Context, obj *CFAuthEngineConfig) (admission.Warnings, error) {
-	cfauthengineconfiglog.Info("validate create", "name", obj.Name)
-	return nil, obj.isValid()
-}
-
-func (r *CFAuthEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *CFAuthEngineConfig) (admission.Warnings, error) {
-	cfauthengineconfiglog.Info("validate update", "name", newObj.Name)
-
-	return nil, newObj.isValid()
-}
-
-func (r *CFAuthEngineConfig) ValidateDelete(ctx context.Context, obj *CFAuthEngineConfig) (admission.Warnings, error) {
-	cfauthengineconfiglog.Info("validate delete", "name", obj.Name)
-	return nil, nil
 }

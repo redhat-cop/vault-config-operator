@@ -154,130 +154,76 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&RandomSecret{}).SetupWebhookWithManager(mgr)
+	// Category A — defaulter + validator (uncovered validation)
+	err = (&AWSAuthEngineClientConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&SecretEngineMount{}).SetupWebhookWithManager(mgr)
+	// Category B — defaulter-only (validator removed, VAP covers validation)
+	err = (&CFAuthEngineConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&DatabaseSecretEngineRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&DatabaseSecretEngineConfig{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&KubernetesAuthEngineRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&AuthEngineMount{}).SetupWebhookWithManager(mgr)
+	err = (&GCPSecretEngineConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = (&KubernetesAuthEngineConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&VaultSecret{}).SetupWebhookWithManager(mgr)
+	err = (&OktaAuthEngineConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&PasswordPolicy{}).SetupWebhookWithManager(mgr)
+	err = (&RADIUSAuthEngineConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&Policy{}).SetupWebhookWithManager(mgr)
+	err = (&SSHSecretEngineConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&GitHubSecretEngineConfig{}).SetupWebhookWithManager(mgr)
+	err = (&TerraformCloudSecretEngineConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&GitHubSecretEngineRole{}).SetupWebhookWithManager(mgr)
+	// Category C — validator-only (uncovered CRD-specific validation)
+	err = (&AliCloudAuthEngineRole{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&RabbitMQSecretEngineRole{}).SetupWebhookWithManager(mgr)
+	err = (&AppRoleAuthEngineRole{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&PKISecretEngineConfig{}).SetupWebhookWithManager(mgr)
+	err = (&AWSAuthEngineRole{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&PKISecretEngineRole{}).SetupWebhookWithManager(mgr)
+	err = (&CORSConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&QuaySecretEngineConfig{}).SetupWebhookWithManager(mgr)
+	err = (&GCPSecretEngineRoleset{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&QuaySecretEngineRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&QuaySecretEngineStaticRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&LDAPAuthEngineConfig{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&LDAPAuthEngineGroup{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&KubernetesSecretEngineConfig{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&KubernetesSecretEngineRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&JWTOIDCAuthEngineConfig{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&JWTOIDCAuthEngineRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&DatabaseSecretEngineStaticRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&Group{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&GroupAlias{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&AzureAuthEngineConfig{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&AzureAuthEngineRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&AzureSecretEngineConfig{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&AzureSecretEngineRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&GCPAuthEngineConfig{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&GCPAuthEngineRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&CertAuthEngineConfig{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&CertAuthEngineRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&IdentityOIDCProvider{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&IdentityOIDCScope{}).SetupWebhookWithManager(mgr)
+	err = (&GCPSecretEngineStaticAccount{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = (&IdentityOIDCClient{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&IdentityOIDCAssignment{}).SetupWebhookWithManager(mgr)
+	err = (&JWTOIDCAuthEngineRole{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&IdentityTokenConfig{}).SetupWebhookWithManager(mgr)
+	err = (&KeyRotationConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&IdentityTokenKey{}).SetupWebhookWithManager(mgr)
+	err = (&LDAPSecretEngineStaticRole{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&IdentityTokenRole{}).SetupWebhookWithManager(mgr)
+	err = (&LeaseCountQuota{}).SetupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = (&PKISecretEngineConfig{}).SetupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = (&RandomSecret{}).SetupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = (&RateLimitQuota{}).SetupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = (&UICustomHeader{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:webhook

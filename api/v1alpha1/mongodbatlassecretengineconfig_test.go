@@ -1,7 +1,6 @@
 package v1alpha1
 
 import (
-	"context"
 	"testing"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
@@ -363,33 +362,6 @@ func TestMongoDBAtlasSecretEngineConfig_IsValid_RandomSecretWithPublicKey(t *tes
 	ok, err := config.IsValid()
 	if !ok || err != nil {
 		t.Errorf("expected valid with randomSecret and spec.publicKey set, got ok=%v, err=%v", ok, err)
-	}
-}
-
-func TestMongoDBAtlasSecretEngineConfig_ValidateUpdate_AllowsSamePathUpdate(t *testing.T) {
-	r := &MongoDBAtlasSecretEngineConfig{}
-	oldObj := &MongoDBAtlasSecretEngineConfig{
-		Spec: MongoDBAtlasSecretEngineConfigSpec{
-			Path: "mongodbatlas",
-			RootCredentials: vaultutils.RootCredentialConfig{
-				Secret: &corev1.LocalObjectReference{Name: "cred"},
-			},
-		},
-	}
-	newObj := &MongoDBAtlasSecretEngineConfig{
-		Spec: MongoDBAtlasSecretEngineConfigSpec{
-			Path: "mongodbatlas",
-			MongoDBAtlasSEConfig: MongoDBAtlasSEConfig{
-				PublicKey: "new-key",
-			},
-			RootCredentials: vaultutils.RootCredentialConfig{
-				Secret: &corev1.LocalObjectReference{Name: "cred"},
-			},
-		},
-	}
-	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
-	if err != nil {
-		t.Errorf("expected no error when spec.path unchanged, got: %v", err)
 	}
 }
 

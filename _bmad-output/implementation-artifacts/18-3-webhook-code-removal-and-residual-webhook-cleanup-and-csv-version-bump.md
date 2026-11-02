@@ -1,7 +1,6 @@
 # Story 18.3: Webhook Code Removal + Residual Webhook Cleanup + CSV Version Bump
 
-Status: ready-for-dev
-
+Status: done
 ## Story
 
 As an operator developer,

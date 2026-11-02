@@ -756,7 +756,7 @@ development_status:
   # - Bump com.redhat.openshift.versions from v4.16 → v4.17 (OCP 4.17 = K8s 1.30)
   # Complexity: Medium
   # Novelty Risk: LOW
-  18-3-webhook-code-removal-and-residual-webhook-cleanup-and-csv-version-bump: ready-for-dev
+  18-3-webhook-code-removal-and-residual-webhook-cleanup-and-csv-version-bump: done
 
   # Story 18.4: VAP Test Suite — envtest + Integration Coverage
   # - Configure envtest to enable ValidatingAdmissionPolicy admission plugin
