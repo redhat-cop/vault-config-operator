@@ -1,6 +1,10 @@
 # Story 18.5: Documentation — VAP Approach + Admission Control Guide
 
-Status: ready-for-dev
+Status: done
+baseline_revision: bfb1547e824e02734aa05463e39ee6863a3151df
+review: 'quick'
+review_source: 'pinned'
+lenses_ran: quick
 
 ## Story
 
@@ -238,22 +242,56 @@ This is a pure documentation story. No code changes, no risk of regressions. The
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+None
+
 ### Completion Notes List
 
+- Created `docs/admission-control.md` — comprehensive guide covering three-tier VAP architecture, parameterized VAP setup, residual webhooks, K8s version requirements, and manifest location
+- Updated `docs/contributing-vault-apis.md` — replaced webhook-centric step 5 with VAP-first approach; added new step 6 for VAP binding updates; renumbered steps 7–10; updated step 1 to note webhook scaffold is optional
+- Updated `_bmad-output/project-context.md` — rewrote "Admission Webhooks" section to "Admission Control (VAPs + Residual Webhooks)"; updated new-type checklist steps 2, 4, 5, 7 to reflect VAP-first approach; added step 4 as VAP binding step
+- All CRD counts verified against actual VAP manifests: 72 path, 65 name, 96 target-ns, 33 total policies, 33 bindings
+- ConfigMap name (`vco-vap-params`) and data key (`vaultNamespace`) verified against actual manifest
+- envtest configuration verified: `ControlPlane.GetAPIServer().Configure().Append("enable-admission-plugins", "ValidatingAdmissionPolicy")`
+- Residual webhook list verified against actual remaining `*_webhook.go` files (24 files: 7 defaulter-only, 1 cross-resource validator, 16 retained validators)
+- UserpassAuthEngineUser removed from residual webhook table (file was deleted in Story 18.3)
+- Fixed "~82 types have no webhook" to "72 of 96 types have no webhook file" to match actual counts
+
 ### File List
+
+New: docs/admission-control.md
+Modified: docs/contributing-vault-apis.md, _bmad-output/project-context.md
 
 ## Code Review Record
 
 ### Review Model Used
 
-{{review_model_name_version}}
+Grok 4.7 xhigh (quick lens)
 
 ### Review Findings
 
+## Review Triage Log
+
+| # | Source | Location | Claim | Verdict | Evidence | Route |
+|---|--------|----------|-------|---------|----------|-------|
+| 1 | quick | `docs/admission-control.md` Overview + Retained table | Overview says residual webhooks are only mutation/cross-resource; table labels 8 validators as "No-op (logging only)" when all 16 have real validation | high | All 16 retained validators verified to have active validation logic (IsValid, immutability checks, field constraints) | patch |
+| 2 | quick | `docs/contributing-vault-apis.md` steps 1+5+6 | Step 1 scaffolds `--programmatic-validation`, step 5 says `--defaulting` only; step 6 references "binding YAML files" but resource lists are on the policy objects | medium | Confirmed: binding files have no resource lists; policy files have `matchConstraints.resourceRules.resources` | patch |
+| 3 | quick | `docs/admission-control.md` Parameterized VAP section | References `ValidateTargetNamespaceUpdate` method that no longer exists | low | `grep -r ValidateTargetNamespaceUpdate api/` returns nothing | patch |
+| 4 | quick | `docs/admission-control.md` ConfigMap Setup | Kustomize wiring description slightly imprecise | low | Description is functionally correct: namespace transformer → ConfigMap → replacement → binding paramRef.namespace | rejected — description is roughly correct, fix adds complexity |
+| 5 | quick | `docs/admission-control.md` Tier 3 table | Field name simplifications vs exact JSON tags | low | Summary descriptions, not CEL references; actual expressions in YAML | rejected — acceptable simplifications for summary table |
+| 6 | quick | `_bmad-output/project-context.md` credential defaulting bullet | Removed nuance about empty-string fallback and inherited values | medium | Original text included "Empty-string fallback is acceptable when no admission request is present" — now missing | patch |
+
 ### Decisions Needed / Decisions Taken
 
+- Rejected Finding 4 (kustomize wiring): description is functionally correct, namePrefix concern is operational not documentation
+- Rejected Finding 5 (field name simplifications): acceptable for summary table, users read actual YAML for CEL
+
 ### Fixes Applied
+
+1. **Finding 1+2 (retained validators):** Fixed overview to mention type-specific validation in residual webhooks. Updated all 16 rows in Retained Webhook Validators table with accurate validation descriptions (removed incorrect "No-op validators (logging only)" labels).
+2. **Finding 3 (step contradictions):** Removed `--programmatic-validation` from step 1 webhook command in `contributing-vault-apis.md` and project-context.md checklist. Changed "binding YAML files" to "policy YAML files" and clarified resource lists are on `ValidatingAdmissionPolicy` objects (`spec.matchConstraints.resourceRules[].resources`).
+3. **Finding 4 (historical method):** Updated parameterized VAP description to use past tense for `ValidateTargetNamespaceUpdate` ("previously implemented in... now removed").
+4. **Finding 7 (credential defaulting):** Restored nuance to credential key defaulting bullet in project-context.md — distinguished between request-inspection defaulters (AWS, CF, RADIUS) and value-check defaulters (GCP, Okta, SSH, TFC), restored empty-string fallback and inherited-default rules.

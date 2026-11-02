@@ -53,21 +53,24 @@ The UBI9 runtime image does not need a Go version bump (it only packages the com
 
 ### Go Language Rules
 
-#### Admission Webhooks (Required for Every Type)
-- Every CRD type **must** have a corresponding `*_webhook.go` file implementing both `admission.Defaulter[*T]` and `admission.Validator[*T]` generic interfaces (from `sigs.k8s.io/controller-runtime/pkg/webhook/admission`).
-- Compile-time checks: `var _ admission.Defaulter[*MyType] = &MyType{}` and `var _ admission.Validator[*MyType] = &MyType{}`
-- Webhook file must declare a package-level logger: `var mytypelog = logf.Log.WithName("mytype-resource")`
-- `SetupWebhookWithManager` follows a fixed pattern: `ctrl.NewWebhookManagedBy(mgr, r).WithDefaulter(r).WithValidator(r).Complete()`
-- Kubebuilder marker comments are required for both mutating and validating paths:
-  - `//+kubebuilder:webhook:path=/mutate-redhatcop-redhat-io-v1alpha1-<lowercase>,mutating=true,...`
-  - `//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-<lowercase>,mutating=false,...`
-- **Critical rule:** `ValidateUpdate` must **always** reject changes to `spec.path` — immutable after creation: `errors.New("spec.path cannot be updated")`
-- **Critical rule:** `ValidateUpdate` must **also** reject changes to `spec.name` (when the type has a `Name` override field) — immutable after creation: `errors.New("spec.name cannot be updated")`. Changing `spec.name` would orphan the Vault object at the old path.
-- **Credential validation:** Types with `RootCredentialConfig` fields (e.g., LDAP, Database, Azure, Quay, Kubernetes Secret Engine) must call `credentials.ValidateCredentialSource()` in `ValidateCreate`/`ValidateUpdate` — this ensures exactly one of `secret`, `vaultSecret`, or `randomSecret` is set (mutual exclusivity).
-- **Strict webhook validation philosophy:** Reject invalid field combinations at admission. Relax a combination only when Vault genuinely supports it universally — not because a single backend or version happens to accept it. Prefer failing closed at the webhook over discovering an unusable spec at reconcile time.
-- **Credential key defaulting:** When a type remaps `RootCredentialConfig` keys (e.g. AWS `access_key`/`secret_key`, Okta `api_token`), the defaulter must not overwrite keys the user explicitly set. Inspect the admission request body and default only omitted keys. Empty-string fallback is acceptable when no admission request is present (unit tests). Never treat the inherited `"username"`/`"password"` values as always-overwriteable — those strings are valid explicit keys.
-- Types with mount semantics (engines) may additionally restrict updates to only the config sub-struct.
-- Webhook must be registered in `main.go` inside the `ENABLE_WEBHOOKS` env-var guard block.
+#### Admission Control (VAPs + Residual Webhooks)
+- **ValidatingAdmissionPolicies (VAPs)** enforce all validation rules declaratively via CEL expressions. See `docs/admission-control.md` for the full architecture guide.
+  - Shared VAPs in `config/vap/`: `vco-immutable-path` (72 CRDs), `vco-immutable-name` (65 CRDs), `vco-target-namespace-guard` (96 CRDs, parameterized)
+  - Credential source VAPs: `vco-exactly-one-root-credential` (3 CRDs), `vco-exactly-one-bind-credential` (1 CRD), plus per-CRD credential VAPs folded into CRD-specific policies
+  - CRD-specific VAPs: 28 `vco-validate-*` policies for unique validation logic (immutable sub-fields, conditional requirements, credentialType-dependent restrictions)
+- **New types must be added to shared VAP policy resource lists** (in `spec.matchConstraints.resourceRules[].resources`) in `config/vap/vco-immutable-path.yaml` (if type has `spec.path`), `vco-immutable-name.yaml` (if type has `spec.name`), and `vco-target-namespace-guard.yaml` (all types with `spec.authentication`)
+- **Strict admission validation philosophy:** Reject invalid field combinations at admission via CEL. Prefer VAP over Go webhook code for validation. Relax a combination only when Vault genuinely supports it universally.
+- **`spec.path` immutability** — Enforced by `vco-immutable-path` VAP; no Go code needed
+- **`spec.name` immutability** — Enforced by `vco-immutable-name` VAP; no Go code needed
+- **Target namespace guard** — Enforced by `vco-target-namespace-guard` VAP (parameterized, reads `vco-vap-params` ConfigMap); no Go code needed
+- **Credential mutual exclusivity** — Enforced by credential source VAPs and CRD-specific VAPs; no Go `ValidateCredentialSource()` calls needed in webhook code
+- **Residual Go webhooks** exist only for:
+  - **Mutating defaulters (gutted to defaulter-only):** CFAuthEngineConfig (raw admission request credential key remap), GCPSecretEngineConfig (`passwordKey` remap to `"credentials"`), KubernetesAuthEngineConfig (filesystem CA cert read), OktaAuthEngineConfig (`passwordKey` default to `"api_token"`), RADIUSAuthEngineConfig (`passwordKey` remap to `"secret"`), SSHSecretEngineConfig (conditional `passwordKey`/`usernameKey` remap), TerraformCloudSecretEngineConfig (`passwordKey` remap to `"token"`)
+  - **Cross-resource validator:** RabbitMQSecretEngineConfig (`validateUniquePath` requires `client.List()`)
+  - **Retained webhook validators (16 types):** AWSAuthEngineClientConfig (credential key remap + validation), plus 15 types with type-specific Go validation not yet migrated to VAPs (see `docs/admission-control.md` for full list)
+- **Webhook files are NOT required for types without defaulting or type-specific validation.** 72 of 96 types have no webhook file.
+- **Credential key defaulting** rules remain in Go webhooks: when a type remaps `RootCredentialConfig` keys (e.g. AWS `access_key`/`secret_key`), the defaulter must not overwrite keys the user explicitly set. Types with raw admission request inspection (AWSAuthEngineClientConfig, CFAuthEngineConfig, RADIUSAuthEngineConfig) check whether the key was present in the request body and default only omitted keys. Other defaulters (GCPSecretEngineConfig, OktaAuthEngineConfig, SSHSecretEngineConfig, TerraformCloudSecretEngineConfig) check the field value against `""` or `"password"`. Empty-string fallback is acceptable when no admission request is present (unit tests). Never treat the inherited `"username"`/`"password"` kubebuilder defaults as always-overwriteable — those strings are valid explicit keys.
+- **envtest VAP configuration:** The envtest suite enables VAPs via `ControlPlane.GetAPIServer().Configure().Append("enable-admission-plugins", "ValidatingAdmissionPolicy")` and loads VAP manifests from `config/vap/` via the k8s client after `testEnv.Start()`.
 
 #### ConditionsAware Implementation
 - Status struct must contain: `Conditions []metav1.Condition` with exact struct tags: `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
@@ -299,15 +302,16 @@ The base port `8200` and default cluster name `vault-config-operator` are reserv
 
 #### Adding a New Vault API Type (Full Checklist)
 1. `operator-sdk create api --group redhatcop --version v1alpha1 --kind MyType --resource --controller`
-2. `operator-sdk create webhook --group redhatcop --version v1alpha1 --kind MyType --defaulting --programmatic-validation`
+2. **Only if the type needs defaulting logic** (credential key remapping, filesystem reads): `operator-sdk create webhook --group redhatcop --version v1alpha1 --kind MyType --defaulting`. Types without defaulting do NOT need a webhook.
 3. Define `*_types.go`: Spec with `Connection`, `Authentication`, inline config struct, `Path`, `Name`; add `vault:` struct tags to inline config fields; implement `VaultObject` (5 required methods: `GetPath`, `GetPayload`, `IsDeletable`, `GetKubeAuthConfiguration`, `GetVaultConnection`) + `ConditionsAware`. `GetPayload()` returns `vaultutils.StructToVaultPayload(&d.Spec.InlineConfig)`. Use `vaultutils.ResourceName(d.Spec.Name, d.Name)` in `GetPath()`. Only implement `VaultEquivalenceChecker`, `VaultValidator`, `VaultInternalValuesPreparer`, or `VaultTLSPreparer` if non-trivial logic is needed — trivial no-ops are NOT required.
-4. Implement webhook in `*_webhook.go`: `admission.Defaulter[*T]`, `admission.Validator[*T]`, immutable `spec.path` rule
-5. Create `*_controller.go` with RBAC markers + `SetupXxxController(mgr)` calling `vaultresourcecontroller.SetupGenericController[MyType](mgr, "MyType", vaultresourcecontroller.StandardVaultResourceFactory)`. No hand-written `Reconcile` body needed. For custom controllers needing hand-written logic, embed `ReconcilerBase` and write a custom `Reconcile` method.
-6. Register controller via `controller.SetupMyTypeController(mgr)` in the setup loop in `main.go`. Register webhook in the webhook section.
-7. Create test YAML fixtures in `test/`
-8. Write integration test with `//go:build integration` tag
-9. Run `make manifests generate fmt vet test`
-10. Create documentation file at `docs/{auth|secret}-engines/{name}.md` following `docs/engine-doc-template.md` (DNFR5) and update the corresponding `index.md`
+4. **Add to shared VAP binding resource lists** in `config/vap/`: add the CRD's plural resource name to `vco-immutable-path.yaml` (if type has `spec.path`), `vco-immutable-name.yaml` (if type has `spec.name`), and `vco-target-namespace-guard.yaml` (all types). If the type has unique validation rules, create a CRD-specific VAP: `config/vap/vco-validate-<lowercase-kind>.yaml` + binding and add to `config/vap/kustomization.yaml`.
+5. **Implement webhook only if defaulting needed** (step 2): implement `admission.Defaulter[*T]` in `*_webhook.go`. Validation (path/name immutability, credential checks, target-namespace guard) is handled by VAPs — no `Validator[*T]` implementation needed.
+6. Create `*_controller.go` with RBAC markers + `SetupXxxController(mgr)` calling `vaultresourcecontroller.SetupGenericController[MyType](mgr, "MyType", vaultresourcecontroller.StandardVaultResourceFactory)`. No hand-written `Reconcile` body needed. For custom controllers needing hand-written logic, embed `ReconcilerBase` and write a custom `Reconcile` method.
+7. Register controller via `controller.SetupMyTypeController(mgr)` in the setup loop in `main.go`. Register webhook only if a defaulting webhook exists (step 2).
+8. Create test YAML fixtures in `test/`
+9. Write integration test with `//go:build integration` tag
+10. Run `make manifests generate fmt vet test`
+11. Create documentation file at `docs/{auth|secret}-engines/{name}.md` following `docs/engine-doc-template.md` (DNFR5) and update the corresponding `index.md`
 
 ### Critical Don't-Miss Rules
 
