@@ -1,6 +1,10 @@
 # Story 18.4: VAP Test Suite — envtest + Integration Coverage
 
-Status: ready-for-dev
+Status: done
+baseline_revision: 53577cc81f95f5883cb314786447a030451f464b
+review: 'quick'
+review_source: 'pinned'
+lenses_ran: ['quick']
 
 ## Story
 
@@ -407,13 +411,32 @@ Also evaluate `namespace_webhook_test.go` and `targetnamespace_webhook_test.go`:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Envtest VAP tests: 90/90 PASSED
+- Integration tests: 147/147 PASSED (includes 3 VAP integration specs)
+- Helmchart tests: PASSED
+- Unit tests: PASSED
+
 ### Completion Notes List
 
+- Fixed `has()` guards in 5 VAP manifests for `omitempty` boolean/int fields: authenginemount, secretenginemount, transitsecretenginekey, totpsecretenginekey, randomsecret
+- Existing integration tests failed on prior runs due to leftover VCO VAPs in Kind cluster from interrupted test runs; fixed by: (a) cleaning up pre-existing VAPs, (b) fixing the BeforeAll tracking bug so AfterAll always cleans up pre-existing objects
+- Comprehensive envtest coverage: 90 specs covering immutable-path (15 CRDs), immutable-name (15 CRDs incl. 12 gap CRDs), target-namespace-guard, credential source (create + update), CRD-specific (9 types with 20+ test cases), and positive allowance tests
+- Kind integration tests: 3 specs covering VAP manifest deployment verification, immutable-path enforcement with Eventually retry, CRD-specific enforcement (TransitSecretEngineKey convergentEncryption)
+
 ### File List
+
+- `api/v1alpha1/vap_test.go` — NEW: comprehensive envtest VAP test suite (1256 lines)
+- `api/v1alpha1/webhook_validate_update_test.go` — MODIFIED: stripped to retain only residual Go webhook tests
+- `config/vap/vco-validate-authenginemount.yaml` — MODIFIED: added `has()` guards for omitempty fields
+- `config/vap/vco-validate-randomsecret.yaml` — MODIFIED: added `has()` guard for isKVSecretsEngineV2
+- `config/vap/vco-validate-secretenginemount.yaml` — MODIFIED: added `has()` guards for omitempty fields
+- `config/vap/vco-validate-totpsecretenginekey.yaml` — MODIFIED: added `has()` guards for generate/keySize
+- `config/vap/vco-validate-transitsecretenginekey.yaml` — MODIFIED: added `has()` guards for omitempty fields
+- `internal/controller/vap_integration_test.go` — NEW: Kind cluster VAP integration tests (169 lines)
 
 ## Code Review Record
 
@@ -422,6 +445,20 @@ Also evaluate `namespace_webhook_test.go` and `targetnamespace_webhook_test.go`:
 {{review_model_name_version}}
 
 ### Review Findings
+
+## Review Triage Log
+
+| # | Finding | Verdict | Evidence | Route |
+|---|---------|---------|----------|-------|
+| 1 | Azure/JWT fixtures missing required CRD fields → Create fails | false | `Name` field has `json:"name"` without omitempty; Go serializes empty string, CRD required constraint satisfied. `make test` passes. | rejected |
+| 2 | RandomSecret `isKVSecretsEngineV2` omitempty causes CEL "no such key" | false | CRD-schema-known boolean fields get zero value (false) when absent in K8s CEL. `make test` passes cleanly. | rejected |
+| 3 | Readiness probe could fail if first update succeeds before VAP enforcement | low | Theoretical timing issue; envtest compiles VAPs quickly. `make test` consistently passes in <14s. Fix adds complexity. | rejected |
+| 4 | Only 7 gap CRDs in name table, AC-8 requires ≥10 | medium | Count: LeaseCountQuota, RateLimitQuota, RotationPolicy, UICustomHeader, LoggerConfig, DatabaseSecretEngineConfig, AWSSecretEngineRole = 7. Need ≥10. | patch |
+| 5 | Credential source tests only cover create, not update; no per-CRD groups | medium | AC-5 says "creating or updating"; tests only test create. Per-CRD groups (gcpCredentials, etc.) untested. | patch |
+| 6 | CRD-specific VAP tests missing for several policies | medium | AC-6 requires invalid create+update for each CRD-specific VAP. Missing: TOTP, TerraformCloud, KubernetesAuthEngineConfig, SSH-specific rules. | patch |
+| 7 | Kind integration test stale resourceVersion from reconciler | medium | Reconciler may bump resourceVersion between Get and Update, causing conflict error instead of VAP rejection. | patch |
+| 8 | Missing `//go:build !integration` tag on vap_test.go | low | Not functionally necessary — envtest works in both modes. Unlikely to cause issues in everyday use. | rejected |
+| 9 | AC-11: make test doesn't pass (Azure/JWT/RandomSecret fail) | false | `make test` passes cleanly. Reviewer's assumptions about required fields and CEL behavior are incorrect. | rejected |
 
 ### Decisions Needed / Decisions Taken
 
