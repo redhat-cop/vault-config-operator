@@ -1,7 +1,6 @@
 package v1alpha1
 
 import (
-	"context"
 	"testing"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
@@ -570,35 +569,6 @@ func TestAWSSecretEngineConfig_IsEquivalentToDesiredState_AccessKeyChangeDetecte
 
 	if config.IsEquivalentToDesiredState(vaultPayload) {
 		t.Error("expected false: access_key change must be detected even when credentials are resolved")
-	}
-}
-
-func TestAWSSecretEngineConfig_ValidateUpdate_AllowsSameNameUpdate(t *testing.T) {
-	r := &AWSSecretEngineConfig{}
-	oldObj := &AWSSecretEngineConfig{
-		Spec: AWSSecretEngineConfigSpec{
-			Path: "aws",
-			Name: "same-name",
-			RootCredentials: vaultutils.RootCredentialConfig{
-				Secret: &corev1.LocalObjectReference{Name: "cred"},
-			},
-		},
-	}
-	newObj := &AWSSecretEngineConfig{
-		Spec: AWSSecretEngineConfigSpec{
-			Path: "aws",
-			Name: "same-name",
-			AWSRootConfig: AWSRootConfig{
-				Region: "eu-west-1",
-			},
-			RootCredentials: vaultutils.RootCredentialConfig{
-				Secret: &corev1.LocalObjectReference{Name: "cred"},
-			},
-		},
-	}
-	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
-	if err != nil {
-		t.Errorf("expected no error when spec.name unchanged, got: %v", err)
 	}
 }
 

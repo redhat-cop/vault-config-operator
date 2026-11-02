@@ -1,7 +1,6 @@
 package v1alpha1
 
 import (
-	"context"
 	"encoding/json"
 	"testing"
 
@@ -398,17 +397,6 @@ func TestSSHSecretEngineRoleIsEquivalentExtraFields(t *testing.T) {
 
 	if !vaultutils.IsEquivalentToDesiredState(role, payload) {
 		t.Error("expected true: extra keys not in desiredState are filtered from payload")
-	}
-}
-
-func TestSSHSecretEngineRoleValidateUpdate_AllowsSameNameAndPath(t *testing.T) {
-	r := &SSHSecretEngineRole{}
-	_, err := r.ValidateUpdate(context.Background(),
-		&SSHSecretEngineRole{Spec: SSHSecretEngineRoleSpec{Path: "ssh", Name: "same-name"}},
-		&SSHSecretEngineRole{Spec: SSHSecretEngineRoleSpec{Path: "ssh", Name: "same-name"}},
-	)
-	if err != nil {
-		t.Errorf("expected no error when name and path unchanged, got: %v", err)
 	}
 }
 

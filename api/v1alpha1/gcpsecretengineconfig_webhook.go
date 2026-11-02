@@ -29,7 +29,6 @@ var gcpsecretengineconfiglog = logf.Log.WithName("gcpsecretengineconfig-resource
 func (r *GCPSecretEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr, r).
 		WithDefaulter(r).
-		WithValidator(r).
 		Complete()
 }
 
@@ -43,24 +42,4 @@ func (r *GCPSecretEngineConfig) Default(ctx context.Context, obj *GCPSecretEngin
 		obj.Spec.GCPCredentials.PasswordKey = "credentials"
 	}
 	return nil
-}
-
-//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-gcpsecretengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=gcpsecretengineconfigs,verbs=create;update,versions=v1alpha1,name=vgcpsecretengineconfig.kb.io,admissionReviewVersions={v1,v1beta1}
-
-var _ admission.Validator[*GCPSecretEngineConfig] = &GCPSecretEngineConfig{}
-
-func (r *GCPSecretEngineConfig) ValidateCreate(ctx context.Context, obj *GCPSecretEngineConfig) (admission.Warnings, error) {
-	gcpsecretengineconfiglog.Info("validate create", "name", obj.Name)
-	return nil, obj.isValid()
-}
-
-func (r *GCPSecretEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *GCPSecretEngineConfig) (admission.Warnings, error) {
-	gcpsecretengineconfiglog.Info("validate update", "name", newObj.Name)
-
-	return nil, newObj.isValid()
-}
-
-func (r *GCPSecretEngineConfig) ValidateDelete(ctx context.Context, obj *GCPSecretEngineConfig) (admission.Warnings, error) {
-	gcpsecretengineconfiglog.Info("validate delete", "name", obj.Name)
-	return nil, nil
 }

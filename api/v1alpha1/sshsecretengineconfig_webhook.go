@@ -29,7 +29,6 @@ var sshsecretengineconfiglog = logf.Log.WithName("sshsecretengineconfig-resource
 func (r *SSHSecretEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr, r).
 		WithDefaulter(r).
-		WithValidator(r).
 		Complete()
 }
 
@@ -48,24 +47,4 @@ func (r *SSHSecretEngineConfig) Default(ctx context.Context, obj *SSHSecretEngin
 		}
 	}
 	return nil
-}
-
-//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-sshsecretengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=sshsecretengineconfigs,verbs=create;update,versions=v1alpha1,name=vsshsecretengineconfig.kb.io,admissionReviewVersions=v1
-
-var _ admission.Validator[*SSHSecretEngineConfig] = &SSHSecretEngineConfig{}
-
-func (r *SSHSecretEngineConfig) ValidateCreate(ctx context.Context, obj *SSHSecretEngineConfig) (admission.Warnings, error) {
-	sshsecretengineconfiglog.Info("validate create", "name", obj.Name)
-	return nil, obj.isValid()
-}
-
-func (r *SSHSecretEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *SSHSecretEngineConfig) (admission.Warnings, error) {
-	sshsecretengineconfiglog.Info("validate update", "name", newObj.Name)
-
-	return nil, newObj.isValid()
-}
-
-func (r *SSHSecretEngineConfig) ValidateDelete(ctx context.Context, obj *SSHSecretEngineConfig) (admission.Warnings, error) {
-	sshsecretengineconfiglog.Info("validate delete", "name", obj.Name)
-	return nil, nil
 }

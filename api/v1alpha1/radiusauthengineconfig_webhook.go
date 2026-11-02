@@ -30,7 +30,6 @@ var radiusauthengineconfiglog = logf.Log.WithName("radiusauthengineconfig-resour
 func (r *RADIUSAuthEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr, r).
 		WithDefaulter(r).
-		WithValidator(r).
 		Complete()
 }
 
@@ -81,24 +80,4 @@ func radiusCredentialKeyOmitted(ctx context.Context, key string) (omitted bool, 
 	}
 	_, present := creds[key]
 	return !present, true
-}
-
-//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-radiusauthengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=radiusauthengineconfigs,verbs=create;update,versions=v1alpha1,name=vradiusauthengineconfig.kb.io,admissionReviewVersions=v1
-
-var _ admission.Validator[*RADIUSAuthEngineConfig] = &RADIUSAuthEngineConfig{}
-
-func (r *RADIUSAuthEngineConfig) ValidateCreate(ctx context.Context, obj *RADIUSAuthEngineConfig) (admission.Warnings, error) {
-	radiusauthengineconfiglog.Info("validate create", "name", obj.Name)
-	return nil, obj.isValid()
-}
-
-func (r *RADIUSAuthEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *RADIUSAuthEngineConfig) (admission.Warnings, error) {
-	radiusauthengineconfiglog.Info("validate update", "name", newObj.Name)
-
-	return nil, newObj.isValid()
-}
-
-func (r *RADIUSAuthEngineConfig) ValidateDelete(ctx context.Context, obj *RADIUSAuthEngineConfig) (admission.Warnings, error) {
-	radiusauthengineconfiglog.Info("validate delete", "name", obj.Name)
-	return nil, nil
 }

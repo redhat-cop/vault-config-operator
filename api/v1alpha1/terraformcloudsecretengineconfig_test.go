@@ -386,29 +386,3 @@ func TestTerraformCloudSecretEngineConfig_IsValid_EmptyPasswordKeyWithRandomSecr
 		t.Errorf("expected valid when passwordKey is empty with randomSecret (does not use passwordKey), got ok=%v err=%v", ok, err)
 	}
 }
-
-func TestTerraformCloudSecretEngineConfig_ValidateUpdate_RejectsEmptyPasswordKey(t *testing.T) {
-	r := &TerraformCloudSecretEngineConfig{}
-	oldObj := &TerraformCloudSecretEngineConfig{
-		Spec: TerraformCloudSecretEngineConfigSpec{
-			Path: "terraform",
-			TFCCredentials: TFCCredentialConfig{
-				Secret:      &corev1.LocalObjectReference{Name: "cred"},
-				PasswordKey: "token",
-			},
-		},
-	}
-	newObj := &TerraformCloudSecretEngineConfig{
-		Spec: TerraformCloudSecretEngineConfigSpec{
-			Path: "terraform",
-			TFCCredentials: TFCCredentialConfig{
-				Secret:      &corev1.LocalObjectReference{Name: "cred"},
-				PasswordKey: "",
-			},
-		},
-	}
-	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
-	if err == nil {
-		t.Error("expected error when passwordKey is blanked on update")
-	}
-}

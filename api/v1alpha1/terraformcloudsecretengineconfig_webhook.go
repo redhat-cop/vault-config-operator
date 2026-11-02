@@ -29,7 +29,6 @@ var terraformcloudsecretengineconfiglog = logf.Log.WithName("terraformcloudsecre
 func (r *TerraformCloudSecretEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr, r).
 		WithDefaulter(r).
-		WithValidator(r).
 		Complete()
 }
 
@@ -43,24 +42,4 @@ func (r *TerraformCloudSecretEngineConfig) Default(ctx context.Context, obj *Ter
 		obj.Spec.TFCCredentials.PasswordKey = "token"
 	}
 	return nil
-}
-
-//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-terraformcloudsecretengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=terraformcloudsecretengineconfigs,verbs=create;update,versions=v1alpha1,name=vterraformcloudsecretengineconfig.kb.io,admissionReviewVersions={v1,v1beta1}
-
-var _ admission.Validator[*TerraformCloudSecretEngineConfig] = &TerraformCloudSecretEngineConfig{}
-
-func (r *TerraformCloudSecretEngineConfig) ValidateCreate(ctx context.Context, obj *TerraformCloudSecretEngineConfig) (admission.Warnings, error) {
-	terraformcloudsecretengineconfiglog.Info("validate create", "name", obj.Name)
-	return nil, obj.isValid()
-}
-
-func (r *TerraformCloudSecretEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *TerraformCloudSecretEngineConfig) (admission.Warnings, error) {
-	terraformcloudsecretengineconfiglog.Info("validate update", "name", newObj.Name)
-
-	return nil, newObj.isValid()
-}
-
-func (r *TerraformCloudSecretEngineConfig) ValidateDelete(ctx context.Context, obj *TerraformCloudSecretEngineConfig) (admission.Warnings, error) {
-	terraformcloudsecretengineconfiglog.Info("validate delete", "name", obj.Name)
-	return nil, nil
 }
