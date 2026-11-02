@@ -775,7 +775,7 @@ development_status:
   # - Update project-context.md admission webhook rules for VAP-first approach
   # Complexity: Low
   # Novelty Risk: LOW
-  18-5-documentation-vap-approach-and-admission-control-guide: ready-for-dev
+  18-5-documentation-vap-approach-and-admission-control-guide: done
 
   # Story 18.6: Project Context + Sprint Status Finalization
   # - Final update to sprint-status.yaml, project-context.md, epics.md
