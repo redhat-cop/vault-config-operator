@@ -35,7 +35,8 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-11-01
+last_updated: 2026-11-02
+# Story 18.4 done 2026-11-02
 # Story 18.4 ready-for-dev 2026-11-01
 # Story 18.6 ready-for-dev 2026-11-01
 # Story 18.5 ready-for-dev 2026-11-01
@@ -766,7 +767,7 @@ development_status:
   # - Adapt existing webhook_validate_update_test.go scenarios
   # Complexity: Medium
   # Novelty Risk: MEDIUM
-  18-4-vap-test-suite-envtest-and-integration-coverage: ready-for-dev
+  18-4-vap-test-suite-envtest-and-integration-coverage: done
 
   # Story 18.5: Documentation — VAP Approach + Admission Control Guide
   # - Create docs/admission-control.md explaining 3-tier VAP architecture

@@ -12,16 +12,19 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-type pathUpdateTestCase struct {
+// Tests for residual Go-level webhook validation that was NOT migrated to VAPs.
+// Path/name immutability and target-namespace-guard are now tested via VAPs
+// in vap_test.go and targetnamespace_webhook_test.go.
+
+type webhookUpdateTestCase struct {
 	name         string
 	validateFn   func() (admission.Warnings, error)
 	expectErr    bool
 	errSubstring string
 }
 
-func TestValidateUpdateRejectsPathChange(t *testing.T) {
-	cases := []pathUpdateTestCase{
-		// --- Rejection tests (CRD-specific validation) ---
+func TestResidualWebhookValidation(t *testing.T) {
+	cases := []webhookUpdateTestCase{
 		{
 			name: "AppRoleAuthEngineRole rejects localSecretIDs change",
 			validateFn: func() (admission.Warnings, error) {
@@ -39,6 +42,35 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 			},
 			expectErr:    true,
 			errSubstring: "spec.localSecretIDs cannot be updated",
+		},
+		{
+			name: "AppRoleAuthEngineRole allows mutable field update",
+			validateFn: func() (admission.Warnings, error) {
+				r := &AppRoleAuthEngineRole{}
+				return r.ValidateUpdate(context.Background(),
+					&AppRoleAuthEngineRole{Spec: AppRoleAuthEngineRoleSpec{
+						Path: "same/path",
+						Name: "same-name",
+						AppRoleRole: AppRoleRole{
+							BindSecretID:   true,
+							LocalSecretIDs: false,
+							TokenPolicies:  []string{"default"},
+							TokenTTL:       "1h",
+						},
+					}},
+					&AppRoleAuthEngineRole{Spec: AppRoleAuthEngineRoleSpec{
+						Path: "same/path",
+						Name: "same-name",
+						AppRoleRole: AppRoleRole{
+							BindSecretID:   true,
+							LocalSecretIDs: false,
+							TokenPolicies:  []string{"default", "new-policy"},
+							TokenTTL:       "2h",
+						},
+					}},
+				)
+			},
+			expectErr: false,
 		},
 		{
 			name: "LDAPSecretEngineStaticRole rejects username change",
@@ -76,38 +108,6 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 			expectErr:    true,
 			errSubstring: "spec.dn cannot be updated",
 		},
-
-		// --- Allowance tests (path unchanged, other field changed) ---
-
-		{
-			name: "AppRoleAuthEngineRole allows mutable field update",
-			validateFn: func() (admission.Warnings, error) {
-				r := &AppRoleAuthEngineRole{}
-				return r.ValidateUpdate(context.Background(),
-					&AppRoleAuthEngineRole{Spec: AppRoleAuthEngineRoleSpec{
-						Path: "same/path",
-						Name: "same-name",
-						AppRoleRole: AppRoleRole{
-							BindSecretID:   true,
-							LocalSecretIDs: false,
-							TokenPolicies:  []string{"default"},
-							TokenTTL:       "1h",
-						},
-					}},
-					&AppRoleAuthEngineRole{Spec: AppRoleAuthEngineRoleSpec{
-						Path: "same/path",
-						Name: "same-name",
-						AppRoleRole: AppRoleRole{
-							BindSecretID:   true,
-							LocalSecretIDs: false,
-							TokenPolicies:  []string{"default", "new-policy"},
-							TokenTTL:       "2h",
-						},
-					}},
-				)
-			},
-			expectErr: false,
-		},
 		{
 			name: "LDAPSecretEngineStaticRole allows mutable field update",
 			validateFn: func() (admission.Warnings, error) {
@@ -122,42 +122,6 @@ func TestValidateUpdateRejectsPathChange(t *testing.T) {
 						Path:             "same/path",
 						Name:             "same-name",
 						LDAPSEStaticRole: LDAPSEStaticRole{Username: "same-user", DN: "uid=same,dc=example,dc=com", RotationPeriod: 43200},
-					}},
-				)
-			},
-			expectErr: false,
-		},
-		{
-			name: "PKISecretEngineConfig allows non-path update",
-			validateFn: func() (admission.Warnings, error) {
-				r := &PKISecretEngineConfig{}
-				return r.ValidateUpdate(context.Background(),
-					&PKISecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: PKISecretEngineConfigSpec{
-						Path:    "same/path",
-						PKIType: PKIType{Type: "root", PrivateKeyType: "internal"},
-					}},
-					&PKISecretEngineConfig{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: PKISecretEngineConfigSpec{
-						Path:    "same/path",
-						PKIType: PKIType{Type: "root", PrivateKeyType: "internal"},
-					}},
-				)
-			},
-			expectErr: false,
-		},
-		{
-			name: "RandomSecret allows non-path update",
-			validateFn: func() (admission.Warnings, error) {
-				r := &RandomSecret{}
-				return r.ValidateUpdate(context.Background(),
-					&RandomSecret{ObjectMeta: metav1.ObjectMeta{Name: "old"}, Spec: RandomSecretSpec{
-						Path:         "same/path",
-						SecretKey:    "key",
-						SecretFormat: VaultPasswordPolicy{PasswordPolicyName: "default"},
-					}},
-					&RandomSecret{ObjectMeta: metav1.ObjectMeta{Name: "new"}, Spec: RandomSecretSpec{
-						Path:         "same/path",
-						SecretKey:    "key",
-						SecretFormat: VaultPasswordPolicy{PasswordPolicyName: "default"},
 					}},
 				)
 			},
