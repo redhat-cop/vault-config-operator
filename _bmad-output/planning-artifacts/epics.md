@@ -3277,6 +3277,8 @@ So that new CRDs need only a type registration line instead of a full controller
 
 ## Epic 18: Webhook-to-VAP Migration + Validation Gap Fix
 
+**Status:** done (2026-11-03) — Stories 18.1, 18.1.1, 18.2–18.6 complete. Retrospective: `_bmad-output/implementation-artifacts/epic-18-retro-2026-11-03.md`.
+
 **Scope:** Migrate validating admission webhooks to Kubernetes ValidatingAdmissionPolicies (VAPs) using a shared-policy strategy. Fix 35 existing validation gaps discovered during analysis (4 missing `spec.path` immutability checks, 31 missing `spec.name` immutability checks). Retain residual mutating webhooks and the RabbitMQ cross-resource webhook that cannot be expressed as VAPs. Update test suite, documentation, and project context.
 
 **Initiative:** vap-migration

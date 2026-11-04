@@ -35,7 +35,11 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11
-last_updated: 2026-11-02
+last_updated: 2026-11-03
+# Epic 18 done 2026-11-03
+# Epic 18 retrospective 2026-11-03
+# Story 18.6 done 2026-11-03
+# Story 18.5 done 2026-11-02
 # Story 18.4 done 2026-11-02
 # Story 18.4 ready-for-dev 2026-11-01
 # Story 18.6 ready-for-dev 2026-11-01
@@ -717,7 +721,7 @@ development_status:
   # Scope: Migrate validating admission webhooks to Kubernetes ValidatingAdmissionPolicies (VAPs)
   # using a shared-policy strategy. Fix 35 existing validation gaps (4 missing spec.path, 31 missing spec.name).
   # Retain residual mutating webhooks and RabbitMQ cross-resource webhook.
-  epic-18: in-progress
+  epic-18: done
 
   # Story 18.1: VAP Infrastructure + Path/Name Immutability Policies
   # - Set up config/vap/ kustomize overlay and envtest VAP support
@@ -782,7 +786,8 @@ development_status:
   # - Retrospective
   # Complexity: Low
   # Novelty Risk: LOW
-  18-6-project-context-and-sprint-status-finalization: ready-for-dev
+  18-6-project-context-and-sprint-status-finalization: done
+  epic-18-retrospective: done
 
 action_items:
   # Epic 10 action items (status from Epic 11 retro follow-through)
@@ -913,4 +918,22 @@ action_items:
   - epic: 16
     action: "Propagate token_type empty-to-default read-shape emit to other always-emit types (Okta, AppRole, AliCloud, OCI, CF, LDAP, AWS, Azure, GCP, JWT, Cert, Kerberos)"
     owner: "Amelia (Developer)"
+    status: open
+
+  # Epic 18 action items
+  - epic: 18
+    action: "Keep shared VAP policy resource lists updated whenever future epics add CRDs (path/name/target-namespace-guard + credential-source as applicable)"
+    owner: "Amelia (Developer)"
+    status: open
+  - epic: 18
+    action: "Consider migrating remaining ~16 Go validators to Tier 3 VAPs where CEL-feasible"
+    owner: "Charlie (Senior Dev)"
+    status: open
+  - epic: 18
+    action: "Regenerate OLM bundle so published CSV minKubeVersion (bundle still 1.29.0) and bundle/metadata/annotations.yaml com.redhat.openshift.versions (bundle still v4.16) match bases/config 1.30.0 / v4.17"
+    owner: "Amelia (Developer)"
+    status: open
+  - epic: 18
+    action: "Monitor CEL complexity on CRD-specific VAPs; split policies that become hard to reason about"
+    owner: "Charlie (Senior Dev)"
     status: open
