@@ -1,6 +1,6 @@
 # Story 18.6: Project Context + Sprint Status Finalization
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -34,56 +34,52 @@ So that project tracking artifacts reflect the VAP migration and all downstream 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Verify all prerequisite stories are done (AC: #1)
-  - [ ] 1.1 — Confirm stories 18.1 through 18.5 are all in `done` status in `sprint-status.yaml`
-  - [ ] 1.2 — If any story is not `done`, STOP and report which stories are incomplete
-- [ ] Task 2: Update project-context.md — Admission Control section (AC: #2, #7)
-  - [ ] 2.1 — Rewrite the "Admission Webhooks (Required for Every Type)" subsection under "Go Language Rules":
+- [x] Task 1: Verify all prerequisite stories are done (AC: #1)
+  - [x] 1.1 — Confirm stories 18.1 through 18.5 are all in `done` status in `sprint-status.yaml`
+  - [x] 1.2 — If any story is not `done`, STOP and report which stories are incomplete
+- [x] Task 2: Update project-context.md — Admission Control section (AC: #2, #7)
+  - [x] 2.1 — Rewrite the "Admission Webhooks (Required for Every Type)" subsection under "Go Language Rules":
     - Rename to "Admission Control (VAPs + Residual Webhooks)"
     - Document that validating logic is now expressed as VAPs in `config/vap/` using CEL expressions
     - Document the three-tier VAP architecture: Tier 1 (universal shared — immutable-path, immutable-name, target-namespace-guard), Tier 2 (semi-shared credential source), Tier 3 (CRD-specific)
-    - Document residual mutating webhooks: AWSAuthEngineClientConfig, CFAuthEngineConfig, KubernetesAuthEngineConfig (complex mutation), RADIUSAuthEngineConfig, GCPSecretEngineConfig, OktaAuthEngineConfig, SSHSecretEngineConfig, TerraformCloudSecretEngineConfig, UserpassAuthEngineUser (simple credential key defaulters)
-    - Document the one retained validating webhook: RabbitMQSecretEngineConfig (cross-resource `validateUniquePath` — requires `client.List()`)
+    - Document residual webhooks aligned with `project-context.md` / `docs/admission-control.md`: seven defaulter-only types (CFAuthEngineConfig, GCPSecretEngineConfig, KubernetesAuthEngineConfig filesystem CA, OktaAuthEngineConfig, RADIUSAuthEngineConfig, SSHSecretEngineConfig, TerraformCloudSecretEngineConfig); AWSAuthEngineClientConfig under retained validators (defaulter + validation); RabbitMQSecretEngineConfig as cross-resource raw `admission.Handler` — UserpassAuthEngineUser NOT residual (removed in 18.3)
     - Document that new types NO LONGER need `admission.Validator[*T]` implementations unless they have cross-resource validation needing API calls
     - Keep `admission.Defaulter[*T]` documentation for types that still need runtime defaulting
     - Document envtest VAP configuration: `KubeAPIServerFlags: []string{"--enable-admission-plugins=ValidatingAdmissionPolicy"}`
-  - [ ] 2.2 — Update "Anti-Patterns to Avoid" with VAP-era rule: "Never add validating logic in Go webhooks for new types — express validation rules as VAPs in `config/vap/` using CEL"
-  - [ ] 2.3 — Update "Critical Don't-Miss Rules" or add a new rule: "When adding a new CRD, add it to the shared VAP binding resource lists in `config/vap/vco-immutable-path-binding.yaml`, `vco-immutable-name-binding.yaml`, and `vco-target-namespace-guard-binding.yaml`"
-- [ ] Task 3: Update project-context.md — New Type Checklist (AC: #3)
-  - [ ] 3.1 — Revise step 4 ("Implement webhook") to: "Add to shared VAP bindings (`config/vap/vco-immutable-path-binding.yaml`, `vco-immutable-name-binding.yaml`, `vco-target-namespace-guard-binding.yaml`) + implement webhook in `*_webhook.go` ONLY if the type needs runtime defaulting logic (most types do NOT)"
-  - [ ] 3.2 — Add new step: "If the type has unique validation logic (field constraints, conditional requirements, mutual exclusivity), create a CRD-specific VAP in `config/vap/vco-validate-<lowercase-kind>.yaml` with its binding"
-  - [ ] 3.3 — Add new step: "If the type has credential source fields (rootCredentials, bindCredentials, etc.), add it to the appropriate shared credential-source VAP binding"
-  - [ ] 3.4 — Update step 6 (main.go registration) to note that types without defaulting logic do NOT register webhooks at all
-- [ ] Task 4: Update project-context.md — Technology references (AC: #4)
-  - [ ] 4.1 — Update the "Core" section under Technology Stack: note that K8s 1.30+ is required (VAPs GA), or at minimum note the CSV minKubeVersion is 1.30.0
-  - [ ] 4.2 — Add `config/vap/` to the "Code Organization" section as the location for VAP manifests
-  - [ ] 4.3 — Update "Build Targets" if needed: note that `make manifests` now also triggers kustomize inclusion of VAP manifests via the `config/default` overlay
-- [ ] Task 5: Update project-context.md — Webhook-specific rules cleanup (AC: #2)
-  - [ ] 5.1 — Remove or annotate rules that are now VAP-handled:
-    - The rule "ValidateUpdate must always reject changes to spec.path" → note this is now enforced by VAP `vco-immutable-path`
-    - The rule "ValidateUpdate must also reject changes to spec.name" → note this is now enforced by VAP `vco-immutable-name`
-    - The rule about `ValidateTargetNamespaceUpdate` → note this is now enforced by VAP `vco-target-namespace-guard`
-  - [ ] 5.2 — Keep the "Strict webhook validation philosophy" rule but update it to reference VAPs: "Express validation rules as CEL in VAPs. Reject invalid field combinations at admission time."
-  - [ ] 5.3 — Keep the "Credential key defaulting" rule as-is — this remains in mutating webhooks
-  - [ ] 5.4 — Keep the "Credential validation" rule about `ValidateCredentialSource()` but note it's now enforced by credential-source VAPs, not Go code
-- [ ] Task 6: Verify epics.md (AC: #5)
-  - [ ] 6.1 — Confirm Epic 18 is fully present in `_bmad-output/planning-artifacts/epics.md` with all 6 stories
-  - [ ] 6.2 — If any story description is missing, add it
-- [ ] Task 7: Finalize sprint-status.yaml (AC: #1, #6)
-  - [ ] 7.1 — Update all 18.x story statuses to `done` (assuming prerequisites are met — see Task 1)
-  - [ ] 7.2 — Update `epic-18` status to `done`
-  - [ ] 7.3 — Add `epic-18-retrospective: done` entry (or `optional` if retrospective is deferred)
-  - [ ] 7.4 — Update `last_updated` timestamp
-  - [ ] 7.5 — Add change log comment at top: `# Epic 18 done YYYY-MM-DD`
-  - [ ] 7.6 — Add action items from retrospective to `action_items:` section
-- [ ] Task 8: Documentation gate verification (AC: #8)
-  - [ ] 8.1 — Verify `docs/admission-control.md` exists (created by Story 18.5)
-  - [ ] 8.2 — Verify it covers: three-tier VAP architecture, shared VAP and binding workflow, target-namespace-guard parameterized ConfigMap, residual webhooks, K8s version requirements
-  - [ ] 8.3 — If documentation is incomplete, document the gap as a retro action item
-- [ ] Task 9: Run retrospective (AC: #6)
-  - [ ] 9.1 — Review all 6 stories for lessons learned
-  - [ ] 9.2 — Identify action items and add to `sprint-status.yaml`
-  - [ ] 9.3 — Write retrospective entry in `_bmad-output/implementation-artifacts/epic-18-retro-YYYY-MM-DD.md`
+  - [x] 2.2 — Update "Anti-Patterns to Avoid" with VAP-era rule: "Never add validating logic in Go webhooks for new types — express validation rules as VAPs in `config/vap/` using CEL"
+  - [x] 2.3 — Update "Critical Don't-Miss Rules" or add a new rule: "When adding a new CRD, add it to the shared VAP binding resource lists in `config/vap/`"
+- [x] Task 3: Update project-context.md — New Type Checklist (AC: #3)
+  - [x] 3.1 — Revise step 4 ("Implement webhook") to shared VAP policy resource-list step
+  - [x] 3.2 — Add new step: CRD-specific VAP when unique validation exists
+  - [x] 3.3 — Add new step: credential-source VAP binding when applicable
+  - [x] 3.4 — Update main.go registration note: types without defaulting do NOT register webhooks
+- [x] Task 4: Update project-context.md — Technology references (AC: #4)
+  - [x] 4.1 — Core section: K8s 1.30+ / OCP 4.17 / CSV `minKubeVersion: 1.30.0`
+  - [x] 4.2 — Add `config/vap/` to Code Organization
+  - [x] 4.3 — Build Targets note: VAP manifests included via `config/default` / `config/vap` kustomize
+- [x] Task 5: Update project-context.md — Webhook-specific rules cleanup (AC: #2)
+  - [x] 5.1 — Path/name/target-namespace rules annotated as VAP-enforced (already present from 18.5; Tier labels added)
+  - [x] 5.2 — Strict admission validation philosophy references VAPs/CEL
+  - [x] 5.3 — Credential key defaulting rule kept (mutating webhooks)
+  - [x] 5.4 — Credential validation noted as VAP-enforced
+- [x] Task 6: Verify epics.md (AC: #5)
+  - [x] 6.1 — Confirm Epic 18 fully present with all 6 stories
+  - [x] 6.2 — Add Epic 18 final status annotation
+- [x] Task 7: Finalize sprint-status.yaml (AC: #1, #6)
+  - [x] 7.1 — Update 18.6 story status to `done` (18.1–18.5 already done)
+  - [x] 7.2 — Update `epic-18` status to `done`
+  - [x] 7.3 — Add `epic-18-retrospective: done`
+  - [x] 7.4 — Update `last_updated` timestamp
+  - [x] 7.5 — Add change log comments at top
+  - [x] 7.6 — Add Epic 18 action items from retrospective
+- [x] Task 8: Documentation gate verification (AC: #8)
+  - [x] 8.1 — Verify `docs/admission-control.md` exists
+  - [x] 8.2 — Verify coverage: three-tier VAPs, shared bindings, `vco-vap-params`, residual webhooks, K8s version requirements
+  - [x] 8.3 — No documentation rewrite needed; bundle `minKubeVersion` drift recorded as action item
+- [x] Task 9: Run retrospective (AC: #6)
+  - [x] 9.1 — Review all stories for lessons learned
+  - [x] 9.2 — Identify action items and add to `sprint-status.yaml`
+  - [x] 9.3 — Write `_bmad-output/implementation-artifacts/epic-18-retro-2026-11-03.md`
 
 ## Dev Notes
 
@@ -213,13 +209,31 @@ This is a documentation/finalization story with no code changes beyond project t
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Composer (Cursor agent router)
 
 ### Debug Log References
 
+None
+
 ### Completion Notes List
 
+- Task 1 gate passed: 18-1, 18-1-1, 18-2, 18-3, 18-4, 18-5 all `done` before finalization
+- Gap-filled `project-context.md` after 18.5: Core minKubeVersion/K8s 1.30+/OCP 4.17; explicit Tier 1/2/3 labels; `config/vap/` in Code Organization + Build Targets; credential-source checklist step; two VAP anti-patterns
+- Did not reintroduce UserpassAuthEngineUser as residual webhook (story-doc drift; matches `docs/admission-control.md`)
+- Annotated Epic 18 **Status: done (2026-11-03)** in `epics.md`; all six stories already present
+- Wrote full retrospective `epic-18-retro-2026-11-03.md`; set `epic-18-retrospective: done`
+- Finalized sprint-status: `epic-18` + `18-6` → `done`; changelog + four open Epic 18 action items
+- AC-8 verified: `docs/admission-control.md` covers three-tier VAPs, bindings, `vco-vap-params`, residual webhooks, K8s 1.30/OCP 4.17 — no rewrite
+- Known risk tracked as action item: `bundle/manifests` CSV still `minKubeVersion: 1.29.0` vs bases `1.30.0`
+
 ### File List
+
+- Modified: `_bmad-output/project-context.md`
+- Modified: `_bmad-output/planning-artifacts/epics.md`
+- Modified: `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- Created: `_bmad-output/implementation-artifacts/epic-18-retro-2026-11-03.md`
+- Modified: `_bmad-output/implementation-artifacts/18-6-project-context-and-sprint-status-finalization.md`
+- Verified only (unchanged): `docs/admission-control.md`
 
 ## Code Review Record
 
