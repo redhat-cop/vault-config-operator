@@ -21,6 +21,10 @@ spec:
   issuerRef:
     {{- toYaml $issuerRef | nindent 4 }}
   secretName: vault-config-operator-webhook-service-cert
+  {{- with .Values.certificate.privateKey }}
+  privateKey:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -33,4 +37,8 @@ spec:
   issuerRef:
     {{- toYaml $issuerRef | nindent 4 }}
   secretName: vault-config-operator-metrics-service-cert
+  {{- with .Values.certificate.privateKey }}
+  privateKey:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 {{- end }}
