@@ -56,3 +56,5 @@ certificate:
     name: selfsigned-issuer
     kind: Issuer
     # group: cert-manager.io
+  # Optional spec.privateKey for both Certificates, e.g. {algorithm: ECDSA, size: 256}.
+  privateKey: {}
