@@ -17,9 +17,12 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
@@ -31,6 +34,9 @@ import (
 	. "github.com/onsi/gomega"
 
 	admissionv1 "k8s.io/api/admission/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/rest"
 
 	// +kubebuilder:scaffold:imports
@@ -84,6 +90,12 @@ var _ = BeforeSuite(func() {
 		},
 	}
 
+	// Ensure the ValidatingAdmissionPolicy admission plugin is enabled.
+	// VAP is GA since K8s 1.30 and enabled by default, but we explicitly
+	// add it to guarantee enforcement in envtest.
+	testEnv.ControlPlane.GetAPIServer().Configure().
+		Append("enable-admission-plugins", "ValidatingAdmissionPolicy")
+
 	var err error
 	// cfg is defined in this file globally.
 	cfg, err = testEnv.Start()
@@ -103,6 +115,36 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
 
+	By("loading VAP manifests from config/vap/")
+	vapDir := filepath.Join("..", "..", "config", "vap")
+	vapFiles, err := filepath.Glob(filepath.Join(vapDir, "*.yaml"))
+	Expect(err).NotTo(HaveOccurred())
+	for _, vapFile := range vapFiles {
+		if filepath.Base(vapFile) == "kustomization.yaml" {
+			continue
+		}
+		data, err := os.ReadFile(vapFile)
+		Expect(err).NotTo(HaveOccurred())
+		reader := yaml.NewYAMLReader(bufio.NewReader(bytes.NewReader(data)))
+		for {
+			doc, err := reader.Read()
+			if err == io.EOF {
+				break
+			}
+			Expect(err).NotTo(HaveOccurred())
+			if len(bytes.TrimSpace(doc)) == 0 {
+				continue
+			}
+			obj := &unstructured.Unstructured{}
+			Expect(yaml.NewYAMLOrJSONDecoder(bytes.NewReader(doc), 4096).Decode(obj)).To(Succeed())
+			Expect(k8sClient.Create(ctx, obj)).To(Succeed())
+		}
+	}
+
+	// Ginkgo randomizes specs, so Deny Its can run before any in-test readiness
+	// probe. Wait here until representative VAPs actually enforce.
+	waitForVAPEnforcement()
+
 	// start webhook server using Manager
 	webhookInstallOptions := &testEnv.WebhookInstallOptions
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
@@ -117,130 +159,76 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&RandomSecret{}).SetupWebhookWithManager(mgr)
+	// Category A — defaulter + validator (uncovered validation)
+	err = (&AWSAuthEngineClientConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&SecretEngineMount{}).SetupWebhookWithManager(mgr)
+	// Category B — defaulter-only (validator removed, VAP covers validation)
+	err = (&CFAuthEngineConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&DatabaseSecretEngineRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&DatabaseSecretEngineConfig{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&KubernetesAuthEngineRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&AuthEngineMount{}).SetupWebhookWithManager(mgr)
+	err = (&GCPSecretEngineConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = (&KubernetesAuthEngineConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&VaultSecret{}).SetupWebhookWithManager(mgr)
+	err = (&OktaAuthEngineConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&PasswordPolicy{}).SetupWebhookWithManager(mgr)
+	err = (&RADIUSAuthEngineConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&Policy{}).SetupWebhookWithManager(mgr)
+	err = (&SSHSecretEngineConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&GitHubSecretEngineConfig{}).SetupWebhookWithManager(mgr)
+	err = (&TerraformCloudSecretEngineConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&GitHubSecretEngineRole{}).SetupWebhookWithManager(mgr)
+	// Category C — validator-only (uncovered CRD-specific validation)
+	err = (&AliCloudAuthEngineRole{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&RabbitMQSecretEngineRole{}).SetupWebhookWithManager(mgr)
+	err = (&AppRoleAuthEngineRole{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&PKISecretEngineConfig{}).SetupWebhookWithManager(mgr)
+	err = (&AWSAuthEngineRole{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&PKISecretEngineRole{}).SetupWebhookWithManager(mgr)
+	err = (&CORSConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&QuaySecretEngineConfig{}).SetupWebhookWithManager(mgr)
+	err = (&GCPSecretEngineRoleset{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&QuaySecretEngineRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&QuaySecretEngineStaticRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&LDAPAuthEngineConfig{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&LDAPAuthEngineGroup{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&KubernetesSecretEngineConfig{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&KubernetesSecretEngineRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&JWTOIDCAuthEngineConfig{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&JWTOIDCAuthEngineRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&DatabaseSecretEngineStaticRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&Group{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&GroupAlias{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&AzureAuthEngineConfig{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&AzureAuthEngineRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&AzureSecretEngineConfig{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&AzureSecretEngineRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&GCPAuthEngineConfig{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&GCPAuthEngineRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&CertAuthEngineConfig{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&CertAuthEngineRole{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&IdentityOIDCProvider{}).SetupWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = (&IdentityOIDCScope{}).SetupWebhookWithManager(mgr)
+	err = (&GCPSecretEngineStaticAccount{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = (&IdentityOIDCClient{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&IdentityOIDCAssignment{}).SetupWebhookWithManager(mgr)
+	err = (&JWTOIDCAuthEngineRole{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&IdentityTokenConfig{}).SetupWebhookWithManager(mgr)
+	err = (&KeyRotationConfig{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&IdentityTokenKey{}).SetupWebhookWithManager(mgr)
+	err = (&LDAPSecretEngineStaticRole{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&IdentityTokenRole{}).SetupWebhookWithManager(mgr)
+	err = (&LeaseCountQuota{}).SetupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = (&PKISecretEngineConfig{}).SetupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = (&RandomSecret{}).SetupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = (&RateLimitQuota{}).SetupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = (&UICustomHeader{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:webhook
@@ -270,3 +258,76 @@ var _ = AfterSuite(func() {
 	err := testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
+
+// waitForVAPEnforcement blocks until key ValidatingAdmissionPolicies are
+// compiled and denying invalid requests. Suite-level wait is required because
+// Ginkgo randomizes specs and in-test Eventually probes are not guaranteed to
+// run first. Functional deny probes are used (not status.observedGeneration)
+// because enforcement is what the suite asserts.
+func waitForVAPEnforcement() {
+	By("waiting for TransitSecretEngineKey VAP to enforce")
+	Eventually(func() error {
+		obj := &TransitSecretEngineKey{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "vap-ready-transit-", Namespace: "default"},
+			Spec: TransitSecretEngineKeySpec{
+				Authentication:   defaultAuth(),
+				Path:             "transit",
+				TransitKeyConfig: TransitKeyConfig{ConvergentEncryption: true, Derived: false},
+			},
+		}
+		err := k8sClient.Create(ctx, obj)
+		if err == nil {
+			_ = k8sClient.Delete(ctx, obj)
+			return fmt.Errorf("TransitSecretEngineKey VAP not enforcing yet")
+		}
+		return nil
+	}, "60s", "1s").Should(Succeed())
+
+	By("waiting for AuthEngineMount type-immutability VAP to enforce")
+	Eventually(func() error {
+		obj := &AuthEngineMount{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "vap-ready-aem-", Namespace: "default"},
+			Spec: AuthEngineMountSpec{
+				Authentication: defaultAuth(),
+				Path:           "auth/vap-ready",
+				AuthMount:      AuthMount{Type: "approle", Description: "vap readiness"},
+			},
+		}
+		if err := k8sClient.Create(ctx, obj); err != nil {
+			return fmt.Errorf("create AuthEngineMount for readiness probe: %w", err)
+		}
+		defer func() { _ = k8sClient.Delete(ctx, obj) }()
+		if err := k8sClient.Get(ctx, client.ObjectKeyFromObject(obj), obj); err != nil {
+			return fmt.Errorf("get AuthEngineMount for readiness probe: %w", err)
+		}
+		obj.Spec.AuthMount.Type = "oidc"
+		if err := k8sClient.Update(ctx, obj); err == nil {
+			return fmt.Errorf("AuthEngineMount type-immutability VAP not enforcing yet")
+		}
+		return nil
+	}, "60s", "1s").Should(Succeed())
+
+	By("waiting for immutable-path VAP to enforce")
+	Eventually(func() error {
+		obj := &AuthEngineMount{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "vap-ready-path-", Namespace: "default"},
+			Spec: AuthEngineMountSpec{
+				Authentication: defaultAuth(),
+				Path:           "auth/vap-ready-path",
+				AuthMount:      AuthMount{Type: "approle", Description: "vap path readiness"},
+			},
+		}
+		if err := k8sClient.Create(ctx, obj); err != nil {
+			return fmt.Errorf("create AuthEngineMount for path readiness probe: %w", err)
+		}
+		defer func() { _ = k8sClient.Delete(ctx, obj) }()
+		if err := k8sClient.Get(ctx, client.ObjectKeyFromObject(obj), obj); err != nil {
+			return fmt.Errorf("get AuthEngineMount for path readiness probe: %w", err)
+		}
+		obj.Spec.Path = "auth/vap-ready-path-changed"
+		if err := k8sClient.Update(ctx, obj); err == nil {
+			return fmt.Errorf("immutable-path VAP not enforcing yet")
+		}
+		return nil
+	}, "60s", "1s").Should(Succeed())
+}

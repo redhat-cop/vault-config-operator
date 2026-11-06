@@ -1,0 +1,25 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: vco-validate-cfauthengineconfig
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups: ["redhatcop.redhat.io"]
+      apiVersions: ["v1alpha1"]
+      operations: ["CREATE", "UPDATE"]
+      resources:
+      - cfauthengineconfigs
+  validations:
+  # cfCredentials exactly-one source
+  - expression: |
+      (has(object.spec.cfCredentials.vaultSecret) ? 1 : 0) +
+      (has(object.spec.cfCredentials.secret) ? 1 : 0) +
+      (has(object.spec.cfCredentials.randomSecret) ? 1 : 0) == 1
+    message: "exactly one of spec.cfCredentials.vaultSecret, spec.cfCredentials.secret, or spec.cfCredentials.randomSecret must be specified"
+  # cfUsername required when using randomSecret
+  - expression: >-
+      !has(object.spec.cfCredentials.randomSecret) ||
+      (has(object.spec.cfUsername) && object.spec.cfUsername != "")
+    message: "spec.cfUsername must be set when using randomSecret credentials (randomSecret only provides the password)"

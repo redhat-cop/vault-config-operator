@@ -1,0 +1,20 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: vco-validate-authenginemount
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups: ["redhatcop.redhat.io"]
+      apiVersions: ["v1alpha1"]
+      operations: ["UPDATE"]
+      resources:
+      - authenginemounts
+  validations:
+  - expression: >-
+      (has(object.spec.description) ? object.spec.description : "") == (has(oldObject.spec.description) ? oldObject.spec.description : "") &&
+      (has(object.spec.type) ? object.spec.type : "") == (has(oldObject.spec.type) ? oldObject.spec.type : "") &&
+      (has(object.spec.local) ? object.spec.local : false) == (has(oldObject.spec.local) ? oldObject.spec.local : false) &&
+      (has(object.spec.sealwrap) ? object.spec.sealwrap : false) == (has(oldObject.spec.sealwrap) ? oldObject.spec.sealwrap : false)
+    message: "only .spec.config can be modified"

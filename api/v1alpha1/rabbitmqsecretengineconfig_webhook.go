@@ -51,12 +51,6 @@ func (r *RabbitMQSecretEngineConfigValidation) Handle(ctx context.Context, req a
 		if err := json.Unmarshal(req.OldObject.Raw, oldRabbitMQSecretEngineConfig); err != nil {
 			return admission.Errored(http.StatusBadRequest, err)
 		}
-		if rabbitMQSecretEngineConfig.Spec.Path != oldRabbitMQSecretEngineConfig.Spec.Path {
-			return admission.Errored(http.StatusBadRequest, errors.New("spec.path cannot be updated"))
-		}
-		if err := rabbitMQSecretEngineConfig.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldRabbitMQSecretEngineConfig.Spec.Authentication); err != nil {
-			return admission.Errored(http.StatusBadRequest, err)
-		}
 		// The stored copy of this config is in the old namespace, so it cannot match itself
 		if rabbitMQSecretEngineConfig.Spec.Authentication.GetTargetNamespace() != oldRabbitMQSecretEngineConfig.Spec.Authentication.GetTargetNamespace() {
 			return r.validateUniquePath(ctx, rabbitMQSecretEngineConfig)

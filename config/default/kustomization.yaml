@@ -19,6 +19,7 @@ resources:
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix including the one in
 # crd/kustomization.yaml
 - ../webhook
+- ../vap
 # [CERTMANAGER] To enable cert-manager, uncomment all sections with 'CERTMANAGER'. 'WEBHOOK' components are required.
 # - ../certmanager
 # [PROMETHEUS] To enable prometheus monitor, uncomment all sections with 'PROMETHEUS'.
@@ -84,6 +85,19 @@ replacements:
       name: prometheus-k8s
     fieldPaths:
     - roleRef.name
+- source:
+    kind: ConfigMap
+    version: v1
+    name: vco-vap-params
+    fieldPath: metadata.namespace
+  targets:
+  - select:
+      kind: ValidatingAdmissionPolicyBinding
+      group: admissionregistration.k8s.io
+      version: v1
+      name: vco-target-namespace-guard-binding
+    fieldPaths:
+    - spec.paramRef.namespace
 # [CERTMANAGER] To enable cert-manager, uncomment all sections with 'CERTMANAGER' prefix.
 # - source:
 #     kind: Service

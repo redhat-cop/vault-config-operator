@@ -1,11 +1,6 @@
 package v1alpha1
 
 import (
-	"context"
-	"reflect"
-	"strings"
-	"testing"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -75,49 +70,3 @@ var _ = Describe("spec.authentication.targetNamespace", func() {
 		Expect(k8sClient.Update(ctx, policy)).To(Succeed())
 	})
 })
-
-var targetNamespaceLockExemptKinds = map[string]string{
-	"VaultSecret":                "only reads from Vault",
-	"Audit":                      "has no webhook",
-	"AuditRequestHeader":         "has no webhook",
-	"Entity":                     "has no webhook",
-	"EntityAlias":                "has no webhook",
-	"RabbitMQSecretEngineConfig": "uses a raw admission handler, tested in rabbitmqsecretengineconfig_webhook_test.go",
-}
-
-func TestUpdateWebhooksRejectTargetNamespaceMove(t *testing.T) {
-	t.Setenv("VAULT_NAMESPACE", "")
-	apiPackage := reflect.TypeOf(Policy{}).PkgPath()
-	checked := 0
-	for kind, objType := range testScheme().KnownTypes(GroupVersion) {
-		if objType.PkgPath() != apiPackage || strings.HasSuffix(kind, "List") {
-			continue
-		}
-		if reason, ok := targetNamespaceLockExemptKinds[kind]; ok {
-			t.Logf("%s is exempt: %s", kind, reason)
-			continue
-		}
-		checked++
-		t.Run(kind, func(t *testing.T) {
-			oldObj, newObj := reflect.New(objType), reflect.New(objType)
-			validateUpdate := newObj.MethodByName("ValidateUpdate")
-			if !validateUpdate.IsValid() {
-				t.Fatalf("%s has no ValidateUpdate: add the targetNamespace check, or add the kind to targetNamespaceLockExemptKinds", kind)
-			}
-			targetNamespace := newObj.Elem().FieldByName("Spec").FieldByName("Authentication").FieldByName("TargetNamespace")
-			if !targetNamespace.IsValid() {
-				t.Fatalf("%s has no spec.authentication.targetNamespace", kind)
-			}
-			targetNamespace.SetString("tenant-a")
-
-			out := validateUpdate.Call([]reflect.Value{reflect.ValueOf(context.Background()), oldObj, newObj})
-			err, _ := out[1].Interface().(error)
-			if err == nil || !strings.Contains(err.Error(), "cannot be updated to a different Vault namespace") {
-				t.Errorf("expected the targetNamespace check to reject the update, got %v", err)
-			}
-		})
-	}
-	if checked < 80 {
-		t.Fatalf("checked %d kinds, expected at least 80", checked)
-	}
-}

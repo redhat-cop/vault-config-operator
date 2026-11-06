@@ -30,14 +30,13 @@ Otherwise output: GATE_RESULT: integration_test_baseline = PASS""",
 ]
 
 # Post-completion gate: executed after the build is marked complete (step-05 / oneshot finalize).
-# Tests MUST pass before the commit. The commit step in the framework templates
-# fires before on_complete, so we undo it here, gate on tests, then re-commit.
-on_complete = """OVERRIDE — Commit gated by tests.
+# The user manages commits — bmad-build must NEVER commit.
+on_complete = """OVERRIDE — No commit; test gates only.
 The ### Commit (or ### Commit and Complete) step above may have already created a commit.
 Undo it now: run `git reset --soft HEAD~1` to move HEAD back one commit while keeping all
 changes staged. If the reset fails (nothing was committed, or no VCS), that is fine — continue.
 
-Then run every gate below IN ORDER. Only commit after ALL test gates pass.
+Then run every gate below IN ORDER. Do NOT commit at the end — the user manages commits.
 
 1. Run `make test 2>&1` in the project root.
    If exit code is non-zero:
@@ -64,9 +63,7 @@ Then run every gate below IN ORDER. Only commit after ALL test gates pass.
      HALT: "Dev agent record must be filled out before completing the story. Add ## Dev Agent Record with: Model Used, Summary of Changes, Outcome, and any Notes."
    Otherwise output: GATE_RESULT: dev_agent_record = PASS
 
-5. ALL gates passed — now commit.
-   If git is available and there are uncommitted or staged changes, commit with a
-   conventional message based on the Intent. If git is not available, skip.
+5. ALL gates passed — do NOT commit. The user will commit when ready.
 
 6. Update sprint-status.yaml.
    Run `python3 ./scripts/finalize-story.py {story_key} --impl-dir {implementation_artifacts}` if the finalize script exists, where {story_key} is derived from the plan/story file name.

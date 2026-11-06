@@ -1,0 +1,8 @@
+---
+description: Use grok 4.7 for bmad-build review subagents
+alwaysApply: true
+---
+
+# BMad Build Review Model
+
+When running bmad-build step-04 (Review), launch all review lens subagents with `model: "grok-4.7-xhigh"`. This overrides the default rule that review subagents run at the same model as the current session.

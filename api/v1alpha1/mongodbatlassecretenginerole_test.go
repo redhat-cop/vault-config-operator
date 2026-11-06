@@ -1,7 +1,6 @@
 package v1alpha1
 
 import (
-	"context"
 	"testing"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -239,72 +238,6 @@ func TestMongoDBAtlasSecretEngineRoleConditions(t *testing.T) {
 	}
 	if got[0].Type != "ReconcileSuccessful" {
 		t.Errorf("expected condition type 'ReconcileSuccessful', got %v", got[0].Type)
-	}
-}
-
-func TestMongoDBAtlasSecretEngineRole_ValidateUpdate_RejectsPathChange(t *testing.T) {
-	r := &MongoDBAtlasSecretEngineRole{}
-	oldObj := &MongoDBAtlasSecretEngineRole{
-		Spec: MongoDBAtlasSecretEngineRoleSpec{
-			Path: "mongodbatlas",
-			Name: "role-1",
-		},
-	}
-	newObj := &MongoDBAtlasSecretEngineRole{
-		Spec: MongoDBAtlasSecretEngineRoleSpec{
-			Path: "different-path",
-			Name: "role-1",
-		},
-	}
-	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
-	if err == nil {
-		t.Error("expected error when spec.path is changed")
-	}
-}
-
-func TestMongoDBAtlasSecretEngineRole_ValidateUpdate_RejectsNameChange(t *testing.T) {
-	r := &MongoDBAtlasSecretEngineRole{}
-	oldObj := &MongoDBAtlasSecretEngineRole{
-		Spec: MongoDBAtlasSecretEngineRoleSpec{
-			Path: "mongodbatlas",
-			Name: "old-name",
-		},
-	}
-	newObj := &MongoDBAtlasSecretEngineRole{
-		Spec: MongoDBAtlasSecretEngineRoleSpec{
-			Path: "mongodbatlas",
-			Name: "new-name",
-		},
-	}
-	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
-	if err == nil {
-		t.Error("expected error when spec.name is changed")
-	}
-}
-
-func TestMongoDBAtlasSecretEngineRole_ValidateUpdate_AllowsFieldUpdate(t *testing.T) {
-	r := &MongoDBAtlasSecretEngineRole{}
-	oldObj := &MongoDBAtlasSecretEngineRole{
-		Spec: MongoDBAtlasSecretEngineRoleSpec{
-			Path: "mongodbatlas",
-			Name: "role-1",
-			MongoDBAtlasSERole: MongoDBAtlasSERole{
-				Roles: []string{"ORG_READ_ONLY"},
-			},
-		},
-	}
-	newObj := &MongoDBAtlasSecretEngineRole{
-		Spec: MongoDBAtlasSecretEngineRoleSpec{
-			Path: "mongodbatlas",
-			Name: "role-1",
-			MongoDBAtlasSERole: MongoDBAtlasSERole{
-				Roles: []string{"ORG_OWNER"},
-			},
-		},
-	}
-	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
-	if err != nil {
-		t.Errorf("expected no error when only role fields changed, got: %v", err)
 	}
 }
 

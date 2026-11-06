@@ -70,8 +70,6 @@ func TestRabbitMQSecretEngineConfigValidationUpdate(t *testing.T) {
 		new         *RabbitMQSecretEngineConfig
 		wantAllowed bool
 	}{
-		{"path change", nil, rabbitMQConfig("b", "rabbitmq", "", ""), rabbitMQConfig("b", "rabbitmq-2", "", ""), false},
-		{"target namespace change", nil, rabbitMQConfig("b", "rabbitmq", "", "tenant-a"), rabbitMQConfig("b", "rabbitmq", "", "tenant-b"), false},
 		{"namespace change to a namespace with the same path", rabbitMQConfig("a", "rabbitmq", "tenant-a", ""), rabbitMQConfig("b", "rabbitmq", "tenant-b", ""), rabbitMQConfig("b", "rabbitmq", "tenant-a", ""), false},
 		{"namespace change to a free namespace", rabbitMQConfig("a", "rabbitmq", "tenant-a", ""), rabbitMQConfig("b", "rabbitmq", "tenant-b", ""), rabbitMQConfig("b", "rabbitmq", "tenant-c", ""), true},
 		{"namespace change does not conflict with the config itself", nil, rabbitMQConfig("b", "rabbitmq", "tenant-b", ""), rabbitMQConfig("b", "rabbitmq", "tenant-c", ""), true},

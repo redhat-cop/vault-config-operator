@@ -3272,3 +3272,352 @@ So that new CRDs need only a type registration line instead of a full controller
 
 **Complexity:** High
 **Novelty Risk:** MEDIUM — generics are well-understood in Go 1.27; errcheck is a mechanical sweep
+
+---
+
+## Epic 18: Webhook-to-VAP Migration + Validation Gap Fix
+
+**Status:** done (2026-11-03) — Stories 18.1, 18.1.1, 18.2–18.6 complete. Retrospective: `_bmad-output/implementation-artifacts/epic-18-retro-2026-11-03.md`.
+
+**Scope:** Migrate validating admission webhooks to Kubernetes ValidatingAdmissionPolicies (VAPs) using a shared-policy strategy. Fix 35 existing validation gaps discovered during analysis (4 missing `spec.path` immutability checks, 31 missing `spec.name` immutability checks). Retain residual mutating webhooks and the RabbitMQ cross-resource webhook that cannot be expressed as VAPs. Update test suite, documentation, and project context.
+
+**Initiative:** vap-migration
+
+**Background:** Analysis of the 92 existing webhook files revealed that virtually all validating logic performs pure manifest analysis — comparing old vs new field values on update and checking field constraints on create. This maps directly to CEL expressions in VAPs. Three cross-cutting rules appear in the vast majority of webhooks (`ValidateTargetNamespaceUpdate` in 91, `spec.path` immutability in 68, `spec.name` immutability in 34), making a shared-policy approach dramatically more maintainable than per-CRD policies.
+
+**Gap analysis findings:**
+- 4 CRDs with `spec.path` but no immutability check: `AzureAuthEngineRole`, `GCPAuthEngineRole`, `JWTOIDCAuthEngineRole`, `LDAPAuthEngineGroup`
+- 31 CRDs with `spec.name` used in `GetPath()` but no immutability check (13 use `spec.Name` directly, 17 use `ResourceName(spec.Name, metadata.Name)`, 1 uses `getName()`)
+- `VaultSecret` is intentionally exempt: it reads secrets (not creates Vault resources), so path/name mutability is correct by design
+- All `sys/` API types have `KubeAuthConfiguration` and support Vault namespacing — the target-namespace guard applies to all 92 CRDs (including VaultSecret, for auth consistency)
+
+**Architecture decision: Shared VAPs (Option B)**
+Instead of one VAP per CRD (~87 policies), use ~20 policies organized in three tiers:
+- **Tier 1 — Universal shared policies (3 VAPs, ~228 bindings total):** `vco-immutable-path` (72 CRDs), `vco-immutable-name` (65 CRDs), `vco-target-namespace-guard` (92 CRDs, parameterized with ConfigMap for `VAULT_NAMESPACE` env var fallback)
+- **Tier 2 — Semi-shared credential source policies (2-3 VAPs):** e.g. `vco-exactly-one-root-credential` for 7 CRDs sharing `spec.rootCredentials.*`
+- **Tier 3 — CRD-specific policies (~15 VAPs):** For unique validation logic (TransitSecretEngineKey, AWSSecretEngineRole, RandomSecret, etc.)
+- **Retained webhooks (3-4):** RabbitMQ cross-resource `validateUniquePath` (API call), KubernetesAuthEngineConfig defaulter (filesystem read), AWS/CF defaulters (complex mutation), and 6 simple defaulters (candidates for `+kubebuilder:default` migration)
+
+**VAP test infrastructure:**
+- envtest supports VAPs via `KubeAPIServerFlags: []string{"--enable-admission-plugins=ValidatingAdmissionPolicy"}` — used for unit-tier tests
+- Kind v1.36.x has VAPs GA — integration tests work out of the box, no extra config needed
+
+**Epic-wide implementation notes:**
+- VAP manifests live under `config/vap/` with a kustomize overlay. Each shared policy is one `ValidatingAdmissionPolicy` YAML; each binding is a `ValidatingAdmissionPolicyBinding` YAML listing all applicable resources.
+- The `vco-target-namespace-guard` VAP uses `spec.paramKind` referencing a ConfigMap that holds the operator's `VAULT_NAMESPACE` value. The operator deployment must create/manage this ConfigMap.
+- When adding new CRDs in future epics, developers must add the new CRD to the shared VAP binding resource lists. Document this in the checklist at step 10 of "Adding a New Vault API Type."
+- Mutating webhooks (defaulters) remain as Go webhooks. Evaluate moving simple default-value defaulters to `+kubebuilder:default` CRD markers where possible.
+- VaultSecret's nested `VaultSecretDefinition[]` structure doesn't fit the shared `spec.path`/`spec.name` VAPs (those fields are inside array elements, not at `spec.*`). VaultSecret keeps a minimal dedicated VAP or webhook for any definition-level validation needed in the future.
+
+---
+
+### Story 18.1: VAP Infrastructure + Universal Immutability Policies
+
+As an operator developer,
+I want shared ValidatingAdmissionPolicy manifests for the three universal immutability rules (path, name, target-namespace-guard),
+So that all CRDs are consistently protected by admission-time validation — including the 35 CRDs currently missing checks.
+
+**Part A — VAP Infrastructure:**
+
+**Acceptance Criteria:**
+
+**Given** the operator source tree
+**When** a developer runs `make manifests`
+**Then** the `config/vap/` directory contains all VAP and binding manifests, included via kustomize overlay
+
+**Given** the envtest suite
+**When** tests start
+**Then** the API server is configured with `--enable-admission-plugins=ValidatingAdmissionPolicy` and VAP manifests are loaded
+
+**Part B — `vco-immutable-path` VAP:**
+
+**Acceptance Criteria:**
+
+**Given** any of the 72 CRDs with `spec.path` (the existing 68 + AzureAuthEngineRole, GCPAuthEngineRole, JWTOIDCAuthEngineRole, LDAPAuthEngineGroup)
+**When** a user submits an UPDATE that changes `spec.path`
+**Then** the API server rejects the request with message "spec.path cannot be updated"
+
+**Given** any of the 72 CRDs
+**When** a user submits an UPDATE that does NOT change `spec.path`
+**Then** the request is allowed
+
+**Part C — `vco-immutable-name` VAP:**
+
+**Acceptance Criteria:**
+
+**Given** any of the 65 CRDs with `spec.name` used in `GetPath()` (the existing 34 + the 31 missing)
+**When** a user submits an UPDATE that changes `spec.name`
+**Then** the API server rejects the request with message "spec.name cannot be updated"
+
+**Given** any of the 65 CRDs
+**When** a user submits an UPDATE that does NOT change `spec.name`
+**Then** the request is allowed
+
+**Given** a CRD using `ResourceName(spec.Name, metadata.Name)` where `spec.name` was originally empty
+**When** a user submits an UPDATE adding `spec.name` (previously relying on `metadata.name`)
+**Then** the request is rejected — adding `spec.name` after creation would change the effective Vault path
+
+**Part D — `vco-target-namespace-guard` VAP (parameterized):**
+
+**Acceptance Criteria:**
+
+**Given** any of the 92 CRDs with `spec.authentication` (all types including VaultSecret)
+**When** a user submits an UPDATE that changes the effective Vault namespace while `targetNamespace` is set on either old or new
+**Then** the API server rejects the request with an appropriate message
+
+**Given** a ConfigMap `vco-vap-params` in the operator namespace
+**When** the operator's `VAULT_NAMESPACE` env var is set
+**Then** the ConfigMap contains the env var value, and the VAP uses it as the fallback for empty `spec.authentication.namespace`
+
+**Given** neither old nor new resource has `targetNamespace` set
+**When** `spec.authentication.namespace` changes
+**Then** the request is allowed (existing behavior preserved)
+
+**Implementation notes:**
+- CEL expression for path: `object.spec.path == oldObject.spec.path`
+- CEL expression for name: `!has(oldObject.spec.name) && !has(object.spec.name) || has(oldObject.spec.name) && has(object.spec.name) && object.spec.name == oldObject.spec.name` — handles the case where `spec.name` was never set (uses metadata.name fallback)
+- CEL for target-namespace-guard must replicate `JoinNamespace(getLoginNamespace(), targetNamespace)` with `CleansePath` slash-stripping logic. Use `params.data.vaultNamespace` as fallback when `spec.authentication.namespace` is empty.
+- VaultSecret: the target-namespace-guard binding should cover VaultSecret at the top-level `spec.authentication` if present, but note that VaultSecret's primary auth config is inside the `vaultSecretDefinitions[]` array. A VaultSecret-specific rule may be needed as a follow-up.
+- Remove the corresponding Go validation code from all webhook `ValidateUpdate` methods for path/name immutability and `ValidateTargetNamespaceUpdate` calls — but ONLY after VAP tests pass.
+
+**Complexity:** High (touches 92 webhook files for cleanup, CEL expression for target-namespace-guard is non-trivial)
+**Novelty Risk:** HIGH — first VAP in the project, new CEL patterns, parameterized VAP setup
+
+---
+
+### Story 18.2: Credential Source + CRD-Specific VAPs
+
+As an operator developer,
+I want the credential source validation and per-CRD unique validation rules migrated to VAPs,
+So that all validating admission logic is expressed declaratively in CEL, not in Go webhook code.
+
+**Part A — Credential Source VAPs:**
+
+**Acceptance Criteria:**
+
+**Given** any of the 7 CRDs with `spec.rootCredentials` (AWSSecretEngineConfig, ConsulSecretEngineConfig, DatabaseSecretEngineConfig, MongoDBAtlasSecretEngineConfig, NomadSecretEngineConfig, QuaySecretEngineConfig, RabbitMQSecretEngineConfig)
+**When** a user submits a CREATE or UPDATE with zero or more than one of `spec.rootCredentials.{vaultSecret, secret, randomSecret}` set
+**Then** the API server rejects the request
+
+**Given** other credential field groups (bindCredentials, GCPCredentials, AWSCredentials, etc.)
+**When** the same mutual-exclusivity rule is violated
+**Then** the corresponding per-field VAP rejects the request
+
+**Part B — CRD-Specific VAPs:**
+
+**Acceptance Criteria:**
+
+For each of the ~15 CRDs with unique `isValid()` logic, a dedicated VAP exists that enforces the same rules:
+
+- **TransitSecretEngineKey:** convergentEncryption requires derived, keySize only for hmac, autoRotatePeriod minimum, and 5+ immutable field checks
+- **AWSSecretEngineRole:** credentialType-dependent field restrictions
+- **RandomSecret:** passwordPolicy mutual exclusivity, inline format validation, secretKey immutability, KVv2 path check
+- **DatabaseSecretEngineStaticRole:** rotation config mutual exclusivity, password/key either-or
+- **TOTPSecretEngineKey:** generate-mode conditional field rules
+- **TerraformCloudSecretEngineRole:** credentialType enum and type-dependent required fields
+- **AuthEngineMount / SecretEngineMount:** "only .spec.config can be modified" guards
+- **PKISecretEngineConfig:** ACME requires cluster, type immutability
+- **KubernetesAuthEngineConfig:** tokenReviewer mutual exclusivity
+- **KubernetesAuthEngineRole:** targetNamespaceSelector vs targetNamespaces mutual exclusivity
+- **SSHSecretEngineConfig:** generateSigningKey conditional + caKeyReference constraints
+
+**Implementation notes:**
+- Group credential source VAPs by field path where possible (e.g., one VAP for all 7 `rootCredentials` CRDs)
+- For CRD-specific VAPs, name them `vco-validate-<lowercase-kind>` (e.g., `vco-validate-transitsecretenginekey`)
+- CEL for the "only config modifiable" guard on mounts can't use `reflect.DeepEqual`. Instead, check each immutable sub-field explicitly, or use a CEL comparison of the full mount struct minus config.
+- Duration parsing in CEL: use `duration()` function for autoRotatePeriod validation (CEL has native duration support)
+
+**Complexity:** High (15+ distinct CEL policies, some with complex conditional logic)
+**Novelty Risk:** MEDIUM — CEL expressions are well-documented, but some validations (duration parsing, struct-level comparison) require careful translation from Go
+
+---
+
+### Story 18.3: Webhook Code Removal + Residual Webhook Cleanup + CSV Version Bump
+
+As an operator developer,
+I want the migrated validating webhook code removed and the remaining webhooks clearly documented,
+So that the codebase has a single source of truth for admission validation (VAPs for validation, minimal webhooks for mutation and cross-resource checks).
+
+**Acceptance Criteria:**
+
+**Given** all VAP tests from Stories 18.1 and 18.2 pass
+**When** the Go webhook code for migrated validations is removed
+**Then** `make test` and `make integration` still pass
+
+**Given** the cleanup is complete
+**When** examining the webhook files
+**Then** the following residual webhooks remain:
+- **Validating:** RabbitMQSecretEngineConfig (cross-resource `validateUniquePath` — requires `client.List()`)
+- **Mutating:** AWSAuthEngineConfig, CFAuthEngineConfig (raw admission request inspection for credential key defaulting)
+- **Mutating:** GCPSecretEngineConfig, OktaAuthEngineConfig, RADIUSAuthEngineConfig, SSHSecretEngineConfig, TerraformCloudSecretEngineConfig, UserpassAuthEngineUser (simple credential key defaulters — evaluate migration to `+kubebuilder:default` markers)
+- **Mutating:** KubernetesAuthEngineConfig (filesystem CA cert read)
+
+**Given** a webhook file that previously contained both defaulting logic AND validation logic
+**When** only the validation was migrated to a VAP
+**Then** the webhook file retains `admission.Defaulter[*T]` but the `admission.Validator[*T]` methods return `nil, nil` (or the validator registration is removed if no validation remains)
+
+**Given** the kustomize webhook configuration
+**When** examining `config/webhook/`
+**Then** only residual webhooks are configured; removed validating webhook paths are no longer present
+
+**Given** `cmd/main.go`
+**When** examining the webhook registration block
+**Then** only residual webhooks are registered; types that are fully VAP-covered no longer register webhooks (or register only the defaulter)
+
+**Part E — CSV and Platform Version Requirements:**
+
+**Acceptance Criteria:**
+
+**Given** VAPs are GA in Kubernetes 1.30 (OpenShift 4.17)
+**When** examining the OLM ClusterServiceVersion
+**Then** `spec.minKubeVersion` is bumped from `1.29.0` to `1.30.0`
+
+**Given** the bundle annotations
+**When** examining `config/manifests/annotations.yaml`
+**Then** `com.redhat.openshift.versions` is bumped from `v4.16` to `v4.17`
+
+**Implementation notes:**
+- `config/manifests/bases/vault-config-operator.clusterserviceversion.yaml`: change `minKubeVersion: 1.29.0` → `minKubeVersion: 1.30.0`
+- `config/manifests/annotations.yaml`: change `com.redhat.openshift.versions: v4.16` → `com.redhat.openshift.versions: v4.17`
+- These version bumps reflect that the operator now **requires** VAP support, which is GA in Kubernetes 1.30 / OpenShift 4.17
+- Phase the removal: first remove the `ValidateUpdate` immutability checks (covered by 18.1 VAPs), then remove the `ValidateCreate`/`ValidateUpdate` `isValid()` calls (covered by 18.2 VAPs)
+- For webhooks that become defaulter-only (no validation): the kubebuilder markers still require a validating webhook path, but the handler returns `Allowed`. Consider whether to keep the scaffold or drop validation registration entirely.
+- Evaluate the 6 simple defaulters for `+kubebuilder:default` migration. If the default value can be expressed as a CRD marker (simple string/bool/int), prefer that. Document any that can't migrate (e.g., RADIUS `passwordKey` defaulting from "password" to "secret" is an override, not a static default).
+- Update the kubebuilder webhook markers and regenerate manifests with `make manifests`
+
+**Complexity:** Medium (mechanical removal + careful testing)
+**Novelty Risk:** LOW — deletion and cleanup, well-understood
+
+---
+
+### Story 18.4: VAP Test Suite — envtest + Integration Coverage
+
+As an operator developer,
+I want comprehensive test coverage for all VAP rules in both envtest (unit tier) and Kind (integration tier),
+So that VAP CEL expressions are regression-tested and validated against the real Kubernetes API server.
+
+**Acceptance Criteria:**
+
+**Given** the envtest suite (`suite_test.go`)
+**When** it starts the test environment
+**Then** `ValidatingAdmissionPolicy` is enabled via `KubeAPIServerFlags` and all VAP manifests from `config/vap/` are loaded
+
+**Given** the envtest suite
+**When** a test creates a CRD resource, then attempts an UPDATE changing `spec.path`
+**Then** the API server rejects the update (proving the VAP is enforced by envtest)
+
+**Given** the envtest suite
+**When** a test creates a CRD resource, then attempts an UPDATE changing `spec.name`
+**Then** the API server rejects the update
+
+**Given** the envtest suite
+**When** a test creates a CRD resource with `spec.authentication.targetNamespace` set, then attempts an UPDATE changing the effective Vault namespace
+**Then** the API server rejects the update
+
+**Given** the 4 previously-missing path-immutability CRDs (AzureAuthEngineRole, GCPAuthEngineRole, JWTOIDCAuthEngineRole, LDAPAuthEngineGroup)
+**When** a test attempts an UPDATE changing `spec.path`
+**Then** the API server rejects the update (proving the gap is fixed)
+
+**Given** a representative sample of the 31 previously-missing name-immutability CRDs
+**When** a test attempts an UPDATE changing `spec.name`
+**Then** the API server rejects the update (proving the gap is fixed)
+
+**Given** each CRD-specific VAP (TransitSecretEngineKey, AWSSecretEngineRole, RandomSecret, etc.)
+**When** a test submits an invalid CREATE or UPDATE
+**Then** the VAP rejects it with the expected message
+
+**Given** the Kind integration test suite
+**When** `make integration` runs
+**Then** VAPs are deployed in the Kind cluster and enforced alongside the operator
+
+**Implementation notes:**
+- envtest test file: `api/v1alpha1/vap_test.go` (new, `//go:build !integration`) — tests VAP CEL expressions against the envtest API server
+- Integration test file: `controllers/vap_integration_test.go` (new, `//go:build integration`) — validates VAPs in Kind
+- Use table-driven tests: one test function per shared VAP rule, with sub-tests per CRD covering rejection and allowance
+- For the target-namespace-guard, create the ConfigMap param before testing
+- The existing `webhook_validate_update_test.go` tests can be adapted — many test the same scenarios that VAPs now enforce
+- Keep existing webhook tests for residual webhooks (RabbitMQ, defaulters)
+
+**Complexity:** Medium (mostly test YAML + Go test code, but many CRDs to cover)
+**Novelty Risk:** MEDIUM — envtest VAP testing is a newer pattern; needs validation that envtest's kube-apiserver version supports all CEL features used
+
+---
+
+### Story 18.5: Documentation — VAP Approach + Admission Control Guide
+
+As an operator user and contributor,
+I want documentation explaining the VAP-based admission control approach,
+So that I understand how validation rules are enforced and how to add rules for new CRDs.
+
+**Acceptance Criteria:**
+
+**Given** the `docs/` directory
+**When** examining admission control documentation
+**Then** a `docs/admission-control.md` file exists explaining:
+- The three-tier VAP architecture (universal, semi-shared, CRD-specific)
+- How shared VAPs and bindings work
+- The target-namespace-guard parameterized VAP and ConfigMap setup
+- Which webhooks remain and why (mutation, cross-resource checks)
+- Kubernetes version requirements (VAPs GA in 1.30+)
+
+**Given** the `docs/` directory
+**When** examining the developer guide for adding a new CRD type
+**Then** the guide includes steps for:
+- Adding the new CRD to shared VAP bindings (path, name, target-ns)
+- Creating a CRD-specific VAP if the type has unique validation rules
+- Testing the VAP in envtest
+
+**Given** `_bmad-output/project-context.md`
+**When** examining the Admission Webhooks rules section
+**Then** the rules are updated to reflect the VAP approach:
+- ValidateUpdate immutability is now enforced by VAPs, not Go webhook code
+- New types must be added to shared VAP binding resource lists
+- Residual mutating webhooks documented
+- envtest VAP configuration documented
+
+**Given** `_bmad-output/planning-artifacts/epics.md`
+**When** examining Epic 18
+**Then** it is present with all story descriptions
+
+**Implementation notes:**
+- Update the "Admission Webhooks" section in `project-context.md` to describe the VAP-first approach
+- Update the "Adding a New Vault API Type" checklist (step 4 currently says "Implement webhook" — update to "Add to VAP bindings + implement webhook only if defaulting logic needed")
+- Add a new "ValidatingAdmissionPolicy (VAP)" section to project-context.md covering: manifest location (`config/vap/`), shared policy naming convention (`vco-*`), parameterized ConfigMap
+- Remove or annotate the now-outdated webhook rules (keep the mutating webhook rules; update validating webhook rules to point to VAPs)
+
+**Complexity:** Low (documentation updates)
+**Novelty Risk:** LOW
+
+---
+
+### Story 18.6: Project Context + Sprint Status Finalization
+
+As a project maintainer,
+I want the sprint-status.yaml, project-context.md, and epics.md fully updated for Epic 18,
+So that project tracking artifacts reflect the VAP migration and all downstream workflows pick up the new rules.
+
+**Acceptance Criteria:**
+
+**Given** `sprint-status.yaml`
+**When** Epic 18 is complete
+**Then** all stories show status `done` and Epic 18 shows status `done`
+
+**Given** `project-context.md`
+**When** an AI agent reads the file
+**Then** all admission control rules reflect the VAP-first approach; webhook rules are updated; the new-type checklist includes VAP binding steps
+
+**Given** `epics.md`
+**When** examining the document
+**Then** Epic 18 is fully present with all stories and final status
+
+**Given** the action items from this epic
+**When** examining `sprint-status.yaml`
+**Then** any retro action items are tracked (e.g., "add VAP binding step to new-type checklist")
+
+**Implementation notes:**
+- This story is the final "close the loop" story for the epic
+- Run through the full checklist: sprint-status, project-context, epics.md, documentation gate
+- Trigger retrospective on the epic
+
+**Complexity:** Low
+**Novelty Risk:** LOW

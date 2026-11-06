@@ -1,0 +1,18 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: vco-validate-kubernetesauthengineconfig
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups: ["redhatcop.redhat.io"]
+      apiVersions: ["v1alpha1"]
+      operations: ["CREATE", "UPDATE"]
+      resources:
+      - kubernetesauthengineconfigs
+  validations:
+  - expression: >-
+      !has(object.spec.tokenReviewerServiceAccount) ||
+      !has(object.spec.tokenReviewerJWTSecret)
+    message: "spec.tokenReviewerServiceAccount and spec.tokenReviewerJWTSecret are mutually exclusive"

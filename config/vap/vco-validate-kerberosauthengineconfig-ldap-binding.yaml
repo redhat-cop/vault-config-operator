@@ -1,0 +1,8 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: vco-validate-kerberosauthengineconfig-ldap
+spec:
+  policyName: vco-validate-kerberosauthengineconfig-ldap
+  validationActions:
+  - Deny
