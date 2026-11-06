@@ -608,8 +608,11 @@ helmchart-repo-push: helmchart-repo
 HELM_TEST_IMG_NAME ?= ${OPERATOR_NAME}
 HELM_TEST_IMG_TAG ?= helmchart-test
 HELM_TEST_SIDECAR_IMG ?= busybox:1.37
-# Single-platform pulls avoid multi-arch OCI indexes (busybox arm32v5/attestations)
-# that break `kind load image-archive` (`ctr ... --all-platforms` missing digests).
+# Docker on Ubuntu 24+/26 (containerd image store) keeps the multi-arch index even
+# after `docker pull --platform=...`, so `docker save` + kind's
+# `ctr import --all-platforms` fails on missing foreign-arch digests (e.g. busybox
+# arm32v5). Rebuild into a local single-platform image and import without
+# --all-platforms.
 HELM_TEST_PLATFORM ?= linux/$(shell uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
 
 # Deploy the helmchart to a kind cluster to test deployment.
@@ -619,14 +622,20 @@ helmchart-test: KIND_CLUSTER_NAME = $(HELM_CLUSTER_NAME)
 helmchart-test: kind-setup deploy-vault helmchart
 	$(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker-build
 	$(CONTAINER_RUNTIME) tag ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
+	@echo "Materializing single-platform sidecar $(HELM_TEST_SIDECAR_IMG) ($(HELM_TEST_PLATFORM))..."
 	$(CONTAINER_RUNTIME) pull --platform=$(HELM_TEST_PLATFORM) ${HELM_TEST_SIDECAR_IMG}
-	@echo "Saving images to archive for kind load (single-platform; avoids multi-arch digest issues)..."
-	$(CONTAINER_RUNTIME) save -o /tmp/kind-helm-image.tar \
-	  ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} \
-	  docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} \
-	  ${HELM_TEST_SIDECAR_IMG}
-	$(KIND) load image-archive --name $(KIND_CLUSTER_NAME) /tmp/kind-helm-image.tar
-	rm -f /tmp/kind-helm-image.tar
+	printf 'FROM --platform=%s %s\n' "$(HELM_TEST_PLATFORM)" "${HELM_TEST_SIDECAR_IMG}" | \
+	  $(CONTAINER_RUNTIME) build --platform=$(HELM_TEST_PLATFORM) $(DOCKER_BUILD_EXTRA_ARGS) -t ${HELM_TEST_SIDECAR_IMG} -
+	@echo "Importing images into kind nodes (ctr without --all-platforms)..."
+	@for node in $$($(KIND) get nodes --name $(KIND_CLUSTER_NAME)); do \
+	  echo "  loading into $$node..."; \
+	  $(CONTAINER_RUNTIME) save \
+	    ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} \
+	    docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} \
+	    ${HELM_TEST_SIDECAR_IMG} | \
+	    $(CONTAINER_RUNTIME) exec -i $$node \
+	      ctr --namespace=k8s.io images import --digests --snapshotter=overlayfs - ; \
+	done
 	$(HELM) --kube-context $(KUBE_CONTEXT) repo add jetstack https://charts.jetstack.io --force-update
 	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.21.1 --set crds.enabled=true
 	$(HELM) --kube-context $(KUBE_CONTEXT) repo add prometheus-community https://prometheus-community.github.io/helm-charts --force-update
