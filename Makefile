@@ -399,9 +399,17 @@ build: manifests generate fmt vet ## Build manager binary.
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./cmd/
 
+# Disable BuildKit attestations so kind load does not hit missing OCI digest
+# errors from attestation/manifest-list exports (seen on newer Docker BuildKit).
+ifeq ($(CONTAINER_RUNTIME),docker)
+DOCKER_BUILD_EXTRA_ARGS ?= --provenance=false --sbom=false
+else
+DOCKER_BUILD_EXTRA_ARGS ?=
+endif
+
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.
-	$(CONTAINER_RUNTIME) build -t ${IMG} .
+	$(CONTAINER_RUNTIME) build $(DOCKER_BUILD_EXTRA_ARGS) -t ${IMG} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
@@ -609,16 +617,12 @@ helmchart-test: kind-setup deploy-vault helmchart
 	$(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker-build
 	$(CONTAINER_RUNTIME) tag ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
 	$(CONTAINER_RUNTIME) pull ${HELM_TEST_SIDECAR_IMG}
-	@if [ "$(CONTAINER_RUNTIME)" = "podman" ]; then \
-	  echo "Using podman: saving images to archive for kind load..."; \
-	  for img in ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} ${HELM_TEST_SIDECAR_IMG}; do \
-	    $(CONTAINER_RUNTIME) save $$img -o /tmp/kind-helm-image.tar && \
-	    $(KIND) load image-archive --name $(KIND_CLUSTER_NAME) /tmp/kind-helm-image.tar && \
-	    rm -f /tmp/kind-helm-image.tar; \
-	  done; \
-	else \
-	  $(KIND) load docker-image --name $(KIND_CLUSTER_NAME) ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} ${HELM_TEST_SIDECAR_IMG}; \
-	fi
+	@echo "Saving images to archive for kind load (avoids BuildKit attestation/manifest-list digest issues)..."
+	@for img in ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} ${HELM_TEST_SIDECAR_IMG}; do \
+	  $(CONTAINER_RUNTIME) save $$img -o /tmp/kind-helm-image.tar && \
+	  $(KIND) load image-archive --name $(KIND_CLUSTER_NAME) /tmp/kind-helm-image.tar && \
+	  rm -f /tmp/kind-helm-image.tar; \
+	done
 	$(HELM) --kube-context $(KUBE_CONTEXT) repo add jetstack https://charts.jetstack.io --force-update
 	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.21.1 --set crds.enabled=true
 	$(HELM) --kube-context $(KUBE_CONTEXT) repo add prometheus-community https://prometheus-community.github.io/helm-charts --force-update

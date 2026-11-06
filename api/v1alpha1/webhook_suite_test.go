@@ -34,6 +34,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	admissionv1 "k8s.io/api/admission/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/rest"
@@ -139,6 +140,10 @@ var _ = BeforeSuite(func() {
 			Expect(k8sClient.Create(ctx, obj)).To(Succeed())
 		}
 	}
+
+	// Ginkgo randomizes specs, so Deny Its can run before any in-test readiness
+	// probe. Wait here until representative VAPs actually enforce.
+	waitForVAPEnforcement()
 
 	// start webhook server using Manager
 	webhookInstallOptions := &testEnv.WebhookInstallOptions
@@ -253,3 +258,76 @@ var _ = AfterSuite(func() {
 	err := testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
+
+// waitForVAPEnforcement blocks until key ValidatingAdmissionPolicies are
+// compiled and denying invalid requests. Suite-level wait is required because
+// Ginkgo randomizes specs and in-test Eventually probes are not guaranteed to
+// run first. Functional deny probes are used (not status.observedGeneration)
+// because enforcement is what the suite asserts.
+func waitForVAPEnforcement() {
+	By("waiting for TransitSecretEngineKey VAP to enforce")
+	Eventually(func() error {
+		obj := &TransitSecretEngineKey{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "vap-ready-transit-", Namespace: "default"},
+			Spec: TransitSecretEngineKeySpec{
+				Authentication:   defaultAuth(),
+				Path:             "transit",
+				TransitKeyConfig: TransitKeyConfig{ConvergentEncryption: true, Derived: false},
+			},
+		}
+		err := k8sClient.Create(ctx, obj)
+		if err == nil {
+			_ = k8sClient.Delete(ctx, obj)
+			return fmt.Errorf("TransitSecretEngineKey VAP not enforcing yet")
+		}
+		return nil
+	}, "60s", "1s").Should(Succeed())
+
+	By("waiting for AuthEngineMount type-immutability VAP to enforce")
+	Eventually(func() error {
+		obj := &AuthEngineMount{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "vap-ready-aem-", Namespace: "default"},
+			Spec: AuthEngineMountSpec{
+				Authentication: defaultAuth(),
+				Path:           "auth/vap-ready",
+				AuthMount:      AuthMount{Type: "approle", Description: "vap readiness"},
+			},
+		}
+		if err := k8sClient.Create(ctx, obj); err != nil {
+			return fmt.Errorf("create AuthEngineMount for readiness probe: %w", err)
+		}
+		defer func() { _ = k8sClient.Delete(ctx, obj) }()
+		if err := k8sClient.Get(ctx, client.ObjectKeyFromObject(obj), obj); err != nil {
+			return fmt.Errorf("get AuthEngineMount for readiness probe: %w", err)
+		}
+		obj.Spec.AuthMount.Type = "oidc"
+		if err := k8sClient.Update(ctx, obj); err == nil {
+			return fmt.Errorf("AuthEngineMount type-immutability VAP not enforcing yet")
+		}
+		return nil
+	}, "60s", "1s").Should(Succeed())
+
+	By("waiting for immutable-path VAP to enforce")
+	Eventually(func() error {
+		obj := &AuthEngineMount{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "vap-ready-path-", Namespace: "default"},
+			Spec: AuthEngineMountSpec{
+				Authentication: defaultAuth(),
+				Path:           "auth/vap-ready-path",
+				AuthMount:      AuthMount{Type: "approle", Description: "vap path readiness"},
+			},
+		}
+		if err := k8sClient.Create(ctx, obj); err != nil {
+			return fmt.Errorf("create AuthEngineMount for path readiness probe: %w", err)
+		}
+		defer func() { _ = k8sClient.Delete(ctx, obj) }()
+		if err := k8sClient.Get(ctx, client.ObjectKeyFromObject(obj), obj); err != nil {
+			return fmt.Errorf("get AuthEngineMount for path readiness probe: %w", err)
+		}
+		obj.Spec.Path = "auth/vap-ready-path-changed"
+		if err := k8sClient.Update(ctx, obj); err == nil {
+			return fmt.Errorf("immutable-path VAP not enforcing yet")
+		}
+		return nil
+	}, "60s", "1s").Should(Succeed())
+}
