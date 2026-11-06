@@ -608,6 +608,9 @@ helmchart-repo-push: helmchart-repo
 HELM_TEST_IMG_NAME ?= ${OPERATOR_NAME}
 HELM_TEST_IMG_TAG ?= helmchart-test
 HELM_TEST_SIDECAR_IMG ?= busybox:1.37
+# Single-platform pulls avoid multi-arch OCI indexes (busybox arm32v5/attestations)
+# that break `kind load image-archive` (`ctr ... --all-platforms` missing digests).
+HELM_TEST_PLATFORM ?= linux/$(shell uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
 
 # Deploy the helmchart to a kind cluster to test deployment.
 # If the test-metrics sidecar in the prometheus pod is ready, the metrics work and the test is successful.
@@ -616,13 +619,14 @@ helmchart-test: KIND_CLUSTER_NAME = $(HELM_CLUSTER_NAME)
 helmchart-test: kind-setup deploy-vault helmchart
 	$(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker-build
 	$(CONTAINER_RUNTIME) tag ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
-	$(CONTAINER_RUNTIME) pull ${HELM_TEST_SIDECAR_IMG}
-	@echo "Saving images to archive for kind load (avoids BuildKit attestation/manifest-list digest issues)..."
-	@for img in ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} ${HELM_TEST_SIDECAR_IMG}; do \
-	  $(CONTAINER_RUNTIME) save $$img -o /tmp/kind-helm-image.tar && \
-	  $(KIND) load image-archive --name $(KIND_CLUSTER_NAME) /tmp/kind-helm-image.tar && \
-	  rm -f /tmp/kind-helm-image.tar; \
-	done
+	$(CONTAINER_RUNTIME) pull --platform=$(HELM_TEST_PLATFORM) ${HELM_TEST_SIDECAR_IMG}
+	@echo "Saving images to archive for kind load (single-platform; avoids multi-arch digest issues)..."
+	$(CONTAINER_RUNTIME) save -o /tmp/kind-helm-image.tar \
+	  ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} \
+	  docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} \
+	  ${HELM_TEST_SIDECAR_IMG}
+	$(KIND) load image-archive --name $(KIND_CLUSTER_NAME) /tmp/kind-helm-image.tar
+	rm -f /tmp/kind-helm-image.tar
 	$(HELM) --kube-context $(KUBE_CONTEXT) repo add jetstack https://charts.jetstack.io --force-update
 	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.21.1 --set crds.enabled=true
 	$(HELM) --kube-context $(KUBE_CONTEXT) repo add prometheus-community https://prometheus-community.github.io/helm-charts --force-update
