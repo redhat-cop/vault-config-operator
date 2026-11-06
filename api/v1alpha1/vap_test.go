@@ -271,7 +271,8 @@ var _ = Describe("VAP Immutable Path", func() {
 		},
 	}
 
-	// The first test uses Eventually to probe VAP readiness.
+	// Suite BeforeSuite already waits for VAP enforcement. Keep Eventually here
+	// as a belt-and-suspenders probe for the immutable-path policy.
 	It("should reject path change for AuthEngineMount (VAP readiness probe)", func() {
 		obj := entries[0].obj()
 		createAndFetch(obj)
