@@ -1,0 +1,6 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AliCloudAuthEngineRole
+metadata:
+  name: alicloudauthenginerole-sample
+spec:
+  arn: arn:aws:iam::123456789012:role/example

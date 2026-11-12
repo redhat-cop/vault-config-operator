@@ -1,0 +1,7 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: OCIAuthEngineRole
+metadata:
+  name: ociauthenginerole-sample
+spec:
+  ocidList:
+  - ocid1.user.oc1..example

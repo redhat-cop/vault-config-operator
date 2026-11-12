@@ -1,0 +1,8 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KerberosAuthEngineConfig
+metadata:
+  name: kerberosauthengineconfig-sample
+spec:
+  keytabSecret:
+    name: keytab
+  serviceAccount: HTTP/example.com

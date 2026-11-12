@@ -1,0 +1,6 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GitHubAuthEngineTeamMap
+metadata:
+  name: githubauthengineteammap-sample
+spec:
+  name: example

@@ -1,0 +1,6 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: RADIUSAuthEngineConfig
+metadata:
+  name: radiusauthengineconfig-sample
+spec:
+  host: radius.example.com

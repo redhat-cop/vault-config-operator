@@ -1,0 +1,5 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: QuotaConfig
+metadata:
+  name: quotaconfig-sample
+spec: {}

@@ -1,0 +1,6 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: LeaseCountQuota
+metadata:
+  name: leasecountquota-sample
+spec:
+  maxLeases: 100
