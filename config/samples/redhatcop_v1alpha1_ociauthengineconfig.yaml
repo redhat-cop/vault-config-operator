@@ -1,0 +1,6 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: OCIAuthEngineConfig
+metadata:
+  name: ociauthengineconfig-sample
+spec:
+  homeTenancyID: ocid1.tenancy.oc1..example

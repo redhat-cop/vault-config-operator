@@ -1,0 +1,7 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: CORSConfig
+metadata:
+  name: corsconfig-sample
+spec:
+  allowedOrigins:
+  - https://example.com

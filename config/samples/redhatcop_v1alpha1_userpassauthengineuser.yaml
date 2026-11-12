@@ -1,0 +1,9 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: UserpassAuthEngineUser
+metadata:
+  name: userpassauthengineuser-sample
+spec:
+  passwordCredentials:
+    secret:
+      name: userpass
+    passwordKey: password
