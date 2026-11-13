@@ -29,7 +29,7 @@ These policies apply to large groups of CRDs that share a common structural patt
 |--------|------|------|-----------|
 | `vco-immutable-path` | Prevents `spec.path` changes on UPDATE | 72 | UPDATE |
 | `vco-immutable-name` | Prevents `spec.name` changes on UPDATE (including adding `spec.name` after creation) | 65 | UPDATE |
-| `vco-target-namespace-guard` | Prevents Vault namespace changes when `targetNamespace` is set on either old or new resource | 96 (parameterized) | UPDATE |
+| `vco-target-namespace-guard` | Prevents Vault namespace changes when `targetNamespace` is set on either old or new resource | 95 (parameterized; all CRDs with `spec.authentication`, i.e. all but VaultSecret) | UPDATE |
 
 **`vco-immutable-path`** — Changing `spec.path` after creation would orphan the Vault object at the old mount path. The CEL expression is:
 
@@ -91,7 +91,7 @@ These policies enforce validation rules unique to individual CRD types. Each fol
 | `vco-validate-oktaauthengineconfig` | Okta credential source mutual exclusivity |
 | `vco-validate-pkisecretengineconfig` | ACME requires cluster (`spec.acme` set but `spec.cluster` nil → reject) |
 | `vco-validate-radiusauthengineconfig` | RADIUS credential source mutual exclusivity |
-| `vco-validate-randomsecret` | passwordPolicy mutual exclusivity, secretKey immutability on UPDATE, KVv2 `/data/` path check |
+| `vco-validate-randomsecret` | passwordPolicy mutual exclusivity, secretKey immutability on UPDATE, KVv2 `/data` path check (`spec.path` must contain a `/data` segment, e.g. `secret/data` or `secret/data/app`) |
 | `vco-validate-secretenginemount` | Only `.spec.config` can be modified on UPDATE; type, description, local, sealWrap, externalEntropyAccess, options are immutable |
 | `vco-validate-sshsecretengineconfig` | When generateSigningKey=false: caKeyReference required, caKeyReference.randomSecret forbidden |
 | `vco-validate-terraformcloudsecretengineconfig` | TFC credential source + passwordKey required when using secret or vaultSecret |
@@ -137,7 +137,7 @@ data:
   vaultNamespace: ""  # set to VAULT_NAMESPACE env var value if used
 ```
 
-The ConfigMap's namespace is injected by kustomize via a `replacements:` entry in `config/default/kustomization.yaml` — it uses the operator namespace as the source.
+The binding's `paramRef.name` and `paramRef.namespace` are kept in sync with the ConfigMap by `replacements:` entries in `config/default/kustomization.yaml` (name prefix and operator namespace) and `config/helmchart/kustomization.yaml` (release namespace).
 
 When `VAULT_NAMESPACE` is not used (the common case), leave `vaultNamespace` empty.
 
@@ -216,7 +216,7 @@ config/vap/
 ├── vco-immutable-path-binding.yaml                       # ValidatingAdmissionPolicyBinding
 ├── vco-immutable-name.yaml                               # ValidatingAdmissionPolicy (65 CRDs)
 ├── vco-immutable-name-binding.yaml                       # ValidatingAdmissionPolicyBinding
-├── vco-target-namespace-guard.yaml                       # ValidatingAdmissionPolicy (96 CRDs, parameterized)
+├── vco-target-namespace-guard.yaml                       # ValidatingAdmissionPolicy (95 CRDs, parameterized)
 ├── vco-target-namespace-guard-binding.yaml               # ValidatingAdmissionPolicyBinding
 ├── vco-vap-params-configmap.yaml                         # ConfigMap for VAULT_NAMESPACE fallback
 │

@@ -19,6 +19,20 @@ replacements:
     options:
       delimiter: "."
       index: 1
+# The overlay namespace is not propagated to paramRef.namespace by kustomize.
+- source:
+    kind: ConfigMap
+    version: v1
+    name: vault-config-operator-vco-vap-params
+    fieldPath: metadata.namespace
+  targets:
+  - select:
+      kind: ValidatingAdmissionPolicyBinding
+      group: admissionregistration.k8s.io
+      version: v1
+      name: vault-config-operator-vco-target-namespace-guard-binding
+    fieldPaths:
+    - spec.paramRef.namespace
 
 patches:
 - target:

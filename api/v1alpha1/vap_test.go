@@ -310,6 +310,34 @@ var _ = Describe("VAP Immutable Path", func() {
 		obj.Spec.AuthMount.Config = AuthMountConfig{DefaultLeaseTTL: "1h"}
 		Expect(k8sClient.Update(ctx, obj)).To(Succeed())
 	})
+
+	It("should allow update when spec.path is unset on both old and new", func() {
+		obj := &SecretEngineMount{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "vap-path-unset-", Namespace: "default"},
+			Spec: SecretEngineMountSpec{
+				Authentication: defaultAuth(),
+				Mount:          Mount{Type: "kv", Description: "no path"},
+			},
+		}
+		createAndFetch(obj)
+		obj.Spec.Mount.Config = MountConfig{DefaultLeaseTTL: "1h"}
+		Expect(k8sClient.Update(ctx, obj)).To(Succeed())
+	})
+
+	It("should reject setting spec.path when it was unset", func() {
+		obj := &SecretEngineMount{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "vap-path-add-", Namespace: "default"},
+			Spec: SecretEngineMountSpec{
+				Authentication: defaultAuth(),
+				Mount:          Mount{Type: "kv", Description: "no path"},
+			},
+		}
+		createAndFetch(obj)
+		obj.Spec.Path = "secret/added"
+		err := k8sClient.Update(ctx, obj)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("spec.path cannot be updated"))
+	})
 })
 
 // ── Immutable Name Tests ──────────────────────────────────────────────
@@ -619,6 +647,23 @@ var _ = Describe("VAP Target Namespace Guard (extended)", func() {
 		}
 		createAndFetch(obj)
 		obj.Spec.Authentication.Namespace = "org2"
+		Expect(k8sClient.Update(ctx, obj)).To(Succeed())
+	})
+
+	It("should allow update of a VaultSecret (no spec.authentication)", func() {
+		obj := &VaultSecret{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "vap-tns-vs-", Namespace: "default"},
+			Spec: VaultSecretSpec{
+				RefreshThreshold: 50,
+				VaultSecretDefinitions: []VaultSecretDefinition{{
+					Name:           "secret",
+					Authentication: defaultAuth(),
+					Path:           "secret/data/app",
+				}},
+			},
+		}
+		createAndFetch(obj)
+		obj.Labels = map[string]string{"updated": "true"}
 		Expect(k8sClient.Update(ctx, obj)).To(Succeed())
 	})
 })
@@ -1017,6 +1062,38 @@ var _ = Describe("VAP CRD-Specific: RandomSecret", func() {
 		}
 		Expect(k8sClient.Create(ctx, obj)).To(Succeed())
 		DeferCleanup(func() { _ = k8sClient.Delete(ctx, obj) })
+	})
+
+	It("should allow a KVv2 path ending in /data on create and update", func() {
+		obj := &RandomSecret{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "vap-rand-kv2-", Namespace: "default"},
+			Spec: RandomSecretSpec{
+				Authentication:      defaultAuth(),
+				Path:                "secret/data",
+				SecretKey:           "password",
+				IsKVSecretsEngineV2: true,
+				SecretFormat:        VaultPasswordPolicy{PasswordPolicyName: "default"},
+			},
+		}
+		createAndFetch(obj)
+		obj.Labels = map[string]string{"updated": "true"}
+		Expect(k8sClient.Update(ctx, obj)).To(Succeed())
+	})
+
+	It("should reject a KVv2 path without a /data segment", func() {
+		obj := &RandomSecret{
+			ObjectMeta: metav1.ObjectMeta{GenerateName: "vap-rand-kv2-", Namespace: "default"},
+			Spec: RandomSecretSpec{
+				Authentication:      defaultAuth(),
+				Path:                "secret/database",
+				SecretKey:           "password",
+				IsKVSecretsEngineV2: true,
+				SecretFormat:        VaultPasswordPolicy{PasswordPolicyName: "default"},
+			},
+		}
+		err := k8sClient.Create(ctx, obj)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("KVv2 secrets must have /data defined in the path"))
 	})
 })
 

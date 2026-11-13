@@ -83,5 +83,8 @@ spec:
       - transitsecretenginekeys
       - userpassauthengineusers
   validations:
-  - expression: "object.spec.path == oldObject.spec.path"
+  # spec.path is optional on several CRDs (e.g. SecretEngineMount, AuthEngineMount).
+  - expression: >-
+      !has(oldObject.spec.path) && !has(object.spec.path) ||
+      has(oldObject.spec.path) && has(object.spec.path) && object.spec.path == oldObject.spec.path
     message: "spec.path cannot be updated"

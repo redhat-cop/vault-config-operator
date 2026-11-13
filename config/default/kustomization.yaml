@@ -98,6 +98,21 @@ replacements:
       name: vco-target-namespace-guard-binding
     fieldPaths:
     - spec.paramRef.namespace
+# paramRef.name is not a kustomize name reference: without this, namePrefix renames
+# the ConfigMap but the binding keeps pointing at the unprefixed name.
+- source:
+    kind: ConfigMap
+    version: v1
+    name: vco-vap-params
+    fieldPath: metadata.name
+  targets:
+  - select:
+      kind: ValidatingAdmissionPolicyBinding
+      group: admissionregistration.k8s.io
+      version: v1
+      name: vco-target-namespace-guard-binding
+    fieldPaths:
+    - spec.paramRef.name
 # [CERTMANAGER] To enable cert-manager, uncomment all sections with 'CERTMANAGER' prefix.
 # - source:
 #     kind: Service

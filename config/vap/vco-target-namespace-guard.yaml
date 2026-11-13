@@ -108,29 +108,29 @@ spec:
       - transitsecretenginekeys
       - uicustomheaders
       - userpassauthengineusers
-      - vaultsecrets
   variables:
   - name: oldLoginNs
     expression: >-
-      has(oldObject.spec.authentication.namespace) ? oldObject.spec.authentication.namespace
+      has(oldObject.spec.authentication) && has(oldObject.spec.authentication.namespace) ? oldObject.spec.authentication.namespace
       : (has(params.data) && 'vaultNamespace' in params.data ? params.data.vaultNamespace : '')
   - name: newLoginNs
     expression: >-
-      has(object.spec.authentication.namespace) ? object.spec.authentication.namespace
+      has(object.spec.authentication) && has(object.spec.authentication.namespace) ? object.spec.authentication.namespace
       : (has(params.data) && 'vaultNamespace' in params.data ? params.data.vaultNamespace : '')
   - name: oldTargetNs
     expression: >-
       (variables.oldLoginNs + '/' +
-      (has(oldObject.spec.authentication.targetNamespace) ? oldObject.spec.authentication.targetNamespace : ''))
+      (has(oldObject.spec.authentication) && has(oldObject.spec.authentication.targetNamespace) ? oldObject.spec.authentication.targetNamespace : ''))
       .replace('//', '/').replace('//', '/')
   - name: newTargetNs
     expression: >-
       (variables.newLoginNs + '/' +
-      (has(object.spec.authentication.targetNamespace) ? object.spec.authentication.targetNamespace : ''))
+      (has(object.spec.authentication) && has(object.spec.authentication.targetNamespace) ? object.spec.authentication.targetNamespace : ''))
       .replace('//', '/').replace('//', '/')
   validations:
   - expression: >-
-      (!has(object.spec.authentication.targetNamespace) && !has(oldObject.spec.authentication.targetNamespace))
+      (!(has(object.spec.authentication) && has(object.spec.authentication.targetNamespace)) &&
+       !(has(oldObject.spec.authentication) && has(oldObject.spec.authentication.targetNamespace)))
       || ('/' + variables.oldTargetNs + '/').replace('//', '/').replace('//', '/')
          == ('/' + variables.newTargetNs + '/').replace('//', '/').replace('//', '/')
     message: "spec.authentication cannot be updated to a different Vault namespace when targetNamespace is set: to move the resource, delete it and create it again"
