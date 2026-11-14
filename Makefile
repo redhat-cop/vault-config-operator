@@ -20,6 +20,13 @@ KUBE_CONTEXT ?= kind-$(KIND_CLUSTER_NAME)
 KUBE_CONFIG_FILE ?= /tmp/$(KIND_CLUSTER_NAME)-kubeconfig
 # Container runtime: use docker in CI (GitHub Actions), podman on local dev machines.
 CONTAINER_RUNTIME ?= $(shell if [ -n "$$GITHUB_ACTIONS" ]; then echo docker; else echo podman; fi)
+# Platform for single-arch docker save/pull. Required on Docker 29+ (ubuntu-26.04 /
+# containerd image store) so kind's ctr import does not look for missing multi-arch blobs.
+# See https://github.com/kubernetes-sigs/kind/issues/3795
+# Derived from the host arch (Kind nodes are always linux/*).
+KIND_LOAD_PLATFORM ?= linux/$(shell go env GOARCH 2>/dev/null || uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+# Optional extra flags for `$(CONTAINER_RUNTIME) build` (e.g. --provenance=false).
+CONTAINER_BUILD_OPTS ?=
 # Note changes to the vault version should also match image tags within the integration/vault-values.yaml and config/local-development/vault-values.yaml files
 VAULT_VERSION ?= 2.0.4
 # The vault version should also match the appVersion in the vault helm chart
@@ -135,7 +142,9 @@ help: ## Display this help.
 
 .PHONY: manifests
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	# maxDescLen=120 keeps OpenAPI descriptions useful for kubectl explain while
+	# keeping the OLM registry ConfigMap under etcd's 1.5MiB request limit.
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:maxDescLen=120 webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -368,7 +377,7 @@ run: manifests generate fmt vet ## Run a controller from your host.
 
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.
-	$(CONTAINER_RUNTIME) build -t ${IMG} .
+	$(CONTAINER_RUNTIME) build $(CONTAINER_BUILD_OPTS) -t ${IMG} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
@@ -570,22 +579,42 @@ HELM_TEST_SIDECAR_IMG ?= busybox:1.37
 
 # Deploy the helmchart to a kind cluster to test deployment.
 # If the test-metrics sidecar in the prometheus pod is ready, the metrics work and the test is successful.
+#
+# Image load notes:
+# - Podman: keep plain `save` + `kind load image-archive` (existing working path).
+# - Docker 29+ / ubuntu-26.04: `kind load docker-image` fails for multi-arch pulls such as
+#   busybox with "ctr: content digest ... not found" because the containerd image store
+#   keeps a multi-platform OCI index while only host layers are present (kind#3795).
+#   Export a single-platform archive with `docker image save --platform` instead.
+# - Also disable BuildKit provenance/SBOM on Docker builds so the archive does not carry
+#   attestation manifests that ctr would try to unpack as images.
 helmchart-test: KIND_CLUSTER_NAME = $(HELM_CLUSTER_NAME)
 .PHONY: helmchart-test
 helmchart-test: kind-setup deploy-vault helmchart
-	$(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker-build
-	$(CONTAINER_RUNTIME) tag ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
-	$(CONTAINER_RUNTIME) pull ${HELM_TEST_SIDECAR_IMG}
-	@if [ "$(CONTAINER_RUNTIME)" = "podman" ]; then \
-	  echo "Using podman: saving images to archive for kind load..."; \
-	  for img in ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} ${HELM_TEST_SIDECAR_IMG}; do \
-	    $(CONTAINER_RUNTIME) save $$img -o /tmp/kind-helm-image.tar && \
-	    $(KIND) load image-archive --name $(KIND_CLUSTER_NAME) /tmp/kind-helm-image.tar && \
-	    rm -f /tmp/kind-helm-image.tar; \
-	  done; \
+	@if [ "$(CONTAINER_RUNTIME)" = "docker" ]; then \
+	  $(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} CONTAINER_BUILD_OPTS="--provenance=false --sbom=false" docker-build; \
 	else \
-	  $(KIND) load docker-image --name $(KIND_CLUSTER_NAME) ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} ${HELM_TEST_SIDECAR_IMG}; \
+	  $(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker-build; \
 	fi
+	$(CONTAINER_RUNTIME) tag ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
+	@if [ "$(CONTAINER_RUNTIME)" = "docker" ]; then \
+	  $(CONTAINER_RUNTIME) pull --platform $(KIND_LOAD_PLATFORM) ${HELM_TEST_SIDECAR_IMG}; \
+	else \
+	  $(CONTAINER_RUNTIME) pull ${HELM_TEST_SIDECAR_IMG}; \
+	fi
+	@for img in ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} ${HELM_TEST_SIDECAR_IMG}; do \
+	  echo "Loading $$img into kind cluster $(KIND_CLUSTER_NAME) via image-archive..."; \
+	  rm -f /tmp/kind-helm-image.tar; \
+	  if [ "$(CONTAINER_RUNTIME)" = "podman" ]; then \
+	    $(CONTAINER_RUNTIME) save $$img -o /tmp/kind-helm-image.tar; \
+	  elif $(CONTAINER_RUNTIME) image save --help 2>&1 | grep -q -- '--platform'; then \
+	    $(CONTAINER_RUNTIME) image save --platform $(KIND_LOAD_PLATFORM) --output /tmp/kind-helm-image.tar $$img; \
+	  else \
+	    $(CONTAINER_RUNTIME) save -o /tmp/kind-helm-image.tar $$img; \
+	  fi && \
+	  $(KIND) load image-archive --name $(KIND_CLUSTER_NAME) /tmp/kind-helm-image.tar && \
+	  rm -f /tmp/kind-helm-image.tar; \
+	done
 	$(HELM) --kube-context $(KUBE_CONTEXT) repo add jetstack https://charts.jetstack.io --force-update
 	$(HELM) --kube-context $(KUBE_CONTEXT) install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.21.1 --set crds.enabled=true
 	$(HELM) --kube-context $(KUBE_CONTEXT) repo add prometheus-community https://prometheus-community.github.io/helm-charts --force-update

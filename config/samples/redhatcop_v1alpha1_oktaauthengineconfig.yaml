@@ -1,0 +1,6 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: OktaAuthEngineConfig
+metadata:
+  name: oktaauthengineconfig-sample
+spec:
+  orgName: example

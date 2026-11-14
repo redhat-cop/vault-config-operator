@@ -1,0 +1,11 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: CFAuthEngineConfig
+metadata:
+  name: cfauthengineconfig-sample
+spec:
+  cfAPIAddr: https://api.example.com
+  identityCACertificates: '-----BEGIN CERTIFICATE-----
+
+    MIIB
+
+    -----END CERTIFICATE-----'

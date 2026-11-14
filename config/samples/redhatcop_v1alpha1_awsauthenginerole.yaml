@@ -1,0 +1,6 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AWSAuthEngineRole
+metadata:
+  name: awsauthenginerole-sample
+spec:
+  name: example

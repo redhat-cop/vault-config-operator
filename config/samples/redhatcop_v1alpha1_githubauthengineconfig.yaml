@@ -1,0 +1,6 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GitHubAuthEngineConfig
+metadata:
+  name: githubauthengineconfig-sample
+spec:
+  organization: example-org

@@ -1,0 +1,6 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: RateLimitQuota
+metadata:
+  name: ratelimitquota-sample
+spec:
+  rate: 10
