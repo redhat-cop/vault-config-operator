@@ -51,6 +51,11 @@ func TestAWSAuthEngineRole_toMap_IAM(t *testing.T) {
 	if !reflect.DeepEqual(result["bound_ami_id"], emptySlice) {
 		t.Errorf("expected bound_ami_id to be empty slice, got %v", result["bound_ami_id"])
 	}
+	for _, k := range []string{"disallow_reauthentication", "allow_instance_migration", "role_tag"} {
+		if _, exists := result[k]; exists {
+			t.Errorf("expected %s to not be emitted for IAM roles, got %v", k, result[k])
+		}
+	}
 }
 
 func TestAWSAuthEngineRole_toMap_EC2(t *testing.T) {
@@ -478,5 +483,40 @@ func TestAWSAuthEngineRole_Webhook_ResolveAWSUniqueIDs_EC2NotEmitted(t *testing.
 	result := role.toMap()
 	if _, exists := result["resolve_aws_unique_ids"]; exists {
 		t.Error("expected resolve_aws_unique_ids to NOT be emitted for EC2 roles")
+	}
+}
+
+func TestAWSAuthEngineRole_toMap_EC2OnlyFields_IAMNotEmitted(t *testing.T) {
+	role := &AWSAuthRole{
+		Name:                     "test-role",
+		AuthType:                 "iam",
+		RoleTag:                  "",
+		AllowInstanceMigration:   false,
+		DisallowReauthentication: false,
+		ResolveAWSUniqueIDs:      true,
+	}
+
+	result := role.toMap()
+	for _, k := range []string{"role_tag", "allow_instance_migration", "disallow_reauthentication"} {
+		if _, exists := result[k]; exists {
+			t.Errorf("expected %s to NOT be emitted for IAM roles (Vault rejects EC2-only fields)", k)
+		}
+	}
+}
+
+func TestAWSAuthEngineRole_toMap_EC2OnlyFields_EC2Emitted(t *testing.T) {
+	role := &AWSAuthRole{
+		Name:                     "test-role",
+		AuthType:                 "ec2",
+		RoleTag:                  "",
+		AllowInstanceMigration:   false,
+		DisallowReauthentication: false,
+	}
+
+	result := role.toMap()
+	for _, k := range []string{"role_tag", "allow_instance_migration", "disallow_reauthentication"} {
+		if _, exists := result[k]; !exists {
+			t.Errorf("expected %s to be emitted for EC2 roles", k)
+		}
 	}
 }

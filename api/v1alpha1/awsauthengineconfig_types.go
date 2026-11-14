@@ -49,6 +49,7 @@ type AWSAuthEngineClientConfigSpec struct {
 	AWSAuthClientConfig `json:",inline"`
 
 	// AWSCredentials specifies how to retrieve the AWS access key and secret key credentials.
+	// Optional: when omitted, Vault uses its default AWS credential chain (e.g. IRSA, EKS Pod Identity, instance profile).
 	// +kubebuilder:validation:Optional
 	AWSCredentials vaultutils.RootCredentialConfig `json:"AWSCredentials,omitempty"`
 }
@@ -177,6 +178,11 @@ func (r *AWSAuthEngineClientConfig) PrepareInternalValues(context context.Contex
 }
 
 func (r *AWSAuthEngineClientConfig) setInternalCredentials(context context.Context) error {
+	if r.Spec.AWSCredentials.Secret == nil && r.Spec.AWSCredentials.VaultSecret == nil && r.Spec.AWSCredentials.RandomSecret == nil {
+		// No explicit credentials: leave access/secret keys unset so Vault can use its
+		// default AWS credential chain (IRSA, EKS Pod Identity, instance profile, etc.).
+		return nil
+	}
 	log := log.FromContext(context)
 	kubeClient := vaultutils.KubeClientFromContext(context)
 	if r.Spec.AWSCredentials.RandomSecret != nil {
@@ -258,10 +264,15 @@ func (r *AWSAuthEngineClientConfig) setInternalCredentials(context context.Conte
 		}
 		return nil
 	}
-	return errors.New("no means of retrieving a secret was specified")
+	// All credential sources were nil; handled by the early return above.
+	return nil
 }
 
 func (r *AWSAuthEngineClientConfig) isValid() error {
+	// Credentials are optional so Vault can use its default AWS credential chain.
+	if r.Spec.AWSCredentials.Secret == nil && r.Spec.AWSCredentials.VaultSecret == nil && r.Spec.AWSCredentials.RandomSecret == nil {
+		return nil
+	}
 	if err := r.Spec.AWSCredentials.ValidateCredentialSource(); err != nil {
 		return err
 	}
