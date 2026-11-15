@@ -226,6 +226,31 @@ func TestAWSAuthEngineClientConfig_IsDeletable(t *testing.T) {
 	}
 }
 
+func TestAWSAuthEngineClientConfig_IsValid_NoCredentialSource(t *testing.T) {
+	instance := &AWSAuthEngineClientConfig{}
+
+	err := instance.isValid()
+	if err != nil {
+		t.Errorf("expected no validation error when AWSCredentials omitted (Vault default chain), got: %v", err)
+	}
+}
+
+func TestAWSAuthEngineClientConfig_PrepareInternalValues_NoCredentialSource(t *testing.T) {
+	instance := &AWSAuthEngineClientConfig{}
+	instance.Spec.STSEndpoint = "https://sts.us-east-1.amazonaws.com"
+
+	if err := instance.PrepareInternalValues(context.Background(), instance); err != nil {
+		t.Fatalf("PrepareInternalValues with no credentials: %v", err)
+	}
+	payload := instance.GetPayload()
+	if _, exists := payload["access_key"]; exists {
+		t.Errorf("expected access_key absent when no credentials configured, got %v", payload["access_key"])
+	}
+	if _, exists := payload["secret_key"]; exists {
+		t.Errorf("expected secret_key absent when no credentials configured, got %v", payload["secret_key"])
+	}
+}
+
 func TestAWSAuthEngineClientConfig_IsValid_EmptyUsernameKey(t *testing.T) {
 	instance := &AWSAuthEngineClientConfig{}
 	instance.Spec.AWSCredentials.Secret = &corev1.LocalObjectReference{Name: "my-secret"}

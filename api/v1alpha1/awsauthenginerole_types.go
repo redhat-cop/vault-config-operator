@@ -95,7 +95,7 @@ type AWSAuthRole struct {
 
 	// RoleTag enables role tags for EC2 auth. Value is the tag key on the instance.
 	// +kubebuilder:validation:Optional
-	RoleTag string `json:"roleTag,omitempty" vault:"role_tag"`
+	RoleTag string `json:"roleTag,omitempty" vault:"role_tag,when=AuthType:ec2"`
 
 	// BoundIAMPrincipalARN constrains IAM auth to specific principal ARNs. Wildcards supported.
 	// +kubebuilder:validation:Optional
@@ -117,11 +117,11 @@ type AWSAuthRole struct {
 
 	// AllowInstanceMigration allows migration of the underlying EC2 instance. EC2 auth only.
 	// +kubebuilder:validation:Optional
-	AllowInstanceMigration bool `json:"allowInstanceMigration,omitempty" vault:"allow_instance_migration"`
+	AllowInstanceMigration bool `json:"allowInstanceMigration,omitempty" vault:"allow_instance_migration,when=AuthType:ec2"`
 
 	// DisallowReauthentication if true, only allows a single token per instance ID. EC2 auth only.
 	// +kubebuilder:validation:Optional
-	DisallowReauthentication bool `json:"disallowReauthentication,omitempty" vault:"disallow_reauthentication"`
+	DisallowReauthentication bool `json:"disallowReauthentication,omitempty" vault:"disallow_reauthentication,when=AuthType:ec2"`
 
 	// TokenTTL is the incremental lifetime for generated tokens.
 	// +kubebuilder:validation:Optional

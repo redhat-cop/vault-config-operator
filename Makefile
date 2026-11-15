@@ -20,6 +20,13 @@ KUBE_CONTEXT ?= kind-$(KIND_CLUSTER_NAME)
 KUBE_CONFIG_FILE ?= /tmp/$(KIND_CLUSTER_NAME)-kubeconfig
 # Container runtime: use docker in CI (GitHub Actions), podman on local dev machines.
 CONTAINER_RUNTIME ?= $(shell if [ -n "$$GITHUB_ACTIONS" ]; then echo docker; else echo podman; fi)
+# Platform for single-arch docker save/pull. Required on Docker 29+ (ubuntu-26.04 /
+# containerd image store) so kind's ctr import does not look for missing multi-arch blobs.
+# See https://github.com/kubernetes-sigs/kind/issues/3795
+# Derived from the host arch (Kind nodes are always linux/*).
+KIND_LOAD_PLATFORM ?= linux/$(shell go env GOARCH 2>/dev/null || uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+# Optional extra flags for `$(CONTAINER_RUNTIME) build` (e.g. --provenance=false).
+CONTAINER_BUILD_OPTS ?=
 # Note changes to the vault version should also match image tags within the integration/vault-values.yaml and config/local-development/vault-values.yaml files
 VAULT_VERSION ?= 2.0.4
 # The vault version should also match the appVersion in the vault helm chart
@@ -135,7 +142,9 @@ help: ## Display this help.
 
 .PHONY: manifests
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	# maxDescLen=120 keeps OpenAPI descriptions useful for kubectl explain while
+	# keeping the OLM registry ConfigMap under etcd's 1.5MiB request limit.
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:maxDescLen=120 webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -409,7 +418,7 @@ endif
 
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.
-	$(CONTAINER_RUNTIME) build $(DOCKER_BUILD_EXTRA_ARGS) -t ${IMG} .
+	$(CONTAINER_RUNTIME) build $(CONTAINER_BUILD_OPTS) $(DOCKER_BUILD_EXTRA_ARGS) -t ${IMG} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
@@ -617,6 +626,12 @@ HELM_TEST_PLATFORM ?= linux/$(shell uname -m | sed 's/x86_64/amd64/;s/aarch64/ar
 
 # Deploy the helmchart to a kind cluster to test deployment.
 # If the test-metrics sidecar in the prometheus pod is ready, the metrics work and the test is successful.
+#
+# Image load notes:
+# - Rebuild the busybox sidecar as a local single-platform image, then import via
+#   `ctr ... images import` (no --all-platforms). Docker's containerd image store
+#   otherwise keeps a multi-arch index and kind import fails on missing digests
+#   (kind#3795). BuildKit provenance/SBOM are disabled via DOCKER_BUILD_EXTRA_ARGS.
 helmchart-test: KIND_CLUSTER_NAME = $(HELM_CLUSTER_NAME)
 .PHONY: helmchart-test
 helmchart-test: kind-setup deploy-vault helmchart

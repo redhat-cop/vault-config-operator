@@ -1,0 +1,5 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: AWSAuthEngineIdentityConfig
+metadata:
+  name: awsauthengineidentityconfig-sample
+spec: {}

@@ -1,0 +1,6 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KerberosAuthEngineLDAPConfig
+metadata:
+  name: kerberosauthengineldapconfig-sample
+spec:
+  url: ldaps://ldap.example.com

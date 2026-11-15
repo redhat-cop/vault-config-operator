@@ -1,0 +1,6 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: KeyRotationConfig
+metadata:
+  name: keyrotationconfig-sample
+spec:
+  enabled: true

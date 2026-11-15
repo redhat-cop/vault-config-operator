@@ -21,19 +21,12 @@ spec:
           API
         properties:
           apiVersion:
-            description: |-
-              APIVersion defines the versioned schema of this representation of an object.
-              Servers should convert recognized schemas to the latest internal value, and
-              may reject unrecognized values.
-              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            description: APIVersion defines the versioned schema of this representation
+              of an object.
             type: string
           kind:
-            description: |-
-              Kind is a string value representing the REST resource this object represents.
-              Servers may infer this from the endpoint the client submits requests to.
-              Cannot be updated.
-              In CamelCase.
-              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            description: Kind is a string value representing the REST resource this
+              object represents.
             type: string
           metadata:
             type: object
@@ -43,9 +36,7 @@ spec:
             properties:
               PEMKeys:
                 description: PEMKeys Optional list of PEM-formatted public keys or
-                  certificates used to verify the signatures of Kubernetes service
-                  account JWTs. If a certificate is given, its public key will be
-                  extracted. Not every installation of Kubernetes exposes these keys.
+                  certificates used to verify the signatures of Kubernetes service...
                 items:
                   type: string
                 type: array
@@ -55,13 +46,12 @@ spec:
                 properties:
                   namespace:
                     description: Namespace is the Vault namespace in which the operator
-                      authenticates, and in which the resource is managed unless TargetNamespace
-                      is set. Only available in Vault Enterprise.
+                      authenticates, and in which the resource is managed unless...
                     type: string
                   path:
                     default: kubernetes
                     description: Path is the path of the role used for this kube auth
-                      authentication. The operator will try to authenticate at {[namespace/]}auth/{spec.path}
+                      authentication.
                     pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
                     type: string
                   role:
@@ -78,26 +68,19 @@ spec:
                         description: |-
                           Name of the referent.
                           This field is effectively required, but due to backwards compatibility is
-                          allowed to be empty. Instances of this type with an empty value here are
-                          almost certainly wrong.
-                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          allowed to be empty.
                         type: string
                     type: object
                     x-kubernetes-map-type: atomic
                   targetNamespace:
                     description: TargetNamespace is the Vault namespace (not a Kubernetes
-                      namespace) in which the resource is managed, relative to the
-                      namespace in which the operator authenticates, for example tenant-a
-                      or org/tenant-a. Only available in Vault Enterprise.
+                      namespace) in which the resource is managed, relative to the...
                     pattern: ^(([^\s/]*[^\s/.][^\s/]*|\.{3,})(/([^\s/]*[^\s/.][^\s/]*|\.{3,}))*)?$
                     type: string
                 type: object
               connection:
                 description: Connection represents the information needed to connect
-                  to Vault. This operator uses the standard Vault environment variables
-                  to connect to Vault. If you need to override those settings and
-                  for example connect to a different Vault instance, you can do with
-                  this section of the CR.
+                  to Vault.
                 properties:
                   address:
                     description: 'Address Address of the Vault server expressed as
@@ -105,38 +88,28 @@ spec:
                     type: string
                   maxRetries:
                     description: MaxRetries Maximum number of retries when certain
-                      error codes are encountered. The default is 2, for three total
-                      attempts. Set this to 0 or less to disable retrying. Error codes
-                      that are retried are 412 (client consistency requirement not
-                      satisfied) and all 5xx except for 501 (not implemented).
+                      error codes are encountered.
                     type: integer
                   tLSConfig:
                     properties:
                       cacert:
                         description: Cacert Path to a PEM-encoded CA certificate file
-                          on the local disk. This file is used to verify the Vault
-                          server's SSL certificate. This environment variable takes
-                          precedence over a cert passed via the secret.
+                          on the local disk.
                         type: string
                       skipVerify:
                         description: SkipVerify Do not verify Vault's presented certificate
-                          before communicating with it. Setting this variable is not
-                          recommended and voids Vault's security model.
+                          before communicating with it.
                         type: boolean
                       tlsSecret:
-                        description: 'TLSSecret namespace-local secret containing
-                          the tls material for the connection. the expected keys for
-                          the secret are: ca bundle -> "ca.crt", certificate -> "tls.crt",
-                          key -> "tls.key"'
+                        description: TLSSecret namespace-local secret containing the
+                          tls material for the connection.
                         properties:
                           name:
                             default: ""
                             description: |-
                               Name of the referent.
                               This field is effectively required, but due to backwards compatibility is
-                              allowed to be empty. Instances of this type with an empty value here are
-                              almost certainly wrong.
-                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              allowed to be empty.
                             type: string
                         type: object
                         x-kubernetes-map-type: atomic
@@ -158,15 +131,11 @@ spec:
                   cert and service account JWT when running in a Kubernetes pod.
                 type: boolean
               issuer:
-                description: Issuer Optional JWT issuer. If no issuer is specified,
-                  then this plugin will use kubernetes/serviceaccount as the default
-                  issuer. See these instructions for looking up the issuer for a given
-                  Kubernetes cluster.
+                description: Issuer Optional JWT issuer.
                 type: string
               kubernetesCACert:
-                description: |-
-                  kubernetesCACert PEM encoded CA cert for use by the TLS client used to talk with the Kubernetes API. NOTE: Every line must end with a newline: \n
-                  if omitted will default to the content of the file "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt" in the operator pod
+                description: kubernetesCACert PEM encoded CA cert for use by the TLS
+                  client used to talk with the Kubernetes API.
                 type: string
               kubernetesHost:
                 default: https://kubernetes.default.svc:443
@@ -181,17 +150,12 @@ spec:
               path:
                 description: |-
                   Path at which to make the configuration.
-                  The final path in Vault will be {[spec.authentication.namespace]}/{[spec.authentication.targetNamespace]}/auth/{spec.path}/config/{metadata.name}.
-                  The authentication role must have the following capabilities = [ "create", "read", "update", "delete"] on that path.
+                  The final path in Vault will be {[spec.authentication.namespace]}/{[spec.
                 pattern: ^(?:/?[\w;:@&=\$-\.\+]*)+/?
                 type: string
               tokenReviewerJWTSecret:
-                description: |-
-                  TokenReviewerJWTSecret sources the token_reviewer_jwt from a Kubernetes Secret.
-                  This is useful when the Kubernetes auth backend's kubernetesHost points at a remote cluster,
-                  an authenticating proxy, or any endpoint where a locally-minted ServiceAccount JWT is not valid.
-                  The Secret is read from the CR's namespace.
-                  Mutually exclusive with TokenReviewerServiceAccount.
+                description: TokenReviewerJWTSecret sources the token_reviewer_jwt
+                  from a Kubernetes Secret.
                 properties:
                   key:
                     description: The key of the secret to select from.  Must be a
@@ -202,9 +166,7 @@ spec:
                     description: |-
                       Name of the referent.
                       This field is effectively required, but due to backwards compatibility is
-                      allowed to be empty. Instances of this type with an empty value here are
-                      almost certainly wrong.
-                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      allowed to be empty.
                     type: string
                   optional:
                     description: Specify whether the Secret or its key must be defined
@@ -214,38 +176,25 @@ spec:
                 type: object
                 x-kubernetes-map-type: atomic
               tokenReviewerServiceAccount:
-                description: |-
-                  TokenReviewerServiceAccount A service account JWT used to access the TokenReview API to validate other JWTs during login. If not set, the JWT submitted in the login payload will be used to access the Kubernetes TokenReview API.
-                  Mutually exclusive with TokenReviewerJWTSecret.
+                description: TokenReviewerServiceAccount A service account JWT used
+                  to access the TokenReview API to validate other JWTs during...
                 properties:
                   name:
                     default: ""
                     description: |-
                       Name of the referent.
                       This field is effectively required, but due to backwards compatibility is
-                      allowed to be empty. Instances of this type with an empty value here are
-                      almost certainly wrong.
-                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      allowed to be empty.
                     type: string
                 type: object
                 x-kubernetes-map-type: atomic
               useAnnotationsAsAliasMetadata:
                 description: UseAnnotationsAsAliasMetadata  Use annotations from the
-                  client token's associated service account as alias metadata for
-                  the Vault entity. Only annotations with the vault.hashicorp.com/alias-metadata-
-                  key prefix are targeted as alias metadata and your annotations must
-                  be 512 characters or less due to the Vault alias metadata value
-                  limit. For example, if you configure the annotation vault.hashicorp.com/alias-metadata-foo,
-                  Vault saves the string "foo" along with the annotation value to
-                  the alias metadata. To save alias metadata, Vault must have permission
-                  to read service accounts from the Kubernetes API.
+                  client token's associated service account as alias metadata for...
                 type: boolean
               useOperatorPodCA:
                 default: true
-                description: |-
-                  UseOperatorPodCA . This field is considered only if `kubernetesCACert` is not set and `disableLocalCAJWT` is set to true.
-                  In this case if this field is set to true the operator pod's CA is injected. This is the original behavior before the introduction of this field
-                  If tis field is set to false, the os ca bundle of where vault is running will be used.
+                description: UseOperatorPodCA .
                 type: boolean
             required:
             - kubernetesHost
@@ -260,9 +209,8 @@ spec:
                     state of this API Resource.
                   properties:
                     lastTransitionTime:
-                      description: |-
-                        lastTransitionTime is the last time the condition transitioned from one status to another.
-                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                      description: lastTransitionTime is the last time the condition
+                        transitioned from one status to another.
                       format: date-time
                       type: string
                     message:
@@ -274,18 +222,13 @@ spec:
                     observedGeneration:
                       description: |-
                         observedGeneration represents the .metadata.generation that the condition was set based upon.
-                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
-                        with respect to the current state of the instance.
+                        For instance, if .
                       format: int64
                       minimum: 0
                       type: integer
                     reason:
-                      description: |-
-                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
-                        Producers of specific condition types may define expected values and meanings for this field,
-                        and whether the values are considered a guaranteed API.
-                        The value should be a CamelCase string.
-                        This field may not be empty.
+                      description: reason contains a programmatic identifier indicating
+                        the reason for the condition's last transition.
                       maxLength: 1024
                       minLength: 1
                       pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
