@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	"context"
-	"errors"
 	"os"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -32,7 +31,6 @@ var kubernetesauthengineconfiglog = logf.Log.WithName("kubernetesauthengineconfi
 func (r *KubernetesAuthEngineConfig) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr, r).
 		WithDefaulter(r).
-		WithValidator(r).
 		Complete()
 }
 
@@ -54,45 +52,4 @@ func (r *KubernetesAuthEngineConfig) Default(ctx context.Context, obj *Kubernete
 		obj.Spec.KubernetesCACert = string(b)
 	}
 	return nil
-}
-
-//+kubebuilder:webhook:path=/validate-redhatcop-redhat-io-v1alpha1-kubernetesauthengineconfig,mutating=false,failurePolicy=fail,sideEffects=None,groups=redhatcop.redhat.io,resources=kubernetesauthengineconfigs,verbs=create;update,versions=v1alpha1,name=vkubernetesauthengineconfig.kb.io,admissionReviewVersions={v1,v1beta1}
-
-var _ admission.Validator[*KubernetesAuthEngineConfig] = &KubernetesAuthEngineConfig{}
-
-// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
-func (r *KubernetesAuthEngineConfig) ValidateCreate(ctx context.Context, obj *KubernetesAuthEngineConfig) (admission.Warnings, error) {
-	kubernetesauthengineconfiglog.Info("validate create", "name", obj.Name)
-
-	if _, err := obj.IsValid(); err != nil {
-		return nil, err
-	}
-	return nil, nil
-}
-
-// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
-func (r *KubernetesAuthEngineConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *KubernetesAuthEngineConfig) (admission.Warnings, error) {
-	kubernetesauthengineconfiglog.Info("validate update", "name", newObj.Name)
-
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
-
-	// the path cannot be updated
-	if newObj.Spec.Path != oldObj.Spec.Path {
-		return nil, errors.New("spec.path cannot be updated")
-	}
-
-	if _, err := newObj.IsValid(); err != nil {
-		return nil, err
-	}
-	return nil, nil
-}
-
-// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
-func (r *KubernetesAuthEngineConfig) ValidateDelete(ctx context.Context, obj *KubernetesAuthEngineConfig) (admission.Warnings, error) {
-	kubernetesauthengineconfiglog.Info("validate delete", "name", obj.Name)
-
-	// TODO(user): fill in your validation logic upon object deletion.
-	return nil, nil
 }

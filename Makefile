@@ -186,6 +186,30 @@ integration: kind-setup deploy-vault start-cloud-provider deploy-postgresql depl
 	@for secret in dummy-error-path-creds test-userpass-password; do \
 		KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) delete secret $$secret -n vault-admin --ignore-not-found 2>/dev/null || true ;\
 	done
+	@echo "Cleaning up orphaned Vault mounts from previous runs..."
+	@VAULT_TOKEN=$$(KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) get secret vault-init -n vault -o jsonpath='{.data.root_token}' 2>/dev/null | base64 -d 2>/dev/null) ;\
+	if [ -n "$$VAULT_TOKEN" ]; then \
+		KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) exec -n vault vault-0 -c vault -- sh -c " \
+			export VAULT_TOKEN=$$VAULT_TOKEN; \
+			KEEP='cubbyhole/ identity/ secret/ sys/'; \
+			for mount in \$$(vault secrets list -format=json 2>/dev/null | python3 -c 'import sys,json; [print(k.rstrip(\"/\")) for k in json.load(sys.stdin).keys()]' 2>/dev/null); do \
+				case \" \$$KEEP \" in *\" \$$mount/ \"*) continue ;; esac; \
+				echo \"  Disabling orphaned secret engine: \$$mount\"; \
+				vault secrets disable \$$mount/ 2>/dev/null || true; \
+			done; \
+			AUTH_KEEP='token/ kubernetes/'; \
+			for auth in \$$(vault auth list -format=json 2>/dev/null | python3 -c 'import sys,json; [print(k.rstrip(\"/\")) for k in json.load(sys.stdin).keys()]' 2>/dev/null); do \
+				case \" \$$AUTH_KEEP \" in *\" \$$auth/ \"*) continue ;; esac; \
+				echo \"  Disabling orphaned auth engine: \$$auth\"; \
+				vault auth disable \$$auth/ 2>/dev/null || true; \
+			done; \
+			echo '  Cleaning up orphaned policies...'; \
+			for policy in \$$(vault policy list 2>/dev/null | grep -v -E '^(default|root)$$'); do \
+				echo \"  Deleting orphaned policy: \$$policy\"; \
+				vault policy delete \$$policy 2>/dev/null || true; \
+			done; \
+		" 2>/dev/null || true ;\
+	fi
 	@echo "Waiting for Vault LoadBalancer container..."
 	@cleanup_cloud_provider() { \
 		if [ -f /tmp/cloud-provider-kind.pid ]; then \
@@ -217,8 +241,17 @@ integration: kind-setup deploy-vault start-cloud-provider deploy-postgresql depl
 	echo "Vault LoadBalancer accessible at 127.0.0.1:$$VAULT_HOST_PORT" ;\
 	export VAULT_TOKEN=$$(KUBECONFIG=$(KUBE_CONFIG_FILE) $(KUBECTL) --context $(KUBE_CONTEXT) get secret vault-init -n vault -o jsonpath='{.data.root_token}' | base64 -d) ;\
 	export VAULT_ADDR="http://127.0.0.1:$$VAULT_HOST_PORT" ;\
-	KUBECONFIG=$(KUBE_CONFIG_FILE) KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -v -coverprofile cover.out --tags=integration -timeout 30m ;\
-	exit $$?
+	KUBECONFIG=$(KUBE_CONFIG_FILE) KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test $$(go list --tags=integration ./... | grep -v '/internal/controller$$') -v -coverprofile cover-unit.out --tags=integration -timeout 10m ;\
+	UNIT_RC=$$? ;\
+	KUBECONFIG=$(KUBE_CONFIG_FILE) KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./internal/controller -v -coverprofile cover-integration.out --tags=integration -timeout 30m ;\
+	INT_RC=$$? ;\
+	if [ -f cover-unit.out ] && [ -f cover-integration.out ]; then \
+		head -1 cover-unit.out > cover.out ;\
+		tail -n +2 cover-unit.out >> cover.out ;\
+		tail -n +2 cover-integration.out >> cover.out ;\
+	fi ;\
+	if [ $$UNIT_RC -ne 0 ]; then exit $$UNIT_RC; fi ;\
+	exit $$INT_RC
 
 .PHONY: deploy-vault
 deploy-vault: kubectl helm
@@ -375,9 +408,17 @@ build: manifests generate fmt vet ## Build manager binary.
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./cmd/
 
+# Disable BuildKit attestations so kind load does not hit missing OCI digest
+# errors from attestation/manifest-list exports (seen on newer Docker BuildKit).
+ifeq ($(CONTAINER_RUNTIME),docker)
+DOCKER_BUILD_EXTRA_ARGS ?= --provenance=false --sbom=false
+else
+DOCKER_BUILD_EXTRA_ARGS ?=
+endif
+
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.
-	$(CONTAINER_RUNTIME) build $(CONTAINER_BUILD_OPTS) -t ${IMG} .
+	$(CONTAINER_RUNTIME) build $(CONTAINER_BUILD_OPTS) $(DOCKER_BUILD_EXTRA_ARGS) -t ${IMG} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
@@ -576,50 +617,45 @@ helmchart-repo-push: helmchart-repo
 HELM_TEST_IMG_NAME ?= ${OPERATOR_NAME}
 HELM_TEST_IMG_TAG ?= helmchart-test
 HELM_TEST_SIDECAR_IMG ?= busybox:1.37
+# Docker on Ubuntu 24+/26 (containerd image store) keeps the multi-arch index even
+# after `docker pull --platform=...`, so `docker save` + kind's
+# `ctr import --all-platforms` fails on missing foreign-arch digests (e.g. busybox
+# arm32v5). Rebuild into a local single-platform image and import without
+# --all-platforms.
+HELM_TEST_PLATFORM ?= linux/$(shell uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
 
 # Deploy the helmchart to a kind cluster to test deployment.
 # If the test-metrics sidecar in the prometheus pod is ready, the metrics work and the test is successful.
 #
 # Image load notes:
-# - Podman: keep plain `save` + `kind load image-archive` (existing working path).
-# - Docker 29+ / ubuntu-26.04: `kind load docker-image` fails for multi-arch pulls such as
-#   busybox with "ctr: content digest ... not found" because the containerd image store
-#   keeps a multi-platform OCI index while only host layers are present (kind#3795).
-#   Export a single-platform archive with `docker image save --platform` instead.
-# - Also disable BuildKit provenance/SBOM on Docker builds so the archive does not carry
-#   attestation manifests that ctr would try to unpack as images.
+# - Rebuild the busybox sidecar as a local single-platform image, then import via
+#   `ctr ... images import` (no --all-platforms). Docker's containerd image store
+#   otherwise keeps a multi-arch index and kind import fails on missing digests
+#   (kind#3795). BuildKit provenance/SBOM are disabled via DOCKER_BUILD_EXTRA_ARGS.
 helmchart-test: KIND_CLUSTER_NAME = $(HELM_CLUSTER_NAME)
 .PHONY: helmchart-test
 helmchart-test: kind-setup deploy-vault helmchart
-	@if [ "$(CONTAINER_RUNTIME)" = "docker" ]; then \
-	  $(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} CONTAINER_BUILD_OPTS="--provenance=false --sbom=false" docker-build; \
-	else \
-	  $(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker-build; \
-	fi
+	$(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker-build
 	$(CONTAINER_RUNTIME) tag ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
-	@if [ "$(CONTAINER_RUNTIME)" = "docker" ]; then \
-	  $(CONTAINER_RUNTIME) pull --platform $(KIND_LOAD_PLATFORM) ${HELM_TEST_SIDECAR_IMG}; \
-	else \
-	  $(CONTAINER_RUNTIME) pull ${HELM_TEST_SIDECAR_IMG}; \
-	fi
-	@for img in ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} ${HELM_TEST_SIDECAR_IMG}; do \
-	  echo "Loading $$img into kind cluster $(KIND_CLUSTER_NAME) via image-archive..."; \
-	  rm -f /tmp/kind-helm-image.tar; \
-	  if [ "$(CONTAINER_RUNTIME)" = "podman" ]; then \
-	    $(CONTAINER_RUNTIME) save $$img -o /tmp/kind-helm-image.tar; \
-	  elif $(CONTAINER_RUNTIME) image save --help 2>&1 | grep -q -- '--platform'; then \
-	    $(CONTAINER_RUNTIME) image save --platform $(KIND_LOAD_PLATFORM) --output /tmp/kind-helm-image.tar $$img; \
-	  else \
-	    $(CONTAINER_RUNTIME) save -o /tmp/kind-helm-image.tar $$img; \
-	  fi && \
-	  $(KIND) load image-archive --name $(KIND_CLUSTER_NAME) /tmp/kind-helm-image.tar && \
-	  rm -f /tmp/kind-helm-image.tar; \
+	@echo "Materializing single-platform sidecar $(HELM_TEST_SIDECAR_IMG) ($(HELM_TEST_PLATFORM))..."
+	$(CONTAINER_RUNTIME) pull --platform=$(HELM_TEST_PLATFORM) ${HELM_TEST_SIDECAR_IMG}
+	printf 'FROM --platform=%s %s\n' "$(HELM_TEST_PLATFORM)" "${HELM_TEST_SIDECAR_IMG}" | \
+	  $(CONTAINER_RUNTIME) build --platform=$(HELM_TEST_PLATFORM) $(DOCKER_BUILD_EXTRA_ARGS) -t ${HELM_TEST_SIDECAR_IMG} -
+	@echo "Importing images into kind nodes (ctr without --all-platforms)..."
+	@for node in $$($(KIND) get nodes --name $(KIND_CLUSTER_NAME)); do \
+	  echo "  loading into $$node..."; \
+	  $(CONTAINER_RUNTIME) save \
+	    ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} \
+	    docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} \
+	    ${HELM_TEST_SIDECAR_IMG} | \
+	    $(CONTAINER_RUNTIME) exec -i $$node \
+	      ctr --namespace=k8s.io images import --digests --snapshotter=overlayfs - ; \
 	done
 	$(HELM) --kube-context $(KUBE_CONTEXT) repo add jetstack https://charts.jetstack.io --force-update
-	$(HELM) --kube-context $(KUBE_CONTEXT) install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.21.1 --set crds.enabled=true
+	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.21.1 --set crds.enabled=true
 	$(HELM) --kube-context $(KUBE_CONTEXT) repo add prometheus-community https://prometheus-community.github.io/helm-charts --force-update
-	$(HELM) --kube-context $(KUBE_CONTEXT) install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n default -f integration/kube-prometheus-stack-values.yaml
-	$(HELM) --kube-context $(KUBE_CONTEXT) install prometheus-rbac integration/helm/prometheus-rbac -n default
+	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i kube-prometheus-stack prometheus-community/kube-prometheus-stack -n default -f integration/kube-prometheus-stack-values.yaml
+	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i prometheus-rbac integration/helm/prometheus-rbac -n default
 	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i ${OPERATOR_NAME}-local charts/${OPERATOR_NAME} -n ${OPERATOR_NAME}-local --create-namespace --force-conflicts \
 	  --set enableCertManager=true \
 	  --set enableMonitoring=true \

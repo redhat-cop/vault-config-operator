@@ -60,12 +60,6 @@ func (r *UICustomHeader) ValidateCreate(ctx context.Context, obj *UICustomHeader
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
 func (r *UICustomHeader) ValidateUpdate(ctx context.Context, oldObj, newObj *UICustomHeader) (admission.Warnings, error) {
 	uicustomheaderlog.Info("validate update", "name", newObj.Name)
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
-	if newObj.Spec.Name != oldObj.Spec.Name {
-		return nil, errors.New("spec.name cannot be updated")
-	}
 	if len(newObj.Spec.Values) == 0 {
 		return nil, errors.New("spec.values must contain at least one value")
 	}

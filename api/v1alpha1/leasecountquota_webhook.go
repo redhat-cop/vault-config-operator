@@ -60,14 +60,6 @@ func (r *LeaseCountQuota) ValidateCreate(ctx context.Context, obj *LeaseCountQuo
 func (r *LeaseCountQuota) ValidateUpdate(ctx context.Context, oldObj, newObj *LeaseCountQuota) (admission.Warnings, error) {
 	leasecountquotalog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
-
-	if newObj.Spec.Name != oldObj.Spec.Name {
-		return nil, fmt.Errorf("spec.name is immutable after creation, was %q, got %q", oldObj.Spec.Name, newObj.Spec.Name)
-	}
-
 	if newObj.Spec.MaxLeases < 1 {
 		return nil, fmt.Errorf("spec.maxLeases must be at least 1")
 	}

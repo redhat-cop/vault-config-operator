@@ -1,0 +1,19 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: vco-validate-kerberosauthengineconfig-ldap
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups: ["redhatcop.redhat.io"]
+      apiVersions: ["v1alpha1"]
+      operations: ["CREATE", "UPDATE"]
+      resources:
+      - kerberosauthengineldapconfigs
+  validations:
+  - expression: |
+      (has(object.spec.ldapCredentials.vaultSecret) ? 1 : 0) +
+      (has(object.spec.ldapCredentials.secret) ? 1 : 0) +
+      (has(object.spec.ldapCredentials.randomSecret) ? 1 : 0) == 1
+    message: "exactly one of spec.ldapCredentials.vaultSecret, spec.ldapCredentials.secret, or spec.ldapCredentials.randomSecret must be specified"

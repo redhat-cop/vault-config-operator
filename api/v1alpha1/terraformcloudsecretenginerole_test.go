@@ -1,7 +1,6 @@
 package v1alpha1
 
 import (
-	"context"
 	"encoding/json"
 	"testing"
 
@@ -390,43 +389,5 @@ func TestTerraformCloudSecretEngineRole_isValid_TeamWithoutOrganization(t *testi
 	_, err := role.IsValid()
 	if err == nil {
 		t.Error("expected error when credentialType is 'team' but organization is empty")
-	}
-}
-
-func TestTerraformCloudSecretEngineRole_ValidateUpdate_RejectsPathChange(t *testing.T) {
-	r := &TerraformCloudSecretEngineRole{}
-	oldObj := &TerraformCloudSecretEngineRole{
-		Spec: TerraformCloudSecretEngineRoleSpec{
-			Path: "terraform",
-		},
-	}
-	newObj := &TerraformCloudSecretEngineRole{
-		Spec: TerraformCloudSecretEngineRoleSpec{
-			Path: "terraform-new",
-		},
-	}
-	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
-	if err == nil {
-		t.Error("expected error when spec.path is changed")
-	}
-}
-
-func TestTerraformCloudSecretEngineRole_ValidateUpdate_RejectsNameChange(t *testing.T) {
-	r := &TerraformCloudSecretEngineRole{}
-	oldObj := &TerraformCloudSecretEngineRole{
-		Spec: TerraformCloudSecretEngineRoleSpec{
-			Path: "terraform",
-			Name: "old-name",
-		},
-	}
-	newObj := &TerraformCloudSecretEngineRole{
-		Spec: TerraformCloudSecretEngineRoleSpec{
-			Path: "terraform",
-			Name: "new-name",
-		},
-	}
-	_, err := r.ValidateUpdate(context.TODO(), oldObj, newObj)
-	if err == nil {
-		t.Error("expected error when spec.name is changed")
 	}
 }

@@ -293,414 +293,77 @@ func main() {
 	}
 
 	if webhooks, ok := os.LookupEnv("ENABLE_WEBHOOKS"); !ok || webhooks != "false" {
-		if err = (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "RandomSecret")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.SecretEngineMount{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "SecretEngineMount")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.DatabaseSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "DatabaseSecretEngineRole")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.DatabaseSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "DatabaseSecretEngineConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.KubernetesAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "KubernetesAuthEngineRole")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.AuthEngineMount{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "AuthEngineMount")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.KubernetesAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "KubernetesAuthEngineConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.LDAPAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "LDAPAuthEngineConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.LDAPAuthEngineGroup{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "LDAPAuthEngineGroup")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.JWTOIDCAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "JWTOIDCAuthEngineConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.JWTOIDCAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "JWTOIDCAuthEngineRole")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.AppRoleAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "AppRoleAuthEngineRole")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.AzureAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "AzureAuthEngineConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.AzureAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "AzureAuthEngineRole")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.GCPAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "GCPAuthEngineConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.GCPAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "GCPAuthEngineRole")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.GitHubAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "GitHubAuthEngineConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.GitHubAuthEngineTeamMap{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "GitHubAuthEngineTeamMap")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.GitHubAuthEngineUserMap{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "GitHubAuthEngineUserMap")
-			os.Exit(1)
+		for _, setup := range []struct {
+			name string
+			fn   func(ctrl.Manager) error
+		}{
+			// Category A — defaulter + validator (uncovered validation)
+			{"AWSAuthEngineClientConfig", func(m ctrl.Manager) error {
+				return (&redhatcopv1alpha1.AWSAuthEngineClientConfig{}).SetupWebhookWithManager(m)
+			}},
+			// Category B — defaulter-only (validator removed, VAP covers validation)
+			{"CFAuthEngineConfig", func(m ctrl.Manager) error {
+				return (&redhatcopv1alpha1.CFAuthEngineConfig{}).SetupWebhookWithManager(m)
+			}},
+			{"GCPSecretEngineConfig", func(m ctrl.Manager) error {
+				return (&redhatcopv1alpha1.GCPSecretEngineConfig{}).SetupWebhookWithManager(m)
+			}},
+			{"KubernetesAuthEngineConfig", func(m ctrl.Manager) error {
+				return (&redhatcopv1alpha1.KubernetesAuthEngineConfig{}).SetupWebhookWithManager(m)
+			}},
+			{"OktaAuthEngineConfig", func(m ctrl.Manager) error {
+				return (&redhatcopv1alpha1.OktaAuthEngineConfig{}).SetupWebhookWithManager(m)
+			}},
+			{"RADIUSAuthEngineConfig", func(m ctrl.Manager) error {
+				return (&redhatcopv1alpha1.RADIUSAuthEngineConfig{}).SetupWebhookWithManager(m)
+			}},
+			{"SSHSecretEngineConfig", func(m ctrl.Manager) error {
+				return (&redhatcopv1alpha1.SSHSecretEngineConfig{}).SetupWebhookWithManager(m)
+			}},
+			{"TerraformCloudSecretEngineConfig", func(m ctrl.Manager) error {
+				return (&redhatcopv1alpha1.TerraformCloudSecretEngineConfig{}).SetupWebhookWithManager(m)
+			}},
+			// Category C — validator-only (uncovered CRD-specific validation)
+			{"AliCloudAuthEngineRole", func(m ctrl.Manager) error {
+				return (&redhatcopv1alpha1.AliCloudAuthEngineRole{}).SetupWebhookWithManager(m)
+			}},
+			{"AppRoleAuthEngineRole", func(m ctrl.Manager) error {
+				return (&redhatcopv1alpha1.AppRoleAuthEngineRole{}).SetupWebhookWithManager(m)
+			}},
+			{"AWSAuthEngineRole", func(m ctrl.Manager) error { return (&redhatcopv1alpha1.AWSAuthEngineRole{}).SetupWebhookWithManager(m) }},
+			{"CORSConfig", func(m ctrl.Manager) error { return (&redhatcopv1alpha1.CORSConfig{}).SetupWebhookWithManager(m) }},
+			{"GCPSecretEngineRoleset", func(m ctrl.Manager) error {
+				return (&redhatcopv1alpha1.GCPSecretEngineRoleset{}).SetupWebhookWithManager(m)
+			}},
+			{"GCPSecretEngineStaticAccount", func(m ctrl.Manager) error {
+				return (&redhatcopv1alpha1.GCPSecretEngineStaticAccount{}).SetupWebhookWithManager(m)
+			}},
+			{"IdentityOIDCClient", func(m ctrl.Manager) error {
+				return (&redhatcopv1alpha1.IdentityOIDCClient{}).SetupWebhookWithManager(m)
+			}},
+			{"JWTOIDCAuthEngineRole", func(m ctrl.Manager) error {
+				return (&redhatcopv1alpha1.JWTOIDCAuthEngineRole{}).SetupWebhookWithManager(m)
+			}},
+			{"KeyRotationConfig", func(m ctrl.Manager) error { return (&redhatcopv1alpha1.KeyRotationConfig{}).SetupWebhookWithManager(m) }},
+			{"LDAPSecretEngineStaticRole", func(m ctrl.Manager) error {
+				return (&redhatcopv1alpha1.LDAPSecretEngineStaticRole{}).SetupWebhookWithManager(m)
+			}},
+			{"LeaseCountQuota", func(m ctrl.Manager) error { return (&redhatcopv1alpha1.LeaseCountQuota{}).SetupWebhookWithManager(m) }},
+			{"PKISecretEngineConfig", func(m ctrl.Manager) error {
+				return (&redhatcopv1alpha1.PKISecretEngineConfig{}).SetupWebhookWithManager(m)
+			}},
+			{"RandomSecret", func(m ctrl.Manager) error { return (&redhatcopv1alpha1.RandomSecret{}).SetupWebhookWithManager(m) }},
+			{"RateLimitQuota", func(m ctrl.Manager) error { return (&redhatcopv1alpha1.RateLimitQuota{}).SetupWebhookWithManager(m) }},
+			{"UICustomHeader", func(m ctrl.Manager) error { return (&redhatcopv1alpha1.UICustomHeader{}).SetupWebhookWithManager(m) }},
+		} {
+			if err = setup.fn(mgr); err != nil {
+				setupLog.Error(err, "unable to create webhook", "webhook", setup.name)
+				os.Exit(1)
+			}
 		}
 
-		if err = (&redhatcopv1alpha1.AWSAuthEngineClientConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "AWSAuthEngineClientConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.AWSAuthEngineIdentityConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "AWSAuthEngineIdentityConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.AWSAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "AWSAuthEngineRole")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.CertAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "CertAuthEngineConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.CertAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "CertAuthEngineRole")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.UserpassAuthEngineUser{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "UserpassAuthEngineUser")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.VaultSecret{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "VaultSecret")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.PasswordPolicy{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "PasswordPolicy")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.Policy{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "Policy")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.GitHubSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "GitHubSecretEngineConfig")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.GitHubSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "GitHubSecretEngineRole")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.AzureSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "AzureSecretEngineRole")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.AzureSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "AzureSecretEngineConfig")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.PKISecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "PKISecretEngineConfig")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.PKISecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "PKISecretEngineRole")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.RabbitMQSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "RabbitMQSecretEngineRole")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.QuaySecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "QuaySecretEngineConfig")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.QuaySecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "QuaySecretEngineRole")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.QuaySecretEngineStaticRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "QuaySecretEngineStaticRole")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.KubernetesSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "KubernetesSecretEngineConfig")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.KubernetesSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "KubernetesSecretEngineRole")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.SSHSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "SSHSecretEngineConfig")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.SSHSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "SSHSecretEngineRole")
-			os.Exit(1)
-		}
-
+		// Category E — RabbitMQ raw handler (cross-resource validateUniquePath)
 		mgr.GetWebhookServer().Register("/validate-redhatcop-redhat-io-v1alpha1-rabbitmqsecretengineconfig", &webhook.Admission{Handler: &redhatcopv1alpha1.RabbitMQSecretEngineConfigValidation{Client: mgr.GetClient()}})
-
-		if err = (&redhatcopv1alpha1.DatabaseSecretEngineStaticRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "DatabaseSecretEngineStaticRole")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.Group{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "Group")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.GroupAlias{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "GroupAlias")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.IdentityOIDCProvider{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "IdentityOIDCProvider")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.IdentityOIDCScope{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "IdentityOIDCScope")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.IdentityOIDCClient{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "IdentityOIDCClient")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.IdentityOIDCAssignment{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "IdentityOIDCAssignment")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.IdentityTokenConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "IdentityTokenConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.IdentityTokenKey{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "IdentityTokenKey")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.IdentityTokenRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "IdentityTokenRole")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.Namespace{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "Namespace")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.AWSSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "AWSSecretEngineConfig")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.AWSSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "AWSSecretEngineRole")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.ConsulSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "ConsulSecretEngineConfig")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.ConsulSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "ConsulSecretEngineRole")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.NomadSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "NomadSecretEngineConfig")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.NomadSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "NomadSecretEngineRole")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.LDAPSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "LDAPSecretEngineConfig")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.LDAPSecretEngineStaticRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "LDAPSecretEngineStaticRole")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.LDAPSecretEngineDynamicRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "LDAPSecretEngineDynamicRole")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.TransitSecretEngineKey{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "TransitSecretEngineKey")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.TOTPSecretEngineKey{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "TOTPSecretEngineKey")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.GCPSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "GCPSecretEngineConfig")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.GCPSecretEngineRoleset{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "GCPSecretEngineRoleset")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.GCPSecretEngineStaticAccount{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "GCPSecretEngineStaticAccount")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.MongoDBAtlasSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "MongoDBAtlasSecretEngineConfig")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.MongoDBAtlasSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "MongoDBAtlasSecretEngineRole")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.TerraformCloudSecretEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "TerraformCloudSecretEngineConfig")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.TerraformCloudSecretEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "TerraformCloudSecretEngineRole")
-			os.Exit(1)
-		}
-
-		if err = (&redhatcopv1alpha1.OktaAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "OktaAuthEngineConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.OktaAuthEngineGroup{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "OktaAuthEngineGroup")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.OCIAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "OCIAuthEngineConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.OCIAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "OCIAuthEngineRole")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.CFAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "CFAuthEngineConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.CFAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "CFAuthEngineRole")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.RADIUSAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "RADIUSAuthEngineConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.RADIUSAuthEngineUser{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "RADIUSAuthEngineUser")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.AliCloudAuthEngineRole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "AliCloudAuthEngineRole")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.KerberosAuthEngineConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "KerberosAuthEngineConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.KerberosAuthEngineLDAPConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "KerberosAuthEngineLDAPConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.KerberosAuthEngineGroup{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "KerberosAuthEngineGroup")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.QuotaConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "QuotaConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.RateLimitQuota{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "RateLimitQuota")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.LeaseCountQuota{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "LeaseCountQuota")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.CORSConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "CORSConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.KeyRotationConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "KeyRotationConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.RotationPolicy{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "RotationPolicy")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.LoggerConfig{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "LoggerConfig")
-			os.Exit(1)
-		}
-		if err = (&redhatcopv1alpha1.UICustomHeader{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "UICustomHeader")
-			os.Exit(1)
-		}
 	}
 
 	//+kubebuilder:scaffold:builder

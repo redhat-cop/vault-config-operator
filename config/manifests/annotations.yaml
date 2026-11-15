@@ -4,4 +4,4 @@
 #
 # This file is not a kustomize resource. Do not list it under resources: below.
 annotations:
-  com.redhat.openshift.versions: v4.16
+  com.redhat.openshift.versions: v4.17

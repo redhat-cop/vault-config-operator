@@ -19,7 +19,6 @@ package v1alpha1
 import (
 	"context"
 	"encoding/json"
-	"errors"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -103,12 +102,6 @@ func (r *AWSAuthEngineClientConfig) ValidateCreate(ctx context.Context, obj *AWS
 func (r *AWSAuthEngineClientConfig) ValidateUpdate(ctx context.Context, oldObj, newObj *AWSAuthEngineClientConfig) (admission.Warnings, error) {
 	awsauthengineclientconfiglog.Info("validate update", "name", newObj.Name)
 
-	if err := newObj.Spec.Authentication.ValidateTargetNamespaceUpdate(&oldObj.Spec.Authentication); err != nil {
-		return nil, err
-	}
-	if newObj.Spec.Path != oldObj.Spec.Path {
-		return nil, errors.New("spec.path cannot be updated")
-	}
 	return nil, newObj.isValid()
 }
 
