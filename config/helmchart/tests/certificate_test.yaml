@@ -1,0 +1,30 @@
+suite: Certificate private key tests
+templates:
+  - certificate.yaml
+set:
+  enableCertManager: true
+tests:
+  - it: leaves privateKey unset by default
+    asserts:
+      - notExists:
+          path: spec.privateKey
+        documentSelector:
+          path: kind
+          value: Certificate
+          matchMany: true
+
+  - it: sets privateKey on both certificates
+    set:
+      certificate.privateKey:
+        algorithm: ECDSA
+        size: 256
+    asserts:
+      - equal:
+          path: spec.privateKey
+          value:
+            algorithm: ECDSA
+            size: 256
+        documentSelector:
+          path: kind
+          value: Certificate
+          matchMany: true
