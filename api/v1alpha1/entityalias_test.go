@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"net/http"
 	"strings"
 	"testing"
 
@@ -346,6 +347,109 @@ func TestEntityAlias_PrepareInternalValues_EntityNotFound(t *testing.T) {
 		t.Fatal("expected error")
 	}
 	if !strings.Contains(err.Error(), "entity not found") {
+		t.Fatalf("err: %v", err)
+	}
+}
+
+func TestEntityAlias_PrepareInternalValues_ReusesExistingAlias(t *testing.T) {
+	ea := &EntityAlias{
+		ObjectMeta: metav1.ObjectMeta{Name: "alias-res", Namespace: "default"},
+		Spec: EntityAliasSpec{
+			EntityAliasConfig: EntityAliasConfig{
+				AuthEngineMountPath: "kubernetes",
+				EntityName:          "my-entity",
+			},
+		},
+	}
+	handler := newFakeVaultHandler()
+	handler.setGet("sys/auth/kubernetes", map[string]any{
+		"accessor": "auth_k8s_1234",
+		"type":     "kubernetes",
+	})
+	handler.setGet("identity/entity/name/my-entity", map[string]any{
+		"id": "entity-uuid-567",
+		"aliases": []any{
+			map[string]any{"id": "existing-alias-id", "name": "alias-res", "mount_accessor": "auth_k8s_1234"},
+		},
+	})
+	handler.setGet("identity/entity-alias", map[string]any{"id": "new-alias-id"})
+	vc, ts := newFakeVaultClient(t, handler)
+	defer ts.Close()
+	ctx := pivContext(newFakeKubeClient(ea), vc)
+
+	if err := ea.PrepareInternalValues(ctx, ea); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	if ea.Status.ID != "existing-alias-id" {
+		t.Errorf("Status.ID: got %q want %q", ea.Status.ID, "existing-alias-id")
+	}
+}
+
+func TestEntityAlias_PrepareInternalValues_CreatesAliasWhenNoneMatches(t *testing.T) {
+	ea := &EntityAlias{
+		ObjectMeta: metav1.ObjectMeta{Name: "alias-res", Namespace: "default"},
+		Spec: EntityAliasSpec{
+			EntityAliasConfig: EntityAliasConfig{
+				AuthEngineMountPath: "kubernetes",
+				EntityName:          "my-entity",
+			},
+		},
+	}
+	handler := newFakeVaultHandler()
+	handler.setGet("sys/auth/kubernetes", map[string]any{
+		"accessor": "auth_k8s_1234",
+		"type":     "kubernetes",
+	})
+	handler.setGet("identity/entity/name/my-entity", map[string]any{
+		"id": "entity-uuid-567",
+		"aliases": []any{
+			map[string]any{"id": "other-mount-alias-id", "name": "alias-res", "mount_accessor": "auth_other_mount"},
+			map[string]any{"id": "other-name-alias-id", "name": "other-name", "mount_accessor": "auth_k8s_1234"},
+		},
+	})
+	handler.setGet("identity/entity-alias", map[string]any{"id": "new-alias-id"})
+	vc, ts := newFakeVaultClient(t, handler)
+	defer ts.Close()
+	ctx := pivContext(newFakeKubeClient(ea), vc)
+
+	if err := ea.PrepareInternalValues(ctx, ea); err != nil {
+		t.Fatalf("PrepareInternalValues: %v", err)
+	}
+	if ea.Status.ID != "new-alias-id" {
+		t.Errorf("Status.ID: got %q want %q", ea.Status.ID, "new-alias-id")
+	}
+}
+
+func TestEntityAlias_PrepareInternalValues_EmptyCreateResponse(t *testing.T) {
+	ea := &EntityAlias{
+		ObjectMeta: metav1.ObjectMeta{Name: "alias-res", Namespace: "default"},
+		Spec: EntityAliasSpec{
+			EntityAliasConfig: EntityAliasConfig{
+				AuthEngineMountPath: "kubernetes",
+				EntityName:          "my-entity",
+			},
+		},
+	}
+	handler := newFakeVaultHandler()
+	handler.setGet("sys/auth/kubernetes", map[string]any{
+		"accessor": "auth_k8s_1234",
+		"type":     "kubernetes",
+	})
+	handler.setGet("identity/entity/name/my-entity", map[string]any{
+		"id": "entity-uuid-567",
+	})
+	vc, ts := newFakeVaultClient(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/v1/identity/entity-alias" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		handler.ServeHTTP(w, r)
+	}))
+	defer ts.Close()
+	ctx := pivContext(newFakeKubeClient(ea), vc)
+
+	err := ea.PrepareInternalValues(ctx, ea)
+	if err == nil || !strings.Contains(err.Error(), "returned no id") {
 		t.Fatalf("err: %v", err)
 	}
 }

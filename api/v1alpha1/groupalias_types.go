@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -163,22 +164,37 @@ func (d *GroupAlias) PrepareInternalValues(context context.Context, object clien
 		return err
 	}
 	canonicalID := secret.Data["id"].(string)
+	name := vaultutils.ResourceName(d.Spec.Name, d.Name)
 
 	if d.Status.ID == "" {
-		//we have to create the group alias as unfortunately this api is asymmetric
-		payload := map[string]any{
-			"name":           map[bool]string{true: d.Spec.Name, false: d.Name}[d.Spec.Name != ""],
-			"mount_accessor": mountAccessor,
-			"canonical_id":   canonicalID,
+		// a previous reconcile may have created the alias but failed to persist its id in the status,
+		// in which case creating it again would fail, so reuse it
+		if id, ok := existingAliasID([]any{secret.Data["alias"]}, name, mountAccessor); ok {
+			log.V(1).Info("reuse existing group alias", "id", id)
+			d.Status.ID = id
+		} else {
+			//we have to create the group alias as unfortunately this api is asymmetric
+			payload := map[string]any{
+				"name":           name,
+				"mount_accessor": mountAccessor,
+				"canonical_id":   canonicalID,
+			}
+			log.V(1).Info("create group alias", "payload", payload)
+			vaultClient := vaultutils.VaultClientFromContext(context)
+			result, err := vaultClient.Logical().Write("/identity/group-alias", payload)
+			if err != nil {
+				log.Error(err, "unable to create group alias", "group alias", d.Spec)
+				return err
+			}
+			// Vault may answer without a body, e.g. when the alias already exists
+			if result != nil {
+				id, _ = result.Data["id"].(string)
+			}
+			if id == "" {
+				return fmt.Errorf("creating group alias %q returned no id", name)
+			}
+			d.Status.ID = id
 		}
-		log.V(1).Info("create group alias", "payload", payload)
-		vaultClient := vaultutils.VaultClientFromContext(context)
-		result, err := vaultClient.Logical().Write("/identity/group-alias", payload)
-		if err != nil {
-			log.Error(err, "unable to create group alias", "group alias", d.Spec)
-			return err
-		}
-		d.Status.ID = result.Data["id"].(string)
 		kubeClient := vaultutils.KubeClientFromContext(context)
 		err = kubeClient.Status().Update(context, d, &client.SubResourceUpdateOptions{})
 		if err != nil {
@@ -192,7 +208,7 @@ func (d *GroupAlias) PrepareInternalValues(context context.Context, object clien
 	d.Spec.retrievedMountAccessor = mountAccessor
 	d.Spec.retrievedCanonicalID = canonicalID
 	d.Spec.retrievedAliasID = d.Status.ID
-	d.Spec.retrievedName = vaultutils.ResourceName(d.Spec.Name, d.Name)
+	d.Spec.retrievedName = name
 	return nil
 }
 

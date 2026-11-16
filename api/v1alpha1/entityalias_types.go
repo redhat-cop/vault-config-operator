@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	vaultutils "github.com/redhat-cop/vault-config-operator/api/v1alpha1/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -176,23 +177,37 @@ func (d *EntityAlias) PrepareInternalValues(context context.Context, object clie
 	d.Spec.retrievedName = vaultutils.ResourceName(d.Spec.Name, d.Name)
 
 	if d.Status.ID == "" {
-		//we have to create the entity alias as unfortunately this api is asymmetric
-		payload := map[string]any{
-			"name":           map[bool]string{true: d.Spec.Name, false: d.Name}[d.Spec.Name != ""],
-			"mount_accessor": d.Spec.retrievedMountAccessor,
-			"canonical_id":   d.Spec.retrievedCanonicalID,
+		// a previous reconcile may have created the alias but failed to persist its id in the status,
+		// in which case creating it again would fail, so reuse it
+		if id, ok := existingAliasID(secret.Data["aliases"], d.Spec.retrievedName, d.Spec.retrievedMountAccessor); ok {
+			log.V(1).Info("reuse existing entity alias", "id", id)
+			d.Status.ID = id
+		} else {
+			//we have to create the entity alias as unfortunately this api is asymmetric
+			payload := map[string]any{
+				"name":           d.Spec.retrievedName,
+				"mount_accessor": d.Spec.retrievedMountAccessor,
+				"canonical_id":   d.Spec.retrievedCanonicalID,
+			}
+			if len(d.Spec.CustomMetadata) > 0 {
+				payload["custom_metadata"] = d.Spec.CustomMetadata
+			}
+			log.V(1).Info("create entity alias", "payload", payload)
+			vaultClient := vaultutils.VaultClientFromContext(context)
+			result, err := vaultClient.Logical().Write("/identity/entity-alias", payload)
+			if err != nil {
+				log.Error(err, "unable to create entity alias", "entity alias", d.Spec)
+				return err
+			}
+			// Vault may answer without a body, e.g. when the alias already exists
+			if result != nil {
+				id, _ = result.Data["id"].(string)
+			}
+			if id == "" {
+				return fmt.Errorf("creating entity alias %q returned no id", d.Spec.retrievedName)
+			}
+			d.Status.ID = id
 		}
-		if len(d.Spec.CustomMetadata) > 0 {
-			payload["custom_metadata"] = d.Spec.CustomMetadata
-		}
-		log.V(1).Info("create entity alias", "payload", payload)
-		vaultClient := vaultutils.VaultClientFromContext(context)
-		result, err := vaultClient.Logical().Write("/identity/entity-alias", payload)
-		if err != nil {
-			log.Error(err, "unable to create entity alias", "entity alias", d.Spec)
-			return err
-		}
-		d.Status.ID = result.Data["id"].(string)
 		kubeClient := vaultutils.KubeClientFromContext(context)
 		err = kubeClient.Status().Update(context, d, &client.SubResourceUpdateOptions{})
 		if err != nil {
@@ -203,6 +218,19 @@ func (d *EntityAlias) PrepareInternalValues(context context.Context, object clie
 
 	d.Spec.retrievedAliasID = d.Status.ID
 	return nil
+}
+
+// existingAliasID returns the id of the alias with the given name and mount accessor
+// among a list of entity or group aliases read from Vault
+func existingAliasID(aliases any, name, mountAccessor string) (string, bool) {
+	list, _ := aliases.([]any)
+	for _, a := range list {
+		if alias, ok := a.(map[string]any); ok && alias["name"] == name && alias["mount_accessor"] == mountAccessor {
+			id, ok := alias["id"].(string)
+			return id, ok
+		}
+	}
+	return "", false
 }
 
 func (d *EntityAlias) GetKubeAuthConfiguration() *vaultutils.KubeAuthConfiguration {
